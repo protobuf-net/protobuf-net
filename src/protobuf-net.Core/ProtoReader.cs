@@ -12,7 +12,7 @@ namespace ProtoBuf
     /// A stateful reader, used to read a protobuf stream. Typical usage would be (sequentially) to call
     /// ReadFieldHeader and (after matching the field) an appropriate Read* method.
     /// </summary>
-    public abstract partial class ProtoReader : IDisposable
+    public abstract partial class ProtoReader : IDisposable, ISerializationContext
     {
         internal const string UseStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version",
             PreferReadSubItem = "If possible, please use the ReadSubItem API; this API may not work correctly with all readers";
@@ -1404,67 +1404,41 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a sub-item from the input reader
         /// </summary>
-        public T ReadSubItem<T>(ref State state, IProtoSerializer<T, T> serializer)
-            => ReadSubItem<T, T>(ref state, default, serializer);
-
-        /// <summary>
-        /// Reads a sub-item from the input reader
-        /// </summary>
-        public TActual ReadSubItem<TBase, TActual>(ref State state, IProtoSerializer<TBase, TActual> serializer)
-            where TActual : TBase
-            => ReadSubItem<TBase, TActual>(ref state, default, serializer);
-
-        /// <summary>
-        /// Reads a sub-item from the input reader
-        /// </summary>
-        public T ReadSubItem<T>(ref State state, T value = default, IProtoSerializer<T, T> serializer = null)
-            => ReadSubItem<T, T>(ref state, value, serializer);
-
-        /// <summary>
-        /// Reads a sub-item from the input reader
-        /// </summary>
-        public TActual ReadSubItem<TBase, TActual>(ref State state, TBase value = default, IProtoSerializer<TBase, TActual> serializer = null)
-            where TActual : TBase
+        public T ReadSubItem<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
         {
             var tok = StartSubItem(this, ref state);
-            var result = (serializer ?? TypeModel.GetSerializer<TBase, TActual>(_model)).Deserialize(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetSerializer<T>(_model)).Read(this, ref state, value);
             EndSubItem(tok, this, ref state);
             return result;
         }
 
         /// <summary>
-        /// Change the type of an object (or create a new object)
+        /// Reads a sub-item from the input reader
         /// </summary>
-        public TActual Cast<TBase, TActual>(TBase value, IProtoFactory<TBase, TActual> serializer = null)
-            where TActual : class, TBase
+        public T ReadBaseType<TBaseType, T>(ref State state, T value = null, IProtoSubTypeSerializer<TBaseType> serializer = null)
+            where TBaseType : class
+            where T : class, TBaseType
         {
-            if (!(value is TActual actual))
-            {
-                if (serializer == null)
-                {
-                    serializer = Model.GetSerializer<TBase, TActual>() as IProtoFactory<TBase, TActual>;
-                }
-                actual = serializer?.Create(Context) ?? Activator.CreateInstance<TActual>();
-                if (value is object)
-                {
-                    if (serializer == null) throw new InvalidOperationException(
-                        $"No serializer available that implements IProtoObjectSerializer<{typeof(TBase).Name}, {typeof(TActual).Name}>");
-                    serializer.Copy(Context, value, actual);
-                }
-            }
-            return actual;
+            return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).ReadSubType(this, ref state, SubTypeState<TBaseType>.Create<T>(this, value));
         }
 
-        public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T, T> serializer = null)
+        public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsObjectType && value is object)
             {
                 SetRootObject(value);
             }
 
-            var result = (serializer ?? Model.GetSerializer<T, T>()).Deserialize(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(this, ref state, value);
             CheckFullyConsumed(ref state);
             return result;
+        }
+
+        public T CreateInstance<T>(IProtoFactory<T> factory = null)
+        {
+            var obj = TypeModel.CreateInstance<T>(this, factory);
+            if (TypeHelper<T>.IsObjectType) NoteObject((object)obj, this);
+            return obj;
         }
     }
 }

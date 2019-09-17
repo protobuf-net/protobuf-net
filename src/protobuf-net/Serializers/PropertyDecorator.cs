@@ -12,7 +12,7 @@ namespace ProtoBuf.Serializers
         private readonly bool readOptionsWriteValue;
         private readonly MethodInfo shadowSetter;
 
-        public PropertyDecorator(Type forType, PropertyInfo property, IProtoSerializer tail) : base(tail)
+        public PropertyDecorator(Type forType, PropertyInfo property, IRuntimeProtoSerializerNode tail) : base(tail)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(property != null);
@@ -22,7 +22,7 @@ namespace ProtoBuf.Serializers
             shadowSetter = GetShadowSetter(property);
         }
 
-        private static void SanityCheck(PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic, bool allowInternal)
+        private static void SanityCheck(PropertyInfo property, IRuntimeProtoSerializerNode tail, out bool writeValue, bool nonPublic, bool allowInternal)
         {
             if (property == null) throw new ArgumentNullException(nameof(property));
 

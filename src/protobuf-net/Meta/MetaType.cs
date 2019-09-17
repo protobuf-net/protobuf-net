@@ -36,7 +36,7 @@ namespace ProtoBuf.Meta
             return Type.ToString();
         }
 
-        IProtoSerializer ISerializerProxy.Serializer => Serializer;
+        IRuntimeProtoSerializerNode ISerializerProxy.Serializer => Serializer;
         private MetaType baseType;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType BaseType => baseType;
 
-        internal TypeModel Model => model;
+        internal RuntimeTypeModel Model => model;
 
         /// <summary>
         /// When used to compile a model, should public serialization/deserialzation methods
@@ -280,7 +280,7 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException(nameof(type));
 
             if (type.IsArray) throw InbuiltType(type);
-            IProtoSerializer coreSerializer = model.TryGetBasicTypeSerializer(type);
+            IRuntimeProtoSerializerNode coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
                 throw InbuiltType(type);
@@ -310,22 +310,22 @@ namespace ProtoBuf.Meta
         /// </summary>
         public Type Type { get; }
 
-        private IProtoTypeSerializer serializer;
+        private IProtoTypeSerializer _serializer;
         internal IProtoTypeSerializer Serializer
         {
             get
             {
-                if (serializer == null)
+                if (_serializer == null)
                 {
                     int opaqueToken = 0;
                     try
                     {
                         model.TakeLock(ref opaqueToken);
-                        if (serializer == null)
+                        if (_serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
                             SetFlag(OPTIONS_Frozen, true, false);
-                            serializer = BuildSerializer();
+                            _serializer = BuildSerializer();
 
                             if (model.AutoCompile) CompileInPlace();
                         }
@@ -335,7 +335,7 @@ namespace ProtoBuf.Meta
                         model.ReleaseLock(opaqueToken);
                     }
                 }
-                return serializer;
+                return _serializer;
             }
         }
         internal bool IsList
@@ -345,6 +345,17 @@ namespace ProtoBuf.Meta
                 Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
                 return itemType != null;
             }
+        }
+
+        internal Type GetInheritanceRoot()
+        {
+            if (Type.IsValueType) return null;
+
+            var root = GetRootType(this);
+            if (!ReferenceEquals(root, this)) return root.Type;
+            if (subTypes != null && subTypes.Count != 0) return root.Type;
+            
+            return null;
         }
 
         private IProtoTypeSerializer BuildSerializer()
@@ -367,7 +378,8 @@ namespace ProtoBuf.Meta
                 Type defaultType = null;
                 ResolveListTypes(model, Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
-                return TypeSerializer.Create(Type, MetaType.GetRootType(this).Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+                return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
+                    constructType, factory, GetInheritanceRoot());
             }
             if (surrogate != null)
             {
@@ -386,7 +398,7 @@ namespace ProtoBuf.Meta
             int fieldCount = fields.Count;
             int subTypeCount = subTypes?.Count ?? 0;
             int[] fieldNumbers = new int[fieldCount + subTypeCount];
-            IProtoSerializer[] serializers = new IProtoSerializer[fieldCount + subTypeCount];
+            IRuntimeProtoSerializerNode[] serializers = new IRuntimeProtoSerializerNode[fieldCount + subTypeCount];
             int i = 0;
             if (subTypeCount != 0)
             {
@@ -397,7 +409,7 @@ namespace ProtoBuf.Meta
                         throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
                     fieldNumbers[i] = subType.FieldNumber;
-                    serializers[i++] = subType.Serializer;
+                    serializers[i++] = subType.GetSerializer(Type);
                 }
             }
             if (fieldCount != 0)
@@ -428,7 +440,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return TypeSerializer.Create(Type, MetaType.GetRootType(this).Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
+            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory, GetInheritanceRoot());
         }
 
         [Flags]
@@ -1513,9 +1525,10 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-            if (!(serializer is CompiledSerializer))
+            if (!(_serializer is CompiledSerializer))
             {
-                serializer = CompiledSerializer.Wrap(Serializer, model);
+                _serializer = CompiledSerializer.Wrap(Serializer, model);
+                Model.ResetServiceCache(Type);
             }
         }
 
@@ -1600,7 +1613,7 @@ namespace ProtoBuf.Meta
 
         internal static MetaType GetRootType(MetaType source)
         {
-            while (source.serializer != null)
+            while (source._serializer != null)
             {
                 MetaType tmp = source.baseType;
                 if (tmp == null) return source;
@@ -1626,7 +1639,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-            return serializer is CompiledSerializer;
+            return _serializer is CompiledSerializer;
         }
 
         internal IEnumerable Fields => this.fields;

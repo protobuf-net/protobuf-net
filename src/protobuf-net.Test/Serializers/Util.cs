@@ -13,7 +13,7 @@ namespace ProtoBuf.unittest.Serializers
     internal static partial class Util
     {
 #if !NO_INTERNAL_CONTEXT
-        public static void Test<T>(T value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
+        public static void Test<T>(T value, Type innerType, Func<IRuntimeProtoSerializerNode, IRuntimeProtoSerializerNode> ctor,
             string expectedHex)
         {
             Assert.NotEqual(typeof(object), typeof(T));
@@ -89,7 +89,7 @@ namespace ProtoBuf.unittest.Serializers
             Assert.Equal(hex, GetHex(raw));
         }
 #if !NO_INTERNAL_CONTEXT
-        public static void Test<T>(T value, Func<IProtoSerializer, IProtoSerializer> ctor, string expectedHex)
+        public static void Test<T>(T value, Func<IRuntimeProtoSerializerNode, IRuntimeProtoSerializerNode> ctor, string expectedHex)
         {
             Test<T>(value, typeof(T), ctor, expectedHex);
         }

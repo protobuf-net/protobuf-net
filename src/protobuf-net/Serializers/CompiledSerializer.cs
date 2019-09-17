@@ -3,17 +3,17 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class CompiledSerializer<TBase, TActual> : CompiledSerializer, IProtoSerializer<TBase, TActual>
-        where TActual : TBase
+    internal sealed class CompiledSerializer<T> : CompiledSerializer,
+        IProtoSerializer<T>
     {
-        private readonly Compiler.ProtoSerializer<TActual> serializer;
-        private readonly Compiler.ProtoDeserializer<TBase, TActual> deserializer;
+        private readonly Compiler.ProtoSerializer<T> serializer;
+        private readonly Compiler.ProtoDeserializer<T> deserializer;
         public CompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
         {
             try
             {
-                serializer = Compiler.CompilerContext.BuildSerializer<TActual>(model.Scope, head, model);
+                serializer = Compiler.CompilerContext.BuildSerializer<T>(model.Scope, head, model);
             }
             catch(Exception ex)
             {
@@ -21,7 +21,7 @@ namespace ProtoBuf.Serializers
             }
             try
             {
-                deserializer = Compiler.CompilerContext.BuildDeserializer<TBase, TActual>(model.Scope, head, model);
+                deserializer = Compiler.CompilerContext.BuildDeserializer<T>(model.Scope, head, model);
             }
             catch (Exception ex)
             {
@@ -29,17 +29,17 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        TActual IProtoSerializer<TBase, TActual>.Deserialize(ProtoReader reader, ref ProtoReader.State state, TBase value)
+        T IProtoSerializer<T>.Read(ProtoReader reader, ref ProtoReader.State state, T value)
             => deserializer(reader, ref state, value);
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => deserializer(source, ref state, (TBase)value);
+            => deserializer(source, ref state, (T)value);
 
-        void IProtoSerializer<TBase, TActual>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, TActual value)
+        void IProtoSerializer<T>.Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => serializer(writer, ref state, value);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-            => serializer(dest, ref state, (TActual)value);
+            => serializer(dest, ref state, (T)value);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
@@ -48,15 +48,11 @@ namespace ProtoBuf.Serializers
             return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled
         }
 
-        bool IProtoTypeSerializer.CanCreateInstance()
-        {
-            return head.CanCreateInstance();
-        }
+        bool IProtoTypeSerializer.IsSubType => head.IsSubType;
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source)
-        {
-            return head.CreateInstance(source);
-        }
+        bool IProtoTypeSerializer.CanCreateInstance() => head.CanCreateInstance();
+
+        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => head.CreateInstance(source);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
@@ -67,7 +63,7 @@ namespace ProtoBuf.Serializers
         {
             if (!(head is CompiledSerializer result))
             {
-                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
+                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<>).MakeGenericType(head.BaseType),
                     new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
 
                 try
@@ -90,9 +86,9 @@ namespace ProtoBuf.Serializers
             this.head = head;
         }
 
-        bool IProtoSerializer.RequiresOldValue => head.RequiresOldValue;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => head.RequiresOldValue;
 
-        bool IProtoSerializer.ReturnsValue => head.ReturnsValue;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => head.ReturnsValue;
 
         public Type ExpectedType => head.ExpectedType;
 
@@ -100,24 +96,27 @@ namespace ProtoBuf.Serializers
 
         public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            head.EmitWrite(ctx, valueFrom);
-        }
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => head.EmitWrite(ctx, valueFrom);
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            head.EmitRead(ctx, valueFrom);
-        }
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => head.EmitWriteRoot(ctx, valueFrom);
+
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => head.EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => head.EmitReadRoot(ctx, valueFrom);
+
+        bool IProtoTypeSerializer.HasInheritance => head.HasInheritance;
 
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
-        {
-            head.EmitCallback(ctx, valueFrom, callbackType);
-        }
+            => head.EmitCallback(ctx, valueFrom, callbackType);
 
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
-        {
-            head.EmitCreateInstance(ctx);
-        }
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
+            => head.EmitCreateInstance(ctx, callNoteObject);
+
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance
+            => head.ShouldEmitCreateInstance;
     }
 }

@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
 
         private readonly object defaultValue;
 
-        public DefaultValueDecorator(object defaultValue, IProtoSerializer tail) : base(tail)
+        public DefaultValueDecorator(object defaultValue, IRuntimeProtoSerializerNode tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
             Type type = defaultValue.GetType();

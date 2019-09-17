@@ -2,30 +2,118 @@
 using ProtoBuf.Meta;
 using System.Reflection;
 using System.Linq;
+using ProtoBuf.Compiler;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class SubItemSerializer<TBase, TActual> : SubItemSerializer, IProtoTypeSerializer
-        where TActual : TBase
-    { 
-        bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
+
+    internal sealed class SubTypeSerializer<TParent, TChild> : SubItemSerializer
+        where TParent : class
+        where TChild : class, TParent
+    {
+        public override bool IsSubType => true;
+
+        public override Type ExpectedType => typeof(TChild);
+        public override Type BaseType => typeof(TParent);
+
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+            => ProtoWriter.WriteSubType<TChild>((TChild)value, dest, ref state);
+
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return ((IProtoTypeSerializer)Proxy.Serializer).HasCallbacks(callbackType);
+            var ss = (SubTypeState<TParent>)value;
+            ss.ReadSubType<TChild>(source, ref state);
+            return ss;
         }
 
-        bool IProtoTypeSerializer.CanCreateInstance()
+        public override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
-            return ((IProtoTypeSerializer)Proxy.Serializer).CanCreateInstance();
+            // => ProtoWriter.WriteSubType<TChild>(value, writer, ref state, this);
+            ctx.LoadValue(valueFrom);
+            ctx.LoadWriter(true);
+            ctx.LoadSelfAsService<IProtoSubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.WriteSubType), BindingFlags.Static | BindingFlags.Public)
+                .MakeGenericMethod(typeof(TChild)));
         }
+        public override void EmitRead(CompilerContext ctx, Local valueFrom)
+        {
+            // we expect the input here to be the SubTypeState<>
+            // => state.ReadSubType<TActual>(reader, ref state, serializer);
+            var type = typeof(SubTypeState<TParent>);
+            ctx.LoadAddress(valueFrom, type);
+            ctx.LoadReader(true);
+            ctx.LoadSelfAsService<IProtoSubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.EmitCall(type.GetMethod(nameof(SubTypeState<TParent>.ReadSubType)).MakeGenericMethod(typeof(TChild)));
+        }
+    }
+    internal class SubValueSerializer<T> : SubItemSerializer
+    {
+        public override bool IsSubType => false;
+
+        public override Type ExpectedType => typeof(T);
+
+
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+            => ProtoWriter.WriteSubItem<T>((T)value, dest, ref state);
+
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+            => source.ReadSubItem<T>(ref state, (T) value, null);
+
+        public override void EmitWrite(CompilerContext ctx, Local valueFrom)
+            => SubItemSerializer.EmitWriteSubItem<T>(ctx, valueFrom);
+
+        public override void EmitRead(CompilerContext ctx, Local valueFrom)
+        {
+            using(var tmp = ctx.GetLocalWithValue(typeof(T), valueFrom))
+            {   // value==null means something else to EmitReadSubItem, so: capture it
+                // and make sure we have a non-stack-based source
+                SubItemSerializer.EmitReadSubItem<T>(ctx, tmp);
+            }
+        }
+    }
+
+
+    internal abstract class SubItemSerializer : IProtoTypeSerializer
+    {
+        public abstract bool IsSubType { get; }
+        public abstract Type ExpectedType { get; }
+        public virtual Type BaseType => ExpectedType;
+        bool IProtoTypeSerializer.HasInheritance => false;
+
+        public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
+
+        public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
+
+        public abstract void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
+        public abstract void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitWrite(ctx, valueFrom);
+
+        bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
+            => Proxy.Serializer is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
+
+        bool IProtoTypeSerializer.CanCreateInstance()
+            => Proxy.Serializer is IProtoTypeSerializer pts && pts.CanCreateInstance();
+
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance
+            => Proxy.Serializer is IProtoTypeSerializer pts && pts.ShouldEmitCreateInstance;
+
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => true;
+
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             ((IProtoTypeSerializer)Proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
         }
 
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
-            ((IProtoTypeSerializer)Proxy.Serializer).EmitCreateInstance(ctx);
+            ((IProtoTypeSerializer)Proxy.Serializer).EmitCreateInstance(ctx, callNoteObject);
         }
 
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
@@ -38,49 +126,7 @@ namespace ProtoBuf.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }
 
-        Type IProtoSerializer.ExpectedType => typeof(TActual);
-        Type IProtoTypeSerializer.BaseType => typeof(TBase);
-
-        bool IProtoSerializer.RequiresOldValue => true;
-
-        bool IProtoSerializer.ReturnsValue => true;
-
-        private bool ApplyRecursionCheck => typeof(TBase) == typeof(TActual);
-
-        void IProtoSerializer.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-        {
-            ProtoWriter.WriteSubItem<TBase, TActual>((TActual)value, dest, ref state, null, ApplyRecursionCheck);
-        }
-
-        object IProtoSerializer.Read(ProtoReader source, ref ProtoReader.State state, object value)
-        {
-            return source.ReadSubItem<TBase, TActual>(ref state, (TBase)value, null);
-        }
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            ctx.LoadValue(valueFrom); // since we're consuming this first, we don't need to capture it
-            if (typeof(TBase) != typeof(TActual)) ctx.Cast(typeof(TActual));
-            SubItemSerializer.EmitWriteSubItem<TBase, TActual>(ctx, null, null, ApplyRecursionCheck);
-        }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            using (Compiler.Local val = ctx.GetLocalWithValue(typeof(TBase), valueFrom))
-            {
-                ctx.LoadReader(true);
-                ctx.LoadValue(val);
-                ctx.LoadNullRef();
-                ctx.EmitCall(ReadSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
-            }
-        }
-    }
-
-
-    internal abstract class SubItemSerializer
-    {
         public static void EmitWriteSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true)
-            => EmitWriteSubItem<T, T>(ctx, value, serializer, applyRecursionCheck);
-
-        public static void EmitWriteSubItem<TBase, TActual>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true)
         {
             ctx.LoadValue(value);
             ctx.LoadWriter(true);
@@ -93,26 +139,24 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }
             ctx.LoadValue(applyRecursionCheck);
-            ctx.EmitCall(WriteSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
+            ctx.EmitCall(s_WriteSubItem.MakeGenericMethod(typeof(T)));
         }
 
         public static void EmitReadSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null)
-            => EmitReadSubItem<T, T>(ctx, value, serializer);
-        public static void EmitReadSubItem<TBase, TActual>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null)
         {
             // reader.ReadSubItem<TBase, TActual>(ref state, value, serializer);
             ctx.LoadReader(true);
             if (value == null)
             {
-                if (TypeHelper<TBase>.IsObjectType)
+                if (TypeHelper<T>.IsObjectType)
                 {
                     ctx.LoadNullRef();
                 }
                 else
                 {
-                    using (var val = new Compiler.Local(ctx, typeof(TBase)))
+                    using (var val = new Compiler.Local(ctx, typeof(T)))
                     {
-                        ctx.InitLocal(typeof(TBase), val);
+                        ctx.InitLocal(typeof(T), val);
                         ctx.LoadValue(val);
                     }
                 }
@@ -129,30 +173,37 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }
-            ctx.EmitCall(ReadSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
+            ctx.EmitCall(s_ReadSubItem.MakeGenericMethod(typeof(T)));
         }
 
-        public static readonly MethodInfo WriteSubItem =
+        private static readonly MethodInfo s_WriteSubItem =
             (from method in typeof(ProtoWriter).GetMethods(BindingFlags.Static | BindingFlags.Public)
              where method.Name == nameof(ProtoWriter.WriteSubItem)
-                && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 2
+                && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
                 && method.GetParameters().Length == 5
              select method).Single();
 
-        public static readonly MethodInfo ReadSubItem =
+        private static readonly MethodInfo s_ReadSubItem =
             (from method in typeof(ProtoReader).GetMethods(BindingFlags.Instance | BindingFlags.Public)
              where method.Name == nameof(ProtoReader.ReadSubItem)
-                && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 2
+                && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
                 && method.GetParameters().Length == 3
              select method).Single();
 
         protected ISerializerProxy Proxy { get; private set; }
 
-        internal static IProtoSerializer Create(Type baseType, Type actualType, ISerializerProxy proxy)
+
+        internal static IRuntimeProtoSerializerNode Create(Type type, ISerializerProxy proxy)
         {
-            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubItemSerializer<,>).MakeGenericType(baseType, actualType));
+            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubValueSerializer<>).MakeGenericType(type));
             obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
-            return (IProtoSerializer)obj;
+            return (IRuntimeProtoSerializerNode)obj;
+        }
+        internal static IRuntimeProtoSerializerNode Create(Type actualType, ISerializerProxy proxy, Type parentType)
+        {
+            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubTypeSerializer<,>).MakeGenericType(parentType, actualType));
+            obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            return (IRuntimeProtoSerializerNode)obj;
         }
     }
 }

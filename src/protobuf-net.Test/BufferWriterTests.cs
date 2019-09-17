@@ -51,12 +51,15 @@ namespace ProtoBuf.Tests
         class Foo
         {
             private Foo() { }
-            public static IProtoSerializer<Foo, Foo> Serializer { get; } = new FooSerializer();
-            sealed class FooSerializer : IProtoSerializer<Foo, Foo>
-            {
-                public Foo Deserialize(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
 
-                public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
+            public static IProtoSerializer<Foo> Serializer => FooSerializer.Instance;
+            sealed class FooSerializer : IProtoSerializer<Foo>
+            {
+                public static FooSerializer Instance { get; } = new FooSerializer();
+                private FooSerializer() { }
+                public Foo Read(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
+
+                public void Write(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
             }
         }
 
@@ -103,11 +106,11 @@ namespace ProtoBuf.Tests
             public A Inner { get; set; }
         }
 
-        class ASerializer : IProtoSerializer<A, A>
+        class ASerializer : IProtoSerializer<A>
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }
-            public A Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+            public A Read(ProtoReader reader, ref ProtoReader.State state, A value)
             {
                 int fieldHeader;
                 if (value == null) value = new A();
@@ -129,7 +132,7 @@ namespace ProtoBuf.Tests
                 return value;
             }
 
-            public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
+            public void Write(ProtoWriter writer, ref ProtoWriter.State state, A value)
             {
 #pragma warning disable CS0618
                 Log?.WriteLine($"Writing to {writer.GetType().Name}");
@@ -176,7 +179,7 @@ namespace ProtoBuf.Tests
                 {
                     A obj = CreateModel(depth);
                     var ser = new ASerializer(Log);
-                    ser.Serialize(writer, ref state, obj);
+                    ser.Write(writer, ref state, obj);
                     writer.Close(ref state);
                 }
             }
@@ -196,7 +199,7 @@ namespace ProtoBuf.Tests
                 {
                     A obj = CreateModel(depth);
                     var ser = new ASerializer(Log);
-                    ser.Serialize(writer, ref state, obj);
+                    ser.Write(writer, ref state, obj);
                     writer.Close(ref state);
                 }
             }

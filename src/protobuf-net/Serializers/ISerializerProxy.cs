@@ -2,6 +2,6 @@
 {
     interface ISerializerProxy
     {
-        IProtoSerializer Serializer { get; }
+        IRuntimeProtoSerializerNode Serializer { get; }
     }
 }

@@ -43,7 +43,7 @@ namespace ProtoBuf.Serializers
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         protected readonly WireType packedWireType;
 
-        internal static ListDecorator Create(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        internal static ListDecorator Create(Type declaredType, Type concreteType, IRuntimeProtoSerializerNode tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
         {
             if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(declaredType,
                 out MethodInfo builderFactory,
@@ -61,7 +61,7 @@ namespace ProtoBuf.Serializers
             return new ListDecorator(declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull);
         }
 
-        protected ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        protected ListDecorator(Type declaredType, Type concreteType, IRuntimeProtoSerializerNode tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
             : base(tail)
         {
             if (returnList) options |= OPTIONS_ReturnList;
@@ -175,7 +175,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, WireType packedWireType, bool castListForAdd)
+        internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IRuntimeProtoSerializerNode tail, MethodInfo add, WireType packedWireType, bool castListForAdd)
         {
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
@@ -231,7 +231,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, bool castListForAdd)
+        private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IRuntimeProtoSerializerNode tail, MethodInfo add, bool castListForAdd)
         {
             ctx.LoadAddress(list, list.Type); // needs to be the reference in case the list is value-type (static-call)
             if (castListForAdd) ctx.Cast(add.DeclaringType);

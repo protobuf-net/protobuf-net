@@ -112,7 +112,7 @@ namespace ProtoBuf
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         public static TimeSpan ReadDuration(ProtoReader source, ref ProtoReader.State state)
-            => source.ReadSubItem<Duration>(ref state, WellKnownSerializer.Instance);
+            => source.ReadSubItem<Duration>(ref state, serializer: WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
@@ -148,7 +148,7 @@ namespace ProtoBuf
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            return source.ReadSubItem<Timestamp>(ref state, WellKnownSerializer.Instance);
+            return source.ReadSubItem<Timestamp>(ref state, serializer: WellKnownSerializer.Instance);
         }
 
         /// <summary>
@@ -260,7 +260,7 @@ namespace ProtoBuf
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    var scaled = source.ReadSubItem<ScaledTicks>(ref state, WellKnownSerializer.Instance);
+                    var scaled = source.ReadSubItem<ScaledTicks>(ref state, serializer: WellKnownSerializer.Instance);
                     kind = scaled.Kind;
                     return scaled.ToTicks();
                 case WireType.Fixed64:
@@ -286,7 +286,7 @@ namespace ProtoBuf
         /// Parses a decimal from a protobuf stream
         /// </summary>
         public static decimal ReadDecimal(ProtoReader reader, ref ProtoReader.State state)
-            => reader.ReadSubItem<decimal>(ref state, WellKnownSerializer.Instance);
+            => reader.ReadSubItem<decimal>(ref state, serializer: WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
@@ -335,7 +335,7 @@ namespace ProtoBuf
         /// Parses a Guid from a protobuf stream
         /// </summary>
         public static Guid ReadGuid(ProtoReader source, ref ProtoReader.State state)
-            => source.ReadSubItem<Guid>(ref state, WellKnownSerializer.Instance);
+            => source.ReadSubItem<Guid>(ref state, serializer: WellKnownSerializer.Instance);
 
         private const int
             FieldExistingObjectKey = 1,

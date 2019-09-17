@@ -2,15 +2,15 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal class UInt16Serializer : IProtoSerializer
+    internal class UInt16Serializer : IRuntimeProtoSerializerNode
     {
         private static readonly Type expectedType = typeof(ushort);
 
         public virtual Type ExpectedType => expectedType;
 
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public virtual object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
@@ -23,11 +23,11 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteUInt16((ushort)value, dest, ref state);
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteUInt16", valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadUInt16", typeof(ushort));
         }

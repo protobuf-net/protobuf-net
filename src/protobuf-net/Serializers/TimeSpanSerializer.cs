@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class TimeSpanSerializer : IProtoSerializer
+    internal sealed class TimeSpanSerializer : IRuntimeProtoSerializerNode
     {
         private static readonly Type expectedType = typeof(TimeSpan);
         private readonly bool wellKnown;
@@ -12,9 +12,9 @@ namespace ProtoBuf.Serializers
         }
         public Type ExpectedType => expectedType;
 
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
@@ -41,12 +41,12 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitWrite<BclHelpers>(
                 wellKnown ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
             ctx.EmitBasicRead<BclHelpers>(

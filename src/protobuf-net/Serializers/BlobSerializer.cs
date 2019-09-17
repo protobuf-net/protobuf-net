@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class BlobSerializer : IProtoSerializer
+    internal sealed class BlobSerializer : IRuntimeProtoSerializerNode
     {
         public Type ExpectedType { get { return expectedType; } }
 
@@ -25,14 +25,14 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteBytes((byte[])value, dest, ref state);
         }
 
-        bool IProtoSerializer.RequiresOldValue { get { return !overwriteList; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return !overwriteList; } }
+        bool IRuntimeProtoSerializerNode.ReturnsValue { get { return true; } }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteBytes", valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (overwriteList)
             {

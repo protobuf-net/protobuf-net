@@ -59,17 +59,17 @@ namespace ProtoBuf.Meta
 
         private readonly DataFormat dataFormat;
 
-        private IProtoSerializer serializer;
+        private IRuntimeProtoSerializerNode serializer;
 
-        internal IProtoSerializer Serializer => serializer ?? (serializer = BuildSerializer());
+        internal IRuntimeProtoSerializerNode GetSerializer(Type parentType) => serializer ?? (serializer = BuildSerializer(parentType));
 
-        private IProtoSerializer BuildSerializer()
+        private IRuntimeProtoSerializerNode BuildSerializer(Type parentType)
         {
             // note the caller here is MetaType.BuildSerializer, which already has the sync-lock
             WireType wireType = WireType.String;
             if(dataFormat == DataFormat.Group) wireType = WireType.StartGroup; // only one exception
             
-            IProtoSerializer ser = SubItemSerializer.Create(MetaType.GetRootType(derivedType).Type, derivedType.Type, derivedType);
+            IRuntimeProtoSerializerNode ser = SubItemSerializer.Create(derivedType.Type, derivedType, parentType);
             return new TagDecorator(fieldNumber, wireType, false, ser);
         }
     }

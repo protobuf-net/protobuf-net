@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class StringSerializer : IProtoSerializer
+    internal sealed class StringSerializer : IRuntimeProtoSerializerNode
     {
         private static readonly Type expectedType = typeof(string);
 
@@ -12,9 +12,9 @@ namespace ProtoBuf.Serializers
         {
             ProtoWriter.WriteString((string)value, dest, ref state);
         }
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
@@ -22,11 +22,11 @@ namespace ProtoBuf.Serializers
             return source.ReadString(ref state);
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteString", valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadString", ExpectedType);
         }

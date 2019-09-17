@@ -20,7 +20,6 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(IExtensible))]
 [assembly: TypeForwardedTo(typeof(IExtension))]
 [assembly: TypeForwardedTo(typeof(IExtensionResettable))]
-[assembly: TypeForwardedTo(typeof(IProtoSerializer<,>))]
 [assembly: TypeForwardedTo(typeof(TypeFormatEventArgs))]
 [assembly: TypeForwardedTo(typeof(TypeFormatEventHandler))]
 [assembly: TypeForwardedTo(typeof(ProtoTypeCode))]

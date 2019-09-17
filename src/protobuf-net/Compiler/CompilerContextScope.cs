@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace ProtoBuf.Compiler
 {
@@ -10,16 +11,22 @@ namespace ProtoBuf.Compiler
     {
         internal static CompilerContextScope CreateInProcess()
         {
-            return new CompilerContextScope(null);
+            return new CompilerContextScope(null, false, null);
         }
 
-        internal static CompilerContextScope CreateForModule(ModuleBuilder module)
-            => new CompilerContextScope(module);
+        internal static CompilerContextScope CreateForModule(ModuleBuilder module, bool isFullEmit, string assemblyName)
+            => new CompilerContextScope(module, isFullEmit, assemblyName);
 
-        private CompilerContextScope(ModuleBuilder module)
+        private CompilerContextScope(ModuleBuilder module, bool isFullEmit, string assemblyName)
         {
             _module = module;
+            IsFullEmit = isFullEmit;
+            AssemblyName = assemblyName;
         }
+
+        internal string AssemblyName { get; }
+
+        public bool IsFullEmit { get; }
 
         private Dictionary<object, FieldInfo> _additionalSerializers;
         private ModuleBuilder _module;
@@ -62,17 +69,32 @@ namespace ProtoBuf.Compiler
                 il.Emit(OpCodes.Stsfld, instance);
                 il.Emit(OpCodes.Ret);
 
-                var iType = typeof(IProtoSerializer<T, T>);
+                var iType = typeof(IProtoSerializer<T>);
                 type.AddInterfaceImplementation(iType);
-                il = Implement(type, iType, nameof(IProtoSerializer<T, T>.Serialize));
-                var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
-                serialize(key, ctx);
-                ctx.Return();
+                il = Implement(type, iType, nameof(IProtoSerializer<T>.Write));
+                if (serialize == null)
+                {
+                    il.ThrowException(typeof(NotImplementedException));
+                }
+                else
+                {
+                    var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
+                    serialize(key, ctx);
+                    ctx.Return();
+                }
 
-                il = Implement(type, iType, nameof(IProtoSerializer<T, T>.Deserialize));
-                ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
-                deserialize(key, ctx);
-                ctx.Return();
+                il = Implement(type, iType, nameof(IProtoSerializer<T>.Read));
+                if (deserialize == null)
+                {
+                    il.ThrowException(typeof(NotImplementedException));
+                }
+                else
+                {
+                    var ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
+                    deserialize(key, ctx);
+                    ctx.Return();
+                }
+
 
                 Type finalType = type.CreateTypeInfo();
                 var result = finalType.GetField(InstanceFieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
@@ -82,17 +104,45 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name)
+        internal static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name, bool @explicit = true)
         {
             var decl = interfaceType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
             if (decl == null) throw new ArgumentException(nameof(name));
             var args = decl.GetParameters();
-            var method = type.DefineMethod(name, (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final,
+            string implName = name;
+            var attribs = (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final;
+            if (@explicit)
+            {
+                implName = CSName(interfaceType) + "." + name;
+                attribs |= MethodAttributes.HideBySig;
+                attribs &= ~MethodAttributes.Public;
+            }
+            var method = type.DefineMethod(implName, attribs,
                 decl.ReturnType, Array.ConvertAll(args, x => x.ParameterType));
             for (int i = 0; i < args.Length; i++)
                 method.DefineParameter(i + 1, args[i].Attributes, args[i].Name);
             type.DefineMethodOverride(method, decl);
             return method.GetILGenerator();
+        }
+
+        internal static string CSName(Type type)
+        {
+            if (type == null) return null;
+            if (!type.IsGenericType) return type.Name;
+
+            var withTicks = type.Name;
+            var index = withTicks.IndexOf('`');
+            if (index < 0) return type.Name;
+
+            var sb = new StringBuilder();
+            sb.Append(type.Name.Substring(0, index)).Append('<');
+            var args = type.GetGenericArguments();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (i != 0) sb.Append(',');
+                sb.Append(CSName(args[i]));
+            }
+            return sb.Append('>').ToString();
         }
     }
 }

@@ -6,29 +6,16 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
     {
-        public bool HasCallbacks(TypeModel.CallbackType callbackType)
-        {
-            return Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
-        }
+        bool IProtoTypeSerializer.IsSubType => Tail is IProtoTypeSerializer pts && pts.IsSubType;
+        public bool HasCallbacks(TypeModel.CallbackType callbackType) => Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
 
-        public bool CanCreateInstance()
-        {
-            return Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
-        }
+        public bool CanCreateInstance() => Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
 
-        public object CreateInstance(ProtoReader source)
-        {
-            return ((IProtoTypeSerializer)Tail).CreateInstance(source);
-        }
+        public object CreateInstance(ProtoReader source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
-        {
-            if (Tail is IProtoTypeSerializer pts)
-            {
-                pts.Callback(value, callbackType, context);
-            }
-        }
-
+            => (Tail as IProtoTypeSerializer)?.Callback(value, callbackType, context);
+            
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             // we only expect this to be invoked if HasCallbacks returned true, so implicitly Tail
@@ -36,15 +23,17 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)Tail).EmitCallback(ctx, valueFrom, callbackType);
         }
 
-        public void EmitCreateInstance(Compiler.CompilerContext ctx)
+        public void EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
-            ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx);
+            ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx, callNoteObject);
         }
+
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance => Tail is IProtoTypeSerializer pts && pts.ShouldEmitCreateInstance;
 
         public override Type ExpectedType => Tail.ExpectedType;
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 
-        public TagDecorator(int fieldNumber, WireType wireType, bool strict, IProtoSerializer tail)
+        public TagDecorator(int fieldNumber, WireType wireType, bool strict, IRuntimeProtoSerializerNode tail)
             : base(tail)
         {
             this.fieldNumber = fieldNumber;
@@ -75,6 +64,14 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
             Tail.Write(dest, ref state, value);
         }
+
+        bool IProtoTypeSerializer.HasInheritance => false;
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => EmitWrite(ctx, valueFrom);
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

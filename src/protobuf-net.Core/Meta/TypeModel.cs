@@ -1207,25 +1207,47 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
-            where TActual : TBase
-            => this as IProtoSerializer<TBase, TActual>;
+        protected internal virtual IProtoSerializer<T> GetSerializer<T>()
+            => this as IProtoSerializer<T>;
+
+        protected internal virtual IProtoFactory<T> GetFactory<T>()
+            => this as IProtoFactory<T>;
+
+        protected internal virtual IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
+            => this as IProtoSubTypeSerializer<T>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IProtoSerializer<TBase, TActual> NoSerializer<TBase, TActual>(TypeModel model)
-            where TActual : TBase
+        private static T NoSerializer<T>(TypeModel model) where T : class
         {
-            string message = typeof(TBase) == typeof(TActual)
-                ? $"No sub-item serializer available for type '{typeof(TBase).Name}'"
-                : $"No sub-item serializer available for type '{typeof(TActual).Name}' : '{typeof(TBase).Name}'";
-            string suffix = model is object ? "" : "; a model instance is required";
-
-            throw new InvalidOperationException(message + suffix);
+            throw new InvalidOperationException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
         }
 
-        internal static IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>(TypeModel model)
-            where TActual : TBase
-           => model?.GetSerializer<TBase, TActual>() ?? WellKnownSerializer.Instance as IProtoSerializer<TBase, TActual> ?? NoSerializer<TBase, TActual>(model);
+        internal static T CreateInstance<T>(ISerializationContext context = null, IProtoFactory<T> factory = null)
+        {
+            if (factory == null) factory = context?.Model?.GetFactory<T>();
+            if (factory != null)
+            {
+                var val = factory.Create(context);
+                if (TypeHelper<T>.IsObjectType)
+                {
+                    if (val != null) return val;
+                }
+                else
+                {
+                    return val;
+                }
+            }
+
+            return Activator.CreateInstance<T>();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
+           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<IProtoSerializer<T>>(model);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
+           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSubTypeSerializer<T> ?? NoSerializer<IProtoSubTypeSerializer<T>>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.
@@ -1285,7 +1307,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// </summary>
-        protected abstract int GetKeyImpl(Type type);
+        protected virtual int GetKeyImpl(Type type) => throw new NotSupportedException(nameof(GetKeyImpl) + " is not supported");
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
@@ -1294,7 +1316,8 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Write state</param>
-        protected internal abstract void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value);
+        protected internal virtual void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
+            => throw new NotSupportedException(nameof(Serialize) + " is not supported");
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -1306,13 +1329,8 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal abstract object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value);
-
-        //internal ProtoSerializer Create(IProtoSerializer head)
-        //{
-        //    return new RuntimeSerializer(head, this);
-        //}
-        //internal ProtoSerializer Compile
+        protected internal virtual object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
+            => throw new NotSupportedException(nameof(DeserializeCore) + " is not supported");
 
         /// <summary>
         /// Indicates the type of callback to be used
@@ -1417,6 +1435,35 @@ namespace ProtoBuf.Meta
                 throw new InvalidOperationException("Unexpected sub-type: " + actual.FullName);
             }
         }
+
+        /// <summary>
+        /// Indicates that while an inheritance tree exists, the exact type encountered was not
+        /// specified in that hierarchy and cannot be processed.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ThrowUnexpectedSubtype<T>(T value) where T : class
+        {
+            if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T), value.GetType());
+        }
+
+        /// <summary>
+        /// Indicates that while an inheritance tree exists, the exact type encountered was not
+        /// specified in that hierarchy and cannot be processed.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ThrowUnexpectedSubtype<T, TConstruct>(T value)
+            where T : class
+            where TConstruct : class, T
+        {
+            if (IsSubType<T>(value) && value.GetType() != typeof(TConstruct))
+                ThrowUnexpectedSubtype(typeof(T), value.GetType());
+        }
+
+        /// <summary>
+        /// Returns whether the object provided is a subtype of the expected type
+        /// </summary>
+        public static bool IsSubType<T>(T value) where T : class
+            => value != null && typeof(T) != value.GetType();
 
         /// <summary>
         /// Indicates that the given type was not expected, and cannot be processed.
