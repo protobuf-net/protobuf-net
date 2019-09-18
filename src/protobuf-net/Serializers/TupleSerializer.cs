@@ -74,13 +74,13 @@ namespace ProtoBuf.Serializers
             if (members[index] is PropertyInfo prop)
             {
                 if (obj == null)
-                    return Helpers.IsValueType(prop.PropertyType) ? Activator.CreateInstance(prop.PropertyType) : null;
+                    return Helpers.IsValueType(prop.PropertyType) ? Activator.CreateInstance(prop.PropertyType, nonPublic: true) : null;
                 return prop.GetValue(obj, null);
             }
             else if (members[index] is FieldInfo field)
             {
                 if (obj == null)
-                    return Helpers.IsValueType(field.FieldType) ? Activator.CreateInstance(field.FieldType) : null;
+                    return Helpers.IsValueType(field.FieldType) ? Activator.CreateInstance(field.FieldType, nonPublic: true) : null;
                 return field.GetValue(obj);
             }
             else

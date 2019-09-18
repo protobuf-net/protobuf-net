@@ -21,7 +21,7 @@ namespace ProtoBuf.Compiler
             this.Index = index;
         }
     }
-    internal sealed class CompilerContext
+    internal sealed class CompilerContext : IDisposable
     {
         public TypeModel Model { get; }
 
@@ -68,7 +68,7 @@ namespace ProtoBuf.Compiler
             Type type = head.ExpectedType;
             try
             {
-                CompilerContext ctx = new CompilerContext(scope, type, true, true, model, typeof(TActual), null);
+                using CompilerContext ctx = new CompilerContext(scope, type, true, true, model, typeof(TActual), null);
                 ctx.WriteNullCheckedTail(type, head, ctx.InputValue);
                 ctx.Emit(OpCodes.Ret);
                 return (ProtoSerializer<TActual>)ctx.method.CreateDelegate(
@@ -84,7 +84,7 @@ namespace ProtoBuf.Compiler
         /*public static ProtoCallback BuildCallback(IProtoTypeSerializer head)
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(type, true, true);
+            using CompilerContext ctx = new CompilerContext(type, true, true);
             using (Local typedVal = new Local(ctx, type))
             {
                 ctx.LoadValue(Local.InputValue);
@@ -114,7 +114,7 @@ namespace ProtoBuf.Compiler
         public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(T), typeof(T));
+            using CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(T), typeof(T));
 
             using (Local typedVal = new Local(ctx, type))
             {
@@ -372,7 +372,10 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private readonly List<LocalBuilder> locals = new List<LocalBuilder>();
+        private readonly PooledList<LocalBuilder> locals = PooledList<LocalBuilder>.Create();
+
+        void IDisposable.Dispose() => locals.Dispose();
+
         internal LocalBuilder GetFromPool(Type type)
         {
             int count = locals.Count;

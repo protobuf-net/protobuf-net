@@ -481,7 +481,7 @@ namespace ProtoBuf.Serializers
             {
                 int field = source.FieldNumber;
                 object origValue = value;
-                if (value == null) value = Activator.CreateInstance(concreteType);
+                if (value == null) value = Activator.CreateInstance(concreteType, nonPublic: true);
                 bool isList = IsList && !SuppressIList;
                 if (packedWireType != WireType.None && source.WireType == WireType.String)
                 {

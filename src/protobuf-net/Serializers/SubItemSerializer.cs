@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System.Reflection;
 using System.Linq;
 using ProtoBuf.Compiler;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Serializers
 {
@@ -64,11 +65,9 @@ namespace ProtoBuf.Serializers
 
         public override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            using(var tmp = ctx.GetLocalWithValue(typeof(T), valueFrom))
-            {   // value==null means something else to EmitReadSubItem, so: capture it
-                // and make sure we have a non-stack-based source
-                SubItemSerializer.EmitReadSubItem<T>(ctx, tmp);
-            }
+            using var tmp = ctx.GetLocalWithValue(typeof(T), valueFrom);
+            // and make sure we have a non-stack-based source
+            SubItemSerializer.EmitReadSubItem<T>(ctx, tmp);
         }
     }
 
@@ -155,11 +154,9 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    using (var val = new Compiler.Local(ctx, typeof(T)))
-                    {
-                        ctx.InitLocal(typeof(T), val);
-                        ctx.LoadValue(val);
-                    }
+                    using var val = new Compiler.Local(ctx, typeof(T));
+                    ctx.InitLocal(typeof(T), val);
+                    ctx.LoadValue(val);
                 }
             }
             else
@@ -196,13 +193,13 @@ namespace ProtoBuf.Serializers
 
         internal static IRuntimeProtoSerializerNode Create(Type type, ISerializerProxy proxy)
         {
-            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubValueSerializer<>).MakeGenericType(type));
+            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubValueSerializer<>).MakeGenericType(type), nonPublic: true);
             obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
             return (IRuntimeProtoSerializerNode)obj;
         }
         internal static IRuntimeProtoSerializerNode Create(Type actualType, ISerializerProxy proxy, Type parentType)
         {
-            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubTypeSerializer<,>).MakeGenericType(parentType, actualType));
+            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubTypeSerializer<,>).MakeGenericType(parentType, actualType), nonPublic: true);
             obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
             return (IRuntimeProtoSerializerNode)obj;
         }

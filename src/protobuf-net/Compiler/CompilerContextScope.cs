@@ -78,7 +78,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
+                    using var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
                     serialize(key, ctx);
                     ctx.Return();
                 }
@@ -90,7 +90,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    var ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
+                    using var ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
                     deserialize(key, ctx);
                     ctx.Return();
                 }

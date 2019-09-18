@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.ComponentModel;
 using System.Buffers;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf
 {

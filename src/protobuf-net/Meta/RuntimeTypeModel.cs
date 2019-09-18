@@ -860,7 +860,7 @@ namespace ProtoBuf.Meta
             IRuntimeProtoSerializerNode ser = ((MetaType)types[key]).Serializer;
             if (value == null && Helpers.IsValueType(ser.ExpectedType))
             {
-                if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType);
+                if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType, nonPublic: true);
                 return ser.Read(source, ref state, value);
             }
             else
@@ -1174,7 +1174,7 @@ namespace ProtoBuf.Meta
                 Helpers.DebugWriteLine("Wrote dll:" + path);
 #endif
             }
-            return (TypeModel)Activator.CreateInstance(finalType);
+            return (TypeModel)Activator.CreateInstance(finalType, nonPublic: true);
         }
 
         private void WriteConstructorsAndOverrides(TypeBuilder type)
@@ -1206,23 +1206,27 @@ namespace ProtoBuf.Meta
                 type.AddInterfaceImplementation(serType);
 
                 var il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Read));
-                var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoSerializer<string>.Read));
-                if (serializer.HasInheritance)
+                using (var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoSerializer<string>.Read)))
                 {
-                    serializer.EmitReadRoot(ctx, ctx.InputValue);
+                    if (serializer.HasInheritance)
+                    {
+                        serializer.EmitReadRoot(ctx, ctx.InputValue);
+                    }
+                    else
+                    {
+                        serializer.EmitRead(ctx, ctx.InputValue);
+                        ctx.LoadValue(ctx.InputValue);
+                    }
+                    ctx.Return();
                 }
-                else
-                {
-                    serializer.EmitRead(ctx, ctx.InputValue);
-                    ctx.LoadValue(ctx.InputValue);
-                }
-                ctx.Return();
 
                 il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
-                ctx = new CompilerContext(scope, il, false, true, this, runtimeType, nameof(IProtoSerializer<string>.Write));
-                if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
-                else serializer.EmitWrite(ctx, ctx.InputValue);
-                ctx.Return();
+                using (var ctx = new CompilerContext(scope, il, false, true, this, runtimeType, nameof(IProtoSerializer<string>.Write)))
+                {
+                    if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
+                    else serializer.EmitWrite(ctx, ctx.InputValue);
+                    ctx.Return();
+                }
 
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)
@@ -1231,17 +1235,21 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
-                    ctx = new CompilerContext(scope, il, false, true, this,
-                         runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
-                    serializer.EmitWrite(ctx, ctx.InputValue);
-                    ctx.Return();
+                    using (var ctx = new CompilerContext(scope, il, false, true, this,
+                         runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType)))
+                    {
+                        serializer.EmitWrite(ctx, ctx.InputValue);
+                        ctx.Return();
+                    }
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
-                    ctx = new CompilerContext(scope, il, false, false, this,
-                         runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
-                    serializer.EmitRead(ctx, ctx.InputValue);
-                    // note that EmitRead will unwrap the T for us on the stack
-                    ctx.Return();
+                    using (var ctx = new CompilerContext(scope, il, false, false, this,
+                         runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
+                    {
+                        serializer.EmitRead(ctx, ctx.InputValue);
+                        // note that EmitRead will unwrap the T for us on the stack
+                        ctx.Return();
+                    }
                 }
 
                 // if we're constructor skipping, provide a factory for that
@@ -1251,36 +1259,12 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
-                    ctx = new CompilerContext(scope, il, false, false, this,
+                    using var ctx = new CompilerContext(scope, il, false, false, this,
                          typeof(ISerializationContext), nameof(IProtoFactory<string>.Create));
                     serializer.EmitCreateInstance(ctx, false);
                     ctx.Return();
                 }
             }
-        }
-
-        private static void StaticCallReadWrite(TypeBuilder type, MethodInfo declaration, MethodInfo implementation, string namePrefix)
-        {
-            var name = namePrefix + declaration.Name;
-            var parameters = declaration.GetParameters();
-            Type[] pTypes = new Type[parameters.Length];
-            for (int i = 0; i < pTypes.Length; i++)
-                pTypes[i] = parameters[i].ParameterType;
-            var method = type.DefineMethod(name,
-                (declaration.Attributes | MethodAttributes.Final | MethodAttributes.Private) & ~(MethodAttributes.Abstract | MethodAttributes.Public),
-                declaration.CallingConvention, declaration.ReturnType, pTypes);
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                method.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
-            }
-            type.DefineMethodOverride(method, declaration);
-            var il = method.GetILGenerator();
-            // drop "this" on the floor
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Ldarg_3);
-            il.EmitCall(OpCodes.Call, implementation, null);
-            il.Emit(OpCodes.Ret);
         }
 
         private TypeBuilder WriteBasicTypeModel(CompilerOptions options, string typeName, ModuleBuilder module)

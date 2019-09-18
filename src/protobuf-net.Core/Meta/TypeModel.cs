@@ -916,7 +916,7 @@ namespace ProtoBuf.Meta
             object nextItem = null;
             IList list = value as IList;
             object[] args = isList ? null : new object[1];
-            var arraySurrogate = listType.IsArray ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType)) : null;
+            var arraySurrogate = listType.IsArray ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), nonPublic: true) : null;
 
             while (TryDeserializeAuxiliaryType(reader, ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
             {
@@ -1014,7 +1014,7 @@ namespace ProtoBuf.Meta
 #pragma warning restore IDE0059
                 }
             }
-            return Activator.CreateInstance(concreteListType);
+            return Activator.CreateInstance(concreteListType, nonPublic: true);
         }
 
         internal bool TryDeserializeAuxiliaryType(ProtoReader reader, ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
@@ -1135,7 +1135,7 @@ namespace ProtoBuf.Meta
             {
                 if (type != typeof(string))
                 {
-                    value = Activator.CreateInstance(type);
+                    value = Activator.CreateInstance(type, nonPublic: true);
                 }
             }
             return found;

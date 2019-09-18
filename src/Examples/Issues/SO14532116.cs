@@ -67,7 +67,7 @@ namespace Examples.Issues
             {
                 obj = Foo.Create();
             } else {
-                obj = Activator.CreateInstance(type);
+                obj = Activator.CreateInstance(type, nonPublic: true);
             }
             Interlocked.Increment(ref count);
             return obj;

@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             TDictionary typed = (AppendToCollection ? ((TDictionary)value) : null)
-                ?? (TDictionary)Activator.CreateInstance(concreteType);
+                ?? (TDictionary)Activator.CreateInstance(concreteType, nonPublic: true);
             do
             {
                 var pair = new KeyValuePair<TKey, TValue>(DefaultKey, DefaultValue);

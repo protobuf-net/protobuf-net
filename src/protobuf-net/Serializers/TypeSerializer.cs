@@ -13,8 +13,8 @@ namespace ProtoBuf.Serializers
         public static IProtoTypeSerializer Create(Type forType, int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, Type rootType)
         {
             var obj = (TypeSerializer)(rootType != null
-                ? Activator.CreateInstance(typeof(InheritanceTypeSerializer<,>).MakeGenericType(rootType, forType))
-                : Activator.CreateInstance(typeof(TypeSerializer<>).MakeGenericType(forType)));
+                ? Activator.CreateInstance(typeof(InheritanceTypeSerializer<,>).MakeGenericType(rootType, forType), nonPublic: true)
+                : Activator.CreateInstance(typeof(TypeSerializer<>).MakeGenericType(forType), nonPublic: true));
             
             obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, callbacks, constructType, factory);
             return (IProtoTypeSerializer)obj;

@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
 using System.Runtime.CompilerServices;
 

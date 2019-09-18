@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf
@@ -1063,15 +1064,13 @@ namespace ProtoBuf
         {
             if (writer.WireType != WireType.String) throw new InvalidOperationException("Invalid wire-type: " + writer.WireType);
             if (elementCount < 0) throw new ArgumentOutOfRangeException(nameof(elementCount));
-            ulong bytes;
-            switch (wireType)
+            var bytes = wireType switch
             {
                 // use long in case very large arrays are enabled
-                case WireType.Fixed32: bytes = ((ulong)elementCount) << 2; break; // x4
-                case WireType.Fixed64: bytes = ((ulong)elementCount) << 3; break; // x8
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(wireType), "Invalid wire-type: " + wireType);
-            }
+                WireType.Fixed32 => ((ulong)elementCount) << 2, // x4
+                WireType.Fixed64 => ((ulong)elementCount) << 3, // x8
+                _ => throw new ArgumentOutOfRangeException(nameof(wireType), "Invalid wire-type: " + wireType),
+            };
             int prefixLength = writer.ImplWriteVarint64(ref state, bytes);
             writer.AdvanceAndReset(prefixLength);
         }
@@ -1175,10 +1174,5 @@ namespace ProtoBuf
                 throw;
             }
         }
-    }
-    internal static class TypeHelper<T>
-    {
-        public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));
-        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx);
-    }
+    }    
 }
