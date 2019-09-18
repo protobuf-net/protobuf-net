@@ -1568,33 +1568,33 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Char:
                     case ProtoTypeCode.UInt16:
                     case ProtoTypeCode.UInt32:
-                        switch (dataFormat)
+                        return dataFormat switch
                         {
-                            case DataFormat.FixedSize: return "fixed32";
-                            default: return "uint32";
-                        }
+                            DataFormat.FixedSize => "fixed32",
+                            _ => "uint32",
+                        };
                     case ProtoTypeCode.SByte:
                     case ProtoTypeCode.Int16:
                     case ProtoTypeCode.Int32:
-                        switch (dataFormat)
+                        return dataFormat switch
                         {
-                            case DataFormat.ZigZag: return "sint32";
-                            case DataFormat.FixedSize: return "sfixed32";
-                            default: return "int32";
-                        }
+                            DataFormat.ZigZag => "sint32",
+                            DataFormat.FixedSize => "sfixed32",
+                            _ => "int32",
+                        };
                     case ProtoTypeCode.UInt64:
-                        switch (dataFormat)
+                        return dataFormat switch
                         {
-                            case DataFormat.FixedSize: return "fixed64";
-                            default: return "uint64";
-                        }
+                            DataFormat.FixedSize => "fixed64",
+                            _ => "uint64",
+                        };
                     case ProtoTypeCode.Int64:
-                        switch (dataFormat)
+                        return dataFormat switch
                         {
-                            case DataFormat.ZigZag: return "sint64";
-                            case DataFormat.FixedSize: return "sfixed64";
-                            default: return "int64";
-                        }
+                            DataFormat.ZigZag => "sint64",
+                            DataFormat.FixedSize => "sfixed64",
+                            _ => "int64",
+                        };
                     case ProtoTypeCode.DateTime:
                         switch (dataFormat)
                         {

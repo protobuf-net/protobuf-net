@@ -12,6 +12,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -56,6 +57,11 @@ namespace ProtoBuf.Internal
             Pool<PooledList<T>>.Put(this);
         }
 
+
+        /// <summary>
+        /// Obtains a span that is a snapshot over the data at the current instance; if
+        /// the collection is modified, this span can become invalid
+        /// </summary>
         public Span<T> Span => new Span<T>(_items, 0, _size);
 
         internal const int MaxArrayLength = 0x7fef_ffff;
@@ -63,6 +69,7 @@ namespace ProtoBuf.Internal
         private const int DefaultCapacity = 4;
 
         private T[] _items; // Do not rename (binary serialization)
+
         private int _size; // Do not rename (binary serialization)
         private int _version; // Do not rename (binary serialization)
 
@@ -77,6 +84,8 @@ namespace ProtoBuf.Internal
         {
             _items = s_emptyArray;
         }
+
+        private ArrayPool<T> Pool => ArrayPool<T>.Shared;
 
         public static PooledList<T> Create()
 #pragma warning disable CS0618
@@ -116,36 +125,10 @@ namespace ProtoBuf.Internal
             return list;
         }
 
-        // Gets and sets the capacity of this list.  The capacity is the size of
-        // the internal array used to hold items.  When set, the internal
-        // array of the list is reallocated to the given capacity.
+        // Gets and the capacity of this list.
         public int Capacity
         {
             get => _items.Length;
-            set
-            {
-                if (value < _size)
-                {
-                    ThrowHelper.ThrowArgumentOutOfRangeException(nameof(Capacity));
-                }
-
-                if (value != _items.Length)
-                {
-                    if (value > 0)
-                    {
-                        T[] newItems = new T[value];
-                        if (_size > 0)
-                        {
-                            Array.Copy(_items, 0, newItems, 0, _size);
-                        }
-                        _items = newItems;
-                    }
-                    else
-                    {
-                        _items = s_emptyArray;
-                    }
-                }
-            }
         }
 
         // Read-only property describing how many elements are in the List.
@@ -299,18 +282,18 @@ namespace ProtoBuf.Internal
         public void Clear()
         {
             _version++;
-            if (TypeHelper<T>.IsReferenceOrContainsReferences)
+            Recycle(_items, _size);
+            _items = Array.Empty<T>();
+            _size = 0;
+        }
+
+        private void Recycle(T[] array, int length)
+        {
+            if (array != null)
             {
-                int size = _size;
-                _size = 0;
-                if (size > 0)
-                {
-                    Array.Clear(_items, 0, size); // Clear the elements so that the gc can reclaim the references.
-                }
-            }
-            else
-            {
-                _size = 0;
+                if (TypeHelper<T>.IsReferenceOrContainsReferences)
+                    Array.Clear(array, 0, length);
+                Pool.Return(array);
             }
         }
 
@@ -408,8 +391,12 @@ namespace ProtoBuf.Internal
                 // Allow the list to grow to maximum possible capacity (~2G elements) before encountering overflow.
                 // Note that this check works even when _items.Length overflowed thanks to the (uint) cast
                 if ((uint)newCapacity > MaxArrayLength) newCapacity = MaxArrayLength;
-                if (newCapacity < min) newCapacity = min;
-                Capacity = newCapacity;
+
+                var oldArr = _items;
+                var newArr = Pool.Rent(Math.Max(newCapacity, min));
+                Array.Copy(oldArr, 0, newArr, 0, _size);
+                _items = newArr;
+                Recycle(oldArr, _size);
             }
         }
 
@@ -1017,24 +1004,6 @@ namespace ProtoBuf.Internal
             T[] array = new T[_size];
             Array.Copy(_items, 0, array, 0, _size);
             return array;
-        }
-
-        // Sets the capacity of this list to the size of the list. This method can
-        // be used to minimize a list's memory overhead once it is known that no
-        // new elements will be added to the list. To completely clear a list and
-        // release all memory referenced by the list, execute the following
-        // statements:
-        //
-        // list.Clear();
-        // list.TrimExcess();
-        //
-        public void TrimExcess()
-        {
-            int threshold = (int)(((double)_items.Length) * 0.9);
-            if (_size < threshold)
-            {
-                Capacity = _size;
-            }
         }
 
         public bool TrueForAll(Predicate<T> match)
