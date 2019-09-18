@@ -1355,7 +1355,7 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T NoSerializer<T>(TypeModel model) where T : class
         {
-            throw new ProtoException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
+            throw new ProtoException($"No {TypeHelper.CSName(typeof(T))} available for model {model?.ToString() ?? "(none)"}");
         }
 
         internal static T CreateInstance<T>(ISerializationContext context = null, IProtoFactory<T> factory = null)

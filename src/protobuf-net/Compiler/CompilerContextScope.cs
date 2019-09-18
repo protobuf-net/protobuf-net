@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -113,7 +114,7 @@ namespace ProtoBuf.Compiler
             var attribs = (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final;
             if (@explicit)
             {
-                implName = CSName(interfaceType) + "." + name;
+                implName = TypeHelper.CSName(interfaceType) + "." + name;
                 attribs |= MethodAttributes.HideBySig;
                 attribs &= ~MethodAttributes.Public;
             }
@@ -123,26 +124,6 @@ namespace ProtoBuf.Compiler
                 method.DefineParameter(i + 1, args[i].Attributes, args[i].Name);
             type.DefineMethodOverride(method, decl);
             return method.GetILGenerator();
-        }
-
-        internal static string CSName(Type type)
-        {
-            if (type == null) return null;
-            if (!type.IsGenericType) return type.Name;
-
-            var withTicks = type.Name;
-            var index = withTicks.IndexOf('`');
-            if (index < 0) return type.Name;
-
-            var sb = new StringBuilder();
-            sb.Append(type.Name.Substring(0, index)).Append('<');
-            var args = type.GetGenericArguments();
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (i != 0) sb.Append(',');
-                sb.Append(CSName(args[i]));
-            }
-            return sb.Append('>').ToString();
         }
     }
 }
