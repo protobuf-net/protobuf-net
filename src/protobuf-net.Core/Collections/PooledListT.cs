@@ -11,6 +11,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using ProtoBuf.Internal;
 using System;
 using System.Buffers;
 using System.Collections;
@@ -19,26 +20,42 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace ProtoBuf.Internal
+namespace ProtoBuf.Collections
 {
     public static class PooledList
     {
-        public static void Dispose<T>(this PooledList<T> list) => ((IDisposable)list)?.Dispose();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Dispose<T>(ref PooledList<T>? list)
+        {
+            var tmp = list;
+            list = null;
+            if (tmp != null) tmp.Dispose();
+        }
 
-        public static void Dispose<T>(this PooledList<T> list, bool cascade)
+        public static void Dispose<T>(ref PooledList<T>? list, bool cascade)
             where T : class, IDisposable
         {
-            if (list != null)
+            var tmp = list;
+            list = null;
+            if (tmp != null)
             {
                 if (cascade)
                 {
-                    var span = list.Span;
+                    var span = tmp.Span;
                     foreach (var item in span)
-                        item.Dispose();
+                        item?.Dispose();
                 }
-                ((IDisposable)list).Dispose();
+                tmp.Dispose();
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static PooledList<T> Create<T>(ref PooledList<T>? list)
+            => list ?? (list = PooledList<T>.Create());
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ShouldSerialize<T>(this PooledList<T> list)
+            => list != null && list.Count != 0;
     }
 
     // Implements a variable-size List that uses an array of objects to store the
@@ -51,7 +68,7 @@ namespace ProtoBuf.Internal
     [Serializable]
     public sealed class PooledList<T> : IList<T>, IList, IReadOnlyList<T>, IDisposable
     {
-        void IDisposable.Dispose()
+        public void Dispose()
         {
             Clear();
             Pool<PooledList<T>>.Put(this);

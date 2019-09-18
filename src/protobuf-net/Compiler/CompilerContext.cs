@@ -8,6 +8,7 @@ using System.Reflection.Emit;
 using System.Collections.Generic;
 using System.Diagnostics;
 using ProtoBuf.Internal;
+using ProtoBuf.Collections;
 
 namespace ProtoBuf.Compiler
 {

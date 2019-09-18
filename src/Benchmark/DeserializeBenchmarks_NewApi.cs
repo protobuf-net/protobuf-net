@@ -22,6 +22,12 @@ namespace Benchmark
         [Benchmark(Description = "C")]
         public protogen.Database ROM_C() => ROM_New(_c);
 
+        static void Dispose(IDisposable input) => input?.Dispose();
+
+        [BenchmarkCategory("ROM_RefState")]
+        [Benchmark(Description = "C_Pooled")]
+        public void ROM_C_Pooled() => Dispose(ROM_NewPooled(_c));
+
         [BenchmarkCategory("ROM_RefState")]
         [Benchmark(Description = "Auto")]
         public protogen.Database ROM_Auto() => ROM_New(_auto);
@@ -37,6 +43,10 @@ namespace Benchmark
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "C")]
         public protogen.Database MemoryStream_New_C() => MemoryStream_New(_c);
+
+        [BenchmarkCategory("MS_RefState")]
+        [Benchmark(Description = "C_Pooled")]
+        public void MemoryStream_New_C_Pooled() => Dispose(MemoryStream_NewPooled(_c));
 
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "Auto")]
@@ -60,6 +70,18 @@ namespace Benchmark
         {
             using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw());
             return reader.Deserialize<protogen.Database>(ref state);
+        }
+
+        private protogen.pooled.Database MemoryStream_NewPooled(TypeModel model)
+        {
+            using var reader = ProtoReader.Create(out var state, ExposableData(), model ?? Throw());
+            return reader.Deserialize<protogen.pooled.Database>(ref state);
+        }
+
+        private protogen.pooled.Database ROM_NewPooled(TypeModel model)
+        {
+            using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw());
+            return reader.Deserialize<protogen.pooled.Database>(ref state);
         }
 
 
