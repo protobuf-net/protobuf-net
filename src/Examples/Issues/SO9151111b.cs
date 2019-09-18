@@ -145,7 +145,9 @@ namespace Proto
         {
             using var memStream = new MemoryStream();
             //Serializer.NonGeneric.Serialize(memStream, obj);
+#pragma warning disable CS0618
             this._modal.Serialize(memStream, obj);
+#pragma warning restore CS0618
 
             return memStream.ToArray();
         }
@@ -156,6 +158,7 @@ namespace Proto
             //return Serializer.Deserialize<TType>(memStream);
 #pragma warning disable CS0618
             return (TType)this._modal.Deserialize(memStream, null, typeof(TType));
+#pragma warning restore CS0618
         }
 
 

@@ -44,7 +44,9 @@ namespace Examples.Issues
         }
 
 
+#pragma warning disable IDE0060 // Remove unused parameter
         private void Test(TypeModel model, string p)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             var obj = Foo.Create(123);
 

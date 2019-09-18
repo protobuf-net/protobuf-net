@@ -1342,11 +1342,10 @@ namespace ProtoBuf.Meta
 
             Type miType;
             PropertyInfo pi = null;
-            FieldInfo fi = null;
             switch (mi.MemberType)
             {
                 case MemberTypes.Field:
-                    fi = (FieldInfo)mi;
+                    var fi = (FieldInfo)mi;
                     miType = fi.FieldType; break;
                 case MemberTypes.Property:
                     pi = (PropertyInfo)mi;
@@ -1359,7 +1358,6 @@ namespace ProtoBuf.Meta
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
             {
-                string name = $"<{((PropertyInfo)mi).Name}>k__BackingField";
                 var backingMembers = Type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (backingMembers != null && backingMembers.Length == 1 && backingMembers[0] is FieldInfo)
                     backingField = backingMembers[0];

@@ -39,30 +39,24 @@ namespace Benchmark
         public void MemoryStream()
         {
             _ms.Position = 0;
-            using (var reader = ReadMS(out var state))
-            {
-                var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
-                GC.KeepAlive(dal);
-            }
+            using var reader = ReadMS(out var state);
+            var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            GC.KeepAlive(dal);
         }
 
         [Benchmark]
         public void ReadOnlySequence()
         {
-            using (var reader = ReadROS(out var state))
-            {
-                var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
-                GC.KeepAlive(dal);
-            }
+            using var reader = ReadROS(out var state);
+            var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            GC.KeepAlive(dal);
         }
         [Benchmark]
         public void ReadOnlyMemory()
         {
-            using (var reader = ReadROM(out var state))
-            {
-                var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
-                GC.KeepAlive(dal);
-            }
+            using var reader = ReadROM(out var state);
+            var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            GC.KeepAlive(dal);
         }
     }
 }

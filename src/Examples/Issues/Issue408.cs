@@ -89,7 +89,6 @@ namespace Examples.Issues
         {
             var obj = new Point {X = 1, Y = 2};
             var clone = model.DeepClone(obj);
-            Assert.NotNull(clone);
             Assert.IsType<Point>(clone);
 
             var point = (Point) clone;
@@ -99,10 +98,10 @@ namespace Examples.Issues
 
         private static void TestNull(TypeModel model)
         {
-            using (var stream = new MemoryStream())
-            {
-                Assert.Throws<ArgumentNullException>(() => model.Serialize(stream, null));
-            }
+            using var stream = new MemoryStream();
+#pragma warning disable CS0618
+            Assert.Throws<ArgumentNullException>(() => model.Serialize(stream, null));
+#pragma warning restore CS0618
         }
     }
 }

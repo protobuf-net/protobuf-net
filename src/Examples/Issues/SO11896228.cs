@@ -56,7 +56,9 @@ namespace Examples.Issues
             Assert.True(Program.CheckBytes(obj, model, expected)); //, caption);
             using (var ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, obj);
+#pragma warning restore CS0618
                 Assert.Equal(expected.Length, ms.Length);
                 Assert.Equal(Program.GetByteString(expected), Program.GetByteString(ms.ToArray())); //, caption);
                 ms.Position = 0;

@@ -67,58 +67,54 @@ namespace ProtoBuf.Serializers
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             // int i and T[] arr
-            using (Compiler.Local arr = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, typeof(int)))
+            using Compiler.Local arr = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            using Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, typeof(int));
+            bool writePacked = (options & OPTIONS_WritePacked) != 0;
+            bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
+
+            using Compiler.Local token = (writePacked && !fixedLengthPacked) ? new Compiler.Local(ctx, typeof(SubItemToken)) : null;
+            Type mappedWriter = typeof(ProtoWriter);
+            if (writePacked)
             {
-                bool writePacked = (options & OPTIONS_WritePacked) != 0;
-                bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
+                ctx.LoadValue(fieldNumber);
+                ctx.LoadValue((int)WireType.String);
+                ctx.LoadWriter(true);
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
 
-                using (Compiler.Local token = (writePacked && !fixedLengthPacked) ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
+                if (fixedLengthPacked)
                 {
-                    Type mappedWriter = typeof(ProtoWriter);
-                    if (writePacked)
-                    {
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadValue((int)WireType.String);
-                        ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+                    // write directly - no need for buffering
+                    ctx.LoadLength(arr, false);
+                    ctx.LoadValue((int)packedWireType);
+                    ctx.LoadWriter(true);
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WritePackedPrefix", this));
+                }
+                else
+                {
+                    ctx.LoadValue(arr);
+                    ctx.LoadWriter(true);
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
+                    ctx.StoreValue(token);
+                }
+                ctx.LoadValue(fieldNumber);
+                ctx.LoadWriter(false);
+                ctx.EmitCall(mappedWriter.GetMethod("SetPackedField"));
+            }
+            EmitWriteArrayLoop(ctx, i, arr);
 
-                        if (fixedLengthPacked)
-                        {
-                            // write directly - no need for buffering
-                            ctx.LoadLength(arr, false);
-                            ctx.LoadValue((int)packedWireType);
-                            ctx.LoadWriter(true);
-                            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WritePackedPrefix", this));
-                        }
-                        else
-                        {
-                            ctx.LoadValue(arr);
-                            ctx.LoadWriter(true);
-                            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
-                            ctx.StoreValue(token);
-                        }
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadWriter(false);
-                        ctx.EmitCall(mappedWriter.GetMethod("SetPackedField"));
-                    }
-                    EmitWriteArrayLoop(ctx, i, arr);
-
-                    if (writePacked)
-                    {
-                        if (fixedLengthPacked)
-                        {
-                            ctx.LoadValue(fieldNumber);
-                            ctx.LoadWriter(false);
-                            ctx.EmitCall(mappedWriter.GetMethod("ClearPackedField"));
-                        }
-                        else
-                        {
-                            ctx.LoadValue(token);
-                            ctx.LoadWriter(true);
-                            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
-                        }
-                    }
+            if (writePacked)
+            {
+                if (fixedLengthPacked)
+                {
+                    ctx.LoadValue(fieldNumber);
+                    ctx.LoadWriter(false);
+                    ctx.EmitCall(mappedWriter.GetMethod("ClearPackedField"));
+                }
+                else
+                {
+                    ctx.LoadValue(token);
+                    ctx.LoadWriter(true);
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
                 }
             }
         }
@@ -240,68 +236,66 @@ namespace ProtoBuf.Serializers
         {
             Type listType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
             Type expected = ExpectedType;
-            using (Compiler.Local oldArr = AppendToCollection ? ctx.GetLocalWithValue(expected, valueFrom) : null)
-            using (Compiler.Local newArr = new Compiler.Local(ctx, expected))
-            using (Compiler.Local list = new Compiler.Local(ctx, listType))
+            using Compiler.Local oldArr = AppendToCollection ? ctx.GetLocalWithValue(expected, valueFrom) : null;
+            using Compiler.Local newArr = new Compiler.Local(ctx, expected);
+            using Compiler.Local list = new Compiler.Local(ctx, listType);
+            ctx.EmitCtor(listType);
+            ctx.StoreValue(list);
+            ListDecorator.EmitReadList(ctx, list, Tail, listType.GetMethod("Add"), packedWireType, false);
+
+            // leave this "using" here, as it can share the "FieldNumber" local with EmitReadList
+            using (Compiler.Local oldLen = AppendToCollection ? new ProtoBuf.Compiler.Local(ctx, typeof(int)) : null)
             {
-                ctx.EmitCtor(listType);
-                ctx.StoreValue(list);
-                ListDecorator.EmitReadList(ctx, list, Tail, listType.GetMethod("Add"), packedWireType, false);
+                Type[] copyToArrayInt32Args = new Type[] { typeof(Array), typeof(int) };
 
-                // leave this "using" here, as it can share the "FieldNumber" local with EmitReadList
-                using (Compiler.Local oldLen = AppendToCollection ? new ProtoBuf.Compiler.Local(ctx, typeof(int)) : null)
+                if (AppendToCollection)
                 {
-                    Type[] copyToArrayInt32Args = new Type[] { typeof(Array), typeof(int) };
+                    ctx.LoadLength(oldArr, true);
+                    ctx.CopyValue();
+                    ctx.StoreValue(oldLen);
 
-                    if (AppendToCollection)
-                    {
-                        ctx.LoadLength(oldArr, true);
-                        ctx.CopyValue();
-                        ctx.StoreValue(oldLen);
+                    ctx.LoadAddress(list, listType);
+                    ctx.LoadValue(listType.GetProperty("Count"));
+                    ctx.Add();
+                    ctx.CreateArray(itemType, null); // length is on the stack
+                    ctx.StoreValue(newArr);
 
-                        ctx.LoadAddress(list, listType);
-                        ctx.LoadValue(listType.GetProperty("Count"));
-                        ctx.Add();
-                        ctx.CreateArray(itemType, null); // length is on the stack
-                        ctx.StoreValue(newArr);
+                    ctx.LoadValue(oldLen);
+                    Compiler.CodeLabel nothingToCopy = ctx.DefineLabel();
+                    ctx.BranchIfFalse(nothingToCopy, true);
+                    ctx.LoadValue(oldArr);
+                    ctx.LoadValue(newArr);
+                    ctx.LoadValue(0); // index in target
 
-                        ctx.LoadValue(oldLen);
-                        Compiler.CodeLabel nothingToCopy = ctx.DefineLabel();
-                        ctx.BranchIfFalse(nothingToCopy, true);
-                        ctx.LoadValue(oldArr);
-                        ctx.LoadValue(newArr);
-                        ctx.LoadValue(0); // index in target
+                    ctx.EmitCall(expected.GetMethod("CopyTo", copyToArrayInt32Args));
+                    ctx.MarkLabel(nothingToCopy);
 
-                        ctx.EmitCall(expected.GetMethod("CopyTo", copyToArrayInt32Args));
-                        ctx.MarkLabel(nothingToCopy);
-
-                        ctx.LoadValue(list);
-                        ctx.LoadValue(newArr);
-                        ctx.LoadValue(oldLen);
-                    }
-                    else
-                    {
-                        ctx.LoadAddress(list, listType);
-                        ctx.LoadValue(listType.GetProperty("Count"));
-                        ctx.CreateArray(itemType, null);
-                        ctx.StoreValue(newArr);
-
-                        ctx.LoadAddress(list, listType);
-                        ctx.LoadValue(newArr);
-                        ctx.LoadValue(0);
-                    }
-
-                    copyToArrayInt32Args[0] = expected; // // prefer: CopyTo(T[], int)
-                    MethodInfo copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
-                    if (copyTo == null)
-                    { // fallback: CopyTo(Array, int)
-                        copyToArrayInt32Args[1] = typeof(Array);
-                        copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
-                    }
-                    ctx.EmitCall(copyTo);
+                    ctx.LoadValue(list);
+                    ctx.LoadValue(newArr);
+                    ctx.LoadValue(oldLen);
                 }
-                ctx.LoadValue(newArr);
+                else
+                {
+                    ctx.LoadAddress(list, listType);
+                    ctx.LoadValue(listType.GetProperty("Count"));
+                    ctx.CreateArray(itemType, null);
+                    ctx.StoreValue(newArr);
+
+                    ctx.LoadAddress(list, listType);
+                    ctx.LoadValue(newArr);
+                    ctx.LoadValue(0);
+                }
+
+                copyToArrayInt32Args[0] = expected; // // prefer: CopyTo(T[], int)
+                MethodInfo copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
+                if (copyTo == null)
+                { // fallback: CopyTo(Array, int)
+                    copyToArrayInt32Args[1] = typeof(Array);
+                    copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
+                }
+                ctx.EmitCall(copyTo);
             }
+            ctx.LoadValue(newArr);
         }
     }
 }

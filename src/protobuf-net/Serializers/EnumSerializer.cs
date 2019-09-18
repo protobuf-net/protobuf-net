@@ -58,18 +58,18 @@ namespace ProtoBuf.Serializers
         {
             unchecked
             {
-                switch (GetTypeCode())
+                return (GetTypeCode()) switch
                 { // unbox then convert to int
-                    case ProtoTypeCode.Byte: return (int)(byte)value;
-                    case ProtoTypeCode.SByte: return (int)(sbyte)value;
-                    case ProtoTypeCode.Int16: return (int)(short)value;
-                    case ProtoTypeCode.Int32: return (int)value;
-                    case ProtoTypeCode.Int64: return (int)(long)value;
-                    case ProtoTypeCode.UInt16: return (int)(ushort)value;
-                    case ProtoTypeCode.UInt32: return (int)(uint)value;
-                    case ProtoTypeCode.UInt64: return (int)(ulong)value;
-                    default: throw new InvalidOperationException();
-                }
+                    ProtoTypeCode.Byte => (int)(byte)value,
+                    ProtoTypeCode.SByte => (int)(sbyte)value,
+                    ProtoTypeCode.Int16 => (int)(short)value,
+                    ProtoTypeCode.Int32 => (int)value,
+                    ProtoTypeCode.Int64 => (int)(long)value,
+                    ProtoTypeCode.UInt16 => (int)(ushort)value,
+                    ProtoTypeCode.UInt32 => (int)(uint)value,
+                    ProtoTypeCode.UInt64 => (int)(ulong)value,
+                    _ => throw new InvalidOperationException(),
+                };
             }
         }
 
@@ -77,18 +77,18 @@ namespace ProtoBuf.Serializers
         {
             unchecked
             {
-                switch (GetTypeCode())
+                return (GetTypeCode()) switch
                 { // convert from int then box 
-                    case ProtoTypeCode.Byte: return Enum.ToObject(ExpectedType, (byte)value);
-                    case ProtoTypeCode.SByte: return Enum.ToObject(ExpectedType, (sbyte)value);
-                    case ProtoTypeCode.Int16: return Enum.ToObject(ExpectedType, (short)value);
-                    case ProtoTypeCode.Int32: return Enum.ToObject(ExpectedType, value);
-                    case ProtoTypeCode.Int64: return Enum.ToObject(ExpectedType, (long)value);
-                    case ProtoTypeCode.UInt16: return Enum.ToObject(ExpectedType, (ushort)value);
-                    case ProtoTypeCode.UInt32: return Enum.ToObject(ExpectedType, (uint)value);
-                    case ProtoTypeCode.UInt64: return Enum.ToObject(ExpectedType, (ulong)value);
-                    default: throw new InvalidOperationException();
-                }
+                    ProtoTypeCode.Byte => Enum.ToObject(ExpectedType, (byte)value),
+                    ProtoTypeCode.SByte => Enum.ToObject(ExpectedType, (sbyte)value),
+                    ProtoTypeCode.Int16 => Enum.ToObject(ExpectedType, (short)value),
+                    ProtoTypeCode.Int32 => Enum.ToObject(ExpectedType, value),
+                    ProtoTypeCode.Int64 => Enum.ToObject(ExpectedType, (long)value),
+                    ProtoTypeCode.UInt16 => Enum.ToObject(ExpectedType, (ushort)value),
+                    ProtoTypeCode.UInt32 => Enum.ToObject(ExpectedType, (uint)value),
+                    ProtoTypeCode.UInt64 => Enum.ToObject(ExpectedType, (ulong)value),
+                    _ => throw new InvalidOperationException(),
+                };
             }
         }
 
@@ -142,28 +142,26 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                using (Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
+                using Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+                Compiler.CodeLabel @continue = ctx.DefineLabel();
+                for (int i = 0; i < map.Length; i++)
                 {
-                    Compiler.CodeLabel @continue = ctx.DefineLabel();
-                    for (int i = 0; i < map.Length; i++)
-                    {
-                        Compiler.CodeLabel tryNextValue = ctx.DefineLabel(), processThisValue = ctx.DefineLabel();
-                        ctx.LoadValue(loc);
-                        WriteEnumValue(ctx, typeCode, map[i].RawValue);
-                        ctx.BranchIfEqual(processThisValue, true);
-                        ctx.Branch(tryNextValue, true);
-                        ctx.MarkLabel(processThisValue);
-                        ctx.LoadValue(map[i].WireValue);
-                        ctx.EmitBasicWrite("WriteInt32", null, this);
-                        ctx.Branch(@continue, false);
-                        ctx.MarkLabel(tryNextValue);
-                    }
-                    ctx.LoadWriter(false);
+                    Compiler.CodeLabel tryNextValue = ctx.DefineLabel(), processThisValue = ctx.DefineLabel();
                     ctx.LoadValue(loc);
-                    ctx.CastToObject(ExpectedType);
-                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));
-                    ctx.MarkLabel(@continue);
+                    WriteEnumValue(ctx, typeCode, map[i].RawValue);
+                    ctx.BranchIfEqual(processThisValue, true);
+                    ctx.Branch(tryNextValue, true);
+                    ctx.MarkLabel(processThisValue);
+                    ctx.LoadValue(map[i].WireValue);
+                    ctx.EmitBasicWrite("WriteInt32", null, this);
+                    ctx.Branch(@continue, false);
+                    ctx.MarkLabel(tryNextValue);
                 }
+                ctx.LoadWriter(false);
+                ctx.LoadValue(loc);
+                ctx.CastToObject(ExpectedType);
+                ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));
+                ctx.MarkLabel(@continue);
             }
         }
 
@@ -184,56 +182,54 @@ namespace ProtoBuf.Serializers
                     wireValues[i] = map[i].WireValue;
                     values[i] = map[i].RawValue;
                 }
-                using (Compiler.Local result = new Compiler.Local(ctx, ExpectedType))
-                using (Compiler.Local wireValue = new Compiler.Local(ctx, typeof(int)))
+                using Compiler.Local result = new Compiler.Local(ctx, ExpectedType);
+                using Compiler.Local wireValue = new Compiler.Local(ctx, typeof(int));
+                ctx.EmitBasicRead("ReadInt32", typeof(int));
+                ctx.StoreValue(wireValue);
+                Compiler.CodeLabel @continue = ctx.DefineLabel();
+                foreach (var group in BasicList.GetContiguousGroups(wireValues, values))
                 {
-                    ctx.EmitBasicRead("ReadInt32", typeof(int));
-                    ctx.StoreValue(wireValue);
-                    Compiler.CodeLabel @continue = ctx.DefineLabel();
-                    foreach (var group in BasicList.GetContiguousGroups(wireValues, values))
+                    Compiler.CodeLabel tryNextGroup = ctx.DefineLabel();
+                    int groupItemCount = group.Items.Count;
+                    if (groupItemCount == 1)
                     {
-                        Compiler.CodeLabel tryNextGroup = ctx.DefineLabel();
-                        int groupItemCount = group.Items.Count;
-                        if (groupItemCount == 1)
-                        {
-                            // discreet group; use an equality test
-                            ctx.LoadValue(wireValue);
-                            ctx.LoadValue(group.First);
-                            Compiler.CodeLabel processThisValue = ctx.DefineLabel();
-                            ctx.BranchIfEqual(processThisValue, true);
-                            ctx.Branch(tryNextGroup, false);
-                            WriteEnumValue(ctx, typeCode, processThisValue, @continue, group.Items[0], @result);
-                        }
-                        else
-                        {
-                            // implement as a jump-table-based switch
-                            ctx.LoadValue(wireValue);
-                            ctx.LoadValue(group.First);
-                            ctx.Subtract(); // jump-tables are zero-based
-                            Compiler.CodeLabel[] jmp = new Compiler.CodeLabel[groupItemCount];
-                            for (int i = 0; i < groupItemCount; i++)
-                            {
-                                jmp[i] = ctx.DefineLabel();
-                            }
-                            ctx.Switch(jmp);
-                            // write the default...
-                            ctx.Branch(tryNextGroup, false);
-                            for (int i = 0; i < groupItemCount; i++)
-                            {
-                                WriteEnumValue(ctx, typeCode, jmp[i], @continue, group.Items[i], @result);
-                            }
-                        }
-                        ctx.MarkLabel(tryNextGroup);
+                        // discreet group; use an equality test
+                        ctx.LoadValue(wireValue);
+                        ctx.LoadValue(group.First);
+                        Compiler.CodeLabel processThisValue = ctx.DefineLabel();
+                        ctx.BranchIfEqual(processThisValue, true);
+                        ctx.Branch(tryNextGroup, false);
+                        WriteEnumValue(ctx, typeCode, processThisValue, @continue, group.Items[0], @result);
                     }
-                    // throw source.CreateEnumException(ExpectedType, wireValue);
-                    ctx.LoadReader(true);
-                    ctx.LoadValue(ExpectedType);
-                    ctx.LoadValue(wireValue);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("ThrowEnumException",
-                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(Type), typeof(int) }));
-                    ctx.MarkLabel(@continue);
-                    ctx.LoadValue(result);
+                    else
+                    {
+                        // implement as a jump-table-based switch
+                        ctx.LoadValue(wireValue);
+                        ctx.LoadValue(group.First);
+                        ctx.Subtract(); // jump-tables are zero-based
+                        Compiler.CodeLabel[] jmp = new Compiler.CodeLabel[groupItemCount];
+                        for (int i = 0; i < groupItemCount; i++)
+                        {
+                            jmp[i] = ctx.DefineLabel();
+                        }
+                        ctx.Switch(jmp);
+                        // write the default...
+                        ctx.Branch(tryNextGroup, false);
+                        for (int i = 0; i < groupItemCount; i++)
+                        {
+                            WriteEnumValue(ctx, typeCode, jmp[i], @continue, group.Items[i], @result);
+                        }
+                    }
+                    ctx.MarkLabel(tryNextGroup);
                 }
+                // throw source.CreateEnumException(ExpectedType, wireValue);
+                ctx.LoadReader(true);
+                ctx.LoadValue(ExpectedType);
+                ctx.LoadValue(wireValue);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("ThrowEnumException",
+                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(Type), typeof(int) }));
+                ctx.MarkLabel(@continue);
+                ctx.LoadValue(result);
             }
         }
         private static void WriteEnumValue(Compiler.CompilerContext ctx, ProtoTypeCode typeCode, object value)

@@ -178,9 +178,9 @@ namespace ProtoBuf.unittest.Meta
         TTo ChangeType<TTo>(TypeModel model, object value)
         {
             using var ms = new MemoryStream();
+#pragma warning disable CS0618
             model.Serialize(ms, value);
             ms.Position = 0;
-#pragma warning disable CS0618
             return (TTo)model.Deserialize(ms, null, typeof(TTo));
 #pragma warning restore CS0618
         }

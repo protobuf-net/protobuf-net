@@ -376,7 +376,9 @@ namespace FX11
             byte[] blob;
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, obj);
+#pragma warning restore CS0618
                 blob = ms.ToArray();
             }
             foreach (byte b in blob)

@@ -1345,10 +1345,11 @@ namespace ProtoBuf
             SerializationContext ctx = parent.Context;
             if (model == null) throw new InvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
+#pragma warning disable CS0618
             model.Serialize(ms, from, ctx);
             ms.Position = 0;
-#pragma warning disable CS0618
             return model.Deserialize(ms, to, type: null);
+#pragma warning restore CS0618
         }
 
         /// <summary>

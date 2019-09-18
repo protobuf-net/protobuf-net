@@ -391,7 +391,9 @@ namespace ProtoBuf
             /// </summary>
             public static object DeepClone(object instance)
             {
+#pragma warning disable CS0618
                 return instance == null ? null : RuntimeTypeModel.Default.DeepClone(instance);
+#pragma warning restore CS0618
             }
 
             /// <summary>
@@ -403,7 +405,9 @@ namespace ProtoBuf
             {
                 if (instance != null)
                 {
+#pragma warning disable CS0618
                     RuntimeTypeModel.Default.Serialize(dest, instance);
+#pragma warning restore CS0618
                 }
             }
 

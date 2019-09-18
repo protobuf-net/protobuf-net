@@ -118,7 +118,9 @@ namespace ProtoBuf.ServiceModel
                 using MemoryStream ms = new MemoryStream();
                 if (isList)
                 {
+#pragma warning disable CS0618
                     model.Serialize(ms, graph, null);
+#pragma warning restore CS0618
                 }
                 else
                 {

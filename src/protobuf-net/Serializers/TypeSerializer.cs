@@ -52,18 +52,16 @@ namespace ProtoBuf.Serializers
             // => reader.ReadBaseType<TBase, T>(ref state, value, this);
             if (context.IsService)
             {
-                using (var tmp = context.GetLocalWithValue(typeof(T), valueFrom))
-                {
-                    context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                    context.LoadReader(true);
-                    context.LoadReader(false);
-                    context.LoadValue(tmp);
-                    context.EmitCall(typeof(SubTypeState<TBase>)
-                        .GetMethod(nameof(SubTypeState<string>.Create), BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(typeof(T)));
-                    context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
-                        .GetMethod(nameof(IProtoSubTypeSerializer<string>.ReadSubType), BindingFlags.Public | BindingFlags.Instance));
-                    if (typeof(T) != typeof(TBase)) context.Cast(typeof(T));
-                }
+                using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
+                context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadReader(true);
+                context.LoadReader(false);
+                context.LoadValue(tmp);
+                context.EmitCall(typeof(SubTypeState<TBase>)
+                    .GetMethod(nameof(SubTypeState<string>.Create), BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(typeof(T)));
+                context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
+                    .GetMethod(nameof(IProtoSubTypeSerializer<string>.ReadSubType), BindingFlags.Public | BindingFlags.Instance));
+                if (typeof(T) != typeof(TBase)) context.Cast(typeof(T));
             }
             else
             {
@@ -80,14 +78,12 @@ namespace ProtoBuf.Serializers
             // => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state, this);
             if (context.IsService)
             {
-                using (var tmp = context.GetLocalWithValue(typeof(T), valueFrom))
-                {
-                    context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                    context.LoadWriter(true);
-                    context.LoadValue(tmp);
-                    context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
-                        .GetMethod(nameof(IProtoSubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
-                }
+                using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
+                context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadWriter(true);
+                context.LoadValue(tmp);
+                context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
+                    .GetMethod(nameof(IProtoSubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
             }
             else
             {
@@ -454,14 +450,12 @@ namespace ProtoBuf.Serializers
 
                 if (value == null)
                 {
-                    using (var tmp = new Local(ctx, type))
-                    {
-                        ctx.LoadValue(value);
-                        ctx.StoreValue(tmp);
-                        ctx.LoadAddress(state, stateType);
-                        ctx.LoadValue(tmp);
-                        ctx.EmitCall(stateProp.GetSetMethod());
-                    }
+                    using var tmp = new Local(ctx, type);
+                    ctx.LoadValue(value);
+                    ctx.StoreValue(tmp);
+                    ctx.LoadAddress(state, stateType);
+                    ctx.LoadValue(tmp);
+                    ctx.EmitCall(stateProp.GetSetMethod());
                 }
                 else
                 {
@@ -480,83 +474,81 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;
-            using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
+            using Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom);
+            // pre-callbacks
+            EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeSerialize);
+
+            Compiler.CodeLabel startFields = ctx.DefineLabel();
+            // inheritance
+            if (CanHaveInheritance)
             {
-                // pre-callbacks
-                EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeSerialize);
-
-                Compiler.CodeLabel startFields = ctx.DefineLabel();
-                // inheritance
-                if (CanHaveInheritance)
+                // if we expect sub-types: do if (IsSubType()) and a switch inside that eventually calls ThrowUnexpectedSubtype
+                // otherwise, *just* call ThrowUnexpectedSubtype (it does the IsSubType test itself)
+                if (serializers.Any(x => x is IProtoTypeSerializer pts && pts.IsSubType))
                 {
-                    // if we expect sub-types: do if (IsSubType()) and a switch inside that eventually calls ThrowUnexpectedSubtype
-                    // otherwise, *just* call ThrowUnexpectedSubtype (it does the IsSubType test itself)
-                    if (serializers.Any(x => x is IProtoTypeSerializer pts && pts.IsSubType))
-                    {
-                        ctx.LoadValue(loc);
-                        ctx.EmitCall(typeof(TypeModel).GetMethod(nameof(TypeModel.IsSubType), BindingFlags.Static | BindingFlags.Public)
-                            .MakeGenericMethod(typeof(T)));
-                        ctx.BranchIfFalse(startFields, false);
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(typeof(TypeModel).GetMethod(nameof(TypeModel.IsSubType), BindingFlags.Static | BindingFlags.Public)
+                        .MakeGenericMethod(typeof(T)));
+                    ctx.BranchIfFalse(startFields, false);
 
-                        for (int i = 0; i < serializers.Length; i++)
+                    for (int i = 0; i < serializers.Length; i++)
+                    {
+                        IRuntimeProtoSerializerNode ser = serializers[i];
+                        Type serType = ser.ExpectedType;
+                        if (ser is IProtoTypeSerializer ts && ts.IsSubType)
                         {
-                            IRuntimeProtoSerializerNode ser = serializers[i];
-                            Type serType = ser.ExpectedType;
-                            if (ser is IProtoTypeSerializer ts && ts.IsSubType)
+                            Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
+                            ctx.LoadValue(loc);
+                            ctx.TryCast(serType);
+                            ctx.CopyValue();
+                            ctx.BranchIfTrue(ifMatch, true);
+                            ctx.DiscardValue();
+                            ctx.Branch(nextTest, true);
+                            ctx.MarkLabel(ifMatch);
+                            if (Helpers.IsValueType(serType))
                             {
-                                Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
-                                ctx.LoadValue(loc);
-                                ctx.TryCast(serType);
-                                ctx.CopyValue();
-                                ctx.BranchIfTrue(ifMatch, true);
                                 ctx.DiscardValue();
-                                ctx.Branch(nextTest, true);
-                                ctx.MarkLabel(ifMatch);
-                                if (Helpers.IsValueType(serType))
-                                {
-                                    ctx.DiscardValue();
-                                    ctx.LoadValue(loc);
-                                    ctx.CastFromObject(serType);
-                                }
-                                ser.EmitWrite(ctx, null);
-                                ctx.Branch(startFields, false);
-                                ctx.MarkLabel(nextTest);
+                                ctx.LoadValue(loc);
+                                ctx.CastFromObject(serType);
                             }
+                            ser.EmitWrite(ctx, null);
+                            ctx.Branch(startFields, false);
+                            ctx.MarkLabel(nextTest);
                         }
                     }
-                    
-                    MethodInfo method;
-                    if (constructType != null && constructType != ExpectedType)
-                    {
-                        method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[2].MakeGenericMethod(ExpectedType, constructType);
-                    }
-                    else
-                    {
-                        method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[1].MakeGenericMethod(ExpectedType);
-                    }
-                    ctx.LoadValue(loc);
-                    ctx.EmitCall(method);
-                }
-                // fields
-
-                ctx.MarkLabel(startFields);
-                for (int i = 0; i < serializers.Length; i++)
-                {
-                    IRuntimeProtoSerializerNode ser = serializers[i];
-                    if (!(ser is IProtoTypeSerializer ts && ts.IsSubType))
-                        ser.EmitWrite(ctx, loc);
                 }
 
-                // extension data
-                if (isExtensible)
+                MethodInfo method;
+                if (constructType != null && constructType != ExpectedType)
                 {
-                    ctx.LoadValue(loc);
-                    ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod(nameof(ProtoWriter.AppendExtensionData), this));
+                    method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[2].MakeGenericMethod(ExpectedType, constructType);
                 }
-                // post-callbacks
-                EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
+                else
+                {
+                    method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[1].MakeGenericMethod(ExpectedType);
+                }
+                ctx.LoadValue(loc);
+                ctx.EmitCall(method);
             }
+            // fields
+
+            ctx.MarkLabel(startFields);
+            for (int i = 0; i < serializers.Length; i++)
+            {
+                IRuntimeProtoSerializerNode ser = serializers[i];
+                if (!(ser is IProtoTypeSerializer ts && ts.IsSubType))
+                    ser.EmitWrite(ctx, loc);
+            }
+
+            // extension data
+            if (isExtensible)
+            {
+                ctx.LoadValue(loc);
+                ctx.LoadWriter(true);
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod(nameof(ProtoWriter.AppendExtensionData), this));
+            }
+            // post-callbacks
+            EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
         }
 
         private static void EmitInvokeCallback(Compiler.CompilerContext ctx, MethodInfo method, bool copyValue, Type constructType, Type type)
@@ -687,103 +679,103 @@ namespace ProtoBuf.Serializers
             Type expected = ExpectedType;
             Helpers.DebugAssert(valueFrom != null);
 
-            using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
-            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
+            using Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom);
+            using Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int));
+            if (!Helpers.IsValueType(ExpectedType) && !HasInheritance)
+            {   // we're writing a *basic* serializer for ref-type T; it could
+                // be null
+                EmitCreateIfNull(ctx, loc);
+            }
+
+            // pre-callbacks
+            if (HasCallbacks(TypeModel.CallbackType.BeforeDeserialize))
             {
-                if (!Helpers.IsValueType(ExpectedType) && !HasInheritance)
-                {   // we're writing a *basic* serializer for ref-type T; it could
-                    // be null
-                    EmitCreateIfNull(ctx, loc);
-                }
+                EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeDeserialize);
+            }
 
-                // pre-callbacks
-                if (HasCallbacks(TypeModel.CallbackType.BeforeDeserialize))
+            Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
+            ctx.Branch(@continue, false);
+
+            ctx.MarkLabel(processField);
+            foreach (var group in BasicList.GetContiguousGroups(fieldNumbers, serializers))
+            {
+                Compiler.CodeLabel tryNextField = ctx.DefineLabel();
+                int groupItemCount = group.Items.Count;
+                if (groupItemCount == 1)
                 {
-                    EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeDeserialize);
-                }
-
-                Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
-                ctx.Branch(@continue, false);
-
-                ctx.MarkLabel(processField);
-                foreach (var group in BasicList.GetContiguousGroups(fieldNumbers, serializers))
-                {
-                    Compiler.CodeLabel tryNextField = ctx.DefineLabel();
-                    int groupItemCount = group.Items.Count;
-                    if (groupItemCount == 1)
-                    {
-                        // discreet group; use an equality test
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadValue(group.First);
-                        Compiler.CodeLabel processThisField = ctx.DefineLabel();
-                        ctx.BranchIfEqual(processThisField, true);
-                        ctx.Branch(tryNextField, false);
-                        WriteFieldHandler(ctx, expected, loc, processThisField, @continue, group.Items[0]);
-                    }
-                    else
-                    {   // implement as a jump-table-based switch
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadValue(group.First);
-                        ctx.Subtract(); // jump-tables are zero-based
-                        Compiler.CodeLabel[] jmp = new Compiler.CodeLabel[groupItemCount];
-                        for (int i = 0; i < groupItemCount; i++)
-                        {
-                            jmp[i] = ctx.DefineLabel();
-                        }
-                        ctx.Switch(jmp);
-                        // write the default...
-                        ctx.Branch(tryNextField, false);
-                        for (int i = 0; i < groupItemCount; i++)
-                        {
-                            WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, group.Items[i]);
-                        }
-                    }
-                    ctx.MarkLabel(tryNextField);
-                }
-
-                ctx.LoadReader(true);
-                if (isExtensible)
-                {
-                    LoadFromState(ctx, loc);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.AppendExtensionData),
-                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(IExtensible) }));
+                    // discreet group; use an equality test
+                    ctx.LoadValue(fieldNumber);
+                    ctx.LoadValue(group.First);
+                    Compiler.CodeLabel processThisField = ctx.DefineLabel();
+                    ctx.BranchIfEqual(processThisField, true);
+                    ctx.Branch(tryNextField, false);
+                    WriteFieldHandler(ctx, expected, loc, processThisField, @continue, group.Items[0]);
                 }
                 else
-                {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.SkipField), Compiler.ReaderUtil.StateTypeArray));
-                }
-                ctx.MarkLabel(@continue);
-                ctx.EmitBasicRead(nameof(ProtoReader.ReadFieldHeader), typeof(int));
-                ctx.CopyValue();
-                ctx.StoreValue(fieldNumber);
-                ctx.LoadValue(0);
-                ctx.BranchIfGreater(processField, false);
-
-                // post-callbacks
-                if (HasCallbacks(TypeModel.CallbackType.AfterDeserialize))
-                {
-                    EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterDeserialize);
-                }
-
-                if (valueFrom != null)
-                {
-                    if (!loc.IsSame(valueFrom))
+                {   // implement as a jump-table-based switch
+                    ctx.LoadValue(fieldNumber);
+                    ctx.LoadValue(group.First);
+                    ctx.Subtract(); // jump-tables are zero-based
+                    Compiler.CodeLabel[] jmp = new Compiler.CodeLabel[groupItemCount];
+                    for (int i = 0; i < groupItemCount; i++)
                     {
-                        LoadFromState(ctx, loc);
-                        ctx.StoreValue(valueFrom);
+                        jmp[i] = ctx.DefineLabel();
+                    }
+                    ctx.Switch(jmp);
+                    // write the default...
+                    ctx.Branch(tryNextField, false);
+                    for (int i = 0; i < groupItemCount; i++)
+                    {
+                        WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, group.Items[i]);
                     }
                 }
+                ctx.MarkLabel(tryNextField);
+            }
 
-                if (HasInheritance)
+            ctx.LoadReader(true);
+            if (isExtensible)
+            {
+                LoadFromState(ctx, loc);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.AppendExtensionData),
+                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(IExtensible) }));
+            }
+            else
+            {
+                ctx.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.SkipField), Compiler.ReaderUtil.StateTypeArray));
+            }
+            ctx.MarkLabel(@continue);
+            ctx.EmitBasicRead(nameof(ProtoReader.ReadFieldHeader), typeof(int));
+            ctx.CopyValue();
+            ctx.StoreValue(fieldNumber);
+            ctx.LoadValue(0);
+            ctx.BranchIfGreater(processField, false);
+
+            // post-callbacks
+            if (HasCallbacks(TypeModel.CallbackType.AfterDeserialize))
+            {
+                EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterDeserialize);
+            }
+
+            if (valueFrom != null)
+            {
+                if (!loc.IsSame(valueFrom))
                 {
-                    // in this scenario, before exiting, we'll leave the T on the stack
                     LoadFromState(ctx, loc);
+                    ctx.StoreValue(valueFrom);
                 }
+            }
+
+            if (HasInheritance)
+            {
+                // in this scenario, before exiting, we'll leave the T on the stack
+                LoadFromState(ctx, loc);
             }
         }
 
         private void WriteFieldHandler(
-            Compiler.CompilerContext ctx, Type expected, Compiler.Local loc, 
+#pragma warning disable IDE0060
+            Compiler.CompilerContext ctx, Type expected, Compiler.Local loc,
+#pragma warning restore IDE0060
             Compiler.CodeLabel handler, Compiler.CodeLabel @continue, IRuntimeProtoSerializerNode serializer)
         {
             ctx.MarkLabel(handler);

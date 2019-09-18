@@ -139,22 +139,20 @@ namespace ProtoBuf.Serializers
         }
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (Compiler.Local loc = ctx.GetLocalWithValue(ctor.DeclaringType, valueFrom))
+            using Compiler.Local loc = ctx.GetLocalWithValue(ctor.DeclaringType, valueFrom);
+            for (int i = 0; i < tails.Length; i++)
             {
-                for (int i = 0; i < tails.Length; i++)
+                Type type = GetMemberType(i);
+                ctx.LoadAddress(loc, ExpectedType);
+                if (members[i] is FieldInfo)
                 {
-                    Type type = GetMemberType(i);
-                    ctx.LoadAddress(loc, ExpectedType);
-                    if (members[i] is FieldInfo)
-                    {
-                        ctx.LoadValue((FieldInfo)members[i]);
-                    }
-                    else if (members[i] is PropertyInfo)
-                    {
-                        ctx.LoadValue((PropertyInfo)members[i]);
-                    }
-                    ctx.WriteNullCheckedTail(type, tails[i], null);
+                    ctx.LoadValue((FieldInfo)members[i]);
                 }
+                else if (members[i] is PropertyInfo)
+                {
+                    ctx.LoadValue((PropertyInfo)members[i]);
+                }
+                ctx.WriteNullCheckedTail(type, tails[i], null);
             }
         }
 
@@ -171,166 +169,164 @@ namespace ProtoBuf.Serializers
 
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local incoming)
         {
-            using (Compiler.Local objValue = ctx.GetLocalWithValue(ExpectedType, incoming))
+            using Compiler.Local objValue = ctx.GetLocalWithValue(ExpectedType, incoming);
+            Compiler.Local[] locals = new Compiler.Local[members.Length];
+            try
             {
-                Compiler.Local[] locals = new Compiler.Local[members.Length];
-                try
+                for (int i = 0; i < locals.Length; i++)
                 {
-                    for (int i = 0; i < locals.Length; i++)
+                    Type type = GetMemberType(i);
+                    bool store = true;
+                    locals[i] = new Compiler.Local(ctx, type);
+                    if (!Helpers.IsValueType(ExpectedType))
                     {
-                        Type type = GetMemberType(i);
-                        bool store = true;
-                        locals[i] = new Compiler.Local(ctx, type);
-                        if (!Helpers.IsValueType(ExpectedType))
+                        // value-types always read the old value
+                        if (Helpers.IsValueType(type))
                         {
-                            // value-types always read the old value
-                            if (Helpers.IsValueType(type))
+                            switch (Helpers.GetTypeCode(type))
                             {
-                                switch (Helpers.GetTypeCode(type))
-                                {
-                                    case ProtoTypeCode.Boolean:
-                                    case ProtoTypeCode.Byte:
-                                    case ProtoTypeCode.Int16:
-                                    case ProtoTypeCode.Int32:
-                                    case ProtoTypeCode.SByte:
-                                    case ProtoTypeCode.UInt16:
-                                    case ProtoTypeCode.UInt32:
-                                        ctx.LoadValue(0);
-                                        break;
-                                    case ProtoTypeCode.Int64:
-                                    case ProtoTypeCode.UInt64:
-                                        ctx.LoadValue(0L);
-                                        break;
-                                    case ProtoTypeCode.Single:
-                                        ctx.LoadValue(0.0F);
-                                        break;
-                                    case ProtoTypeCode.Double:
-                                        ctx.LoadValue(0.0D);
-                                        break;
-                                    case ProtoTypeCode.Decimal:
-                                        ctx.LoadValue(0M);
-                                        break;
-                                    case ProtoTypeCode.Guid:
-                                        ctx.LoadValue(Guid.Empty);
-                                        break;
-                                    default:
-                                        ctx.LoadAddress(locals[i], type);
-                                        ctx.EmitCtor(type);
-                                        store = false;
-                                        break;
-                                }
+                                case ProtoTypeCode.Boolean:
+                                case ProtoTypeCode.Byte:
+                                case ProtoTypeCode.Int16:
+                                case ProtoTypeCode.Int32:
+                                case ProtoTypeCode.SByte:
+                                case ProtoTypeCode.UInt16:
+                                case ProtoTypeCode.UInt32:
+                                    ctx.LoadValue(0);
+                                    break;
+                                case ProtoTypeCode.Int64:
+                                case ProtoTypeCode.UInt64:
+                                    ctx.LoadValue(0L);
+                                    break;
+                                case ProtoTypeCode.Single:
+                                    ctx.LoadValue(0.0F);
+                                    break;
+                                case ProtoTypeCode.Double:
+                                    ctx.LoadValue(0.0D);
+                                    break;
+                                case ProtoTypeCode.Decimal:
+                                    ctx.LoadValue(0M);
+                                    break;
+                                case ProtoTypeCode.Guid:
+                                    ctx.LoadValue(Guid.Empty);
+                                    break;
+                                default:
+                                    ctx.LoadAddress(locals[i], type);
+                                    ctx.EmitCtor(type);
+                                    store = false;
+                                    break;
                             }
-                            else
-                            {
-                                ctx.LoadNullRef();
-                            }
-                            if (store)
+                        }
+                        else
+                        {
+                            ctx.LoadNullRef();
+                        }
+                        if (store)
+                        {
+                            ctx.StoreValue(locals[i]);
+                        }
+                    }
+                }
+
+                Compiler.CodeLabel skipOld = Helpers.IsValueType(ExpectedType)
+                                                    ? new Compiler.CodeLabel()
+                                                    : ctx.DefineLabel();
+                if (!Helpers.IsValueType(ExpectedType))
+                {
+                    ctx.LoadAddress(objValue, ExpectedType);
+                    ctx.BranchIfFalse(skipOld, false);
+                }
+                for (int i = 0; i < members.Length; i++)
+                {
+                    ctx.LoadAddress(objValue, ExpectedType);
+                    if (members[i] is FieldInfo)
+                    {
+                        ctx.LoadValue((FieldInfo)members[i]);
+                    }
+                    else if (members[i] is PropertyInfo)
+                    {
+                        ctx.LoadValue((PropertyInfo)members[i]);
+                    }
+                    ctx.StoreValue(locals[i]);
+                }
+
+                if (!Helpers.IsValueType(ExpectedType)) ctx.MarkLabel(skipOld);
+
+                using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
+                {
+                    Compiler.CodeLabel @continue = ctx.DefineLabel(),
+                                       processField = ctx.DefineLabel(),
+                                       notRecognised = ctx.DefineLabel();
+                    ctx.Branch(@continue, false);
+
+                    Compiler.CodeLabel[] handlers = new Compiler.CodeLabel[members.Length];
+                    for (int i = 0; i < members.Length; i++)
+                    {
+                        handlers[i] = ctx.DefineLabel();
+                    }
+
+                    ctx.MarkLabel(processField);
+
+                    ctx.LoadValue(fieldNumber);
+                    ctx.LoadValue(1);
+                    ctx.Subtract(); // jump-table is zero-based
+                    ctx.Switch(handlers);
+
+                    // and the default:
+                    ctx.Branch(notRecognised, false);
+                    for (int i = 0; i < handlers.Length; i++)
+                    {
+                        ctx.MarkLabel(handlers[i]);
+                        IRuntimeProtoSerializerNode tail = tails[i];
+                        Compiler.Local oldValIfNeeded = tail.RequiresOldValue ? locals[i] : null;
+                        ctx.ReadNullCheckedTail(locals[i].Type, tail, oldValIfNeeded);
+                        if (tail.ReturnsValue)
+                        {
+                            if (Helpers.IsValueType(locals[i].Type))
                             {
                                 ctx.StoreValue(locals[i]);
                             }
-                        }
-                    }
-
-                    Compiler.CodeLabel skipOld = Helpers.IsValueType(ExpectedType)
-                                                        ? new Compiler.CodeLabel()
-                                                        : ctx.DefineLabel();
-                    if (!Helpers.IsValueType(ExpectedType))
-                    {
-                        ctx.LoadAddress(objValue, ExpectedType);
-                        ctx.BranchIfFalse(skipOld, false);
-                    }
-                    for (int i = 0; i < members.Length; i++)
-                    {
-                        ctx.LoadAddress(objValue, ExpectedType);
-                        if (members[i] is FieldInfo)
-                        {
-                            ctx.LoadValue((FieldInfo)members[i]);
-                        }
-                        else if (members[i] is PropertyInfo)
-                        {
-                            ctx.LoadValue((PropertyInfo)members[i]);
-                        }
-                        ctx.StoreValue(locals[i]);
-                    }
-
-                    if (!Helpers.IsValueType(ExpectedType)) ctx.MarkLabel(skipOld);
-
-                    using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
-                    {
-                        Compiler.CodeLabel @continue = ctx.DefineLabel(),
-                                           processField = ctx.DefineLabel(),
-                                           notRecognised = ctx.DefineLabel();
-                        ctx.Branch(@continue, false);
-
-                        Compiler.CodeLabel[] handlers = new Compiler.CodeLabel[members.Length];
-                        for (int i = 0; i < members.Length; i++)
-                        {
-                            handlers[i] = ctx.DefineLabel();
-                        }
-
-                        ctx.MarkLabel(processField);
-
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadValue(1);
-                        ctx.Subtract(); // jump-table is zero-based
-                        ctx.Switch(handlers);
-
-                        // and the default:
-                        ctx.Branch(notRecognised, false);
-                        for (int i = 0; i < handlers.Length; i++)
-                        {
-                            ctx.MarkLabel(handlers[i]);
-                            IRuntimeProtoSerializerNode tail = tails[i];
-                            Compiler.Local oldValIfNeeded = tail.RequiresOldValue ? locals[i] : null;
-                            ctx.ReadNullCheckedTail(locals[i].Type, tail, oldValIfNeeded);
-                            if (tail.ReturnsValue)
+                            else
                             {
-                                if (Helpers.IsValueType(locals[i].Type))
-                                {
-                                    ctx.StoreValue(locals[i]);
-                                }
-                                else
-                                {
-                                    Compiler.CodeLabel hasValue = ctx.DefineLabel(), allDone = ctx.DefineLabel();
+                                Compiler.CodeLabel hasValue = ctx.DefineLabel(), allDone = ctx.DefineLabel();
 
-                                    ctx.CopyValue();
-                                    ctx.BranchIfTrue(hasValue, true); // interpret null as "don't assign"
-                                    ctx.DiscardValue();
-                                    ctx.Branch(allDone, true);
-                                    ctx.MarkLabel(hasValue);
-                                    ctx.StoreValue(locals[i]);
-                                    ctx.MarkLabel(allDone);
-                                }
+                                ctx.CopyValue();
+                                ctx.BranchIfTrue(hasValue, true); // interpret null as "don't assign"
+                                ctx.DiscardValue();
+                                ctx.Branch(allDone, true);
+                                ctx.MarkLabel(hasValue);
+                                ctx.StoreValue(locals[i]);
+                                ctx.MarkLabel(allDone);
                             }
-                            ctx.Branch(@continue, false);
                         }
-
-                        ctx.MarkLabel(notRecognised);
-                        ctx.LoadReader(true);
-                        ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
-
-                        ctx.MarkLabel(@continue);
-                        ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
-                        ctx.CopyValue();
-                        ctx.StoreValue(fieldNumber);
-                        ctx.LoadValue(0);
-                        ctx.BranchIfGreater(processField, false);
-                    }
-                    for (int i = 0; i < locals.Length; i++)
-                    {
-                        ctx.LoadValue(locals[i]);
+                        ctx.Branch(@continue, false);
                     }
 
-                    ctx.EmitCtor(ctor);
-                    ctx.StoreValue(objValue);
+                    ctx.MarkLabel(notRecognised);
+                    ctx.LoadReader(true);
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
+
+                    ctx.MarkLabel(@continue);
+                    ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
+                    ctx.CopyValue();
+                    ctx.StoreValue(fieldNumber);
+                    ctx.LoadValue(0);
+                    ctx.BranchIfGreater(processField, false);
                 }
-                finally
+                for (int i = 0; i < locals.Length; i++)
                 {
-                    for (int i = 0; i < locals.Length; i++)
-                    {
-                        if (locals[i] != null)
-                            locals[i].Dispose(); // release for re-use
-                    }
+                    ctx.LoadValue(locals[i]);
+                }
+
+                ctx.EmitCtor(ctor);
+                ctx.StoreValue(objValue);
+            }
+            finally
+            {
+                for (int i = 0; i < locals.Length; i++)
+                {
+                    if (locals[i] != null)
+                        locals[i].Dispose(); // release for re-use
                 }
             }
         }

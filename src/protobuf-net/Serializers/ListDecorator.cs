@@ -126,108 +126,104 @@ namespace ProtoBuf.Serializers
              */
             bool returnList = ReturnList;
 
-            using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType))
-            using (Compiler.Local origlist = (returnList && AppendToCollection && !Helpers.IsValueType(ExpectedType)) ? new Compiler.Local(ctx, ExpectedType) : null)
+            using Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType);
+            using Compiler.Local origlist = (returnList && AppendToCollection && !Helpers.IsValueType(ExpectedType)) ? new Compiler.Local(ctx, ExpectedType) : null;
+            if (!AppendToCollection)
+            { // always new
+                ctx.LoadNullRef();
+                ctx.StoreValue(list);
+            }
+            else if (returnList && origlist != null)
+            { // need a copy
+                ctx.LoadValue(list);
+                ctx.StoreValue(origlist);
+            }
+            if (concreteType != null)
             {
-                if (!AppendToCollection)
-                { // always new
+                ctx.LoadValue(list);
+                Compiler.CodeLabel notNull = ctx.DefineLabel();
+                ctx.BranchIfTrue(notNull, true);
+                ctx.EmitCtor(concreteType);
+                ctx.StoreValue(list);
+                ctx.MarkLabel(notNull);
+            }
+
+            bool castListForAdd = !add.DeclaringType.IsAssignableFrom(declaredType);
+            EmitReadList(ctx, list, Tail, add, packedWireType, castListForAdd);
+
+            if (returnList)
+            {
+                if (AppendToCollection && origlist != null)
+                {
+                    // remember ^^^^ we had a spare copy of the list on the stack; now we'll compare
+                    ctx.LoadValue(origlist);
+                    ctx.LoadValue(list); // [orig] [new-value]
+                    Compiler.CodeLabel sameList = ctx.DefineLabel(), allDone = ctx.DefineLabel();
+                    ctx.BranchIfEqual(sameList, true);
+                    ctx.LoadValue(list);
+                    ctx.Branch(allDone, true);
+                    ctx.MarkLabel(sameList);
                     ctx.LoadNullRef();
-                    ctx.StoreValue(list);
+                    ctx.MarkLabel(allDone);
                 }
-                else if (returnList && origlist != null)
-                { // need a copy
-                    ctx.LoadValue(list);
-                    ctx.StoreValue(origlist);
-                }
-                if (concreteType != null)
+                else
                 {
                     ctx.LoadValue(list);
-                    Compiler.CodeLabel notNull = ctx.DefineLabel();
-                    ctx.BranchIfTrue(notNull, true);
-                    ctx.EmitCtor(concreteType);
-                    ctx.StoreValue(list);
-                    ctx.MarkLabel(notNull);
-                }
-
-                bool castListForAdd = !add.DeclaringType.IsAssignableFrom(declaredType);
-                EmitReadList(ctx, list, Tail, add, packedWireType, castListForAdd);
-
-                if (returnList)
-                {
-                    if (AppendToCollection && origlist != null)
-                    {
-                        // remember ^^^^ we had a spare copy of the list on the stack; now we'll compare
-                        ctx.LoadValue(origlist);
-                        ctx.LoadValue(list); // [orig] [new-value]
-                        Compiler.CodeLabel sameList = ctx.DefineLabel(), allDone = ctx.DefineLabel();
-                        ctx.BranchIfEqual(sameList, true);
-                        ctx.LoadValue(list);
-                        ctx.Branch(allDone, true);
-                        ctx.MarkLabel(sameList);
-                        ctx.LoadNullRef();
-                        ctx.MarkLabel(allDone);
-                    }
-                    else
-                    {
-                        ctx.LoadValue(list);
-                    }
                 }
             }
         }
 
         internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IRuntimeProtoSerializerNode tail, MethodInfo add, WireType packedWireType, bool castListForAdd)
         {
-            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
+            using Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int));
+            Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();
+            if (packedWireType != WireType.None)
             {
-                Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();
-                if (packedWireType != WireType.None)
-                {
-                    ctx.LoadReader(false);
-                    ctx.LoadValue(typeof(ProtoReader).GetProperty("WireType"));
-                    ctx.LoadValue((int)WireType.String);
-                    ctx.BranchIfEqual(readPacked, false);
-                }
                 ctx.LoadReader(false);
-                ctx.LoadValue(typeof(ProtoReader).GetProperty("FieldNumber"));
-                ctx.StoreValue(fieldNumber);
+                ctx.LoadValue(typeof(ProtoReader).GetProperty("WireType"));
+                ctx.LoadValue((int)WireType.String);
+                ctx.BranchIfEqual(readPacked, false);
+            }
+            ctx.LoadReader(false);
+            ctx.LoadValue(typeof(ProtoReader).GetProperty("FieldNumber"));
+            ctx.StoreValue(fieldNumber);
 
-                Compiler.CodeLabel @continue = ctx.DefineLabel();
-                ctx.MarkLabel(@continue);
+            Compiler.CodeLabel @continue = ctx.DefineLabel();
+            ctx.MarkLabel(@continue);
 
-                EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
+            EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
+
+            ctx.LoadReader(true);
+            ctx.LoadValue(fieldNumber);
+            ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
+                new[] { Compiler.ReaderUtil.ByRefStateType, typeof(int) }));
+            ctx.BranchIfTrue(@continue, false);
+
+            if (packedWireType != WireType.None)
+            {
+                Compiler.CodeLabel allDone = ctx.DefineLabel();
+                ctx.Branch(allDone, false);
+                ctx.MarkLabel(readPacked);
 
                 ctx.LoadReader(true);
-                ctx.LoadValue(fieldNumber);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
-                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(int) }));
-                ctx.BranchIfTrue(@continue, false);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
+                    Compiler.ReaderUtil.ReaderStateTypeArray));
 
-                if (packedWireType != WireType.None)
-                {
-                    Compiler.CodeLabel allDone = ctx.DefineLabel();
-                    ctx.Branch(allDone, false);
-                    ctx.MarkLabel(readPacked);
+                Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
+                ctx.MarkLabel(testForData);
+                ctx.LoadValue((int)packedWireType);
+                ctx.LoadReader(false);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("HasSubValue"));
+                ctx.BranchIfFalse(noMoreData, false);
 
-                    ctx.LoadReader(true);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
-                        Compiler.ReaderUtil.ReaderStateTypeArray));
+                EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
+                ctx.Branch(testForData, false);
 
-                    Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
-                    ctx.MarkLabel(testForData);
-                    ctx.LoadValue((int)packedWireType);
-                    ctx.LoadReader(false);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("HasSubValue"));
-                    ctx.BranchIfFalse(noMoreData, false);
-
-                    EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
-                    ctx.Branch(testForData, false);
-
-                    ctx.MarkLabel(noMoreData);
-                    ctx.LoadReader(true);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                        new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
-                    ctx.MarkLabel(allDone);
-                }
+                ctx.MarkLabel(noMoreData);
+                ctx.LoadReader(true);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
+                    new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
+                ctx.MarkLabel(allDone);
             }
         }
 
@@ -243,21 +239,19 @@ namespace ProtoBuf.Serializers
                 if (Helpers.IsValueType(itemType) || !tailReturnsValue)
                 {
                     // going to need a variable
-                    using (Compiler.Local item = new Compiler.Local(ctx, itemType))
-                    {
-                        if (Helpers.IsValueType(itemType))
-                        {   // initialise the struct
-                            ctx.LoadAddress(item, itemType);
-                            ctx.EmitCtor(itemType);
-                        }
-                        else
-                        {   // assign null
-                            ctx.LoadNullRef();
-                            ctx.StoreValue(item);
-                        }
-                        tail.EmitRead(ctx, item);
-                        if (!tailReturnsValue) { ctx.LoadValue(item); }
+                    using Compiler.Local item = new Compiler.Local(ctx, itemType);
+                    if (Helpers.IsValueType(itemType))
+                    {   // initialise the struct
+                        ctx.LoadAddress(item, itemType);
+                        ctx.EmitCtor(itemType);
                     }
+                    else
+                    {   // assign null
+                        ctx.LoadNullRef();
+                        ctx.StoreValue(item);
+                    }
+                    tail.EmitRead(ctx, item);
+                    if (!tailReturnsValue) { ctx.LoadValue(item); }
                 }
                 else
                 {    // no variable; pass the null on the stack and take the value *off* the stack
@@ -314,7 +308,7 @@ namespace ProtoBuf.Serializers
             // try a custom enumerator
             MethodInfo getEnumerator = Helpers.GetInstanceMethod(expectedType, "GetEnumerator", null);
 
-            Type getReturnType = null;
+            Type getReturnType;
             if (getEnumerator != null)
             {
                 getReturnType = getEnumerator.ReturnType;
@@ -333,7 +327,9 @@ namespace ProtoBuf.Serializers
                 {
                     return getEnumerator;
                 }
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
                 moveNext = current = getEnumerator = null;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
             }
 
             // try IEnumerable<T>
@@ -367,66 +363,62 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
-            using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
+            using Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            MethodInfo getEnumerator = GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current);
+            Helpers.DebugAssert(moveNext != null);
+            Helpers.DebugAssert(current != null);
+            Helpers.DebugAssert(getEnumerator != null);
+            Type enumeratorType = getEnumerator.ReturnType;
+            bool writePacked = WritePacked;
+            using Compiler.Local iter = new Compiler.Local(ctx, enumeratorType);
+            using Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null;
+            if (writePacked)
             {
-                MethodInfo getEnumerator = GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current);
-                Helpers.DebugAssert(moveNext != null);
-                Helpers.DebugAssert(current != null);
-                Helpers.DebugAssert(getEnumerator != null);
-                Type enumeratorType = getEnumerator.ReturnType;
-                bool writePacked = WritePacked;
-                using (Compiler.Local iter = new Compiler.Local(ctx, enumeratorType))
-                using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
+                ctx.LoadValue(fieldNumber);
+                ctx.LoadValue((int)WireType.String);
+                ctx.LoadWriter(true);
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+
+                ctx.LoadValue(list);
+                ctx.LoadWriter(true);
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
+                ctx.StoreValue(token);
+
+                ctx.LoadValue(fieldNumber);
+                ctx.LoadWriter(false);
+                ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
+            }
+
+            ctx.LoadAddress(list, ExpectedType);
+            ctx.EmitCall(getEnumerator, ExpectedType);
+            ctx.StoreValue(iter);
+            using (ctx.Using(iter))
+            {
+                Compiler.CodeLabel body = ctx.DefineLabel(), next = ctx.DefineLabel();
+                ctx.Branch(next, false);
+
+                ctx.MarkLabel(body);
+
+                ctx.LoadAddress(iter, enumeratorType);
+                ctx.EmitCall(current, enumeratorType);
+                Type itemType = Tail.ExpectedType;
+                if (itemType != typeof(object) && current.ReturnType == typeof(object))
                 {
-                    if (writePacked)
-                    {
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadValue((int)WireType.String);
-                        ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
-
-                        ctx.LoadValue(list);
-                        ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
-                        ctx.StoreValue(token);
-
-                        ctx.LoadValue(fieldNumber);
-                        ctx.LoadWriter(false);
-                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
-                    }
-
-                    ctx.LoadAddress(list, ExpectedType);
-                    ctx.EmitCall(getEnumerator, ExpectedType);
-                    ctx.StoreValue(iter);
-                    using (ctx.Using(iter))
-                    {
-                        Compiler.CodeLabel body = ctx.DefineLabel(), next = ctx.DefineLabel();
-                        ctx.Branch(next, false);
-
-                        ctx.MarkLabel(body);
-
-                        ctx.LoadAddress(iter, enumeratorType);
-                        ctx.EmitCall(current, enumeratorType);
-                        Type itemType = Tail.ExpectedType;
-                        if (itemType != typeof(object) && current.ReturnType == typeof(object))
-                        {
-                            ctx.CastFromObject(itemType);
-                        }
-                        Tail.EmitWrite(ctx, null);
-
-                        ctx.MarkLabel(@next);
-                        ctx.LoadAddress(iter, enumeratorType);
-                        ctx.EmitCall(moveNext, enumeratorType);
-                        ctx.BranchIfTrue(body, false);
-                    }
-
-                    if (writePacked)
-                    {
-                        ctx.LoadValue(token);
-                        ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
-                    }
+                    ctx.CastFromObject(itemType);
                 }
+                Tail.EmitWrite(ctx, null);
+
+                ctx.MarkLabel(@next);
+                ctx.LoadAddress(iter, enumeratorType);
+                ctx.EmitCall(moveNext, enumeratorType);
+                ctx.BranchIfTrue(body, false);
+            }
+
+            if (writePacked)
+            {
+                ctx.LoadValue(token);
+                ctx.LoadWriter(true);
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
             }
         }
 

@@ -64,7 +64,9 @@ namespace ProtoBuf.unittest.Serializers
             byte[] raw;
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, value);
+#pragma warning restore CS0618
                 raw = ms.ToArray();
             }
 
@@ -73,7 +75,9 @@ namespace ProtoBuf.unittest.Serializers
             model.CompileInPlace();
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, value);
+#pragma warning restore CS0618
                 raw = ms.ToArray();
             }
 
@@ -83,7 +87,9 @@ namespace ProtoBuf.unittest.Serializers
             PEVerify.Verify("compiled.dll");
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 compiled.Serialize(ms, value);
+#pragma warning restore CS0618
                 raw = ms.ToArray();
             }
             Assert.Equal(hex, GetHex(raw));
@@ -109,16 +115,14 @@ namespace ProtoBuf.unittest.Serializers
 
         public static void Test(WriterRunner action, string expectedHex)
         {
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            using (var pw = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
             {
-                using (var pw = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
-                {
-                    action(pw, ref state);
-                    pw.Close(ref state);
-                }
-                string s = GetHex(ms.ToArray());
-                Assert.Equal(expectedHex, s);
+                action(pw, ref state);
+                pw.Close(ref state);
             }
+            string s = GetHex(ms.ToArray());
+            Assert.Equal(expectedHex, s);
         }
     }
 }

@@ -321,7 +321,9 @@ namespace ProtoBuf.unittest.Meta
             {
                 var model = RuntimeTypeModel.Create();
                 using var ms = new MemoryStream();
+#pragma warning disable CS0618
                 model.Serialize(ms, objs[i], null);
+#pragma warning restore CS0618
                 expected[i] = GetHex(ms.ToArray());
             }
             for (int i = 0; i < 250; i++)
@@ -346,7 +348,9 @@ namespace ProtoBuf.unittest.Meta
                             using var ms = new MemoryStream();
                             if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
                             else allGo.WaitOne();
+#pragma warning disable CS0618
                             model.Serialize(ms, obj, null);
+#pragma warning restore CS0618
                             string hex = GetHex(ms.ToArray());
                             if (hex != exp) throw new InvalidDataException("Bad serialization; " + hex + " vs " + exp);
                         }

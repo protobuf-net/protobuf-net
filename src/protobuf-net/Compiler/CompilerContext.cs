@@ -632,17 +632,15 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 { // nullable T; check HasValue
-                    using (Compiler.Local valOrNull = GetLocalWithValue(type, valueFrom))
-                    {
-                        LoadAddress(valOrNull, type);
-                        LoadValue(type.GetProperty("HasValue"));
-                        CodeLabel @end = DefineLabel();
-                        BranchIfFalse(@end, false);
-                        LoadAddress(valOrNull, type);
-                        EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
-                        tail.EmitWrite(this, null);
-                        MarkLabel(@end);
-                    }
+                    using Compiler.Local valOrNull = GetLocalWithValue(type, valueFrom);
+                    LoadAddress(valOrNull, type);
+                    LoadValue(type.GetProperty("HasValue"));
+                    CodeLabel @end = DefineLabel();
+                    BranchIfFalse(@end, false);
+                    LoadAddress(valOrNull, type);
+                    EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+                    tail.EmitWrite(this, null);
+                    MarkLabel(@end);
                 }
             }
             else
@@ -668,11 +666,9 @@ namespace ProtoBuf.Compiler
                 if (tail.RequiresOldValue)
                 {
                     // we expect the input value to be in valueFrom; need to unpack it from T?
-                    using (Local loc = GetLocalWithValue(type, valueFrom))
-                    {
-                        LoadAddress(loc, type);
-                        EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
-                    }
+                    using Local loc = GetLocalWithValue(type, valueFrom);
+                    LoadAddress(loc, type);
+                    EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
                 }
                 else
                 {
@@ -784,7 +780,9 @@ namespace ProtoBuf.Compiler
             {
                 if (member is FieldInfo && (member.Name.StartsWith("<") & member.Name.EndsWith(">k__BackingField")))
                 {
+#pragma warning disable IDE0057 // sibstring can be simplified
                     var propName = member.Name.Substring(1, member.Name.Length - 17);
+#pragma warning restore IDE0057 // sibstring can be simplified
                     var prop = member.DeclaringType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
                     if (prop != null) member = prop;
                 }
@@ -1039,56 +1037,54 @@ namespace ProtoBuf.Compiler
             else
             {
                 // too many to jump easily (especially on Android) - need to split up (note: uses a local pulled from the stack)
-                using (Local val = GetLocalWithValue(typeof(int), null))
+                using Local val = GetLocalWithValue(typeof(int), null);
+                int count = jumpTable.Length, offset = 0;
+                int blockCount = count / MAX_JUMPS;
+                if ((count % MAX_JUMPS) != 0) blockCount++;
+
+                Label[] blockLabels = new Label[blockCount];
+                for (int i = 0; i < blockCount; i++)
                 {
-                    int count = jumpTable.Length, offset = 0;
-                    int blockCount = count / MAX_JUMPS;
-                    if ((count % MAX_JUMPS) != 0) blockCount++;
-
-                    Label[] blockLabels = new Label[blockCount];
-                    for (int i = 0; i < blockCount; i++)
-                    {
-                        blockLabels[i] = il.DefineLabel();
-                    }
-                    CodeLabel endOfSwitch = DefineLabel();
-
-                    LoadValue(val);
-                    LoadValue(MAX_JUMPS);
-                    Emit(OpCodes.Div);
-                    TraceCompile(OpCodes.Switch.ToString());
-                    il.Emit(OpCodes.Switch, blockLabels);
-                    Branch(endOfSwitch, false);
-
-                    Label[] innerLabels = new Label[MAX_JUMPS];
-                    for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
-                    {
-                        il.MarkLabel(blockLabels[blockIndex]);
-
-                        int itemsThisBlock = Math.Min(MAX_JUMPS, count);
-                        count -= itemsThisBlock;
-                        if (innerLabels.Length != itemsThisBlock) innerLabels = new Label[itemsThisBlock];
-
-                        int subtract = offset;
-                        for (int j = 0; j < itemsThisBlock; j++)
-                        {
-                            innerLabels[j] = jumpTable[offset++].Value;
-                        }
-                        LoadValue(val);
-                        if (subtract != 0) // switches are always zero-based
-                        {
-                            LoadValue(subtract);
-                            Emit(OpCodes.Sub);
-                        }
-                        TraceCompile(OpCodes.Switch.ToString());
-                        il.Emit(OpCodes.Switch, innerLabels);
-                        if (count != 0)
-                        { // force default to the very bottom
-                            Branch(endOfSwitch, false);
-                        }
-                    }
-                    Helpers.DebugAssert(count == 0, "Should use exactly all switch items");
-                    MarkLabel(endOfSwitch);
+                    blockLabels[i] = il.DefineLabel();
                 }
+                CodeLabel endOfSwitch = DefineLabel();
+
+                LoadValue(val);
+                LoadValue(MAX_JUMPS);
+                Emit(OpCodes.Div);
+                TraceCompile(OpCodes.Switch.ToString());
+                il.Emit(OpCodes.Switch, blockLabels);
+                Branch(endOfSwitch, false);
+
+                Label[] innerLabels = new Label[MAX_JUMPS];
+                for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
+                {
+                    il.MarkLabel(blockLabels[blockIndex]);
+
+                    int itemsThisBlock = Math.Min(MAX_JUMPS, count);
+                    count -= itemsThisBlock;
+                    if (innerLabels.Length != itemsThisBlock) innerLabels = new Label[itemsThisBlock];
+
+                    int subtract = offset;
+                    for (int j = 0; j < itemsThisBlock; j++)
+                    {
+                        innerLabels[j] = jumpTable[offset++].Value;
+                    }
+                    LoadValue(val);
+                    if (subtract != 0) // switches are always zero-based
+                    {
+                        LoadValue(subtract);
+                        Emit(OpCodes.Sub);
+                    }
+                    TraceCompile(OpCodes.Switch.ToString());
+                    il.Emit(OpCodes.Switch, innerLabels);
+                    if (count != 0)
+                    { // force default to the very bottom
+                        Branch(endOfSwitch, false);
+                    }
+                }
+                Helpers.DebugAssert(count == 0, "Should use exactly all switch items");
+                MarkLabel(endOfSwitch);
             }
         }
 
@@ -1205,15 +1201,13 @@ namespace ProtoBuf.Compiler
                     }
                     else
                     {   // *could* be IDisposable; test via "as"
-                        using (Compiler.Local disp = new Compiler.Local(ctx, disposableType))
-                        {
-                            ctx.LoadValue(local);
-                            ctx.TryCast(disposableType);
-                            ctx.CopyValue();
-                            ctx.StoreValue(disp);
-                            ctx.BranchIfFalse(@null, true);
-                            ctx.LoadAddress(disp, disposableType);
-                        }
+                        using Compiler.Local disp = new Compiler.Local(ctx, disposableType);
+                        ctx.LoadValue(local);
+                        ctx.TryCast(disposableType);
+                        ctx.CopyValue();
+                        ctx.StoreValue(disp);
+                        ctx.BranchIfFalse(@null, true);
+                        ctx.LoadAddress(disp, disposableType);
                     }
                     ctx.EmitCall(dispose);
                     ctx.MarkLabel(@null);

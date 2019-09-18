@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -33,12 +34,13 @@ namespace ProtoBuf.Meta
         protected internal Type MapType(Type type, bool demand) => type;
 #pragma warning restore RCS1163 // Unused parameter.
 
-        private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
+        internal static WireType GetWireType(TypeModel model, ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
             if (Helpers.IsEnum(type))
             {
-                modelKey = GetKey(ref type);
+                if (model != null)
+                    modelKey = model.GetKey(ref type);
                 return WireType.Variant;
             }
             switch (code)
@@ -69,7 +71,7 @@ namespace ProtoBuf.Meta
                     return WireType.String;
             }
 
-            if ((modelKey = GetKey(ref type)) >= 0)
+            if (model != null && (modelKey = model.GetKey(ref type)) >= 0)
             {
                 return WireType.String;
             }
@@ -91,7 +93,7 @@ namespace ProtoBuf.Meta
 
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             // note the "ref type" here normalizes against proxies
-            WireType wireType = GetWireType(typecode, format, ref type, out int modelKey);
+            WireType wireType = GetWireType(this, typecode, format, ref type, out int modelKey);
 
             if (modelKey >= 0)
             {   // write the header, but defer to the model
@@ -194,6 +196,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
+        [Obsolete(PreferGenericAPI)]
         public void Serialize(Stream dest, object value)
         {
             Serialize(dest, value, null);
@@ -205,20 +208,48 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Obsolete(PreferGenericAPI)]
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
             using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            try
+            if (!DynamicStub.TrySerialize(value.GetType(), this, writer, ref state, value))
             {
-                writer.SetRootObject(value);
-                SerializeCore(writer, ref state, value);
-                writer.Close(ref state);
+                try
+                {
+                    writer.SetRootObject(value);
+                    SerializeCore(writer, ref state, value);
+                    writer.Close(ref state);
+                }
+                catch
+                {
+                    writer.Abandon();
+                    throw;
+                }
             }
-            catch
-            {
-                writer.Abandon();
-                throw;
-            }
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination stream to write to.</param>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public long Serialize<T>(Stream dest, T value, SerializationContext context = null)
+        {
+            using var writer = ProtoWriter.Create(out var state, dest, this, context);
+            return writer.Serialize<T>(ref state, value);
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination stream to write to.</param>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public long Serialize<T>(IBufferWriter<byte> dest, T value, SerializationContext context = null)
+        {
+            using var writer = ProtoWriter.Create(out var state, dest, this, context);
+            return writer.Serialize<T>(ref state, value);
         }
 
         /// <summary>
@@ -239,6 +270,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination writer to write to.</param>
         /// <param name="state">Writer state</param>
+        [Obsolete(PreferGenericAPI)]
         public void Serialize(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
@@ -259,6 +291,36 @@ namespace ProtoBuf.Meta
             finally
             {
                 dest.Model = oldModel;
+            }
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination writer to write to.</param>
+        /// <param name="state">Writer state</param>
+        public void Serialize<T>(ProtoWriter dest, ref ProtoWriter.State state, T value)
+        {
+            if (dest == null) throw new ArgumentNullException(nameof(dest));
+            if (TypeHelper<T>.IsLegacyType)
+            {
+#pragma warning disable CS0618
+                Serialize(dest, ref state, (object)value);
+#pragma warning restore CS0618
+            }
+            else
+            {
+                TypeModel oldModel = dest.Model;
+                try
+                {
+                    dest.Model = this;
+                    dest.Serialize<T>(ref state, value);
+                }
+                finally
+                {
+                    dest.Model = oldModel;
+                }
             }
         }
 
@@ -628,7 +690,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public T Deserialize<T>(Stream source, T value = default, SerializationContext context = null)
         {
-            if (typeof(T) == typeof(object))
+            if (TypeHelper<T>.IsLegacyType)
             {
                 // looks like you're accidentally calling the wrong API, but: we'll let it slide
 #pragma warning disable CS0618
@@ -636,6 +698,52 @@ namespace ProtoBuf.Meta
 #pragma warning restore CS0618
             }
             using var reader = ProtoReader.Create(out var state, source, this, context);
+            return reader.Deserialize<T>(ref state, value);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
+        {
+            using var reader = ProtoReader.Create(out var state, source, this, context);
+            if (TypeHelper<T>.IsLegacyType)
+            {
+                // looks like you're accidentally calling the wrong API, but: we'll let it slide
+#pragma warning disable CS0618
+                return (T)Deserialize(reader, ref state, value, value?.GetType() ?? typeof(object));
+#pragma warning restore CS0618
+            }
+            return reader.Deserialize<T>(ref state, value);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
+        {
+            using var reader = ProtoReader.Create(out var state, source, this, context);
+            if (TypeHelper<T>.IsLegacyType)
+            {
+                // looks like you're accidentally calling the wrong API, but: we'll let it slide
+#pragma warning disable CS0618
+                return (T)Deserialize(reader, ref state, value, value?.GetType() ?? typeof(object));
+#pragma warning restore CS0618
+            }
             return reader.Deserialize<T>(ref state, value);
         }
 
@@ -1042,7 +1150,7 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException(nameof(type));
             Type itemType;
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            WireType wiretype = GetWireType(typecode, format, ref type, out int modelKey);
+            WireType wiretype = GetWireType(this, typecode, format, ref type, out int modelKey);
 
             bool found = false;
             if (wiretype == WireType.None)
@@ -1386,63 +1494,90 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
+        public T DeepClone<T>(T value)
+        {
+            if (TypeHelper<T>.IsObjectType && value == null) return value;
+            if (TypeHelper<T>.IsLegacyType)
+            {
+#pragma warning disable CS0618
+                return (T)DeepClone((object)value);
+#pragma warning restore CS0618
+            }
+
+            using var ms = new MemoryStream();
+            Serialize<T>(ms, value);
+            ms.Position = 0;
+            return Deserialize<T>(ms);
+        }
+
+        /// <summary>
+        /// Create a deep clone of the supplied instance; any sub-items are also cloned.
+        /// </summary>
+        [Obsolete(PreferGenericAPI)]
         public object DeepClone(object value)
         {
             if (value == null) return null;
             Type type = value.GetType();
-            int key = GetKey(ref type);
+            if (DynamicStub.TryDeepClone(this, type, ref value))
+            {
+                return value;
+            }
+            else
+            {
+                int key = GetKey(ref type);
 
-            if (key >= 0 && !Helpers.IsEnum(type))
-            {
-                using MemoryStream ms = new MemoryStream();
-                using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
+                if (key >= 0 && !Helpers.IsEnum(type))
                 {
-                    writer.SetRootObject(value);
-                    try
+                    using MemoryStream ms = new MemoryStream();
+                    using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
                     {
-                        Serialize(writer, ref writeState, key, value);
+                        writer.SetRootObject(value);
+                        try
+                        {
+                            Serialize(writer, ref writeState, key, value);
+                        }
+                        catch
+                        {
+                            writer.Abandon();
+                            throw;
+                        }
+                        writer.Close(ref writeState);
                     }
-                    catch
-                    {
-                        writer.Abandon();
-                        throw;
-                    }
-                    writer.Close(ref writeState);
+                    ms.Position = 0;
+                    using var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
+                    return DeserializeCore(reader, ref readState, key, null);
                 }
-                ms.Position = 0;
-                using var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
-                return DeserializeCore(reader, ref readState, key, null);
-            }
-            if (type == typeof(byte[]))
-            {
-                byte[] orig = (byte[])value, clone = new byte[orig.Length];
-                Buffer.BlockCopy(orig, 0, clone, 0, orig.Length);
-                return clone;
-            }
-            else if (GetWireType(Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)
-            {   // immutable; just return the original value
-                return value;
-            }
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
+                if (type == typeof(byte[]))
                 {
-                    try
-                    {
-                        if (!TrySerializeAuxiliaryType(writer, ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
-                    }
-                    catch
-                    {
-                        writer.Abandon();
-                        throw;
-                    }
-                    writer.Close(ref writeState);
+                    byte[] orig = (byte[])value, clone = new byte[orig.Length];
+                    Buffer.BlockCopy(orig, 0, clone, 0, orig.Length);
+                    return clone;
                 }
-                ms.Position = 0;
-                using var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
-                value = null; // start from scratch!
-                TryDeserializeAuxiliaryType(reader, ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
-                return value;
+                else if (GetWireType(this, Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)
+                {   // immutable; just return the original value
+                    return value;
+                }
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
+                    {
+                        try
+                        {
+                            if (!TrySerializeAuxiliaryType(writer, ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                        }
+                        catch
+                        {
+                            writer.Abandon();
+                            throw;
+                        }
+                        writer.Close(ref writeState);
+                    }
+                    ms.Position = 0;
+                    using var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
+                    value = null; // start from scratch!
+                    TryDeserializeAuxiliaryType(reader, ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
+                    return value;
+                }
             }
         }
 
@@ -1673,7 +1808,9 @@ namespace ProtoBuf.Meta
                 => model.Deserialize(serializationStream, null, type, (long)-1, Context);
 
             public void Serialize(Stream serializationStream, object graph)
+#pragma warning disable CS0618
                 => model.Serialize(serializationStream, graph, Context);
+#pragma warning restore CS0618
 
             public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector { get; set; }
         }

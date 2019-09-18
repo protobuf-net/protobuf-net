@@ -18,34 +18,24 @@ namespace ProtoBuf.Tests
         [Fact]
         public void ManualWriter_Stream()
         {
-            using (var ms = new MemoryStream())
-            {
-                using (var w = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
-                {
-                    ManualWriter(w, ref state);
-                }
-            }
+            using var ms = new MemoryStream();
+            using var w = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null);
+            ManualWriter(w, ref state);
         }
 
         [Fact]
         public void ManualWriter_Null()
         {
-            using (var w = ProtoWriter.CreateNull(out var state, RuntimeTypeModel.Default, null))
-            {
-                ManualWriter(w, ref state);
-            }
+            using var w = ProtoWriter.CreateNull(out var state, RuntimeTypeModel.Default, null);
+            ManualWriter(w, ref state);
         }
 
         [Fact]
         public void ManualWriter_Buffer()
         {
-            using (var bw = BufferWriter<byte>.Create())
-            {
-                using (var w = ProtoWriter.Create(out var state, bw, RuntimeTypeModel.Default, null))
-                {
-                    ManualWriter(w, ref state);
-                }
-            }
+            using var bw = BufferWriter<byte>.Create();
+            using var w = ProtoWriter.Create(out var state, bw, RuntimeTypeModel.Default, null);
+            ManualWriter(w, ref state);
         }
 
         class Foo
@@ -172,17 +162,13 @@ namespace ProtoBuf.Tests
         [InlineData(5)]
         public void WriteWithCustomSerializer_Buffer(int depth)
         {
-            using (var bw = BufferWriter<byte>.Create())
-            {
-                var model = RuntimeTypeModel.Default;
-                using (var writer = ProtoWriter.Create(out var state, bw.Writer, model, null))
-                {
-                    A obj = CreateModel(depth);
-                    var ser = new ASerializer(Log);
-                    ser.Write(writer, ref state, obj);
-                    writer.Close(ref state);
-                }
-            }
+            using var bw = BufferWriter<byte>.Create();
+            var model = RuntimeTypeModel.Default;
+            using var writer = ProtoWriter.Create(out var state, bw.Writer, model, null);
+            A obj = CreateModel(depth);
+            var ser = new ASerializer(Log);
+            ser.Write(writer, ref state, obj);
+            writer.Close(ref state);
         }
 
         [Theory]
@@ -192,17 +178,13 @@ namespace ProtoBuf.Tests
         [InlineData(5)]
         public void WriteWithCustomSerializer_Stream(int depth)
         {
-            using (var ms = new MemoryStream())
-            {
-                var model = RuntimeTypeModel.Default;
-                using (var writer = ProtoWriter.Create(out var state, ms, model, null))
-                {
-                    A obj = CreateModel(depth);
-                    var ser = new ASerializer(Log);
-                    ser.Write(writer, ref state, obj);
-                    writer.Close(ref state);
-                }
-            }
+            using var ms = new MemoryStream();
+            var model = RuntimeTypeModel.Default;
+            using var writer = ProtoWriter.Create(out var state, ms, model, null);
+            A obj = CreateModel(depth);
+            var ser = new ASerializer(Log);
+            ser.Write(writer, ref state, obj);
+            writer.Close(ref state);
         }
 
         [Theory]
@@ -218,12 +200,10 @@ namespace ProtoBuf.Tests
             {
                 Serializer.Serialize(bw, obj);
 
-                using (var buffer = bw.Flush())
-                {
-                    var clone = Serializer.Deserialize<A>(buffer.Value);
-                    Assert.NotSame(obj, clone);
-                    obj = clone;
-                }
+                using var buffer = bw.Flush();
+                var clone = Serializer.Deserialize<A>(buffer.Value);
+                Assert.NotSame(obj, clone);
+                obj = clone;
             }
 
             var level = 0;
