@@ -88,9 +88,14 @@ namespace Benchmark
         {
             _data = File.ReadAllBytes("test.bin");
             var model = RuntimeTypeModel.Create();
-            model.Add(typeof(protogen.Database), true);
-            model.Add(typeof(protogen.Order), true);
-            model.Add(typeof(protogen.OrderLine), true);
+            model.Add(typeof(protogen.Database));
+            model.Add(typeof(protogen.Order));
+            model.Add(typeof(protogen.OrderLine));
+#if NEW_API
+            model.Add(typeof(protogen.pooled.Database));
+            model.Add(typeof(protogen.pooled.Order));
+            model.Add(typeof(protogen.pooled.OrderLine));
+#endif
             model.CompileInPlace();
             _cip = model;
             _c = model.Compile();
