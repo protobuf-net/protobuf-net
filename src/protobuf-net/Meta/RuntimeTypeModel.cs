@@ -10,6 +10,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ProtoBuf.Compiler;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Meta
 {

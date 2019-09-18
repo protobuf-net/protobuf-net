@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
@@ -211,7 +212,7 @@ namespace ProtoBuf.Serializers
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             int field = source.FieldNumber;
-            BasicList list = new BasicList();
+            var list = new BasicList();
             if (packedWireType != WireType.None && source.WireType == WireType.String)
             {
                 SubItemToken token = ProtoReader.StartSubItem(source, ref state);

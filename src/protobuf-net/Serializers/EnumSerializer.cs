@@ -1,4 +1,5 @@
 ﻿using System;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
@@ -189,7 +190,7 @@ namespace ProtoBuf.Serializers
                     ctx.EmitBasicRead("ReadInt32", typeof(int));
                     ctx.StoreValue(wireValue);
                     Compiler.CodeLabel @continue = ctx.DefineLabel();
-                    foreach (BasicList.Group group in BasicList.GetContiguousGroups(wireValues, values))
+                    foreach (var group in BasicList.GetContiguousGroups(wireValues, values))
                     {
                         Compiler.CodeLabel tryNextGroup = ctx.DefineLabel();
                         int groupItemCount = group.Items.Count;

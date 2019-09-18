@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
 using System.Diagnostics;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Compiler
 {
@@ -371,13 +372,13 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private readonly MutableList locals = new MutableList();
+        private readonly List<LocalBuilder> locals = new List<LocalBuilder>();
         internal LocalBuilder GetFromPool(Type type)
         {
             int count = locals.Count;
             for (int i = 0; i < count; i++)
             {
-                LocalBuilder item = (LocalBuilder)locals[i];
+                LocalBuilder item = locals[i];
                 if (item != null && item.LocalType == type)
                 {
                     locals[i] = null; // remove from pool

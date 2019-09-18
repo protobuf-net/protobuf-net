@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using ProtoBuf.Meta;
 
 namespace ProtoBuf
 {
     internal sealed class NetObjectCache
     {
         internal const int Root = 0;
-        private MutableList underlyingList;
+        private List<object> underlyingList;
 
-        private MutableList List => underlyingList ?? (underlyingList = new MutableList());
+        private List<object> List => underlyingList ?? (underlyingList = new List<object>());
 
         internal object GetKeyedObject(int key)
         {
@@ -18,7 +17,7 @@ namespace ProtoBuf
                 if (rootObject == null) throw new ProtoException("No root object assigned");
                 return rootObject;
             }
-            BasicList list = List;
+            var list = List;
 
             if (key < 0 || key >= list.Count)
             {
@@ -44,8 +43,12 @@ namespace ProtoBuf
             }
             else
             {
-                MutableList list = List;
-                if (key < list.Count)
+                var list = List;
+                if (key == list.Count)
+                {
+                    list.Add(value);
+                }
+                else if (key < list.Count)
                 {
                     object oldVal = list[key];
                     if (oldVal == null)
@@ -57,7 +60,7 @@ namespace ProtoBuf
                         throw new ProtoException("Reference-tracked objects cannot change reference");
                     } // otherwise was the same; nothing to do
                 }
-                else if (key != list.Add(value))
+                else
                 {
                     throw new ProtoException("Internal error; a key mismatch occurred");
                 }
@@ -76,7 +79,7 @@ namespace ProtoBuf
             }
 
             string s = value as string;
-            BasicList list = List;
+            var list = List;
             int index;
 
             if (s == null)
@@ -106,8 +109,8 @@ namespace ProtoBuf
 
             if (!(existing = index >= 0))
             {
-                index = list.Add(value);
-
+                index = list.Count;
+                list.Add(value);
                 if (s == null)
                 {
                     objectKeys.Add(value, index);

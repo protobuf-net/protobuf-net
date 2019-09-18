@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
@@ -381,28 +382,25 @@ namespace ProtoBuf
             }
         }
 
-        private MutableList recursionStack;
+        private List<object> recursionStack;
         private void CheckRecursionStackAndPush(object instance)
         {
-            int hitLevel;
-            if (recursionStack == null) { recursionStack = new MutableList(); }
-            else if (instance != null && (hitLevel = recursionStack.IndexOfReference(instance)) >= 0)
+            if (recursionStack == null) { recursionStack = new List<object>(); }
+            else if (instance != null)
             {
-#if DEBUG
-                Helpers.DebugWriteLine("Stack:");
-                foreach (object obj in recursionStack)
+                int hitLevel = 0;
+                foreach (var obj in recursionStack)
                 {
-                    Helpers.DebugWriteLine(obj == null ? "<null>" : obj.ToString());
+                    if (obj == instance)
+                    {
+                        throw new ProtoException($"Possible recursion detected (offset: {(recursionStack.Count - hitLevel)} level(s)): {instance}");
+                    }
+                    hitLevel++;
                 }
-                Helpers.DebugWriteLine(instance == null ? "<null>" : instance.ToString());
-#endif
-#pragma warning disable RCS1097 // Remove redundant 'ToString' call.
-                throw new ProtoException("Possible recursion detected (offset: " + (recursionStack.Count - hitLevel).ToString() + " level(s)): " + instance.ToString());
-#pragma warning restore RCS1097 // Remove redundant 'ToString' call.
             }
             recursionStack.Add(instance);
         }
-        private void PopRecursionStack() { recursionStack.RemoveLast(); }
+        private void PopRecursionStack() { recursionStack.RemoveAt(recursionStack.Count - 1); }
 
         /// <summary>
         /// Indicates the end of a nested record.

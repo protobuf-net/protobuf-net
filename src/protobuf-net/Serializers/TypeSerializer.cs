@@ -4,6 +4,7 @@ using System.Reflection;
 using ProtoBuf.Compiler;
 using System.Linq;
 using System.Collections.Generic;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Serializers
 {
@@ -705,7 +706,7 @@ namespace ProtoBuf.Serializers
                 ctx.Branch(@continue, false);
 
                 ctx.MarkLabel(processField);
-                foreach (BasicList.Group group in BasicList.GetContiguousGroups(fieldNumbers, serializers))
+                foreach (var group in BasicList.GetContiguousGroups(fieldNumbers, serializers))
                 {
                     Compiler.CodeLabel tryNextField = ctx.DefineLabel();
                     int groupItemCount = group.Items.Count;
@@ -717,7 +718,7 @@ namespace ProtoBuf.Serializers
                         Compiler.CodeLabel processThisField = ctx.DefineLabel();
                         ctx.BranchIfEqual(processThisField, true);
                         ctx.Branch(tryNextField, false);
-                        WriteFieldHandler(ctx, expected, loc, processThisField, @continue, (IRuntimeProtoSerializerNode)group.Items[0]);
+                        WriteFieldHandler(ctx, expected, loc, processThisField, @continue, group.Items[0]);
                     }
                     else
                     {   // implement as a jump-table-based switch
@@ -734,7 +735,7 @@ namespace ProtoBuf.Serializers
                         ctx.Branch(tryNextField, false);
                         for (int i = 0; i < groupItemCount; i++)
                         {
-                            WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, (IRuntimeProtoSerializerNode)group.Items[i]);
+                            WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, group.Items[i]);
                         }
                     }
                     ctx.MarkLabel(tryNextField);

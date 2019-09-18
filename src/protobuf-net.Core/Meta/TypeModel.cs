@@ -835,7 +835,7 @@ namespace ProtoBuf.Meta
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).IsAssignableFrom(listType)) { return null; }
 
-            BasicList candidates = new BasicList();
+            var candidates = new List<Type>();
             foreach (MethodInfo method in listType.GetMethods())
             {
                 if (method.IsStatic || method.Name != "Add") continue;
@@ -884,7 +884,7 @@ namespace ProtoBuf.Meta
             return null;
         }
 
-        private static void TestEnumerableListPatterns(BasicList candidates, Type iType)
+        private static void TestEnumerableListPatterns(List<Type> candidates, Type iType)
         {
             if (iType.IsGenericType)
             {
@@ -916,7 +916,7 @@ namespace ProtoBuf.Meta
             object nextItem = null;
             IList list = value as IList;
             object[] args = isList ? null : new object[1];
-            BasicList arraySurrogate = listType.IsArray ? new BasicList() : null;
+            var arraySurrogate = listType.IsArray ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType)) : null;
 
             while (TryDeserializeAuxiliaryType(reader, ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
             {

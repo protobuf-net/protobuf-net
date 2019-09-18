@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 
-namespace ProtoBuf.Meta
+namespace ProtoBuf.Internal
 {
     internal sealed class MutableList : BasicList
     {
@@ -233,30 +234,31 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        internal sealed class Group
+        internal readonly struct Group<T>
         {
             public readonly int First;
-            public readonly BasicList Items;
+            public readonly List<T> Items;
+            public bool IsEmpty => Items is null;
             public Group(int first)
             {
                 this.First = first;
-                this.Items = new BasicList();
+                this.Items = new List<T>();
             }
         }
 
-        internal static BasicList GetContiguousGroups(int[] keys, object[] values)
+        internal static List<Group<T>> GetContiguousGroups<T>(int[] keys, T[] values)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
             if (values == null) throw new ArgumentNullException(nameof(values));
             if (values.Length < keys.Length) throw new ArgumentException("Not all keys are covered by values", nameof(values));
-            BasicList outer = new BasicList();
-            Group group = null;
+            var outer = new List<Group<T>>();
+            Group<T> group = default;
             for (int i = 0; i < keys.Length; i++)
             {
-                if (i == 0 || keys[i] != keys[i - 1]) { group = null; }
-                if (group == null)
+                if (i == 0 || keys[i] != keys[i - 1]) { group = default; }
+                if (group.IsEmpty)
                 {
-                    group = new Group(keys[i]);
+                    group = new Group<T>(keys[i]);
                     outer.Add(group);
                 }
                 group.Items.Add(values[i]);

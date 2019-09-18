@@ -52,11 +52,3 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(ProtoPartialMemberAttribute))]
 [assembly: TypeForwardedTo(typeof(ProtoPartialIgnoreAttribute))]
 [assembly: TypeForwardedTo(typeof(ImplicitFields))]
-
-
-// internal: probably not needed to delare
-[assembly: TypeForwardedTo(typeof(BasicList))]
-[assembly: TypeForwardedTo(typeof(Helpers))]
-[assembly: TypeForwardedTo(typeof(NetObjectCache))]
-[assembly: TypeForwardedTo(typeof(BufferPool))]
-[assembly: TypeForwardedTo(typeof(ExtensibleUtil))]

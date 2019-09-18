@@ -4,6 +4,7 @@ using System.Text;
 using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Collections.Generic;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Meta
 {
