@@ -104,6 +104,7 @@ namespace Benchmark
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         internal static int ParseVarintUInt32_Loop(ReadOnlySpan<byte> span, int offset, out uint value)
         {
             uint b, result = 0;
@@ -141,43 +142,102 @@ namespace Benchmark
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         internal static int ParseVarintUInt32_MoveMask(ReadOnlySpan<byte> span, int offset, out uint value)
         {
             value = span[offset];
-            return (value & 0x80) == 0 ? 1 : Impl(span, offset, out value);
-            static int Impl(ReadOnlySpan<byte> span, int offset, out uint value)
+            return (value & 0x80) == 0 ? 1 : ParseVarintUInt32_MoveMask_Impl(span, offset, out value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        static int ParseVarintUInt32_MoveMask_Impl(ReadOnlySpan<byte> span, int offset, out uint value)
+        {
+            var stopbits = ~(uint)Sse2.MoveMask(MemoryMarshal.AsRef<Vector128<byte>>(span.Slice(offset)));
+            switch (BitOperations.TrailingZeroCount(stopbits))
             {
-                var stopbits = ~(uint)Sse2.MoveMask(MemoryMarshal.AsRef<Vector128<byte>>(span.Slice(offset)));
+                case 1:
+                    value = (uint)(
+                        (span[offset++] & 0x7F) |
+                        (span[offset] << 7)
+                        );
+                    return 2;
+                case 2:
+                    value = (uint)(
+                        (span[offset++] & 0x7F) |
+                        ((span[offset++] & 0x7F) << 7) |
+                        (span[offset] << 14)
+                        );
+                    return 3;
+                case 3:
+                    value = (uint)(
+                        (span[offset++] & 0x7F) |
+                        ((span[offset++] & 0x7F) << 7) |
+                        ((span[offset++] & 0x7F) << 14) |
+                        (span[offset] << 21)
+                        );
+                    return 4;
+                case 4:
+                    value = (uint)(
+                        (span[offset++] & 0x7F) |
+                        ((span[offset++] & 0x7F) << 7) |
+                        ((span[offset++] & 0x7F) << 14) |
+                        ((span[offset++] & 0x7F) << 21) |
+                        (span[offset] << 28)
+                        );
+                    return 5;
+                default:
+                    ThrowOverflow();
+                    value = default;
+                    return -1;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        internal static int ParseVarintUInt32_MoveMask_Ptr(ReadOnlySpan<byte> span, int offset, out uint value)
+        {
+            value = span[offset];
+            return (value & 0x80) == 0 ? 1 : ParseVarintUInt32_MoveMask_Ptr_Impl(span, offset, out value);
+            
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        static unsafe int ParseVarintUInt32_MoveMask_Ptr_Impl(ReadOnlySpan<byte> span, int offset, out uint value)
+        {
+            fixed (byte* bPtr = span)
+            {
+                var ptr = bPtr + offset;
+
+                var stopbits = ~(uint)Sse2.MoveMask(*(Vector128<byte>*)ptr);
                 switch (BitOperations.TrailingZeroCount(stopbits))
                 {
                     case 1:
                         value = (uint)(
-                            (span[offset++] & 0x7F) |
-                            (span[offset] << 7)
+                            (*ptr++ & 0x7F) |
+                            (*ptr << 7)
                             );
                         return 2;
                     case 2:
                         value = (uint)(
-                            (span[offset++] & 0x7F) |
-                            ((span[offset++] & 0x7F) << 7) |
-                            (span[offset] << 14)
+                            (*ptr++ & 0x7F) |
+                            ((*ptr++ & 0x7F) << 7) |
+                            (*ptr << 14)
                             );
                         return 3;
                     case 3:
                         value = (uint)(
-                            (span[offset++] & 0x7F) |
-                            ((span[offset++] & 0x7F) << 7) |
-                            ((span[offset++] & 0x7F) << 14) |
-                            (span[offset] << 21)
+                            (*ptr++ & 0x7F) |
+                            ((*ptr++ & 0x7F) << 7) |
+                            ((*ptr++ & 0x7F) << 14) |
+                            (*ptr << 21)
                             );
                         return 4;
                     case 4:
                         value = (uint)(
-                            (span[offset++] & 0x7F) |
-                            ((span[offset++] & 0x7F) << 7) |
-                            ((span[offset++] & 0x7F) << 14) |
-                            ((span[offset++] & 0x7F) << 21) |
-                            (span[offset] << 28)
+                            (*ptr++ & 0x7F) |
+                            ((*ptr++ & 0x7F) << 7) |
+                            ((*ptr++ & 0x7F) << 14) |
+                            ((*ptr++ & 0x7F) << 21) |
+                            (*ptr << 28)
                             );
                         return 5;
                     default:
@@ -188,88 +248,39 @@ namespace Benchmark
             }
         }
 
-        internal static int ParseVarintUInt32_MoveMask_Ptr(ReadOnlySpan<byte> span, int offset, out uint value)
-        {
-            value = span[offset];
-            return (value & 0x80) == 0 ? 1 : Impl(span, offset, out value);
-            static unsafe int Impl(ReadOnlySpan<byte> span, int offset, out uint value)
-            {
-                fixed (byte* bPtr = span)
-                {
-                    var ptr = bPtr + offset;
-
-                    var stopbits = ~(uint)Sse2.MoveMask(*(Vector128<byte>*)ptr);
-                    switch (BitOperations.TrailingZeroCount(stopbits))
-                    {
-                        case 1:
-                            value = (uint)(
-                                (*ptr++ & 0x7F) |
-                                (*ptr << 7)
-                                );
-                            return 2;
-                        case 2:
-                            value = (uint)(
-                                (*ptr++ & 0x7F) |
-                                ((*ptr++ & 0x7F) << 7) |
-                                (*ptr << 14)
-                                );
-                            return 3;
-                        case 3:
-                            value = (uint)(
-                                (*ptr++ & 0x7F) |
-                                ((*ptr++ & 0x7F) << 7) |
-                                ((*ptr++ & 0x7F) << 14) |
-                                (*ptr << 21)
-                                );
-                            return 4;
-                        case 4:
-                            value = (uint)(
-                                (*ptr++ & 0x7F) |
-                                ((*ptr++ & 0x7F) << 7) |
-                                ((*ptr++ & 0x7F) << 14) |
-                                ((*ptr++ & 0x7F) << 21) |
-                                (*ptr << 28)
-                                );
-                            return 5;
-                        default:
-                            ThrowOverflow();
-                            value = default;
-                            return -1;
-                    }
-                }
-            }
-        }
-
 
         // basline implementation from code snapshot
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         internal static int ParseVarintUInt32_Baseline(ReadOnlySpan<byte> span, int offset, out uint value)
         {
             value = span[offset];
-            return (value & 0x80) == 0 ? 1 : Impl(span.Slice(offset), ref value);
-
-            static int Impl(ReadOnlySpan<byte> span, ref uint value)
-            {
-                uint chunk = span[1];
-                value = (value & 0x7F) | (chunk & 0x7F) << 7;
-                if ((chunk & 0x80) == 0) return 2;
-
-                chunk = span[2];
-                value |= (chunk & 0x7F) << 14;
-                if ((chunk & 0x80) == 0) return 3;
-
-                chunk = span[3];
-                value |= (chunk & 0x7F) << 21;
-                if ((chunk & 0x80) == 0) return 4;
-
-                chunk = span[4];
-                value |= chunk << 28; // can only use 4 bits from this chunk
-                if ((chunk & 0xF0) == 0) return 5;
-
-                ThrowOverflow();
-                return 0;
-            }
+            return (value & 0x80) == 0 ? 1 : ParseVarintUInt32_Baseline_Impl(span.Slice(offset), ref value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        static int ParseVarintUInt32_Baseline_Impl(ReadOnlySpan<byte> span, ref uint value)
+        {
+            uint chunk = span[1];
+            value = (value & 0x7F) | (chunk & 0x7F) << 7;
+            if ((chunk & 0x80) == 0) return 2;
+
+            chunk = span[2];
+            value |= (chunk & 0x7F) << 14;
+            if ((chunk & 0x80) == 0) return 3;
+
+            chunk = span[3];
+            value |= (chunk & 0x7F) << 21;
+            if ((chunk & 0x80) == 0) return 4;
+
+            chunk = span[4];
+            value |= chunk << 28; // can only use 4 bits from this chunk
+            if ((chunk & 0xF0) == 0) return 5;
+
+            ThrowOverflow();
+            return 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         internal static unsafe int ParseVarintUInt32_Baseline_Ptr(ReadOnlySpan<byte> span, int offset, out uint value)
         {
             fixed (byte* ptr = &span[offset])
