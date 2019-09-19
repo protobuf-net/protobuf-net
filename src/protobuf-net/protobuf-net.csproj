@@ -8,7 +8,6 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <Configurations>Debug;Release</Configurations>
-    <PlatformSpanOverloads>false</PlatformSpanOverloads>
   </PropertyGroup>
   
   <!-- define configuration per-platform -->
@@ -20,13 +19,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
-    <PlatformSpanOverloads>true</PlatformSpanOverloads>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModelConfiguration)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformSpanOverloads)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_SPAN_OVERLOADS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
