@@ -75,7 +75,7 @@ namespace ProtoBuf
         {
             var arr = _values32;
             for (int i = 0; i < arr.Length; i++)
-                ComputeVarintLength32_Loop(arr[i]);
+                ComputeVarintLength32_Lzcnt(arr[i]);
         }
 
         [Benchmark(OperationsPerInvoke = LOOP_SIZE)]
@@ -83,7 +83,7 @@ namespace ProtoBuf
         {
             var arr = _values64;
             for (int i = 0; i < arr.Length; i++)
-                ComputeVarintLength64_Loop(arr[i]);
+                ComputeVarintLength64_Lzcnt(arr[i]);
         }
 
         // deliberately not static/aggressive-inline; in real impl, this
