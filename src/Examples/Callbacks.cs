@@ -213,11 +213,13 @@ namespace Examples
             }
         }
 #pragma warning disable xUnit2002, xUnit2005 // it is convinced that TCreate is a value-type
+#pragma warning disable IDE0060 // Remove unused parameter
         static void Test<T, TCreate>(TypeModel model, string mode)
+#pragma warning restore IDE0060 // Remove unused parameter
             where TCreate : T, new()
             where T : ICallbackTest
         {
-            mode = ":" + mode;
+            // mode = ":" + mode;
             TCreate cs = new TCreate
             {
                 Bar = "abc"
@@ -257,11 +259,13 @@ namespace Examples
         [ProtoContract]
         class DuplicateCallbacks
         {
+#pragma warning disable IDE0051 // Remove unused private members
             [ProtoBeforeSerialization]
             void Foo() {}
 
             [ProtoBeforeSerialization]
             void Bar() { }
+#pragma warning restore IDE0051 // Remove unused private members
         }
 
         [Fact]
@@ -342,26 +346,26 @@ namespace Examples
             Assert.Null(orig.C.ReadState);
             Assert.Null(orig.C.WriteState);
 #endif
-            using (var ms = new MemoryStream())
-            {
-                SerializationContext ctx = new SerializationContext { Context = new object()};
-                model.Serialize(ms, orig, ctx);
-                Assert.Null(orig.B.ReadState);
-                Assert.Same(ctx.Context, orig.B.WriteState);
+            using var ms = new MemoryStream();
+            SerializationContext ctx = new SerializationContext { Context = new object()};
+            model.Serialize(ms, orig, ctx);
+            Assert.Null(orig.B.ReadState);
+            Assert.Same(ctx.Context, orig.B.WriteState);
 #if REMOTING
-                Assert.Null(orig.C.ReadState);
-                Assert.Same(ctx.Context, orig.C.WriteState);
+            Assert.Null(orig.C.ReadState);
+            Assert.Same(ctx.Context, orig.C.WriteState);
 #endif
-                ms.Position = 0;
-                ctx = new SerializationContext { Context = new object() };
-                clone = (CallbackWrapper)model.Deserialize(ms, null, typeof(CallbackWrapper), -1, ctx);
-                Assert.Same(ctx.Context, clone.B.ReadState);
-                Assert.Null(clone.B.WriteState);
+            ms.Position = 0;
+            ctx = new SerializationContext { Context = new object() };
+#pragma warning disable CS0618
+            clone = (CallbackWrapper)model.Deserialize(ms, null, typeof(CallbackWrapper), -1, ctx);
+#pragma warning restore CS0618
+            Assert.Same(ctx.Context, clone.B.ReadState);
+            Assert.Null(clone.B.WriteState);
 #if REMOTING
-                Assert.Same(ctx.Context, clone.C.ReadState);
-                Assert.Null(clone.C.WriteState);
+            Assert.Same(ctx.Context, clone.C.ReadState);
+            Assert.Null(clone.C.WriteState);
 #endif
-            }
         }
         [ProtoContract]
         public class CallbackWrapper
@@ -460,7 +464,9 @@ namespace Examples
             public string Bar { get; set; }
         }
 
+#pragma warning disable IDE0051 // Remove unused private members
         private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer, ref ProtoWriter.State state)
+#pragma warning restore IDE0051 // Remove unused private members
         {
             obj.OnSerializing();
             string bar = obj.Bar;

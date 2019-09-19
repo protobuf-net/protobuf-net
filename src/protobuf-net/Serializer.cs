@@ -159,9 +159,7 @@ namespace ProtoBuf
         /// Precompiles the serializer for a given type.
         /// </summary>
         public static void PrepareSerializer<T>()
-        {
-            NonGeneric.PrepareSerializer(typeof(T));
-        }
+            => RuntimeTypeModel.Default[typeof(T)].CompileInPlace();
 
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
@@ -269,6 +267,7 @@ namespace ProtoBuf
         /// <summary>
         /// Provides non-generic access to the default serializer.
         /// </summary>
+        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public static class NonGeneric
         {
             /// <summary>
