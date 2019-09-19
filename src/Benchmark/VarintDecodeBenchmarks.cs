@@ -13,7 +13,7 @@ namespace Benchmark
     [CoreJob]
     public class VarintDecodeBenchmarks
     {
-        byte[] _payload = new byte[16 * 1024];
+        readonly byte[] _payload = new byte[16 * 1024];
         const int VARINTS_IN_PAYLOAD = 3364;
         [GlobalSetup]
         public void Setup()

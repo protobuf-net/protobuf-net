@@ -85,22 +85,30 @@ namespace ProtoBuf
 
             private protected override int ImplWriteVarint32(ref State state, uint value)
             {
+#if PLAT_INTRINSICS
+                return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+#else
                 int count = 1;
                 while ((value >>= 7) != 0)
                 {
                     count++;
                 }
                 return count;
+#endif
             }
 
             private protected override int ImplWriteVarint64(ref State state, ulong value)
             {
+#if PLAT_INTRINSICS
+                return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+#else
                 int count = 1;
                 while ((value >>= 7) != 0)
                 {
                     count++;
                 }
                 return count;
+#endif
             }
 
             private protected override bool TryFlush(ref State state) => true;

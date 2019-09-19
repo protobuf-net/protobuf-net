@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.0</TargetFrameworks>
     <RootNamespace>ProtoBuf</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -18,12 +18,15 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.0'">
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS</DefineConstants>
+  </PropertyGroup>
   
   <!--
   
   PREFER_SPANS        : if the Stream resolves to something that can be processed another way, allow it
   PLAT_ISREF          : does System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences-T() exist?
   PLAT_SPAN_OVERLOADS : do common methods like string encode have APIs that take spans
-  
+  PLAT_INTRINSICS     : make use of CPU intrinsics
   -->
 </Project>

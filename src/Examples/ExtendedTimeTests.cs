@@ -55,7 +55,7 @@ namespace Examples
             public long Value { get; set; }
         }
 
-        static DateTime origin = new DateTime(1970,1,1);
+        readonly static DateTime origin = new DateTime(1970,1,1);
 
         static DateTime KnownTimeWithTicks
         {
@@ -64,7 +64,7 @@ namespace Examples
         [Fact]
         public void TickPrecisionTimeSpanTest()
         {
-            DateTime dt = KnownTimeWithTicks;
+            // DateTime dt = KnownTimeWithTicks;
             TimeSpan ts = KnownTimeWithTicks - new DateTime(2008, 1, 1);
             TimeSpanString val = new TimeSpanString { When = ts },
                 clone = Serializer.DeepClone(val);
@@ -90,6 +90,7 @@ namespace Examples
             for (int i = 0; i < 500; i++)
             {
                 DateTime dt = new DateTime(rand.Next(int.MaxValue));
+                TestDate(dt);
             }
         }
 
