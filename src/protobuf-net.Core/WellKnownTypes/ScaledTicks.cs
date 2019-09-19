@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 
 namespace ProtoBuf.WellKnownTypes
 {
@@ -88,10 +89,13 @@ namespace ProtoBuf.WellKnownTypes
                     {
                         case 1: return long.MaxValue;
                         case -1: return long.MinValue;
-                        default: throw new ProtoException("Unknown min/max value: " + Value.ToString());
+                        default:
+                            ThrowHelper.ThrowProtoException("Unknown min/max value: " + Value.ToString());
+                            return default;
                     }
                 default:
-                    throw new ProtoException("Unknown timescale: " + Scale.ToString());
+                    ThrowHelper.ThrowProtoException("Unknown timescale: " + Scale.ToString());
+                    return default;
             }
         }
     }
@@ -124,7 +128,8 @@ namespace ProtoBuf.WellKnownTypes
                             case DateTimeKind.Local:
                                 break; // fine
                             default:
-                                throw new ProtoException("Invalid date/time kind: " + kind.ToString());
+                                ThrowHelper.ThrowProtoException("Invalid date/time kind: " + kind.ToString());
+                                break;
                         }
                         break;
                     default:

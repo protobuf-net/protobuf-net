@@ -166,7 +166,7 @@ namespace ProtoBuf.Meta
                 if (isInsideList) throw CreateNestedListsNotSupported(parentList?.GetType());
                 foreach (object item in sequence)
                 {
-                    if (item == null) { throw new NullReferenceException(); }
+                    if (item == null) ThrowHelper.ThrowNullReferenceException();
                     if (!TrySerializeAuxiliaryType(writer, ref state, null, format, tag, item, true, sequence))
                     {
                         ThrowUnexpectedType(item.GetType());
@@ -179,7 +179,7 @@ namespace ProtoBuf.Meta
 
         private void SerializeCore(ProtoWriter writer, ref ProtoWriter.State state, object value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
             Type type = value.GetType();
             int key = GetKey(ref type);
             if (key >= 0)
@@ -363,7 +363,7 @@ namespace ProtoBuf.Meta
             bytesRead = 0;
             if (type == null && (style != PrefixStyle.Base128 || resolver == null))
             {
-                throw new InvalidOperationException("A type must be provided unless base-128 prefixing is being used in combination with a resolver");
+                ThrowHelper.ThrowInvalidOperationException("A type must be provided unless base-128 prefixing is being used in combination with a resolver");
             }
             do
             {
@@ -390,7 +390,7 @@ namespace ProtoBuf.Meta
 
                 if (skip)
                 {
-                    if (len == long.MaxValue) throw new InvalidOperationException();
+                    if (len == long.MaxValue) ThrowHelper.ThrowInvalidOperationException();
                     ProtoReader.Seek(source, len, null);
                     bytesRead += len;
                 }
@@ -520,7 +520,7 @@ namespace ProtoBuf.Meta
                 }
                 return haveObject;
             }
-            void IEnumerator.Reset() { throw new NotSupportedException(); }
+            void IEnumerator.Reset() { ThrowHelper.ThrowNotSupportedException(); }
             public object Current { get { return current; } }
             private readonly Stream source;
             private readonly Type type;
@@ -574,7 +574,7 @@ namespace ProtoBuf.Meta
         {
             if (type == null)
             {
-                if (value == null) throw new ArgumentNullException(nameof(value));
+                if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
                 type = value.GetType();
             }
             int key = GetKey(ref type);
@@ -592,7 +592,8 @@ namespace ProtoBuf.Meta
                         ProtoWriter.WriteObject(writer, ref state, value, key, style, fieldNumber);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(style));
+                        ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
+                        break;
                 }
                 writer.Flush(ref state);
                 writer.Close(ref state);
@@ -711,7 +712,7 @@ namespace ProtoBuf.Meta
             {
                 if (value == null)
                 {
-                    throw new ArgumentNullException(nameof(type));
+                    ThrowHelper.ThrowArgumentNullException(nameof(type));
                 }
                 else
                 {
@@ -822,7 +823,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         internal object DeserializeFallback(ProtoReader source, ref ProtoReader.State state, object value, System.Type type)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
             if (type == null || type == typeof(object))
                 type = value?.GetType() ?? typeof(object);
             var oldModel = source.Model;
@@ -983,7 +984,7 @@ namespace ProtoBuf.Meta
         private bool TryDeserializeList(ref ProtoReader.State state, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
             MethodInfo addMethod = TypeModel.ResolveListAdd(listType, itemType, out bool isList);
-            if (addMethod == null) throw new NotSupportedException("Unknown list variant: " + listType.FullName);
+            if (addMethod == null) ThrowHelper.ThrowNotSupportedException("Unknown list variant: " + listType.FullName);
             bool found = false;
             object nextItem = null;
             IList list = value as IList;
@@ -1111,7 +1112,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         internal bool TryDeserializeAuxiliaryType(ProtoReader reader, ref ProtoReader.State state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             Type itemType;
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             WireType wiretype = GetWireType(this, typecode, format, ref type, out int modelKey);
@@ -1222,27 +1223,43 @@ namespace ProtoBuf.Meta
         /// optimal performance.
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.Create", true)]
-        public static TypeModel Create() => throw new NotSupportedException();
+        public static TypeModel Create()
+        {
+            ThrowHelper.ThrowNotSupportedException();
+            return default;
+        }
 
         /// <summary>
         /// Create a model that serializes all types from an
         /// assembly specified by type
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.CreateForAssembly", true)]
-        public static TypeModel CreateForAssembly<T>() => throw new NotSupportedException();
+        public static TypeModel CreateForAssembly<T>()
+        {
+            ThrowHelper.ThrowNotSupportedException();
+            return default;
+        }
 
         /// <summary>
         /// Create a model that serializes all types from an
         /// assembly specified by type
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.CreateForAssembly", true)]
-        public static TypeModel CreateForAssembly(Type type) => throw new NotSupportedException();
+        public static TypeModel CreateForAssembly(Type type)
+        {
+            ThrowHelper.ThrowNotSupportedException();
+            return default;
+        }
 
         /// <summary>
         /// Create a model that serializes all types from an assembly
         /// </summary>
         [Obsolete("Use RuntimeTypeModel.CreateForAssembly", true)]
-        public static TypeModel CreateForAssembly(Assembly assembly) => throw new NotSupportedException();
+        public static TypeModel CreateForAssembly(Assembly assembly)
+        {
+            ThrowHelper.ThrowNotSupportedException();
+            return default;
+        }
 
         /// <summary>
         /// Applies common proxy scenarios, resolving the actual type to consider
@@ -1319,7 +1336,8 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T NoSerializer<T>(TypeModel model) where T : class
         {
-            throw new ProtoException($"No {TypeHelper.CSName(typeof(T))} available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No {TypeHelper.CSName(typeof(T))} available for model {model?.ToString() ?? "(none)"}");
+            return default;
         }
 
         internal static T CreateInstance<T>(ISerializationContext context = null, IProtoFactory<T> factory = null)
@@ -1366,7 +1384,7 @@ namespace ProtoBuf.Meta
                     var actualKey = GetKeyImpl(type);
                     if(actualKey != tuple.Key)
                     {
-                        throw new InvalidOperationException(
+                        ThrowHelper.ThrowInvalidOperationException(
                             $"Key cache failure; got {tuple.Key} instead of {actualKey} for '{type.Name}'");
                     }
 #endif
@@ -1407,7 +1425,11 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// </summary>
-        protected virtual int GetKeyImpl(Type type) => throw new NotSupportedException(nameof(GetKeyImpl) + " is not supported");
+        protected virtual int GetKeyImpl(Type type)
+        {
+            ThrowHelper.ThrowNotSupportedException(nameof(GetKeyImpl) + " is not supported");
+            return default;
+        }
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
@@ -1417,7 +1439,7 @@ namespace ProtoBuf.Meta
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Write state</param>
         protected internal virtual void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
-            => throw new NotSupportedException(nameof(Serialize) + " is not supported");
+            => ThrowHelper.ThrowNotSupportedException(nameof(Serialize) + " is not supported");
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -1430,7 +1452,10 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         protected internal virtual object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
-            => throw new NotSupportedException(nameof(DeserializeCore) + " is not supported");
+        {
+            ThrowHelper.ThrowNotSupportedException(nameof(DeserializeCore) + " is not supported");
+            return default;
+        }
 
         /// <summary>
         /// Indicates the type of callback to be used
@@ -1555,7 +1580,7 @@ namespace ProtoBuf.Meta
         {
             if (expected != TypeModel.ResolveProxies(actual))
             {
-                throw new InvalidOperationException("Unexpected sub-type: " + actual.FullName);
+                ThrowHelper.ThrowInvalidOperationException("Unexpected sub-type: " + actual.FullName);
             }
         }
 
@@ -1601,12 +1626,12 @@ namespace ProtoBuf.Meta
                 if (baseType != null && baseType
                     .IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
                 {
-                    throw new InvalidOperationException(
+                    ThrowHelper.ThrowInvalidOperationException(
                         "Are you mixing protobuf-net and protobuf-csharp-port? See https://stackoverflow.com/q/11564914/23354; type: " + fullName);
                 }
             }
 
-            throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
+            ThrowHelper.ThrowInvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
         }
 
         /// <summary>
@@ -1630,7 +1655,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static void ThrowCannotCreateInstance(Type type)
         {
-            throw new ProtoException("No parameterless constructor found for " + (type?.FullName ?? "(null)"));
+            ThrowHelper.ThrowProtoException("No parameterless constructor found for " + (type?.FullName ?? "(null)"));
         }
 
         internal static string SerializeType(TypeModel model, System.Type type)
@@ -1686,7 +1711,7 @@ namespace ProtoBuf.Meta
 
         private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             Type tmp = Nullable.GetUnderlyingType(type);
             if (tmp != null) type = tmp;
 
@@ -1735,7 +1760,8 @@ namespace ProtoBuf.Meta
         /// <param name="syntax">The .proto syntax to use for the operation</param>
         public virtual string GetSchema(Type type, ProtoSyntax syntax)
         {
-            throw new NotSupportedException();
+            ThrowHelper.ThrowNotSupportedException();
+            return default;
         }
 
 #pragma warning disable RCS1159 // Use EventHandler<T>.
@@ -1762,8 +1788,10 @@ namespace ProtoBuf.Meta
             private readonly Type type;
             internal Formatter(TypeModel model, Type type)
             {
-                this.model = model ?? throw new ArgumentNullException(nameof(model));
-                this.type = type ?? throw new ArgumentNullException(nameof(type));
+                if (model == null) ThrowHelper.ThrowArgumentNullException(nameof(model));
+                if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(model));
+                this.model = model;
+                this.type = type;
             }
 
             public System.Runtime.Serialization.SerializationBinder Binder { get; set; }

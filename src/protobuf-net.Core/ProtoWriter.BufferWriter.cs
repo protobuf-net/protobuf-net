@@ -16,7 +16,7 @@ namespace ProtoBuf
         //            where T : IBufferWriter<byte>
         //        {
         //#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
-        //            if (writer == null) throw new ArgumentNullException(nameof(writer));
+        //            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
         //#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
         //            state = default;
         //            return new BufferWriterProtoWriter<T>(writer, model, context);
@@ -27,7 +27,7 @@ namespace ProtoBuf
         /// </summary>
         public static ProtoWriter Create(out State state, IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
             state = default;
 
             return BufferWriterProtoWriter<IBufferWriter<byte>>.CreateBufferWriter(writer, model, context);
@@ -56,7 +56,11 @@ namespace ProtoBuf
                 _writer = default;
             }
 
-            protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
+            protected internal override State DefaultState()
+            {
+                ThrowHelper.ThrowInvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
+                return default;
+            }
 
 #pragma warning disable IDE0044 // Add readonly modifier
             private TBuffer _writer; // not readonly, because T could be a struct - might need in-place state changes
@@ -238,7 +242,8 @@ namespace ProtoBuf
                         AdvanceAndReset(4);
                         break;
                     default:
-                        throw new NotImplementedException($"Sub-object prefix style not implemented: {style}");
+                        ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
+                        break;
                 }
                 var oldPos = GetPosition(ref state);
                 serializer.Write(this, ref state, value);
@@ -247,7 +252,7 @@ namespace ProtoBuf
                 var actualLength = (newPos - oldPos);
                 if (actualLength != calculatedLength)
                 {
-                    throw new InvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                    ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
                 }
             }
 
@@ -278,15 +283,18 @@ namespace ProtoBuf
                 var actualLength = (newPos - oldPos);
                 if (actualLength != calculatedLength)
                 {
-                    throw new InvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                    ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
                 }
             }
 
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
-                => throw new NotSupportedException("You must use the WriteSubItem API with this writer type");
+                => ThrowHelper.ThrowNotSupportedException("You must use the WriteSubItem API with this writer type");
 
             private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
-                => throw new NotSupportedException("You must use the WriteSubItem API with this writer type");
+            {
+                ThrowHelper.ThrowNotSupportedException("You must use the WriteSubItem API with this writer type");
+                return default;
+            }
 
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {

@@ -1,4 +1,5 @@
-﻿using ProtoBuf.WellKnownTypes;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.WellKnownTypes;
 using System;
 
 namespace ProtoBuf
@@ -58,7 +59,7 @@ namespace ProtoBuf
 
         private static void WriteTimeSpanImpl(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind kind, ref ProtoWriter.State state)
         {
-            if (dest == null) throw new ArgumentNullException(nameof(dest));
+            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
 
             switch (dest.WireType)
             {
@@ -71,7 +72,8 @@ namespace ProtoBuf
                     ProtoWriter.WriteInt64(timeSpan.Ticks, dest, ref state);
                     break;
                 default:
-                    throw new ProtoException("Unexpected wire-type: " + dest.WireType.ToString());
+                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + dest.WireType.ToString());
+                    break;
             }
         }
 
@@ -224,7 +226,7 @@ namespace ProtoBuf
 
         private static void WriteDateTimeImpl(DateTime value, ProtoWriter dest, bool includeKind, ref ProtoWriter.State state)
         {
-            if (dest == null) throw new ArgumentNullException(nameof(dest));
+            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
             TimeSpan delta;
             switch (dest.WireType)
             {
@@ -265,7 +267,9 @@ namespace ProtoBuf
                     kind = DateTimeKind.Unspecified;
                     return source.ReadInt64(ref state);
                 default:
-                    throw new ProtoException("Unexpected wire-type: " + source.WireType.ToString());
+                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + source.WireType.ToString());
+                    kind = default;
+                    return default;
             }
         }
 
@@ -412,7 +416,7 @@ namespace ProtoBuf
                         type = source.DeserializeType(typeName);
                         if (type == null)
                         {
-                            throw new ProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
+                            ThrowHelper.ThrowProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
                         }
                         if (type == typeof(string))
                         {
@@ -422,7 +426,7 @@ namespace ProtoBuf
                         {
                             key = source.GetTypeKey(ref type);
                             if (key < 0)
-                                throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
+                                ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                         }
                         break;
                     case FieldObject:
@@ -467,7 +471,7 @@ namespace ProtoBuf
                         }
                         if (newObjectKey >= 0 && !lateSet && !ReferenceEquals(oldValue, value))
                         {
-                            throw new ProtoException("A reference-tracked object changed reference during deserialization");
+                            ThrowHelper.ThrowProtoException("A reference-tracked object changed reference during deserialization");
                         }
                         if (newObjectKey < 0 && newTypeKey >= 0)
                         {  // have a new type, but not a new object
@@ -481,7 +485,7 @@ namespace ProtoBuf
             }
             if (newObjectKey >= 0 && (options & NetObjectOptions.AsReference) == 0)
             {
-                throw new ProtoException("Object key in input stream, but reference-tracking was not expected");
+                ThrowHelper.ThrowProtoException("Object key in input stream, but reference-tracking was not expected");
             }
             ProtoReader.EndSubItem(token, source, ref state);
 
@@ -503,7 +507,7 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteNetObject(object value, ProtoWriter dest, ref ProtoWriter.State state, int key, NetObjectOptions options)
         {
-            if (dest == null) throw new ArgumentNullException(nameof(dest));
+            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = dest.WireType;
@@ -529,7 +533,7 @@ namespace ProtoBuf
                     if (!(value is string))
                     {
                         key = dest.GetTypeKey(ref type);
-                        if (key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
+                        if (key < 0) ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }
                     int typeKey = dest.NetCache.AddObjectKey(type, out bool existing);
                     ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint, dest, ref state);

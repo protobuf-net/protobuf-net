@@ -36,7 +36,11 @@ namespace ProtoBuf
 
         private sealed class ReadOnlySequenceProtoReader : ProtoReader
         {
-            protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoReader.Create");
+            protected internal override State DefaultState()
+            {
+                ThrowHelper.ThrowInvalidOperationException("You must retain and pass the state from ProtoReader.Create");
+                return default;
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static string ToString(ReadOnlySpan<byte> span, int offset, int bytes)

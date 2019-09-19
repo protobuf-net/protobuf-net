@@ -105,7 +105,8 @@ namespace ProtoBuf
                 return typed;
             }
 
-            throw new NotImplementedException("upcast");
+            ThrowHelper.ThrowNotImplementedException("upcast");
+            return default;
         }
 
         /// <summary>
@@ -127,7 +128,7 @@ namespace ProtoBuf
             if (callback != null)
             {
                 if (_value is T obj) callback.Invoke(obj, _context);
-                else if (_onBeforeDeserialize is object) throw new InvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
+                else if (_onBeforeDeserialize is object) ThrowHelper.ThrowInvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
                 else _onBeforeDeserialize = callback;
             }
         }

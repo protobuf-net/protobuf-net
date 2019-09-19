@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Reflection;
+using ProtoBuf.Internal;
 
 #pragma warning disable RCS1163
 namespace ProtoBuf
@@ -113,7 +114,8 @@ namespace ProtoBuf
         {
             if (stream == null || !stream.TryGetBuffer(out segment))
             {
-                throw new InvalidOperationException("Unable to obtain buffer from MemoryStream");
+                ThrowHelper.ThrowInvalidOperationException("Unable to obtain buffer from MemoryStream");
+                segment = default;
             }
 
         }

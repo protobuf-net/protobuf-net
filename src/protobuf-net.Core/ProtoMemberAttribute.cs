@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Reflection;
 
 namespace ProtoBuf
@@ -41,14 +42,13 @@ namespace ProtoBuf
 
         internal ProtoMemberAttribute(int tag, bool forced)
         {
-            if (tag <= 0 && !forced) throw new ArgumentOutOfRangeException(nameof(tag));
+            if (tag <= 0 && !forced) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
             this.tag = tag;
         }
 
-#if !NO_RUNTIME
         internal MemberInfo Member, BackingMember;
         internal bool TagIsPinned;
-#endif
+
         /// <summary>
         /// Gets or sets the original name defined in the .proto; not used
         /// during serialization.
@@ -215,9 +215,7 @@ namespace ProtoBuf
         public ProtoPartialMemberAttribute(int tag, string memberName)
             : base(tag)
         {
-#if !NO_RUNTIME
-            if (string.IsNullOrEmpty(memberName)) throw new ArgumentNullException(nameof(memberName));
-#endif
+            if (string.IsNullOrEmpty(memberName)) ThrowHelper.ThrowArgumentNullException(nameof(memberName));
             this.MemberName = memberName;
         }
         /// <summary>

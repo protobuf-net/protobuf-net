@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -15,7 +16,7 @@ namespace ProtoBuf
         {
             if (key-- == Root)
             {
-                if (rootObject == null) throw new ProtoException("No root object assigned");
+                if (rootObject == null) ThrowHelper.ThrowProtoException("No root object assigned");
                 return rootObject;
             }
             var list = List;
@@ -23,13 +24,13 @@ namespace ProtoBuf
             if (key < 0 || key >= list.Count)
             {
                 Debug.WriteLine("Missing key: " + key);
-                throw new ProtoException("Internal error; a missing key occurred");
+                ThrowHelper.ThrowProtoException("Internal error; a missing key occurred");
             }
 
             object tmp = list[key];
             if (tmp == null)
             {
-                throw new ProtoException("A deferred key does not have a value yet");
+                ThrowHelper.ThrowProtoException("A deferred key does not have a value yet");
             }
             return tmp;
         }
@@ -38,8 +39,8 @@ namespace ProtoBuf
         {
             if (key-- == Root)
             {
-                if (value == null) throw new ArgumentNullException(nameof(value));
-                if (rootObject != null && ((object)rootObject != (object)value)) throw new ProtoException("The root object cannot be reassigned");
+                if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+                if (rootObject != null && ((object)rootObject != (object)value)) ThrowHelper.ThrowProtoException("The root object cannot be reassigned");
                 rootObject = value;
             }
             else
@@ -58,12 +59,12 @@ namespace ProtoBuf
                     }
                     else if (!ReferenceEquals(oldVal, value))
                     {
-                        throw new ProtoException("Reference-tracked objects cannot change reference");
+                        ThrowHelper.ThrowProtoException("Reference-tracked objects cannot change reference");
                     } // otherwise was the same; nothing to do
                 }
                 else
                 {
-                    throw new ProtoException("Internal error; a key mismatch occurred");
+                    ThrowHelper.ThrowProtoException("Internal error; a key mismatch occurred");
                 }
             }
         }
@@ -71,7 +72,7 @@ namespace ProtoBuf
         private object rootObject;
         internal int AddObjectKey(object value, out bool existing)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
 
             if ((object)value == (object)rootObject) // (object) here is no-op, but should be
             {                                        // preserved even if this was typed - needs ref-check

@@ -42,7 +42,9 @@ namespace TestMediaBrowser
         }
 
         [ProtoMember(1)]
+#pragma warning disable IDE0044 // Add readonly modifier
         private int legs;
+#pragma warning restore IDE0044 // Add readonly modifier
         public int Legs { get { return legs; } }
 
         [ProtoMember(2)]
@@ -53,9 +55,9 @@ namespace TestMediaBrowser
     {
 
         // its used during reflection tests 
-#pragma warning disable 169
+#pragma warning disable 169, IDE0044, IDE0051
         Fur i;
-#pragma warning restore 169
+#pragma warning restore 169, IDE0044, IDE0051
 
         [ProtoMember(1)]
         public Fur Fur { get; set; }
@@ -73,7 +75,9 @@ namespace TestMediaBrowser
         }
 
         [ProtoMember(1)]
+#pragma warning disable IDE0044 // Add readonly modifier
         int? age;
+#pragma warning restore IDE0044 // Add readonly modifier
         public int? Age { get { return age; } }
 
         [ProtoMember(2)]
@@ -177,6 +181,7 @@ namespace TestMediaBrowser
             Thing original = new Animal();
             Assert.IsType<Animal>(Serializer.DeepClone(original));
         }
+
         /*
         [Fact]
         public void TestMergeDoesNotInventFields()
@@ -189,7 +194,9 @@ namespace TestMediaBrowser
             Assert.Null(other.TVDBSeriesId);
         }*/
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "This works differently by design; perhaps reverse order?")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void TestMerging()
         {
             var source = new MisterNullable(11)
@@ -326,14 +333,12 @@ namespace TestMediaBrowser
 #if !COREFX
             TimeAction("Standard serialization", () =>
             {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    bf.Serialize(ms, list);
-                    ms.Position = 0;
-                    list = new List<DummyPersistanceObject>();
-                    list = (List<DummyPersistanceObject>)bf.Deserialize(ms);
-                }
+                using MemoryStream ms = new MemoryStream();
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(ms, list);
+                ms.Position = 0;
+                list = new List<DummyPersistanceObject>();
+                list = (List<DummyPersistanceObject>)bf.Deserialize(ms);
             });
 #endif
             GC.Collect();
@@ -361,21 +366,18 @@ namespace TestMediaBrowser
 
             TimeAction("Custom Serializer", () =>
             {
-                using (MemoryStream ms = new MemoryStream())
+                using MemoryStream ms = new MemoryStream();
+                foreach (var foo in list)
                 {
-                    foreach (var foo in list)
-                    {
-                        Serializer.Serialize(ms, foo);
-                    }
+                    Serializer.Serialize(ms, foo);
+                }
 
-                    ms.Position = 0;
+                ms.Position = 0;
 
-                    list = new List<DummyPersistanceObject>();
-                    for (int i = 0; i < 100000; i++)
-                    {
-                        list.Add(Serializer.Deserialize<DummyPersistanceObject>(ms));
-                    }
-
+                list = new List<DummyPersistanceObject>();
+                for (int i = 0; i < 100000; i++)
+                {
+                    list.Add(Serializer.Deserialize<DummyPersistanceObject>(ms));
                 }
             });
 

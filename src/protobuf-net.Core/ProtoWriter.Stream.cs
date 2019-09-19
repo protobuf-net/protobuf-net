@@ -44,9 +44,9 @@ namespace ProtoBuf
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
                 obj.Init(model, context);
-                if (dest == null) throw new ArgumentNullException(nameof(dest));
-                if (!dest.CanWrite) throw new ArgumentException("Cannot write to stream", nameof(dest));
-                //if (model == null) throw new ArgumentNullException("model");
+                if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+                if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
+                //if (model == null) ThrowHelper.ThrowArgumentNullException("model");
                 obj.dest = dest;
                 obj.ioBuffer = BufferPool.GetBuffer();
                 return obj;
@@ -353,7 +353,8 @@ namespace ProtoBuf
                         }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(style));
+                        ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
+                        break;
                 }
                 // and this object is no longer a blockage - also flush if sensible
                 const int ADVISORY_FLUSH_SIZE = 1024;

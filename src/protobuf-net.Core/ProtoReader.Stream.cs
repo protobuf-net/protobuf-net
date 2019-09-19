@@ -148,8 +148,8 @@ namespace ProtoBuf
             internal void Init(Stream source, TypeModel model, SerializationContext context, long length)
             {
                 Init(model, context);
-                if (source == null) throw new ArgumentNullException(nameof(source));
-                if (!source.CanRead) throw new ArgumentException("Cannot read from stream", nameof(source));
+                if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+                if (!source.CanRead) ThrowHelper.ThrowArgumentException("Cannot read from stream", nameof(source));
 
                 if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
                 {

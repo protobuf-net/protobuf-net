@@ -13,9 +13,9 @@ namespace ProtoBuf
         /// </summary>
         None = -1,
 
-        ///// <summary>
-        ///// Base-128 variable-length encoding
-        ///// </summary>
+        /// <summary>
+        /// Base-128 variable-length encoding
+        /// </summary>
         Varint = 0,
 
         /// <summary>

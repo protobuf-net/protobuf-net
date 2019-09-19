@@ -1,3 +1,4 @@
+using ProtoBuf.Internal;
 using System;
 
 namespace ProtoBuf
@@ -23,7 +24,7 @@ namespace ProtoBuf
             get { return implicitFirstTag; }
             set
             {
-                if (value < 1) throw new ArgumentOutOfRangeException("ImplicitFirstTag");
+                if (value < 1) ThrowHelper.ThrowArgumentOutOfRangeException("ImplicitFirstTag");
                 implicitFirstTag = value;
             }
         }

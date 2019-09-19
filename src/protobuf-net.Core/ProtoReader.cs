@@ -59,12 +59,12 @@ namespace ProtoBuf
         partial void OnDispose()
         {
             int count = System.Threading.Interlocked.Decrement(ref _usageCount);
-            if (count != 0) throw new InvalidOperationException($"Usage count - expected 0, was {count}");
+            if (count != 0) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 0, was {count}");
         }
         partial void OnInit()
         {
             int count = System.Threading.Interlocked.Increment(ref _usageCount);
-            if (count != 1) throw new InvalidOperationException($"Usage count - expected 1, was {count}");
+            if (count != 1) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 1, was {count}");
         }
 #endif
         partial void OnDispose();
@@ -513,7 +513,7 @@ namespace ProtoBuf
         // [Obsolete(PreferReadSubItem, false)]
         public static void EndSubItem(SubItemToken token, ProtoReader reader, ref State state)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader == null) ThrowHelper.ThrowArgumentNullException(nameof(reader));
             long value64 = token.value64;
             switch (reader.WireType)
             {
@@ -556,7 +556,7 @@ namespace ProtoBuf
         // [Obsolete(PreferReadSubItem, false)]
         public static SubItemToken StartSubItem(ProtoReader reader, ref State state)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader == null) ThrowHelper.ThrowArgumentNullException(nameof(reader));
             switch (reader.WireType)
             {
                 case WireType.StartGroup:
@@ -629,9 +629,9 @@ namespace ProtoBuf
             return _fieldNumber;
         }
         private static void ThrowInvalidField(int fieldNumber)
-            => throw new ProtoException("Invalid field in source data: " + fieldNumber.ToString());
+            => ThrowHelper.ThrowProtoException("Invalid field in source data: " + fieldNumber.ToString());
         private static void ThrowUnexpectedEndGroup()
-            => throw new ProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
+            => ThrowHelper.ThrowProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
 
         /// <summary>
         /// Looks ahead to see whether the next field in the stream is what we expect
@@ -901,8 +901,8 @@ namespace ProtoBuf
 
         //static byte[] ReadBytes(Stream stream, int length)
         //{
-        //    if (stream == null) throw new ArgumentNullException("stream");
-        //    if (length < 0) throw new ArgumentOutOfRangeException("length");
+        //    if (stream == null) ThrowHelper.ThrowArgumentNullException("stream");
+        //    if (length < 0) ThrowHelper.ThrowArgumentOutOfRangeException("length");
         //    byte[] buffer = new byte[length];
         //    int offset = 0, read;
         //    while (length > 0 && (read = stream.Read(buffer, offset, length)) > 0)
@@ -964,7 +964,7 @@ namespace ProtoBuf
         public static void DirectReadBytes(Stream source, byte[] buffer, int offset, int count)
         {
             int read;
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
             while (count > 0 && (read = source.Read(buffer, offset, count)) > 0)
             {
                 count -= read;
@@ -1032,7 +1032,7 @@ namespace ProtoBuf
                         {
                             if ((val & 7) != (uint)WireType.String)
                             { // got a header, but it isn't a string
-                                throw new InvalidOperationException($"Unexpected wire-type: {(WireType)(val & 7)}, expected {WireType.String})");
+                                ThrowHelper.ThrowInvalidOperationException($"Unexpected wire-type: {(WireType)(val & 7)}, expected {WireType.String})");
                             }
                             fieldNumber = (int)(val >> 3);
                             tmpBytesRead = ProtoReader.TryReadUInt64Varint(source, out val);
@@ -1080,7 +1080,9 @@ namespace ProtoBuf
                             | ReadByteOrThrow(source);
                     }
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(style));
+                    ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
+                    bytesRead = default;
+                    return default;
             }
         }
 
@@ -1118,7 +1120,8 @@ namespace ProtoBuf
                 value |= ((ulong)b & 0x7F) << shift;
                 return ++bytesRead;
             }
-            throw new OverflowException();
+            ThrowHelper.ThrowOverflowException();
+            return default;
         }
 
         private protected abstract bool IsFullyConsumed(ref State state);
@@ -1198,7 +1201,7 @@ namespace ProtoBuf
         /// </summary>
         public void AppendExtensionData(ref State state, IExtensible instance)
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
             IExtension extn = instance.GetExtensionObject(true);
             bool commit = false;
             // unusually we *don't* want "using" here; the "finally" does that, with
@@ -1263,7 +1266,7 @@ namespace ProtoBuf
         /// </summary>
         public static bool HasSubValue(ProtoBuf.WireType wireType, ProtoReader source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
             // check for virtual end of stream
             if (source.blockEnd64 <= source._longPosition || wireType == WireType.EndGroup) { return false; }
             source.WireType = wireType;
@@ -1293,7 +1296,7 @@ namespace ProtoBuf
         /// </summary>
         public static void NoteObject(object value, ProtoReader reader)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader == null) ThrowHelper.ThrowArgumentNullException(nameof(reader));
             if (reader.trapCount != 0)
             {
                 reader.netCache.RegisterTrappedObject(value);
@@ -1331,10 +1334,10 @@ namespace ProtoBuf
         /// </summary>
         public static object Merge(ProtoReader parent, object from, object to)
         {
-            if (parent == null) throw new ArgumentNullException(nameof(parent));
+            if (parent == null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
             TypeModel model = parent.Model;
             SerializationContext ctx = parent.Context;
-            if (model == null) throw new InvalidOperationException("Types cannot be merged unless a type-model has been specified");
+            if (model == null) ThrowHelper.ThrowInvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
 
             using (var writer = ProtoWriter.Create(out var writeState, ms, model, ctx))
