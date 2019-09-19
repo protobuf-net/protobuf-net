@@ -6,6 +6,7 @@
     <NoWarn>CS1591</NoWarn>
     <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.0'">$(DefineConstants);INTRINSICS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.25" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-rc1.19456.4" />
+    <!--<PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />-->
   </ItemGroup>
 
   <ItemGroup>
