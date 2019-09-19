@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
@@ -44,7 +45,7 @@ namespace ProtoBuf.Serializers
 
         private ProtoTypeCode GetTypeCode()
         {
-            Type type = Helpers.GetUnderlyingType(ExpectedType) ?? ExpectedType;
+            Type type = Nullable.GetUnderlyingType(ExpectedType) ?? ExpectedType;
             return Helpers.GetTypeCode(type);
         }
 
@@ -94,7 +95,7 @@ namespace ProtoBuf.Serializers
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            Helpers.DebugAssert(value == null); // since replaces
+            Debug.Assert(value == null); // since replaces
             int wireValue = source.ReadInt32(ref state);
             if (map == null)
             {

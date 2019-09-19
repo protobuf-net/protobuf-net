@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace ProtoBuf.Serializers
 {
@@ -15,7 +16,7 @@ namespace ProtoBuf.Serializers
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            Helpers.DebugAssert(value == null); // since replaces
+            Debug.Assert(value == null); // since replaces
             return (char)source.ReadUInt16(ref state);
         }
 

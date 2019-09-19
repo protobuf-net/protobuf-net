@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -14,7 +15,7 @@ namespace ProtoBuf.Serializers
                 null, new Type[] { typeof(string) }, null);
             if (method != null && method.ReturnType == type)
             {
-                if (Helpers.IsValueType(type))
+                if (type.IsValueType)
                 {
                     MethodInfo toString = GetCustomToString(type);
                     if (toString == null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
@@ -26,7 +27,7 @@ namespace ProtoBuf.Serializers
         private static MethodInfo GetCustomToString(Type type)
         {
             return type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
-                        null, Helpers.EmptyTypes, null);
+                        null, Type.EmptyTypes, null);
         }
 
         private ParseableSerializer(MethodInfo parse)
@@ -41,7 +42,7 @@ namespace ProtoBuf.Serializers
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            Helpers.DebugAssert(value == null); // since replaces
+            Debug.Assert(value == null); // since replaces
             return parse.Invoke(null, new object[] { source.ReadString(ref state) });
         }
 
@@ -53,16 +54,14 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type type = ExpectedType;
-            if (Helpers.IsValueType(type))
+            if (type.IsValueType)
             {   // note that for structs, we've already asserted that a custom ToString
                 // exists; no need to handle the box/callvirt scenario
 
                 // force it to a variable if needed, so we can take the address
-                using (Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom))
-                {
-                    ctx.LoadAddress(loc, type);
-                    ctx.EmitCall(GetCustomToString(type));
-                }
+                using Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom);
+                ctx.LoadAddress(loc, type);
+                ctx.EmitCall(GetCustomToString(type));
             }
             else
             {

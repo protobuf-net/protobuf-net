@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ProtoBuf.Internal
 {
@@ -100,7 +101,7 @@ namespace ProtoBuf.Internal
 
             internal Node(object[] data, int length)
             {
-                Helpers.DebugAssert((data == null && length == 0) ||
+                Debug.Assert((data == null && length == 0) ||
                     (data != null && length > 0 && length <= data.Length));
                 this.data = data;
 

@@ -172,7 +172,7 @@ namespace ProtoBuf.Compiler
         {
             if (IsObject(type))
             { }
-            else if (Helpers.IsValueType(type))
+            else if (type.IsValueType)
             {
                 il.Emit(OpCodes.Box, type);
                 TraceCompile(OpCodes.Box + ": " + type);
@@ -188,7 +188,7 @@ namespace ProtoBuf.Compiler
         {
             if (IsObject(type))
             { }
-            else if (Helpers.IsValueType(type))
+            else if (type.IsValueType)
             {
                 il.Emit(OpCodes.Unbox_Any, type);
                 TraceCompile(OpCodes.Unbox_Any + ": " + type);
@@ -494,7 +494,7 @@ namespace ProtoBuf.Compiler
                 if (fromValue.Type == type) return fromValue.AsCopy();
                 // otherwise, load onto the stack and let the default handling (below) deal with it
                 LoadValue(fromValue);
-                if (!Helpers.IsValueType(type) && (fromValue.Type == null || !type.IsAssignableFrom(fromValue.Type)))
+                if (!type.IsValueType && (fromValue.Type == null || !type.IsAssignableFrom(fromValue.Type)))
                 { // need to cast
                     Cast(type);
                 }
@@ -592,14 +592,14 @@ namespace ProtoBuf.Compiler
             CheckAccessibility(ref member);
             OpCode opcode;
             Debug.Assert(method is MethodBuilder || !method.IsDefined(typeof(ObsoleteAttribute), true), "calling an obsolete method: " + method.Name);
-            if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
+            if (method.IsStatic || method.DeclaringType.IsValueType)
             {
                 opcode = OpCodes.Call;
             }
             else
             {
                 opcode = OpCodes.Callvirt;
-                if (targetType != null && Helpers.IsValueType(targetType) && !Helpers.IsValueType(method.DeclaringType))
+                if (targetType != null && targetType.IsValueType && !method.DeclaringType.IsValueType)
                 {
                     Constrain(targetType);
                 }
@@ -622,9 +622,9 @@ namespace ProtoBuf.Compiler
 
         internal void WriteNullCheckedTail(Type type, IRuntimeProtoSerializerNode tail, Compiler.Local valueFrom)
         {
-            if (Helpers.IsValueType(type))
+            if (type.IsValueType)
             {
-                Type underlyingType = Helpers.GetUnderlyingType(type);
+                Type underlyingType = Nullable.GetUnderlyingType(type);
 
                 if (underlyingType == null)
                 { // not a nullable T; can invoke directly
@@ -638,7 +638,7 @@ namespace ProtoBuf.Compiler
                     CodeLabel @end = DefineLabel();
                     BranchIfFalse(@end, false);
                     LoadAddress(valOrNull, type);
-                    EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+                    EmitCall(type.GetMethod("GetValueOrDefault", Type.EmptyTypes));
                     tail.EmitWrite(this, null);
                     MarkLabel(@end);
                 }
@@ -661,18 +661,18 @@ namespace ProtoBuf.Compiler
         {
             Type underlyingType;
 
-            if (Helpers.IsValueType(type) && (underlyingType = Helpers.GetUnderlyingType(type)) != null)
+            if (type.IsValueType && (underlyingType = Nullable.GetUnderlyingType(type)) != null)
             {
                 if (tail.RequiresOldValue)
                 {
                     // we expect the input value to be in valueFrom; need to unpack it from T?
                     using Local loc = GetLocalWithValue(type, valueFrom);
                     LoadAddress(loc, type);
-                    EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+                    EmitCall(type.GetMethod("GetValueOrDefault", Type.EmptyTypes));
                 }
                 else
                 {
-                    Helpers.DebugAssert(valueFrom == null); // not expecting a valueFrom in this case
+                    Debug.Assert(valueFrom == null); // not expecting a valueFrom in this case
                 }
                 tail.EmitRead(this, null); // either unwrapped on the stack or not provided
                 if (tail.ReturnsValue)
@@ -691,7 +691,7 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(Type type)
         {
-            EmitCtor(type, Helpers.EmptyTypes);
+            EmitCtor(type, Type.EmptyTypes);
         }
 
         public void EmitCtor(ConstructorInfo ctor)
@@ -712,9 +712,9 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
-            Helpers.DebugAssert(type != null);
-            Helpers.DebugAssert(parameterTypes != null);
-            if (Helpers.IsValueType(type) && parameterTypes.Length == 0)
+            Debug.Assert(type != null);
+            Debug.Assert(parameterTypes != null);
+            if (type.IsValueType && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
                 TraceCompile(OpCodes.Initobj + ": " + type);
@@ -932,7 +932,7 @@ namespace ProtoBuf.Compiler
 
         internal void LoadAddress(Local local, Type type, bool evenIfClass = false)
         {
-            if (evenIfClass || Helpers.IsValueType(type))
+            if (evenIfClass || type.IsValueType)
             {
                 if (local == null)
                 {
@@ -1083,7 +1083,7 @@ namespace ProtoBuf.Compiler
                         Branch(endOfSwitch, false);
                     }
                 }
-                Helpers.DebugAssert(count == 0, "Should use exactly all switch items");
+                Debug.Assert(count == 0, "Should use exactly all switch items");
                 MarkLabel(endOfSwitch);
             }
         }
@@ -1184,7 +1184,7 @@ namespace ProtoBuf.Compiler
                 Type type = local.Type;
                 // remember that we've already (in the .ctor) excluded the case
                 // where it *cannot* be disposable
-                if (Helpers.IsValueType(type))
+                if (type.IsValueType)
                 {
                     ctx.LoadAddress(local, type);
                     ctx.Constrain(type);
@@ -1226,7 +1226,7 @@ namespace ProtoBuf.Compiler
 
         internal void LoadLength(Local arr, bool zeroIfNull)
         {
-            Helpers.DebugAssert(arr.Type.IsArray && arr.Type.GetArrayRank() == 1);
+            Debug.Assert(arr.Type.IsArray && arr.Type.GetArrayRank() == 1);
 
             if (zeroIfNull)
             {
@@ -1260,9 +1260,9 @@ namespace ProtoBuf.Compiler
         internal void LoadArrayValue(Local arr, Local i)
         {
             Type type = arr.Type;
-            Helpers.DebugAssert(type.IsArray && arr.Type.GetArrayRank() == 1);
+            Debug.Assert(type.IsArray && arr.Type.GetArrayRank() == 1);
             type = type.GetElementType();
-            Helpers.DebugAssert(type != null, "Not an array: " + arr.Type.FullName);
+            Debug.Assert(type != null, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
             switch (Helpers.GetTypeCode(type))
@@ -1280,7 +1280,7 @@ namespace ProtoBuf.Compiler
                 case ProtoTypeCode.Single: Emit(OpCodes.Ldelem_R4); break;
                 case ProtoTypeCode.Double: Emit(OpCodes.Ldelem_R8); break;
                 default:
-                    if (Helpers.IsValueType(type))
+                    if (type.IsValueType)
                     {
                         il.Emit(OpCodes.Ldelema, type);
                         il.Emit(OpCodes.Ldobj, type);
@@ -1402,7 +1402,7 @@ namespace ProtoBuf.Compiler
 
         internal bool AllowInternal(PropertyInfo property)
         {
-            return NonPublic || InternalsVisible(Helpers.GetAssembly(property.DeclaringType));
+            return NonPublic || InternalsVisible(property.DeclaringType.Assembly);
         }
     }
 }

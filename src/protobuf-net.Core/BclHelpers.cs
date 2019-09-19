@@ -271,8 +271,6 @@ namespace ProtoBuf
             }
         }
 
-        private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
-
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>

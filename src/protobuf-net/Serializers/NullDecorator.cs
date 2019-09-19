@@ -11,7 +11,7 @@ namespace ProtoBuf.Serializers
                 throw new NotSupportedException("NullDecorator only supports implementations that return values");
 
             Type tailType = tail.ExpectedType;
-            if (Helpers.IsValueType(tailType))
+            if (tailType.IsValueType)
             {
                 ExpectedType = typeof(Nullable<>).MakeGenericType(tailType);
             }
@@ -59,10 +59,10 @@ namespace ProtoBuf.Serializers
             ctx.MarkLabel(processField);
             if (Tail.RequiresOldValue)
             {
-                if (Helpers.IsValueType(ExpectedType))
+                if (ExpectedType.IsValueType)
                 {
                     ctx.LoadAddress(oldValue, ExpectedType);
-                    ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+                    ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Type.EmptyTypes));
                 }
                 else
                 {
@@ -71,7 +71,7 @@ namespace ProtoBuf.Serializers
             }
             Tail.EmitRead(ctx, null);
             // note we demanded always returns a value
-            if (Helpers.IsValueType(ExpectedType))
+            if (ExpectedType.IsValueType)
             {
                 ctx.EmitCtor(ExpectedType, Tail.ExpectedType); // re-nullable<T> it
             }
@@ -96,7 +96,7 @@ namespace ProtoBuf.Serializers
             ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
             ctx.StoreValue(token);
 
-            if (Helpers.IsValueType(ExpectedType))
+            if (ExpectedType.IsValueType)
             {
                 ctx.LoadAddress(valOrNull, ExpectedType);
                 ctx.LoadValue(ExpectedType.GetProperty("HasValue"));
@@ -107,10 +107,10 @@ namespace ProtoBuf.Serializers
             }
             Compiler.CodeLabel @end = ctx.DefineLabel();
             ctx.BranchIfFalse(@end, false);
-            if (Helpers.IsValueType(ExpectedType))
+            if (ExpectedType.IsValueType)
             {
                 ctx.LoadAddress(valOrNull, ExpectedType);
-                ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+                ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Type.EmptyTypes));
             }
             else
             {

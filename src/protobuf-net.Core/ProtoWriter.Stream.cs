@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace ProtoBuf
@@ -74,7 +75,7 @@ namespace ProtoBuf
 
             private static void IncrementedAndReset(int length, StreamProtoWriter writer)
             {
-                Helpers.DebugAssert(length >= 0);
+                Debug.Assert(length >= 0);
                 writer.ioIndex += length;
                 writer.Advance(length);
                 writer.WireType = WireType.None;
@@ -186,7 +187,7 @@ namespace ProtoBuf
                 DemandSpace(expectedBytes, this, ref state);
                 int actualBytes = UTF8.GetBytes(value, 0, value.Length, ioBuffer, ioIndex);
                 ioIndex += actualBytes;
-                Helpers.DebugAssert(expectedBytes == actualBytes);
+                Debug.Assert(expectedBytes == actualBytes);
             }
 
             private static void WriteUInt32ToBuffer(uint value, byte[] buffer, int index)

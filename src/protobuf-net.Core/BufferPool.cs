@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Diagnostics;
 
 namespace ProtoBuf
 {
@@ -24,10 +25,10 @@ namespace ProtoBuf
 
         internal static void ResizeAndFlushLeft(ref byte[] buffer, int toFitAtLeastBytes, int copyFromIndex, int copyBytes)
         {
-            Helpers.DebugAssert(buffer != null);
-            Helpers.DebugAssert(toFitAtLeastBytes > buffer.Length);
-            Helpers.DebugAssert(copyFromIndex >= 0);
-            Helpers.DebugAssert(copyBytes >= 0);
+            Debug.Assert(buffer != null);
+            Debug.Assert(toFitAtLeastBytes > buffer.Length);
+            Debug.Assert(copyFromIndex >= 0);
+            Debug.Assert(copyBytes >= 0);
 
             int newLength = buffer.Length * 2;
             if (newLength < 0)

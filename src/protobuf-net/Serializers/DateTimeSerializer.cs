@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace ProtoBuf.Serializers
 {
@@ -27,7 +28,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                Helpers.DebugAssert(value == null); // since replaces
+                Debug.Assert(value == null); // since replaces
                 return BclHelpers.ReadDateTime(source, ref state);
             }
         }

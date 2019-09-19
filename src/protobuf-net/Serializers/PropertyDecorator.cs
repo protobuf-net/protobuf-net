@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -14,8 +15,8 @@ namespace ProtoBuf.Serializers
 
         public PropertyDecorator(Type forType, PropertyInfo property, IRuntimeProtoSerializerNode tail) : base(tail)
         {
-            Helpers.DebugAssert(forType != null);
-            Helpers.DebugAssert(property != null);
+            Debug.Assert(forType != null);
+            Debug.Assert(property != null);
             ExpectedType = forType;
             this.property = property;
             SanityCheck(property, tail, out readOptionsWriteValue, true, true);
@@ -31,7 +32,7 @@ namespace ProtoBuf.Serializers
             {
                 throw new InvalidOperationException("Cannot serialize property without a get accessor");
             }
-            if (!writeValue && (!tail.RequiresOldValue || Helpers.IsValueType(tail.ExpectedType)))
+            if (!writeValue && (!tail.RequiresOldValue || tail.ExpectedType.IsValueType))
             { // so we can't save the value, and the tail doesn't use it either... not helpful
                 // or: can't write the value, so the struct value will be lost
                 throw new InvalidOperationException("Cannot apply changes to property " + property.DeclaringType.FullName + "." + property.Name);
@@ -48,14 +49,14 @@ namespace ProtoBuf.Serializers
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            Helpers.DebugAssert(value != null);
+            Debug.Assert(value != null);
             value = property.GetValue(value, null);
             if (value != null) Tail.Write(dest, ref state, value);
         }
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            Helpers.DebugAssert(value != null);
+            Debug.Assert(value != null);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
             object newVal = Tail.Read(source, ref state, oldVal);
@@ -83,56 +84,52 @@ namespace ProtoBuf.Serializers
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             SanityCheck(property, Tail, out bool writeValue, ctx.NonPublic, ctx.AllowInternal(property));
-            if (Helpers.IsValueType(ExpectedType) && valueFrom == null)
+            if (ExpectedType.IsValueType && valueFrom == null)
             {
                 throw new InvalidOperationException("Attempt to mutate struct on the head of the stack; changes would be lost");
             }
 
-            using (Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
+            using Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            if (Tail.RequiresOldValue)
             {
-                if (Tail.RequiresOldValue)
-                {
-                    ctx.LoadAddress(loc, ExpectedType); // stack is: old-addr
-                    ctx.LoadValue(property); // stack is: old-value
+                ctx.LoadAddress(loc, ExpectedType); // stack is: old-addr
+                ctx.LoadValue(property); // stack is: old-value
+            }
+            Type propertyType = property.PropertyType;
+            ctx.ReadNullCheckedTail(propertyType, Tail, null); // stack is [new-value]
+
+            if (writeValue)
+            {
+                using Compiler.Local newVal = new Compiler.Local(ctx, property.PropertyType);
+                ctx.StoreValue(newVal); // stack is empty
+
+                Compiler.CodeLabel allDone = new Compiler.CodeLabel(); // <=== default structs
+                if (!propertyType.IsValueType)
+                { // if the tail returns a null, intepret that as *no assign*
+                    allDone = ctx.DefineLabel();
+                    ctx.LoadValue(newVal); // stack is: new-value
+                    ctx.BranchIfFalse(@allDone, true); // stack is empty
                 }
-                Type propertyType = property.PropertyType;
-                ctx.ReadNullCheckedTail(propertyType, Tail, null); // stack is [new-value]
-
-                if (writeValue)
+                // assign the value
+                ctx.LoadAddress(loc, ExpectedType); // parent-addr
+                ctx.LoadValue(newVal); // parent-obj|new-value
+                if (shadowSetter == null)
                 {
-                    using (Compiler.Local newVal = new Compiler.Local(ctx, property.PropertyType))
-                    {
-                        ctx.StoreValue(newVal); // stack is empty
-
-                        Compiler.CodeLabel allDone = new Compiler.CodeLabel(); // <=== default structs
-                        if (!Helpers.IsValueType(propertyType))
-                        { // if the tail returns a null, intepret that as *no assign*
-                            allDone = ctx.DefineLabel();
-                            ctx.LoadValue(newVal); // stack is: new-value
-                            ctx.BranchIfFalse(@allDone, true); // stack is empty
-                        }
-                        // assign the value
-                        ctx.LoadAddress(loc, ExpectedType); // parent-addr
-                        ctx.LoadValue(newVal); // parent-obj|new-value
-                        if (shadowSetter == null)
-                        {
-                            ctx.StoreValue(property); // empty
-                        }
-                        else
-                        {
-                            ctx.EmitCall(shadowSetter); // empty
-                        }
-                        if (!Helpers.IsValueType(propertyType))
-                        {
-                            ctx.MarkLabel(allDone);
-                        }
-                    }
+                    ctx.StoreValue(property); // empty
                 }
                 else
-                { // don't want return value; drop it if anything there
-                    // stack is [new-value]
-                    if (Tail.ReturnsValue) { ctx.DiscardValue(); }
+                {
+                    ctx.EmitCall(shadowSetter); // empty
                 }
+                if (!propertyType.IsValueType)
+                {
+                    ctx.MarkLabel(allDone);
+                }
+            }
+            else
+            { // don't want return value; drop it if anything there
+              // stack is [new-value]
+                if (Tail.ReturnsValue) { ctx.DiscardValue(); }
             }
         }
 

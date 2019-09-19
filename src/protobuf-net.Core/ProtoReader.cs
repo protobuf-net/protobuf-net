@@ -447,12 +447,7 @@ namespace ProtoBuf
                     return ReadSingle(ref state);
                 case WireType.Fixed64:
                     long value = ReadInt64(ref state);
-#if FEAT_SAFE
-                    return BitConverter.Int64BitsToDouble(value);
-                    // return BitConverter.ToDouble(BitConverter.GetBytes(value), 0);
-#else
                     unsafe { return *(double*)&value; }
-#endif
                 default:
                     throw CreateWireTypeException(ref state);
             }
@@ -818,11 +813,7 @@ namespace ProtoBuf
                 case WireType.Fixed32:
                     {
                         int value = ReadInt32(ref state);
-#if FEAT_SAFE
-                        return BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
-#else
                         unsafe { return *(float*)&value; }
-#endif
                     }
                 case WireType.Fixed64:
                     {

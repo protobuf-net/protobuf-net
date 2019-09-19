@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -8,11 +9,11 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
-        internal const bool PreferSpans
-#if PLAT_SPAN_OVERLOADS
-            = true;
+
+#if PREFER_SPANS
+        internal const bool PreferSpans = true;
 #else
-            = false;
+        internal const bool PreferSpans = true;
 #endif
 
         /// <summary>
@@ -40,13 +41,11 @@ namespace ProtoBuf
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
         public static ProtoReader Create(out State state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
-#if PLAT_SPAN_OVERLOADS
             if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
             {
                 return Create(out state, new System.Buffers.ReadOnlySequence<byte>(
                     segment.Array, segment.Offset, segment.Count), model, context);
             }
-#endif
 
             state = default; // not used by this API
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -80,9 +79,7 @@ namespace ProtoBuf
             return false;
         }
 
-#pragma warning disable RCS1163
         internal static bool TryConsumeSegmentRespectingPosition(Stream source, out ArraySegment<byte> data, long length)
-#pragma warning restore RCS1163
         {
             if (source is MemoryStream ms && ms.CanSeek
                 && (ms.TryGetBuffer(out var segment) || ReflectionTryGetBuffer(ms, out segment)))
@@ -367,7 +364,7 @@ namespace ProtoBuf
 
             private void Ensure(ref State state, int count, bool strict)
             {
-                Helpers.DebugAssert(_available <= count, "Asking for data without checking first");
+                Debug.Assert(_available <= count, "Asking for data without checking first");
                 if (_source != null)
                 {
                     if (count > _ioBuffer.Length)

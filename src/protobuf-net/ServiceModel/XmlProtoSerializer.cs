@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
@@ -23,7 +24,7 @@ namespace ProtoBuf.ServiceModel
             this.key = key;
             this.isList = isList;
             this.type = type ?? throw new ArgumentOutOfRangeException(nameof(type));
-            this.isEnum = Helpers.IsEnum(type);
+            this.isEnum = type.IsEnum;
         }
         /// <summary>
         /// Attempt to create a new serializer for the given model and type
@@ -53,7 +54,7 @@ namespace ProtoBuf.ServiceModel
             key = GetKey(model, ref type, out isList);
             this.model = model;
             this.type = type;
-            this.isEnum = Helpers.IsEnum(type);
+            this.isEnum = type.IsEnum;
             if (key < 0) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
         }
 
@@ -137,8 +138,9 @@ namespace ProtoBuf.ServiceModel
                         }
                     }
                 }
-                byte[] buffer = ms.GetBuffer();
-                writer.WriteBase64(buffer, 0, (int)ms.Length);
+                Helpers.GetBuffer(ms, out var segment);
+                writer.WriteBase64(segment.Array, segment.Offset, segment.Count);
+                
             }
         }
 
@@ -183,7 +185,7 @@ namespace ProtoBuf.ServiceModel
             }
 
             object result = null;
-            Helpers.DebugAssert(reader.CanReadBinaryContent, "CanReadBinaryContent");
+            Debug.Assert(reader.CanReadBinaryContent, "CanReadBinaryContent");
             ReadOnlyMemory<byte> payload = reader.ReadContentAsBase64();
             using (var protoReader = ProtoReader.Create(out var state, payload, model, null))
             {

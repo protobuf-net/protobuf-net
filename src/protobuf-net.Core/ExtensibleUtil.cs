@@ -53,21 +53,19 @@ namespace ProtoBuf
             {
                 object value = null;
                 SerializationContext ctx = new SerializationContext();
-                using (var reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF))
+                using var reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
+                while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
                 {
-                    while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
-                    {
-                        if (!singleton)
-                        {
-                            yield return value;
-
-                            value = null; // fresh item each time
-                        }
-                    }
-                    if (singleton && value != null)
+                    if (!singleton)
                     {
                         yield return value;
+
+                        value = null; // fresh item each time
                     }
+                }
+                if (singleton && value != null)
+                {
+                    yield return value;
                 }
             }
             finally

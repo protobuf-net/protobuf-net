@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Diagnostics;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
@@ -53,7 +53,7 @@ namespace ProtoBuf.Serializers
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            Helpers.DebugAssert(fieldNumber == source.FieldNumber);
+            Debug.Assert(fieldNumber == source.FieldNumber);
             if (strict) { source.Assert(ref state, wireType); }
             else if (NeedsHint) { source.Hint(wireType); }
             return Tail.Read(source, ref state, value);

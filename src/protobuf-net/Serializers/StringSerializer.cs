@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace ProtoBuf.Serializers
 {
@@ -18,7 +19,7 @@ namespace ProtoBuf.Serializers
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            Helpers.DebugAssert(value == null); // since replaces
+            Debug.Assert(value == null); // since replaces
             return source.ReadString(ref state);
         }
 

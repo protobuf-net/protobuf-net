@@ -2,6 +2,7 @@
 using System.Collections;
 using ProtoBuf.Meta;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace ProtoBuf.Serializers
 {
@@ -127,7 +128,7 @@ namespace ProtoBuf.Serializers
             bool returnList = ReturnList;
 
             using Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType);
-            using Compiler.Local origlist = (returnList && AppendToCollection && !Helpers.IsValueType(ExpectedType)) ? new Compiler.Local(ctx, ExpectedType) : null;
+            using Compiler.Local origlist = (returnList && AppendToCollection && !ExpectedType.IsValueType) ? new Compiler.Local(ctx, ExpectedType) : null;
             if (!AppendToCollection)
             { // always new
                 ctx.LoadNullRef();
@@ -236,11 +237,11 @@ namespace ProtoBuf.Serializers
             bool tailReturnsValue = tail.ReturnsValue;
             if (tail.RequiresOldValue)
             {
-                if (Helpers.IsValueType(itemType) || !tailReturnsValue)
+                if (itemType.IsValueType || !tailReturnsValue)
                 {
                     // going to need a variable
                     using Compiler.Local item = new Compiler.Local(ctx, itemType);
-                    if (Helpers.IsValueType(itemType))
+                    if (itemType.IsValueType)
                     {   // initialise the struct
                         ctx.LoadAddress(item, itemType);
                         ctx.EmitCtor(itemType);
@@ -280,7 +281,7 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.CastToObject(itemType);
                 }
-                else if (Helpers.GetUnderlyingType(addParamType) == itemType)
+                else if (Nullable.GetUnderlyingType(addParamType) == itemType)
                 { // list is nullable
                     ConstructorInfo ctor = Helpers.GetConstructor(addParamType, new Type[] { itemType }, false);
                     ctx.EmitCtor(ctor); // the itemType on the stack is now a Nullable<ItemType>
@@ -365,9 +366,9 @@ namespace ProtoBuf.Serializers
         {
             using Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom);
             MethodInfo getEnumerator = GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current);
-            Helpers.DebugAssert(moveNext != null);
-            Helpers.DebugAssert(current != null);
-            Helpers.DebugAssert(getEnumerator != null);
+            Debug.Assert(moveNext != null);
+            Debug.Assert(current != null);
+            Debug.Assert(getEnumerator != null);
             Type enumeratorType = getEnumerator.ReturnType;
             bool writePacked = WritePacked;
             using Compiler.Local iter = new Compiler.Local(ctx, enumeratorType);

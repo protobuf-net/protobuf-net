@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ProtoBuf
 {
@@ -21,7 +22,7 @@ namespace ProtoBuf
 
             if (key < 0 || key >= list.Count)
             {
-                Helpers.DebugWriteLine("Missing key: " + key);
+                Debug.WriteLine("Missing key: " + key);
                 throw new ProtoException("Internal error; a missing key occurred");
             }
 

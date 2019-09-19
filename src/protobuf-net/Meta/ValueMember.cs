@@ -4,6 +4,7 @@ using ProtoBuf.Serializers;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace ProtoBuf.Meta
 {
@@ -85,11 +86,11 @@ namespace ProtoBuf.Meta
             : this(model, fieldNumber, memberType, itemType, defaultType, dataFormat)
         {
             if (parentType == null) throw new ArgumentNullException(nameof(parentType));
-            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
 
             Member = member ?? throw new ArgumentNullException(nameof(member));
             ParentType = parentType;
-            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             
             if (defaultValue != null && (defaultValue.GetType() != memberType))
             {
@@ -127,12 +128,12 @@ namespace ProtoBuf.Meta
         private static object ParseDefaultValue(Type type, object value)
         {
             {
-                Type tmp = Helpers.GetUnderlyingType(type);
+                Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
             }
             if (value is string s)
             {
-                if (Helpers.IsEnum(type)) return Helpers.ParseEnum(type, s);
+                if (type.IsEnum) return Enum.Parse(type, s, true);
 
                 switch (Helpers.GetTypeCode(type))
                 {
@@ -159,7 +160,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (Helpers.IsEnum(type)) return Enum.ToObject(type, value);
+            if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
@@ -392,7 +393,7 @@ namespace ProtoBuf.Meta
 
         private static bool IsValidMapKeyType(Type type)
         {
-            if (type == null || Helpers.IsEnum(type)) return false;
+            if (type == null || type.IsEnum) return false;
             switch (Helpers.GetTypeCode(type))
             {
                 case ProtoTypeCode.Boolean:
@@ -471,11 +472,11 @@ namespace ProtoBuf.Meta
                     // apply lists if appropriate
                     if (ItemType != null)
                     {
-                        Type underlyingItemType = SupportNull ? ItemType : Helpers.GetUnderlyingType(ItemType) ?? ItemType;
+                        Type underlyingItemType = SupportNull ? ItemType : Nullable.GetUnderlyingType(ItemType) ?? ItemType;
 
-                        Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
-                            || (ser.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
-                            , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
+                        Debug.Assert(underlyingItemType == ser.ExpectedType
+                            || (ser.ExpectedType == typeof(object) && !underlyingItemType.IsValueType)
+                            , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
                         if (MemberType.IsArray)
                         {
                             ser = new ArrayDecorator(ser, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
@@ -551,10 +552,10 @@ namespace ProtoBuf.Meta
             bool asReference, bool dynamicType, bool overwriteList, bool allowComplexTypes)
         {
             {
-                Type tmp = Helpers.GetUnderlyingType(type);
+                Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
             }
-            if (Helpers.IsEnum(type))
+            if (type.IsEnum)
             {
                 if (allowComplexTypes && model != null)
                 {
@@ -662,7 +663,7 @@ namespace ProtoBuf.Meta
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;
                     if (meta != null)
                     { // exists
-                        if (asReference && Helpers.IsValueType(type))
+                        if (asReference && type.IsValueType)
                         {
                             string message = "AsReference cannot be used with value-types";
 

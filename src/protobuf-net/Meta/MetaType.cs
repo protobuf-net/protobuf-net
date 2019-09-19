@@ -290,7 +290,7 @@ namespace ProtoBuf.Meta
             Type = type;
             this.model = model;
 
-            if (Helpers.IsEnum(type))
+            if (type.IsEnum)
             {
                 EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
             }
@@ -361,7 +361,7 @@ namespace ProtoBuf.Meta
 
         private IProtoTypeSerializer BuildSerializer()
         {
-            if (Helpers.IsEnum(Type))
+            if (Type.IsEnum)
             {
                 return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Varint, false, new EnumSerializer(Type, GetEnumMap()));
             }
@@ -456,7 +456,7 @@ namespace ProtoBuf.Meta
         internal static bool GetAsReferenceDefault(RuntimeTypeModel model, Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            if (Helpers.IsEnum(type)) return false; // never as-ref
+            if (type.IsEnum) return false; // never as-ref
             AttributeMap[] typeAttribs = AttributeMap.Create(model, type, false);
             for (int i = 0; i < typeAttribs.Length; i++)
             {
@@ -483,7 +483,7 @@ namespace ProtoBuf.Meta
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
             }
-            bool isEnum = !EnumPassthru && Helpers.IsEnum(Type);
+            bool isEnum = !EnumPassthru && Type.IsEnum;
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
 
             bool enumShouldUseImplicitPassThru = isEnum;
@@ -544,7 +544,7 @@ namespace ProtoBuf.Meta
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
                 {
                     if (item.TryGet(nameof(ProtoContractAttribute.Name), out tmp)) name = (string)tmp;
-                    if (Helpers.IsEnum(Type)) // note this is subtly different to isEnum; want to do this even if [Flags]
+                    if (Type.IsEnum) // note this is subtly different to isEnum; want to do this even if [Flags]
                     {
                         if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthruHasValue), false, out tmp) && (bool)tmp)
                         {
@@ -1078,7 +1078,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    MethodInfo method = Helpers.GetInstanceMethod(finalType, "ShouldSerialize" + member.Name, Helpers.EmptyTypes);
+                    MethodInfo method = Helpers.GetInstanceMethod(finalType, "ShouldSerialize" + member.Name, Type.EmptyTypes);
                     if (method != null && method.ReturnType == typeof(bool))
                     {
                         vm.SetSpecified(method, null);
@@ -1230,7 +1230,7 @@ namespace ProtoBuf.Meta
             if (surrogateType != null)
             {
                 // note that BuildSerializer checks the **CURRENT TYPE** is OK to be surrogated
-                if (surrogateType != null && Helpers.IsAssignableFrom(typeof(IEnumerable), surrogateType))
+                if (surrogateType != null && typeof(IEnumerable).IsAssignableFrom(surrogateType))
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
@@ -1336,7 +1336,7 @@ namespace ProtoBuf.Meta
         private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
             MemberInfo mi = null;
-            MemberInfo[] members = Type.GetMember(memberName, Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            MemberInfo[] members = Type.GetMember(memberName, Type.IsEnum ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (members != null && members.Length == 1) mi = members[0];
             if (mi == null) throw new ArgumentException("Unable to determine member: " + memberName, nameof(memberName));
 
@@ -1358,7 +1358,7 @@ namespace ProtoBuf.Meta
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
             {
-                var backingMembers = Type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var backingMembers = Type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Type.IsEnum ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (backingMembers != null && backingMembers.Length == 1 && backingMembers[0] is FieldInfo)
                     backingField = backingMembers[0];
             }
@@ -1405,7 +1405,7 @@ namespace ProtoBuf.Meta
 
             if (itemType != null && defaultType == null)
             {
-                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
+                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Type.EmptyTypes, true) != null)
                 {
                     defaultType = type;
                 }
@@ -1426,7 +1426,7 @@ namespace ProtoBuf.Meta
                     }
                 }
                 // verify that the default type is appropriate
-                if (defaultType != null && !Helpers.IsAssignableFrom(type, defaultType)) { defaultType = null; }
+                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
             }
         }
 
@@ -1645,7 +1645,7 @@ namespace ProtoBuf.Meta
 
         internal static StringBuilder NewLine(StringBuilder builder, int indent)
         {
-            return Helpers.AppendLine(builder).Append(' ', indent * 3);
+            return builder.AppendLine().Append(' ', indent * 3);
         }
 
         internal bool IsAutoTuple => HasFlag(OPTIONS_AutoTuple);
@@ -1700,7 +1700,7 @@ namespace ProtoBuf.Meta
                     NewLine(builder, indent).Append('}');
                 }
             }
-            else if (Helpers.IsEnum(Type))
+            else if (Type.IsEnum)
             {
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
                 if (fieldsArr.Length == 0 && EnumPassthru)

@@ -179,7 +179,7 @@ namespace ProtoBuf.Meta
             }
             else
             {
-                Type tmp = Helpers.GetUnderlyingType(type);
+                Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
 
                 isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out var _, false, false, false, false) != null);
@@ -239,8 +239,7 @@ namespace ProtoBuf.Meta
 
             if (!string.IsNullOrEmpty(package))
             {
-                headerBuilder.Append("package ").Append(package).Append(';');
-                Helpers.AppendLine(headerBuilder);
+                headerBuilder.Append("package ").Append(package).Append(';').AppendLine();
             }
 
             var imports = CommonImports.None;
@@ -253,10 +252,9 @@ namespace ProtoBuf.Meta
             // write the messages
             if (isInbuiltType)
             {
-                Helpers.AppendLine(bodyBuilder).Append("message ").Append(type.Name).Append(" {");
+                bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
                 MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref imports))
-                    .Append(" value = 1;");
-                Helpers.AppendLine(bodyBuilder).Append('}');
+                    .Append(" value = 1;").AppendLine().Append('}');
             }
             else
             {
@@ -269,25 +267,21 @@ namespace ProtoBuf.Meta
             }
             if ((imports & CommonImports.Bcl) != 0)
             {
-                headerBuilder.Append("import \"protobuf-net/bcl.proto\"; // schema for protobuf-net's handling of core .NET types");
-                Helpers.AppendLine(headerBuilder);
+                headerBuilder.Append("import \"protobuf-net/bcl.proto\"; // schema for protobuf-net's handling of core .NET types").AppendLine();
             }
             if ((imports & CommonImports.Protogen) != 0)
             {
-                headerBuilder.Append("import \"protobuf-net/protogen.proto\"; // custom protobuf-net options");
-                Helpers.AppendLine(headerBuilder);
+                headerBuilder.Append("import \"protobuf-net/protogen.proto\"; // custom protobuf-net options").AppendLine();
             }
             if ((imports & CommonImports.Timestamp) != 0)
             {
-                headerBuilder.Append("import \"google/protobuf/timestamp.proto\";");
-                Helpers.AppendLine(headerBuilder);
+                headerBuilder.Append("import \"google/protobuf/timestamp.proto\";").AppendLine();
             }
             if ((imports & CommonImports.Duration) != 0)
             {
-                headerBuilder.Append("import \"google/protobuf/duration.proto\";");
-                Helpers.AppendLine(headerBuilder);
+                headerBuilder.Append("import \"google/protobuf/duration.proto\";").AppendLine();
             }
-            return Helpers.AppendLine(headerBuilder.Append(bodyBuilder)).ToString();
+            return headerBuilder.Append(bodyBuilder).AppendLine().ToString();
         }
         [Flags]
         internal enum CommonImports
@@ -534,7 +528,7 @@ namespace ProtoBuf.Meta
             // the fast fail path: types that will never have a meta-type
             bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
 
-            if (!Helpers.IsEnum(type) && TryGetBasicTypeSerializer(type) != null)
+            if (!type.IsEnum && TryGetBasicTypeSerializer(type) != null)
             {
                 if (shouldAdd && !addWithContractOnly) throw MetaType.InbuiltType(type);
                 return -1; // this will never be a meta-type
@@ -568,7 +562,7 @@ namespace ProtoBuf.Meta
                         }
 
                         if (!shouldAdd || (
-                            !Helpers.IsEnum(type) && addWithContractOnly && family == MetaType.AttributeFamily.None)
+                            !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
                         {
                             if (demand) ThrowUnexpectedType(type);
@@ -805,7 +799,7 @@ namespace ProtoBuf.Meta
 
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
-            Helpers.DebugAssert(type != null);
+            Debug.Assert(type != null);
             try
             {
                 int typeIndex = FindOrAddAuto(type, demand, true, false);
@@ -840,7 +834,7 @@ namespace ProtoBuf.Meta
         /// <param name="state">Writer state</param>
         protected internal override void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
         {
-            //Helpers.DebugWriteLine("Serialize", value);
+            //Debug.WriteLine("Serialize", value);
             ((MetaType)types[key]).Serializer.Write(dest, ref state, value);
         }
 
@@ -856,9 +850,9 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         protected internal override object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
         {
-            //Helpers.DebugWriteLine("Deserialize", value);
+            //Debug.WriteLine("Deserialize", value);
             IRuntimeProtoSerializerNode ser = ((MetaType)types[key]).Serializer;
-            if (value == null && Helpers.IsValueType(ser.ExpectedType))
+            if (value == null && ser.ExpectedType.IsValueType)
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType, nonPublic: true);
                 return ser.Read(source, ref state, value);
@@ -1010,7 +1004,7 @@ namespace ProtoBuf.Meta
             public void SetFrameworkOptions(MetaType from)
             {
                 if (from == null) throw new ArgumentNullException(nameof(from));
-                AttributeMap[] attribs = AttributeMap.Create(from.Model, Helpers.GetAssembly(from.Type));
+                AttributeMap[] attribs = AttributeMap.Create(from.Model, from.Type.Assembly);
                 foreach (AttributeMap attrib in attribs)
                 {
                     if (attrib.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute")
@@ -1171,7 +1165,7 @@ namespace ProtoBuf.Meta
                     // advertise the file info
                     throw new IOException(path + ", " + ex.Message, ex);
                 }
-                Helpers.DebugWriteLine("Wrote dll:" + path);
+                Debug.WriteLine("Wrote dll:" + path);
 #endif
             }
             return (TypeModel)Activator.CreateInstance(finalType, nonPublic: true);
@@ -1287,7 +1281,7 @@ namespace ProtoBuf.Meta
                 Type versionAttribType = null;
                 try
                 { // this is best-endeavours only
-                    versionAttribType = TypeModel.ResolveKnownType("System.Runtime.Versioning.TargetFrameworkAttribute", Helpers.GetAssembly(typeof(string)));
+                    versionAttribType = TypeModel.ResolveKnownType("System.Runtime.Versioning.TargetFrameworkAttribute", typeof(string).Assembly);
                 }
                 catch { /* don't stress */ }
                 if (versionAttribType != null)
@@ -1327,7 +1321,7 @@ namespace ProtoBuf.Meta
                 BasicList internalAssemblies = new BasicList(), consideredAssemblies = new BasicList();
                 foreach (MetaType metaType in types)
                 {
-                    Assembly assembly = Helpers.GetAssembly(metaType.Type);
+                    Assembly assembly = metaType.Type.Assembly;
                     if (consideredAssemblies.IndexOfReference(assembly) >= 0) continue;
                     consideredAssemblies.Add(assembly);
 
@@ -1476,7 +1470,7 @@ namespace ProtoBuf.Meta
 
             if (itemType != null && defaultType == null)
             {
-                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
+                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Type.EmptyTypes, true) != null)
                 {
                     defaultType = type;
                 }
@@ -1497,7 +1491,7 @@ namespace ProtoBuf.Meta
                     }
                 }
                 // verify that the default type is appropriate
-                if (defaultType != null && !Helpers.IsAssignableFrom(type, defaultType)) { defaultType = null; }
+                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
             }
         }
 
@@ -1533,7 +1527,7 @@ namespace ProtoBuf.Meta
 
         internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
         {
-            Type tmp = Helpers.GetUnderlyingType(effectiveType);
+            Type tmp = Nullable.GetUnderlyingType(effectiveType);
             if (tmp != null) effectiveType = tmp;
 
             if (effectiveType == typeof(byte[])) return "bytes";
@@ -1639,7 +1633,7 @@ namespace ProtoBuf.Meta
         {
             if (factory != null)
             {
-                if (type != null && Helpers.IsValueType(type)) throw new InvalidOperationException();
+                if (type != null && type.IsValueType) throw new InvalidOperationException();
                 if (!factory.IsStatic) throw new ArgumentException("A factory-method must be static", nameof(factory));
                 if (type != null && factory.ReturnType != type && factory.ReturnType != typeof(object)) throw new ArgumentException("The factory-method must return object" + (type == null ? "" : (" or " + type.FullName)), nameof(factory));
 

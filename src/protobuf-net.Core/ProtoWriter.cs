@@ -893,11 +893,7 @@ namespace ProtoBuf
                     WriteSingle(f, writer, ref state);
                     return;
                 case WireType.Fixed64:
-#if FEAT_SAFE
-                    writer.ImplWriteFixed64(ref state, (ulong)BitConverter.DoubleToInt64Bits(value));
-#else
                     unsafe { writer.ImplWriteFixed64(ref state, *(ulong*)&value); }
-#endif
                     writer.AdvanceAndReset(8);
                     return;
                 default:
@@ -924,11 +920,7 @@ namespace ProtoBuf
             switch (writer.WireType)
             {
                 case WireType.Fixed32:
-#if FEAT_SAFE
-                    writer.ImplWriteFixed32(ref state, BitConverter.ToUInt32(BitConverter.GetBytes(value), 0));
-#else
                     unsafe { writer.ImplWriteFixed32(ref state, *(uint*)&value); }
-#endif
                     writer.AdvanceAndReset(4);
                     return;
                 case WireType.Fixed64:

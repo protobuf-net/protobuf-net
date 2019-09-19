@@ -76,7 +76,8 @@ namespace ProtoBuf
 
             using MemoryStream ms = new MemoryStream();
             Serializer.Serialize<T>(ms, instance);
-            writer.WriteBase64(Helpers.GetBuffer(ms), 0, (int)ms.Length);
+            Helpers.GetBuffer(ms, out var segment);
+            writer.WriteBase64(segment.Array, segment.Offset, segment.Count);
         }
 
         /// <summary>

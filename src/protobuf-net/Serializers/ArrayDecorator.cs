@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Reflection;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
@@ -21,14 +22,14 @@ namespace ProtoBuf.Serializers
         public ArrayDecorator(IRuntimeProtoSerializerNode tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
             : base(tail)
         {
-            Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");
-            Helpers.DebugAssert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array; " + arrayType.FullName);
+            Debug.Assert(arrayType != null, "arrayType should be non-null");
+            Debug.Assert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array; " + arrayType.FullName);
             this.itemType = arrayType.GetElementType();
-            Type underlyingItemType = supportNull ? itemType : (Helpers.GetUnderlyingType(itemType) ?? itemType);
+            Type underlyingItemType = supportNull ? itemType : (Nullable.GetUnderlyingType(itemType) ?? itemType);
 
-            Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType
-                || (Tail.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType)), "invalid tail");
-            Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
+            Debug.Assert(underlyingItemType == Tail.ExpectedType
+                || (Tail.ExpectedType == typeof(object) && !underlyingItemType.IsValueType), "invalid tail");
+            Debug.Assert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             if (!ListDecorator.CanPack(packedWireType))
             {
@@ -60,8 +61,8 @@ namespace ProtoBuf.Serializers
                 default:
                     return false; // nope
             }
-            if (!Helpers.IsValueType(itemType)) return false;
-            return Helpers.GetUnderlyingType(itemType) == null;
+            if (!itemType.IsValueType) return false;
+            return Nullable.GetUnderlyingType(itemType) == null;
         }
 
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)

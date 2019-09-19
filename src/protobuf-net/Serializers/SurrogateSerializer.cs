@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -29,12 +30,12 @@ namespace ProtoBuf.Serializers
 
         public SurrogateSerializer(Type forType, Type declaredType, IProtoTypeSerializer rootTail)
         {
-            Helpers.DebugAssert(forType != null, "forType");
-            Helpers.DebugAssert(declaredType != null, "declaredType");
-            Helpers.DebugAssert(rootTail != null, "rootTail");
-            Helpers.DebugAssert(rootTail.RequiresOldValue, "RequiresOldValue");
-            Helpers.DebugAssert(!rootTail.ReturnsValue, "ReturnsValue");
-            Helpers.DebugAssert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
+            Debug.Assert(forType != null, "forType");
+            Debug.Assert(declaredType != null, "declaredType");
+            Debug.Assert(rootTail != null, "rootTail");
+            Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
+            Debug.Assert(!rootTail.ReturnsValue, "ReturnsValue");
+            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
             ExpectedType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
@@ -126,19 +127,17 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
-            using (Compiler.Local converted = new Compiler.Local(ctx, declaredType)) // declare/re-use local
-            {
-                ctx.LoadValue(valueFrom); // load primary onto stack
-                ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
-                ctx.StoreValue(converted); // store into surrogate local
+            Debug.Assert(valueFrom != null); // don't support stack-head for this
+            using Compiler.Local converted = new Compiler.Local(ctx, declaredType);
+            ctx.LoadValue(valueFrom); // load primary onto stack
+            ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
+            ctx.StoreValue(converted); // store into surrogate local
 
-                rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
+            rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
-                ctx.LoadValue(converted); // load from surrogate local
-                ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
-                ctx.StoreValue(valueFrom); // store back into primary
-            }
+            ctx.LoadValue(converted); // load from surrogate local
+            ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
+            ctx.StoreValue(valueFrom); // store back into primary
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

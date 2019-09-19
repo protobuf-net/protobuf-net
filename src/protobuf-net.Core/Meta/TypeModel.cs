@@ -38,7 +38,7 @@ namespace ProtoBuf.Meta
         internal static WireType GetWireType(TypeModel model, ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
-            if (Helpers.IsEnum(type))
+            if (type.IsEnum)
             {
                 if (model != null)
                     modelKey = model.GetKey(ref type);
@@ -98,7 +98,7 @@ namespace ProtoBuf.Meta
 
             if (modelKey >= 0)
             {   // write the header, but defer to the model
-                if (Helpers.IsEnum(type))
+                if (type.IsEnum)
                 { // no header
                     Serialize(writer, ref state, modelKey, value);
                     return true;
@@ -158,7 +158,7 @@ namespace ProtoBuf.Meta
 
             // by now, we should have covered all the simple cases; if we wrote a field-header, we have
             // forgotten something!
-            Helpers.DebugAssert(wireType == WireType.None);
+            Debug.Assert(wireType == WireType.None);
 
             // now attempt to handle sequences (including arrays and lists)
             if (value is IEnumerable sequence)
@@ -398,7 +398,7 @@ namespace ProtoBuf.Meta
 
             using var reader = ProtoReader.Create(out var state, source, this, context, len);
             int key = GetKey(ref type);
-            if (key >= 0 && !Helpers.IsEnum(type))
+            if (key >= 0 && !type.IsEnum)
             {
                 value = DeserializeCore(reader, ref state, key, value);
             }
@@ -720,7 +720,7 @@ namespace ProtoBuf.Meta
             }
 
             bool autoCreate = true;
-            Type underlyingType = Helpers.GetUnderlyingType(type);
+            Type underlyingType = Nullable.GetUnderlyingType(type);
             if (underlyingType != null)
             {
                 type = underlyingType;
@@ -846,7 +846,7 @@ namespace ProtoBuf.Meta
             if (!DynamicStub.TryDeserialize(type, this, reader, ref state, ref value))
             {
                 int key = GetKey(ref type);
-                if (key >= 0 && !Helpers.IsEnum(type))
+                if (key >= 0 && !type.IsEnum)
                 {
                     return DeserializeCore(reader, ref state, key, value);
                 }
@@ -902,7 +902,7 @@ namespace ProtoBuf.Meta
         }
         internal static Type GetListItemType(Type listType)
         {
-            Helpers.DebugAssert(listType != null);
+            Debug.Assert(listType != null);
 
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).IsAssignableFrom(listType)) { return null; }
@@ -1050,7 +1050,7 @@ namespace ProtoBuf.Meta
             }
 
             if (!listType.IsClass || listType.IsAbstract
-                || Helpers.GetConstructor(listType, Helpers.EmptyTypes, true) == null)
+                || Helpers.GetConstructor(listType, Type.EmptyTypes, true) == null)
             {
                 string fullName;
                 bool handled = false;
@@ -1252,7 +1252,7 @@ namespace ProtoBuf.Meta
             if (type == null) return null;
             if (type.IsGenericParameter) return null;
             // Nullable<T>
-            Type tmp = Helpers.GetUnderlyingType(type);
+            Type tmp = Nullable.GetUnderlyingType(type);
             if (tmp != null) return tmp;
 
             // EF POCO
@@ -1492,7 +1492,7 @@ namespace ProtoBuf.Meta
             {
                 int key = GetKey(ref type);
 
-                if (key >= 0 && !Helpers.IsEnum(type))
+                if (key >= 0 && !type.IsEnum)
                 {
                     using MemoryStream ms = new MemoryStream();
                     using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
@@ -1687,7 +1687,7 @@ namespace ProtoBuf.Meta
         private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            Type tmp = Helpers.GetUnderlyingType(type);
+            Type tmp = Nullable.GetUnderlyingType(type);
             if (tmp != null) type = tmp;
 
             // is it a basic type?

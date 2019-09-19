@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Reflection;
 using ProtoBuf.Meta;
 
@@ -9,9 +10,9 @@ namespace ProtoBuf.Serializers
     {
         protected override bool RequireAdd { get { return false; } }
 
-#pragma warning disable RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         private static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             if (CheckIsIReadOnlyCollectionExactly(declaredType)) return declaredType;
             foreach (Type intImpl in declaredType.GetInterfaces())
@@ -64,7 +65,9 @@ namespace ProtoBuf.Serializers
             string name = declaredType.Name;
             int i = name.IndexOf('`');
             if (i <= 0) return false;
-            name = declaredTypeInfo.IsInterface ? name.Substring(1, i - 1) : name.Substring(0, i);
+#pragma warning disable IDE0057 // substring can be simplified
+            name = declaredTypeInfo.IsInterface ? name.Substring(1, i - 1) : name.Substring(i);
+#pragma warning restore IDE0057 // substring can be simplified
 
             Type outerType = TypeModel.ResolveKnownType(declaredType.Namespace + "." + name, declaredTypeInfo.Assembly);
             // I hate special-cases...
@@ -105,10 +108,10 @@ namespace ProtoBuf.Serializers
             add = Helpers.GetInstanceMethod(builderFactory.ReturnType, "Add", effectiveType);
             if (add == null) return false;
 
-            finish = Helpers.GetInstanceMethod(builderFactory.ReturnType, "ToImmutable", Helpers.EmptyTypes);
+            finish = Helpers.GetInstanceMethod(builderFactory.ReturnType, "ToImmutable", Type.EmptyTypes);
             if (finish == null || finish.ReturnType == null || finish.ReturnType == voidType) return false;
 
-            if (!(finish.ReturnType == declaredType || Helpers.IsAssignableFrom(declaredType, finish.ReturnType))) return false;
+            if (!(finish.ReturnType == declaredType || declaredType.IsAssignableFrom(finish.ReturnType))) return false;
 
             addRange = Helpers.GetInstanceMethod(builderFactory.ReturnType, "AddRange", new Type[] { declaredType });
             if (addRange == null)
@@ -180,86 +183,82 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (Compiler.Local oldList = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : null)
-            using (Compiler.Local builder = new Compiler.Local(ctx, builderFactory.ReturnType))
+            using Compiler.Local oldList = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : null;
+            using Compiler.Local builder = new Compiler.Local(ctx, builderFactory.ReturnType);
+            ctx.EmitCall(builderFactory);
+            ctx.StoreValue(builder);
+
+            if (AppendToCollection)
             {
-                ctx.EmitCall(builderFactory);
-                ctx.StoreValue(builder);
-
-                if (AppendToCollection)
+                Compiler.CodeLabel done = ctx.DefineLabel();
+                if (!ExpectedType.IsValueType)
                 {
-                    Compiler.CodeLabel done = ctx.DefineLabel();
-                    if (!Helpers.IsValueType(ExpectedType))
-                    {
-                        ctx.LoadValue(oldList);
-                        ctx.BranchIfFalse(done, false); // old value null; nothing to add
-                    }
-
-                    ctx.LoadAddress(oldList, oldList.Type);
-                    if (isEmpty != null)
-                    {
-                        ctx.EmitCall(Helpers.GetGetMethod(isEmpty, false, false));
-                        ctx.BranchIfTrue(done, false); // old list is empty; nothing to add
-                    }
-                    else
-                    {
-                        ctx.EmitCall(Helpers.GetGetMethod(length, false, false));
-                        ctx.BranchIfFalse(done, false); // old list is empty; nothing to add
-                    }
-
-                    Type voidType = typeof(void);
-                    if (addRange != null)
-                    {
-                        ctx.LoadValue(builder);
-                        ctx.LoadValue(oldList);
-                        ctx.EmitCall(addRange);
-                        if (addRange.ReturnType != null && add.ReturnType != voidType) ctx.DiscardValue();
-                    }
-                    else
-                    {
-                        // loop and call Add repeatedly
-                        MethodInfo moveNext, current, getEnumerator = GetEnumeratorInfo(out moveNext, out current);
-                        Helpers.DebugAssert(moveNext != null);
-                        Helpers.DebugAssert(current != null);
-                        Helpers.DebugAssert(getEnumerator != null);
-
-                        Type enumeratorType = getEnumerator.ReturnType;
-                        using (Compiler.Local iter = new Compiler.Local(ctx, enumeratorType))
-                        {
-                            ctx.LoadAddress(oldList, ExpectedType);
-                            ctx.EmitCall(getEnumerator);
-                            ctx.StoreValue(iter);
-                            using (ctx.Using(iter))
-                            {
-                                Compiler.CodeLabel body = ctx.DefineLabel(), next = ctx.DefineLabel();
-                                ctx.Branch(next, false);
-
-                                ctx.MarkLabel(body);
-                                ctx.LoadAddress(builder, builder.Type);
-                                ctx.LoadAddress(iter, enumeratorType);
-                                ctx.EmitCall(current);
-                                ctx.EmitCall(add);
-                                if (add.ReturnType != null && add.ReturnType != voidType) ctx.DiscardValue();
-
-                                ctx.MarkLabel(@next);
-                                ctx.LoadAddress(iter, enumeratorType);
-                                ctx.EmitCall(moveNext);
-                                ctx.BranchIfTrue(body, false);
-                            }
-                        }
-                    }
-
-                    ctx.MarkLabel(done);
+                    ctx.LoadValue(oldList);
+                    ctx.BranchIfFalse(done, false); // old value null; nothing to add
                 }
 
-                EmitReadList(ctx, builder, Tail, add, packedWireType, false);
-
-                ctx.LoadAddress(builder, builder.Type);
-                ctx.EmitCall(finish);
-                if (ExpectedType != finish.ReturnType)
+                ctx.LoadAddress(oldList, oldList.Type);
+                if (isEmpty != null)
                 {
-                    ctx.Cast(ExpectedType);
+                    ctx.EmitCall(Helpers.GetGetMethod(isEmpty, false, false));
+                    ctx.BranchIfTrue(done, false); // old list is empty; nothing to add
                 }
+                else
+                {
+                    ctx.EmitCall(Helpers.GetGetMethod(length, false, false));
+                    ctx.BranchIfFalse(done, false); // old list is empty; nothing to add
+                }
+
+                Type voidType = typeof(void);
+                if (addRange != null)
+                {
+                    ctx.LoadValue(builder);
+                    ctx.LoadValue(oldList);
+                    ctx.EmitCall(addRange);
+                    if (addRange.ReturnType != null && add.ReturnType != voidType) ctx.DiscardValue();
+                }
+                else
+                {
+                    // loop and call Add repeatedly
+                    MethodInfo moveNext, current, getEnumerator = GetEnumeratorInfo(out moveNext, out current);
+                    Debug.Assert(moveNext != null);
+                    Debug.Assert(current != null);
+                    Debug.Assert(getEnumerator != null);
+
+                    Type enumeratorType = getEnumerator.ReturnType;
+                    using Compiler.Local iter = new Compiler.Local(ctx, enumeratorType);
+                    ctx.LoadAddress(oldList, ExpectedType);
+                    ctx.EmitCall(getEnumerator);
+                    ctx.StoreValue(iter);
+                    using (ctx.Using(iter))
+                    {
+                        Compiler.CodeLabel body = ctx.DefineLabel(), next = ctx.DefineLabel();
+                        ctx.Branch(next, false);
+
+                        ctx.MarkLabel(body);
+                        ctx.LoadAddress(builder, builder.Type);
+                        ctx.LoadAddress(iter, enumeratorType);
+                        ctx.EmitCall(current);
+                        ctx.EmitCall(add);
+                        if (add.ReturnType != null && add.ReturnType != voidType) ctx.DiscardValue();
+
+                        ctx.MarkLabel(@next);
+                        ctx.LoadAddress(iter, enumeratorType);
+                        ctx.EmitCall(moveNext);
+                        ctx.BranchIfTrue(body, false);
+                    }
+                }
+
+                ctx.MarkLabel(done);
+            }
+
+            EmitReadList(ctx, builder, Tail, add, packedWireType, false);
+
+            ctx.LoadAddress(builder, builder.Type);
+            ctx.EmitCall(finish);
+            if (ExpectedType != finish.ReturnType)
+            {
+                ctx.Cast(ExpectedType);
             }
         }
     }

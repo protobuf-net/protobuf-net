@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
@@ -74,7 +75,7 @@ namespace ProtoBuf.Serializers
                 {
                     throw new InvalidOperationException($"Unable to wrap {head.BaseType.Name}/{head.ExpectedType.Name}: {tie.InnerException.Message}", tie.InnerException);
                 }
-                Helpers.DebugAssert(result.ExpectedType == head.ExpectedType);
+                Debug.Assert(result.ExpectedType == head.ExpectedType);
             }
             return result;
         }
