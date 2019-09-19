@@ -13,7 +13,6 @@
     <div class="container-fluid h-100">
         <app class="h-100  d-flex flex-column">Loading...</app>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
     <script type="text/javascript">
         //this method get the base 64content of a file input selected document,
         //this the only solution so far for getting document in bazor
@@ -142,7 +141,7 @@
             });
             monaco.languages.register({ id: 'protobuf' });
 
-            window.initMonaco = function (block,component, language, readonly) {
+            window.initMonaco = function (block, component, language, readonly) {
 
                 if (!block) {
                     return;
@@ -192,11 +191,23 @@
             };
         });
     </script>
+    <script src="_framework/blazor.webassembly.js"></script>
 
     <style type="text/css">
         html,
         body {
             height: 100%;
+        }
+
+        .nav-tabs {
+            overflow-x: auto;
+            overflow-y: hidden;
+            display: -webkit-box;
+            display: -moz-box;
+        }
+
+        .nav-tabs>li {
+            float: none;
         }
     </style>
 </body>

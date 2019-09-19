@@ -25,7 +25,7 @@
                     @if (model.IsProtobugGen())
                     {
                         <div class="form-group form-check">
-                            <input class="form-check-input" type="checkbox" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
+                            <input class="form-check-input" type="checkbox" checked="@model.SpecifyOptInProto" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
                             <label class="form-check-label" for="opt_in_proto">
                                 Specify options in .proto
                             </label>
@@ -40,12 +40,9 @@
                                     <InputSelect id="version" @bind-Value="model.LanguageVersion" class="form-control">
 
                                         @foreach (var version in model.GetLanguageVersions())
-                                                        {
+                                        {
                                             <option value="@version">@version</option>
-                                                        }
-                                        /**/
-                                        /**/
-                                        /**/
+                                        }
                                     </InputSelect>
                                 </div>
                             }
@@ -66,12 +63,9 @@
                             <label for="namingConvention">Naming convention</label>
                             <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control">
                                 @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
-                                        {
+                                {
                                     <option value="@namingConvention">@namingConvention</option>
-                                        }
-                                /**/
-                                /**/
-                                /**/
+                                }
                             </InputSelect>
                         </div>
                     }
@@ -138,21 +132,27 @@
             }
             @if (codeFiles != null)
             {
-                @foreach (var file in codeFiles)
-                {
-                    <div class="form-group   flex-grow-1  d-flex flex-column">
-                        <p style="flex:none;">
-                            @file.Name
-                        </p>
-                        <MonacoEditor Language="@model.GetMonacoLanguage()" Content="@file.Text" ReadOnly="true"></MonacoEditor>
-                    </div>
-                }
+                <ul class="nav nav-tabs">
+                     @foreach (var file in codeFiles)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link  @(currentCodeFile == file ? "active":"")" href="#"  @onclick="() => currentCodeFile = file">  @file.Name</a>
+                        </li>
+                    }
+                </ul>
+                <div class="form-group flex-grow-1  d-flex flex-column">
+                    @if(currentCodeFile != null){
+
+                        <MonacoEditor Language="@model.GetMonacoLanguage()" Content="@currentCodeFile.Text" ReadOnly="true"></MonacoEditor>
+                    }
+                </div>
             }
         </div>
     </div>
 
 </EditForm>
 @code{
+
     bool showMoreOptions = false;
     bool loading = false;
 
@@ -163,6 +163,8 @@
     private GeneratorViewModel model = new GeneratorViewModel();
 
     private List<CodeFile> codeFiles;
+
+    private CodeFile currentCodeFile;
 
     private string exceptionMessage;
 
@@ -201,6 +203,7 @@
             codeFiles = null;
             exceptionMessage = null;
             errors = null;
+            await protoEditor.ClearErrors();
             StateHasChanged();
             using (var reader = new StringReader(model.ProtoContent))
             {
@@ -214,7 +217,6 @@
                 errors = set.GetErrors();
                 if (errors.Any())
                 {
-                    await protoEditor.ClearErrors();
                     foreach(var error in errors){
                         await protoEditor.AddError(error.IsError, error.LineNumber, error.LineNumber , error.ColumnNumber,  error.ColumnNumber + error.LineContents.Length, error.Message);
                     }
@@ -233,7 +235,7 @@
         }
         catch (Exception e)
         {
-            exceptionMessage = "An unhandled exception occured : " + e.Message;
+            exceptionMessage = "An unhandled exception occured : " + e.Message+". StackTrace : "+e.StackTrace;
         }
         finally
         {
@@ -253,11 +255,11 @@
         {
             using (var output = JsonDocument.Parse(content))
             {
-                codeFiles = output.RootElement.EnumerateArray()
+                SetCodeFiles(output.RootElement.EnumerateArray()
                     .Select(j => new CodeFile(
                         j.GetProperty("name").GetString(),
                         j.GetProperty("text").GetString()))
-                    .ToList();
+                    .ToList());
             }
         }
         else
@@ -279,7 +281,14 @@
     private void ProtobufnetGenerate(FileDescriptorSet set)
     {
         CodeGenerator codegen = model.GetCodeGenerator();
-        codeFiles = codegen.Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions()).ToList();
+        var generateResult = codegen.Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions()).ToList();
+        SetCodeFiles(generateResult);
+
+    }
+
+    private void SetCodeFiles(List<CodeFile> files){
+        codeFiles = files;
+        currentCodeFile = files.FirstOrDefault();
     }
 
 }
