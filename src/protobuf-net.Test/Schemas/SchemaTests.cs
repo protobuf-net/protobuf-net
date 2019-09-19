@@ -42,7 +42,7 @@ namespace ProtoBuf.Schemas
                     ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer, ref state);
                     var tok2 = ProtoWriter.StartSubItem(null, writer, ref state);
 
-                    ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer, ref state);
+                    ProtoWriter.WriteFieldHeader(2, WireType.Varint, writer, ref state);
                     ProtoWriter.WriteInt32(15447542, writer, ref state);
 
                     ProtoWriter.WriteFieldHeader(3, WireType.String, writer, ref state);

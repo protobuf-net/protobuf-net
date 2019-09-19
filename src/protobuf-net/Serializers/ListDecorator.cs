@@ -13,8 +13,8 @@ namespace ProtoBuf.Serializers
             {
                 case WireType.Fixed32:
                 case WireType.Fixed64:
-                case WireType.SignedVariant:
-                case WireType.Variant:
+                case WireType.SignedVarint:
+                case WireType.Varint:
                     return true;
                 default:
                     return false;

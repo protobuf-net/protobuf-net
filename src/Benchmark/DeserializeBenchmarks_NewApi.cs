@@ -218,7 +218,7 @@ namespace Benchmark
                         obj.UnitPrice = reader.ReadDouble(ref state);
                         break;
                     case 4:
-                        reader.Hint(WireType.SignedVariant);
+                        reader.Hint(WireType.SignedVarint);
                         obj.Quantity = reader.ReadInt32(ref state);
                         break;
                     case 5:

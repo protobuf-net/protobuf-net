@@ -185,8 +185,8 @@ namespace ProtoBuf
                 case WireType.Fixed64:
                 case WireType.String:
                 case WireType.StartGroup:
-                case WireType.SignedVariant:
-                case WireType.Variant:
+                case WireType.SignedVarint:
+                case WireType.Varint:
                     break; // fine
                 case WireType.None:
                 case WireType.EndGroup:
@@ -207,8 +207,8 @@ namespace ProtoBuf
                 {
                     case WireType.Fixed32:
                     case WireType.Fixed64:
-                    case WireType.Variant:
-                    case WireType.SignedVariant:
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
                         break; // fine
                     default:
                         throw new InvalidOperationException("Wire-type cannot be encoded as packed: " + wireType.ToString());
@@ -672,7 +672,7 @@ namespace ProtoBuf
                     writer.ImplWriteFixed64(ref state, value);
                     writer.AdvanceAndReset(8);
                     return;
-                case WireType.Variant:
+                case WireType.Varint:
                     int bytes = writer.ImplWriteVarint64(ref state, value);
                     writer.AdvanceAndReset(bytes);
                     return;
@@ -707,10 +707,10 @@ namespace ProtoBuf
                     writer.ImplWriteFixed64(ref state, (ulong)value);
                     writer.AdvanceAndReset(8);
                     return;
-                case WireType.Variant:
+                case WireType.Varint:
                     writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)value));
                     return;
-                case WireType.SignedVariant:
+                case WireType.SignedVarint:
                     writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, Zig(value)));
                     return;
                 case WireType.Fixed32:
@@ -749,7 +749,7 @@ namespace ProtoBuf
                     writer.ImplWriteFixed64(ref state, value);
                     writer.AdvanceAndReset(8);
                     return;
-                case WireType.Variant:
+                case WireType.Varint:
                     int bytes = writer.ImplWriteVarint32(ref state, value);
                     writer.AdvanceAndReset(bytes);
                     return;
@@ -847,7 +847,7 @@ namespace ProtoBuf
                     writer.ImplWriteFixed64(ref state, (ulong)(long)value);
                     writer.AdvanceAndReset(8);
                     return;
-                case WireType.Variant:
+                case WireType.Varint:
                     if (value >= 0)
                     {
                         writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)value));
@@ -857,7 +857,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)(long)value));
                     }
                     return;
-                case WireType.SignedVariant:
+                case WireType.SignedVarint:
                     writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, Zig(value)));
                     return;
                 default:

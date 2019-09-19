@@ -262,7 +262,7 @@ namespace ProtoBuf
         {
             switch (WireType)
             {
-                case WireType.Variant:
+                case WireType.Varint:
                     return ReadUInt32Varint(ref state, Read32VarintMode.Signed);
                 case WireType.Fixed32:
                     return ImplReadUInt32Fixed(ref state);
@@ -291,14 +291,14 @@ namespace ProtoBuf
         {
             switch (WireType)
             {
-                case WireType.Variant:
+                case WireType.Varint:
                     return (int)ReadUInt32Varint(ref state, Read32VarintMode.Signed);
                 case WireType.Fixed32:
                     return (int)ImplReadUInt32Fixed(ref state);
                 case WireType.Fixed64:
                     long l = ReadInt64(ref state);
                     checked { return (int)l; }
-                case WireType.SignedVariant:
+                case WireType.SignedVarint:
                     return Zag(ReadUInt32Varint(ref state, Read32VarintMode.Signed));
                 default:
                     throw CreateWireTypeException(ref state);
@@ -338,10 +338,10 @@ namespace ProtoBuf
         public long ReadInt64(ref State state)
             => WireType switch
             {
-                WireType.Variant => (long)ReadUInt64Varint(ref state),
+                WireType.Varint => (long)ReadUInt64Varint(ref state),
                 WireType.Fixed32 => (int)ImplReadUInt32Fixed(ref state),
                 WireType.Fixed64 => (long)ImplReadUInt64Fixed(ref state),
-                WireType.SignedVariant => Zag(ReadUInt64Varint(ref state)),
+                WireType.SignedVarint => Zag(ReadUInt64Varint(ref state)),
                 _ => throw CreateWireTypeException(ref state),
             };
 
@@ -754,8 +754,8 @@ namespace ProtoBuf
                     long len = (long)ReadUInt64Varint(ref state);
                     ImplSkipBytes(ref state, len);
                     return;
-                case WireType.Variant:
-                case WireType.SignedVariant:
+                case WireType.Varint:
+                case WireType.SignedVarint:
                     ReadUInt64Varint(ref state); // and drop it
                     return;
                 case WireType.StartGroup:
@@ -792,7 +792,7 @@ namespace ProtoBuf
         public ulong ReadUInt64(ref State state)
             => WireType switch
             {
-                WireType.Variant => ReadUInt64Varint(ref state),
+                WireType.Varint => ReadUInt64Varint(ref state),
                 WireType.Fixed32 => ImplReadUInt32Fixed(ref state),
                 WireType.Fixed64 => ImplReadUInt64Fixed(ref state),
                 _ => throw CreateWireTypeException(ref state),
@@ -898,7 +898,7 @@ namespace ProtoBuf
                         }
                         ImplReadBytes(ref state, new ArraySegment<byte>(value, offset, len));
                         return value;
-                    case WireType.Variant:
+                    case WireType.Varint:
                         return new byte[0];
                     default:
                         throw CreateWireTypeException(ref state);
@@ -1243,8 +1243,8 @@ namespace ProtoBuf
                 case WireType.Fixed32:
                     ProtoWriter.WriteInt32(ReadInt32(ref readState), writer, ref writeState);
                     return;
-                case WireType.Variant:
-                case WireType.SignedVariant:
+                case WireType.Varint:
+                case WireType.SignedVarint:
                 case WireType.Fixed64:
                     ProtoWriter.WriteInt64(ReadInt64(ref readState), writer, ref writeState);
                     return;

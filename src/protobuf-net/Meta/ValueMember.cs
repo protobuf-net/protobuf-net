@@ -527,10 +527,10 @@ namespace ProtoBuf.Meta
         {
             switch (format)
             {
-                case DataFormat.ZigZag: return WireType.SignedVariant;
+                case DataFormat.ZigZag: return WireType.SignedVarint;
                 case DataFormat.FixedSize: return width == 32 ? WireType.Fixed32 : WireType.Fixed64;
                 case DataFormat.TwosComplement:
-                case DataFormat.Default: return WireType.Variant;
+                case DataFormat.Default: return WireType.Varint;
                 default: throw new InvalidOperationException();
             }
         }
@@ -559,7 +559,7 @@ namespace ProtoBuf.Meta
                 if (allowComplexTypes && model != null)
                 {
                     // need to do this before checking the typecode; an int enum will report Int32 etc
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = WireType.Varint;
                     return new EnumSerializer(type, model.GetEnumMap(type));
                 }
                 else
@@ -597,7 +597,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.Fixed64;
                     return PrimitiveSerializer<DoubleSerializer>.Singleton;
                 case ProtoTypeCode.Boolean:
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = WireType.Varint;
                     return PrimitiveSerializer<BooleanSerializer>.Singleton;
                 case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
@@ -612,7 +612,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return PrimitiveSerializer<SByteSerializer>.Singleton;
                 case ProtoTypeCode.Char:
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = WireType.Varint;
                     return PrimitiveSerializer<CharSerializer>.Singleton;
                 case ProtoTypeCode.Int16:
                     defaultWireType = GetIntWireType(dataFormat, 32);

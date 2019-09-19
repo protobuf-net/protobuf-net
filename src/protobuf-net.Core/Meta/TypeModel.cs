@@ -41,13 +41,13 @@ namespace ProtoBuf.Meta
             {
                 if (model != null)
                     modelKey = model.GetKey(ref type);
-                return WireType.Variant;
+                return WireType.Varint;
             }
             switch (code)
             {
                 case ProtoTypeCode.Int64:
                 case ProtoTypeCode.UInt64:
-                    return format == DataFormat.FixedSize ? WireType.Fixed64 : WireType.Variant;
+                    return format == DataFormat.FixedSize ? WireType.Fixed64 : WireType.Varint;
                 case ProtoTypeCode.Int16:
                 case ProtoTypeCode.Int32:
                 case ProtoTypeCode.UInt16:
@@ -56,7 +56,7 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.SByte:
                 case ProtoTypeCode.Byte:
                 case ProtoTypeCode.Char:
-                    return format == DataFormat.FixedSize ? WireType.Fixed32 : WireType.Variant;
+                    return format == DataFormat.FixedSize ? WireType.Fixed32 : WireType.Varint;
                 case ProtoTypeCode.Double:
                     return WireType.Fixed64;
                 case ProtoTypeCode.Single:

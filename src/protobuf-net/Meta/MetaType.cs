@@ -363,7 +363,7 @@ namespace ProtoBuf.Meta
         {
             if (Helpers.IsEnum(Type))
             {
-                return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(Type, GetEnumMap()));
+                return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Varint, false, new EnumSerializer(Type, GetEnumMap()));
             }
             Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
             if (itemType != null)

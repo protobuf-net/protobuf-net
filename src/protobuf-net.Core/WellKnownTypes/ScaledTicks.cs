@@ -112,7 +112,7 @@ namespace ProtoBuf.WellKnownTypes
                         scale = (TimeSpanScale)reader.ReadInt32(ref state);
                         break;
                     case FieldTimeSpanValue:
-                        reader.Assert(ref state, WireType.SignedVariant);
+                        reader.Assert(ref state, WireType.SignedVarint);
                         value = reader.ReadInt64(ref state);
                         break;
                     case FieldTimeSpanKind:
@@ -142,17 +142,17 @@ namespace ProtoBuf.WellKnownTypes
         {
             if (value.Value != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVarint, writer, ref state);
                 ProtoWriter.WriteInt64(value.Value, writer, ref state);
             }
             if (value.Scale != TimeSpanScale.Days)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Varint, writer, ref state);
                 ProtoWriter.WriteInt32((int)value.Scale, writer, ref state);
             }
             if (value.Kind != DateTimeKind.Unspecified)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Varint, writer, ref state);
                 ProtoWriter.WriteInt32((int)value.Kind, writer, ref state);
             }
         }

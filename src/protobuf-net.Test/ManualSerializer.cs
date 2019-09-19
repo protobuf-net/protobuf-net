@@ -286,7 +286,7 @@ namespace ProtoBuf
             }
             if (value.AVal != 0)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(1, WireType.Varint, writer, ref state);
                 ProtoWriter.WriteInt32(value.AVal, writer, ref state);
             }
         }
@@ -329,7 +329,7 @@ namespace ProtoBuf
             }
             if (value.BVal != 0)
             {
-                ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(2, WireType.Varint, writer, ref state);
                 ProtoWriter.WriteInt32(value.BVal, writer, ref state);
             }
         }
@@ -360,7 +360,7 @@ namespace ProtoBuf
             TypeModel.ThrowUnexpectedSubtype<C>(value);
             if (value.CVal != 0)
             {
-                ProtoWriter.WriteFieldHeader(3, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(3, WireType.Varint, writer, ref state);
                 ProtoWriter.WriteInt32(value.CVal, writer, ref state);
             }
         }
@@ -388,7 +388,7 @@ namespace ProtoBuf
             TypeModel.ThrowUnexpectedSubtype<D>(value);
             if (value.DVal != 0)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteFieldHeader(1, WireType.Varint, writer, ref state);
                 ProtoWriter.WriteInt32(value.DVal, writer, ref state);
             }
         }
