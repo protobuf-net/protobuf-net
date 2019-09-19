@@ -113,11 +113,9 @@ namespace ProtoBuf.Serializers
 
         public virtual T Read(ProtoReader reader, ref ProtoReader.State state, T value)
         {
-            object obj = value;
             if (value == null) value = (T)CreateInstance(reader);
             OnBeforeDeserialize?.Invoke(value, reader);
             DeserializeBody(reader, ref state, ref value, (ref T o) => o, (ref T o, T v) => o = v);
-            value = (T)obj;
             OnAfterDeserialize?.Invoke(value, reader);
             return value;
         }

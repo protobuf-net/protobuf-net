@@ -12,6 +12,8 @@ using System.Xml.Serialization;
 using System.Reflection.Emit;
 using System.Reflection;
 using ProtoBuf;
+using ProtoBuf.Meta;
+using Examples;
 
 namespace TestMediaBrowser
 {
@@ -96,7 +98,7 @@ namespace TestMediaBrowser
         public List<MisterNullable> Nullables { get; set; }
     }
     [ProtoContract]
-    class DateTimeClass
+    public class DateTimeClass
     {
         [ProtoMember(1)]
         public DateTime Date { get; set; }
@@ -148,12 +150,24 @@ namespace TestMediaBrowser
 
         }
 
+#if EMIT_DLL
+        [Fact]
+        public void CompileDateTimeClassModel()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(DateTimeClass));
+            model.Compile("CompileDateTimeClassModel", "CompileDateTimeClassModel.dll");
+            PEVerify.AssertValid("CompileDateTimeClassModel.dll");
+        }
+#endif
 
         [Fact]
         public void TestUninitializedDatetimePersistance()
         {
             var original = new DateTimeClass();
+            Assert.NotNull(original);
             var copy = Serializer.DeepClone(original);
+            Assert.NotNull(copy);
             Assert.Equal(original.Date, copy.Date);
         }
 

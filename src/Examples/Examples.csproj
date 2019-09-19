@@ -12,7 +12,7 @@
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
+    <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT;PLAT_SPANS;EMIT_DLL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\Tools\nwind.proto.bin">
