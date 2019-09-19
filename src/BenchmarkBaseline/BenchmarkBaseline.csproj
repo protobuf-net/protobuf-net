@@ -5,6 +5,8 @@
     <TargetFrameworks>net472;netcoreapp3.0</TargetFrameworks>
     <NoWarn>CS1591</NoWarn>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
+    <RootNamespace>Benchmarks</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

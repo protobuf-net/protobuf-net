@@ -7,6 +7,8 @@
     <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.0'">$(DefineConstants);INTRINSICS</DefineConstants>
+    <RootNamespace>Benchmarks</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,11 +6,10 @@ namespace Benchmark
     {
         private static void Main(string[] args)
         {
-//#if NEW_API
-//            var obj = new DeserializeBenchmarks();
-//            obj.Setup();
-//            obj.MemoryStream_New_C_Pooled();
-//#endif
+            //#if INTRINSICS
+            //            var obj = new VarintBenchmarks();
+            //            obj.Setup();
+            //#endif
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
