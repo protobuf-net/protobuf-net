@@ -6,10 +6,10 @@ namespace Benchmark
     {
         private static void Main(string[] args)
         {
-            //#if INTRINSICS
-            //            var obj = new VarintBenchmarks();
-            //            obj.Setup();
-            //#endif
+//#if INTRINSICS
+//            var obj = new VarintDecodeBenchmarks();
+//            obj.Setup();
+//#endif
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }

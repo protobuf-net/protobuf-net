@@ -1377,11 +1377,12 @@ namespace ProtoBuf
         {
             return AddErrorData(new OverflowException(), reader, ref state);
         }
-
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowOverflow(ProtoReader reader, ref State state)
         {
             throw Overflow(reader, ref state);
         }
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowOverflow()
         {
             State state = default;

@@ -8,8 +8,7 @@ namespace Benchmark
 {
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     [CoreJob]
-    [CategoriesColumn]
-    public class VarintBenchmarks
+    public class VarintEncodeBenchmarks
     {
         const int LOOP_SIZE = 2048;
         uint[] _values32 = new uint[LOOP_SIZE];
