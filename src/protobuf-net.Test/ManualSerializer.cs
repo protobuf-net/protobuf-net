@@ -41,7 +41,7 @@ namespace ProtoBuf
             using (var writer = withState ? ProtoWriter.Create(out writeState, ms, null) : ProtoWriter.Create(ms, null))
 #pragma warning restore CS0618
             {
-                model.Serialize(writer, ref writeState, obj);
+                writer.Serialize(ref writeState, obj);
                 Assert.Equal(0, writer.Depth);
                 writer.Close(ref writeState);
             }
@@ -63,7 +63,7 @@ namespace ProtoBuf
 #pragma warning disable CS0618
             using var reader = withState ? ProtoReader.Create(out readState, ms, null) : ProtoReader.Create(ms, null);
 #pragma warning restore CS0618
-            var raw = model.Deserialize(reader, ref readState, null, typeof(A));
+            var raw = reader.Deserialize<A>(ref readState, null);
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);
@@ -121,7 +121,7 @@ namespace ProtoBuf
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
             using (var writer = ProtoWriter.Create(out var writeState, pipe.Writer, null))
             {
-                model.Serialize(writer, ref writeState, obj);
+                writer.Serialize(ref writeState, obj);
                 Assert.Equal(0, writer.Depth);
                 writer.Close(ref writeState);
             }
@@ -140,7 +140,7 @@ namespace ProtoBuf
             // 7B = 123(raw) or - 62(zigzag)
 
             using var reader = ProtoReader.Create(out var readState, result.Value, null);
-            var raw = model.Deserialize(reader, ref readState, null, typeof(A));
+            var raw = reader.Deserialize<A>(ref readState, null);
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);

@@ -29,104 +29,100 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (Compiler.Local oldValue = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
-            using (Compiler.Local field = new Compiler.Local(ctx, typeof(int)))
+            using Compiler.Local oldValue = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            using Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken));
+            using Compiler.Local field = new Compiler.Local(ctx, typeof(int));
+            ctx.LoadReader(true);
+            ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
+                Compiler.ReaderUtil.ReaderStateTypeArray));
+            ctx.StoreValue(token);
+
+            Compiler.CodeLabel next = ctx.DefineLabel(), processField = ctx.DefineLabel(), end = ctx.DefineLabel();
+
+            ctx.MarkLabel(next);
+
+            ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
+            ctx.CopyValue();
+            ctx.StoreValue(field);
+            ctx.LoadValue(Tag); // = 1 - process
+            ctx.BranchIfEqual(processField, true);
+            ctx.LoadValue(field);
+            ctx.LoadValue(1); // < 1 - exit
+            ctx.BranchIfLess(end, false);
+
+            // default: skip
+            ctx.LoadReader(true);
+            ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
+            ctx.Branch(next, true);
+
+            // process
+            ctx.MarkLabel(processField);
+            if (Tail.RequiresOldValue)
             {
-                ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
-                    Compiler.ReaderUtil.ReaderStateTypeArray));
-                ctx.StoreValue(token);
-
-                Compiler.CodeLabel next = ctx.DefineLabel(), processField = ctx.DefineLabel(), end = ctx.DefineLabel();
-
-                ctx.MarkLabel(next);
-
-                ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
-                ctx.CopyValue();
-                ctx.StoreValue(field);
-                ctx.LoadValue(Tag); // = 1 - process
-                ctx.BranchIfEqual(processField, true);
-                ctx.LoadValue(field);
-                ctx.LoadValue(1); // < 1 - exit
-                ctx.BranchIfLess(end, false);
-
-                // default: skip
-                ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
-                ctx.Branch(next, true);
-
-                // process
-                ctx.MarkLabel(processField);
-                if (Tail.RequiresOldValue)
-                {
-                    if (Helpers.IsValueType(ExpectedType))
-                    {
-                        ctx.LoadAddress(oldValue, ExpectedType);
-                        ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
-                    }
-                    else
-                    {
-                        ctx.LoadValue(oldValue);
-                    }
-                }
-                Tail.EmitRead(ctx, null);
-                // note we demanded always returns a value
                 if (Helpers.IsValueType(ExpectedType))
                 {
-                    ctx.EmitCtor(ExpectedType, Tail.ExpectedType); // re-nullable<T> it
-                }
-                ctx.StoreValue(oldValue);
-                ctx.Branch(next, false);
-
-                // outro
-                ctx.MarkLabel(end);
-
-                ctx.LoadValue(token);
-                ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                    new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
-                ctx.LoadValue(oldValue); // load the old value
-            }
-        }
-        protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            using (Compiler.Local valOrNull = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
-            {
-                ctx.LoadNullRef();
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
-                ctx.StoreValue(token);
-
-                if (Helpers.IsValueType(ExpectedType))
-                {
-                    ctx.LoadAddress(valOrNull, ExpectedType);
-                    ctx.LoadValue(ExpectedType.GetProperty("HasValue"));
-                }
-                else
-                {
-                    ctx.LoadValue(valOrNull);
-                }
-                Compiler.CodeLabel @end = ctx.DefineLabel();
-                ctx.BranchIfFalse(@end, false);
-                if (Helpers.IsValueType(ExpectedType))
-                {
-                    ctx.LoadAddress(valOrNull, ExpectedType);
+                    ctx.LoadAddress(oldValue, ExpectedType);
                     ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
                 }
                 else
                 {
-                    ctx.LoadValue(valOrNull);
+                    ctx.LoadValue(oldValue);
                 }
-                Tail.EmitWrite(ctx, null);
-
-                ctx.MarkLabel(@end);
-
-                ctx.LoadValue(token);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
             }
+            Tail.EmitRead(ctx, null);
+            // note we demanded always returns a value
+            if (Helpers.IsValueType(ExpectedType))
+            {
+                ctx.EmitCtor(ExpectedType, Tail.ExpectedType); // re-nullable<T> it
+            }
+            ctx.StoreValue(oldValue);
+            ctx.Branch(next, false);
+
+            // outro
+            ctx.MarkLabel(end);
+
+            ctx.LoadValue(token);
+            ctx.LoadReader(true);
+            ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
+                new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
+            ctx.LoadValue(oldValue); // load the old value
+        }
+        protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            using Compiler.Local valOrNull = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            using Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken));
+            ctx.LoadNullRef();
+            ctx.LoadWriter(true);
+            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
+            ctx.StoreValue(token);
+
+            if (Helpers.IsValueType(ExpectedType))
+            {
+                ctx.LoadAddress(valOrNull, ExpectedType);
+                ctx.LoadValue(ExpectedType.GetProperty("HasValue"));
+            }
+            else
+            {
+                ctx.LoadValue(valOrNull);
+            }
+            Compiler.CodeLabel @end = ctx.DefineLabel();
+            ctx.BranchIfFalse(@end, false);
+            if (Helpers.IsValueType(ExpectedType))
+            {
+                ctx.LoadAddress(valOrNull, ExpectedType);
+                ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+            }
+            else
+            {
+                ctx.LoadValue(valOrNull);
+            }
+            Tail.EmitWrite(ctx, null);
+
+            ctx.MarkLabel(@end);
+
+            ctx.LoadValue(token);
+            ctx.LoadWriter(true);
+            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
         }
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)

@@ -59,7 +59,7 @@ namespace Benchmark
 #if NEW_API
                 using (var writer = ProtoWriter.Create(out var state, buffer, model))
                 {
-                    model.Serialize(writer, ref state, _database);
+                    writer.Serialize(ref state, _database);
                     writer.Close(ref state);
                 }
 #else

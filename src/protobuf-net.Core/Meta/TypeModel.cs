@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -196,10 +197,11 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        [Obsolete(PreferGenericAPI)]
+        [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public void Serialize(Stream dest, object value)
         {
-            Serialize(dest, value, null);
+            using var writer = ProtoWriter.Create(out var state, dest, this);
+            SerializeFallback(writer, ref state, value);
         }
 
         /// <summary>
@@ -208,10 +210,15 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        [Obsolete(PreferGenericAPI)]
+        [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
             using var writer = ProtoWriter.Create(out var state, dest, this, context);
+            SerializeFallback(writer, ref state, value);
+        }
+
+        internal void SerializeFallback(ProtoWriter writer, ref ProtoWriter.State state, object value)
+        {
             if (!DynamicStub.TrySerialize(value.GetType(), this, writer, ref state, value))
             {
                 try
@@ -237,7 +244,7 @@ namespace ProtoBuf.Meta
         public long Serialize<T>(Stream dest, T value, SerializationContext context = null)
         {
             using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            return writer.Serialize<T>(ref state, value);
+            return SerializeImpl<T>(writer, ref state, value);
         }
 
         /// <summary>
@@ -249,7 +256,7 @@ namespace ProtoBuf.Meta
         public long Serialize<T>(IBufferWriter<byte> dest, T value, SerializationContext context = null)
         {
             using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            return writer.Serialize<T>(ref state, value);
+            return SerializeImpl<T>(writer, ref state, value);
         }
 
         /// <summary>
@@ -261,66 +268,22 @@ namespace ProtoBuf.Meta
         public void Serialize(ProtoWriter dest, object value)
         {
             ProtoWriter.State state = dest.DefaultState();
-            Serialize(dest, ref state, value);
+            SerializeFallback(dest, ref state, value);
         }
 
-        /// <summary>
-        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
-        /// </summary>
-        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="dest">The destination writer to write to.</param>
-        /// <param name="state">Writer state</param>
-        [Obsolete(PreferGenericAPI)]
-        public void Serialize(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        internal static long SerializeImpl<T>(ProtoWriter dest, ref ProtoWriter.State state, T value)
         {
-            if (dest == null) throw new ArgumentNullException(nameof(dest));
-            TypeModel oldModel = dest.Model;
-            try
+            if (TypeHelper<T>.IsObjectType && value == null) return 0;
+            if (TypeHelper<T>.UseFallback)
             {
-                dest.Model = this;
-                dest.CheckClear(ref state);
-                dest.SetRootObject(value);
-                SerializeCore(dest, ref state, value);
-                dest.CheckClear(ref state);
-            }
-            catch
-            {
-                dest.Abandon();
-                throw;
-            }
-            finally
-            {
-                dest.Model = oldModel;
-            }
-        }
-
-        /// <summary>
-        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
-        /// </summary>
-        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="dest">The destination writer to write to.</param>
-        /// <param name="state">Writer state</param>
-        public void Serialize<T>(ProtoWriter dest, ref ProtoWriter.State state, T value)
-        {
-            if (dest == null) throw new ArgumentNullException(nameof(dest));
-            if (TypeHelper<T>.IsLegacyType)
-            {
-#pragma warning disable CS0618
-                Serialize(dest, ref state, (object)value);
-#pragma warning restore CS0618
+                Debug.Assert(dest.Model != null, "Model is null");
+                long position = dest.GetPosition(ref state);
+                dest.Model.SerializeFallback(dest, ref state, value);
+                return dest.GetPosition(ref state) - position;
             }
             else
             {
-                TypeModel oldModel = dest.Model;
-                try
-                {
-                    dest.Model = this;
-                    dest.Serialize<T>(ref state, value);
-                }
-                finally
-                {
-                    dest.Model = oldModel;
-                }
+                return dest.Serialize<T>(ref state, value);
             }
         }
 
@@ -649,10 +612,11 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        [Obsolete(PreferGenericAPI, false)]
+        [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public object Deserialize(Stream source, object value, Type type)
         {
-            return Deserialize(source, value, type, null);
+            using var reader = ProtoReader.Create(out var state, source, this, null, ProtoReader.TO_EOF);
+            return DeserializeFallback(reader, ref state, value, type);
         }
 
         /// <summary>
@@ -665,18 +629,20 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        [Obsolete(PreferGenericAPI, false)]
+        [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public object Deserialize(Stream source, object value, Type type, SerializationContext context)
         {
-            bool autoCreate = PrepareDeserialize(value, ref type);
             using var reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
-            if (value != null) reader.SetRootObject(value);
-            object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
-            reader.CheckFullyConsumed(ref state);
-            return obj;
+            return DeserializeFallback(reader, ref state, value, type);
         }
 
         internal const string PreferGenericAPI = "The non-generic API is sub-optimal; it is recommended to use the generic API whenever possible";
+
+//#if DEBUG
+//        internal const bool DemandGenericAPI = true;
+//#else
+        internal const bool DemandGenericAPI = false;
+//#endif
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -690,15 +656,21 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public T Deserialize<T>(Stream source, T value = default, SerializationContext context = null)
         {
-            if (TypeHelper<T>.IsLegacyType)
-            {
-                // looks like you're accidentally calling the wrong API, but: we'll let it slide
-#pragma warning disable CS0618
-                return (T)Deserialize(source, value, value?.GetType() ?? typeof(object), context);
-#pragma warning restore CS0618
-            }
             using var reader = ProtoReader.Create(out var state, source, this, context);
-            return reader.Deserialize<T>(ref state, value);
+            return DeserializeImpl<T>(reader, ref state, value);
+        }
+
+        internal static T DeserializeImpl<T>(ProtoReader reader, ref ProtoReader.State state, T value = default)
+        {
+            if (TypeHelper<T>.UseFallback)
+            {
+                Debug.Assert(reader.Model != null, "Model is null");
+                return (T)reader.Model.DeserializeFallback(reader, ref state, value, typeof(T));
+            }
+            else
+            {
+                return reader.Deserialize<T>(ref state, value);
+            }
         }
 
         /// <summary>
@@ -714,14 +686,7 @@ namespace ProtoBuf.Meta
         public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
             using var reader = ProtoReader.Create(out var state, source, this, context);
-            if (TypeHelper<T>.IsLegacyType)
-            {
-                // looks like you're accidentally calling the wrong API, but: we'll let it slide
-#pragma warning disable CS0618
-                return (T)Deserialize(reader, ref state, value, value?.GetType() ?? typeof(object));
-#pragma warning restore CS0618
-            }
-            return reader.Deserialize<T>(ref state, value);
+            return DeserializeImpl<T>(reader, ref state, value);
         }
 
         /// <summary>
@@ -737,14 +702,7 @@ namespace ProtoBuf.Meta
         public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {
             using var reader = ProtoReader.Create(out var state, source, this, context);
-            if (TypeHelper<T>.IsLegacyType)
-            {
-                // looks like you're accidentally calling the wrong API, but: we'll let it slide
-#pragma warning disable CS0618
-                return (T)Deserialize(reader, ref state, value, value?.GetType() ?? typeof(object));
-#pragma warning restore CS0618
-            }
-            return reader.Deserialize<T>(ref state, value);
+            return DeserializeImpl<T>(reader, ref state, value);
         }
 
         private bool PrepareDeserialize(object value, ref Type type)
@@ -781,6 +739,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public object Deserialize(Stream source, object value, System.Type type, int length)
             => Deserialize(source, value, type, length, null);
 
@@ -794,6 +753,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public object Deserialize(Stream source, object value, System.Type type, long length)
             => Deserialize(source, value, type, length, null);
 
@@ -808,6 +768,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
             => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)length, context);
 
@@ -822,6 +783,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
             bool autoCreate = PrepareDeserialize(value, ref type);
@@ -845,7 +807,7 @@ namespace ProtoBuf.Meta
         public object Deserialize(ProtoReader source, object value, Type type)
         {
             ProtoReader.State state = source.DefaultState();
-            return Deserialize(source, ref state, value, type);
+            return DeserializeFallback(source, ref state, value, type);
         }
 
         /// <summary>
@@ -858,9 +820,11 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(ProtoReader source, ref ProtoReader.State state, object value, System.Type type)
+        internal object DeserializeFallback(ProtoReader source, ref ProtoReader.State state, object value, System.Type type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
+            if (type == null || type == typeof(object))
+                type = value?.GetType() ?? typeof(object);
             var oldModel = source.Model;
             try
             {
@@ -1497,23 +1461,25 @@ namespace ProtoBuf.Meta
         public T DeepClone<T>(T value)
         {
             if (TypeHelper<T>.IsObjectType && value == null) return value;
-            if (TypeHelper<T>.IsLegacyType)
+            if (TypeHelper<T>.UseFallback)
             {
 #pragma warning disable CS0618
                 return (T)DeepClone((object)value);
 #pragma warning restore CS0618
             }
-
-            using var ms = new MemoryStream();
-            Serialize<T>(ms, value);
-            ms.Position = 0;
-            return Deserialize<T>(ms);
+            else
+            {
+                using var ms = new MemoryStream();
+                Serialize<T>(ms, value);
+                ms.Position = 0;
+                return Deserialize<T>(ms);
+            }
         }
 
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        [Obsolete(PreferGenericAPI)]
+        [Obsolete(PreferGenericAPI, false)]
         public object DeepClone(object value)
         {
             if (value == null) return null;
@@ -1805,12 +1771,16 @@ namespace ProtoBuf.Meta
             public System.Runtime.Serialization.StreamingContext Context { get; set; }
 
             public object Deserialize(Stream serializationStream)
-                => model.Deserialize(serializationStream, null, type, (long)-1, Context);
+            {
+                using var reader = ProtoReader.Create(out var state, serializationStream, model, Context);
+                return model.DeserializeFallback(reader, ref state, null, type);
+            }
 
             public void Serialize(Stream serializationStream, object graph)
-#pragma warning disable CS0618
-                => model.Serialize(serializationStream, graph, Context);
-#pragma warning restore CS0618
+            {
+                using var reader = ProtoWriter.Create(out var state, serializationStream, model, Context);
+                model.SerializeFallback(reader, ref state, graph);
+            }
 
             public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector { get; set; }
         }

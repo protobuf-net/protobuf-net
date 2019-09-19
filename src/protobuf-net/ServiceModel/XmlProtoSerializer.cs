@@ -116,24 +116,25 @@ namespace ProtoBuf.ServiceModel
             else
             {
                 using MemoryStream ms = new MemoryStream();
-                if (isList)
+                using (ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null))
                 {
-#pragma warning disable CS0618
-                    model.Serialize(ms, graph, null);
-#pragma warning restore CS0618
-                }
-                else
-                {
-                    using ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null);
-                    try
+                    if (isList)
                     {
-                        model.Serialize(protoWriter, ref state, key, graph);
-                        protoWriter.Close(ref state);
+                        model.SerializeFallback(protoWriter, ref state, graph);
                     }
-                    catch
+                    else
                     {
-                        protoWriter.Abandon();
-                        throw;
+
+                        try
+                        {
+                            model.Serialize(protoWriter, ref state, key, graph);
+                            protoWriter.Close(ref state);
+                        }
+                        catch
+                        {
+                            protoWriter.Abandon();
+                            throw;
+                        }
                     }
                 }
                 byte[] buffer = ms.GetBuffer();
@@ -169,14 +170,16 @@ namespace ProtoBuf.ServiceModel
             }
             if (isSelfClosed) // no real content
             {
+                using var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
                 if (isList || isEnum)
                 {
-#pragma warning disable CS0618
-                    return model.Deserialize(Stream.Null, null, type, null);
-#pragma warning restore CS0618
+                    return model.DeserializeFallback(protoReader, ref state, null, type);
                 }
-                using var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
-                return model.DeserializeCore(protoReader, ref state, key, null);
+                else
+                {
+                    
+                    return model.DeserializeCore(protoReader, ref state, key, null);
+                }
             }
 
             object result = null;
@@ -189,7 +192,7 @@ namespace ProtoBuf.ServiceModel
                 else if (isList || isEnum)
                 {
 #pragma warning disable CS0618
-                    result = model.Deserialize(protoReader, ref state, null, type);
+                    result = model.DeserializeFallback(protoReader, ref state, null, type);
 #pragma warning restore CS0618
                 }
                 else

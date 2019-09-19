@@ -40,7 +40,7 @@ namespace ProtoBuf.NWind
             contents = arr;
             using var reader = ProtoReader.Create(out var readState, arr, RuntimeTypeModel.Default);
             var watch = Stopwatch.StartNew();
-            var obj = (DatabaseCompat)reader.Model.Deserialize(reader, ref readState, null, typeof(DatabaseCompat));
+            var obj = (DatabaseCompat)reader.Deserialize<DatabaseCompat>(ref readState, null);
             watch.Stop();
             Log?.WriteLine($"Deserialized: {watch.ElapsedMilliseconds}ms");
             return obj;
@@ -51,7 +51,7 @@ namespace ProtoBuf.NWind
             try
             {
                 var watch = Stopwatch.StartNew();
-                writer.Model.Serialize(writer, ref state, db);
+                writer.Serialize(ref state, db);
                 watch.Stop();
                 Log?.WriteLine($"Serialized: {watch.ElapsedMilliseconds}ms");
             }

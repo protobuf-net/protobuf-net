@@ -26,7 +26,7 @@ namespace Examples
             var obj = new Foo { Bar = "abc", Blap = "abc" };
             using (var writer = ProtoWriter.Create(out var s, ms, model, null))
             {
-                writer.Model.Serialize(writer, ref s, obj);
+                writer.Serialize(ref s, obj);
                 writer.Close(ref s);
             }
             ms.Position = 0;
@@ -39,7 +39,7 @@ namespace Examples
             Foo foo;
             using (var reader = GetReader(out var state))
             {
-                foo = (Foo)reader.Model.Deserialize(reader, ref state, null, typeof(Foo));
+                foo = (Foo)reader.Deserialize<Foo>(ref state, null);
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -53,7 +53,7 @@ namespace Examples
             using (var reader = GetReader(out var state))
             {
                 reader.InternStrings = true;
-                foo = (Foo)reader.Model.Deserialize(reader, ref state, null, typeof(Foo));
+                foo = (Foo)reader.Deserialize<Foo>(ref state, null);
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -67,7 +67,7 @@ namespace Examples
             using (var reader = GetReader(out var state))
             {
                 reader.InternStrings = false;
-                foo = (Foo)reader.Model.Deserialize(reader, ref state, null, typeof(Foo));
+                foo = (Foo)reader.Deserialize<Foo>(ref state, null);
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");

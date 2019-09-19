@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal
 {
     internal static class TypeHelper
     {
-        public static bool IsLegacyType(Type type)
+        public static bool UseFallback(Type type)
         {
             if (type == null) return false;
             if (type == typeof(object)) return true;
@@ -14,6 +14,9 @@ namespace ProtoBuf.Internal
             if (type.IsEnum) return true;
             if (TypeModel.GetWireType(null, Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)
                 return true;
+            if (TypeModel.GetListItemType(type) != null)
+                return true;
+
             return false;
         }
         internal static string CSName(Type type)
@@ -21,24 +24,24 @@ namespace ProtoBuf.Internal
             if (type == null) return null;
             if (!type.IsGenericType)
             {
-                switch (Type.GetTypeCode(type))
+                return (Type.GetTypeCode(type)) switch
                 {
-                    case TypeCode.Boolean: return "bool";
-                    case TypeCode.Char: return "char";
-                    case TypeCode.SByte: return "sbyte";
-                    case TypeCode.Byte: return "byte";
-                    case TypeCode.Int16: return "short";
-                    case TypeCode.UInt16: return "ushort";
-                    case TypeCode.Int32: return "int";
-                    case TypeCode.UInt32: return "uint";
-                    case TypeCode.Int64: return "long";
-                    case TypeCode.UInt64: return "ulong";
-                    case TypeCode.Single: return "float";
-                    case TypeCode.Double: return "double";
-                    case TypeCode.Decimal: return "decimal";
-                    case TypeCode.String: return "string";
-                }
-                return type.Name;
+                    TypeCode.Boolean => "bool",
+                    TypeCode.Char => "char",
+                    TypeCode.SByte => "sbyte",
+                    TypeCode.Byte => "byte",
+                    TypeCode.Int16 => "short",
+                    TypeCode.UInt16 => "ushort",
+                    TypeCode.Int32 => "int",
+                    TypeCode.UInt32 => "uint",
+                    TypeCode.Int64 => "long",
+                    TypeCode.UInt64 => "ulong",
+                    TypeCode.Single => "float",
+                    TypeCode.Double => "double",
+                    TypeCode.Decimal => "decimal",
+                    TypeCode.String => "string",
+                    _ => type.Name,
+                };
             }
 
             var withTicks = type.Name;
@@ -63,8 +66,8 @@ namespace ProtoBuf.Internal
 
         public static readonly bool IsReferenceOrContainsReferences = GetContainsReferences();
 
-        // "legacy types" are things that require special primitive handling that is not implemented in the <T> versions
-        public static readonly bool IsLegacyType = TypeHelper.IsLegacyType(typeof(T));
+        // these are things that require special primitive handling that is not implemented in the <T> versions
+        public static readonly bool UseFallback = TypeHelper.UseFallback(typeof(T));
 
 #if PLAT_ISREF
         private static bool GetContainsReferences()

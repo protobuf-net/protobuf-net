@@ -60,6 +60,31 @@ namespace ProtoBuf
                 }
 #endif
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static string ToString(ReadOnlySpan<byte> span)
+            {
+#if PLAT_SPAN_OVERLOADS
+                return UTF8.GetString(span);
+#else
+                unsafe
+                {
+                    fixed (byte* sPtr = &MemoryMarshal.GetReference(span))
+                    {
+                        var bPtr = sPtr;
+                        int bytes = span.Length;
+                        int chars = UTF8.GetCharCount(bPtr, bytes);
+                        string s = new string('\0', chars);
+                        fixed (char* cPtr = s)
+                        {
+                            UTF8.GetChars(bPtr, bytes, cPtr, chars);
+                        }
+                        return s;
+                    }
+                }
+#endif
+            }
+
             internal static int TryParseUInt32Varint(ProtoReader @this, ref State state, int offset, bool trimNegative, out uint value, ReadOnlySpan<byte> span)
             {
                 if ((uint)offset >= (uint)span.Length)
@@ -235,12 +260,18 @@ namespace ProtoBuf
             {
                 // we should probably do the work with a Decoder,
                 // but this works for today
-                using (var mem = MemoryPool<byte>.Shared.Rent(bytes))
+                var arr = BufferPool.GetBuffer(bytes);
+                try
                 {
-                    var span = mem.Memory.Span;
+                    var span = new Span<byte>(arr, 0, bytes);
                     ImplReadBytes(ref state, span, bytes);
-                    return ToString(span, 0, bytes);
+                    return ToString(span);
                 }
+                finally
+                {
+                    BufferPool.ReleaseBufferToPool(ref arr);
+                }
+                
             }
 
             private void ImplReadBytes(ref State state, Span<byte> target, int bytesToRead)

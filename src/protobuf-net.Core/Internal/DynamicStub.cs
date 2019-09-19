@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Meta;
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal
@@ -33,7 +34,7 @@ namespace ProtoBuf.Internal
         private static DynamicStub SlowGet(Type type)
         {
             var obj = NilStub.Instance;
-            if (!TypeHelper.IsLegacyType(type))
+            if (!TypeHelper.UseFallback(type))
             {
                 try
                 {
@@ -77,6 +78,7 @@ namespace ProtoBuf.Internal
             }
             protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
             {
+                Debug.Assert(reader != null, "reader is null");
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
                 value = reader.Deserialize<T>(ref state, (T)value, serializer);

@@ -35,9 +35,7 @@ namespace Benchmark
             {
                 using (var writer = ProtoWriter.Create(out var state, buffer, model))
                 {
-#pragma warning disable CS0618
-                    model.Serialize(writer, ref state, _database);
-#pragma warning restore CS0618
+                    writer.Serialize(ref state, _database);
                     writer.Close(ref state);
                 }
                 AssertLength(buffer.Length);
@@ -52,9 +50,7 @@ namespace Benchmark
             {
                 using (var writer = ProtoWriter.Create(out var state, buffer, model))
                 {
-#pragma warning disable CS0618
-                    model.Serialize(writer, ref state, _database);
-#pragma warning restore CS0618
+                    writer.Serialize(ref state, _database);
                     writer.Close(ref state);
                 }
                 AssertLength(buffer.Reset());

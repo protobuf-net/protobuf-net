@@ -1345,11 +1345,14 @@ namespace ProtoBuf
             SerializationContext ctx = parent.Context;
             if (model == null) throw new InvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
-#pragma warning disable CS0618
-            model.Serialize(ms, from, ctx);
+
+            using (var writer = ProtoWriter.Create(out var writeState, ms, model, ctx))
+            {
+                model.SerializeFallback(writer, ref writeState, from);
+            }
             ms.Position = 0;
-            return model.Deserialize(ms, to, type: null);
-#pragma warning restore CS0618
+            using var reader = ProtoReader.Create(out var state, ms, model);
+            return model.DeserializeFallback(reader, ref state, to, type: null);
         }
 
         /// <summary>
@@ -1415,7 +1418,7 @@ namespace ProtoBuf
         /// </summary>
         public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
         {
-            if (TypeHelper<T>.IsObjectType && value is object)
+            if (TypeHelper<T>.IsObjectType && value != null)
             {
                 SetRootObject(value);
             }
