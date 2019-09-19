@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
+using System;
 
 namespace Benchmark
 {
@@ -7,8 +8,7 @@ namespace Benchmark
         private static void Main(string[] args)
         {
 //#if INTRINSICS
-//            var obj = new VarintDecodeBenchmarks();
-//            obj.Setup();
+//            new VarintDecodeBenchmarks().Setup();
 //#endif
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
