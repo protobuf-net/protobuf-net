@@ -1,7 +1,5 @@
 ﻿using ProtoBuf.WellKnownTypes;
 using System;
-using System.Runtime.InteropServices;
-using System.Reflection;
 
 namespace ProtoBuf
 {

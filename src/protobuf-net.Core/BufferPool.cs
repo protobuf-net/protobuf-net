@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace ProtoBuf
 {
-    internal sealed class BufferPool
+    internal static class BufferPool
     {
         private static readonly ArrayPool<byte> _pool = ArrayPool<byte>.Shared;
 
