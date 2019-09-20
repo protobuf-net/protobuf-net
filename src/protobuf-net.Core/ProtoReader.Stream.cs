@@ -27,7 +27,7 @@ namespace ProtoBuf
         public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
             var reader = Pool<StreamProtoReader>.TryGet() ?? new StreamProtoReader();
-            reader.Init(source, model, context, length);
+            reader.Init(source, model ?? TypeModel.DefaultModel, context, length);
             return reader;
         }
 
