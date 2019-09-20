@@ -83,28 +83,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteRecursionSafeObject(value, key, writer, ref state);
-        }
-        /// <summary>
-        /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
-        /// caller is asserting that this relationship is non-recursive; no recursion check will be
-        /// performed.
-        /// </summary>
-        /// <param name="value">The object to write.</param>
-        /// <param name="key">The key that uniquely identifies the type within the model.</param>
-        /// <param name="writer">The destination.</param>
-        /// <param name="state">Writer state</param>
-        public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            if (writer.model == null)
-            {
-                ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
-            }
-            SubItemToken token = StartSubItem(null, writer, ref state);
-            writer.model.Serialize(writer, ref state, key, value);
-            EndSubItem(token, writer, ref state);
+            writer.DefaultState().WriteRecursionSafeObject(value, key);
         }
 
         internal static void WriteObject(ProtoWriter writer, ref State state, object value, int key, PrefixStyle style, int fieldNumber)

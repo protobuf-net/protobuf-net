@@ -306,6 +306,25 @@ namespace ProtoBuf
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(_writer, ref this, value);
 
             internal TypeModel Model => _writer?.Model;
+
+            /// <summary>
+            /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
+            /// caller is asserting that this relationship is non-recursive; no recursion check will be
+            /// performed.
+            /// </summary>
+            /// <param name="value">The object to write.</param>
+            /// <param name="key">The key that uniquely identifies the type within the model.</param>
+            public void WriteRecursionSafeObject(object value, int key)
+            {
+                var writer = _writer;
+                if (writer.model == null)
+                {
+                    ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
+                }
+                SubItemToken token = StartSubItem(null, writer, ref this);
+                writer.model.Serialize(writer, ref this, key, value);
+                EndSubItem(token, writer, ref this);
+            }
         }
     }
 }
