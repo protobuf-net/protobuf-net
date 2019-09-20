@@ -66,7 +66,7 @@ namespace ProtoBuf
                 case WireType.String:
                 case WireType.StartGroup:
                     var scaled = new ScaledTicks(timeSpan, kind);
-                    ProtoWriter.WriteSubItem<ScaledTicks>(scaled, dest, ref state, WellKnownSerializer.Instance);
+                    state.WriteSubItem<ScaledTicks>(scaled, WellKnownSerializer.Instance);
                     break;
                 case WireType.Fixed64:
                     state.WriteInt64(timeSpan.Ticks);
@@ -128,7 +128,7 @@ namespace ProtoBuf
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         public static void WriteDuration(TimeSpan value, ProtoWriter dest, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<Duration>(value, dest, ref state, WellKnownSerializer.Instance);
+            => state.WriteSubItem<Duration>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
@@ -165,7 +165,7 @@ namespace ProtoBuf
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
         public static void WriteTimestamp(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<Timestamp>(value, dest, ref state, WellKnownSerializer.Instance);
+            => state.WriteSubItem<Timestamp>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream
@@ -303,7 +303,7 @@ namespace ProtoBuf
         /// Writes a decimal to a protobuf stream
         /// </summary>
         public static void WriteDecimal(decimal value, ProtoWriter writer, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<decimal>(value, writer, ref state, WellKnownSerializer.Instance);
+            => state.WriteSubItem<decimal>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
@@ -319,7 +319,7 @@ namespace ProtoBuf
         /// Writes a Guid to a protobuf stream
         /// </summary>        
         public static void WriteGuid(Guid value, ProtoWriter dest, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<Guid>(value, dest, ref state, WellKnownSerializer.Instance);
+            => state.WriteSubItem<Guid>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream

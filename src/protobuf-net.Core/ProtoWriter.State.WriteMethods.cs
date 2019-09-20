@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
 namespace ProtoBuf
 {
@@ -283,6 +284,28 @@ namespace ProtoBuf
                         break;
                 }
             }
+
+            /// <summary>
+            /// Writes a sub-item to the input writer
+            /// </summary>
+            public void WriteSubItem<T>(T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
+                => _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+
+            /// <summary>
+            /// Writes a sub-type to the input writer
+            /// </summary>
+            public void WriteSubType<T>(T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+            {
+                if (value != null) _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
+            }
+
+            /// <summary>
+            /// Writes a base-type to the input writer
+            /// </summary>
+            public void WriteBaseType<T>(T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+                => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(_writer, ref this, value);
+
+            internal TypeModel Model => _writer?.Model;
         }
     }
 }

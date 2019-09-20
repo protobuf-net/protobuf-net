@@ -299,7 +299,7 @@ namespace ProtoBuf
                 if (value is B b)
                 {
                     state.WriteFieldHeader(4, WireType.String);
-                    ProtoWriter.WriteSubType<B>(b, writer, ref state, this);
+                    state.WriteSubType<B>(b, this);
                 }
                 else
                 {
@@ -342,7 +342,7 @@ namespace ProtoBuf
                 if (value is C c)
                 {
                     state.WriteFieldHeader(5, WireType.String);
-                    ProtoWriter.WriteSubType<C>(c, writer, ref state, this);
+                    state.WriteSubType<C>(c, this);
                 }
                 else
                 {

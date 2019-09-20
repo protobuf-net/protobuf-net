@@ -62,7 +62,7 @@ namespace ProtoBuf.Serializers
             foreach (var pair in (TDictionary)value)
             {
                 state.WriteFieldHeader(fieldNumber, wireType);
-                ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
+                state.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, _runtimeSerializer);
             }
         }
 

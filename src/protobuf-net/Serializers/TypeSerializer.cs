@@ -32,7 +32,7 @@ namespace ProtoBuf.Serializers
         internal override Type BaseType => typeof(TBase);
 
         public override void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
-            => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state);
+            => state.WriteBaseType<TBase>(value);
 
         public override T Read(ref ProtoReader.State state, T value)
             => state.ReadBaseType<TBase, T>(value);
@@ -79,9 +79,10 @@ namespace ProtoBuf.Serializers
         {   // => ((IProtoSubTypeSerializer<TBase>)this).WriteSubType(writer, ref state, value);
             // or
             // => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state, this);
+
+            using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
             if (context.IsService)
             {
-                using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
                 context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
                 context.LoadWriter(true);
                 context.LoadValue(tmp);
@@ -90,10 +91,10 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                context.LoadValue(valueFrom);
-                context.LoadWriter(true);
+                context.LoadState();
+                context.LoadValue(tmp);
                 context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.WriteBaseType), BindingFlags.Public | BindingFlags.Static)
+                context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.State.WriteBaseType), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(typeof(TBase)));
             }
         }

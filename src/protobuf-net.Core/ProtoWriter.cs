@@ -812,12 +812,6 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        public static void WriteSubItem<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
-            => writer.WriteSubItem<T>(ref state, value, serializer, PrefixStyle.Base128, recursionCheck);
-
-        /// <summary>
-        /// Writes a sub-item to the input writer
-        /// </summary>
         protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
@@ -826,20 +820,6 @@ namespace ProtoBuf
             EndSubItem(ref state, tok, style);
 #pragma warning restore CS0618
         }
-
-        /// <summary>
-        /// Writes a sub-type to the input writer
-        /// </summary>
-        public static void WriteSubType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
-        {
-            if (value != null) writer.WriteSubType<T>(ref state, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model));
-        }
-
-        /// <summary>
-        /// Writes a base-type to the input writer
-        /// </summary>
-        public static void WriteBaseType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
-            => (serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model)).WriteSubType(writer, ref state, value);
 
         /// <summary>
         /// Writes a sub-item to the input writer
