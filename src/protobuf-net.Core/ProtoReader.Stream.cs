@@ -13,7 +13,7 @@ namespace ProtoBuf
 #if PREFER_SPANS
         internal const bool PreferSpans = true;
 #else
-        internal const bool PreferSpans = true;
+        internal const bool PreferSpans = false;
 #endif
 
         /// <summary>
