@@ -17,12 +17,19 @@ namespace ProtoBuf
         /// <summary>
         /// Writer state
         /// </summary>
-        public ref struct State
+        public ref partial struct State
         {
             internal bool IsActive => !_span.IsEmpty;
 
             private Span<byte> _span;
             private Memory<byte> _memory;
+
+            internal State(ProtoWriter writer)
+            {
+                this = default;
+                _writer = writer;
+            }
+            private ProtoWriter _writer;
 
             internal Span<byte> Remaining
             {

@@ -12,7 +12,7 @@ namespace ProtoBuf
 
         private sealed class NullProtoWriter : ProtoWriter
         {
-            protected internal override State DefaultState() => default;
+            protected internal override State DefaultState() => new State(this);
 
             private NullProtoWriter() { }
 
@@ -20,7 +20,7 @@ namespace ProtoBuf
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
                 obj.Init(model, context);
-                state = default;
+                state = new State(obj);
                 return obj;
             }
 

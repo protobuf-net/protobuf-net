@@ -52,7 +52,7 @@ namespace ProtoBuf.WellKnownTypes
         Timestamp IProtoSerializer<Timestamp>.Read(ProtoReader reader, ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);
-            duration = ReadDuration(reader, ref state, duration);
+            duration = ReadDuration(ref state, duration);
             return new Timestamp(duration.Seconds, duration.Nanoseconds);
         }
 

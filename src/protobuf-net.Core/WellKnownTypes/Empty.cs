@@ -10,9 +10,9 @@
     {
         Empty IProtoSerializer<Empty>.Read(ProtoReader reader, ref ProtoReader.State state, Empty value)
         {
-            while(reader.ReadFieldHeader(ref state) > 0)
+            while(state.ReadFieldHeader() > 0)
             {
-                reader.SkipField(ref state);
+                state.SkipField();
             }
             return value;
         }

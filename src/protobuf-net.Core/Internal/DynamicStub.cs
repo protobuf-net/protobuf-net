@@ -81,7 +81,7 @@ namespace ProtoBuf.Internal
                 Debug.Assert(reader != null, "reader is null");
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
-                value = reader.Deserialize<T>(ref state, (T)value, serializer);
+                value = state.Deserialize<T>((T)value, serializer);
                 return true;
             }
 

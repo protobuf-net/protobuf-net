@@ -27,12 +27,13 @@ namespace ProtoBuf
         /// <param name="state">Writer state</param>
         public static ProtoWriter Create(out State state, Stream dest, TypeModel model, SerializationContext context = null)
         {
-            state = default;
-            return StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
+            var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
+            state = new State(writer);
+            return writer;
         }
         private class StreamProtoWriter : ProtoWriter
         {
-            protected internal override State DefaultState() => default;
+            protected internal override State DefaultState() => new State(this);
 
             private Stream dest;
             private int flushLock;

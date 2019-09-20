@@ -11,6 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ProtoWriter.State.WriteMethods.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="ProtoWriter.State.WriteMethods.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.1" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
   </ItemGroup>
@@ -19,14 +27,14 @@
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.0'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE</DefineConstants>
   </PropertyGroup>
   
   <!--
-  
-  PREFER_SPANS        : if the Stream resolves to something that can be processed another way, allow it
-  PLAT_ISREF          : does System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences-T() exist?
-  PLAT_SPAN_OVERLOADS : do common methods like string encode have APIs that take spans
-  PLAT_INTRINSICS     : make use of CPU intrinsics
+  PREFER_SPANS              : if the Stream resolves to something that can be processed another way, allow it
+  PLAT_ISREF                : does System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences-T() exist?
+  PLAT_SPAN_OVERLOADS       : do common methods like string encode have APIs that take spans
+  PLAT_INTRINSICS           : make use of CPU intrinsics
+  PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
   -->
 </Project>

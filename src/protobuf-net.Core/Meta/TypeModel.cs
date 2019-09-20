@@ -409,7 +409,7 @@ namespace ProtoBuf.Meta
                     TypeModel.ThrowUnexpectedType(type); // throws
                 }
             }
-            bytesRead += reader.GetPosition(ref state);
+            bytesRead += state.GetPosition();
             haveObject = true;
             return value;
         }
@@ -617,7 +617,7 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, Type type)
         {
             using var reader = ProtoReader.Create(out var state, source, this, null, ProtoReader.TO_EOF);
-            return DeserializeFallback(reader, ref state, value, type);
+            return state.DeserializeFallback(this, value, type);
         }
 
         /// <summary>
@@ -634,7 +634,7 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, Type type, SerializationContext context)
         {
             using var reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
-            return DeserializeFallback(reader, ref state, value, type);
+            return state.DeserializeFallback(this, value, type);
         }
 
         internal const string PreferGenericAPI = "The non-generic API is sub-optimal; it is recommended to use the generic API whenever possible";
@@ -658,20 +658,7 @@ namespace ProtoBuf.Meta
         public T Deserialize<T>(Stream source, T value = default, SerializationContext context = null)
         {
             using var reader = ProtoReader.Create(out var state, source, this, context);
-            return DeserializeImpl<T>(reader, ref state, value);
-        }
-
-        internal static T DeserializeImpl<T>(ProtoReader reader, ref ProtoReader.State state, T value = default)
-        {
-            if (TypeHelper<T>.UseFallback)
-            {
-                Debug.Assert(reader.Model != null, "Model is null");
-                return (T)reader.Model.DeserializeFallback(reader, ref state, value, typeof(T));
-            }
-            else
-            {
-                return reader.Deserialize<T>(ref state, value);
-            }
+            return state.DeserializeImpl<T>(value);
         }
 
         /// <summary>
@@ -687,7 +674,7 @@ namespace ProtoBuf.Meta
         public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
             using var reader = ProtoReader.Create(out var state, source, this, context);
-            return DeserializeImpl<T>(reader, ref state, value);
+            return state.DeserializeImpl<T>(value);
         }
 
         /// <summary>
@@ -703,10 +690,10 @@ namespace ProtoBuf.Meta
         public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {
             using var reader = ProtoReader.Create(out var state, source, this, context);
-            return DeserializeImpl<T>(reader, ref state, value);
+            return state.DeserializeImpl<T>(value);
         }
 
-        private bool PrepareDeserialize(object value, ref Type type)
+        internal bool PrepareDeserialize(object value, ref Type type)
         {
             if (type == null)
             {
@@ -791,7 +778,7 @@ namespace ProtoBuf.Meta
             using var reader = ProtoReader.Create(out var state, source, this, context, length);
             if (value != null) reader.SetRootObject(value);
             object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
-            reader.CheckFullyConsumed(ref state);
+            state.CheckFullyConsumed();
             return obj;
         }
 
@@ -806,43 +793,9 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public object Deserialize(ProtoReader source, object value, Type type)
-        {
-            ProtoReader.State state = source.DefaultState();
-            return DeserializeFallback(source, ref state, value, type);
-        }
+            => source.DefaultState().DeserializeFallback(this, value, type);
 
-        /// <summary>
-        /// Applies a protocol-buffer reader to an existing instance (which may be null).
-        /// </summary>
-        /// <param name="type">The type (including inheritance) to consider.</param>
-        /// <param name="value">The existing instance to be modified (can be null).</param>
-        /// <param name="source">The reader to apply to the instance (cannot be null).</param>
-        /// <param name="state">Reader state</param>
-        /// <returns>The updated instance; this may be different to the instance argument if
-        /// either the original instance was null, or the stream defines a known sub-type of the
-        /// original instance.</returns>
-        internal object DeserializeFallback(ProtoReader source, ref ProtoReader.State state, object value, System.Type type)
-        {
-            if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-            if (type == null || type == typeof(object))
-                type = value?.GetType() ?? typeof(object);
-            var oldModel = source.Model;
-            try
-            {
-                source.Model = this;
-                bool autoCreate = PrepareDeserialize(value, ref type);
-                if (value != null) source.SetRootObject(value);
-                object obj = DeserializeAny(source, ref state, type, value, autoCreate);
-                source.CheckFullyConsumed(ref state);
-                return obj;
-            }
-            finally
-            {
-                source.Model = oldModel;
-            }
-        }
-
-        private object DeserializeAny(ProtoReader reader, ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
+        internal object DeserializeAny(ProtoReader reader, ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
         {
             if (!DynamicStub.TryDeserialize(type, this, reader, ref state, ref value))
             {
@@ -1151,20 +1104,19 @@ namespace ProtoBuf.Meta
 #pragma warning restore RCS1218 // Simplify code branching.
 
                 // read the next item
-                int fieldNumber = reader.ReadFieldHeader(ref state);
+                int fieldNumber = state.ReadFieldHeader();
                 if (fieldNumber <= 0) break;
                 if (fieldNumber != tag)
                 {
                     if (skipOtherFields)
                     {
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         continue;
                     }
-                    throw ProtoReader.AddErrorData(new InvalidOperationException(
-                        "Expected field " + tag.ToString() + ", but found " + fieldNumber.ToString()), reader, ref state);
+                    state.ThrowInvalidOperationException($"Expected field {tag}, but found {fieldNumber}");
                 }
                 found = true;
-                reader.Hint(wiretype); // handle signed data etc
+                state.Hint(wiretype); // handle signed data etc
 
                 if (modelKey >= 0)
                 {
@@ -1172,9 +1124,9 @@ namespace ProtoBuf.Meta
                     {
                         case WireType.String:
                         case WireType.StartGroup:
-                            SubItemToken token = ProtoReader.StartSubItem(reader, ref state);
+                            SubItemToken token = state.StartSubItem();
                             value = DeserializeCore(reader, ref state, modelKey, value);
-                            ProtoReader.EndSubItem(token, reader, ref state);
+                            state.EndSubItem(token);
                             continue;
                         default:
                             value = DeserializeCore(reader, ref state, modelKey, value);
@@ -1183,25 +1135,25 @@ namespace ProtoBuf.Meta
                 }
                 switch (typecode)
                 {
-                    case ProtoTypeCode.Int16: value = reader.ReadInt16(ref state); continue;
-                    case ProtoTypeCode.Int32: value = reader.ReadInt32(ref state); continue;
-                    case ProtoTypeCode.Int64: value = reader.ReadInt64(ref state); continue;
-                    case ProtoTypeCode.UInt16: value = reader.ReadUInt16(ref state); continue;
-                    case ProtoTypeCode.UInt32: value = reader.ReadUInt32(ref state); continue;
-                    case ProtoTypeCode.UInt64: value = reader.ReadUInt64(ref state); continue;
-                    case ProtoTypeCode.Boolean: value = reader.ReadBoolean(ref state); continue;
-                    case ProtoTypeCode.SByte: value = reader.ReadSByte(ref state); continue;
-                    case ProtoTypeCode.Byte: value = reader.ReadByte(ref state); continue;
-                    case ProtoTypeCode.Char: value = (char)reader.ReadUInt16(ref state); continue;
-                    case ProtoTypeCode.Double: value = reader.ReadDouble(ref state); continue;
-                    case ProtoTypeCode.Single: value = reader.ReadSingle(ref state); continue;
-                    case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(reader, ref state); continue;
-                    case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(reader, ref state); continue;
-                    case ProtoTypeCode.String: value = reader.ReadString(ref state); continue;
-                    case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, reader, ref state); continue;
-                    case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(reader, ref state); continue;
-                    case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(reader, ref state); continue;
-                    case ProtoTypeCode.Uri: value = new Uri(reader.ReadString(ref state), UriKind.RelativeOrAbsolute); continue;
+                    case ProtoTypeCode.Int16: value = state.ReadInt16(); continue;
+                    case ProtoTypeCode.Int32: value = state.ReadInt32(); continue;
+                    case ProtoTypeCode.Int64: value = state.ReadInt64(); continue;
+                    case ProtoTypeCode.UInt16: value = state.ReadUInt16(); continue;
+                    case ProtoTypeCode.UInt32: value = state.ReadUInt32(); continue;
+                    case ProtoTypeCode.UInt64: value = state.ReadUInt64(); continue;
+                    case ProtoTypeCode.Boolean: value = state.ReadBoolean(); continue;
+                    case ProtoTypeCode.SByte: value = state.ReadSByte(); continue;
+                    case ProtoTypeCode.Byte: value = state.ReadByte(); continue;
+                    case ProtoTypeCode.Char: value = (char)state.ReadUInt16(); continue;
+                    case ProtoTypeCode.Double: value = state.ReadDouble(); continue;
+                    case ProtoTypeCode.Single: value = state.ReadSingle(); continue;
+                    case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(ref state); continue;
+                    case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(ref state); continue;
+                    case ProtoTypeCode.String: value = state.ReadString(); continue;
+                    case ProtoTypeCode.ByteArray: value = state.AppendBytes((byte[])value); continue;
+                    case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(ref state); continue;
+                    case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(ref state); continue;
+                    case ProtoTypeCode.Uri: value = new Uri(state.ReadString(), UriKind.RelativeOrAbsolute); continue;
                 }
             }
             if (!found && !asListItem && autoCreate)
@@ -1801,7 +1753,7 @@ namespace ProtoBuf.Meta
             public object Deserialize(Stream serializationStream)
             {
                 using var reader = ProtoReader.Create(out var state, serializationStream, model, Context);
-                return model.DeserializeFallback(reader, ref state, null, type);
+                return state.DeserializeFallback(model, null, type);
             }
 
             public void Serialize(Stream serializationStream, object graph)

@@ -9,36 +9,23 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        //        /// <summary>
-        //        /// Create a new ProtoWriter that tagets a buffer writer
-        //        /// </summary>
-        //        public static ProtoWriter CreateForBufferWriter<T>(out State state, T writer, TypeModel model, SerializationContext context = null)
-        //            where T : IBufferWriter<byte>
-        //        {
-        //#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
-        //            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-        //#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
-        //            state = default;
-        //            return new BufferWriterProtoWriter<T>(writer, model, context);
-        //        }
-
         /// <summary>
         /// Create a new ProtoWriter that tagets a buffer writer
         /// </summary>
         public static ProtoWriter Create(out State state, IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
         {
             if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            state = default;
 
-            return BufferWriterProtoWriter<IBufferWriter<byte>>.CreateBufferWriter(writer, model, context);
+            var protoWriter = BufferWriterProtoWriter.CreateBufferWriter(writer, model, context);
+            state = new State(protoWriter);
+            return protoWriter;
         }
 
-        private sealed class BufferWriterProtoWriter<TBuffer> : ProtoWriter
-            where TBuffer : IBufferWriter<byte>
+        private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            internal static BufferWriterProtoWriter<TBuffer> CreateBufferWriter(TBuffer writer, TypeModel model, SerializationContext context)
+            internal static BufferWriterProtoWriter CreateBufferWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
             {
-                var obj = Pool<BufferWriterProtoWriter<TBuffer>>.TryGet() ?? new BufferWriterProtoWriter<TBuffer>();
+                var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
                 obj.Init(model, context);
                 obj._writer = writer;
                 return obj;
@@ -47,7 +34,7 @@ namespace ProtoBuf
             private protected override void Dispose()
             {
                 base.Dispose();
-                Pool<BufferWriterProtoWriter<TBuffer>>.Put(this);
+                Pool<BufferWriterProtoWriter>.Put(this);
             }
 
             private protected override void Cleanup()
@@ -62,9 +49,8 @@ namespace ProtoBuf
                 return default;
             }
 
-#pragma warning disable IDE0044 // Add readonly modifier
-            private TBuffer _writer; // not readonly, because T could be a struct - might need in-place state changes
-#pragma warning restore IDE0044 // Add readonly modifier
+            private IBufferWriter<byte> _writer;
+
             private BufferWriterProtoWriter() { }
 
             private protected override bool ImplDemandFlushOnDispose => true;

@@ -108,19 +108,19 @@ namespace ProtoBuf.WellKnownTypes
             TimeSpanScale scale = TimeSpanScale.Days;
             long value = 0;
             var kind = DateTimeKind.Unspecified;
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
                     case FieldTimeSpanScale:
-                        scale = (TimeSpanScale)reader.ReadInt32(ref state);
+                        scale = (TimeSpanScale)state.ReadInt32();
                         break;
                     case FieldTimeSpanValue:
-                        reader.Assert(ref state, WireType.SignedVarint);
-                        value = reader.ReadInt64(ref state);
+                        state.Assert(WireType.SignedVarint);
+                        value = state.ReadInt64();
                         break;
                     case FieldTimeSpanKind:
-                        kind = (DateTimeKind)reader.ReadInt32(ref state);
+                        kind = (DateTimeKind)state.ReadInt32();
                         switch (kind)
                         {
                             case DateTimeKind.Unspecified:
@@ -133,7 +133,7 @@ namespace ProtoBuf.WellKnownTypes
                         }
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }

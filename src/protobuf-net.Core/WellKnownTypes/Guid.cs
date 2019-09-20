@@ -24,13 +24,13 @@ namespace ProtoBuf.WellKnownTypes
         {
             ulong low = 0, high = 0;
             int fieldNumber;
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
-                    case FieldGuidLow: low = reader.ReadUInt64(ref state); break;
-                    case FieldGuidHigh: high = reader.ReadUInt64(ref state); break;
-                    default: reader.SkipField(ref state); break;
+                    case FieldGuidLow: low = state.ReadUInt64(); break;
+                    case FieldGuidHigh: high = state.ReadUInt64(); break;
+                    default: state.SkipField(); break;
                 }
             }
 

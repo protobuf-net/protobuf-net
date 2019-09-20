@@ -112,12 +112,12 @@ namespace ProtoBuf
         /// <summary>
         /// Parse the input as a sub-type of the instance
         /// </summary>
-        public void ReadSubType<TSubType>(ProtoReader reader, ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
+        public void ReadSubType<TSubType>(ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
-            var tok = ProtoReader.StartSubItem(reader, ref state);
-            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(reader, ref state,
+            var tok = state.StartSubItem();
+            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(state.GetReader(), ref state,
                 new SubTypeState<TSubType>(_context, _ctor, _value, _onBeforeDeserialize));
-            ProtoReader.EndSubItem(tok, reader, ref state);
+            state.EndSubItem(tok);
         }
 
         /// <summary>

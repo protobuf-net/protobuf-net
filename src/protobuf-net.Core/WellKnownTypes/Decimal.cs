@@ -12,14 +12,14 @@ namespace ProtoBuf.WellKnownTypes
             uint high = 0;
             uint signScale = 0;
             int fieldNumber;
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
-                    case FieldDecimalLow: low = reader.ReadUInt64(ref state); break;
-                    case FieldDecimalHigh: high = reader.ReadUInt32(ref state); break;
-                    case FieldDecimalSignScale: signScale = reader.ReadUInt32(ref state); break;
-                    default: reader.SkipField(ref state); break;
+                    case FieldDecimalLow: low = state.ReadUInt64(); break;
+                    case FieldDecimalHigh: high = state.ReadUInt32(); break;
+                    case FieldDecimalSignScale: signScale = state.ReadUInt32(); break;
+                    default: state.SkipField(); break;
                 }
             }
             int lo = (int)(low & 0xFFFFFFFFL),
