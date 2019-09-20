@@ -848,18 +848,18 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal override object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
+        protected internal override object DeserializeCore(ref ProtoReader.State state, int key, object value)
         {
             //Debug.WriteLine("Deserialize", value);
             IRuntimeProtoSerializerNode ser = ((MetaType)types[key]).Serializer;
             if (value == null && ser.ExpectedType.IsValueType)
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType, nonPublic: true);
-                return ser.Read(source, ref state, value);
+                return ser.Read(ref state, value);
             }
             else
             {
-                return ser.Read(source, ref state, value);
+                return ser.Read(ref state, value);
             }
         }
 

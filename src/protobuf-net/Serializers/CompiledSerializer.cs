@@ -30,11 +30,11 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        T IProtoSerializer<T>.Read(ProtoReader reader, ref ProtoReader.State state, T value)
-            => deserializer(reader, ref state, value);
+        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+            => deserializer(ref state, value);
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => deserializer(source, ref state, (T)value);
+        public override object Read(ref ProtoReader.State state, object value)
+            => deserializer(ref state, (T)value);
 
         void IProtoSerializer<T>.Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => serializer(writer, ref state, value);
@@ -53,7 +53,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoTypeSerializer.CanCreateInstance() => head.CanCreateInstance();
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => head.CreateInstance(source);
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext context) => head.CreateInstance(context);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
@@ -95,7 +95,7 @@ namespace ProtoBuf.Serializers
 
         public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
 
-        public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
+        public abstract object Read(ref ProtoReader.State state, object value);
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
             => head.EmitWrite(ctx, valueFrom);

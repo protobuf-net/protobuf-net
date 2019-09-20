@@ -8,7 +8,7 @@ namespace ProtoBuf.Serializers
         Type BaseType { get; }
         bool HasCallbacks(TypeModel.CallbackType callbackType);
         bool CanCreateInstance();
-        object CreateInstance(ProtoReader source);
+        object CreateInstance(ISerializationContext context);
         void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context);
 
         void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType);

@@ -11,7 +11,7 @@ namespace protogen.pooled
 {
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class Database : global::ProtoBuf.IExtensible, IDisposable
+    internal partial class Database : global::ProtoBuf.IExtensible, IDisposable
     {
         void IDisposable.Dispose()
         {
@@ -29,7 +29,7 @@ namespace protogen.pooled
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class Order : global::ProtoBuf.IExtensible, IDisposable
+    internal partial class Order : global::ProtoBuf.IExtensible, IDisposable
     {
         void IDisposable.Dispose()
         {
@@ -97,7 +97,7 @@ namespace protogen.pooled
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class OrderLine : global::ProtoBuf.IExtensible, IDisposable
+    internal partial class OrderLine : global::ProtoBuf.IExtensible, IDisposable
     {
         void IDisposable.Dispose() { }
 

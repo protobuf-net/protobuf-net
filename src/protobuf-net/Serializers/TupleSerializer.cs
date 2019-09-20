@@ -68,7 +68,7 @@ namespace ProtoBuf.Serializers
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
         {
             if (members[index] is PropertyInfo prop)
@@ -89,7 +89,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             object[] values = new object[members.Length];
             bool invokeCtor = false;
@@ -106,7 +106,7 @@ namespace ProtoBuf.Serializers
                 if (field <= tails.Length)
                 {
                     IRuntimeProtoSerializerNode tail = tails[field - 1];
-                    values[field - 1] = tails[field - 1].Read(source, ref state, tail.RequiresOldValue ? values[field - 1] : null);
+                    values[field - 1] = tails[field - 1].Read(ref state, tail.RequiresOldValue ? values[field - 1] : null);
                 }
                 else
                 {

@@ -280,12 +280,12 @@ namespace ProtoBuf
         void IProtoSerializer<C>.Write(ProtoWriter writer, ref ProtoWriter.State state, C value)
             => ((IProtoSubTypeSerializer<A>)this).WriteSubType(writer, ref state, value);
 
-        A IProtoSerializer<A>.Read(ProtoReader reader, ref ProtoReader.State state, A value)
-            => ((IProtoSubTypeSerializer<A>)this).ReadSubType(reader, ref state, SubTypeState<A>.Create<A>(reader, value));
-        B IProtoSerializer<B>.Read(ProtoReader reader, ref ProtoReader.State state, B value)
-            => (B)((IProtoSubTypeSerializer<A>)this).ReadSubType(reader, ref state, SubTypeState<A>.Create<B>(reader, value));
-        C IProtoSerializer<C>.Read(ProtoReader reader, ref ProtoReader.State state, C value)
-            => (C)((IProtoSubTypeSerializer<A>)this).ReadSubType(reader, ref state, SubTypeState<A>.Create<C>(reader, value));
+        A IProtoSerializer<A>.Read(ref ProtoReader.State state, A value)
+            => ((IProtoSubTypeSerializer<A>)this).ReadSubType(ref state, SubTypeState<A>.Create<A>(state.Context, value));
+        B IProtoSerializer<B>.Read(ref ProtoReader.State state, B value)
+            => (B)((IProtoSubTypeSerializer<A>)this).ReadSubType(ref state, SubTypeState<A>.Create<B>(state.Context, value));
+        C IProtoSerializer<C>.Read(ref ProtoReader.State state, C value)
+            => (C)((IProtoSubTypeSerializer<A>)this).ReadSubType(ref state, SubTypeState<A>.Create<C>(state.Context, value));
 
         void IProtoSubTypeSerializer<A>.WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, A value)
         {
@@ -308,7 +308,7 @@ namespace ProtoBuf
             }
         }
 
-        A IProtoSubTypeSerializer<A>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<A> value)
+        A IProtoSubTypeSerializer<A>.ReadSubType(ref ProtoReader.State state, SubTypeState<A> value)
         {
             int field;
             value.OnBeforeDeserialize((obj, ctx) => obj.OnBeforeDeserialize());
@@ -351,7 +351,7 @@ namespace ProtoBuf
             }
         }
 
-        B IProtoSubTypeSerializer<B>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<B> value)
+        B IProtoSubTypeSerializer<B>.ReadSubType(ref ProtoReader.State state, SubTypeState<B> value)
         {
             int field;
             while ((field = state.ReadFieldHeader()) != 0)
@@ -382,7 +382,7 @@ namespace ProtoBuf
             }
         }
 
-        C IProtoSubTypeSerializer<C>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<C> value)
+        C IProtoSubTypeSerializer<C>.ReadSubType(ref ProtoReader.State state, SubTypeState<C> value)
         {
             int field;
             while ((field = state.ReadFieldHeader()) != 0)
@@ -410,7 +410,7 @@ namespace ProtoBuf
             }
         }
 
-        D IProtoSerializer<D>.Read(ProtoReader reader, ref ProtoReader.State state, D value)
+        D IProtoSerializer<D>.Read(ref ProtoReader.State state, D value)
         {
             if (value == null) value = state.CreateInstance<D>(this);
             int field;

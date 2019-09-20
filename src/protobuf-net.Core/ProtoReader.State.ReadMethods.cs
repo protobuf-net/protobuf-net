@@ -308,15 +308,15 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal object ReadTypedObject(object value, int key, Type type)
             {
-                var reader = _reader;
-                if (reader._model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
+                var model = Model;
+                if (model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
 
                 SubItemToken token = StartSubItem();
                 if (key >= 0)
                 {
-                    value = reader._model.DeserializeCore(reader, ref this, key, value);
+                    value = model.DeserializeCore(ref this, key, value);
                 }
-                else if (type != null && reader._model.TryDeserializeAuxiliaryType(reader, ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
+                else if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
                 {
                     // ok
                 }
@@ -698,7 +698,7 @@ namespace ProtoBuf
             public T ReadSubItem<T>(T value = default, IProtoSerializer<T> serializer = null)
             {
                 var tok = StartSubItem();
-                var result = (serializer ?? TypeModel.GetSerializer<T>(_reader._model)).Read(_reader, ref this, value);
+                var result = (serializer ?? TypeModel.GetSerializer<T>(_reader._model)).Read(ref this, value);
                 EndSubItem(tok);
                 return result;
             }
@@ -718,7 +718,7 @@ namespace ProtoBuf
                 where TBaseType : class
                 where T : class, TBaseType
             {
-                return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_reader._model)).ReadSubType(_reader, ref this, SubTypeState<TBaseType>.Create<T>(_reader, value));
+                return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_reader._model)).ReadSubType(ref this, SubTypeState<TBaseType>.Create<T>(_reader, value));
             }
 
             /// <summary>
@@ -732,7 +732,7 @@ namespace ProtoBuf
                     _reader.SetRootObject(value);
                 }
 
-                var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(_reader, ref this, value);
+                var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
                 CheckFullyConsumed();
                 return result;
             }

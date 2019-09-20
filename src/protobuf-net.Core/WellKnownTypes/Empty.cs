@@ -8,7 +8,7 @@
 
     partial class WellKnownSerializer : IProtoSerializer<Empty>
     {
-        Empty IProtoSerializer<Empty>.Read(ProtoReader reader, ref ProtoReader.State state, Empty value)
+        Empty IProtoSerializer<Empty>.Read(ref ProtoReader.State state, Empty value)
         {
             while(state.ReadFieldHeader() > 0)
             {

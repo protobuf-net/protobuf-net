@@ -49,7 +49,7 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : IProtoSerializer<Timestamp>
     {
-        Timestamp IProtoSerializer<Timestamp>.Read(ProtoReader reader, ref ProtoReader.State state, Timestamp value)
+        Timestamp IProtoSerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);
             duration = ReadDuration(ref state, duration);

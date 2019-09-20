@@ -183,7 +183,7 @@ namespace ProtoBuf.ServiceModel
                     else
                     {
 
-                        return model.DeserializeCore(state.GetReader(), ref state, key, null);
+                        return model.DeserializeCore(ref state, key, null);
                     }
                 }
                 finally
@@ -207,7 +207,7 @@ namespace ProtoBuf.ServiceModel
                     }
                     else
                     {
-                        result = model.DeserializeCore(state.GetReader(), ref state, key, null);
+                        result = model.DeserializeCore(ref state, key, null);
                     }
                 }
             }

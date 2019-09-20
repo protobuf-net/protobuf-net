@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteByte((byte)value, dest, ref state);
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
             return state.ReadByte();

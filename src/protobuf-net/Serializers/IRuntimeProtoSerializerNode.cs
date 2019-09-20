@@ -28,7 +28,7 @@ namespace ProtoBuf.Serializers
         /// <param name="source">The reader providing the input data.</param>
         /// <param name="state">Reader state</param>
         /// <returns>The updated / replacement value.</returns>
-        object Read(ProtoReader source, ref ProtoReader.State state, object value);
+        object Read(ref ProtoReader.State state, object value);
 
         /// <summary>
         /// Indicates whether a Read operation <em>replaces</em> the existing value, or

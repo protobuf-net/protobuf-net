@@ -20,7 +20,7 @@ namespace ProtoBuf.WellKnownTypes
         }
 
         private const int FieldGuidLow = 1, FieldGuidHigh = 2;
-        Guid IProtoSerializer<Guid>.Read(ProtoReader reader, ref ProtoReader.State state, Guid value)
+        Guid IProtoSerializer<Guid>.Read(ref ProtoReader.State state, Guid value)
         {
             ulong low = 0, high = 0;
             int fieldNumber;

@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
             return state.ReadInt32();

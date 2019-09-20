@@ -45,7 +45,7 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : IProtoSerializer<Duration>
     {
-        Duration IProtoSerializer<Duration>.Read(ProtoReader reader, ref ProtoReader.State state, Duration value)
+        Duration IProtoSerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);
 
         private static Duration ReadDuration(ref ProtoReader.State state, Duration value)

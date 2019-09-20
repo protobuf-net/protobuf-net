@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
             => ProtoWriter.WriteSubType<TChild>((TChild)value, dest, ref state);
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             var ss = (SubTypeState<TParent>)value;
             ss.ReadSubType<TChild>(ref state);
@@ -57,7 +57,7 @@ namespace ProtoBuf.Serializers
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
             => ProtoWriter.WriteSubItem<T>((T)value, dest, ref state);
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
             => state.ReadSubItem<T>((T) value, null);
 
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
@@ -81,7 +81,7 @@ namespace ProtoBuf.Serializers
 
         public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
 
-        public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
+        public abstract object Read(ref ProtoReader.State state, object value);
 
         public abstract void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
         public abstract void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
@@ -120,7 +120,7 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)Proxy.Serializer).Callback(value, callbackType, context);
         }
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source)
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext source)
         {
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }

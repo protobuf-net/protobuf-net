@@ -47,7 +47,7 @@ namespace ProtoBuf.Tests
             {
                 public static FooSerializer Instance { get; } = new FooSerializer();
                 private FooSerializer() { }
-                public Foo Read(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
+                public Foo Read(ref ProtoReader.State state, Foo value) => value;
 
                 public void Write(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
             }
@@ -100,7 +100,7 @@ namespace ProtoBuf.Tests
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }
-            public A Read(ProtoReader reader, ref ProtoReader.State state, A value)
+            public A Read(ref ProtoReader.State state, A value)
             {
                 int fieldHeader;
                 if (value == null) value = new A();

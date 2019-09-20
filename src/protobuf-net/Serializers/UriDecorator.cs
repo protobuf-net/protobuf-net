@@ -19,10 +19,10 @@ namespace ProtoBuf.Serializers
             Tail.Write(dest, ref state, ((Uri)value).OriginalString);
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // not expecting incoming
-            string s = (string)Tail.Read(source, ref state, null);
+            string s = (string)Tail.Read(ref state, null);
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 

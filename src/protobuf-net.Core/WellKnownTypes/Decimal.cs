@@ -6,7 +6,7 @@ namespace ProtoBuf.WellKnownTypes
     {
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
-        decimal IProtoSerializer<decimal>.Read(ProtoReader reader, ref ProtoReader.State state, decimal value)
+        decimal IProtoSerializer<decimal>.Read(ref ProtoReader.State state, decimal value)
         {
             ulong low = 0;
             uint high = 0;

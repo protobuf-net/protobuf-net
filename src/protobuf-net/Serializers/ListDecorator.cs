@@ -470,15 +470,15 @@ namespace ProtoBuf.Serializers
         private bool CanUsePackedPrefix() =>
             ArrayDecorator.CanUsePackedPrefix(packedWireType, Tail.ExpectedType);
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             try
             {
-                int field = source.FieldNumber;
+                int field = state.FieldNumber;
                 object origValue = value;
                 if (value == null) value = Activator.CreateInstance(concreteType, nonPublic: true);
                 bool isList = IsList && !SuppressIList;
-                if (packedWireType != WireType.None && source.WireType == WireType.String)
+                if (packedWireType != WireType.None && state.WireType == WireType.String)
                 {
                     SubItemToken token = state.StartSubItem();
                     if (isList)
@@ -486,15 +486,15 @@ namespace ProtoBuf.Serializers
                         IList list = (IList)value;
                         while (state.HasSubValue(packedWireType))
                         {
-                            list.Add(Tail.Read(source, ref state, null));
+                            list.Add(Tail.Read(ref state, null));
                         }
                     }
                     else
                     {
                         object[] args = new object[1];
-                        while (ProtoReader.HasSubValue(packedWireType, source))
+                        while (state.HasSubValue(packedWireType))
                         {
-                            args[0] = Tail.Read(source, ref state, null);
+                            args[0] = Tail.Read(ref state, null);
                             add.Invoke(value, args);
                         }
                     }
@@ -507,7 +507,7 @@ namespace ProtoBuf.Serializers
                         IList list = (IList)value;
                         do
                         {
-                            list.Add(Tail.Read(source, ref state, null));
+                            list.Add(Tail.Read(ref state, null));
                         } while (state.TryReadFieldHeader(field));
                     }
                     else
@@ -515,7 +515,7 @@ namespace ProtoBuf.Serializers
                         object[] args = new object[1];
                         do
                         {
-                            args[0] = Tail.Read(source, ref state, null);
+                            args[0] = Tail.Read(ref state, null);
                             add.Invoke(value, args);
                         } while (state.TryReadFieldHeader(field));
                     }

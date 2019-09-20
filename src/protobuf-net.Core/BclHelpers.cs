@@ -381,14 +381,15 @@ namespace ProtoBuf
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             ProtoReader.State state = source.DefaultState();
-            return ReadNetObject(source, ref state, value, key, type, options);
+            return ReadNetObject(ref state, value, key, type, options);
         }
 
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static object ReadNetObject(ProtoReader source, ref ProtoReader.State state, object value, int key, Type type, NetObjectOptions options)
+        internal static object ReadNetObject(ref ProtoReader.State state, object value, int key, Type type, NetObjectOptions options)
         {
+            var source = state.GetReader();
             SubItemToken token = state.StartSubItem();
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1, tmp;
@@ -505,7 +506,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static void WriteNetObject(object value, ProtoWriter dest, ref ProtoWriter.State state, int key, NetObjectOptions options)
+        internal static void WriteNetObject(object value, ProtoWriter dest, ref ProtoWriter.State state, int key, NetObjectOptions options)
         {
             if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,

@@ -40,7 +40,7 @@ namespace ProtoBuf.Serializers
         bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return false; } }
         bool IRuntimeProtoSerializerNode.ReturnsValue { get { return true; } }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
             return parse.Invoke(null, new object[] { state.ReadString() });

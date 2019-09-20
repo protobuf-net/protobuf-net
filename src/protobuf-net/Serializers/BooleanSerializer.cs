@@ -14,7 +14,7 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteBoolean((bool)value, dest, ref state);
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
             return state.ReadBoolean();

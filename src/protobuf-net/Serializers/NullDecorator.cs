@@ -124,7 +124,7 @@ namespace ProtoBuf.Serializers
             ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             SubItemToken tok = state.StartSubItem();
             int field;
@@ -132,7 +132,7 @@ namespace ProtoBuf.Serializers
             {
                 if (field == Tag)
                 {
-                    value = Tail.Read(source, ref state, value);
+                    value = Tail.Read(ref state, value);
                 }
                 else
                 {

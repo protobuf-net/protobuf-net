@@ -28,9 +28,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            object result = Tail.Read(source, ref state, value);
+            object result = Tail.Read(ref state, value);
             if (setSpecified != null) setSpecified.Invoke(value, new object[] { true });
             return result;
         }

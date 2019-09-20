@@ -34,13 +34,13 @@ namespace ProtoBuf.Serializers
         public override void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state);
 
-        public override T Read(ProtoReader reader, ref ProtoReader.State state, T value)
+        public override T Read(ref ProtoReader.State state, T value)
             => state.ReadBaseType<TBase, T>(value);
 
-        T IProtoSubTypeSerializer<T>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value)
+        T IProtoSubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
         {
             value.OnBeforeDeserialize(OnBeforeDeserialize);
-            DeserializeBody(reader, ref state, ref value, (ref SubTypeState<T> s) => s.Value, (ref SubTypeState<T> s, T v) => s.Value = v);
+            DeserializeBody(ref state, ref value, (ref SubTypeState<T> s) => s.Value, (ref SubTypeState<T> s, T v) => s.Value = v);
             return value.OnAfterDeserialize(OnAfterDeserialize);
         }
 
@@ -55,7 +55,7 @@ namespace ProtoBuf.Serializers
             {
                 using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
                 context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                context.LoadReaderWithState();
+                context.LoadState();
 
                 // sub-state
                 context.LoadSerializationContext(oldApi: false);
@@ -113,12 +113,12 @@ namespace ProtoBuf.Serializers
         public virtual void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => SerializeImpl(writer, ref state, value);
 
-        public virtual T Read(ProtoReader reader, ref ProtoReader.State state, T value)
+        public virtual T Read(ref ProtoReader.State state, T value)
         {
-            if (value == null) value = (T)CreateInstance(reader);
-            OnBeforeDeserialize?.Invoke(value, reader);
-            DeserializeBody(reader, ref state, ref value, (ref T o) => o, (ref T o, T v) => o = v);
-            OnAfterDeserialize?.Invoke(value, reader);
+            if (value == null) value = (T)CreateInstance(state.Context);
+            OnBeforeDeserialize?.Invoke(value, state.Context);
+            DeserializeBody(ref state, ref value, (ref T o) => o, (ref T o, T v) => o = v);
+            OnAfterDeserialize?.Invoke(value, state.Context);
             return value;
         }
         public virtual bool IsSubType => false;
@@ -126,8 +126,8 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
             => Write(dest, ref state, (T)value);
 
-        object IRuntimeProtoSerializerNode.Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => Read(source, ref state, (T)value);
+        object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
+            => Read(ref state, (T)value);
 
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -241,7 +241,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoTypeSerializer.CanCreateInstance() { return true; }
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => CreateInstance(source);
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext context) => CreateInstance(context);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
@@ -297,7 +297,7 @@ namespace ProtoBuf.Serializers
         protected Action<T, ISerializationContext> OnBeforeDeserialize, OnAfterDeserialize;
         protected delegate T StateGetter<TState>(ref TState state);
         protected delegate void StateSetter<TState>(ref TState state, T value);
-        protected void DeserializeBody<TState>(ProtoReader source, ref ProtoReader.State state, ref TState bodyState, StateGetter<TState> getter, StateSetter<TState> setter)
+        protected void DeserializeBody<TState>(ref ProtoReader.State state, ref TState bodyState, StateGetter<TState> getter, StateSetter<TState> setter)
         {
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
             bool fieldHandled;
@@ -320,12 +320,12 @@ namespace ProtoBuf.Serializers
                         {
                             // sub-types are implemented differently; pass the entire
                             // state through and unbox again to observe any changes
-                            bodyState = (TState)ser.Read(source, ref state, bodyState);
+                            bodyState = (TState)ser.Read(ref state, bodyState);
                         }
                         else
                         {
                             var value = getter(ref bodyState);
-                            object result = ser.Read(source, ref state, value);
+                            object result = ser.Read(ref state, value);
                             if (ser.ReturnsValue) setter(ref bodyState, (T)result);
                         }
                         

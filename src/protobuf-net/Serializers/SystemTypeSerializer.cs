@@ -14,7 +14,7 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteType((Type)value, dest, ref state);
         }
 
-        object IRuntimeProtoSerializerNode.Read(ProtoReader source, ref ProtoReader.State state, object value)
+        object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
             return state.ReadType();

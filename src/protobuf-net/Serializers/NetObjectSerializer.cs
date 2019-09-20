@@ -22,9 +22,9 @@ namespace ProtoBuf.Serializers
 
         public bool RequiresOldValue => true;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
-            return BclHelpers.ReadNetObject(source, ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
+            return BclHelpers.ReadNetObject(ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)

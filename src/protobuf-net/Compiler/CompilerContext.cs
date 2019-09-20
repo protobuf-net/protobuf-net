@@ -233,23 +233,32 @@ namespace ProtoBuf.Compiler
             TraceCompile(">> " + traceName);
             _traceName = traceName;
             IsStatic = isStatic;
-            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
+            GetOpCodes(isWriter, isStatic, out _state, out _writer, out _inputArg);
         }
 
         public bool IsStatic { get; }
 
         private readonly string _traceName;
 
-        private readonly OpCode _readerWriter, _state;
+        private readonly OpCode _writer, _state;
         private readonly byte _inputArg;
 
 #pragma warning disable RCS1163, IDE0060 // Unused parameter.
         private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode state, out OpCode readerWriter, out byte inputArg)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
-            state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
-            inputArg = (byte)(isStatic ? 2 : 3);
+            if(isWriter)
+            {
+                readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
+                state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
+                inputArg = (byte)(isStatic ? 2 : 3);
+            }
+            else
+            {
+                readerWriter = default;
+                state = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
+                inputArg = (byte)(isStatic ? 1 : 2);
+            }
         }
 
         internal CompilerContextScope Scope { get; }
@@ -260,14 +269,14 @@ namespace ProtoBuf.Compiler
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;
             Type[] paramTypes;
-            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
+            GetOpCodes(isWriter, isStatic, out _state, out _writer, out _inputArg);
             if (isWriter)
             {
                 paramTypes = new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, inputType };
             }
             else
             {
-                paramTypes = new Type[] { typeof(ProtoReader), StateBasedReadMethods.ByRefStateType, inputType };
+                paramTypes = new Type[] { StateBasedReadMethods.ByRefStateType, inputType };
             }
             int uniqueIdentifier = Interlocked.Increment(ref next);
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
@@ -415,18 +424,8 @@ namespace ProtoBuf.Compiler
             {
                 throw new InvalidOperationException("Tried to load writer, but was a reader; " + _traceName);
             }
-            Emit(_readerWriter);
+            Emit(_writer);
             if (withState) Emit(_state);
-        }
-
-        public void LoadReaderWithState()
-        {
-            if (isWriter)
-            {
-                throw new InvalidOperationException("Tried to load reader, but was a writer; " + _traceName);
-            }
-            Emit(_readerWriter);
-            LoadState();
         }
 
         public void LoadState() => Emit(_state);

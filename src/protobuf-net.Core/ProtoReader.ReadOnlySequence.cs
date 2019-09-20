@@ -33,6 +33,8 @@ namespace ProtoBuf
             /// <param name="context">Additional context about this serialization operation</param>
             public static State Create(ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
                 => Create(new ReadOnlySequence<byte>(source), model, context);
+
+            internal void SetRootObject(object value) => _reader.SetRootObject(value);
         }
 
         private sealed class ReadOnlySequenceProtoReader : ProtoReader

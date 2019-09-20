@@ -14,7 +14,7 @@ namespace ProtoBuf
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T Read(ProtoReader reader, ref ProtoReader.State state, T value);
+        T Read(ref ProtoReader.State state, T value);
 
         /// <summary>
         /// Serialize an instance to the supplied writer
@@ -35,7 +35,7 @@ namespace ProtoBuf
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
+        T ReadSubType(ref ProtoReader.State state, SubTypeState<T> value);
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ namespace ProtoBuf
         public void ReadSubType<TSubType>(ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
             var tok = state.StartSubItem();
-            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(state.GetReader(), ref state,
+            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(ref state,
                 new SubTypeState<TSubType>(_context, _ctor, _value, _onBeforeDeserialize));
             state.EndSubItem(tok);
         }

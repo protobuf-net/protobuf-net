@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
         bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => throw new NotSupportedException();
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
 
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
 
@@ -106,14 +106,14 @@ namespace ProtoBuf.Serializers
             rootTail.Write(writer, ref state, toTail.Invoke(null, new object[] { value }));
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             // convert the incoming value
             object[] args = { value };
             value = toTail.Invoke(null, args);
 
             // invoke the tail and convert the outgoing value
-            args[0] = rootTail.Read(source, ref state, value);
+            args[0] = rootTail.Read(ref state, value);
             return fromTail.Invoke(null, args);
         }
 

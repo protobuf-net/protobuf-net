@@ -43,7 +43,7 @@ namespace ProtoBuf.Serializers
 
         private bool AppendToCollection { get; }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             TDictionary typed = (AppendToCollection ? ((TDictionary)value) : null)
                 ?? (TDictionary)Activator.CreateInstance(concreteType, nonPublic: true);
@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                 _valueTail = valueTail;
             }
 
-            KeyValuePair<TKey, TValue> IProtoSerializer<KeyValuePair<TKey, TValue>>.Read(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            KeyValuePair<TKey, TValue> IProtoSerializer<KeyValuePair<TKey, TValue>>.Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
             {
                 var key = pair.Key;
                 var value = pair.Value;
@@ -87,10 +87,10 @@ namespace ProtoBuf.Serializers
                     switch (field)
                     {
                         case 1:
-                            key = (TKey)_keyTail.Read(reader, ref state, null);
+                            key = (TKey)_keyTail.Read(ref state, null);
                             break;
                         case 2:
-                            value = (TValue)_valueTail.Read(reader, ref state, _valueTail.RequiresOldValue ? (object)value : null);
+                            value = (TValue)_valueTail.Read(ref state, _valueTail.RequiresOldValue ? (object)value : null);
                             break;
                         default:
                             state.SkipField();

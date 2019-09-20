@@ -93,7 +93,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
             int wireValue = state.ReadInt32();

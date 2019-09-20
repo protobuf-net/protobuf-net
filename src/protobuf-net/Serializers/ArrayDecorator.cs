@@ -206,16 +206,16 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            int field = source.FieldNumber;
+            int field = state.FieldNumber;
             var list = new BasicList();
-            if (packedWireType != WireType.None && source.WireType == WireType.String)
+            if (packedWireType != WireType.None && state.WireType == WireType.String)
             {
                 SubItemToken token = state.StartSubItem();
-                while (ProtoReader.HasSubValue(packedWireType, source))
+                while (state.HasSubValue(packedWireType))
                 {
-                    list.Add(Tail.Read(source, ref state, null));
+                    list.Add(Tail.Read(ref state, null));
                 }
                 state.EndSubItem(token);
             }
@@ -223,7 +223,7 @@ namespace ProtoBuf.Serializers
             {
                 do
                 {
-                    list.Add(Tail.Read(source, ref state, null));
+                    list.Add(Tail.Read(ref state, null));
                 } while (state.TryReadFieldHeader(field));
             }
             int oldLen = AppendToCollection ? (value == null ? 0 : ((Array)value).Length) : 0;

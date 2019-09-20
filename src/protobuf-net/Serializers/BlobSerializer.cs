@@ -15,7 +15,7 @@ namespace ProtoBuf.Serializers
 
         private readonly bool overwriteList;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             return state.AppendBytes(overwriteList ? null : (byte[])value);
         }

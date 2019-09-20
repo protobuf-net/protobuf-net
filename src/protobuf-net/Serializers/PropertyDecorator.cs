@@ -54,12 +54,12 @@ namespace ProtoBuf.Serializers
             if (value != null) Tail.Write(dest, ref state, value);
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value != null);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
-            object newVal = Tail.Read(source, ref state, oldVal);
+            object newVal = Tail.Read(ref state, oldVal);
             if (readOptionsWriteValue && newVal != null) // if the tail returns a null, intepret that as *no assign*
             {
                 if (shadowSetter == null)

@@ -32,9 +32,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            return Tail.Read(source, ref state, value);
+            return Tail.Read(ref state, value);
         }
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

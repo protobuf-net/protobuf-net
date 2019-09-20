@@ -30,7 +30,7 @@ namespace ProtoBuf.unittest.Meta
             var state = ProtoReader.State.Create(Stream.Null, null, null);
             try
             {
-                var result = deser(state.GetReader(), ref state, default);
+                var result = deser(ref state, default);
                 Assert.IsType<CustomerStruct>(result);
             }
             finally
@@ -42,7 +42,7 @@ namespace ProtoBuf.unittest.Meta
             try
             {
                 CustomerStruct before = new CustomerStruct { Id = 123, Name = "abc" };
-                CustomerStruct after = (CustomerStruct)deser(state.GetReader(), ref state, before);
+                CustomerStruct after = (CustomerStruct)deser(ref state, before);
                 Assert.Equal(before.Id, after.Id);
                 Assert.Equal(before.Name, after.Name);
             }
@@ -75,7 +75,7 @@ namespace ProtoBuf.unittest.Meta
             var state = ProtoReader.State.Create(ms, null, null);
             try
             {
-                CustomerStruct? cst = (CustomerStruct?)deser(state.GetReader(), ref state, default);
+                CustomerStruct? cst = (CustomerStruct?)deser(ref state, default);
                 Assert.True(cst.HasValue);
                 CustomerStruct cs2 = cst.Value;
                 Assert.Equal(cs1.Id, cs2.Id);

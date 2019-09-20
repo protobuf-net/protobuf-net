@@ -11,7 +11,7 @@ namespace ProtoBuf.Serializers
 
         public bool CanCreateInstance() => Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
 
-        public object CreateInstance(ProtoReader source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
+        public object CreateInstance(ISerializationContext source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
             => (Tail as IProtoTypeSerializer)?.Callback(value, callbackType, context);
@@ -51,12 +51,12 @@ namespace ProtoBuf.Serializers
 
         private bool NeedsHint => ((int)wireType & ~7) != 0;
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(fieldNumber == source.FieldNumber);
+            Debug.Assert(fieldNumber == state.FieldNumber);
             if (strict) { state.Assert(wireType); }
             else if (NeedsHint) { state.Hint(wireType); }
-            return Tail.Read(source, ref state, value);
+            return Tail.Read(ref state, value);
         }
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
