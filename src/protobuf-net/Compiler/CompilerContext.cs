@@ -267,7 +267,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                paramTypes = new Type[] { typeof(ProtoReader), typeof(ProtoReader.State).MakeByRefType(), inputType };
+                paramTypes = new Type[] { typeof(ProtoReader), StateBasedReadMethods.ByRefStateType, inputType };
             }
             int uniqueIdentifier = Interlocked.Increment(ref next);
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
@@ -509,8 +509,9 @@ namespace ProtoBuf.Compiler
             return result;
         }
 
-        private static class StateBasedReadMethods
+        internal static class StateBasedReadMethods
         {
+            internal static readonly Type ByRefStateType = typeof(ProtoReader.State).MakeByRefType();
             private static readonly Hashtable s_perTypeCache = new Hashtable();
             private static Dictionary<string, MethodInfo> CreateAndAdd(Type parentType)
             {
@@ -524,7 +525,7 @@ namespace ProtoBuf.Compiler
                     if (method.IsStatic)
                     {
                         if (args.Length != 1) continue;
-                        if (args[0].ParameterType != typeof(ProtoReader.State)) continue;
+                        if (args[0].ParameterType != ByRefStateType) continue;
                     }
                     else
                     {
