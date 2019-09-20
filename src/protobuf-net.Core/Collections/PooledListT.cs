@@ -22,7 +22,7 @@ using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Collections
 {
-    public static class PooledList
+    internal static class PooledList
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Dispose<T>(ref PooledList<T>? list)
@@ -66,7 +66,7 @@ namespace ProtoBuf.Collections
     //
     [DebuggerDisplay("Count = {Count}")]
     [Serializable]
-    public sealed class PooledList<T> : IList<T>, IList, IReadOnlyList<T>, IDisposable
+    internal sealed class PooledList<T> : IList<T>, IList, IReadOnlyList<T>, IDisposable
     {
         public void Dispose()
         {
