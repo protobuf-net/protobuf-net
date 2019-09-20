@@ -109,7 +109,7 @@ namespace ProtoBuf.WellKnownTypes
         }
 
         void IProtoSerializer<Duration>.Write(ProtoWriter writer, ref ProtoWriter.State state, Duration value)
-            => WriteSecondsNanos(writer, ref state, value.Seconds, value.Nanoseconds);
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
 
         internal static long ToDurationSeconds(TimeSpan value, out int nanos)
         {
@@ -125,7 +125,7 @@ namespace ProtoBuf.WellKnownTypes
             return ticks;
         }
 
-        private static void WriteSecondsNanos(ProtoWriter writer, ref ProtoWriter.State state, long seconds, int nanos)
+        private static void WriteSecondsNanos(ref ProtoWriter.State state, long seconds, int nanos)
         {
             if (nanos < 0)
             {   // from Timestamp.proto:
@@ -137,7 +137,7 @@ namespace ProtoBuf.WellKnownTypes
             if (seconds != 0)
             {
                 state.WriteFieldHeader(1, WireType.Varint);
-                ProtoWriter.WriteInt64(seconds, writer, ref state);
+                state.WriteInt64(seconds);
             }
             if (nanos != 0)
             {

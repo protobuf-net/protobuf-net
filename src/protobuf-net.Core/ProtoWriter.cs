@@ -575,33 +575,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteUInt64(ulong value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteUInt64(value, writer, ref state);
-        }
-        /// <summary>
-        /// Writes an unsigned 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
-        /// </summary>
-        public static void WriteUInt64(ulong value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            switch (writer.WireType)
-            {
-                case WireType.Fixed64:
-                    writer.ImplWriteFixed64(ref state, value);
-                    writer.AdvanceAndReset(8);
-                    return;
-                case WireType.Varint:
-                    int bytes = writer.ImplWriteVarint64(ref state, value);
-                    writer.AdvanceAndReset(bytes);
-                    return;
-                case WireType.Fixed32:
-                    writer.ImplWriteFixed32(ref state, checked((uint)value));
-                    writer.AdvanceAndReset(4);
-                    return;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
+            writer.DefaultState().WriteUInt64(value);
         }
 
         /// <summary>
@@ -610,35 +584,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteInt64(long value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteInt64(value, writer, ref state);
-        }
-        /// <summary>
-        /// Writes a signed 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
-        /// </summary>
-        public static void WriteInt64(long value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            switch (writer.WireType)
-            {
-                case WireType.Fixed64:
-                    writer.ImplWriteFixed64(ref state, (ulong)value);
-                    writer.AdvanceAndReset(8);
-                    return;
-                case WireType.Varint:
-                    writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)value));
-                    return;
-                case WireType.SignedVarint:
-                    writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, Zig(value)));
-                    return;
-                case WireType.Fixed32:
-                    writer.ImplWriteFixed32(ref state, checked((uint)(int)value));
-                    writer.AdvanceAndReset(4);
-                    return;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
+            writer.DefaultState().WriteInt64(value);
         }
 
         /// <summary>

@@ -229,6 +229,60 @@ namespace ProtoBuf
                         break;
                 }
             }
+
+            /// <summary>
+            /// Writes a signed 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+            /// </summary>
+            public void WriteInt64(long value)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed64:
+                        writer.ImplWriteFixed64(ref this, (ulong)value);
+                        writer.AdvanceAndReset(8);
+                        return;
+                    case WireType.Varint:
+                        writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, (ulong)value));
+                        return;
+                    case WireType.SignedVarint:
+                        writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, Zig(value)));
+                        return;
+                    case WireType.Fixed32:
+                        writer.ImplWriteFixed32(ref this, checked((uint)(int)value));
+                        writer.AdvanceAndReset(4);
+                        return;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Writes an unsigned 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            public void WriteUInt64(ulong value)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed64:
+                        writer.ImplWriteFixed64(ref this, value);
+                        writer.AdvanceAndReset(8);
+                        return;
+                    case WireType.Varint:
+                        int bytes = writer.ImplWriteVarint64(ref this, value);
+                        writer.AdvanceAndReset(bytes);
+                        return;
+                    case WireType.Fixed32:
+                        writer.ImplWriteFixed32(ref this, checked((uint)value));
+                        writer.AdvanceAndReset(4);
+                        return;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
         }
     }
 }

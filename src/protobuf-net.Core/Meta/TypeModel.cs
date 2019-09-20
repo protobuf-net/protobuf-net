@@ -132,10 +132,10 @@ namespace ProtoBuf.Meta
             {
                 case ProtoTypeCode.Int16: state.WriteInt16((short)value); return true;
                 case ProtoTypeCode.Int32: state.WriteInt32((int)value); return true;
-                case ProtoTypeCode.Int64: ProtoWriter.WriteInt64((long)value, writer, ref state); return true;
+                case ProtoTypeCode.Int64: state.WriteInt64((long)value); return true;
                 case ProtoTypeCode.UInt16: state.WriteUInt16((ushort)value); return true;
                 case ProtoTypeCode.UInt32: state.WriteUInt32((uint)value); return true;
-                case ProtoTypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer, ref state); return true;
+                case ProtoTypeCode.UInt64: state.WriteUInt64((ulong)value); return true;
                 case ProtoTypeCode.Boolean: state.WriteBoolean((bool)value); return true;
                 case ProtoTypeCode.SByte: state.WriteSByte((sbyte)value); return true;
                 case ProtoTypeCode.Byte: state.WriteByte((byte)value); return true;

@@ -54,7 +54,7 @@ namespace ProtoBuf.WellKnownTypes
             if (low != 0)
             {
                 state.WriteFieldHeader(FieldDecimalLow, WireType.Varint);
-                ProtoWriter.WriteUInt64(low, writer, ref state);
+                state.WriteUInt64(low);
             }
             if (high != 0)
             {

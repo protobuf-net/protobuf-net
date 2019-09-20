@@ -1514,7 +1514,7 @@ namespace Google.Protobuf.Reflection
                                                 state.WriteFieldHeader(field.Number, WireType.Fixed64);
                                                 break;
                                         }
-                                        ProtoWriter.WriteUInt64(ui64, writer, ref state);
+                                        state.WriteUInt64(ui64);
                                     }
                                 }
                                 break;
@@ -1566,7 +1566,7 @@ namespace Google.Protobuf.Reflection
                                                 state.WriteFieldHeader(field.Number, WireType.Fixed64);
                                                 break;
                                         }
-                                        ProtoWriter.WriteInt64(i64, writer, ref state);
+                                        state.WriteInt64(i64);
                                     }
                                 }
                                 break;

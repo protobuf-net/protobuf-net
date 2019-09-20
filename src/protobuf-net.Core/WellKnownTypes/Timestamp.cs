@@ -57,6 +57,6 @@ namespace ProtoBuf.WellKnownTypes
         }
 
         void IProtoSerializer<Timestamp>.Write(ProtoWriter writer, ref ProtoWriter.State state, Timestamp value)
-            => WriteSecondsNanos(writer, ref state, value.Seconds, value.Nanoseconds);
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
     }
 }

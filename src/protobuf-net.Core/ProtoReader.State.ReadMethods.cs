@@ -665,7 +665,7 @@ namespace ProtoBuf
                     case WireType.Varint:
                     case WireType.SignedVarint:
                     case WireType.Fixed64:
-                        ProtoWriter.WriteInt64(ReadInt64(), writer, ref writeState);
+                        writeState.WriteInt64(ReadInt64());
                         return;
                     case WireType.String:
                         ProtoWriter.WriteBytes(AppendBytes(null), writer, ref writeState);

@@ -148,7 +148,7 @@ namespace ProtoBuf.WellKnownTypes
             if (value.Value != 0)
             {
                 state.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVarint);
-                ProtoWriter.WriteInt64(value.Value, writer, ref state);
+                state.WriteInt64(value.Value);
             }
             if (value.Scale != TimeSpanScale.Days)
             {

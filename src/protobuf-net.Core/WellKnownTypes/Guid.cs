@@ -56,9 +56,9 @@ namespace ProtoBuf.WellKnownTypes
             {
                 var obj = new GuidAccessor(value);
                 state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
-                ProtoWriter.WriteUInt64(obj.Low, writer, ref state);
+                state.WriteUInt64(obj.Low);
                 state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
-                ProtoWriter.WriteUInt64(obj.High, writer, ref state);
+                state.WriteUInt64(obj.High);
             }
             else
             {

@@ -69,7 +69,7 @@ namespace ProtoBuf
                     ProtoWriter.WriteSubItem<ScaledTicks>(scaled, dest, ref state, WellKnownSerializer.Instance);
                     break;
                 case WireType.Fixed64:
-                    ProtoWriter.WriteInt64(timeSpan.Ticks, dest, ref state);
+                    state.WriteInt64(timeSpan.Ticks);
                     break;
                 default:
                     ThrowHelper.ThrowProtoException("Unexpected wire-type: " + dest.WireType.ToString());
