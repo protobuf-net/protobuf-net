@@ -142,7 +142,7 @@ namespace ProtoBuf.WellKnownTypes
             if (nanos != 0)
             {
                 state.WriteFieldHeader(2, WireType.Varint);
-                ProtoWriter.WriteInt32(nanos, writer, ref state);
+                state.WriteInt32(nanos);
             }
         }
     }

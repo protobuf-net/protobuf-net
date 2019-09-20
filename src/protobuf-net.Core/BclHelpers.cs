@@ -518,7 +518,7 @@ namespace ProtoBuf
             {
                 int objectKey = dest.NetCache.AddObjectKey(value, out bool existing);
                 state.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Varint);
-                ProtoWriter.WriteInt32(objectKey, dest, ref state);
+                state.WriteInt32(objectKey);
                 if (existing)
                 {
                     writeObject = false;
@@ -538,7 +538,7 @@ namespace ProtoBuf
                     }
                     int typeKey = dest.NetCache.AddObjectKey(type, out bool existing);
                     state.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint);
-                    ProtoWriter.WriteInt32(typeKey, dest, ref state);
+                    state.WriteInt32(typeKey);
                     if (!existing)
                     {
                         state.WriteFieldHeader(FieldTypeName, WireType.String);

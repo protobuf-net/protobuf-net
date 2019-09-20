@@ -39,22 +39,18 @@ namespace ProtoBuf
 
             if (withState)
             {
-                using (var writer = ProtoWriter.Create(out var writeState, ms, model))
-                {
-                    writer.Serialize(ref writeState, obj);
-                    Assert.Equal(0, writer.Depth);
-                    writer.Close(ref writeState);
-                }
+                using var writer = ProtoWriter.Create(out var writeState, ms, model);
+                writer.Serialize(ref writeState, obj);
+                Assert.Equal(0, writer.Depth);
+                writer.Close(ref writeState);
             }
             else
             {
 #pragma warning disable CS0618
-                using (var writer = ProtoWriter.Create(ms, model))
-                {
-                    model.Serialize(writer, obj);
+                using var writer = ProtoWriter.Create(ms, model);
+                model.Serialize(writer, obj);
 #pragma warning restore CS0618
-                    Assert.Equal(0, writer.Depth);
-                }
+                Assert.Equal(0, writer.Depth);
             }
             var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
             Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
@@ -313,7 +309,7 @@ namespace ProtoBuf
             if (value.AVal != 0)
             {
                 state.WriteFieldHeader(1, WireType.Varint);
-                ProtoWriter.WriteInt32(value.AVal, writer, ref state);
+                state.WriteInt32(value.AVal);
             }
         }
 
@@ -356,7 +352,7 @@ namespace ProtoBuf
             if (value.BVal != 0)
             {
                 state.WriteFieldHeader(2, WireType.Varint);
-                ProtoWriter.WriteInt32(value.BVal, writer, ref state);
+                state.WriteInt32(value.BVal);
             }
         }
 
@@ -387,7 +383,7 @@ namespace ProtoBuf
             if (value.CVal != 0)
             {
                 state.WriteFieldHeader(3, WireType.Varint);
-                ProtoWriter.WriteInt32(value.CVal, writer, ref state);
+                state.WriteInt32(value.CVal);
             }
         }
 
@@ -415,7 +411,7 @@ namespace ProtoBuf
             if (value.DVal != 0)
             {
                 state.WriteFieldHeader(1, WireType.Varint);
-                ProtoWriter.WriteInt32(value.DVal, writer, ref state);
+                state.WriteInt32(value.DVal);
             }
         }
 

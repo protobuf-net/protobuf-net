@@ -116,7 +116,7 @@ namespace ProtoBuf.Serializers
         {
             if (map == null)
             {
-                ProtoWriter.WriteInt32(EnumToWire(value), dest, ref state);
+                state.WriteInt32(EnumToWire(value));
             }
             else
             {
@@ -124,7 +124,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (object.Equals(map[i].TypedValue, value))
                     {
-                        ProtoWriter.WriteInt32(map[i].WireValue, dest, ref state);
+                        state.WriteInt32(map[i].WireValue);
                         return;
                     }
                 }
@@ -139,7 +139,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(valueFrom);
                 ctx.ConvertToInt32(typeCode, false);
-                ctx.EmitBasicWrite("WriteInt32", null, this);
+                ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), null);
             }
             else
             {
@@ -154,7 +154,7 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(tryNextValue, true);
                     ctx.MarkLabel(processThisValue);
                     ctx.LoadValue(map[i].WireValue);
-                    ctx.EmitBasicWrite("WriteInt32", null, this);
+                    ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), null);
                     ctx.Branch(@continue, false);
                     ctx.MarkLabel(tryNextValue);
                 }

@@ -59,12 +59,12 @@ namespace ProtoBuf.WellKnownTypes
             if (high != 0)
             {
                 state.WriteFieldHeader(FieldDecimalHigh, WireType.Varint);
-                ProtoWriter.WriteUInt32(high, writer, ref state);
+                state.WriteUInt32(high);
             }
             if (signScale != 0)
             {
                 state.WriteFieldHeader(FieldDecimalSignScale, WireType.Varint);
-                ProtoWriter.WriteUInt32(signScale, writer, ref state);
+                state.WriteUInt32(signScale);
             }
         }
 

@@ -660,7 +660,7 @@ namespace ProtoBuf
                 switch (reader.WireType)
                 {
                     case WireType.Fixed32:
-                        ProtoWriter.WriteInt32(ReadInt32(), writer, ref writeState);
+                        writeState.WriteInt32(ReadInt32());
                         return;
                     case WireType.Varint:
                     case WireType.SignedVarint:

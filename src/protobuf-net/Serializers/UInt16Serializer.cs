@@ -21,12 +21,12 @@ namespace ProtoBuf.Serializers
 
         public virtual void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt16((ushort)value, dest, ref state);
+            state.WriteUInt16((ushort)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteUInt16", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteUInt16), valueFrom);
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

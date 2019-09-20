@@ -153,12 +153,12 @@ namespace ProtoBuf.WellKnownTypes
             if (value.Scale != TimeSpanScale.Days)
             {
                 state.WriteFieldHeader(FieldTimeSpanScale, WireType.Varint);
-                ProtoWriter.WriteInt32((int)value.Scale, writer, ref state);
+                state.WriteInt32((int)value.Scale);
             }
             if (value.Kind != DateTimeKind.Unspecified)
             {
                 state.WriteFieldHeader(FieldTimeSpanKind, WireType.Varint);
-                ProtoWriter.WriteInt32((int)value.Kind, writer, ref state);
+                state.WriteInt32((int)value.Kind);
             }
         }
     }

@@ -571,12 +571,10 @@ namespace ProtoBuf.Compiler
             var args = method.GetParameters();
             if (args.Length != 1) throw new ArgumentNullException(nameof(methodName));
 
-            using (var tmp = GetLocalWithValue(args[0].ParameterType, fromValue))
-            {
-                LoadState();
-                LoadValue(tmp);
-                EmitCall(method);
-            }
+            using var tmp = GetLocalWithValue(args[0].ParameterType, fromValue);
+            LoadState();
+            LoadValue(tmp);
+            EmitCall(method);
         }
 
         internal void EmitBasicWrite(string methodName, Compiler.Local fromValue, IRuntimeProtoSerializerNode caller)

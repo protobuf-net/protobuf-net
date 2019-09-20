@@ -96,6 +96,93 @@ namespace ProtoBuf
                     ThrowHelper.ThrowInvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber.ToString() + " but received " + fieldNumber.ToString());
                 }
             }
+
+            /// <summary>
+            /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+            /// </summary>
+            public void WriteInt32(int value)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed32:
+                        writer.ImplWriteFixed32(ref this, (uint)value);
+                        writer.AdvanceAndReset(4);
+                        return;
+                    case WireType.Fixed64:
+                        writer.ImplWriteFixed64(ref this, (ulong)(long)value);
+                        writer.AdvanceAndReset(8);
+                        return;
+                    case WireType.Varint:
+                        if (value >= 0)
+                        {
+                            writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)value));
+                        }
+                        else
+                        {
+                            writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, (ulong)(long)value));
+                        }
+                        return;
+                    case WireType.SignedVarint:
+                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, Zig(value)));
+                        return;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+            /// </summary>
+            public void WriteSByte(sbyte value) => WriteInt32(value);
+
+            /// <summary>
+            /// Writes a signed 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+            /// </summary>
+            public void WriteInt16(short value) => WriteInt32(value);
+
+            /// <summary>
+            /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            public void WriteUInt16(ushort value) => WriteUInt32(value);
+
+            /// <summary>
+            /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            public void WriteByte(byte value) => WriteUInt32(value);
+
+            /// <summary>
+            /// Writes a boolean to the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            public void WriteBoolean(bool value) => WriteUInt32(value ? (uint)1 : (uint)0);
+
+            /// <summary>
+            /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            public void WriteUInt32(uint value)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed32:
+                        writer.ImplWriteFixed32(ref this, value);
+                        writer.AdvanceAndReset(4);
+                        return;
+                    case WireType.Fixed64:
+                        writer.ImplWriteFixed64(ref this, value);
+                        writer.AdvanceAndReset(8);
+                        return;
+                    case WireType.Varint:
+                        int bytes = writer.ImplWriteVarint32(ref this, value);
+                        writer.AdvanceAndReset(bytes);
+                        return;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
+
         }
     }
 }

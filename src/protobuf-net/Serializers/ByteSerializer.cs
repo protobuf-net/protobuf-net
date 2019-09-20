@@ -15,7 +15,7 @@ namespace ProtoBuf.Serializers
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteByte((byte)value, dest, ref state);
+            state.WriteByte((byte)value);
         }
 
         public object Read(ref ProtoReader.State state, object value)
@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteByte", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteByte), valueFrom);
         }
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)

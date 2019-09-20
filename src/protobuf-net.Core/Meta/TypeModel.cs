@@ -130,16 +130,16 @@ namespace ProtoBuf.Meta
             }
             switch (typecode)
             {
-                case ProtoTypeCode.Int16: ProtoWriter.WriteInt16((short)value, writer, ref state); return true;
-                case ProtoTypeCode.Int32: ProtoWriter.WriteInt32((int)value, writer, ref state); return true;
+                case ProtoTypeCode.Int16: state.WriteInt16((short)value); return true;
+                case ProtoTypeCode.Int32: state.WriteInt32((int)value); return true;
                 case ProtoTypeCode.Int64: ProtoWriter.WriteInt64((long)value, writer, ref state); return true;
-                case ProtoTypeCode.UInt16: ProtoWriter.WriteUInt16((ushort)value, writer, ref state); return true;
-                case ProtoTypeCode.UInt32: ProtoWriter.WriteUInt32((uint)value, writer, ref state); return true;
+                case ProtoTypeCode.UInt16: state.WriteUInt16((ushort)value); return true;
+                case ProtoTypeCode.UInt32: state.WriteUInt32((uint)value); return true;
                 case ProtoTypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer, ref state); return true;
-                case ProtoTypeCode.Boolean: ProtoWriter.WriteBoolean((bool)value, writer, ref state); return true;
-                case ProtoTypeCode.SByte: ProtoWriter.WriteSByte((sbyte)value, writer, ref state); return true;
-                case ProtoTypeCode.Byte: ProtoWriter.WriteByte((byte)value, writer, ref state); return true;
-                case ProtoTypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer, ref state); return true;
+                case ProtoTypeCode.Boolean: state.WriteBoolean((bool)value); return true;
+                case ProtoTypeCode.SByte: state.WriteSByte((sbyte)value); return true;
+                case ProtoTypeCode.Byte: state.WriteByte((byte)value); return true;
+                case ProtoTypeCode.Char: state.WriteUInt16((ushort)(char)value); return true;
                 case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer, ref state); return true;
                 case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer, ref state); return true;
                 case ProtoTypeCode.DateTime:

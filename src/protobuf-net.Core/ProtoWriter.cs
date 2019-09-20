@@ -647,34 +647,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteUInt32(uint value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteUInt32(value, writer, ref state);
-        }
-
-        /// <summary>
-        /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
-        /// </summary>
-        public static void WriteUInt32(uint value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            switch (writer.WireType)
-            {
-                case WireType.Fixed32:
-                    writer.ImplWriteFixed32(ref state, value);
-                    writer.AdvanceAndReset(4);
-                    return;
-                case WireType.Fixed64:
-                    writer.ImplWriteFixed64(ref state, value);
-                    writer.AdvanceAndReset(8);
-                    return;
-                case WireType.Varint:
-                    int bytes = writer.ImplWriteVarint32(ref state, value);
-                    writer.AdvanceAndReset(bytes);
-                    return;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
+            writer.DefaultState().WriteUInt32(value);
         }
 
         /// <summary>
@@ -683,15 +656,8 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteInt16(short value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteInt32(value, writer, ref state);
+            writer.DefaultState().WriteInt16(value);
         }
-
-        /// <summary>
-        /// Writes a signed 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
-        /// </summary>
-        public static void WriteInt16(short value, ProtoWriter writer, ref State state)
-            => WriteInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -699,15 +665,8 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteUInt16(ushort value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteUInt32(value, writer, ref state);
+            writer.DefaultState().WriteUInt16(value);
         }
-
-        /// <summary>
-        /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
-        /// </summary>
-        public static void WriteUInt16(ushort value, ProtoWriter writer, ref State state)
-            => WriteUInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -715,15 +674,8 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteByte(byte value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteUInt32(value, writer, ref state);
+            writer.DefaultState().WriteByte(value);
         }
-
-        /// <summary>
-        /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
-        /// </summary>
-        public static void WriteByte(byte value, ProtoWriter writer, ref State state)
-            => WriteUInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
@@ -731,14 +683,8 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteSByte(sbyte value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteInt32(value, writer, ref state);
+            writer.DefaultState().WriteSByte(value);
         }
-        /// <summary>
-        /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
-        /// </summary>
-        public static void WriteSByte(sbyte value, ProtoWriter writer, ref State state)
-            => WriteInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
@@ -746,42 +692,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteInt32(int value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteInt32(value, writer, ref state);
-        }
-        /// <summary>
-        /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
-        /// </summary>
-        public static void WriteInt32(int value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            switch (writer.WireType)
-            {
-                case WireType.Fixed32:
-                    writer.ImplWriteFixed32(ref state, (uint)value);
-                    writer.AdvanceAndReset(4);
-                    return;
-                case WireType.Fixed64:
-                    writer.ImplWriteFixed64(ref state, (ulong)(long)value);
-                    writer.AdvanceAndReset(8);
-                    return;
-                case WireType.Varint:
-                    if (value >= 0)
-                    {
-                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)value));
-                    }
-                    else
-                    {
-                        writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)(long)value));
-                    }
-                    return;
-                case WireType.SignedVarint:
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, Zig(value)));
-                    return;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
+            writer.DefaultState().WriteInt32(value);
         }
 
         /// <summary>
@@ -877,16 +788,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteBoolean(bool value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteBoolean(value, writer, ref state);
-        }
-
-        /// <summary>
-        /// Writes a boolean to the stream; supported wire-types: Variant, Fixed32, Fixed64
-        /// </summary>
-        public static void WriteBoolean(bool value, ProtoWriter writer, ref State state)
-        {
-            ProtoWriter.WriteUInt32(value ? (uint)1 : (uint)0, writer, ref state);
+            writer.DefaultState().WriteBoolean(value);
         }
 
         /// <summary>

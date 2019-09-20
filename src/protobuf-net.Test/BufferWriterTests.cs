@@ -59,7 +59,7 @@ namespace ProtoBuf.Tests
             {
                 state.WriteFieldHeader(1, WireType.Varint);
                 Assert.Equal(1, w.GetPosition(ref state));
-                ProtoWriter.WriteInt32(42, w, ref state);
+                state.WriteInt32(42);
                 Assert.Equal(2, w.GetPosition(ref state));
 
                 state.WriteFieldHeader(2, WireType.String);
@@ -128,7 +128,7 @@ namespace ProtoBuf.Tests
                 Log?.WriteLine($"Writing to {writer.GetType().Name}");
                 Log?.WriteLine($"Writing field 1, value: {value.Level}; pos: {writer.GetPosition(ref state)}");
                 state.WriteFieldHeader(1, WireType.Varint);
-                ProtoWriter.WriteInt32(value.Level, writer, ref state);
+                state.WriteInt32(value.Level);
                 Log?.WriteLine($"Wrote field 1... pos: {writer.GetPosition(ref state)}");
 
                 var obj = value.Inner;

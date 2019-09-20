@@ -42,7 +42,7 @@ namespace ProtoBuf.Schemas
                 var tok2 = ProtoWriter.StartSubItem(null, writer, ref state);
 
                 state.WriteFieldHeader(2, WireType.Varint);
-                ProtoWriter.WriteInt32(15447542, writer, ref state);
+                state.WriteInt32(15447542);
 
                 state.WriteFieldHeader(3, WireType.String);
                 var tok3 = ProtoWriter.StartSubItem(null, writer, ref state);
@@ -430,7 +430,7 @@ namespace ProtoBuf.Schemas
             Assert.Null(genError);
         }
 
-        private static bool IncludeComments(string path) => false;
+        private static bool IncludeComments(string _) => false;
         //{
         //    switch(path)
         //    {

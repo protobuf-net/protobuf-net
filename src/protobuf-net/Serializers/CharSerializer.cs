@@ -11,7 +11,7 @@ namespace ProtoBuf.Serializers
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt16((ushort)(char)value, dest, ref state);
+            state.WriteUInt16((ushort)(char)value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)
