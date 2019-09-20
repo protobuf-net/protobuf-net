@@ -161,13 +161,13 @@ namespace ProtoBuf.Serializers
 
             if (packedWireType != WireType.None && source.WireType == WireType.String)
             {
-                SubItemToken token = ProtoReader.StartSubItem(source, ref state);
+                SubItemToken token = state.StartSubItem();
                 while (ProtoReader.HasSubValue(packedWireType, source))
                 {
                     args[0] = Tail.Read(source, ref state, null);
                     add.Invoke(builderInstance, args);
                 }
-                ProtoReader.EndSubItem(token, source, ref state);
+                state.EndSubItem(token);
             }
             else
             {
@@ -175,7 +175,7 @@ namespace ProtoBuf.Serializers
                 {
                     args[0] = Tail.Read(source, ref state, null);
                     add.Invoke(builderInstance, args);
-                } while (source.TryReadFieldHeader(ref state, field));
+                } while (state.TryReadFieldHeader(field));
             }
 
             return finish.Invoke(builderInstance, null);

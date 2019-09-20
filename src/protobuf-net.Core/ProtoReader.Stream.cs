@@ -31,35 +31,29 @@ namespace ProtoBuf
             return reader;
         }
 
-        /// <summary>
-        /// Creates a new reader against a stream
-        /// </summary>
-        /// <param name="source">The source stream</param>
-        /// <param name="state">Reader state</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        public static ProtoReader Create(out State state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
+        partial struct State
         {
-            if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
+            /// <summary>
+            /// Creates a new reader against a stream
+            /// </summary>
+            /// <param name="source">The source stream</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+            public static State Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
             {
-                return Create(out state, new System.Buffers.ReadOnlySequence<byte>(
-                    segment.Array, segment.Offset, segment.Count), model, context);
-            }
+                if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
+                {
+                    return Create(new System.Buffers.ReadOnlySequence<byte>(
+                        segment.Array, segment.Offset, segment.Count), model, context);
+                }
 
-            
+
 #pragma warning disable CS0618 // Type or member is obsolete
-            var reader = Create(source, model, context, length);
+                var reader = ProtoReader.Create(source, model, context, length);
 #pragma warning restore CS0618 // Type or member is obsolete
-            state = new State(reader);
-            return reader;
-        }
-
-        internal static ProtoReader CreateSolid(out SolidState state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
-        {
-            var reader = Create(out var liquid, source, model, context, length);
-            state = liquid.Solidify();
-            return reader;
+                return new State(reader);
+            }
         }
 
         private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),

@@ -713,8 +713,8 @@ namespace ProtoBuf
                 model.SerializeFallback(writer, ref writeState, from);
             }
             ms.Position = 0;
-            using var reader = ProtoReader.Create(out var state, ms, model);
-            return state.DeserializeFallback(model, to, type: null);
+            using var state = ProtoReader.State.Create(ms, model);
+            return state.DeserializeFallback(to, type: null);
         }
     }
 }

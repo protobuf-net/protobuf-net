@@ -35,7 +35,7 @@ namespace ProtoBuf.Serializers
             => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state);
 
         public override T Read(ProtoReader reader, ref ProtoReader.State state, T value)
-            => reader.ReadBaseType<TBase, T>(ref state, value);
+            => state.ReadBaseType<TBase, T>(value);
 
         T IProtoSubTypeSerializer<T>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value)
         {
@@ -48,15 +48,17 @@ namespace ProtoBuf.Serializers
             => SerializeImpl(writer, ref state, value);
 
         public override void EmitReadRoot(CompilerContext context, Local valueFrom)
-        {   // => (T)((IProtoSubTypeSerializer<TBase>)this).ReadSubType(reader, ref state, SubTypeState<TBase>.Create<T>(reader, value));
+        {   // => (T)((IProtoSubTypeSerializer<TBase>)this).ReadSubType(reader, ref state, SubTypeState<TBase>.Create<T>(state.Context, value));
             // or
-            // => reader.ReadBaseType<TBase, T>(ref state, value, this);
+            // => state.ReadBaseType<TBase, T>(value, this);
             if (context.IsService)
             {
                 using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
                 context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                context.LoadReader(true);
-                context.LoadReader(false);
+                context.LoadReaderWithState();
+
+                // sub-state
+                context.LoadSerializationContext(oldApi: false);
                 context.LoadValue(tmp);
                 context.EmitCall(typeof(SubTypeState<TBase>)
                     .GetMethod(nameof(SubTypeState<string>.Create), BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(typeof(T)));
@@ -66,10 +68,10 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                context.LoadReader(true);
+                context.LoadState();
                 context.LoadValue(valueFrom);
                 context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                context.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
+                context.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(typeof(TBase), typeof(T)));
             }
         }
@@ -301,7 +303,7 @@ namespace ProtoBuf.Serializers
             bool fieldHandled;
 
             //Debug.WriteLine(">> Reading fields for " + forType.FullName);
-            while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 fieldHandled = false;
                 if (fieldNumber < lastFieldNumber)
@@ -340,11 +342,11 @@ namespace ProtoBuf.Serializers
                     if (isExtensible)
                     {
                         var val = getter(ref bodyState);
-                        source.AppendExtensionData(ref state, (IExtensible)val);
+                        state.AppendExtensionData((IExtensible)val);
                     }
                     else
                     {
-                        source.SkipField(ref state);
+                        state.SkipField();
                     }
                 }
             }
@@ -550,20 +552,35 @@ namespace ProtoBuf.Serializers
             EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
         }
 
-        private static void EmitInvokeCallback(Compiler.CompilerContext ctx, MethodInfo method, bool copyValue, Type constructType, Type type)
+        private static void EmitInvokeCallback(Compiler.CompilerContext ctx, MethodInfo method, Type constructType, Type type, Local valueFrom)
         {
             if (method != null)
             {
-                if (copyValue) ctx.CopyValue(); // assumes the target is on the stack, and that we want to *retain* it on the stack
+                if (method.IsStatic)
+                {
+                    // calling a static factory method
+                    Debug.Assert(valueFrom == null);
+                }
+                else
+                {
+                    // here, we're calling a callback *on an instance*;
+                    Debug.Assert(valueFrom != null);
+                    ctx.LoadAddress(valueFrom, type);
+                }
+
                 ParameterInfo[] parameters = method.GetParameters();
                 bool handled = true;
 
                 for (int i = 0; i < parameters.Length; i++)
                 {
                     Type parameterType = parameters[i].ParameterType;
-                    if (parameterType == typeof(SerializationContext))
+                    if (parameterType == typeof(ISerializationContext))
                     {
-                        ctx.LoadSerializationContext();
+                        ctx.LoadSerializationContext(oldApi: false);
+                    }
+                    else if (parameterType == typeof(SerializationContext))
+                    {
+                        ctx.LoadSerializationContext(oldApi: true);
                     }
                     else if (parameterType == typeof(Type))
                     {
@@ -572,8 +589,9 @@ namespace ProtoBuf.Serializers
                     }
                     else if (parameterType == typeof(System.Runtime.Serialization.StreamingContext))
                     {
-                        ctx.LoadSerializationContext();
+                        ctx.LoadSerializationContext(true);
                         MethodInfo op = typeof(SerializationContext).GetMethod("op_Implicit", new Type[] { typeof(SerializationContext) });
+                        handled = false;
                         if (op != null)
                         { // it isn't always! (framework versions, etc)
                             ctx.EmitCall(op);
@@ -641,8 +659,8 @@ namespace ProtoBuf.Serializers
             {
                 return;
             }
-            ctx.LoadAddress(valueFrom, ExpectedType);
-            EmitInvokeCallback(ctx, method, actuallyHasInheritance, null, ExpectedType);
+
+            EmitInvokeCallback(ctx, method, null, ExpectedType, valueFrom);
 
             if (actuallyHasInheritance)
             {
@@ -731,19 +749,19 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(tryNextField);
             }
 
-            ctx.LoadReader(true);
+            ctx.LoadState();
             if (isExtensible)
             {
                 LoadFromState(ctx, loc);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.AppendExtensionData),
-                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(IExtensible) }));
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.AppendExtensionData),
+                    new[] { typeof(IExtensible) }));
             }
             else
             {
-                ctx.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.SkipField), Compiler.ReaderUtil.StateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.SkipField), Type.EmptyTypes));
             }
             ctx.MarkLabel(@continue);
-            ctx.EmitBasicRead(nameof(ProtoReader.ReadFieldHeader), typeof(int));
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadFieldHeader), typeof(int));
             ctx.CopyValue();
             ctx.StoreValue(fieldNumber);
             ctx.LoadValue(0);
@@ -895,12 +913,12 @@ namespace ProtoBuf.Serializers
             // different ways of creating a new instance
             if (factory != null)
             {
-                EmitInvokeCallback(ctx, factory, false, constructType, ExpectedType);
+                EmitInvokeCallback(ctx, factory, constructType, ExpectedType, null);
             }
             else if (!useConstructor)
             {   // DataContractSerializer style
                 ctx.LoadValue(constructType);
-                ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
+                ctx.EmitCall(typeof(BclHelpers).GetMethod(nameof(BclHelpers.GetUninitializedObject)));
                 ctx.Cast(ExpectedType);
             }
             else if (constructType.IsClass && hasConstructor)
@@ -910,25 +928,37 @@ namespace ProtoBuf.Serializers
             else
             {
                 ctx.LoadValue(ExpectedType);
-                ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowCannotCreateInstance",
+                ctx.EmitCall(typeof(TypeModel).GetMethod(nameof(TypeModel.ThrowCannotCreateInstance),
                     BindingFlags.Static | BindingFlags.Public));
                 ctx.LoadNullRef();
                 callNoteObject = false;
             }
-            if (callNoteObject)
+
+            // at this point we have an ExpectedType on the stack
+
+            if (callNoteObject || baseCtorCallbacks != null)
             {
-                // track root object creation
-                ctx.CopyValue();
-                ctx.LoadReader(false);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("NoteObject",
-                        BindingFlags.Static | BindingFlags.Public));
-            }
-            if (baseCtorCallbacks != null)
-            {
-                for (int i = 0; i < baseCtorCallbacks.Length; i++)
+                // we're going to need it multiple times; use a local
+                using var loc = new Local(ctx, ExpectedType);
+                ctx.StoreValue(loc);
+
+                if (callNoteObject)
                 {
-                    EmitInvokeCallback(ctx, baseCtorCallbacks[i], true, null, ExpectedType);
+                    // track root object creation
+                    ctx.LoadState();
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.NoteObject)));
                 }
+
+                if (baseCtorCallbacks != null)
+                {
+                    for (int i = 0; i < baseCtorCallbacks.Length; i++)
+                    {
+                        EmitInvokeCallback(ctx, baseCtorCallbacks[i], null, ExpectedType, loc);
+                    }
+                }
+
+                ctx.LoadValue(loc);
             }
         }
         private void EmitCreateIfNull(Compiler.CompilerContext ctx, Compiler.Local storage)
@@ -941,9 +971,9 @@ namespace ProtoBuf.Serializers
                 ctx.BranchIfTrue(afterNullCheck, false);
 
                 ((IProtoTypeSerializer)this).EmitCreateInstance(ctx);
-
-                if (callbacks != null) EmitInvokeCallback(ctx, callbacks.BeforeDeserialize, true, null, ExpectedType);
                 ctx.StoreValue(storage);
+
+                if (callbacks != null) EmitInvokeCallback(ctx, callbacks.BeforeDeserialize, null, ExpectedType, storage);
                 ctx.MarkLabel(afterNullCheck);
             }
         }

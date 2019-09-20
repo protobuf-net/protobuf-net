@@ -17,7 +17,7 @@ namespace ProtoBuf.Serializers
         object IRuntimeProtoSerializerNode.Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadType(ref state);
+            return state.ReadType();
         }
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadType", ExpectedType);
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadType), ExpectedType);
         }
     }
 }

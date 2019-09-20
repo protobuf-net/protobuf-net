@@ -21,12 +21,12 @@ namespace ProtoBuf.Serializers
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadDuration(source, ref state);
+                return BclHelpers.ReadDuration(ref state);
             }
             else
             {
                 Debug.Assert(value == null); // since replaces
-                return BclHelpers.ReadTimeSpan(source, ref state);
+                return BclHelpers.ReadTimeSpan(ref state);
             }
         }
 
@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
-            ctx.EmitBasicRead<BclHelpers>(
+            ctx.EmitStateBasedRead(typeof(BclHelpers),
                 wellKnown ? nameof(BclHelpers.ReadDuration) : nameof(BclHelpers.ReadTimeSpan),
                 ExpectedType);
         }

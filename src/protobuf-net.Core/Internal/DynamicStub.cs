@@ -16,8 +16,8 @@ namespace ProtoBuf.Internal
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeserialize(Type type, TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
-            => Get(type).TryDeserialize(model, reader, ref state, ref value);
+        internal static bool TryDeserialize(Type type, TypeModel model, ref ProtoReader.State state, ref object value)
+            => Get(type).TryDeserialize(model, ref state, ref value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySerialize(Type type, TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value)
@@ -49,7 +49,7 @@ namespace ProtoBuf.Internal
             return obj;
         }
 
-        protected abstract bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value);
+        protected abstract bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value);
 
         protected abstract bool TrySerialize(TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value);
 
@@ -60,7 +60,7 @@ namespace ProtoBuf.Internal
         {
             public static DynamicStub Instance { get; } = new NilStub();
             private NilStub() { }
-            protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
                 => false;
             protected override bool TrySerialize(TypeModel model, ProtoWriter reader, ref ProtoWriter.State state, object value)
                 => false;
@@ -76,9 +76,8 @@ namespace ProtoBuf.Internal
                 try { return TypeModel.GetSerializer<T>(model); }
                 catch { return null; }
             }
-            protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
             {
-                Debug.Assert(reader != null, "reader is null");
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
                 value = state.Deserialize<T>((T)value, serializer);

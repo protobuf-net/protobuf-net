@@ -104,18 +104,18 @@ namespace ProtoBuf.Tests
             {
                 int fieldHeader;
                 if (value == null) value = new A();
-                while ((fieldHeader = reader.ReadFieldHeader(ref state)) > 0)
+                while ((fieldHeader = state.ReadFieldHeader()) > 0)
                 {
                     switch (fieldHeader)
                     {
                         case 1:
-                            value.Level = reader.ReadInt32(ref state);
+                            value.Level = state.ReadInt32();
                             break;
                         case 2:
-                            value.Inner = reader.ReadSubItem<A>(ref state, value.Inner, this);
+                            value.Inner = state.ReadSubItem<A>(value.Inner, this);
                             break;
                         default:
-                            reader.SkipField(ref state);
+                            state.SkipField();
                             break;
                     }
                 }

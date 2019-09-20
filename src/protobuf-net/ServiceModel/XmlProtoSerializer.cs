@@ -170,37 +170,50 @@ namespace ProtoBuf.ServiceModel
                 if (!isSelfClosed) reader.ReadEndElement();
                 return null;
             }
+            ProtoReader.State state;
             if (isSelfClosed) // no real content
             {
-                using var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
-                if (isList || isEnum)
+                state = ProtoReader.State.Create(Stream.Null, model, null, ProtoReader.TO_EOF);
+                try
                 {
-                    return model.DeserializeFallback(protoReader, ref state, null, type);
+                    if (isList || isEnum)
+                    {
+                        return state.DeserializeFallback(null, type);
+                    }
+                    else
+                    {
+
+                        return model.DeserializeCore(state.GetReader(), ref state, key, null);
+                    }
                 }
-                else
+                finally
                 {
-                    
-                    return model.DeserializeCore(protoReader, ref state, key, null);
+                    state.Dispose();
                 }
             }
 
             object result = null;
             Debug.Assert(reader.CanReadBinaryContent, "CanReadBinaryContent");
             ReadOnlyMemory<byte> payload = reader.ReadContentAsBase64();
-            using (var protoReader = ProtoReader.Create(out var state, payload, model, null))
+            state = ProtoReader.State.Create(payload, model, null);
+            try
             {
-                if (DynamicStub.TryDeserialize(type, model, protoReader, ref state, ref result))
-                {} // winning!
-                else if (isList || isEnum)
                 {
-#pragma warning disable CS0618
-                    result = model.DeserializeFallback(protoReader, ref state, null, type);
-#pragma warning restore CS0618
+                    if (DynamicStub.TryDeserialize(type, model, ref state, ref result))
+                    { } // winning!
+                    else if (isList || isEnum)
+                    {
+                        result = state.DeserializeFallback(null, type);
+                    }
+                    else
+                    {
+                        result = model.DeserializeCore(state.GetReader(), ref state, key, null);
+                    }
                 }
-                else
-                {
-                    result = model.DeserializeCore(protoReader, ref state, key, null);
-                }
+            }
+            finally
+            {
+                state.Dispose();
             }
             reader.ReadEndElement();
             return result;

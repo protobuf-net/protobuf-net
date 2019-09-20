@@ -24,12 +24,12 @@ namespace ProtoBuf.Serializers
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadTimestamp(source, ref state);
+                return BclHelpers.ReadTimestamp(ref state);
             }
             else
             {
                 Debug.Assert(value == null); // since replaces
-                return BclHelpers.ReadDateTime(source, ref state);
+                return BclHelpers.ReadDateTime(ref state);
             }
         }
 
@@ -53,7 +53,7 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
-            ctx.EmitBasicRead<BclHelpers>(
+            ctx.EmitStateBasedRead(typeof(BclHelpers),
                 wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
         }

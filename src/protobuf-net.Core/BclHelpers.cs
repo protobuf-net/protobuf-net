@@ -256,7 +256,7 @@ namespace ProtoBuf
 
         private static long ReadTimeSpanTicks(ref ProtoReader.State state, out DateTimeKind kind)
         {
-            switch (state.GetWireType())
+            switch (state.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
@@ -267,7 +267,7 @@ namespace ProtoBuf
                     kind = DateTimeKind.Unspecified;
                     return state.ReadInt64();
                 default:
-                    ThrowHelper.ThrowProtoException($"Unexpected wire-type: {state.GetWireType()}");
+                    ThrowHelper.ThrowProtoException($"Unexpected wire-type: {state.WireType}");
                     kind = default;
                     return default;
             }

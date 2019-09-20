@@ -10,29 +10,30 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
-        /// <summary>
-        /// Creates a new reader against a multi-segment buffer
-        /// </summary>
-        /// <param name="source">The source buffer</param>
-        /// <param name="state">Reader state</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        public static ProtoReader Create(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
+        partial struct State
         {
-            var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
-            reader.Init(out state, source, model, context);
-            return reader;
-        }
+            /// <summary>
+            /// Creates a new reader against a multi-segment buffer
+            /// </summary>
+            /// <param name="source">The source buffer</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
+            {
+                var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
+                reader.Init(source, model, context);
+                return new State(reader);
+            }
 
-        /// <summary>
-        /// Creates a new reader against a multi-segment buffer
-        /// </summary>
-        /// <param name="source">The source buffer</param>
-        /// <param name="state">Reader state</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        public static ProtoReader Create(out State state, ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
-            => Create(out state, new ReadOnlySequence<byte>(source), model, context);
+            /// <summary>
+            /// Creates a new reader against a multi-segment buffer
+            /// </summary>
+            /// <param name="source">The source buffer</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
+                => Create(new ReadOnlySequence<byte>(source), model, context);
+        }
 
         private sealed class ReadOnlySequenceProtoReader : ProtoReader
         {
@@ -146,11 +147,10 @@ namespace ProtoBuf
                 Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
-            internal void Init(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)
+            internal void Init(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)
             {
                 base.Init(model, context);
                 _source = source.GetEnumerator();
-                state = new State(this);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

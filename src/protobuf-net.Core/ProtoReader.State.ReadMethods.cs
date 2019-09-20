@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -620,8 +621,23 @@ namespace ProtoBuf
                 finally { extn.EndAppend(dest, commit); }
             }
 
-            [MethodImpl(HotPath)]
-            internal WireType GetWireType() => _reader.WireType;
+            /// <summary>
+            /// Indicates the underlying proto serialization format on the wire.
+            /// </summary>
+            public WireType WireType
+            {
+                [MethodImpl(HotPath)]
+                get => _reader.WireType;
+            }
+
+            /// <summary>
+            /// Gets the number of the field being processed.
+            /// </summary>
+            public int FieldNumber
+            {
+                [MethodImpl(HotPath)]
+                get => _reader._fieldNumber;
+            }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             private void AppendExtensionField(ProtoWriter writer, ref ProtoWriter.State writeState)
@@ -719,35 +735,50 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Indicates whether the reader still has data remaining in the current sub-item,
+            /// additionally setting the wire-type for the next field if there is more data.
+            /// This is used when decoding packed data.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public bool HasSubValue(WireType wireType) => ProtoReader.HasSubValue(wireType, _reader); 
+
+            /// <summary>
             /// Create an instance of the provided type, respecting any custom factory rules
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
             public T CreateInstance<T>(IProtoFactory<T> factory = null)
             {
                 var obj = TypeModel.CreateInstance<T>(Context, factory);
-                if (TypeHelper<T>.IsObjectType) NoteObject((object)obj, _reader);
+                if (TypeHelper<T>.IsObjectType) NoteObject(obj);
                 return obj;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object DeserializeFallback(TypeModel model, object value, System.Type type)
+            internal object DeserializeFallback(object value, Type type, TypeModel overrideModel)
             {
-                if (type == null || type == typeof(object))
-                    type = value?.GetType() ?? typeof(object);
                 var oldModel = Model;
                 try
                 {
-                    Model = model;
-                    bool autoCreate = model.PrepareDeserialize(value, ref type);
-                    if (value != null) _reader.SetRootObject(value);
-                    object obj = model.DeserializeAny(_reader, ref this, type, value, autoCreate);
-                    CheckFullyConsumed();
-                    return obj;
+                    Model = overrideModel;
+                    return DeserializeFallback(value, type);
                 }
                 finally
                 {
                     Model = oldModel;
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal object DeserializeFallback(object value, Type type)
+            {
+                if (type == null || type == typeof(object))
+                    type = value?.GetType() ?? typeof(object);
+
+                bool autoCreate = Model.PrepareDeserialize(value, ref type);
+                if (value != null) _reader.SetRootObject(value);
+                object obj = Model.DeserializeAny(ref this, type, value, autoCreate);
+                CheckFullyConsumed();
+                return obj;
             }
 
             [MethodImpl(HotPath)]
@@ -756,13 +787,20 @@ namespace ProtoBuf
                 if (TypeHelper<T>.UseFallback)
                 {
                     Debug.Assert(Model != null, "Model is null");
-                    return (T)DeserializeFallback(Model, value, typeof(T));
+                    return (T)DeserializeFallback(value, typeof(T));
                 }
                 else
                 {
                     return Deserialize<T>(value);
                 }
             }
+
+            /// <summary>
+            /// Utility method, not intended for public use; this helps maintain the root object is complex scenarios
+            /// </summary>
+            [MethodImpl(HotPath)]
+            [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+            public void NoteObject(object value) => ProtoReader.NoteObject(value, _reader);
         }
     }
 }

@@ -26,9 +26,14 @@ namespace ProtoBuf
                 reader?.Dispose();
             }
             internal SolidState Solidify() => new SolidState(
+                _reader,
                 _memory.Slice(OffsetInCurrent, RemainingInCurrent));
 
-            internal State(ReadOnlyMemory<byte> memory) : this() => Init(memory);
+            internal State(ProtoReader reader, ReadOnlyMemory<byte> memory)
+                : this(reader)
+            {
+                Init(memory);
+            }
 
             internal State(ProtoReader reader)
             {
@@ -36,7 +41,9 @@ namespace ProtoBuf
                 _reader = reader;
             }
 
+#pragma warning disable IDE0044 // make readonly
             private ProtoReader _reader;
+#pragma warning restore IDE0044 // make readonly
 
             internal void Init(ReadOnlyMemory<byte> memory)
             {
@@ -194,11 +201,17 @@ namespace ProtoBuf
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void NoContextThrowOverflow() => default(State).ThrowOverflow();
 
-        internal readonly struct SolidState
+        internal readonly struct SolidState : IDisposable
         {
+            public void Dispose() => _reader?.Dispose();
             private readonly ReadOnlyMemory<byte> _memory;
-            internal SolidState(ReadOnlyMemory<byte> memory) => _memory = memory;
-            internal State Liquify() => new State(_memory);
+            private readonly ProtoReader _reader;
+            internal SolidState(ProtoReader reader, ReadOnlyMemory<byte> memory)
+            {
+                _memory = memory;
+                _reader = reader;
+            }
+            internal State Liquify() => new State(_reader, _memory);
         }
     }
 }

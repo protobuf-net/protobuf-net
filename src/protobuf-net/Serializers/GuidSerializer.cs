@@ -21,7 +21,7 @@ namespace ProtoBuf.Serializers
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return BclHelpers.ReadGuid(source, ref state);
+            return BclHelpers.ReadGuid(ref state);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead<BclHelpers>(nameof(BclHelpers.ReadGuid), ExpectedType);
+            ctx.EmitStateBasedRead(typeof(BclHelpers), nameof(BclHelpers.ReadGuid), ExpectedType);
         }
     }
 }

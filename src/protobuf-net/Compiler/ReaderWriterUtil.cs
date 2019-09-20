@@ -4,12 +4,6 @@ using System.Reflection;
 
 namespace ProtoBuf.Compiler
 {
-    internal static class ReaderUtil
-    {
-        internal static readonly Type ByRefStateType = typeof(ProtoReader.State).MakeByRefType();
-        internal static readonly Type[] StateTypeArray = new[] { ByRefStateType },
-            ReaderStateTypeArray = new[] { typeof(ProtoReader), ByRefStateType };
-    }
     internal static class WriterUtil
     {
         internal static readonly Type ByRefStateType = typeof(ProtoWriter.State).MakeByRefType();

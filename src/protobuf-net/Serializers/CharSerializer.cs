@@ -17,7 +17,7 @@ namespace ProtoBuf.Serializers
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return (char)source.ReadUInt16(ref state);
+            return (char)state.ReadUInt16();
         }
 
         // no need for any special IL here; ushort and char are

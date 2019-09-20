@@ -212,19 +212,19 @@ namespace ProtoBuf.Serializers
             var list = new BasicList();
             if (packedWireType != WireType.None && source.WireType == WireType.String)
             {
-                SubItemToken token = ProtoReader.StartSubItem(source, ref state);
+                SubItemToken token = state.StartSubItem();
                 while (ProtoReader.HasSubValue(packedWireType, source))
                 {
                     list.Add(Tail.Read(source, ref state, null));
                 }
-                ProtoReader.EndSubItem(token, source, ref state);
+                state.EndSubItem(token);
             }
             else
             {
                 do
                 {
                     list.Add(Tail.Read(source, ref state, null));
-                } while (source.TryReadFieldHeader(ref state, field));
+                } while (state.TryReadFieldHeader(field));
             }
             int oldLen = AppendToCollection ? (value == null ? 0 : ((Array)value).Length) : 0;
             Array result = Array.CreateInstance(itemType, oldLen + list.Count);

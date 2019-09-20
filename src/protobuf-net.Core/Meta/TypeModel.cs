@@ -396,20 +396,28 @@ namespace ProtoBuf.Meta
                 }
             } while (skip);
 
-            using var reader = ProtoReader.Create(out var state, source, this, context, len);
-            int key = GetKey(ref type);
-            if (key >= 0 && !type.IsEnum)
+            var state = ProtoReader.State.Create(source, this, context, len);
+            try
             {
-                value = DeserializeCore(reader, ref state, key, value);
-            }
-            else
-            {
-                if (!(TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null) || len == 0))
+                var reader = state.GetReader();
+                int key = GetKey(ref type);
+                if (key >= 0 && !type.IsEnum)
                 {
-                    TypeModel.ThrowUnexpectedType(type); // throws
+                    value = DeserializeCore(reader, ref state, key, value);
                 }
+                else
+                {
+                    if (!(TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null) || len == 0))
+                    {
+                        TypeModel.ThrowUnexpectedType(type); // throws
+                    }
+                }
+                bytesRead += state.GetPosition();
             }
-            bytesRead += state.GetPosition();
+            finally
+            {
+                state.Dispose();
+            }
             haveObject = true;
             return value;
         }
@@ -616,8 +624,8 @@ namespace ProtoBuf.Meta
         [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public object Deserialize(Stream source, object value, Type type)
         {
-            using var reader = ProtoReader.Create(out var state, source, this, null, ProtoReader.TO_EOF);
-            return state.DeserializeFallback(this, value, type);
+            using var state = ProtoReader.State.Create(source, this, null, ProtoReader.TO_EOF);
+            return state.DeserializeFallback(value, type);
         }
 
         /// <summary>
@@ -633,17 +641,17 @@ namespace ProtoBuf.Meta
         [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public object Deserialize(Stream source, object value, Type type, SerializationContext context)
         {
-            using var reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
-            return state.DeserializeFallback(this, value, type);
+            using var state = ProtoReader.State.Create(source, this, context, ProtoReader.TO_EOF);
+            return state.DeserializeFallback(value, type);
         }
 
         internal const string PreferGenericAPI = "The non-generic API is sub-optimal; it is recommended to use the generic API whenever possible";
 
-//#if DEBUG
-//        internal const bool DemandGenericAPI = true;
-//#else
+        //#if DEBUG
+        //        internal const bool DemandGenericAPI = true;
+        //#else
         internal const bool DemandGenericAPI = false;
-//#endif
+        //#endif
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -657,7 +665,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public T Deserialize<T>(Stream source, T value = default, SerializationContext context = null)
         {
-            using var reader = ProtoReader.Create(out var state, source, this, context);
+            using var state = ProtoReader.State.Create(source, this, context);
             return state.DeserializeImpl<T>(value);
         }
 
@@ -673,7 +681,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
-            using var reader = ProtoReader.Create(out var state, source, this, context);
+            using var state = ProtoReader.State.Create(source, this, context);
             return state.DeserializeImpl<T>(value);
         }
 
@@ -689,7 +697,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {
-            using var reader = ProtoReader.Create(out var state, source, this, context);
+            using var state = ProtoReader.State.Create(source, this, context);
             return state.DeserializeImpl<T>(value);
         }
 
@@ -775,11 +783,19 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
             bool autoCreate = PrepareDeserialize(value, ref type);
-            using var reader = ProtoReader.Create(out var state, source, this, context, length);
-            if (value != null) reader.SetRootObject(value);
-            object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
-            state.CheckFullyConsumed();
-            return obj;
+            var state = ProtoReader.State.Create(source, this, context, length);
+            try
+            {
+                var reader = state.GetReader();
+                if (value != null) reader.SetRootObject(value);
+                object obj = DeserializeAny(ref state, type, value, autoCreate);
+                state.CheckFullyConsumed();
+                return obj;
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         /// <summary>
@@ -793,19 +809,19 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public object Deserialize(ProtoReader source, object value, Type type)
-            => source.DefaultState().DeserializeFallback(this, value, type);
+            => source.DefaultState().DeserializeFallback(value, type, this);
 
-        internal object DeserializeAny(ProtoReader reader, ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
+        internal object DeserializeAny(ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
         {
-            if (!DynamicStub.TryDeserialize(type, this, reader, ref state, ref value))
+            if (!DynamicStub.TryDeserialize(type, this, ref state, ref value))
             {
                 int key = GetKey(ref type);
                 if (key >= 0 && !type.IsEnum)
                 {
-                    return DeserializeCore(reader, ref state, key, value);
+                    return DeserializeCore(state.GetReader(), ref state, key, value);
                 }
                 // this returns true to say we actively found something, but a value is assigned either way (or throws)
-                TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
+                TryDeserializeAuxiliaryType(state.GetReader(), ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
             }
             return value;
         }
@@ -1043,10 +1059,10 @@ namespace ProtoBuf.Meta
             return Activator.CreateInstance(concreteListType, nonPublic: true);
         }
 
-        internal bool TryDeserializeAuxiliaryType(ProtoReader reader, ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
+        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
             var liquid = state.Liquify();
-            var result = TryDeserializeAuxiliaryType(reader, ref liquid, format, tag, type, ref value,
+            var result = TryDeserializeAuxiliaryType(liquid.GetReader(), ref liquid, format, tag, type, ref value,
                 skipOtherFields, asListItem, autoCreate, insideList, parentListOrType);
             state = liquid.Solidify();
             return result;
@@ -1487,8 +1503,15 @@ namespace ProtoBuf.Meta
                         writer.Close(ref writeState);
                     }
                     ms.Position = 0;
-                    using var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
-                    return DeserializeCore(reader, ref readState, key, null);
+                    var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
+                    try
+                    {
+                        return DeserializeCore(readState.GetReader(), ref readState, key, null);
+                    }
+                    finally
+                    {
+                        readState.Dispose();
+                    }
                 }
                 if (type == typeof(byte[]))
                 {
@@ -1516,9 +1539,17 @@ namespace ProtoBuf.Meta
                         writer.Close(ref writeState);
                     }
                     ms.Position = 0;
-                    using var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
-                    value = null; // start from scratch!
-                    TryDeserializeAuxiliaryType(reader, ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
+                    var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
+                    try
+                    {
+                        value = null; // start from scratch!
+                        TryDeserializeAuxiliaryType(readState.GetReader(), ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
+                    }
+                    finally
+                    {
+                        readState.Dispose();
+                    }
+
                     return value;
                 }
             }
@@ -1752,8 +1783,8 @@ namespace ProtoBuf.Meta
 
             public object Deserialize(Stream serializationStream)
             {
-                using var reader = ProtoReader.Create(out var state, serializationStream, model, Context);
-                return state.DeserializeFallback(model, null, type);
+                using var state = ProtoReader.State.Create(serializationStream, model, Context);
+                return state.DeserializeFallback(null, type);
             }
 
             public void Serialize(Stream serializationStream, object graph)

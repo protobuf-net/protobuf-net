@@ -50,7 +50,7 @@ namespace ProtoBuf.WellKnownTypes
 
         private static Duration ReadDuration(ref ProtoReader.State state, Duration value)
         {
-            if (state.GetWireType() == WireType.String && state.RemainingInCurrent >= 20)
+            if (state.WireType == WireType.String && state.RemainingInCurrent >= 20)
             {
                 if (TryReadDurationFast(ref state, ref value)) return value;
             }

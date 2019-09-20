@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < values.Length; i++)
                 values[i] = GetValue(value, i);
             int field;
-            while ((field = source.ReadFieldHeader(ref state)) > 0)
+            while ((field = state.ReadFieldHeader()) > 0)
             {
                 invokeCtor = true;
                 if (field <= tails.Length)
@@ -110,7 +110,7 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    source.SkipField(ref state);
+                    state.SkipField();
                 }
             }
             return invokeCtor ? ctor.Invoke(values) : value;
@@ -303,11 +303,11 @@ namespace ProtoBuf.Serializers
                     }
 
                     ctx.MarkLabel(notRecognised);
-                    ctx.LoadReader(true);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
+                    ctx.LoadState();
+                    ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.SkipField), Type.EmptyTypes));
 
                     ctx.MarkLabel(@continue);
-                    ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
+                    ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadFieldHeader), typeof(int));
                     ctx.CopyValue();
                     ctx.StoreValue(fieldNumber);
                     ctx.LoadValue(0);

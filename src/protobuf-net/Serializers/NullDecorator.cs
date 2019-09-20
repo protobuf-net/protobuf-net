@@ -32,16 +32,15 @@ namespace ProtoBuf.Serializers
             using Compiler.Local oldValue = ctx.GetLocalWithValue(ExpectedType, valueFrom);
             using Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken));
             using Compiler.Local field = new Compiler.Local(ctx, typeof(int));
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
-                Compiler.ReaderUtil.ReaderStateTypeArray));
+            ctx.LoadState();
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.StartSubItem), Type.EmptyTypes));
             ctx.StoreValue(token);
 
             Compiler.CodeLabel next = ctx.DefineLabel(), processField = ctx.DefineLabel(), end = ctx.DefineLabel();
 
             ctx.MarkLabel(next);
 
-            ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadFieldHeader), typeof(int));
             ctx.CopyValue();
             ctx.StoreValue(field);
             ctx.LoadValue(Tag); // = 1 - process
@@ -51,8 +50,8 @@ namespace ProtoBuf.Serializers
             ctx.BranchIfLess(end, false);
 
             // default: skip
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
+            ctx.LoadState();
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.SkipField), Type.EmptyTypes));
             ctx.Branch(next, true);
 
             // process
@@ -81,10 +80,10 @@ namespace ProtoBuf.Serializers
             // outro
             ctx.MarkLabel(end);
 
+            ctx.LoadState();
             ctx.LoadValue(token);
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.EndSubItem),
+                new[] { typeof(SubItemToken) }));
             ctx.LoadValue(oldValue); // load the old value
         }
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -127,9 +126,9 @@ namespace ProtoBuf.Serializers
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            SubItemToken tok = ProtoReader.StartSubItem(source, ref state);
+            SubItemToken tok = state.StartSubItem();
             int field;
-            while ((field = source.ReadFieldHeader(ref state)) > 0)
+            while ((field = state.ReadFieldHeader()) > 0)
             {
                 if (field == Tag)
                 {
@@ -137,10 +136,10 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    source.SkipField(ref state);
+                    state.SkipField();
                 }
             }
-            ProtoReader.EndSubItem(tok, source, ref state);
+            state.EndSubItem(tok);
             return value;
         }
 

@@ -255,11 +255,11 @@ namespace FX11
         }
 
 #pragma warning disable RCS1213, IDE0051
-        private static Product Read(ref ProtoReader.State state, Product product1, ProtoReader reader1)
+        private static Product Read(ref ProtoReader.State state, Product product1)
 #pragma warning restore RCS1213, IDE0051
         {
             int num;
-            while ((num = reader1.ReadFieldHeader(ref state)) > 0)
+            while ((num = state.ReadFieldHeader()) > 0)
             {
                 switch (num)
                 {
@@ -268,21 +268,21 @@ namespace FX11
                         {
                             product1 = new Product();
                         }
-                        product1.ProductID = reader1.ReadInt32(ref state);
+                        product1.ProductID = state.ReadInt32();
                         continue;
                     case 2:
                         if (product1 == null)
                         {
                             product1 = new Product();
                         }
-                        product1.ProductName = reader1.ReadString(ref state);
+                        product1.ProductName = state.ReadString();
                         continue;
                     case 3:
                         if (product1 == null)
                         {
                             product1 = new Product();
                         }
-                        product1.SupplierID = new int?(reader1.ReadInt32(ref state));
+                        product1.SupplierID = new int?(state.ReadInt32());
                         continue;
                 }
             }

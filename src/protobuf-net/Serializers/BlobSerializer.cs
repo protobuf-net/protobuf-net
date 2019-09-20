@@ -17,7 +17,7 @@ namespace ProtoBuf.Serializers
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source, ref state);
+            return state.AppendBytes(overwriteList ? null : (byte[])value);
         }
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
@@ -34,18 +34,19 @@ namespace ProtoBuf.Serializers
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
+            using var tmp = overwriteList ? default : ctx.GetLocalWithValue(typeof(byte[]), entity);
+            ctx.LoadState();
             if (overwriteList)
             {
                 ctx.LoadNullRef();
             }
             else
             {
-                ctx.LoadValue(entity);
+                ctx.LoadValue(tmp);
             }
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader)
-               .GetMethod(nameof(ProtoReader.AppendBytes),
-               new[] { typeof(byte[]), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType}));
+            ctx.EmitCall(typeof(ProtoReader.State)
+               .GetMethod(nameof(ProtoReader.State.AppendBytes),
+               new[] { typeof(byte[])}));
         }
     }
 }

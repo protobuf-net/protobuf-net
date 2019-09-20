@@ -59,11 +59,20 @@ namespace ProtoBuf
             // 7B = 123(raw) or - 62(zigzag)
 
             ms.Position = 0;
-            ProtoReader.State readState = default;
+
+            A raw;
+            if (withState)
+            {
+                using var readState = ProtoReader.State.Create(ms, null);
+                raw = readState.Deserialize<A>(null);
+            }
+            else
+            {
 #pragma warning disable CS0618
-            using var reader = withState ? ProtoReader.Create(out readState, ms, null) : ProtoReader.Create(ms, null);
+                using var reader = ProtoReader.Create(ms, null);
 #pragma warning restore CS0618
-            var raw = reader.Deserialize<A>(ref readState, null);
+                raw = reader.DefaultState().Deserialize<A>(null);
+            }
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);
@@ -139,8 +148,8 @@ namespace ProtoBuf
             // 08 = field 1, type Variant
             // 7B = 123(raw) or - 62(zigzag)
 
-            using var reader = ProtoReader.Create(out var readState, result.Value, null);
-            var raw = reader.Deserialize<A>(ref readState, null);
+            using var readState = ProtoReader.State.Create(result.Value, null);
+            var raw = readState.Deserialize<A>(null);
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);
@@ -170,11 +179,19 @@ namespace ProtoBuf
             Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
 
             ms.Position = 0;
-            ProtoReader.State readState = default;
+            A raw;
+            if (withState)
+            {
+                using var readState = ProtoReader.State.Create(ms, null);
+                raw = readState.Deserialize<A>(null);
+            }
+            else
+            {
 #pragma warning disable CS0618
-            using var reader = withState ? ProtoReader.Create(out readState, ms, null) : ProtoReader.Create(ms, null);
+                using var reader = ProtoReader.Create(ms, null);
 #pragma warning restore CS0618
-            var raw = reader.Deserialize<A>(ref readState, null, ModelSerializer.Default);
+                raw = reader.DefaultState().Deserialize<A>(null);
+            }
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);
@@ -200,8 +217,8 @@ namespace ProtoBuf
             var hex = Hex(result.Value);
             Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
 
-            using var reader = ProtoReader.Create(out var readState, result.Value, null);
-            var raw = reader.Deserialize<A>(ref readState, null, ModelSerializer.Default);
+            using var readState = ProtoReader.State.Create(result.Value, null);
+            var raw = readState.Deserialize<A>(null, ModelSerializer.Default);
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);
@@ -295,18 +312,18 @@ namespace ProtoBuf
         {
             int field;
             value.OnBeforeDeserialize((obj, ctx) => obj.OnBeforeDeserialize());
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
                     case 1:
-                        value.Value.AVal = reader.ReadInt32(ref state);
+                        value.Value.AVal = state.ReadInt32();
                         break;
                     case 4:
-                        value.ReadSubType<B>(reader, ref state, this);
+                        value.ReadSubType<B>(ref state, this);
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }
@@ -337,18 +354,18 @@ namespace ProtoBuf
         B IProtoSubTypeSerializer<B>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<B> value)
         {
             int field;
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
                     case 2:
-                        value.Value.BVal = reader.ReadInt32(ref state);
+                        value.Value.BVal = state.ReadInt32();
                         break;
                     case 5:
-                        value.ReadSubType<C>(reader, ref state, this);
+                        value.ReadSubType<C>(ref state, this);
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }
@@ -368,15 +385,15 @@ namespace ProtoBuf
         C IProtoSubTypeSerializer<C>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<C> value)
         {
             int field;
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
                     case 3:
-                        value.Value.CVal = reader.ReadInt32(ref state);
+                        value.Value.CVal = state.ReadInt32();
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }
@@ -395,17 +412,17 @@ namespace ProtoBuf
 
         D IProtoSerializer<D>.Read(ProtoReader reader, ref ProtoReader.State state, D value)
         {
-            if (value == null) value = reader.CreateInstance<D>(this);
+            if (value == null) value = state.CreateInstance<D>(this);
             int field;
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
                     case 1:
-                        value.DVal = reader.ReadInt32(ref state);
+                        value.DVal = state.ReadInt32();
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }

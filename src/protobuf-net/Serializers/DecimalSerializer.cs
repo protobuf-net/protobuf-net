@@ -16,7 +16,7 @@ namespace ProtoBuf.Serializers
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return BclHelpers.ReadDecimal(source, ref state);
+            return BclHelpers.ReadDecimal(ref state);
         }
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead<BclHelpers>(nameof(BclHelpers.ReadDecimal), ExpectedType);
+            ctx.EmitStateBasedRead(typeof(BclHelpers), nameof(BclHelpers.ReadDecimal), ExpectedType);
         }
     }
 }

@@ -54,8 +54,8 @@ namespace ProtoBuf.Serializers
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Debug.Assert(fieldNumber == source.FieldNumber);
-            if (strict) { source.Assert(ref state, wireType); }
-            else if (NeedsHint) { source.Hint(wireType); }
+            if (strict) { state.Assert(wireType); }
+            else if (NeedsHint) { state.Hint(wireType); }
             return Tail.Read(source, ref state, value);
         }
 
@@ -86,17 +86,10 @@ namespace ProtoBuf.Serializers
         {
             if (strict || NeedsHint)
             {
-                ctx.LoadReader(strict);
+                ctx.LoadState();
                 ctx.LoadValue((int)wireType);
-                if (strict)
-                {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Assert",
-                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(WireType) }));
-                }
-                else
-                {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Hint"));
-                }
+                string name = strict ? nameof(ProtoReader.State.Assert) : nameof(ProtoReader.State.Hint);
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(name, new[] { typeof(WireType) }));
             }
             Tail.EmitRead(ctx, valueFrom);
         }

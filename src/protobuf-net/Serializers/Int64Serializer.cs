@@ -16,7 +16,7 @@ namespace ProtoBuf.Serializers
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadInt64(ref state);
+            return state.ReadInt64();
         }
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadInt64", ExpectedType);
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt64), ExpectedType);
         }
     }
 }

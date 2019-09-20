@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using ProtoBuf.Internal;
 using ProtoBuf.Collections;
+using System.Collections;
 
 namespace ProtoBuf.Compiler
 {
@@ -266,7 +267,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                paramTypes = new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, inputType };
+                paramTypes = new Type[] { typeof(ProtoReader), typeof(ProtoReader.State).MakeByRefType(), inputType };
             }
             int uniqueIdentifier = Interlocked.Increment(ref next);
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
@@ -417,15 +418,18 @@ namespace ProtoBuf.Compiler
             Emit(_readerWriter);
             if (withState) Emit(_state);
         }
-        public void LoadReader(bool withState)
+
+        public void LoadReaderWithState()
         {
             if (isWriter)
             {
                 throw new InvalidOperationException("Tried to load reader, but was a writer; " + _traceName);
             }
             Emit(_readerWriter);
-            if (withState) Emit(_state);
+            LoadState();
         }
+
+        public void LoadState() => Emit(_state);
 
         public void StoreValue(Local local)
         {
@@ -505,50 +509,57 @@ namespace ProtoBuf.Compiler
             return result;
         }
 
-        private static class ReadMethods<T>
+        private static class StateBasedReadMethods
         {
-            private static readonly Dictionary<string, MethodInfo> s_helperMethods;
-            static ReadMethods()
+            private static readonly Hashtable s_perTypeCache = new Hashtable();
+            private static Dictionary<string, MethodInfo> CreateAndAdd(Type parentType)
             {
-                s_helperMethods = new Dictionary<string, MethodInfo>(StringComparer.Ordinal);
-                foreach (var method in typeof(T).GetMethods(
+                var lookup = new Dictionary<string, MethodInfo>(StringComparer.Ordinal);
+                foreach (var method in parentType.GetMethods(
                     BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
                 {
                     if (method.IsDefined(typeof(ObsoleteAttribute), true)) continue;
-                    var p = method.GetParameters();
+
+                    var args = method.GetParameters();
                     if (method.IsStatic)
                     {
-                        if (p.Length == 2 && p[0].ParameterType == typeof(ProtoReader)
-                            && p[1].ParameterType == Compiler.ReaderUtil.ByRefStateType)
-                        {
-                            s_helperMethods.Add(method.Name, method);
-                        }
+                        if (args.Length != 1) continue;
+                        if (args[0].ParameterType != typeof(ProtoReader.State)) continue;
                     }
-                    else if (typeof(T) == typeof(ProtoReader))
+                    else
                     {
-                        if (p.Length == 1 && p[0].ParameterType == Compiler.ReaderUtil.ByRefStateType)
-                            s_helperMethods.Add(method.Name, method);
+                        if (args.Length != 0) continue;
                     }
+                    lookup.Add(method.Name, method);
                 }
+                lock(s_perTypeCache)
+                {
+                    s_perTypeCache[parentType] = lookup;
+                }
+                return lookup;
             }
 
-            internal static bool Find(string methodName, out MethodInfo method)
-                => s_helperMethods.TryGetValue(methodName, out method);
+            internal static bool Find(Type parentType, string methodName, out MethodInfo method)
+            {
+                var lookup = ((Dictionary<string, MethodInfo>)s_perTypeCache[parentType]) ?? CreateAndAdd(parentType);
+
+                return lookup.TryGetValue(methodName, out method);
+            }
         }
 
-        internal void EmitBasicRead(string methodName, Type expectedType)
-            => EmitBasicRead<ProtoReader>(methodName, expectedType);
-        internal void EmitBasicRead<T>(string methodName, Type expectedType)
+        internal void EmitStateBasedRead(string methodName, Type expectedType)
+            => EmitStateBasedRead(typeof(ProtoReader.State), methodName, expectedType);
+        internal void EmitStateBasedRead(Type ownerType, string methodName, Type expectedType)
         {
-            if (!ReadMethods<T>.Find(methodName, out var method))
+            if (!StateBasedReadMethods.Find(ownerType, methodName, out var method))
             {
-                throw new ArgumentException($"No suitable '{methodName}' method found on {typeof(T).Name}");
+                throw new ArgumentException($"No suitable '{methodName}' method found on {ownerType.Name}");
             }
             if (method.ReturnType != expectedType)
             {
                 throw new ArgumentException($"Method '{methodName}' has wrong return type; got {method.ReturnType.Name}, expected {expectedType.Name}");
             }
-            LoadReader(true);
+            LoadState();
             EmitCall(method);
         }
 
@@ -1393,11 +1404,25 @@ namespace ProtoBuf.Compiler
         //    Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
         //}
 
-        internal void LoadSerializationContext()
+        internal void LoadSerializationContext(bool oldApi) // old api = SerializationContext; new api = ISerializationContext
         {
-            if (isWriter) LoadWriter(false);
-            else LoadReader(false);
-            LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
+            if (isWriter)
+            {
+                LoadWriter(false);
+                if (oldApi)
+                {
+                    LoadValue(typeof(ProtoWriter).GetProperty(nameof(ProtoWriter.Context)));
+                }
+            }
+            else
+            {
+                LoadState();
+                LoadValue(typeof(ProtoReader.State).GetProperty(nameof(ProtoReader.State.Context)));
+                if (oldApi)
+                {
+                    LoadValue(typeof(ISerializationContext).GetProperty(nameof(ISerializationContext.Context)));
+                }
+            }
         }
 
         internal bool AllowInternal(PropertyInfo property)

@@ -50,9 +50,9 @@ namespace ProtoBuf.Serializers
             do
             {
                 var pair = new KeyValuePair<TKey, TValue>(DefaultKey, DefaultValue);
-                pair = source.ReadSubItem<KeyValuePair<TKey, TValue>>(ref state, pair, _runtimeSerializer);
+                pair = state.ReadSubItem<KeyValuePair<TKey, TValue>>(pair, _runtimeSerializer);
                 typed[pair.Key] = pair.Value;
-            } while (source.TryReadFieldHeader(ref state, fieldNumber));
+            } while (state.TryReadFieldHeader(fieldNumber));
 
             return typed;
         }
@@ -82,7 +82,7 @@ namespace ProtoBuf.Serializers
                 var key = pair.Key;
                 var value = pair.Value;
                 int field;
-                while ((field = reader.ReadFieldHeader(ref state)) > 0)
+                while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
                     {
@@ -93,7 +93,7 @@ namespace ProtoBuf.Serializers
                             value = (TValue)_valueTail.Read(reader, ref state, _valueTail.RequiresOldValue ? (object)value : null);
                             break;
                         default:
-                            reader.SkipField(ref state);
+                            state.SkipField();
                             break;
                     }
                 }
@@ -250,8 +250,8 @@ namespace ProtoBuf.Serializers
             }
 
             // token = ProtoReader.StartSubItem(reader);
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem", Compiler.ReaderUtil.ReaderStateTypeArray));
+            ctx.LoadState();
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.StartSubItem), Type.EmptyTypes));
             ctx.StoreValue(token);
 
             Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
@@ -266,8 +266,8 @@ namespace ProtoBuf.Serializers
 
             // case 0: default: reader.SkipField();
             ctx.MarkLabel(@default);
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
+            ctx.LoadState();
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.SkipField), Type.EmptyTypes));
             ctx.Branch(@continue, false);
 
             // case 1: key = ...
@@ -283,17 +283,17 @@ namespace ProtoBuf.Serializers
 
             // (fieldNumber = reader.ReadFieldHeader()) > 0
             ctx.MarkLabel(@continue);
-            ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadFieldHeader), typeof(int));
             ctx.CopyValue();
             ctx.StoreValue(fieldNumber);
             ctx.LoadValue(0);
             ctx.BranchIfGreater(processField, false);
 
             // ProtoReader.EndSubItem(token, reader);
+            ctx.LoadState();
             ctx.LoadValue(token);
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.EndSubItem),
+                new[] { typeof(SubItemToken) }));
 
             // list[key] = value;
             ctx.LoadAddress(list, ExpectedType);
@@ -302,10 +302,10 @@ namespace ProtoBuf.Serializers
             ctx.EmitCall(indexerSet);
 
             // while reader.TryReadFieldReader(fieldNumber)
-            ctx.LoadReader(true);
+            ctx.LoadState();
             ctx.LoadValue(this.fieldNumber);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
-                new[] { Compiler.ReaderUtil.ByRefStateType, typeof(int) }));
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.TryReadFieldHeader),
+                new[] { typeof(int) }));
             ctx.BranchIfTrue(redoFromStart, false);
 
             if (ReturnsValue)
