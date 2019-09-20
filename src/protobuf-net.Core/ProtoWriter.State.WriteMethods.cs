@@ -183,6 +183,52 @@ namespace ProtoBuf
                 }
             }
 
+            /// <summary>
+            /// Writes a double-precision number to the stream; supported wire-types: Fixed32, Fixed64
+            /// </summary>
+            public void WriteDouble(double value)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed32:
+                        float f = (float)value;
+                        if (float.IsInfinity(f) && !double.IsInfinity(value))
+                        {
+                            ThrowHelper.ThrowOverflowException();
+                        }
+                        WriteSingle(f);
+                        return;
+                    case WireType.Fixed64:
+                        unsafe { writer.ImplWriteFixed64(ref this, *(ulong*)&value); }
+                        writer.AdvanceAndReset(8);
+                        return;
+                    default:
+                        ThrowException(writer);
+                        return;
+                }
+            }
+
+            /// <summary>
+            /// Writes a single-precision number to the stream; supported wire-types: Fixed32, Fixed64
+            /// </summary>
+            public void WriteSingle(float value)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed32:
+                        unsafe { writer.ImplWriteFixed32(ref this, *(uint*)&value); }
+                        writer.AdvanceAndReset(4);
+                        return;
+                    case WireType.Fixed64:
+                        WriteDouble(value);
+                        return;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
         }
     }
 }

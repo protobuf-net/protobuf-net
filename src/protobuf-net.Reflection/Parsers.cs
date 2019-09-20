@@ -1438,7 +1438,7 @@ namespace Google.Protobuf.Reflection
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
                                 {
                                     state.WriteFieldHeader(field.Number, WireType.Fixed32);
-                                    ProtoWriter.WriteSingle(f32, writer, ref state);
+                                    state.WriteSingle(f32);
                                 }
                                 break;
                             case FieldDescriptorProto.Type.TypeDouble:
@@ -1450,7 +1450,7 @@ namespace Google.Protobuf.Reflection
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
                                 {
                                     state.WriteFieldHeader(field.Number, WireType.Fixed64);
-                                    ProtoWriter.WriteDouble(f64, writer, ref state);
+                                    state.WriteDouble(f64);
                                 }
                                 break;
                             case FieldDescriptorProto.Type.TypeBool:

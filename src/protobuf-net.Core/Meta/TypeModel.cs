@@ -140,8 +140,8 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.SByte: state.WriteSByte((sbyte)value); return true;
                 case ProtoTypeCode.Byte: state.WriteByte((byte)value); return true;
                 case ProtoTypeCode.Char: state.WriteUInt16((ushort)(char)value); return true;
-                case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer, ref state); return true;
-                case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer, ref state); return true;
+                case ProtoTypeCode.Double: state.WriteDouble((double)value); return true;
+                case ProtoTypeCode.Single: state.WriteSingle((float)value); return true;
                 case ProtoTypeCode.DateTime:
                     if (SerializeDateTimeKind())
                         BclHelpers.WriteDateTimeWithKind((DateTime)value, writer, ref state);
@@ -1413,7 +1413,6 @@ namespace ProtoBuf.Meta
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <param name="state">Reader state</param>
-        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>

@@ -701,64 +701,16 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteDouble(double value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteDouble(value, writer, ref state);
+            writer.DefaultState().WriteDouble(value);
         }
 
-        /// <summary>
-        /// Writes a double-precision number to the stream; supported wire-types: Fixed32, Fixed64
-        /// </summary>
-        public static void WriteDouble(double value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            switch (writer.WireType)
-            {
-                case WireType.Fixed32:
-                    float f = (float)value;
-                    if (float.IsInfinity(f) && !double.IsInfinity(value))
-                    {
-                        ThrowHelper.ThrowOverflowException();
-                    }
-                    WriteSingle(f, writer, ref state);
-                    return;
-                case WireType.Fixed64:
-                    unsafe { writer.ImplWriteFixed64(ref state, *(ulong*)&value); }
-                    writer.AdvanceAndReset(8);
-                    return;
-                default:
-                    ThrowException(writer);
-                    return;
-            }
-        }
         /// <summary>
         /// Writes a single-precision number to the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
         [Obsolete(UseStateAPI, false)]
         public static void WriteSingle(float value, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteSingle(value, writer, ref state);
-        }
-
-        /// <summary>
-        /// Writes a single-precision number to the stream; supported wire-types: Fixed32, Fixed64
-        /// </summary>
-        public static void WriteSingle(float value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            switch (writer.WireType)
-            {
-                case WireType.Fixed32:
-                    unsafe { writer.ImplWriteFixed32(ref state, *(uint*)&value); }
-                    writer.AdvanceAndReset(4);
-                    return;
-                case WireType.Fixed64:
-                    WriteDouble(value, writer, ref state);
-                    return;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
+            writer.DefaultState().WriteSingle(value);
         }
 
         /// <summary>
