@@ -377,10 +377,10 @@ namespace ProtoBuf.Serializers
             using Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null;
             if (writePacked)
             {
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
                 ctx.LoadValue((int)WireType.String);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
                 ctx.LoadValue(list);
                 ctx.LoadWriter(true);
@@ -432,7 +432,7 @@ namespace ProtoBuf.Serializers
             bool fixedSizePacked = (writePacked & CanUsePackedPrefix()) && value is ICollection;
             if (writePacked)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest, ref state);
+                state.WriteFieldHeader(fieldNumber, WireType.String);
                 if (fixedSizePacked)
                 {
                     ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest, ref state);

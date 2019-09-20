@@ -9,15 +9,7 @@
     <Title>protobuf-net.Core</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="ProtoWriter.State.WriteMethods.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="ProtoWriter.State.WriteMethods.cs" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.1" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />

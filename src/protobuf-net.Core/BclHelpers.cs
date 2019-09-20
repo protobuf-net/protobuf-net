@@ -517,7 +517,7 @@ namespace ProtoBuf
             if (asReference)
             {
                 int objectKey = dest.NetCache.AddObjectKey(value, out bool existing);
-                ProtoWriter.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Varint, dest, ref state);
+                state.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Varint);
                 ProtoWriter.WriteInt32(objectKey, dest, ref state);
                 if (existing)
                 {
@@ -537,18 +537,18 @@ namespace ProtoBuf
                         if (key < 0) ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }
                     int typeKey = dest.NetCache.AddObjectKey(type, out bool existing);
-                    ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint, dest, ref state);
+                    state.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint);
                     ProtoWriter.WriteInt32(typeKey, dest, ref state);
                     if (!existing)
                     {
-                        ProtoWriter.WriteFieldHeader(FieldTypeName, WireType.String, dest, ref state);
-                        ProtoWriter.WriteString(dest.SerializeType(type), dest, ref state);
+                        state.WriteFieldHeader(FieldTypeName, WireType.String);
+                        state.WriteType(type);
                     }
                 }
-                ProtoWriter.WriteFieldHeader(FieldObject, wireType, dest, ref state);
+                state.WriteFieldHeader(FieldObject, wireType);
                 if (value is string s)
                 {
-                    ProtoWriter.WriteString(s, dest, ref state);
+                    state.WriteString(s);
                 }
                 else
                 {

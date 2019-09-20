@@ -465,15 +465,15 @@ namespace Examples
         }
 
 #pragma warning disable IDE0051 // Remove unused private members
-        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer, ref ProtoWriter.State state)
+        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ref ProtoWriter.State state)
 #pragma warning restore IDE0051 // Remove unused private members
         {
             obj.OnSerializing();
             string bar = obj.Bar;
             if(bar != null)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, writer, ref state);
-                ProtoWriter.WriteString(bar, writer, ref state);
+                state.WriteFieldHeader(1, WireType.String);
+                state.WriteString(bar);
             }
             obj.OnSerialized();
         }

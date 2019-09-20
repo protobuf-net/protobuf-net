@@ -13,8 +13,8 @@ namespace ProtoBuf.unittest.Serializers
         {
             Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref st);
-                ProtoWriter.WriteString("abc", pw, ref st);
+                st.WriteFieldHeader(1, WireType.String);
+                st.WriteString("abc");
             }, "0A03616263");
         }
         [Fact]
@@ -24,14 +24,14 @@ namespace ProtoBuf.unittest.Serializers
             {
                 Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
                   {
-                      ProtoWriter.WriteFieldHeader(1, WireType.Varint, pw, ref st);
+                      st.WriteFieldHeader(1, WireType.Varint);
                       ProtoWriter.WriteInt32(i, pw, ref st);
                   }, "08" // 1 * 8 + 0
                  + i.ToString("X2")
                 );
             }
             Util.Test((ProtoWriter pw, ref ProtoWriter.State st) => {
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, pw, ref st);
+                st.WriteFieldHeader(1, WireType.Varint);
                 ProtoWriter.WriteInt32(128, pw, ref st);
             }, "088001");
         }

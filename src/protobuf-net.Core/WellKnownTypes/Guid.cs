@@ -55,17 +55,17 @@ namespace ProtoBuf.WellKnownTypes
             else if (s_guidOptimized)
             {
                 var obj = new GuidAccessor(value);
-                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, writer, ref state);
+                state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
                 ProtoWriter.WriteUInt64(obj.Low, writer, ref state);
-                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, writer, ref state);
+                state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
                 ProtoWriter.WriteUInt64(obj.High, writer, ref state);
             }
             else
             {
                 byte[] blob = value.ToByteArray();
-                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, writer, ref state);
+                state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
                 ProtoWriter.WriteBytes(blob, 0, 8, writer, ref state);
-                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, writer, ref state);
+                state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
                 ProtoWriter.WriteBytes(blob, 8, 8, writer, ref state);
             }
         }

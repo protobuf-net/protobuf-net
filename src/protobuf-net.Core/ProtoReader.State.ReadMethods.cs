@@ -656,7 +656,7 @@ namespace ProtoBuf
             {
                 //TODO: replace this with stream-based, buffered raw copying
                 var reader = _reader;
-                ProtoWriter.WriteFieldHeader(reader._fieldNumber, reader.WireType, writer, ref writeState);
+                writeState.WriteFieldHeader(reader._fieldNumber, reader.WireType);
                 switch (reader.WireType)
                 {
                     case WireType.Fixed32:

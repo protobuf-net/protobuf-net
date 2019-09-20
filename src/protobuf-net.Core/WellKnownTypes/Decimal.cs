@@ -53,17 +53,17 @@ namespace ProtoBuf.WellKnownTypes
 
             if (low != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalLow, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(FieldDecimalLow, WireType.Varint);
                 ProtoWriter.WriteUInt64(low, writer, ref state);
             }
             if (high != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalHigh, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(FieldDecimalHigh, WireType.Varint);
                 ProtoWriter.WriteUInt32(high, writer, ref state);
             }
             if (signScale != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalSignScale, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(FieldDecimalSignScale, WireType.Varint);
                 ProtoWriter.WriteUInt32(signScale, writer, ref state);
             }
         }

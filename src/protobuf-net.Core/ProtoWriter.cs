@@ -163,66 +163,10 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteFieldHeader(fieldNumber, wireType, writer, ref state);
+            writer.DefaultState().WriteFieldHeader(fieldNumber, wireType);
         }
 
-        /// <summary>
-        /// Writes a field-header, indicating the format of the next data we plan to write.
-        /// </summary>
-        public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            if (writer.WireType != WireType.None)
-            {
-                ThrowHelper.ThrowInvalidOperationException("Cannot write a " + wireType.ToString()
-                + " header until the " + writer.WireType.ToString() + " data has been written");
-            }
-            if (fieldNumber < 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fieldNumber));
-#if DEBUG
-            switch (wireType)
-            {   // validate requested header-type
-                case WireType.Fixed32:
-                case WireType.Fixed64:
-                case WireType.String:
-                case WireType.StartGroup:
-                case WireType.SignedVarint:
-                case WireType.Varint:
-                    break; // fine
-                case WireType.None:
-                case WireType.EndGroup:
-                default:
-                    ThrowHelper.ThrowArgumentException("Invalid wire-type: " + wireType.ToString(), nameof(wireType));
-            }
-#endif
-            writer._needFlush = true;
-            if (writer.packedFieldNumber == 0)
-            {
-                writer.fieldNumber = fieldNumber;
-                writer.WireType = wireType;
-                WriteHeaderCore(fieldNumber, wireType, writer, ref state);
-            }
-            else if (writer.packedFieldNumber == fieldNumber)
-            { // we'll set things up, but note we *don't* actually write the header here
-                switch (wireType)
-                {
-                    case WireType.Fixed32:
-                    case WireType.Fixed64:
-                    case WireType.Varint:
-                    case WireType.SignedVarint:
-                        break; // fine
-                    default:
-                        ThrowHelper.ThrowInvalidOperationException("Wire-type cannot be encoded as packed: " + wireType.ToString());
-                        break;
-                }
-                writer.fieldNumber = fieldNumber;
-                writer.WireType = wireType;
-            }
-            else
-            {
-                ThrowHelper.ThrowInvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber.ToString() + " but received " + fieldNumber.ToString());
-            }
-        }
+
         internal static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer, ref State state)
         {
             uint header = (((uint)fieldNumber) << 3)
@@ -592,35 +536,7 @@ namespace ProtoBuf
         /// Writes a string to the stream; supported wire-types: String
         /// </summary>
         [Obsolete(UseStateAPI, false)]
-        public static void WriteString(string value, ProtoWriter writer)
-        {
-            State state = writer.DefaultState();
-            WriteString(value, writer, ref state);
-        }
-        /// <summary>
-        /// Writes a string to the stream; supported wire-types: String
-        /// </summary>
-        public static void WriteString(string value, ProtoWriter writer, ref State state)
-        {
-            switch (writer.WireType)
-            {
-                case WireType.String:
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, 0));
-                    }
-                    else
-                    {
-                        var len = UTF8.GetByteCount(value);
-                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)len) + len);
-                        writer.ImplWriteString(ref state, value, len);
-                    }
-                    break;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
-        }
+        public static void WriteString(string value, ProtoWriter writer) => writer.DefaultState().WriteString(value);
 
         protected private abstract void ImplWriteString(ref State state, string value, int expectedBytes);
         protected private abstract int ImplWriteVarint32(ref State state, uint value);
@@ -1091,18 +1007,7 @@ namespace ProtoBuf
         /// </summary>
         [Obsolete(UseStateAPI, false)]
         public static void WriteType(Type value, ProtoWriter writer)
-        {
-            State state = writer.DefaultState();
-            WriteType(value, writer, ref state);
-        }
-        /// <summary>
-        /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
-        /// </summary>
-        public static void WriteType(Type value, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            WriteString(writer.SerializeType(value), writer, ref state);
-        }
+            => writer.DefaultState().WriteType(value);
 
         /// <summary>
         /// Writes a sub-item to the input writer

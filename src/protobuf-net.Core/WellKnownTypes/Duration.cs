@@ -136,12 +136,12 @@ namespace ProtoBuf.WellKnownTypes
             }
             if (seconds != 0)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(1, WireType.Varint);
                 ProtoWriter.WriteInt64(seconds, writer, ref state);
             }
             if (nanos != 0)
             {
-                ProtoWriter.WriteFieldHeader(2, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(2, WireType.Varint);
                 ProtoWriter.WriteInt32(nanos, writer, ref state);
             }
         }

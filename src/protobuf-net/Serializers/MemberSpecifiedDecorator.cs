@@ -42,15 +42,13 @@ namespace ProtoBuf.Serializers
                 Tail.EmitWrite(ctx, valueFrom);
                 return;
             }
-            using (Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            {
-                ctx.LoadAddress(loc, ExpectedType);
-                ctx.EmitCall(getSpecified);
-                Compiler.CodeLabel done = ctx.DefineLabel();
-                ctx.BranchIfFalse(done, false);
-                Tail.EmitWrite(ctx, loc);
-                ctx.MarkLabel(done);
-            }
+            using Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            ctx.LoadAddress(loc, ExpectedType);
+            ctx.EmitCall(getSpecified);
+            Compiler.CodeLabel done = ctx.DefineLabel();
+            ctx.BranchIfFalse(done, false);
+            Tail.EmitWrite(ctx, loc);
+            ctx.MarkLabel(done);
         }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -59,13 +57,11 @@ namespace ProtoBuf.Serializers
                 Tail.EmitRead(ctx, valueFrom);
                 return;
             }
-            using (Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            {
-                Tail.EmitRead(ctx, loc);
-                ctx.LoadAddress(loc, ExpectedType);
-                ctx.LoadValue(1); // true
-                ctx.EmitCall(setSpecified);
-            }
+            using Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            Tail.EmitRead(ctx, loc);
+            ctx.LoadAddress(loc, ExpectedType);
+            ctx.LoadValue(1); // true
+            ctx.EmitCall(setSpecified);
         }
     }
 }

@@ -105,7 +105,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    ProtoWriter.WriteFieldHeader(tag, wireType, writer, ref state);
+                    state.WriteFieldHeader(tag, wireType);
                     switch (wireType)
                     {
                         case WireType.None:
@@ -126,7 +126,7 @@ namespace ProtoBuf.Meta
 
             if (wireType != WireType.None)
             {
-                ProtoWriter.WriteFieldHeader(tag, wireType, writer, ref state);
+                state.WriteFieldHeader(tag, wireType);
             }
             switch (typecode)
             {
@@ -149,11 +149,11 @@ namespace ProtoBuf.Meta
                         BclHelpers.WriteDateTime((DateTime)value, writer, ref state);
                     return true;
                 case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer, ref state); return true;
-                case ProtoTypeCode.String: ProtoWriter.WriteString((string)value, writer, ref state); return true;
+                case ProtoTypeCode.String: state.WriteString((string)value); return true;
                 case ProtoTypeCode.ByteArray: ProtoWriter.WriteBytes((byte[])value, writer, ref state); return true;
                 case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan((TimeSpan)value, writer, ref state); return true;
                 case ProtoTypeCode.Guid: BclHelpers.WriteGuid((Guid)value, writer, ref state); return true;
-                case ProtoTypeCode.Uri: ProtoWriter.WriteString(((Uri)value).OriginalString, writer, ref state); return true;
+                case ProtoTypeCode.Uri: state.WriteString(((Uri)value).OriginalString); return true;
             }
 
             // by now, we should have covered all the simple cases; if we wrote a field-header, we have

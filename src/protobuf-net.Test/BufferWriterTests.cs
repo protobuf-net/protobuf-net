@@ -57,22 +57,22 @@ namespace ProtoBuf.Tests
         {
             try
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, w, ref state);
+                state.WriteFieldHeader(1, WireType.Varint);
                 Assert.Equal(1, w.GetPosition(ref state));
                 ProtoWriter.WriteInt32(42, w, ref state);
                 Assert.Equal(2, w.GetPosition(ref state));
 
-                ProtoWriter.WriteFieldHeader(2, WireType.String, w, ref state);
+                state.WriteFieldHeader(2, WireType.String);
                 Assert.Equal(3, w.GetPosition(ref state));
-                ProtoWriter.WriteString("abcdefghijklmnop", w, ref state);
+                state.WriteString("abcdefghijklmnop");
                 Assert.Equal(20, w.GetPosition(ref state));
 
-                ProtoWriter.WriteFieldHeader(3, WireType.StartGroup, w, ref state);
+                state.WriteFieldHeader(3, WireType.StartGroup);
                 Assert.Equal(21, w.GetPosition(ref state));
                 ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
                 Assert.Equal(22, w.GetPosition(ref state));
 
-                ProtoWriter.WriteFieldHeader(4, WireType.String, w, ref state);
+                state.WriteFieldHeader(4, WireType.String);
                 Assert.Equal(23, w.GetPosition(ref state));
                 ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
                 Assert.Equal(24, w.GetPosition(ref state));
@@ -127,7 +127,7 @@ namespace ProtoBuf.Tests
 #pragma warning disable CS0618
                 Log?.WriteLine($"Writing to {writer.GetType().Name}");
                 Log?.WriteLine($"Writing field 1, value: {value.Level}; pos: {writer.GetPosition(ref state)}");
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(1, WireType.Varint);
                 ProtoWriter.WriteInt32(value.Level, writer, ref state);
                 Log?.WriteLine($"Wrote field 1... pos: {writer.GetPosition(ref state)}");
 
@@ -135,7 +135,7 @@ namespace ProtoBuf.Tests
                 if (obj != null)
                 {
                     Log?.WriteLine($"Writing field 2...; pos: {writer.GetPosition(ref state)}");
-                    ProtoWriter.WriteFieldHeader(2, WireType.String, writer, ref state);
+                    state.WriteFieldHeader(2, WireType.String);
                     ProtoWriter.WriteSubItem<A>(obj, writer, ref state, this);
                     Log?.WriteLine($"Wrote field 2...; pos: {writer.GetPosition(ref state)}");
                 }

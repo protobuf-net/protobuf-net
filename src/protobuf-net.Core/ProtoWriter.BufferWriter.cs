@@ -67,18 +67,18 @@ namespace ProtoBuf
             private protected override void ImplWriteFixed32(ref State state, uint value)
             {
                 if (state.RemainingInCurrent < 4) GetBuffer(ref state);
-                state.WriteFixed32(value);
+                state.LocalWriteFixed32(value);
             }
 
             private protected override void ImplWriteFixed64(ref State state, ulong value)
             {
                 if (state.RemainingInCurrent < 8) GetBuffer(ref state);
-                state.WriteFixed64(value);
+                state.LocalWriteFixed64(value);
             }
 
             private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
             {
-                if (expectedBytes <= state.RemainingInCurrent) state.WriteString(value);
+                if (expectedBytes <= state.RemainingInCurrent) state.LocalWriteString(value);
                 else FallbackWriteString(ref state, value, expectedBytes);
             }
 
@@ -87,7 +87,7 @@ namespace ProtoBuf
                 GetBuffer(ref state);
                 if (expectedBytes <= state.RemainingInCurrent)
                 {
-                    state.WriteString(value);
+                    state.LocalWriteString(value);
                 }
                 else
                 {
@@ -108,7 +108,7 @@ namespace ProtoBuf
             private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
             {
                 var span = new ReadOnlySpan<byte>(data, offset, length);
-                if (length <= state.RemainingInCurrent) state.WriteBytes(span);
+                if (length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                 else FallbackWriteBytes(ref state, span);
             }
 
@@ -117,7 +117,7 @@ namespace ProtoBuf
                 if (data.IsSingleSegment)
                 {
                     var span = data.First.Span;
-                    if (span.Length <= state.RemainingInCurrent) state.WriteBytes(span);
+                    if (span.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                     else FallbackWriteBytes(ref state, span);
                 }
                 else
@@ -125,7 +125,7 @@ namespace ProtoBuf
                     foreach (var segment in data)
                     {
                         var span = segment.Span;
-                        if (span.Length <= state.RemainingInCurrent) state.WriteBytes(span);
+                        if (span.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                         else FallbackWriteBytes(ref state, span);
                     }
                 }
@@ -139,12 +139,12 @@ namespace ProtoBuf
                     GetBuffer(ref state);
                     if (span.Length <= state.RemainingInCurrent)
                     {
-                        state.WriteBytes(span);
+                        state.LocalWriteBytes(span);
                         return;
                     }
                     else
                     {
-                        state.WriteBytes(span.Slice(0, state.RemainingInCurrent));
+                        state.LocalWriteBytes(span.Slice(0, state.RemainingInCurrent));
                         span = span.Slice(state.RemainingInCurrent);
                     }
                 }
@@ -153,13 +153,13 @@ namespace ProtoBuf
             private protected override int ImplWriteVarint32(ref State state, uint value)
             {
                 if (state.RemainingInCurrent < 5) GetBuffer(ref state);
-                return state.WriteVarint32(value);
+                return state.LocalWriteVarint32(value);
             }
 
             private protected override int ImplWriteVarint64(ref State state, ulong value)
             {
                 if (state.RemainingInCurrent < 10) GetBuffer(ref state);
-                return state.WriteVarint64(value);
+                return state.LocalWriteVarint64(value);
             }
 
             protected internal override void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer,

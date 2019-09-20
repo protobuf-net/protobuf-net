@@ -61,7 +61,7 @@ namespace ProtoBuf.Serializers
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+            state.WriteFieldHeader(fieldNumber, wireType);
             Tail.Write(dest, ref state, value);
         }
 
@@ -75,10 +75,10 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
+            ctx.LoadState();
             ctx.LoadValue((int)fieldNumber);
             ctx.LoadValue((int)wireType);
-            ctx.LoadWriter(true);
-            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
             Tail.EmitWrite(ctx, valueFrom);
         }
 

@@ -61,7 +61,7 @@ namespace ProtoBuf.Serializers
         {
             foreach (var pair in (TDictionary)value)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+                state.WriteFieldHeader(fieldNumber, wireType);
                 ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
             }
         }
@@ -189,10 +189,10 @@ namespace ProtoBuf.Serializers
 
 
                 // ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
                 ctx.LoadValue((int)wireType);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
                 // ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
                 SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(ctx, kvp, pairSerializer, false);

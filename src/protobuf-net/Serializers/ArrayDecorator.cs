@@ -77,10 +77,10 @@ namespace ProtoBuf.Serializers
             Type mappedWriter = typeof(ProtoWriter);
             if (writePacked)
             {
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
                 ctx.LoadValue((int)WireType.String);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
                 if (fixedLengthPacked)
                 {
@@ -169,7 +169,7 @@ namespace ProtoBuf.Serializers
 
             if (writePacked)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest, ref state);
+                state.WriteFieldHeader(fieldNumber, WireType.String);
 
                 if (fixedLengthPacked)
                 {
@@ -184,7 +184,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                token = new SubItemToken(); // default
+                token = default;
             }
             bool checkForNull = !SupportNull;
             for (int i = 0; i < len; i++)

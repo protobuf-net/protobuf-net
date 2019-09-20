@@ -57,7 +57,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void WriteFixed32(uint value)
+            internal void LocalWriteFixed32(uint value)
             {
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(Remaining, value);
                 OffsetInCurrent += 4;
@@ -68,13 +68,13 @@ namespace ProtoBuf
             internal void ReverseLast32() => _span.Slice(OffsetInCurrent - 4, 4).Reverse();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void Advance(int bytes)
+            internal void LocalAdvance(int bytes)
             {
                 OffsetInCurrent += bytes;
                 RemainingInCurrent -= bytes;
             }
 
-            internal void WriteBytes(ReadOnlySpan<byte> span)
+            internal void LocalWriteBytes(ReadOnlySpan<byte> span)
             {
                 span.CopyTo(Remaining);
                 OffsetInCurrent += span.Length;
@@ -82,14 +82,14 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void WriteFixed64(ulong value)
+            internal void LocalWriteFixed64(ulong value)
             {
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(Remaining, value);
                 OffsetInCurrent += 8;
                 RemainingInCurrent -= 8;
             }
 
-            internal void WriteString(string value)
+            internal void LocalWriteString(string value)
             {
                 int bytes;
 #if PLAT_SPAN_OVERLOADS
@@ -111,7 +111,7 @@ namespace ProtoBuf
                 RemainingInCurrent -= bytes;
             }
 
-            internal int WriteVarint64(ulong value)
+            internal int LocalWriteVarint64(ulong value)
             {
                 int count = 0;
                 var span = _span;
@@ -154,7 +154,7 @@ namespace ProtoBuf
                 return bytes;
             }
 
-            internal int WriteVarint32(uint value)
+            internal int LocalWriteVarint32(uint value)
             {
                 int count = 0;
                 var span = _span;

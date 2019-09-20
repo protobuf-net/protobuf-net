@@ -147,17 +147,17 @@ namespace ProtoBuf.WellKnownTypes
         {
             if (value.Value != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVarint, writer, ref state);
+                state.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVarint);
                 ProtoWriter.WriteInt64(value.Value, writer, ref state);
             }
             if (value.Scale != TimeSpanScale.Days)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(FieldTimeSpanScale, WireType.Varint);
                 ProtoWriter.WriteInt32((int)value.Scale, writer, ref state);
             }
             if (value.Kind != DateTimeKind.Unspecified)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Varint, writer, ref state);
+                state.WriteFieldHeader(FieldTimeSpanKind, WireType.Varint);
                 ProtoWriter.WriteInt32((int)value.Kind, writer, ref state);
             }
         }

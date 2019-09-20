@@ -1357,13 +1357,13 @@ namespace Google.Protobuf.Reflection
                         }
                         else if (messageSet)
                         {
-                            ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer, ref state);
+                            state.WriteFieldHeader(1, WireType.StartGroup);
                             var grp = ProtoWriter.StartSubItem(null, writer, ref state);
 
-                            ProtoWriter.WriteFieldHeader(2, WireType.Varint, writer, ref state);
+                            state.WriteFieldHeader(2, WireType.Varint);
                             ProtoWriter.WriteInt32(field.Number, writer, ref state);
 
-                            ProtoWriter.WriteFieldHeader(3, WireType.String, writer, ref state);
+                            state.WriteFieldHeader(3, WireType.String);
                             var payload = ProtoWriter.StartSubItem(null, writer, ref state);
 
                             AppendOptions(nextFile, writer, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
@@ -1373,8 +1373,8 @@ namespace Google.Protobuf.Reflection
                         }
                         else
                         {
-                            ProtoWriter.WriteFieldHeader(field.Number,
-                                field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer, ref state);
+                            state.WriteFieldHeader(field.Number,
+                                field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String);
                             var tok = ProtoWriter.StartSubItem(null, writer, ref state);
 
                             AppendOptions(nextFile, writer, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
@@ -1389,21 +1389,21 @@ namespace Google.Protobuf.Reflection
                         // need to write an empty object to match protoc
                         if (messageSet)
                         {
-                            ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer, ref state);
+                            state.WriteFieldHeader(1, WireType.StartGroup);
                             var grp = ProtoWriter.StartSubItem(null, writer, ref state);
 
-                            ProtoWriter.WriteFieldHeader(2, WireType.Varint, writer, ref state);
+                            state.WriteFieldHeader(2, WireType.Varint);
                             ProtoWriter.WriteInt32(field.Number, writer, ref state);
 
-                            ProtoWriter.WriteFieldHeader(3, WireType.String, writer, ref state);
+                            state.WriteFieldHeader(3, WireType.String);
                             var payload = ProtoWriter.StartSubItem(null, writer, ref state);
                             ProtoWriter.EndSubItem(payload, writer, ref state);
                             ProtoWriter.EndSubItem(grp, writer, ref state);
                         }
                         else
                         {
-                            ProtoWriter.WriteFieldHeader(field.Number,
-                                   field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer, ref state);
+                            state.WriteFieldHeader(field.Number,
+                                   field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String);
                             var payload = ProtoWriter.StartSubItem(null, writer, ref state);
                             ProtoWriter.EndSubItem(payload, writer, ref state);
                         }
@@ -1437,7 +1437,7 @@ namespace Google.Protobuf.Reflection
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
                                 {
-                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer, ref state);
+                                    state.WriteFieldHeader(field.Number, WireType.Fixed32);
                                     ProtoWriter.WriteSingle(f32, writer, ref state);
                                 }
                                 break;
@@ -1449,7 +1449,7 @@ namespace Google.Protobuf.Reflection
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
                                 {
-                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed64, writer, ref state);
+                                    state.WriteFieldHeader(field.Number, WireType.Fixed64);
                                     ProtoWriter.WriteDouble(f64, writer, ref state);
                                 }
                                 break;
@@ -1468,7 +1468,7 @@ namespace Google.Protobuf.Reflection
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "false"))
                                 {
-                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.Varint, writer, ref state);
+                                    state.WriteFieldHeader(field.Number, WireType.Varint);
                                     ProtoWriter.WriteInt32(i32, writer, ref state);
                                 }
                                 break;
@@ -1485,10 +1485,10 @@ namespace Google.Protobuf.Reflection
                                         switch (field.type)
                                         {
                                             case FieldDescriptorProto.Type.TypeUint32:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Varint, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.Varint);
                                                 break;
                                             case FieldDescriptorProto.Type.TypeFixed32:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.Fixed32);
                                                 break;
                                         }
                                         ProtoWriter.WriteUInt32(ui32, writer, ref state);
@@ -1508,10 +1508,10 @@ namespace Google.Protobuf.Reflection
                                         switch (field.type)
                                         {
                                             case FieldDescriptorProto.Type.TypeUint64:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Varint, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.Varint);
                                                 break;
                                             case FieldDescriptorProto.Type.TypeFixed64:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed64, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.Fixed64);
                                                 break;
                                         }
                                         ProtoWriter.WriteUInt64(ui64, writer, ref state);
@@ -1531,13 +1531,13 @@ namespace Google.Protobuf.Reflection
                                     switch (field.type)
                                     {
                                         case FieldDescriptorProto.Type.TypeInt32:
-                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.Varint, writer, ref state);
+                                            state.WriteFieldHeader(field.Number, WireType.Varint);
                                             break;
                                         case FieldDescriptorProto.Type.TypeSint32:
-                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.SignedVarint, writer, ref state);
+                                            state.WriteFieldHeader(field.Number, WireType.SignedVarint);
                                             break;
                                         case FieldDescriptorProto.Type.TypeSfixed32:
-                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer, ref state);
+                                            state.WriteFieldHeader(field.Number, WireType.Fixed32);
                                             break;
                                     }
                                     ProtoWriter.WriteInt32(i32, writer, ref state);
@@ -1557,13 +1557,13 @@ namespace Google.Protobuf.Reflection
                                         switch (field.type)
                                         {
                                             case FieldDescriptorProto.Type.TypeInt64:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Varint, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.Varint);
                                                 break;
                                             case FieldDescriptorProto.Type.TypeSint64:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.SignedVarint, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.SignedVarint);
                                                 break;
                                             case FieldDescriptorProto.Type.TypeSfixed64:
-                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed64, writer, ref state);
+                                                state.WriteFieldHeader(field.Number, WireType.Fixed64);
                                                 break;
                                         }
                                         ProtoWriter.WriteInt64(i64, writer, ref state);
@@ -1583,7 +1583,7 @@ namespace Google.Protobuf.Reflection
                                     {
                                         if (ShouldWrite(field, value.AggregateValue, @enum.Values.FirstOrDefault()?.Name))
                                         {
-                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.Varint, writer, ref state);
+                                            state.WriteFieldHeader(field.Number, WireType.Varint);
                                             ProtoWriter.WriteInt32(found.Number, writer, ref state);
                                         }
                                     }
@@ -1598,10 +1598,10 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeBytes:
                                 if (ShouldWrite(field, value.AggregateValue, ""))
                                 {
-                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer, ref state);
+                                    state.WriteFieldHeader(field.Number, WireType.String);
                                     if (value.AggregateValue == null || value.AggregateValue.IndexOf('\\') < 0)
                                     {
-                                        ProtoWriter.WriteString(value.AggregateValue ?? "", writer, ref state);
+                                        state.WriteString(value.AggregateValue ?? "");
                                     }
                                     else
                                     {

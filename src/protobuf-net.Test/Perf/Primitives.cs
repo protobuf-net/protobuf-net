@@ -31,7 +31,7 @@ namespace ProtoBuf.Perf
                 using var ms = new MemoryStream();
                 using (var writer = ProtoWriter.Create(out var writeState, ms, RuntimeTypeModel.Default))
                 {
-                    ProtoWriter.WriteFieldHeader(1, WireType.String, writer, ref writeState);
+                    writeState.WriteFieldHeader(1, WireType.String);
                     BclHelpers.WriteDecimal(value, writer, ref writeState);
                     writer.Close(ref writeState);
                 }
@@ -105,7 +105,7 @@ namespace ProtoBuf.Perf
             ms.SetLength(0);
             using (var writer = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default))
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, writer, ref state);
+                state.WriteFieldHeader(1, WireType.String);
                 BclHelpers.WriteGuid(value, writer, ref state);
                 writer.Close(ref state);
             }

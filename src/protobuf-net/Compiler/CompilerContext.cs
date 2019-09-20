@@ -563,6 +563,22 @@ namespace ProtoBuf.Compiler
             EmitCall(method);
         }
 
+        internal void EmitStateBasedWrite(string methodName, Local fromValue)
+        {
+            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
+            
+            var method = typeof(ProtoWriter.State).GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
+            var args = method.GetParameters();
+            if (args.Length != 1) throw new ArgumentNullException(nameof(methodName));
+
+            using (var tmp = GetLocalWithValue(args[0].ParameterType, fromValue))
+            {
+                LoadState();
+                LoadValue(tmp);
+                EmitCall(method);
+            }
+        }
+
         internal void EmitBasicWrite(string methodName, Compiler.Local fromValue, IRuntimeProtoSerializerNode caller)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
