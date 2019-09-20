@@ -631,6 +631,18 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Gets / sets a flag indicating whether strings should be checked for repetition; if
+            /// true, any repeated UTF-8 byte sequence will result in the same String instance, rather
+            /// than a second instance of the same string. Disabled by default. Note that this uses
+            /// a <i>custom</i> interner - the system-wide string interner is not used.
+            /// </summary>
+            public bool InternStrings
+            {
+                get => _reader.InternStrings;
+                set => _reader.InternStrings = value;
+            }
+
+            /// <summary>
             /// Gets the number of the field being processed.
             /// </summary>
             public int FieldNumber

@@ -38,9 +38,9 @@ namespace ProtoBuf.NWind
             byte[] arr = File.ReadAllBytes(path);
             Log?.WriteLine($"{arr.Length} bytes loaded from {path}");
             contents = arr;
-            using var reader = ProtoReader.Create(out var readState, arr, RuntimeTypeModel.Default);
+            using var readState = ProtoReader.State.Create(arr, RuntimeTypeModel.Default);
             var watch = Stopwatch.StartNew();
-            var obj = (DatabaseCompat)reader.Deserialize<DatabaseCompat>(ref readState, null);
+            var obj = (DatabaseCompat)readState.Deserialize<DatabaseCompat>(null);
             watch.Stop();
             Log?.WriteLine($"Deserialized: {watch.ElapsedMilliseconds}ms");
             return obj;

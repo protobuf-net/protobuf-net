@@ -64,28 +64,26 @@ namespace ProtoBuf.unittest.Meta
             var ser = CompilerContext.BuildSerializer<CustomerStruct>(model.Scope, head, model);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
-            using (MemoryStream ms = new MemoryStream())
+            using MemoryStream ms = new MemoryStream();
+            using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, null, null))
             {
-                using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, null, null))
-                {
-                    ser(writer, ref writeState, cs1);
-                    writer.Close(ref writeState);
-                }
-                byte[] blob = ms.ToArray();
-                ms.Position = 0;
-                var state = ProtoReader.State.Create(ms, null, null);
-                try
-                {
-                    CustomerStruct? cst = (CustomerStruct?)deser(state.GetReader(), ref state, default);
-                    Assert.True(cst.HasValue);
-                    CustomerStruct cs2 = cst.Value;
-                    Assert.Equal(cs1.Id, cs2.Id);
-                    Assert.Equal(cs1.Name, cs2.Name);
-                }
-                finally
-                {
-                    state.Dispose();
-                }
+                ser(writer, ref writeState, cs1);
+                writer.Close(ref writeState);
+            }
+            byte[] blob = ms.ToArray();
+            ms.Position = 0;
+            var state = ProtoReader.State.Create(ms, null, null);
+            try
+            {
+                CustomerStruct? cst = (CustomerStruct?)deser(state.GetReader(), ref state, default);
+                Assert.True(cst.HasValue);
+                CustomerStruct cs2 = cst.Value;
+                Assert.Equal(cs1.Id, cs2.Id);
+                Assert.Equal(cs1.Name, cs2.Name);
+            }
+            finally
+            {
+                state.Dispose();
             }
         }
     }
