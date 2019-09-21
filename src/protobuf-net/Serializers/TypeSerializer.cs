@@ -499,21 +499,27 @@ namespace ProtoBuf.Serializers
                         Type serType = ser.ExpectedType;
                         if (ser is IProtoTypeSerializer ts && ts.IsSubType)
                         {
-                            Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
+                            Compiler.CodeLabel nextTest = ctx.DefineLabel();
                             ctx.LoadValue(loc);
                             ctx.TryCast(serType);
-                            ctx.CopyValue();
-                            ctx.BranchIfTrue(ifMatch, true);
-                            ctx.DiscardValue();
-                            ctx.Branch(nextTest, true);
-                            ctx.MarkLabel(ifMatch);
+
+                            using var typed = new Local(ctx, serType);
+                            ctx.StoreValue(typed);
+
+                            ctx.LoadValue(typed);
+                            ctx.BranchIfFalse(nextTest, false);
+
                             if (serType.IsValueType)
                             {
-                                ctx.DiscardValue();
                                 ctx.LoadValue(loc);
                                 ctx.CastFromObject(serType);
+                                ser.EmitWrite(ctx, null);
                             }
-                            ser.EmitWrite(ctx, null);
+                            else
+                            {
+                                ser.EmitWrite(ctx, typed);
+                            }
+                            
                             ctx.Branch(startFields, false);
                             ctx.MarkLabel(nextTest);
                         }

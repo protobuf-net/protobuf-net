@@ -187,15 +187,21 @@ namespace ProtoBuf.Serializers
                 }
                 ctx.StoreValue(kvp);
 
+                if (wireType == WireType.String)
+                {
+                    SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(fieldNumber, ctx, kvp, pairSerializer, false);
+                }
+                else
+                {
+                    // ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+                    ctx.LoadState();
+                    ctx.LoadValue(fieldNumber);
+                    ctx.LoadValue((int)wireType);
+                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
-                // ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
-                ctx.LoadState();
-                ctx.LoadValue(fieldNumber);
-                ctx.LoadValue((int)wireType);
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
-
-                // ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
-                SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(ctx, kvp, pairSerializer, false);
+                    // ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
+                    SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(null, ctx, kvp, pairSerializer, false);
+                }
 
                 ctx.MarkLabel(@next);
                 ctx.LoadAddress(iter, enumeratorType);

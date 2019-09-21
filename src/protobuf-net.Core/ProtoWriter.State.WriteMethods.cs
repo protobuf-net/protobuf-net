@@ -302,17 +302,35 @@ namespace ProtoBuf
             }
 
             /// <summary>
-            /// Writes a sub-item to the input writer
+            /// Writes a sub-item to the writer
             /// </summary>
             public void WriteSubItem<T>(T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
                 => _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+
+            /// <summary>
+            /// Writes a sub-item to the writer
+            /// </summary>
+            public void WriteSubItem<T>(int fieldNumber, T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
+            {
+                WriteFieldHeader(fieldNumber, WireType.String);
+                _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+            }
 
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
             public void WriteSubType<T>(T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
             {
-                if (value != null) _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
+                _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
+            }
+
+            /// <summary>
+            /// Writes a sub-type to the input writer
+            /// </summary>
+            public void WriteSubType<T>(int fieldNumber, T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+            {
+                WriteFieldHeader(fieldNumber, WireType.String);
+                _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
             }
 
             /// <summary>
