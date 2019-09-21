@@ -425,7 +425,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             SubItemToken token;
             bool writePacked = WritePacked;

@@ -112,7 +112,7 @@ namespace ProtoBuf.Serializers
             return null; // to make compiler happy
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             if (map == null)
             {

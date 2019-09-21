@@ -49,7 +49,7 @@ namespace ProtoBuf.WellKnownTypes
             }
         }
 
-        void IProtoSerializer<Guid>.Write(ProtoWriter writer, ref ProtoWriter.State state, Guid value)
+        void IProtoSerializer<Guid>.Write(ref ProtoWriter.State state, Guid value)
         {
             if (value == Guid.Empty) { }
             else if (s_guidOptimized)

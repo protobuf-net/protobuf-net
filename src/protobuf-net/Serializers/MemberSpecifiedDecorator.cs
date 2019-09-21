@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
             this.setSpecified = setSpecified;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             if (getSpecified == null || (bool)getSpecified.Invoke(value, null))
             {

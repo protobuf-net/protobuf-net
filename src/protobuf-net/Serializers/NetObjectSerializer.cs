@@ -27,7 +27,7 @@ namespace ProtoBuf.Serializers
             return BclHelpers.ReadNetObject(ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             BclHelpers.WriteNetObject(ref state, value, key, options);
         }

@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
             return state.ReadSByte();
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             state.WriteSByte((sbyte)value);
         }

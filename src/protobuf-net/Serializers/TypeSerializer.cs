@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
 
         internal override Type BaseType => typeof(TBase);
 
-        public override void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        public override void Write(ref ProtoWriter.State state, T value)
             => state.WriteBaseType<TBase>(value);
 
         public override T Read(ref ProtoReader.State state, T value)
@@ -44,8 +44,8 @@ namespace ProtoBuf.Serializers
             return value.OnAfterDeserialize(OnAfterDeserialize);
         }
 
-        void IProtoSubTypeSerializer<T>.WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, T value)
-            => SerializeImpl(writer, ref state, value);
+        void IProtoSubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
+            => SerializeImpl(ref state, value);
 
         public override void EmitReadRoot(CompilerContext context, Local valueFrom)
         {   // => (T)((IProtoSubTypeSerializer<TBase>)this).ReadSubType(reader, ref state, SubTypeState<TBase>.Create<T>(state.Context, value));
@@ -84,7 +84,7 @@ namespace ProtoBuf.Serializers
             if (context.IsService)
             {
                 context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
-                context.LoadWriter(true);
+                context.LoadState();
                 context.LoadValue(tmp);
                 context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
                     .GetMethod(nameof(IProtoSubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
@@ -111,8 +111,8 @@ namespace ProtoBuf.Serializers
 
         T IProtoFactory<T>.Create(ISerializationContext context) => (T)CreateInstance(context);
 
-        public virtual void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
-            => SerializeImpl(writer, ref state, value);
+        public virtual void Write(ref ProtoWriter.State state, T value)
+            => SerializeImpl(ref state, value);
 
         public virtual T Read(ref ProtoReader.State state, T value)
         {
@@ -124,8 +124,8 @@ namespace ProtoBuf.Serializers
         }
         public virtual bool IsSubType => false;
 
-        void IRuntimeProtoSerializerNode.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-            => Write(dest, ref state, (T)value);
+        void IRuntimeProtoSerializerNode.Write(ref ProtoWriter.State state, object value)
+            => Write(ref state, (T)value);
 
         object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
             => Read(ref state, (T)value);
@@ -269,14 +269,14 @@ namespace ProtoBuf.Serializers
             return null;
         }
 
-        protected void SerializeImpl(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        protected void SerializeImpl(ref ProtoWriter.State state, T value)
         {
-            if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize, writer.Context);
+            if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize, state.Context.Context);
             // write inheritance first
             if (CanHaveInheritance)
             {
                 IRuntimeProtoSerializerNode next = GetMoreSpecificSerializer(value);
-                if (next != null) next.Write(writer, ref state, value);
+                if (next != null) next.Write(ref state, value);
             }
 
             // write all actual fields
@@ -287,12 +287,12 @@ namespace ProtoBuf.Serializers
                 if (!(ser is IProtoTypeSerializer ts && ts.IsSubType))
                 {
                     //Debug.WriteLine(": " + ser.ToString());
-                    ser.Write(writer, ref state, value);
+                    ser.Write(ref state, value);
                 }
             }
             //Debug.WriteLine("<< Writing fields for " + forType.FullName);
-            if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, writer, ref state);
-            if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, writer.Context);
+            if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, ref state);
+            if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, state.Context.Context);
         }
 
         protected Action<T, ISerializationContext> OnBeforeDeserialize, OnAfterDeserialize;

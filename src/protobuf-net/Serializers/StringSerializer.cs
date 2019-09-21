@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType => expectedType;
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             state.WriteString((string)value);
         }

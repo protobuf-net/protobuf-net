@@ -17,6 +17,6 @@
             return value;
         }
 
-        void IProtoSerializer<Empty>.Write(ProtoWriter writer, ref ProtoWriter.State state, Empty value) { }
+        void IProtoSerializer<Empty>.Write(ref ProtoWriter.State state, Empty value) { }
     }
 }

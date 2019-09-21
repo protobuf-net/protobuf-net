@@ -88,7 +88,7 @@ namespace ProtoBuf.Meta
         ///  - IEnumerable sequences of any type handled by TrySerializeAuxiliaryType
         ///  
         /// </summary>
-        internal bool TrySerializeAuxiliaryType(ProtoWriter writer, ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
+        internal bool TrySerializeAuxiliaryType(ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
         {
             if (type == null) { type = value.GetType(); }
 
@@ -100,7 +100,7 @@ namespace ProtoBuf.Meta
             {   // write the header, but defer to the model
                 if (type.IsEnum)
                 { // no header
-                    Serialize(writer, ref state, modelKey, value);
+                    Serialize(ref state, modelKey, value);
                     return true;
                 }
                 else
@@ -109,12 +109,12 @@ namespace ProtoBuf.Meta
                     switch (wireType)
                     {
                         case WireType.None:
-                            throw ProtoWriter.CreateException(writer);
+                            throw ProtoWriter.CreateException(ref state);
                         case WireType.StartGroup:
                         case WireType.String:
                             // needs a wrapping length etc
                             SubItemToken token = ProtoWriter.StartSubItem(value, writer, ref state);
-                            Serialize(writer, ref state, modelKey, value);
+                            Serialize(ref state, modelKey, value);
                             ProtoWriter.EndSubItem(token, writer, ref state);
                             return true;
                         default:
@@ -1404,7 +1404,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Write state</param>
-        protected internal virtual void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
+        protected internal virtual void Serialize(ref ProtoWriter.State state, int key, object value)
             => ThrowHelper.ThrowNotSupportedException(nameof(Serialize) + " is not supported");
 
         /// <summary>

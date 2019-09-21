@@ -59,7 +59,7 @@ namespace ProtoBuf.Serializers
             return Tail.Read(ref state, value);
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             state.WriteFieldHeader(fieldNumber, wireType);
             Tail.Write(dest, ref state, value);

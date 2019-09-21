@@ -57,7 +57,7 @@ namespace ProtoBuf.Serializers
             return typed;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             foreach (var pair in (TDictionary)value)
             {
@@ -100,10 +100,10 @@ namespace ProtoBuf.Serializers
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
 
-            void IProtoSerializer<KeyValuePair<TKey, TValue>>.Write(ProtoWriter writer, ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
+            void IProtoSerializer<KeyValuePair<TKey, TValue>>.Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
             {
-                if (pair.Key != null) _keyTail.Write(writer, ref state, pair.Key);
-                if (pair.Value != null) _valueTail.Write(writer, ref state, pair.Value);
+                if (pair.Key != null) _keyTail.Write(ref state, pair.Key);
+                if (pair.Value != null) _valueTail.Write(ref state, pair.Value);
             }
         }
 

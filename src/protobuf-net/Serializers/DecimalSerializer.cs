@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
             return BclHelpers.ReadDecimal(ref state);
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             BclHelpers.WriteDecimal(ref state, (decimal)value);
         }

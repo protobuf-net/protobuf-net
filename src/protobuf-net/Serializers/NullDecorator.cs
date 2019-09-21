@@ -143,7 +143,7 @@ namespace ProtoBuf.Serializers
             return value;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
             if (value != null)

@@ -9,7 +9,7 @@ namespace ProtoBuf.Serializers
         protected ProtoDecoratorBase(IRuntimeProtoSerializerNode tail) { this.Tail = tail; }
         public abstract bool ReturnsValue { get; }
         public abstract bool RequiresOldValue { get; }
-        public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
+        public abstract void Write(ref ProtoWriter.State state, object value);
         public abstract object Read(ref ProtoReader.State state, object value);
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom) { EmitWrite(ctx, valueFrom); }

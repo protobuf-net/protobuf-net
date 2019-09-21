@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
         /// <param name="value">The value to be serialized.</param>
         /// <param name="state">Writer state</param>
         /// <param name="dest">The writer entity that is accumulating the output data.</param>
-        void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
+        void Write(ref ProtoWriter.State state, object value);
 
         /// <summary>
         /// Perform the steps necessary to deserialize this data.

@@ -116,7 +116,7 @@ namespace ProtoBuf.Serializers
             return invokeCtor ? ctor.Invoke(values) : value;
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             for (int i = 0; i < tails.Length; i++)
             {

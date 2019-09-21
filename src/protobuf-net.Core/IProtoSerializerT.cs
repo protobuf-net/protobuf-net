@@ -19,7 +19,7 @@ namespace ProtoBuf
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void Write(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void Write(ref ProtoWriter.State state, T value);
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace ProtoBuf
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void WriteSubType(ref ProtoWriter.State state, T value);
 
         /// <summary>
         /// Deserialize an instance from the supplied writer

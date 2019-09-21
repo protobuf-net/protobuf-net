@@ -344,6 +344,7 @@ namespace ProtoBuf
             internal TypeModel Model => _writer?.Model;
 
             internal WireType WireType => _writer.WireType;
+            internal long GetPosition() => _writer._position64;
 
             internal ProtoWriter GetWriter() => _writer;
 
@@ -365,6 +366,11 @@ namespace ProtoBuf
                 writer.model.Serialize(writer, ref this, key, value);
                 EndSubItem(token, writer, ref this);
             }
+
+            /// <summary>
+            /// The serialization context associated with this instance
+            /// </summary>
+            public ISerializationContext Context => _writer;
 
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String

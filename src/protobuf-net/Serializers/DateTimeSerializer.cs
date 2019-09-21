@@ -33,7 +33,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             if (wellKnown)
                 BclHelpers.WriteTimestamp(ref state, (DateTime)value);

@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
         public override Type ExpectedType => typeof(TChild);
         public override Type BaseType => typeof(TParent);
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
             => state.WriteSubType<TChild>((TChild)value);
 
         public override object Read(ref ProtoReader.State state, object value)
@@ -74,7 +74,7 @@ namespace ProtoBuf.Serializers
         public override Type ExpectedType => typeof(T);
 
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
             => state.WriteSubItem<T>((T)value);
 
         public override object Read(ref ProtoReader.State state, object value)
@@ -104,7 +104,7 @@ namespace ProtoBuf.Serializers
         public virtual Type BaseType => ExpectedType;
         bool IProtoTypeSerializer.HasInheritance => false;
 
-        public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
+        public abstract void Write(ref ProtoWriter.State state, object value);
 
         public abstract object Read(ref ProtoReader.State state, object value);
 

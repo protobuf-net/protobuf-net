@@ -9,7 +9,7 @@ namespace ProtoBuf.Serializers
 
         public override Type ExpectedType => expectedType;
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             state.WriteUInt16((ushort)(char)value);
         }

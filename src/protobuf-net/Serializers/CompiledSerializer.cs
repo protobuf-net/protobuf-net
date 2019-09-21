@@ -39,7 +39,7 @@ namespace ProtoBuf.Serializers
         void IProtoSerializer<T>.Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => serializer(writer, ref state, value);
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
             => serializer(dest, ref state, (T)value);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
@@ -93,7 +93,7 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType => head.ExpectedType;
 
-        public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
+        public abstract void Write(ref ProtoWriter.State state, object value);
 
         public abstract object Read(ref ProtoReader.State state, object value);
 

@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
             this.defaultValue = defaultValue;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             if (!object.Equals(value, defaultValue))
             {

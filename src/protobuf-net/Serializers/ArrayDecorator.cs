@@ -159,7 +159,7 @@ namespace ProtoBuf.Serializers
 
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             IList arr = (IList)value;
             int len = arr.Count;

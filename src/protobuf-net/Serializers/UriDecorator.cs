@@ -14,7 +14,7 @@ namespace ProtoBuf.Serializers
 
         public override bool ReturnsValue => true;
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             Tail.Write(dest, ref state, ((Uri)value).OriginalString);
         }

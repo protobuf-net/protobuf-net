@@ -30,7 +30,7 @@ namespace ProtoBuf.WellKnownTypes
             return new decimal(lo, mid, hi, isNeg, scale);
         }
 
-        void IProtoSerializer<decimal>.Write(ProtoWriter writer, ref ProtoWriter.State state, decimal value)
+        void IProtoSerializer<decimal>.Write(ref ProtoWriter.State state, decimal value)
         {
             ulong low;
             uint high, signScale;

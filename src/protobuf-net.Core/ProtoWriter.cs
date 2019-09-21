@@ -92,7 +92,7 @@ namespace ProtoBuf
             {
                 ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
             }
-            if (writer.WireType != WireType.None) throw ProtoWriter.CreateException(writer);
+            if (writer.WireType != WireType.None) throw ProtoWriter.CreateException(ref state);
 
             switch (style)
             {
@@ -585,13 +585,15 @@ namespace ProtoBuf
         }
 
         // general purpose serialization exception message
-        internal static Exception CreateException(ProtoWriter writer)
+        internal static Exception CreateException(ref ProtoWriter.State state)
         {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            return new ProtoException("Invalid serialization operation with wire-type " + writer.WireType.ToString() + " at position " + writer._position64.ToString());
+            return new ProtoException("Invalid serialization operation with wire-type " + state.WireType.ToString() + " at position " + state.GetPosition().ToString());
         }
         internal static void ThrowException(ProtoWriter writer)
-            => throw CreateException(writer);
+        {
+            var state = writer == null ? default : writer.DefaultState();
+            throw CreateException(ref state);
+        }
 
         /// <summary>
         /// Writes a boolean to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -615,13 +617,12 @@ namespace ProtoBuf
         /// <summary>
         /// Copies any extension data stored for the instance to the underlying stream
         /// </summary>
-        public static void AppendExtensionData(IExtensible instance, ProtoWriter writer, ref State state)
+        public static void AppendExtensionData(IExtensible instance, ref State state)
         {
             if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
             // we expect the writer to be raw here; the extension data will have the
             // header detail, so we'll copy it implicitly
-            if (writer.WireType != WireType.None) throw CreateException(writer);
+            if (state.WireType != WireType.None) throw CreateException(ref state);
 
             IExtension extn = instance.GetExtensionObject(false);
             if (extn != null)
@@ -729,7 +730,7 @@ namespace ProtoBuf
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(this, ref state, value);
+            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
             EndSubItem(ref state, tok, style);
 #pragma warning restore CS0618
         }
@@ -741,7 +742,7 @@ namespace ProtoBuf
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, null, PrefixStyle.Base128);
-            serializer.WriteSubType(this, ref state, value);
+            serializer.WriteSubType(ref state, value);
             EndSubItem(ref state, tok, PrefixStyle.Base128);
 #pragma warning restore CS0618
         }
@@ -758,7 +759,7 @@ namespace ProtoBuf
                 if (value != null)
                 {
                     SetRootObject(value);
-                    (serializer ?? TypeModel.GetSerializer<T>(model)).Write(this, ref state, value);
+                    (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
                 }
                 CheckClear(ref state);
                 long after = GetPosition(ref state);

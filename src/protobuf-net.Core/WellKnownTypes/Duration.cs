@@ -108,7 +108,7 @@ namespace ProtoBuf.WellKnownTypes
             return new Duration(seconds, nanos);
         }
 
-        void IProtoSerializer<Duration>.Write(ProtoWriter writer, ref ProtoWriter.State state, Duration value)
+        void IProtoSerializer<Duration>.Write(ref ProtoWriter.State state, Duration value)
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
 
         internal static long ToDurationSeconds(TimeSpan value, out int nanos)

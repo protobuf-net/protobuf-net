@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
             return state.ReadUInt16();
         }
 
-        public virtual void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public virtual void Write(ref ProtoWriter.State state, object value)
         {
             state.WriteUInt16((ushort)value);
         }

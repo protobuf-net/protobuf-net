@@ -234,32 +234,22 @@ namespace ProtoBuf.Compiler
             TraceCompile(">> " + traceName);
             _traceName = traceName;
             IsStatic = isStatic;
-            GetOpCodes(isWriter, isStatic, out _state, out _writer, out _inputArg);
+            GetOpCodes(isWriter, isStatic, out _state, out _inputArg);
         }
 
         public bool IsStatic { get; }
 
         private readonly string _traceName;
 
-        private readonly OpCode _writer, _state;
+        private readonly OpCode _state;
         private readonly byte _inputArg;
 
 #pragma warning disable RCS1163, IDE0060 // Unused parameter.
-        private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode state, out OpCode readerWriter, out byte inputArg)
+        private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode state, out byte inputArg)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            if(isWriter)
-            {
-                readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
-                state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
-                inputArg = (byte)(isStatic ? 2 : 3);
-            }
-            else
-            {
-                readerWriter = default;
-                state = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
-                inputArg = (byte)(isStatic ? 1 : 2);
-            }
+            state = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
+            inputArg = (byte)(isStatic ? 1 : 2);
         }
 
         internal CompilerContextScope Scope { get; }
@@ -270,10 +260,10 @@ namespace ProtoBuf.Compiler
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;
             Type[] paramTypes;
-            GetOpCodes(isWriter, isStatic, out _state, out _writer, out _inputArg);
+            GetOpCodes(isWriter, isStatic, out _state, out _inputArg);
             if (isWriter)
             {
-                paramTypes = new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, inputType };
+                paramTypes = new Type[] { WriterUtil.ByRefStateType, inputType };
             }
             else
             {
@@ -418,15 +408,6 @@ namespace ProtoBuf.Compiler
                 }
             }
             locals.Add(value); // create a new slot
-        }
-        public void LoadWriter(bool withState)
-        {
-            if (!isWriter)
-            {
-                throw new InvalidOperationException("Tried to load writer, but was a reader; " + _traceName);
-            }
-            Emit(_writer);
-            if (withState) Emit(_state);
         }
 
         public void LoadState() => Emit(_state);
@@ -574,7 +555,7 @@ namespace ProtoBuf.Compiler
                            && method.ReturnType == typeof(void)
                            let args = method.GetParameters()
                            where args.Length == (method.IsStatic ? 2 : 1)
-                           && (!method.IsStatic || args[0].ParameterType == typeof(ProtoWriter.State).MakeByRefType())
+                           && (!method.IsStatic || args[0].ParameterType == WriterUtil.ByRefStateType)
                            select new { Method = method, Type = args[method.IsStatic ? 1 : 0].ParameterType }).Single();
 
             using var tmp = GetLocalWithValue(found.Type, fromValue);
@@ -1394,22 +1375,18 @@ namespace ProtoBuf.Compiler
 
         internal void LoadSerializationContext(bool oldApi) // old api = SerializationContext; new api = ISerializationContext
         {
+            LoadState();
             if (isWriter)
             {
-                LoadWriter(false);
-                if (oldApi)
-                {
-                    LoadValue(typeof(ProtoWriter).GetProperty(nameof(ProtoWriter.Context)));
-                }
+                LoadValue(typeof(ProtoWriter).GetProperty(nameof(ProtoWriter.State.Context)));
             }
             else
             {
-                LoadState();
                 LoadValue(typeof(ProtoReader.State).GetProperty(nameof(ProtoReader.State.Context)));
-                if (oldApi)
-                {
-                    LoadValue(typeof(ISerializationContext).GetProperty(nameof(ISerializationContext.Context)));
-                }
+            }
+            if (oldApi)
+            {
+                LoadValue(typeof(ISerializationContext).GetProperty(nameof(ISerializationContext.Context)));
             }
         }
 

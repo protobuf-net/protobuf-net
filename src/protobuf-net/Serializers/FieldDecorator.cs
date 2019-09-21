@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
             this.field = field;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             Debug.Assert(value != null);
             value = field.GetValue(value);

@@ -143,7 +143,7 @@ namespace ProtoBuf.WellKnownTypes
         private const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02, FieldTimeSpanKind = 0x03;
 
 
-        void IProtoSerializer<ScaledTicks>.Write(ProtoWriter writer, ref ProtoWriter.State state, ScaledTicks value)
+        void IProtoSerializer<ScaledTicks>.Write(ref ProtoWriter.State state, ScaledTicks value)
         {
             if (value.Value != 0)
             {
