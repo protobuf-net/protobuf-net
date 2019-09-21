@@ -202,7 +202,7 @@
             {
                 var set = new FileDescriptorSet
                 {
-                    ImportValidator = path => true,
+                    ImportValidator = path => true
                 };
                 set.Add("my.proto", true, reader);
 
@@ -217,13 +217,13 @@
                     return;
                 }
 
-                if (model.IsProtobugGen())
+                if (model.IsProtobugGen() && !model.ProtoContent.Contains("import"))
                 {
                     ProtobufnetGenerate(set);
                 }
                 else
                 {
-                    await ProtocGenerate();
+                    await ServerSideGenerate();
                 }
             }
         }
@@ -236,14 +236,10 @@
             loading = false;
         }
     }
-    private async Task ProtocGenerate()
+    private async Task ServerSideGenerate()
     {
-        var response = await Http.PostAsync("/generate", new FormUrlEncodedContent(
-            new Dictionary<string, string>() {
-                {"schema", model.ProtoContent },
-                {"tooling", model.GetProtocTooling() }
-                                                                                                                    }
-          ));
+        var response = await Http.PostAsync("/generate",
+            new StringContent(JsonSerializer.Serialize(model),System.Text.Encoding.UTF8, "application/json"));
         var content = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
@@ -274,8 +270,10 @@
     }
     private void ProtobufnetGenerate(FileDescriptorSet set)
     {
-        CodeGenerator codegen = model.GetCodeGenerator();
-        var generateResult = codegen.Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions()).ToList();
+        
+        var generateResult = model.GetCodeGenerator()
+            .Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions())
+            .ToList();
         SetCodeFiles(generateResult);
 
     }
