@@ -21,16 +21,26 @@
             }
             long headerEnd = reader.GetPosition(ref state);
 
-            <p data-offset="@start">@DecodeModel.AsHex(start, headerEnd - start) = field <b>@(field)</b>, type <b>@(reader.WireType == ProtoBuf.WireType.Variant ? "Varint" : reader.WireType.ToString())</b></p>
+            <p data-offset="@start">
+                @DecodeModel.AsHex(start, headerEnd - start) = field
+                <b>@(field)</b>
+                <span class="badge badge-info" title="Data Type">
+                    @(reader.WireType == ProtoBuf.WireType.Variant ? "Varint" : reader.WireType.ToString())
+                </span>
+            </p>
             switch (reader.WireType)
             {
                 case ProtoBuf.WireType.Variant:
                     var val = reader.ReadInt64(ref state);
-                    <p>@DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd) = <b>@(val)</b> (raw) or <b>@(Zag(val))</b> (zigzag)</p>
+                    <p>
+                        Hexa = <b>@DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd)</b>.
+                        Raw = <b>@(val)</b>.
+                        ZigZag = <b>@(Zag(val))</b>.
+                    </p>
                     break;
                 case ProtoBuf.WireType.StartGroup:
                     reader.SkipField(ref state);
-                    <p>payload (inc. terminator) = @DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd)</p>
+                    <p>Payload (inc. terminator) = @DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd)</p>
 
                     <div style="padding-left: 2em">
                         @if (DecodeModel.Deep)
@@ -48,11 +58,13 @@
                     {
                         var payloadBytes = ProtoBuf.ProtoReader.AppendBytes(null, reader, ref state);
                         var lenLen = reader.GetPosition(ref state) - payloadBytes.Length - headerEnd;
-                        <p>@DecodeModel.AsHex(headerEnd, lenLen) = length <b>@(payloadBytes.Length)</b></p>
+                        <p>
+                            Length = <b>@(payloadBytes.Length)</b>(@DecodeModel.AsHex(headerEnd, lenLen))
+                        </p>
                         var slice = new DecodeModel(payloadBytes, DecodeModel.Deep);
                         if (slice.Count == 0)
                         {
-                            <p>(empty payload)</p>
+                            <p>(Empty payload)</p>
                         }
                         else if (slice.Count > 256)
                         {
@@ -60,11 +72,11 @@
                         }
                         else
                         {
-                            <p>payload = @slice.AsHex()</p>
+                            <p>Payload = @slice.AsHex()</p>
                             var s = slice.AsString();
                             if (!string.IsNullOrEmpty(s))
                             {
-                                <p>UTF8: @s</p>
+                                <p>UTF8 = @s</p>
                             }
                         }
                         if (slice.Count == 0)
@@ -86,16 +98,24 @@
                     break;
                 case ProtoBuf.WireType.Fixed64:
                     var val64 = reader.ReadInt64(ref state);
-                    <p>@DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd) = <b>@(val64)</b> (integer) or <b>@(ToDouble(val64))</b> (floating point)</p>
+                    <p>
+                        Hex = <b>@DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd)</b>.
+                        Integer = <b>@(val64)</b>.
+                        Floating point = <b>@(ToDouble(val64))</b>.
+                    </p>
                     break;
                 case ProtoBuf.WireType.Fixed32:
                     var val32 = reader.ReadInt32(ref state);
-                    <p>@DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd) = <b>@(val32)</b> (integer) or <b>@(ToSingle(val32))</b> (floating point)</p>
+                    <p>
+                        Hex = @DecodeModel.AsHex(headerEnd, reader.GetPosition(ref state) - headerEnd) .
+                        Integer = <b>@(val32)</b>.
+                        Floating point = <b>@(ToSingle(val32))</b>.
+                    </p>
                     break;
                 case ProtoBuf.WireType.EndGroup:
                     break;
                 default:
-                    <p>unexpected wire-type: @(reader.WireType)</p>
+                    <p>Unexpected wire-type: @(reader.WireType)</p>
                     break;
             }
             start = reader.GetPosition(ref state);
@@ -107,20 +127,25 @@
             if (suffixLen != 0)
             {
                 <hr />
-                <p>@DecodeModel.AsHex(start, suffixLen) = field <b>@(DecodeModel.SkipField)</b>, type <b>@(ProtoBuf.WireType.EndGroup)</b></p>
+                <p>
+                    @DecodeModel.AsHex(start, suffixLen) = Field <b>@(DecodeModel.SkipField)</b>,
+                    <span class="badge">@(ProtoBuf.WireType.EndGroup)</span>
+                </p>
             }
         }
         @if (reader.GetPosition(ref state) < DecodeModel.Count)
         {
-            <p>remaining data: @DecodeModel.AsHex(reader.GetPosition(ref state), DecodeModel.Count - reader.GetPosition(ref state))</p>
+            <p>Remaining data: @DecodeModel.AsHex(reader.GetPosition(ref state), DecodeModel.Count - reader.GetPosition(ref state))</p>
             <DecodeResultDeeper Hex="DecodeModel.AsHex(reader.Position, DecodeModel.Count - reader.Position)"></DecodeResultDeeper>
         }
     }
 }
 catch (Exception ex)
 {
-    <p>error: @(ex.Message)</p>
-    <pre> @(ex.StackTrace)</pre>
+    <div class="alert alert-danger">
+        <p>error: @(ex.Message)</p>
+        <pre> @(ex.StackTrace)</pre>
+    </div>
 }
 
 

@@ -24,35 +24,30 @@
 
                     @if (model.IsProtobugGen())
                     {
-                        <div class="form-group form-check">
-                            <input class="form-check-input" type="checkbox" checked="@model.SpecifyOptInProto" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
-                            <label class="form-check-label" for="opt_in_proto">
-                                Specify options in .proto
-                            </label>
-                        </div>
 
-                        @if (!model.SpecifyOptInProto)
+                        @if (model.HasLanguageVersion())
                         {
-                            @if (model.HasLanguageVersion())
-                            {
-                                <div class="form-group ml-2">
-                                    <label for="version">@model.Language Version</label>
-                                    <InputSelect id="version" @bind-Value="model.LanguageVersion" class="form-control">
+                            <div class="form-group ml-2">
+                                <label for="version">@model.Language Version</label>
+                                <InputSelect id="version" @bind-Value="model.LanguageVersion" class="form-control">
 
-                                        @foreach (var version in model.GetLanguageVersions())
-                                        {
-                                            <option value="@version">@version</option>
-                                        }
-                                    </InputSelect>
-                                </div>
-                            }
-                            <div class="form-group form-check ml-2">
-                                <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
-                                <label class="form-check-label" for="oneof">
-                                    <code>oneof</code> should use enum
-                                </label>
+                                    @foreach (var version in model.GetLanguageVersions())
+                                                {
+                                        <option value="@version">@version</option>
+                                                }
+                                    /**/
+                                    /**/
+                                    /**/
+                                    /**/
+                                </InputSelect>
                             </div>
                         }
+                        <div class="form-group form-check ml-2">
+                            <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
+                            <label class="form-check-label" for="oneof">
+                                <code>oneof</code> should use enum
+                            </label>
+                        </div>
                         <div class="form-group form-check ">
                             <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
                             <label class="form-check-label" for="repeated_accessors">
@@ -63,10 +58,18 @@
                             <label for="namingConvention">Naming convention</label>
                             <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control">
                                 @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
-                                {
+                                        {
                                     <option value="@namingConvention">@namingConvention</option>
-                                }
+                                        }
+                                /**/
+                                /**/
                             </InputSelect>
+                        </div>
+                        <div class="form-group">
+
+                            <button class="btn btn-sm btn-secondary" @onclick="LoadProtoWithOptions">
+                                Load proto with options
+                            </button>
                         </div>
                     }
                     <div class="form-group">
@@ -85,6 +88,9 @@
                                 {
                                 <option value="@language">@language</option>
                                 }
+                            /**/
+                            /**/
+                            /**/
                         </InputSelect>
                     </div>
                     <div class="col">
@@ -133,15 +139,16 @@
             @if (codeFiles != null)
             {
                 <ul class="nav nav-tabs mb-2">
-                     @foreach (var file in codeFiles)
+                    @foreach (var file in codeFiles)
                     {
                         <li class="nav-item">
-                            <a class="nav-link  @(currentCodeFile == file ? "active":"")" href="#"  @onclick="() => currentCodeFile = file">  @file.Name</a>
+                            <a class="nav-link  @(currentCodeFile == file ? "active":"")" href="#" @onclick="() => currentCodeFile = file">  @file.Name</a>
                         </li>
                     }
                 </ul>
                 <div class="form-group flex-grow-1  d-flex flex-column">
-                    @if(currentCodeFile != null){
+                    @if (currentCodeFile != null)
+                    {
 
                         <MonacoEditor Language="@model.GetMonacoLanguage()" Content="@currentCodeFile.Text" ReadOnly="true"></MonacoEditor>
                     }
@@ -173,27 +180,13 @@
         model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto");
         showMoreOptions = false;
     }
-    //we use this for inserting options at the end of the script without erasing user custom content
-    private const string ProtoOptionCommentDelimiter = "//endof options";
 
-    protected async Task ChangeOptionSpecification(ChangeEventArgs e)
+    protected async Task LoadProtoWithOptions()
     {
-        model.SpecifyOptInProto = (bool)e.Value;
-        if (model.ProtoContent != null)
-        {
 
-            model.ProtoContent = model.ProtoContent.Substring(model.ProtoContent.IndexOf(ProtoOptionCommentDelimiter) + ProtoOptionCommentDelimiter.Length);
-        }
+        model.ProtoContent = await Http.GetStringAsync("https://gist.githubusercontent.com/mgravell/c545f903467fd7fa441ad80c5433d331/raw/59e0681069463c016eb06a630991945aa783b90f/configure_protogen.proto");
+        showMoreOptions = false;
 
-        if (model.SpecifyOptInProto)
-        {
-            //we could have this content hard coded but it was like this before
-            var optContent = await Http.GetStringAsync("https://gist.githubusercontent.com/mgravell/c545f903467fd7fa441ad80c5433d331/raw/59e0681069463c016eb06a630991945aa783b90f/configure_protogen.proto");
-            model.ProtoContent = $"{optContent}{Environment.NewLine}{ProtoOptionCommentDelimiter}{Environment.NewLine}{model.ProtoContent}";
-            //because the content was changed we go back to the editor
-            showMoreOptions = false;
-
-        }
     }
     protected async Task Generate()
     {
@@ -217,8 +210,9 @@
                 errors = set.GetErrors();
                 if (errors.Any())
                 {
-                    foreach(var error in errors){
-                        await protoEditor.AddError(error.IsError, error.LineNumber, error.LineNumber , error.ColumnNumber,  error.ColumnNumber + error.LineContents.Length, error.Message);
+                    foreach (var error in errors)
+                    {
+                        await protoEditor.AddError(error.IsError, error.LineNumber, error.LineNumber, error.ColumnNumber, error.ColumnNumber + error.LineContents.Length, error.Message);
                     }
                     return;
                 }
@@ -235,7 +229,7 @@
         }
         catch (Exception e)
         {
-            exceptionMessage = "An unhandled exception occured : " + e.Message+". StackTrace : "+e.StackTrace;
+            exceptionMessage = "An unhandled exception occured : " + e.Message + ". StackTrace : " + e.StackTrace;
         }
         finally
         {
@@ -248,7 +242,7 @@
             new Dictionary<string, string>() {
                 {"schema", model.ProtoContent },
                 {"tooling", model.GetProtocTooling() }
-                                                                                                        }
+                                                                                                                    }
           ));
         var content = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
@@ -286,7 +280,8 @@
 
     }
 
-    private void SetCodeFiles(List<CodeFile> files){
+    private void SetCodeFiles(List<CodeFile> files)
+    {
         codeFiles = files;
         currentCodeFile = files.FirstOrDefault();
     }

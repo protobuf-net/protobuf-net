@@ -13,6 +13,7 @@
     <Watch Include="**\*.razor" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="BlazorInputFile" Version="0.1.0-preview" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.0.0-preview9.19457.4" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.0.0-preview9.19457.4" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.0.0-preview9.19457.4" />
