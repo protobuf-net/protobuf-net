@@ -1,12 +1,40 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ProtoBuf
 {
-    public class StringMap
+    /// <summary>
+    /// Not yet implemented
+    /// </summary>
+    public sealed class StringMap
     {
+//        // TODO: 
+//        public bool TryGetValue(string value, out ReadOnlyMemory<byte> bytes)
+//        {
+//            bytes = default;
+//            return false;
+//        }
+//        public bool TryGetValue(ReadOnlyMemory<byte> bytes, out string value)
+//        {
+//            value = default;
+//            return false;
+//        }
+
+//        public string GetValue(ReadOnlyMemory<byte> bytes)
+//        {
+//            if (bytes.IsEmpty) return "";
+//            if (TryGetValue(bytes, out var s)) return s;
+//#if PLAT_SPAN_OVERLOADS
+//            return Encoding.UTF8.GetString(bytes.Span);
+//#else
+//            unsafe
+//            {
+//                fixed (byte* ptr = bytes.Span)
+//                {
+//                    return Encoding.UTF8.GetString(ptr, bytes.Length);
+//                }
+//            }
+//#endif
+//        }
     }
 }
