@@ -20,9 +20,8 @@ namespace ProtoBuf
     /// Provides support for common .NET types that do not have a direct representation
     /// in protobuf, using the definitions from bcl.proto
     /// </summary>
-    public sealed class BclHelpers // should really be static, but I'm cheating with a <T>
+    public static class BclHelpers
     {
-        private BclHelpers() { }
         /// <summary>
         /// Creates a new instance of the specified type, bypassing the constructor.
         /// </summary>
@@ -45,23 +44,21 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
+            var state = dest.DefaultState();
+            WriteTimeSpanImpl(ref state, timeSpan, DateTimeKind.Unspecified);
         }
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest, ref ProtoWriter.State state)
+        public static void WriteTimeSpan(ref ProtoWriter.State state, TimeSpan value)
         {
-            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
+            WriteTimeSpanImpl(ref state, value, DateTimeKind.Unspecified);
         }
 
-        private static void WriteTimeSpanImpl(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind kind, ref ProtoWriter.State state)
+        private static void WriteTimeSpanImpl(ref ProtoWriter.State state, TimeSpan timeSpan, DateTimeKind kind)
         {
-            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
-
-            switch (dest.WireType)
+            switch (state.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
@@ -72,7 +69,7 @@ namespace ProtoBuf
                     state.WriteInt64(timeSpan.Ticks);
                     break;
                 default:
-                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + dest.WireType.ToString());
+                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + state.WireType.ToString());
                     break;
             }
         }
@@ -120,14 +117,14 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI)]
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteDuration(value, dest, ref state);
+            var state = dest.DefaultState();
+            WriteDuration(ref state, value);
         }
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        public static void WriteDuration(TimeSpan value, ProtoWriter dest, ref ProtoWriter.State state)
+        public static void WriteDuration(ref ProtoWriter.State state, TimeSpan value)
             => state.WriteSubItem<Duration>(value, WellKnownSerializer.Instance);
 
         /// <summary>
@@ -157,14 +154,14 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteTimestamp(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteTimestamp(value, dest, ref state);
+            var state = dest.DefaultState();
+            WriteTimestamp(ref state, value);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        public static void WriteTimestamp(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        public static void WriteTimestamp(ref ProtoWriter.State state, DateTime value)
             => state.WriteSubItem<Timestamp>(value, WellKnownSerializer.Instance);
 
         /// <summary>
@@ -195,15 +192,15 @@ namespace ProtoBuf
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
             ProtoWriter.State state = dest.DefaultState();
-            WriteDateTimeImpl(value, dest, false, ref state);
+            WriteDateTimeImpl(ref state, value, false);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
-        public static void WriteDateTime(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        public static void WriteDateTime(ref ProtoWriter.State state, DateTime value)
         {
-            WriteDateTimeImpl(value, dest, false, ref state);
+            WriteDateTimeImpl(ref state, value, false);
         }
 
         /// <summary>
@@ -213,22 +210,21 @@ namespace ProtoBuf
         public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest)
         {
             ProtoWriter.State state = dest.DefaultState();
-            WriteDateTimeImpl(value, dest, true, ref state);
+            WriteDateTimeImpl(ref state, value, true);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
-        public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        public static void WriteDateTimeWithKind(ref ProtoWriter.State state, DateTime value)
         {
-            WriteDateTimeImpl(value, dest, true, ref state);
+            WriteDateTimeImpl(ref state, value, true);
         }
 
-        private static void WriteDateTimeImpl(DateTime value, ProtoWriter dest, bool includeKind, ref ProtoWriter.State state)
+        private static void WriteDateTimeImpl(ref ProtoWriter.State state, DateTime value, bool includeKind)
         {
-            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
             TimeSpan delta;
-            switch (dest.WireType)
+            switch (state.WireType)
             {
                 case WireType.StartGroup:
                 case WireType.String:
@@ -251,7 +247,7 @@ namespace ProtoBuf
                     delta = value - EpochOrigin[0];
                     break;
             }
-            WriteTimeSpanImpl(delta, dest, includeKind ? value.Kind : DateTimeKind.Unspecified, ref state);
+            WriteTimeSpanImpl(ref state, delta, includeKind ? value.Kind : DateTimeKind.Unspecified);
         }
 
         private static long ReadTimeSpanTicks(ref ProtoReader.State state, out DateTimeKind kind)
@@ -295,14 +291,14 @@ namespace ProtoBuf
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
             ProtoWriter.State state = writer.DefaultState();
-            WriteDecimal(value, writer, ref state);
+            WriteDecimal(ref state, value);
         }
 
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
-        public static void WriteDecimal(decimal value, ProtoWriter writer, ref ProtoWriter.State state)
+        public static void WriteDecimal(ref ProtoWriter.State state, decimal value)
             => state.WriteSubItem<decimal>(value, WellKnownSerializer.Instance);
 
         /// <summary>
@@ -311,14 +307,14 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteGuid(Guid value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteGuid(value, dest, ref state);
+            var state = dest.DefaultState();
+            WriteGuid(ref state, value);
         }
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
         /// </summary>        
-        public static void WriteGuid(Guid value, ProtoWriter dest, ref ProtoWriter.State state)
+        public static void WriteGuid(ref ProtoWriter.State state, Guid value)
             => state.WriteSubItem<Guid>(value, WellKnownSerializer.Instance);
 
         /// <summary>
@@ -500,15 +496,15 @@ namespace ProtoBuf
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
             ProtoWriter.State state = dest.DefaultState();
-            WriteNetObject(value, dest, ref state, key, options);
+            WriteNetObject(ref state, value, key, options);
         }
 
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        internal static void WriteNetObject(object value, ProtoWriter dest, ref ProtoWriter.State state, int key, NetObjectOptions options)
+        internal static void WriteNetObject(ref ProtoWriter.State state, object value, int key, NetObjectOptions options)
         {
-            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+            var dest = state.GetWriter();
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = dest.WireType;

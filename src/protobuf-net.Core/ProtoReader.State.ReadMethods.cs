@@ -668,7 +668,7 @@ namespace ProtoBuf
                         writeState.WriteInt64(ReadInt64());
                         return;
                     case WireType.String:
-                        ProtoWriter.WriteBytes(AppendBytes(null), writer, ref writeState);
+                        writeState.WriteBytes(AppendBytes(null));
                         return;
                     case WireType.StartGroup:
                         SubItemToken readerToken = StartSubItem(),

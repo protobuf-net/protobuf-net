@@ -64,9 +64,9 @@ namespace ProtoBuf.WellKnownTypes
             {
                 byte[] blob = value.ToByteArray();
                 state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
-                ProtoWriter.WriteBytes(blob, 0, 8, writer, ref state);
+                state.WriteBytes(blob, 0, 8);
                 state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
-                ProtoWriter.WriteBytes(blob, 8, 8, writer, ref state);
+                state.WriteBytes(blob, 8, 8);
             }
         }
 

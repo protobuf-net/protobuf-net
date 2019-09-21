@@ -34,18 +34,18 @@ namespace ProtoBuf.Serializers
         {
             if (wellKnown)
             {
-                BclHelpers.WriteDuration((TimeSpan)value, dest, ref state);
+                BclHelpers.WriteDuration(ref state, (TimeSpan)value);
             }
             else
             {
-                BclHelpers.WriteTimeSpan((TimeSpan)value, dest, ref state);
+                BclHelpers.WriteTimeSpan(ref state, (TimeSpan)value);
             }
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite<BclHelpers>(
-                wellKnown ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom, this);
+            ctx.EmitStateBasedWrite(
+                wellKnown ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom, typeof(BclHelpers));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

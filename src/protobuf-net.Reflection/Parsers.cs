@@ -108,9 +108,6 @@ namespace Google.Protobuf.Reflection
                 try
                 {
                     return typeof(FileDescriptorSet)
-#if NETSTANDARD1_3
-                    .GetTypeInfo()
-#endif
                     .Assembly.GetManifestResourceStream(resourceName);
                 } catch { }
             }
@@ -1611,14 +1608,7 @@ namespace Google.Protobuf.Reflection
                                             ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
                                             continue;
                                         }
-#if NETSTANDARD1_3
-                                        if (ms.TryGetBuffer(out var seg))
-                                            ProtoWriter.WriteBytes(seg.Array, seg.Offset, seg.Count, writer, ref state);
-                                        else
-                                            ProtoWriter.WriteBytes(ms.ToArray(), writer, ref state);
-#else
-                                        ProtoWriter.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length, writer, ref state);
-#endif
+                                        state.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length);
                                     }
                                 }
                                 break;

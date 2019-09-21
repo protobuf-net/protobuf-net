@@ -13,31 +13,35 @@ namespace ProtoBuf
             public void WriteString(int fieldNumber, string value, StringMap map = null)
             {
                 WriteFieldHeader(fieldNumber, WireType.String);
-                WriteString(value, map);
+                WriteStringWithLengthPrefix(value, map);
             }
 
+            private void WriteStringWithLengthPrefix(string value, StringMap map)
+            {
+                var writer = _writer;
+                if (string.IsNullOrEmpty(value))
+                {
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, 0));
+                }
+                else
+                {
+                    var len = UTF8.GetByteCount(value);
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)len) + len);
+                    writer.ImplWriteString(ref this, value, len);
+                }
+            }
             /// <summary>
             /// Writes a string to the stream; supported wire-types: String
             /// </summary>
             public void WriteString(string value, StringMap map = null)
             {
-                var writer = _writer;
-                switch (writer.WireType)
+                switch (_writer.WireType)
                 {
                     case WireType.String:
-                        if (string.IsNullOrEmpty(value))
-                        {
-                            writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, 0));
-                        }
-                        else
-                        {
-                            var len = UTF8.GetByteCount(value);
-                            writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)len) + len);
-                            writer.ImplWriteString(ref this, value, len);
-                        }
+                        WriteStringWithLengthPrefix(value, map);
                         break;
                     default:
-                        ThrowException(writer);
+                        ThrowException(_writer);
                         break;
                 }
             }
@@ -103,6 +107,11 @@ namespace ProtoBuf
             public void WriteInt32Varint(int fieldNumber, int value)
             {
                 WriteFieldHeader(fieldNumber, WireType.Varint);
+                WriteInt32VarintImpl(value);
+            }
+
+            private void WriteInt32VarintImpl(int value)
+            {
                 var writer = _writer;
                 if (value >= 0)
                 {
@@ -131,14 +140,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(8);
                         return;
                     case WireType.Varint:
-                        if (value >= 0)
-                        {
-                            writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)value));
-                        }
-                        else
-                        {
-                            writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, (ulong)(long)value));
-                        }
+                        WriteInt32VarintImpl(value);
                         return;
                     case WireType.SignedVarint:
                         writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, Zig(value)));
@@ -341,6 +343,10 @@ namespace ProtoBuf
 
             internal TypeModel Model => _writer?.Model;
 
+            internal WireType WireType => _writer.WireType;
+
+            internal ProtoWriter GetWriter() => _writer;
+
             /// <summary>
             /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
             /// caller is asserting that this relationship is non-recursive; no recursion check will be
@@ -359,6 +365,70 @@ namespace ProtoBuf
                 writer.model.Serialize(writer, ref this, key, value);
                 EndSubItem(token, writer, ref this);
             }
+
+            /// <summary>
+            /// Writes a byte-array to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(System.Buffers.ReadOnlySequence<byte> data)
+            {
+                var writer = _writer;
+                int length = checked((int)data.Length);
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed32:
+                        if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
+                        writer.ImplWriteBytes(ref this, data);
+                        writer.AdvanceAndReset(4);
+                        return;
+                    case WireType.Fixed64:
+                        if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
+                        writer.ImplWriteBytes(ref this, data);
+                        writer.AdvanceAndReset(8);
+                        return;
+                    case WireType.String:
+                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)length) + length);
+                        if (length == 0) return;
+                        writer.ImplWriteBytes(ref this, data);
+                        break;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Writes a byte-array to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(byte[] data, int offset, int length)
+            {
+                var writer = _writer;
+                switch (writer.WireType)
+                {
+                    case WireType.Fixed32:
+                        if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
+                        writer.ImplWriteBytes(ref this, data, offset, 4);
+                        writer.AdvanceAndReset(4);
+                        return;
+                    case WireType.Fixed64:
+                        if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
+                        writer.ImplWriteBytes(ref this, data, offset, 8);
+                        writer.AdvanceAndReset(8);
+                        return;
+                    case WireType.String:
+                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)length) + length);
+                        if (length == 0) return;
+                        writer.ImplWriteBytes(ref this, data, offset, length);
+                        break;
+                    default:
+                        ThrowException(writer);
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Writes a byte-array to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(byte[] data) => WriteBytes(data, 0, data.Length);
         }
     }
 }

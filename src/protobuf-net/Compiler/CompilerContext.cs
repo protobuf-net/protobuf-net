@@ -10,6 +10,7 @@ using System.Diagnostics;
 using ProtoBuf.Internal;
 using ProtoBuf.Collections;
 using System.Collections;
+using System.Linq;
 
 namespace ProtoBuf.Compiler
 {
@@ -563,50 +564,23 @@ namespace ProtoBuf.Compiler
             EmitCall(method);
         }
 
-        internal void EmitStateBasedWrite(string methodName, Local fromValue)
+        internal void EmitStateBasedWrite(string methodName, Local fromValue, Type type = null)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            
-            var method = typeof(ProtoWriter.State).GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
-            var args = method.GetParameters();
-            if (args.Length != 1) throw new ArgumentNullException(nameof(methodName));
+            if (type == null) type = typeof(ProtoWriter.State);
 
-            using var tmp = GetLocalWithValue(args[0].ParameterType, fromValue);
+            var found = (from method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+                           where method.Name == methodName && !method.IsGenericMethodDefinition
+                           && method.ReturnType == typeof(void)
+                           let args = method.GetParameters()
+                           where args.Length == (method.IsStatic ? 2 : 1)
+                           && (!method.IsStatic || args[0].ParameterType == typeof(ProtoWriter.State).MakeByRefType())
+                           select new { Method = method, Type = args[method.IsStatic ? 1 : 0].ParameterType }).Single();
+
+            using var tmp = GetLocalWithValue(found.Type, fromValue);
             LoadState();
             LoadValue(tmp);
-            EmitCall(method);
-        }
-
-        internal void EmitBasicWrite(string methodName, Compiler.Local fromValue, IRuntimeProtoSerializerNode caller)
-        {
-            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            LoadValue(fromValue);
-            LoadWriter(true);
-            EmitCall(GetWriterMethod(methodName, caller));
-        }
-
-        private MethodInfo GetWriterMethod(string methodName, IRuntimeProtoSerializerNode caller)
-        {
-            var method = Compiler.WriterUtil.GetStaticMethod(methodName, caller);
-
-            ParameterInfo[] pis = method.GetParameters();
-            if (pis.Length == 3 && pis[1].ParameterType == typeof(ProtoWriter)
-                && pis[2].ParameterType == Compiler.WriterUtil.ByRefStateType)
-            {
-                return method;
-            }
-
-            throw new ArgumentException("No suitable method found for: " + methodName, nameof(methodName));
-        }
-
-        internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom, IRuntimeProtoSerializerNode caller)
-        {
-            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            MethodInfo method = Compiler.WriterUtil.GetStaticMethod<T>(methodName, caller);
-            if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException(nameof(methodName));
-            LoadValue(valueFrom);
-            LoadWriter(true);
-            EmitCall(method);
+            EmitCall(found.Method);
         }
 
         public void EmitCall(MethodInfo method) { EmitCall(method, null); }

@@ -15,7 +15,7 @@ namespace ProtoBuf.Serializers
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteGuid((Guid)value, dest, ref state);
+            BclHelpers.WriteGuid(ref state, (Guid)value);
         }
 
         public object Read(ref ProtoReader.State state, object value)
@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteGuid), valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(BclHelpers.WriteGuid), valueFrom, typeof(BclHelpers));
         }
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)

@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteNetObject(value, dest, ref state, key, options);
+            BclHelpers.WriteNetObject(ref state, value, key, options);
         }
 
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)

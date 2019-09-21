@@ -144,15 +144,15 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.Single: state.WriteSingle((float)value); return true;
                 case ProtoTypeCode.DateTime:
                     if (SerializeDateTimeKind())
-                        BclHelpers.WriteDateTimeWithKind((DateTime)value, writer, ref state);
+                        BclHelpers.WriteDateTimeWithKind(ref state, (DateTime)value);
                     else
-                        BclHelpers.WriteDateTime((DateTime)value, writer, ref state);
+                        BclHelpers.WriteDateTime(ref state, (DateTime)value);
                     return true;
-                case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer, ref state); return true;
+                case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal(ref state, (decimal)value); return true;
                 case ProtoTypeCode.String: state.WriteString((string)value); return true;
-                case ProtoTypeCode.ByteArray: ProtoWriter.WriteBytes((byte[])value, writer, ref state); return true;
-                case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan((TimeSpan)value, writer, ref state); return true;
-                case ProtoTypeCode.Guid: BclHelpers.WriteGuid((Guid)value, writer, ref state); return true;
+                case ProtoTypeCode.ByteArray: state.WriteBytes((byte[])value); return true;
+                case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan(ref state, (TimeSpan)value); return true;
+                case ProtoTypeCode.Guid: BclHelpers.WriteGuid(ref state, (Guid)value); return true;
                 case ProtoTypeCode.Uri: state.WriteString(((Uri)value).OriginalString); return true;
             }
 

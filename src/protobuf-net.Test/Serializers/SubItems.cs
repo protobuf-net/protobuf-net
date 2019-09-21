@@ -17,7 +17,7 @@ namespace ProtoBuf.unittest.Serializers
                 st.WriteFieldHeader(5, WireType.String);
                 SubItemToken token = ProtoWriter.StartSubItem(new object(), pw, ref st);
                 st.WriteFieldHeader(6, WireType.String);
-                ProtoWriter.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }, pw, ref st);
+                st.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
                 ProtoWriter.EndSubItem(token, pw, ref st);
             }, "2A" // 5 * 8 + 2 = 42
              + "0A" // sub-item length = 10

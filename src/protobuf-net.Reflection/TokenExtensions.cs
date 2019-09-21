@@ -220,14 +220,7 @@ namespace ProtoBuf.Reflection
 
                     if (!asBytes)
                     {
-#if NETSTANDARD1_3
-                        string s = ms.TryGetBuffer(out var segment)
-                            ? Encoding.UTF8.GetString(segment.Array, segment.Offset, segment.Count)
-                            : Encoding.UTF8.GetString(ms.ToArray());
-
-#else
                         string s = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
-#endif
                         return s.Replace("\\", @"\\")
                             .Replace("\'", @"\'")
                             .Replace("\"", @"\""")

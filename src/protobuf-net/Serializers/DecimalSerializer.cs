@@ -21,12 +21,12 @@ namespace ProtoBuf.Serializers
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteDecimal((decimal)value, dest, ref state);
+            BclHelpers.WriteDecimal(ref state, (decimal)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteDecimal), valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(BclHelpers.WriteDecimal), valueFrom, typeof(BclHelpers));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

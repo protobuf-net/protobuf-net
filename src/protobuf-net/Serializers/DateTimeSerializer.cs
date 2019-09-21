@@ -36,18 +36,18 @@ namespace ProtoBuf.Serializers
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (wellKnown)
-                BclHelpers.WriteTimestamp((DateTime)value, dest, ref state);
+                BclHelpers.WriteTimestamp(ref state, (DateTime)value);
             else if (includeKind)
-                BclHelpers.WriteDateTimeWithKind((DateTime)value, dest, ref state);
+                BclHelpers.WriteDateTimeWithKind(ref state, (DateTime)value);
             else
-                BclHelpers.WriteDateTime((DateTime)value, dest, ref state);
+                BclHelpers.WriteDateTime(ref state, (DateTime)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite<BclHelpers>(
+            ctx.EmitStateBasedWrite(
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
-                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, this);
+                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, typeof(BclHelpers));
         }
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)

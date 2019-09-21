@@ -160,17 +160,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteBytes(byte[] data, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteBytes(data, writer, ref state);
-        }
-
-        /// <summary>
-        /// Writes a byte-array to the stream; supported wire-types: String
-        /// </summary>
-        public static void WriteBytes(byte[] data, ProtoWriter writer, ref State state)
-        {
-            if (data == null) ThrowHelper.ThrowArgumentNullException(nameof(data));
-            WriteBytes(data, 0, data.Length, writer, ref state);
+            writer.DefaultState().WriteBytes(data);
         }
 
         /// <summary>
@@ -179,66 +169,10 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteBytes(data, offset, length, writer, ref state);
+            writer.DefaultState().WriteBytes(data, offset, length);
         }
 
-        /// <summary>
-        /// Writes a byte-array to the stream; supported wire-types: String
-        /// </summary>
-        public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer, ref State state)
-        {
-            switch (writer.WireType)
-            {
-                case WireType.Fixed32:
-                    if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
-                    writer.ImplWriteBytes(ref state, data, offset, 4);
-                    writer.AdvanceAndReset(4);
-                    return;
-                case WireType.Fixed64:
-                    if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
-                    writer.ImplWriteBytes(ref state, data, offset, 8);
-                    writer.AdvanceAndReset(8);
-                    return;
-                case WireType.String:
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)length) + length);
-                    if (length == 0) return;
-                    writer.ImplWriteBytes(ref state, data, offset, length);
-                    break;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Writes a byte-array to the stream; supported wire-types: String
-        /// </summary>
-        public static void WriteBytes(System.Buffers.ReadOnlySequence<byte> data, ProtoWriter writer, ref State state)
-        {
-            int length = checked((int)data.Length);
-            switch (writer.WireType)
-            {
-                case WireType.Fixed32:
-                    if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
-                    writer.ImplWriteBytes(ref state, data);
-                    writer.AdvanceAndReset(4);
-                    return;
-                case WireType.Fixed64:
-                    if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
-                    writer.ImplWriteBytes(ref state, data);
-                    writer.AdvanceAndReset(8);
-                    return;
-                case WireType.String:
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)length) + length);
-                    if (length == 0) return;
-                    writer.ImplWriteBytes(ref state, data);
-                    break;
-                default:
-                    ThrowException(writer);
-                    break;
-            }
-        }
+        
 
         private int depth = 0;
         private const int RecursionCheckDepth = 25;

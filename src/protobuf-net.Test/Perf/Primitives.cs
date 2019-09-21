@@ -32,7 +32,7 @@ namespace ProtoBuf.Perf
                 using (var writer = ProtoWriter.Create(out var writeState, ms, RuntimeTypeModel.Default))
                 {
                     writeState.WriteFieldHeader(1, WireType.String);
-                    BclHelpers.WriteDecimal(value, writer, ref writeState);
+                    BclHelpers.WriteDecimal(ref writeState, value);
                     writer.Close(ref writeState);
                 }
                 var hex = BitConverter.ToString(
@@ -106,7 +106,7 @@ namespace ProtoBuf.Perf
             using (var writer = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default))
             {
                 state.WriteFieldHeader(1, WireType.String);
-                BclHelpers.WriteGuid(value, writer, ref state);
+                BclHelpers.WriteGuid(ref state, value);
                 writer.Close(ref state);
             }
 
