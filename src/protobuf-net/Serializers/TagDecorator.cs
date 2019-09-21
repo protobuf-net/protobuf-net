@@ -75,11 +75,18 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.LoadState();
-            ctx.LoadValue((int)fieldNumber);
-            ctx.LoadValue((int)wireType);
-            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
-            Tail.EmitWrite(ctx, valueFrom);
+            if (Tail is IDirectWriteNode dw && dw.CanEmitDirectWrite(wireType))
+            {
+                dw.EmitDirectWrite(fieldNumber, wireType, ctx, valueFrom);
+            }
+            else
+            {
+                ctx.LoadState();
+                ctx.LoadValue((int)fieldNumber);
+                ctx.LoadValue((int)wireType);
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
+                Tail.EmitWrite(ctx, valueFrom);
+            }
         }
 
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

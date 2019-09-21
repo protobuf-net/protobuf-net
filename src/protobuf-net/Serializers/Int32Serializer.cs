@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class Int32Serializer : IRuntimeProtoSerializerNode
+    internal sealed class Int32Serializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
         private static readonly Type expectedType = typeof(int);
 
@@ -31,6 +32,20 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), ExpectedType);
+        }
+
+        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => wireType == WireType.Varint;
+
+        void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            using (var loc = ctx.GetLocalWithValue(typeof(int), valueFrom))
+            {
+                ctx.LoadState();
+                ctx.LoadValue(fieldNumber);
+                ctx.LoadValue(loc);
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteInt32Varint), BindingFlags.Instance | BindingFlags.Public,
+                    null, new[] { typeof(int), typeof(int) }, null));
+            }
         }
     }
 }

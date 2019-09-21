@@ -40,21 +40,11 @@ namespace ProtoBuf.Serializers
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Compiler.CodeLabel done = ctx.DefineLabel();
-            if (valueFrom == null)
+            using(var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             {
-                ctx.CopyValue(); // on the stack
-                Compiler.CodeLabel needToPop = ctx.DefineLabel();
-                EmitBranchIfDefaultValue(ctx, needToPop);
-                Tail.EmitWrite(ctx, null);
-                ctx.Branch(done, true);
-                ctx.MarkLabel(needToPop);
-                ctx.DiscardValue();
-            }
-            else
-            {
-                ctx.LoadValue(valueFrom); // variable/parameter
+                ctx.LoadValue(loc);
                 EmitBranchIfDefaultValue(ctx, done);
-                Tail.EmitWrite(ctx, valueFrom);
+                Tail.EmitWrite(ctx, loc);
             }
             ctx.MarkLabel(done);
         }

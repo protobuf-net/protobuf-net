@@ -8,9 +8,18 @@ namespace ProtoBuf
         ref partial struct State
         {
             /// <summary>
+            /// Writes a string to the stream
+            /// </summary>
+            public void WriteString(int fieldNumber, string value, StringMap map = null)
+            {
+                WriteFieldHeader(fieldNumber, WireType.String);
+                WriteString(value, map);
+            }
+
+            /// <summary>
             /// Writes a string to the stream; supported wire-types: String
             /// </summary>
-            public void WriteString(string value)
+            public void WriteString(string value, StringMap map = null)
             {
                 var writer = _writer;
                 switch (writer.WireType)
@@ -47,28 +56,8 @@ namespace ProtoBuf
             public void WriteFieldHeader(int fieldNumber, WireType wireType)
             {
                 var writer = _writer;
-                if (writer.WireType != WireType.None)
-                {
-                    ThrowHelper.ThrowInvalidOperationException("Cannot write a " + wireType.ToString()
-                    + " header until the " + writer.WireType.ToString() + " data has been written");
-                }
+                if (writer.WireType != WireType.None) FailPendingField(writer, wireType);
                 if (fieldNumber < 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fieldNumber));
-#if DEBUG
-            switch (wireType)
-            {   // validate requested header-type
-                case WireType.Fixed32:
-                case WireType.Fixed64:
-                case WireType.String:
-                case WireType.StartGroup:
-                case WireType.SignedVarint:
-                case WireType.Varint:
-                    break; // fine
-                case WireType.None:
-                case WireType.EndGroup:
-                default:
-                    ThrowHelper.ThrowArgumentException("Invalid wire-type: " + wireType.ToString(), nameof(wireType));
-            }
-#endif
                 writer._needFlush = true;
                 if (writer.packedFieldNumber == 0)
                 {
@@ -76,25 +65,52 @@ namespace ProtoBuf
                     writer.WireType = wireType;
                     WriteHeaderCore(fieldNumber, wireType, writer, ref this);
                 }
-                else if (writer.packedFieldNumber == fieldNumber)
-                { // we'll set things up, but note we *don't* actually write the header here
-                    switch (wireType)
-                    {
-                        case WireType.Fixed32:
-                        case WireType.Fixed64:
-                        case WireType.Varint:
-                        case WireType.SignedVarint:
-                            break; // fine
-                        default:
-                            ThrowHelper.ThrowInvalidOperationException("Wire-type cannot be encoded as packed: " + wireType.ToString());
-                            break;
+                else
+                {
+                    WritePackedField(writer, fieldNumber, wireType);
+                }
+
+                static void FailPendingField(ProtoWriter writer, WireType wireType)
+                {
+                    ThrowHelper.ThrowInvalidOperationException("Cannot write a " + wireType.ToString()
+                    + " header until the " + writer.WireType.ToString() + " data has been written");
+                }
+                static void WritePackedField(ProtoWriter writer, int fieldNumber, WireType wireType)
+                {
+                    if (writer.packedFieldNumber == fieldNumber)
+                    { // we'll set things up, but note we *don't* actually write the header here
+                        switch (wireType)
+                        {
+                            case WireType.Fixed32:
+                            case WireType.Fixed64:
+                            case WireType.Varint:
+                            case WireType.SignedVarint:
+                                break; // fine
+                            default:
+                                ThrowHelper.ThrowInvalidOperationException("Wire-type cannot be encoded as packed: " + wireType.ToString());
+                                break;
+                        }
+                        writer.fieldNumber = fieldNumber;
+                        writer.WireType = wireType;
                     }
-                    writer.fieldNumber = fieldNumber;
-                    writer.WireType = wireType;
+                    else
+                    {
+                        ThrowHelper.ThrowInvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber.ToString() + " but received " + fieldNumber.ToString());
+                    }
+                }
+            }
+
+            public void WriteInt32Varint(int fieldNumber, int value)
+            {
+                WriteFieldHeader(fieldNumber, WireType.Varint);
+                var writer = _writer;
+                if (value >= 0)
+                {
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)value));
                 }
                 else
                 {
-                    ThrowHelper.ThrowInvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber.ToString() + " but received " + fieldNumber.ToString());
+                    writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, (ulong)(long)value));
                 }
             }
 

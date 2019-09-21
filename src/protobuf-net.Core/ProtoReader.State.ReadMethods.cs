@@ -333,7 +333,7 @@ namespace ProtoBuf
             /// Reads a string from the stream (using UTF8); supported wire-types: String
             /// </summary>
             [MethodImpl(HotPath)]
-            public string ReadString()
+            public string ReadString(StringMap map = null)
             {
                 if (_reader.WireType == WireType.String)
                 {
