@@ -42,37 +42,6 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type).
-        /// </summary>
-        /// <param name="value">The object to write.</param>
-        /// <param name="key">The key that uniquely identifies the type within the model.</param>
-        /// <param name="writer">The destination.</param>
-        /// <param name="state">Writer state</param>
-        public static void WriteObject(object value, int key, ProtoWriter writer, ref State state)
-        {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            if (writer.model == null)
-            {
-                ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
-            }
-
-            SubItemToken token = StartSubItem(value, writer, ref state);
-            if (key >= 0)
-            {
-                writer.model.Serialize(writer, ref state, key, value);
-            }
-            else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, ref state, value.GetType(), DataFormat.Default, TypeModel.ListItemTag, value, false, null))
-            {
-                // all ok
-            }
-            else
-            {
-                TypeModel.ThrowUnexpectedType(value.GetType());
-            }
-
-            EndSubItem(token, writer, ref state);
-        }
-        /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
         /// caller is asserting that this relationship is non-recursive; no recursion check will be
         /// performed.
@@ -84,45 +53,6 @@ namespace ProtoBuf
         public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer)
         {
             writer.DefaultState().WriteRecursionSafeObject(value, key);
-        }
-
-        internal static void WriteObject(ProtoWriter writer, ref State state, object value, int key, PrefixStyle style, int fieldNumber)
-        {
-            if (writer.model == null)
-            {
-                ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
-            }
-            if (writer.WireType != WireType.None) throw ProtoWriter.CreateException(ref state);
-
-            switch (style)
-            {
-                case PrefixStyle.Base128:
-                    writer.WireType = WireType.String;
-                    writer.fieldNumber = fieldNumber;
-                    if (fieldNumber > 0) WriteHeaderCore(fieldNumber, WireType.String, writer, ref state);
-                    break;
-                case PrefixStyle.Fixed32:
-                case PrefixStyle.Fixed32BigEndian:
-                    writer.fieldNumber = 0;
-                    writer.WireType = WireType.Fixed32;
-                    break;
-                default:
-                    ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
-                    break;
-            }
-            SubItemToken token = writer.StartSubItem(ref state, value, style);
-            if (key < 0)
-            {
-                if (!writer.model.TrySerializeAuxiliaryType(writer, ref state, value.GetType(), DataFormat.Default, TypeModel.ListItemTag, value, false, null))
-                {
-                    TypeModel.ThrowUnexpectedType(value.GetType());
-                }
-            }
-            else
-            {
-                writer.model.Serialize(writer, ref state, key, value);
-            }
-            writer.EndSubItem(ref state, token, style);
         }
 
         internal int GetTypeKey(ref Type type)
@@ -143,15 +73,6 @@ namespace ProtoBuf
         public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
             writer.DefaultState().WriteFieldHeader(fieldNumber, wireType);
-        }
-
-
-        internal static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer, ref State state)
-        {
-            uint header = (((uint)fieldNumber) << 3)
-                | (((uint)wireType) & 7);
-            int bytes = writer.ImplWriteVarint32(ref state, header);
-            writer.Advance(bytes);
         }
 
         /// <summary>
@@ -190,17 +111,6 @@ namespace ProtoBuf
             return writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
         }
 
-        /// <summary>
-        /// Indicates the start of a nested record.
-        /// </summary>
-        /// <param name="instance">The instance to write.</param>
-        /// <param name="writer">The destination.</param>
-        /// <param name="state">Writer state</param>
-        /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
-        [Obsolete(PreferWriteSubItem, false)]
-        public static SubItemToken StartSubItem(object instance, ProtoWriter writer, ref State state)
-            => writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
-
         private void PreSubItem(object instance)
         {
             if (++depth > RecursionCheckDepth)
@@ -208,38 +118,6 @@ namespace ProtoBuf
                 CheckRecursionStackAndPush(instance);
             }
             if (packedFieldNumber != 0) ThrowHelper.ThrowInvalidOperationException("Cannot begin a sub-item while performing packed encoding");
-        }
-
-        [Obsolete(PreferWriteSubItem, false)]
-        private SubItemToken StartSubItem(ref State state, object instance, PrefixStyle style)
-        {
-            PreSubItem(instance);
-            switch (WireType)
-            {
-                case WireType.StartGroup:
-                    WireType = WireType.None;
-                    return new SubItemToken((long)(-fieldNumber));
-                case WireType.Fixed32:
-                    switch (style)
-                    {
-                        case PrefixStyle.Fixed32:
-                        case PrefixStyle.Fixed32BigEndian:
-                            break; // OK
-                        default:
-                            throw CreateException(this);
-                    }
-                    goto case WireType.String;
-                case WireType.String:
-#if DEBUG
-                    if (model != null && model.ForwardsOnly)
-                    {
-                        ThrowHelper.ThrowProtoException("Should not be buffering data: " + instance ?? "(null)");
-                    }
-#endif
-                    return ImplStartLengthPrefixedSubItem(ref state, instance, style);
-                default:
-                    throw CreateException(this);
-            }
         }
 
         private List<object> recursionStack;
@@ -270,45 +148,18 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            writer.EndSubItem(ref state, token, PrefixStyle.Base128);
+            writer.DefaultState().EndSubItem(token, PrefixStyle.Base128);
         }
 
-        /// <summary>
-        /// Indicates the end of a nested record.
-        /// </summary>
-        /// <param name="token">The token obtained from StartubItem.</param>
-        /// <param name="writer">The destination.</param>
-        /// <param name="state">Writer state</param>
-        [Obsolete(PreferWriteSubItem, false)]
-        public static void EndSubItem(SubItemToken token, ProtoWriter writer, ref State state)
-            => writer.EndSubItem(ref state, token, PrefixStyle.Base128);
-
-        private void PostSubItem()
+        private void PostSubItem(ref State state)
         {
-            if (WireType != WireType.None) { throw CreateException(this); }
-            if (depth <= 0) throw CreateException(this);
+            if (WireType != WireType.None) state.ThrowInvalidSerializationOperation();
+            if (depth <= 0) state.ThrowInvalidSerializationOperation();
             if (depth-- > RecursionCheckDepth)
             {
                 PopRecursionStack();
             }
             packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
-        }
-
-        [Obsolete(PreferWriteSubItem, false)]
-        private void EndSubItem(ref State state, SubItemToken token, PrefixStyle style)
-        {
-            PostSubItem();
-            int value = (int)token.value64;
-            if (value < 0)
-            {   // group - very simple append
-                WriteHeaderCore(-value, WireType.EndGroup, this, ref state);
-                WireType = WireType.None;
-            }
-            else
-            {
-                ImplEndLengthPrefixedSubItem(ref state, token, style);
-            }
         }
 
         protected private ProtoWriter() { }
@@ -372,6 +223,31 @@ namespace ProtoBuf
             Context = null;
         }
 
+
+        /// <summary>
+        /// Writes a sub-item to the input writer
+        /// </summary>
+        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = state.StartSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
+            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
+            state.EndSubItem(tok, style);
+#pragma warning restore CS0618
+        }
+
+        /// <summary>
+        /// Writes a sub-item to the input writer
+        /// </summary>
+        protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer) where T : class
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = state.StartSubItem(null, PrefixStyle.Base128);
+            serializer.WriteSubType(ref state, value);
+            state.EndSubItem(tok, PrefixStyle.Base128);
+#pragma warning restore CS0618
+        }
+
         /// <summary>
         /// Abandon any pending unflushed data
         /// </summary>
@@ -403,17 +279,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public void Close()
         {
-            State state = DefaultState();
-            Close(ref state);
-        }
-        /// <summary>
-        /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
-        /// by this operation.
-        /// </summary>
-        public void Close(ref State state)
-        {
-            CheckClear(ref state);
-            Cleanup();
+            DefaultState().Close();
         }
 
         internal int Depth => depth;
@@ -462,17 +328,6 @@ namespace ProtoBuf
         private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);
         protected private abstract bool ImplDemandFlushOnDispose { get; }
-
-        /// <summary>
-        /// Writes any uncommitted data to the output
-        /// </summary>
-        public void Flush(ref State state)
-        {
-            if (TryFlush(ref state))
-            {
-                _needFlush = false;
-            }
-        }
 
         /// <summary>
         /// Writes any buffered data (if possible) to the underlying stream.
@@ -584,15 +439,10 @@ namespace ProtoBuf
             ThrowHelper.ThrowProtoException("No wire-value is mapped to the enum " + rhs + " at position " + writer._position64.ToString());
         }
 
-        // general purpose serialization exception message
-        internal static Exception CreateException(ref ProtoWriter.State state)
-        {
-            return new ProtoException("Invalid serialization operation with wire-type " + state.WireType.ToString() + " at position " + state.GetPosition().ToString());
-        }
         internal static void ThrowException(ProtoWriter writer)
         {
             var state = writer == null ? default : writer.DefaultState();
-            throw CreateException(ref state);
+            throw state.ThrowInvalidSerializationOperation();
         }
 
         /// <summary>
@@ -614,37 +464,6 @@ namespace ProtoBuf
             AppendExtensionData(instance, writer, ref state);
         }
 
-        /// <summary>
-        /// Copies any extension data stored for the instance to the underlying stream
-        /// </summary>
-        public static void AppendExtensionData(IExtensible instance, ref State state)
-        {
-            if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
-            // we expect the writer to be raw here; the extension data will have the
-            // header detail, so we'll copy it implicitly
-            if (state.WireType != WireType.None) throw CreateException(ref state);
-
-            IExtension extn = instance.GetExtensionObject(false);
-            if (extn != null)
-            {
-                // unusually we *don't* want "using" here; the "finally" does that, with
-                // the extension object being responsible for disposal etc
-                Stream source = extn.BeginQuery();
-                try
-                {
-                    if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
-                    {
-                        writer.ImplWriteBytes(ref state, data.Array, data.Offset, data.Count);
-                        writer.Advance(data.Count);
-                    }
-                    else
-                    {
-                        writer.ImplCopyRawFromStream(ref state, source);
-                    }
-                }
-                finally { extn.EndQuery(source); }
-            }
-        }
 
         /// <summary>
         /// Used for packed encoding; indicates that the next field should be skipped rather than
@@ -680,28 +499,6 @@ namespace ProtoBuf
             State state = writer.DefaultState();
             WritePackedPrefix(elementCount, wireType, writer, ref state);
         }
-        /// <summary>
-        /// Used for packed encoding; writes the length prefix using fixed sizes rather than using
-        /// buffering. Only valid for fixed-32 and fixed-64 encoding.
-        /// </summary>
-        public static void WritePackedPrefix(int elementCount, WireType wireType, ProtoWriter writer, ref State state)
-        {
-            if (writer.WireType != WireType.String) ThrowHelper.ThrowInvalidOperationException("Invalid wire-type: " + writer.WireType);
-            if (elementCount < 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(elementCount));
-            ulong bytes;
-            switch (wireType)
-            {
-                // use long in case very large arrays are enabled
-                case WireType.Fixed32: bytes = ((ulong)elementCount) << 2; break; // x4
-                case WireType.Fixed64: bytes = ((ulong)elementCount) << 3; break; // x8
-                default:
-                    ThrowHelper.ThrowArgumentOutOfRangeException(nameof(wireType), "Invalid wire-type: " + wireType);
-                    bytes = default;
-                    break;
-            };
-            int prefixLength = writer.ImplWriteVarint64(ref state, bytes);
-            writer.AdvanceAndReset(prefixLength);
-        }
 
         internal string SerializeType(Type type)
         {
@@ -722,54 +519,5 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
-
-        /// <summary>
-        /// Writes a sub-item to the input writer
-        /// </summary>
-        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
-        {
-#pragma warning disable CS0618 // StartSubItem/EndSubItem
-            var tok = StartSubItem(ref state, TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
-            EndSubItem(ref state, tok, style);
-#pragma warning restore CS0618
-        }
-
-        /// <summary>
-        /// Writes a sub-item to the input writer
-        /// </summary>
-        protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer) where T : class
-        {
-#pragma warning disable CS0618 // StartSubItem/EndSubItem
-            var tok = StartSubItem(ref state, null, PrefixStyle.Base128);
-            serializer.WriteSubType(ref state, value);
-            EndSubItem(ref state, tok, PrefixStyle.Base128);
-#pragma warning restore CS0618
-        }
-
-        /// <summary>
-        /// Writes an object to the input writer
-        /// </summary>
-        public long Serialize<T>(ref State state, T value, IProtoSerializer<T> serializer = null)
-        {
-            try
-            {
-                CheckClear(ref state);
-                long before = GetPosition(ref state);
-                if (value != null)
-                {
-                    SetRootObject(value);
-                    (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
-                }
-                CheckClear(ref state);
-                long after = GetPosition(ref state);
-                return after - before;
-            }
-            catch
-            {
-                Abandon();
-                throw;
-            }
-        }
-    }    
+    }
 }

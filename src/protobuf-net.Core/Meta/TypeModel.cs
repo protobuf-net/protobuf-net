@@ -109,16 +109,17 @@ namespace ProtoBuf.Meta
                     switch (wireType)
                     {
                         case WireType.None:
-                            throw ProtoWriter.CreateException(ref state);
+                            state.ThrowInvalidSerializationOperation();
+                            return false;
                         case WireType.StartGroup:
                         case WireType.String:
                             // needs a wrapping length etc
-                            SubItemToken token = ProtoWriter.StartSubItem(value, writer, ref state);
+                            SubItemToken token = state.StartSubItem(value);
                             Serialize(ref state, modelKey, value);
-                            ProtoWriter.EndSubItem(token, writer, ref state);
+                            state.EndSubItem(token);
                             return true;
                         default:
-                            Serialize(writer, ref state, modelKey, value);
+                            Serialize(ref state, modelKey, value);
                             return true;
                     }
                 }
@@ -177,16 +178,16 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        private void SerializeCore(ProtoWriter writer, ref ProtoWriter.State state, object value)
+        private void SerializeCore(ref ProtoWriter.State state, object value)
         {
             if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
             Type type = value.GetType();
             int key = GetKey(ref type);
             if (key >= 0)
             {
-                Serialize(writer, ref state, key, value);
+                Serialize(ref state, key, value);
             }
-            else if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+            else if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
             {
                 ThrowUnexpectedType(type);
             }
@@ -214,22 +215,22 @@ namespace ProtoBuf.Meta
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
             using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            SerializeFallback(writer, ref state, value);
+            SerializeFallback(ref state, value);
         }
 
-        internal void SerializeFallback(ProtoWriter writer, ref ProtoWriter.State state, object value)
+        internal void SerializeFallback(ref ProtoWriter.State state, object value)
         {
-            if (!DynamicStub.TrySerialize(value.GetType(), this, writer, ref state, value))
+            if (!DynamicStub.TrySerialize(value.GetType(), this, ref state, value))
             {
                 try
                 {
-                    writer.SetRootObject(value);
-                    SerializeCore(writer, ref state, value);
+                    state.SetRootObject(value);
+                    SerializeCore(ref state, value);
                     writer.Close(ref state);
                 }
                 catch
                 {
-                    writer.Abandon();
+                    state.Abandon();
                     throw;
                 }
             }
@@ -585,30 +586,35 @@ namespace ProtoBuf.Meta
                 type = value.GetType();
             }
             int key = GetKey(ref type);
-            using ProtoWriter writer = ProtoWriter.Create(out var state, dest, this, context);
+
+            ProtoWriter.Create(out var state, dest, this, context);
             try
             {
                 switch (style)
                 {
                     case PrefixStyle.None:
-                        Serialize(writer, ref state, key, value);
+                        Serialize(ref state, key, value);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
                     case PrefixStyle.Fixed32BigEndian:
-                        ProtoWriter.WriteObject(writer, ref state, value, key, style, fieldNumber);
+                        state.WriteObject(value, key, style, fieldNumber);
                         break;
                     default:
                         ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
                         break;
                 }
-                writer.Flush(ref state);
-                writer.Close(ref state);
+                state.Flush();
+                state.Close();
             }
             catch
             {
-                writer.Abandon();
+                state.Abandon();
                 throw;
+            }
+            finally
+            {
+                state.Dispose();
             }
         }
         /// <summary>
@@ -1485,19 +1491,19 @@ namespace ProtoBuf.Meta
                 if (key >= 0 && !type.IsEnum)
                 {
                     using MemoryStream ms = new MemoryStream();
-                    using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
+                    using (ProtoWriter.Create(out var writeState, ms, this, null))
                     {
-                        writer.SetRootObject(value);
+                        writeState.SetRootObject(value);
                         try
                         {
-                            Serialize(writer, ref writeState, key, value);
+                            Serialize(ref writeState, key, value);
                         }
                         catch
                         {
-                            writer.Abandon();
+                            writeState.Abandon();
                             throw;
                         }
-                        writer.Close(ref writeState);
+                        writeState.Close();
                     }
                     ms.Position = 0;
                     var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
@@ -1526,14 +1532,14 @@ namespace ProtoBuf.Meta
                     {
                         try
                         {
-                            if (!TrySerializeAuxiliaryType(writer, ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                            if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
                         }
                         catch
                         {
                             writer.Abandon();
                             throw;
                         }
-                        writer.Close(ref writeState);
+                        writeState.Close();
                     }
                     ms.Position = 0;
                     var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
@@ -1786,8 +1792,10 @@ namespace ProtoBuf.Meta
 
             public void Serialize(Stream serializationStream, object graph)
             {
-                using var reader = ProtoWriter.Create(out var state, serializationStream, model, Context);
-                model.SerializeFallback(reader, ref state, graph);
+                using (ProtoWriter.Create(out var state, serializationStream, model, Context))
+                {
+                    model.SerializeFallback(ref state, graph);
+                }
             }
 
             public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector { get; set; }

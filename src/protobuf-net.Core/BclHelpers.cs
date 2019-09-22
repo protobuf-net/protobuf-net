@@ -548,10 +548,10 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    ProtoWriter.WriteObject(value, key, dest, ref state);
+                    state.WriteObject(value, key);
                 }
             }
-            ProtoWriter.EndSubItem(token, dest, ref state);
+            state.EndSubItem(token);
         }
     }
 }

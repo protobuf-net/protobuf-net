@@ -1218,10 +1218,10 @@ namespace Google.Protobuf.Reflection
                     var hive = OptionHive.Build(options.UninterpretedOptions);
 
                     // first pass is used to sort the fields so we write them in the right order
-                    AppendOptions(this, writer, ref state, ctx, options.Extendee, hive.Children, true, 0, false);
+                    AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, true, 0, false);
                     // second pass applies the data
-                    AppendOptions(this, writer, ref state, ctx, options.Extendee, hive.Children, false, 0, false);
-                    writer.Close(ref state);
+                    AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, false, 0, false);
+                    state.Close();
                 }
                 options.UninterpretedOptions.RemoveAll(x => x.Applied);
             }
@@ -1293,10 +1293,10 @@ namespace Google.Protobuf.Reflection
                 return root;
             }
         }
-        private static void AppendOptions(FileDescriptorProto file, ProtoWriter writer, ref ProtoWriter.State state, ParserContext ctx, string extendee, List<OptionHive> options, bool resolveOnly, int depth, bool messageSet)
+        private static void AppendOptions(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, List<OptionHive> options, bool resolveOnly, int depth, bool messageSet)
         {
             foreach (var option in options)
-                AppendOption(file, writer, ref state, ctx, extendee, option, resolveOnly, depth, messageSet);
+                AppendOption(file, ref state, ctx, extendee, option, resolveOnly, depth, messageSet);
 
             if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
             {
@@ -1304,7 +1304,7 @@ namespace Google.Protobuf.Reflection
                 options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
             }
         }
-        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
+        private static void AppendOption(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
         {
             static bool ShouldWrite(FieldDescriptorProto f, string v, string d)
                 => f.label != FieldDescriptorProto.Label.LabelOptional || v != (f.DefaultValue ?? d);
@@ -1350,33 +1350,33 @@ namespace Google.Protobuf.Reflection
                     {
                         if (resolveOnly)
                         {
-                            AppendOptions(nextFile, writer, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
+                            AppendOptions(nextFile, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
                         }
                         else if (messageSet)
                         {
                             state.WriteFieldHeader(1, WireType.StartGroup);
-                            var grp = ProtoWriter.StartSubItem(null, writer, ref state);
+                            var grp = state.StartSubItem(null);
 
                             state.WriteFieldHeader(2, WireType.Varint);
                             state.WriteInt32(field.Number);
 
                             state.WriteFieldHeader(3, WireType.String);
-                            var payload = ProtoWriter.StartSubItem(null, writer, ref state);
+                            var payload = state.StartSubItem(null);
 
-                            AppendOptions(nextFile, writer, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
+                            AppendOptions(nextFile, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
 
-                            ProtoWriter.EndSubItem(payload, writer, ref state);
-                            ProtoWriter.EndSubItem(grp, writer, ref state);
+                            state.EndSubItem(payload);
+                            state.EndSubItem(grp);
                         }
                         else
                         {
                             state.WriteFieldHeader(field.Number,
                                 field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String);
-                            var tok = ProtoWriter.StartSubItem(null, writer, ref state);
+                            var tok = state.StartSubItem(null);
 
-                            AppendOptions(nextFile, writer, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
+                            AppendOptions(nextFile, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
 
-                            ProtoWriter.EndSubItem(tok, writer, ref state);
+                            state.EndSubItem(tok);
                         }
                     }
                     if (resolveOnly) return; // nothing more to do
@@ -1387,22 +1387,22 @@ namespace Google.Protobuf.Reflection
                         if (messageSet)
                         {
                             state.WriteFieldHeader(1, WireType.StartGroup);
-                            var grp = ProtoWriter.StartSubItem(null, writer, ref state);
+                            var grp = state.StartSubItem(null);
 
                             state.WriteFieldHeader(2, WireType.Varint);
                             state.WriteInt32(field.Number);
 
                             state.WriteFieldHeader(3, WireType.String);
-                            var payload = ProtoWriter.StartSubItem(null, writer, ref state);
-                            ProtoWriter.EndSubItem(payload, writer, ref state);
-                            ProtoWriter.EndSubItem(grp, writer, ref state);
+                            var payload = state.StartSubItem(null);
+                            state.EndSubItem(payload);
+                            state.EndSubItem(grp);
                         }
                         else
                         {
                             state.WriteFieldHeader(field.Number,
                                    field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String);
-                            var payload = ProtoWriter.StartSubItem(null, writer, ref state);
-                            ProtoWriter.EndSubItem(payload, writer, ref state);
+                            var payload = state.StartSubItem(null);
+                            state.EndSubItem(payload);
                         }
                         option.Options.Single().Applied = true;
                     }

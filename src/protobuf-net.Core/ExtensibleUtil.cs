@@ -100,12 +100,12 @@ namespace ProtoBuf
                 {
                     try
                     {
-                        model.TrySerializeAuxiliaryType(writer, ref state, null, format, tag, value, false, null);
-                        writer.Close(ref state);
+                        model.TrySerializeAuxiliaryType(ref state, null, format, tag, value, false, null);
+                        state.Close();
                     }
                     catch
                     {
-                        writer.Abandon();
+                        state.Abandon();
                         throw;
                     }
                 }

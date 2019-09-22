@@ -672,10 +672,10 @@ namespace ProtoBuf
                         return;
                     case WireType.StartGroup:
                         SubItemToken readerToken = StartSubItem(),
-                            writerToken = ProtoWriter.StartSubItem(null, writer, ref writeState);
+                            writerToken = writeState.StartSubItem(null);
                         while (ReadFieldHeader() > 0) { AppendExtensionField(writer, ref writeState); }
                         EndSubItem(readerToken);
-                        ProtoWriter.EndSubItem(writerToken, writer, ref writeState);
+                        writeState.EndSubItem(writerToken);
                         return;
                     case WireType.None: // treat as explicit errorr
                     case WireType.EndGroup: // treat as explicit error

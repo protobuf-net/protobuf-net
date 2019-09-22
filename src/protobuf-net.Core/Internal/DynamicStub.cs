@@ -20,8 +20,8 @@ namespace ProtoBuf.Internal
             => Get(type).TryDeserialize(model, ref state, ref value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySerialize(Type type, TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value)
-            => Get(type).TrySerialize(model, writer, ref state, value);
+        internal static bool TrySerialize(Type type, TypeModel model, ref ProtoWriter.State state, object value)
+            => Get(type).TrySerialize(model, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeepClone(TypeModel model, Type type, ref object value)
@@ -51,7 +51,7 @@ namespace ProtoBuf.Internal
 
         protected abstract bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value);
 
-        protected abstract bool TrySerialize(TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value);
+        protected abstract bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value);
 
         protected abstract bool TryDeepClone(TypeModel model, ref object value);
 
@@ -62,7 +62,7 @@ namespace ProtoBuf.Internal
             private NilStub() { }
             protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
                 => false;
-            protected override bool TrySerialize(TypeModel model, ProtoWriter reader, ref ProtoWriter.State state, object value)
+            protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
                 => false;
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
@@ -84,7 +84,7 @@ namespace ProtoBuf.Internal
                 return true;
             }
 
-            protected override bool TrySerialize(TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value)
+            protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
             {
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;

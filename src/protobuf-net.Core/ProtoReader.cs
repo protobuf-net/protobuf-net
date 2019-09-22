@@ -708,9 +708,9 @@ namespace ProtoBuf
             if (model == null) ThrowHelper.ThrowInvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
 
-            using (var writer = ProtoWriter.Create(out var writeState, ms, model, ctx))
+            using (ProtoWriter.Create(out var writeState, ms, model, ctx))
             {
-                model.SerializeFallback(writer, ref writeState, from);
+                model.SerializeFallback(ref writeState, from);
             }
             ms.Position = 0;
             using var state = ProtoReader.State.Create(ms, model);

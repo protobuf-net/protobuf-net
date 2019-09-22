@@ -7,8 +7,8 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static ProtoWriter CreateNull(out State state, TypeModel model, SerializationContext context = null)
-            => NullProtoWriter.CreateNullImpl(model, context, out state);
+        internal static State CreateNull(TypeModel model, SerializationContext context = null)
+            => NullProtoWriter.CreateNullImpl(model, context);
 
         private sealed class NullProtoWriter : ProtoWriter
         {
@@ -16,12 +16,11 @@ namespace ProtoBuf
 
             private NullProtoWriter() { }
 
-            public static NullProtoWriter CreateNullImpl(TypeModel model, SerializationContext context, out State state)
+            public static State CreateNullImpl(TypeModel model, SerializationContext context)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
                 obj.Init(model, context);
-                state = new State(obj);
-                return obj;
+                return new State(obj);
             }
 
             private protected override void Dispose()

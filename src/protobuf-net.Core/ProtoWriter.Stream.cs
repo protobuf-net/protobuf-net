@@ -361,7 +361,7 @@ namespace ProtoBuf
                 const int ADVISORY_FLUSH_SIZE = 1024;
                 if (--flushLock == 0 && ioIndex >= ADVISORY_FLUSH_SIZE)
                 {
-                    Flush(ref state);
+                    state.Flush();
                 }
             }
         }

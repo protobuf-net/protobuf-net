@@ -49,10 +49,24 @@ namespace ProtoBuf
                 _span = memory.Span;
                 RemainingInCurrent = _span.Length;
             }
-            internal int Flush()
+
+            /// <summary>
+            /// Writes any uncommitted data to the output
+            /// </summary>
+            public void Flush()
+            {
+                if (_writer.TryFlush(ref this))
+                {
+                    _writer._needFlush = false;
+                }
+            }
+
+            internal int ConsiderWritten()
             {
                 int val = OffsetInCurrent;
+                var writer = _writer;
                 this = default;
+                _writer = writer;
                 return val;
             }
 

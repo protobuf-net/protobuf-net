@@ -59,7 +59,7 @@ namespace ProtoBuf
             {
                 if (state.IsActive)
                 {
-                    _writer.Advance(state.Flush());
+                    _writer.Advance(state.ConsiderWritten());
                 }
                 return true;
             }
@@ -171,7 +171,7 @@ namespace ProtoBuf
                     case WireType.Fixed32:
                         PreSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null);
                         WriteWithLengthPrefix<T>(ref state, value, serializer, style);
-                        PostSubItem();
+                        PostSubItem(ref state);
                         return;
                     case WireType.StartGroup:
                     default:
@@ -198,19 +198,24 @@ namespace ProtoBuf
             private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
             {
                 long calculatedLength;
-                using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))
+                var nulState = NullProtoWriter.CreateNullImpl(Model, Context);
+                try
                 {
                     try
                     {
-                        serializer.Write(nullWriter, ref nulState, value);
-                        nullWriter.Close(ref nulState);
-                        calculatedLength = nullWriter.GetPosition(ref state);
+                        serializer.Write(ref nulState, value);
+                        nulState.Close();
+                        calculatedLength = nulState.GetPosition();
                     }
                     catch
                     {
-                        nullWriter.Abandon();
+                        nulState.Abandon();
                         throw;
                     }
+                }
+                finally
+                {
+                    nulState.Dispose();
                 }
 
                 switch (style)
@@ -246,19 +251,24 @@ namespace ProtoBuf
                 where T : class
             {
                 long calculatedLength;
-                using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))
+                var nulState = NullProtoWriter.CreateNullImpl(Model, Context);
+                try
                 {
                     try
                     {
-                        serializer.WriteSubType(nullWriter, ref nulState, value);
-                        nullWriter.Close(ref nulState);
-                        calculatedLength = nullWriter.GetPosition(ref state);
+                        serializer.WriteSubType(ref nulState, value);
+                        nulState.Close();
+                        calculatedLength = nulState.GetPosition();
                     }
                     catch
                     {
-                        nullWriter.Abandon();
+                        nulState.Abandon();
                         throw;
                     }
+                }
+                finally
+                {
+                    nulState.Dispose();
                 }
 
                 AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
