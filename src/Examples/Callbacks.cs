@@ -195,6 +195,7 @@ namespace Examples
                 for (int i = 0; i < extraTypes.Length; i++) model.Add(extraTypes[i], true);
             }
             model.AutoCompile = false;
+            
             Test<T, TCreate>(model, "Runtime");
 
             if(compile)
@@ -219,40 +220,47 @@ namespace Examples
             where TCreate : T, new()
             where T : ICallbackTest
         {
-            // mode = ":" + mode;
-            TCreate cs = new TCreate
+            try
             {
-                Bar = "abc"
-            };
-            string ctorExpected = typeof (TCreate)._IsValueType() ? null : "ctor";
-            Assert.NotNull(cs); //, "orig" + mode);
-            Assert.Equal(ctorExpected, cs.History); //, "orig before" + mode);
-            Assert.Equal("abc", cs.Bar); //, "orig before" + mode);
+                // mode = ":" + mode;
+                TCreate cs = new TCreate
+                {
+                    Bar = "abc"
+                };
+                string ctorExpected = typeof(TCreate)._IsValueType() ? null : "ctor";
+                Assert.NotNull(cs); //, "orig" + mode);
+                Assert.Equal(ctorExpected, cs.History); //, "orig before" + mode);
+                Assert.Equal("abc", cs.Bar); //, "orig before" + mode);
 
-            TCreate clone = (TCreate) model.DeepClone<TCreate>(cs);
-            if (!typeof (TCreate)._IsValueType())
-            {
-                Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                TCreate clone = (TCreate)model.DeepClone<TCreate>(cs);
+                if (!typeof(TCreate)._IsValueType())
+                {
+                    Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                }
+                Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
+
+                Assert.NotNull(clone); //, "clone" + mode);
+                Assert.NotSame(cs, clone); //, "clone" + mode);
+
+                Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone.History); //, "clone after" + mode);
+                Assert.Equal("abc", clone.Bar); //, "clone after" + mode);
+
+                T clone2 = (T)model.DeepClone(cs);
+                if (!typeof(TCreate)._IsValueType())
+                {
+                    Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                }
+                Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
+
+                Assert.NotNull(clone2); //, "clone2" + mode);
+                Assert.NotSame(cs, clone2); //, "clone2" + mode);
+                Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone2.History); //, "clone2 after" + mode);
+                Assert.Equal("abc", clone2.Bar); //, "clone2 after" + mode);
             }
-            Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
-
-            Assert.NotNull(clone); //, "clone" + mode);
-            Assert.NotSame(cs, clone); //, "clone" + mode);
-
-            Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone.History); //, "clone after" + mode);
-            Assert.Equal("abc", clone.Bar); //, "clone after" + mode);
-
-            T clone2 = (T) model.DeepClone(cs);
-            if (!typeof (TCreate)._IsValueType())
+            catch(Exception ex)
             {
-                Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                throw new InvalidOperationException(mode, ex);
             }
-            Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
-
-            Assert.NotNull(clone2); //, "clone2" + mode);
-            Assert.NotSame(cs, clone2); //, "clone2" + mode);
-            Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone2.History); //, "clone2 after" + mode);
-            Assert.Equal("abc", clone2.Bar); //, "clone2 after" + mode);
             
         }
 #pragma warning restore xUnit2002, xUnit2005
