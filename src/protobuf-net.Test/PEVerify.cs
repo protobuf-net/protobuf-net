@@ -5,6 +5,8 @@ using System.Text;
 using System.IO;
 using Xunit;
 using System.Diagnostics;
+using ProtoBuf.Meta;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.unittest
 {
@@ -28,6 +30,15 @@ namespace ProtoBuf.unittest
                 Console.Error.WriteLine("PEVerify not found at " + exePath);
                 unavailable = true;
             }
+        }
+
+        internal static void CompileAndVerify(this RuntimeTypeModel model,
+            [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
+        {
+            var path = Path.ChangeExtension(name, "dll");
+            if (File.Exists(path)) File.Delete(path);
+            model.Compile(name, path);
+            Verify(path, exitCode, deleteOnSuccess);
         }
 #endif
         public static void Verify(string path)

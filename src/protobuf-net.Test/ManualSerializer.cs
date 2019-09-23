@@ -22,8 +22,7 @@ namespace ProtoBuf
             model.Add(typeof(C));
             model.Add(typeof(D));
             model.Add(typeof(E));
-            model.Compile("EmitManualSerializer", "EmitManualSerializer.dll");
-            PEVerify.Verify("EmitManualSerializer.dll", 0, deleteOnSuccess: false);
+            model.CompileAndVerify(deleteOnSuccess: false);
         }
 #endif
 
@@ -466,6 +465,12 @@ namespace ProtoBuf
     {
         [ProtoMember(1)]
         public int DVal { get; set; }
+
+        [ProtoMember(2)]
+        public string Name { get; set; }
+
+        [ProtoMember(3)]
+        public D Nested { get; set; }
 
     }
 
