@@ -333,7 +333,9 @@ namespace ProtoBuf
             /// Reads a string from the stream (using UTF8); supported wire-types: String
             /// </summary>
             [MethodImpl(HotPath)]
+#pragma warning disable IDE0060 // map isn't implemented yet, but we definitely want it
             public string ReadString(StringMap map = null)
+#pragma warning restore IDE0060
             {
                 if (_reader.WireType == WireType.String)
                 {
