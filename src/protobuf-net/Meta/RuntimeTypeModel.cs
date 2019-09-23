@@ -283,6 +283,7 @@ namespace ProtoBuf.Meta
             }
             return headerBuilder.Append(bodyBuilder).AppendLine().ToString();
         }
+
         [Flags]
         internal enum CommonImports
         {

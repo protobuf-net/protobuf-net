@@ -14,13 +14,13 @@ namespace Examples
         public string Bar { get; set;}
 
         [OnDeserialized]
-        void OnDeserialized() { History += ";OnDeserialized"; }
+        public void OnDeserialized() { History += ";OnDeserialized"; }
         [OnDeserializing]
-        void OnDeserializing() { History += ";OnDeserializing"; }
+        public void OnDeserializing() { History += ";OnDeserializing"; }
         [OnSerialized]
-        void OnSerialized() { History += ";OnSerialized"; }
+        public void OnSerialized() { History += ";OnSerialized"; }
         [OnSerializing]
-        void OnSerializing() { History += ";OnSerializing"; }
+        public void OnSerializing() { History += ";OnSerializing"; }
         public CallbackSimple() { History = "ctor"; }
         public string History { get; private set; }
     }
@@ -229,7 +229,7 @@ namespace Examples
             Assert.Equal(ctorExpected, cs.History); //, "orig before" + mode);
             Assert.Equal("abc", cs.Bar); //, "orig before" + mode);
 
-            TCreate clone = (TCreate) model.DeepClone(cs);
+            TCreate clone = (TCreate) model.DeepClone<TCreate>(cs);
             if (!typeof (TCreate)._IsValueType())
             {
                 Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
@@ -238,6 +238,7 @@ namespace Examples
 
             Assert.NotNull(clone); //, "clone" + mode);
             Assert.NotSame(cs, clone); //, "clone" + mode);
+
             Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone.History); //, "clone after" + mode);
             Assert.Equal("abc", clone.Bar); //, "clone after" + mode);
 
@@ -272,6 +273,20 @@ namespace Examples
         public void TestSimple()
         {
             Test<CallbackSimple, CallbackSimple>();
+        }
+
+        [Fact]
+        public void TestStructSimple_Basic()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(CallbackStructSimple), true);
+            model.Add(typeof(CallbackSimple), true);
+            var compiled = model.Compile("TestStructSimple", "TestStructSimple.dll");
+            PEVerify.AssertValid("TestStructSimple.dll");
+
+            var obj = new CallbackStructSimple();
+            var clone = compiled.DeepClone(obj);
+            Assert.Equal(";OnDeserializing;OnDeserialized", clone.History);
         }
 
         [Fact]
