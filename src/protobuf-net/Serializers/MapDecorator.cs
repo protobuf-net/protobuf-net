@@ -126,7 +126,7 @@ namespace ProtoBuf.Serializers
                     return method;
                 }
             }
-            throw new InvalidOperationException("Unable to resolve indexer for map");
+            throw new InvalidOperationException("Unable to resolve indexer for map: " + typeof(TDictionary));
         }
 
         FieldInfo GetPairSerializer(CompilerContext ctx)

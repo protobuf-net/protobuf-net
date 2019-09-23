@@ -1,16 +1,12 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 using System.IO;
 #if !COREFX
 using System.Runtime.Serialization.Formatters.Binary;
 #endif
 using System.Diagnostics;
-using System.Xml.Serialization;
-using System.Reflection.Emit;
-using System.Reflection;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using Examples;
@@ -18,40 +14,43 @@ using Examples;
 namespace TestMediaBrowser
 {
 
-#region test data
+    #region test data
 
-    enum Fur { smooth, fluffy }
+    public enum Fur { smooth, fluffy }
 
     [ProtoContract]
     [ProtoInclude(10, typeof(Animal))]
-    class Thing
+    public class Thing
     {
         [ProtoMember(1)]
         public int Age;
     }
     [ProtoContract]
     [ProtoInclude(10, typeof(Dog))]
-    class Animal : Thing
+    public class Animal : Thing
     {
 
         public Animal()
         {
             Random r = new Random();
-            legs = r.Next();
+            Legs = r.Next();
             Weight = r.Next();
         }
 
+
+        //#pragma warning disable IDE0044 // Add readonly modifier
+        //        [ProtoMember(1)]
+        //        private int legs;
+        //#pragma warning restore IDE0044 // Add readonly modifier
+
         [ProtoMember(1)]
-#pragma warning disable IDE0044 // Add readonly modifier
-        private int legs;
-#pragma warning restore IDE0044 // Add readonly modifier
-        public int Legs { get { return legs; } }
+        public int Legs { get; set; }
 
         [ProtoMember(2)]
-        public int Weight { get; private set; }
+        public int Weight { get; set; }
     }
     [ProtoContract]
-    class Dog : Animal
+    public class Dog : Animal
     {
 
         // its used during reflection tests 
@@ -179,7 +178,25 @@ namespace TestMediaBrowser
         public void TestInheritedClone()
         {
             Thing original = new Animal();
-            Assert.IsType<Animal>(Serializer.DeepClone(original));
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(Thing), true);
+
+            Assert.IsType<Animal>(model.DeepClone(original));
+            model.CompileInPlace();
+            Assert.IsType<Animal>(model.DeepClone(original));
+
+            var compiled = model.Compile();
+            Assert.IsType<Animal>(compiled.DeepClone(original));
+        }
+
+        [Fact]
+        public void TestInheritedClone_PEVerify()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(Thing), true);
+            model.Compile("TestInheritedClone", "TestInheritedClone.dll");
+            PEVerify.AssertValid("TestInheritedClone.dll");
         }
 
         /*

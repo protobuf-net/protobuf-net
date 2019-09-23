@@ -428,18 +428,18 @@ namespace ProtoBuf.Serializers
         bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return true; } }
         bool IRuntimeProtoSerializerNode.ReturnsValue { get { return false; } } // updates field directly
 
-        private void LoadFromState(CompilerContext ctx, Local state)
+        private void LoadFromState(CompilerContext ctx, Local value)
         {
             if (HasInheritance)
             {
                 var stateType = typeof(SubTypeState<>).MakeGenericType(typeof(T));
                 var stateProp = stateType.GetProperty(nameof(SubTypeState<string>.Value));
-                ctx.LoadAddress(state, stateType);
+                ctx.LoadAddress(value, stateType);
                 ctx.EmitCall(stateProp.GetGetMethod());
             }
             else
             {
-                ctx.LoadValue(state);
+                ctx.LoadValue(value);
             }
         }
 
@@ -698,10 +698,10 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            Type expected = ExpectedType;
+            Type inputType = HasInheritance ? typeof(SubTypeState<>).MakeGenericType(ExpectedType) : ExpectedType;
             Debug.Assert(valueFrom != null);
 
-            using Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom);
+            using Compiler.Local loc = ctx.GetLocalWithValue(inputType, valueFrom);
             using Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int));
             if (!ExpectedType.IsValueType && !HasInheritance)
             {   // we're writing a *basic* serializer for ref-type T; it could
@@ -731,7 +731,7 @@ namespace ProtoBuf.Serializers
                     Compiler.CodeLabel processThisField = ctx.DefineLabel();
                     ctx.BranchIfEqual(processThisField, true);
                     ctx.Branch(tryNextField, false);
-                    WriteFieldHandler(ctx, expected, loc, processThisField, @continue, group.Items[0]);
+                    WriteFieldHandler(ctx, ExpectedType, loc, processThisField, @continue, group.Items[0]);
                 }
                 else
                 {   // implement as a jump-table-based switch
@@ -748,7 +748,7 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(tryNextField, false);
                     for (int i = 0; i < groupItemCount; i++)
                     {
-                        WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, group.Items[i]);
+                        WriteFieldHandler(ctx, ExpectedType, loc, jmp[i], @continue, group.Items[i]);
                     }
                 }
                 ctx.MarkLabel(tryNextField);

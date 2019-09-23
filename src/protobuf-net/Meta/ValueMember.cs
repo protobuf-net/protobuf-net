@@ -426,7 +426,7 @@ namespace ProtoBuf.Meta
 
                     if (dictionaryType == null)
                     {
-                        throw new InvalidOperationException("Unable to resolve map type for type: " + MemberType.FullName);
+                        throw new InvalidOperationException("Unable to resolve map type for type: " + MemberType.ToString());
                     }
                     var concreteType = DefaultType;
                     if (concreteType == null && MemberType.IsClass)
@@ -451,7 +451,7 @@ namespace ProtoBuf.Meta
                     ser = TryGetCoreSerializer(model, dataFormat, finalType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
                     if (ser == null)
                     {
-                        throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
+                        throw new InvalidOperationException("No serializer defined for type: " + finalType.ToString());
                     }
 
                     // apply tags

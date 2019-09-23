@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
@@ -10,7 +11,7 @@ namespace ProtoBuf.Serializers
         where T : class, TBase
     {
         private readonly Compiler.ProtoSerializer<T> subTypeSerializer;
-        private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDesrializer;
+        private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
 
         T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
             => state.ReadBaseType<TBase, T>(value);
@@ -28,7 +29,7 @@ namespace ProtoBuf.Serializers
             => subTypeSerializer(ref state, value);
 
         T IProtoSubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
-            => subTypeDesrializer(ref state, value);
+            => subTypeDeserializer(ref state, value);
 
         public InheritanceCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
@@ -43,7 +44,7 @@ namespace ProtoBuf.Serializers
             }
             try
             {
-                subTypeDesrializer = Compiler.CompilerContext.BuildSubTypeDeserializer<T>(model.Scope, head, model);
+                subTypeDeserializer = Compiler.CompilerContext.BuildSubTypeDeserializer<T>(model.Scope, head, model);
             }
             catch (Exception ex)
             {
@@ -114,15 +115,21 @@ namespace ProtoBuf.Serializers
             if (!(head is CompiledSerializer result))
             {
                 ConstructorInfo ctor;
-                if (head.BaseType == head.ExpectedType)
+                try
                 {
-                    ctor = Helpers.GetConstructor(typeof(InheritanceCompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
-                        new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
-                }
-                else
+                    if (head.IsSubType)
+                    {
+                        ctor = Helpers.GetConstructor(typeof(InheritanceCompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
+                            new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
+                    }
+                    else
+                    {
+                        ctor = Helpers.GetConstructor(typeof(SimpleCompiledSerializer<>).MakeGenericType(head.BaseType),
+                            new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
+                    }
+                } catch(Exception ex)
                 {
-                    ctor = Helpers.GetConstructor(typeof(SimpleCompiledSerializer<>).MakeGenericType(head.BaseType),
-                        new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
+                    throw new InvalidOperationException($"Unable to wrap {head.BaseType}/{head.ExpectedType}", ex);
                 }
                 try
                 {
@@ -137,7 +144,7 @@ namespace ProtoBuf.Serializers
             return result;
         }
 
-        private readonly IProtoTypeSerializer head;
+        protected readonly IProtoTypeSerializer head;
         Type IProtoTypeSerializer.BaseType => head.BaseType;
         protected CompiledSerializer(IProtoTypeSerializer head)
         {
