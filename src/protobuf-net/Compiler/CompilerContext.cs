@@ -1362,7 +1362,7 @@ namespace ProtoBuf.Compiler
             LoadState();
             if (isWriter)
             {
-                LoadValue(typeof(ProtoWriter).GetProperty(nameof(ProtoWriter.State.Context)));
+                LoadValue(typeof(ProtoWriter.State).GetProperty(nameof(ProtoWriter.State.Context)));
             }
             else
             {
