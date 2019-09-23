@@ -15,10 +15,10 @@ namespace ProtoBuf.unittest.Serializers
             Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
             {
                 st.WriteFieldHeader(5, WireType.String);
-                SubItemToken token = ProtoWriter.StartSubItem(new object(), pw, ref st);
+                SubItemToken token = st.StartSubItem(new object());
                 st.WriteFieldHeader(6, WireType.String);
                 st.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
-                ProtoWriter.EndSubItem(token, pw, ref st);
+                st.EndSubItem(token);
             }, "2A" // 5 * 8 + 2 = 42
              + "0A" // sub-item length = 10
              + "32" // 6 * 8 + 2 = 50 = 0x32

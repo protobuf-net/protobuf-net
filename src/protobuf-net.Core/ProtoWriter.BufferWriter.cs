@@ -237,7 +237,7 @@ namespace ProtoBuf
                         break;
                 }
                 var oldPos = GetPosition(ref state);
-                serializer.Write(this, ref state, value);
+                serializer.Write(ref state, value);
                 var newPos = GetPosition(ref state);
 
                 var actualLength = (newPos - oldPos);
@@ -273,7 +273,7 @@ namespace ProtoBuf
 
                 AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
                 var oldPos = GetPosition(ref state);
-                serializer.WriteSubType(this, ref state, value);
+                serializer.WriteSubType(ref state, value);
                 var newPos = GetPosition(ref state);
 
                 var actualLength = (newPos - oldPos);

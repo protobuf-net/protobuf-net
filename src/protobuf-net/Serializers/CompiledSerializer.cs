@@ -36,11 +36,11 @@ namespace ProtoBuf.Serializers
         public override object Read(ref ProtoReader.State state, object value)
             => deserializer(ref state, (T)value);
 
-        void IProtoSerializer<T>.Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
-            => serializer(writer, ref state, value);
+        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+            => serializer(ref state, value);
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => serializer(dest, ref state, (T)value);
+            => serializer(ref state, (T)value);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {

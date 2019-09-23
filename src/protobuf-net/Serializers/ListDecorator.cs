@@ -435,14 +435,14 @@ namespace ProtoBuf.Serializers
                 state.WriteFieldHeader(fieldNumber, WireType.String);
                 if (fixedSizePacked)
                 {
-                    ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest, ref state);
+                    state.WritePackedPrefix(((ICollection)value).Count, packedWireType);
                     token = default;
                 }
                 else
                 {
-                    token = ProtoWriter.StartSubItem(value, dest, ref state);
+                    token = state.StartSubItem(value);
                 }
-                ProtoWriter.SetPackedField(fieldNumber, dest);
+                state.SetPackedField(fieldNumber);
             }
             else
             {
@@ -452,17 +452,17 @@ namespace ProtoBuf.Serializers
             foreach (object subItem in (IEnumerable)value)
             {
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
-                Tail.Write(dest, ref state, subItem);
+                Tail.Write(ref state, subItem);
             }
             if (writePacked)
             {
                 if (fixedSizePacked)
                 {
-                    ProtoWriter.ClearPackedField(fieldNumber, dest);
+                    state.ClearPackedField(fieldNumber);
                 }
                 else
                 {
-                    ProtoWriter.EndSubItem(token, dest, ref state);
+                    state.EndSubItem(token);
                 }
             }
         }

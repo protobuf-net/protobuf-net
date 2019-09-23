@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
@@ -309,7 +310,7 @@ namespace ProtoBuf
             /// Writes a sub-item to the writer
             /// </summary>
             public void WriteSubItem<T>(T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
-                => WriteSubItem<T>(value, serializer, PrefixStyle.Base128, recursionCheck);
+                => _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
 
             /// <summary>
             /// Writes a sub-item to the writer
@@ -317,7 +318,7 @@ namespace ProtoBuf
             public void WriteSubItem<T>(int fieldNumber, T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
             {
                 WriteFieldHeader(fieldNumber, WireType.String);
-                WriteSubItem<T>(value, serializer, PrefixStyle.Base128, recursionCheck);
+                _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
             }
 
             /// <summary>
@@ -350,6 +351,8 @@ namespace ProtoBuf
                 get => _writer.WireType;
                 private set => _writer.WireType = value;
             }
+
+            internal int Depth => _writer.Depth;
 
             internal int FieldNumber
             {
@@ -600,7 +603,7 @@ namespace ProtoBuf
             public void Dispose()
             {
                 var writer = _writer;
-                _writer = null;
+                this = default;
                 writer?.Dispose();
             }
 
@@ -707,12 +710,51 @@ namespace ProtoBuf
             }
 
             // general purpose serialization exception message
+            [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidSerializationOperation()
             {
                 if (_writer == null) throw new ProtoException("No underlying writer");
                 throw new ProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}");
             }
 
+            /// <summary>
+            /// Used for packed encoding; indicates that the next field should be skipped rather than
+            /// a field header written. Note that the field number must match, else an exception is thrown
+            /// when the attempt is made to write the (incorrect) field. The wire-type is taken from the
+            /// subsequent call to WriteFieldHeader. Only primitive types can be packed.
+            /// </summary>
+            public void SetPackedField(int fieldNumber)
+            {
+                if (fieldNumber <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fieldNumber));
+                _writer.packedFieldNumber = fieldNumber;
+            }
+
+            /// <summary>
+            /// Used for packed encoding; explicitly reset the packed field marker; this is not required
+            /// if using StartSubItem/EndSubItem
+            /// </summary>
+            public void ClearPackedField(int fieldNumber)
+            {
+                if (fieldNumber != _writer.packedFieldNumber)
+                    ThrowWrongPackedField(fieldNumber, _writer);
+                _writer.packedFieldNumber = 0;
+
+                static void ThrowWrongPackedField(int fieldNumber, ProtoWriter writer)
+                {
+                    ThrowHelper.ThrowInvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber.ToString() + " but received " + fieldNumber.ToString());
+                }
+            }
+
+            /// <summary>
+            /// Throws an exception indicating that the given enum cannot be mapped to a serialized value.
+            /// </summary>
+            public void ThrowEnumException(object enumValue)
+            {
+#pragma warning disable RCS1097 // Remove redundant 'ToString' call.
+                string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
+#pragma warning restore RCS1097 // Remove redundant 'ToString' call.
+                ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
+            }
         }
     }
 }

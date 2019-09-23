@@ -39,10 +39,10 @@ namespace ProtoBuf
 
             if (withState)
             {
-                using var writer = ProtoWriter.Create(out var writeState, ms, model);
-                writer.Serialize(ref writeState, obj);
-                Assert.Equal(0, writer.Depth);
-                writer.Close(ref writeState);
+                using var writeState = ProtoWriter.State.Create(ms, model);
+                writeState.Serialize(obj);
+                Assert.Equal(0, writeState.Depth);
+                writeState.Close();
             }
             else
             {
@@ -137,9 +137,9 @@ namespace ProtoBuf
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
             using (var writer = ProtoWriter.Create(out var writeState, pipe.Writer, model))
             {
-                writer.Serialize(ref writeState, obj);
+                writeState.Serialize(obj);
                 Assert.Equal(0, writer.Depth);
-                writer.Close(ref writeState);
+                writeState.Close();
             }
             using var result = pipe.Flush();
             var hex = Hex(result.Value);
@@ -172,11 +172,11 @@ namespace ProtoBuf
             using var ms = new MemoryStream();
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
 
-            using (var writer = ProtoWriter.Create(out var writeState, ms, null))
+            using (var writeState = ProtoWriter.State.Create(ms, null))
             {
-                writer.Serialize(ref writeState, obj, ModelSerializer.Default);
-                Assert.Equal(0, writer.Depth);
-                writer.Close(ref writeState);
+                writeState.Serialize(obj, ModelSerializer.Default);
+                Assert.Equal(0, writeState.Depth);
+                writeState.Close();
             }
 
             Assert.Equal(12, ms.Length);
@@ -209,12 +209,12 @@ namespace ProtoBuf
         {
             using var pipe = Pipelines.Sockets.Unofficial.Buffers.BufferWriter<byte>.Create();
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
-            using (var writer = ProtoWriter.Create(out var writeState, pipe.Writer, null))
+            using (ProtoWriter.Create(out var writeState, pipe.Writer, null))
             {
-                var bytes = writer.Serialize<A>(ref writeState, obj, ModelSerializer.Default);
+                var bytes = writeState.Serialize<A>(obj, ModelSerializer.Default);
                 Assert.Equal(12, bytes);
-                Assert.Equal(0, writer.Depth);
-                writer.Close(ref writeState);
+                Assert.Equal(0, writeState.Depth);
+                writeState.Close();
             }
             Assert.Equal(12, pipe.Length);
 

@@ -33,29 +33,29 @@ namespace ProtoBuf.Schemas
         public void CanWriteMessageSetData()
         {
             using var ms = new MemoryStream();
-            using (var writer = ProtoWriter.Create(out var state, ms, null, null))
+            using (var state = ProtoWriter.State.Create(ms, null, null))
             {
                 state.WriteFieldHeader(5, WireType.String);
-                var tok = ProtoWriter.StartSubItem(null, writer, ref state);
+                var tok = state.StartSubItem(null);
 
                 state.WriteFieldHeader(1, WireType.StartGroup);
-                var tok2 = ProtoWriter.StartSubItem(null, writer, ref state);
+                var tok2 = state.StartSubItem(null);
 
                 state.WriteFieldHeader(2, WireType.Varint);
                 state.WriteInt32(15447542);
 
                 state.WriteFieldHeader(3, WireType.String);
-                var tok3 = ProtoWriter.StartSubItem(null, writer, ref state);
+                var tok3 = state.StartSubItem(null);
 
                 state.WriteFieldHeader(1, WireType.String);
                 state.WriteString("EmbeddedMessageSetElement");
 
-                ProtoWriter.EndSubItem(tok3, writer, ref state);
-                ProtoWriter.EndSubItem(tok2, writer, ref state);
+                state.EndSubItem(tok3);
+                state.EndSubItem(tok2);
 
-                ProtoWriter.EndSubItem(tok, writer, ref state);
+                state.EndSubItem(tok);
 
-                writer.Close(ref state);
+                state.Close();
             }
 
             var hex = BitConverter.ToString(ms.ToArray(), 0, (int)ms.Length);

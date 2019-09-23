@@ -62,7 +62,7 @@ namespace ProtoBuf.Serializers
         public override void Write(ref ProtoWriter.State state, object value)
         {
             state.WriteFieldHeader(fieldNumber, wireType);
-            Tail.Write(dest, ref state, value);
+            Tail.Write(ref state, value);
         }
 
         bool IProtoTypeSerializer.HasInheritance => false;

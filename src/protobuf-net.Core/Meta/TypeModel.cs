@@ -168,7 +168,7 @@ namespace ProtoBuf.Meta
                 foreach (object item in sequence)
                 {
                     if (item == null) ThrowHelper.ThrowNullReferenceException();
-                    if (!TrySerializeAuxiliaryType(writer, ref state, null, format, tag, item, true, sequence))
+                    if (!TrySerializeAuxiliaryType(ref state, null, format, tag, item, true, sequence))
                     {
                         ThrowUnexpectedType(item.GetType());
                     }
@@ -201,8 +201,15 @@ namespace ProtoBuf.Meta
         [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public void Serialize(Stream dest, object value)
         {
-            using var writer = ProtoWriter.Create(out var state, dest, this);
-            SerializeFallback(writer, ref state, value);
+            var state = ProtoWriter.State.Create(dest, this);
+            try
+            {
+                SerializeFallback(ref state, value);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         /// <summary>
@@ -214,8 +221,15 @@ namespace ProtoBuf.Meta
         [Obsolete(PreferGenericAPI, DemandGenericAPI)]
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
-            using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            SerializeFallback(ref state, value);
+            var state = ProtoWriter.State.Create(dest, this, context);
+            try
+            {
+                SerializeFallback(ref state, value);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         internal void SerializeFallback(ref ProtoWriter.State state, object value)
@@ -226,7 +240,7 @@ namespace ProtoBuf.Meta
                 {
                     state.SetRootObject(value);
                     SerializeCore(ref state, value);
-                    writer.Close(ref state);
+                    state.Close();
                 }
                 catch
                 {
@@ -244,8 +258,15 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public long Serialize<T>(Stream dest, T value, SerializationContext context = null)
         {
-            using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            return SerializeImpl<T>(writer, ref state, value);
+            var state = ProtoWriter.State.Create(dest, this, context);
+            try
+            {
+                return SerializeImpl<T>(ref state, value);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         /// <summary>
@@ -257,7 +278,7 @@ namespace ProtoBuf.Meta
         public long Serialize<T>(IBufferWriter<byte> dest, T value, SerializationContext context = null)
         {
             using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            return SerializeImpl<T>(writer, ref state, value);
+            return SerializeImpl<T>(ref state, value);
         }
 
         /// <summary>
@@ -269,22 +290,22 @@ namespace ProtoBuf.Meta
         public void Serialize(ProtoWriter dest, object value)
         {
             ProtoWriter.State state = dest.DefaultState();
-            SerializeFallback(dest, ref state, value);
+            SerializeFallback(ref state, value);
         }
 
-        internal static long SerializeImpl<T>(ProtoWriter dest, ref ProtoWriter.State state, T value)
+        internal static long SerializeImpl<T>(ref ProtoWriter.State state, T value)
         {
             if (TypeHelper<T>.IsObjectType && value == null) return 0;
             if (TypeHelper<T>.UseFallback)
             {
-                Debug.Assert(dest.Model != null, "Model is null");
-                long position = dest.GetPosition(ref state);
-                dest.Model.SerializeFallback(dest, ref state, value);
-                return dest.GetPosition(ref state) - position;
+                Debug.Assert(state.Model != null, "Model is null");
+                long position = state.GetPosition();
+                state.Model.SerializeFallback(ref state, value);
+                return state.GetPosition() - position;
             }
             else
             {
-                return dest.Serialize<T>(ref state, value);
+                return state.Serialize<T>(value);
             }
         }
 
@@ -587,7 +608,7 @@ namespace ProtoBuf.Meta
             }
             int key = GetKey(ref type);
 
-            ProtoWriter.Create(out var state, dest, this, context);
+            var state = ProtoWriter.State.Create(dest, this, context);
             try
             {
                 switch (style)
@@ -1491,7 +1512,8 @@ namespace ProtoBuf.Meta
                 if (key >= 0 && !type.IsEnum)
                 {
                     using MemoryStream ms = new MemoryStream();
-                    using (ProtoWriter.Create(out var writeState, ms, this, null))
+                    var writeState = ProtoWriter.State.Create(ms, this, null);
+                    try
                     {
                         writeState.SetRootObject(value);
                         try
@@ -1504,6 +1526,10 @@ namespace ProtoBuf.Meta
                             throw;
                         }
                         writeState.Close();
+                    }
+                    finally
+                    {
+                        writeState.Dispose();
                     }
                     ms.Position = 0;
                     var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
@@ -1528,18 +1554,20 @@ namespace ProtoBuf.Meta
                 }
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
+                    var writeState = ProtoWriter.State.Create(ms, this, null);
+                    try
                     {
-                        try
-                        {
-                            if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
-                        }
-                        catch
-                        {
-                            writer.Abandon();
-                            throw;
-                        }
+                        if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
                         writeState.Close();
+                    }
+                    catch
+                    {
+                        writeState.Abandon();
+                        throw;
+                    }
+                    finally
+                    {
+                        writeState.Dispose();
                     }
                     ms.Position = 0;
                     var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
@@ -1792,9 +1820,14 @@ namespace ProtoBuf.Meta
 
             public void Serialize(Stream serializationStream, object graph)
             {
-                using (ProtoWriter.Create(out var state, serializationStream, model, Context))
+                var state = ProtoWriter.State.Create(serializationStream, model, Context);
+                try
                 {
                     model.SerializeFallback(ref state, graph);
+                }
+                finally
+                {
+                    state.Dispose();
                 }
             }
 

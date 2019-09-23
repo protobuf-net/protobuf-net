@@ -830,12 +830,11 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Writer state</param>
-        protected internal override void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
+        protected internal override void Serialize(ref ProtoWriter.State state, int key, object value)
         {
             //Debug.WriteLine("Serialize", value);
-            ((MetaType)types[key]).Serializer.Write(dest, ref state, value);
+            ((MetaType)types[key]).Serializer.Write(ref state, value);
         }
 
         /// <summary>
@@ -844,10 +843,6 @@ namespace ProtoBuf.Meta
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <param name="state">Reader state</param>
-        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
-        /// <returns>The updated instance; this may be different to the instance argument if
-        /// either the original instance was null, or the stream defines a known sub-type of the
-        /// original instance.</returns>
         protected internal override object DeserializeCore(ref ProtoReader.State state, int key, object value)
         {
             //Debug.WriteLine("Deserialize", value);
@@ -871,7 +866,7 @@ namespace ProtoBuf.Meta
             if (compiled) return Compiler.CompilerContext.BuildSerializer<TActual>(Scope, serializer, this);
 
             return new Compiler.ProtoSerializer<TActual>(
-                (ProtoWriter dest, ref ProtoWriter.State state, TActual val) => serializer.Write(dest, ref state, val));
+                (ref ProtoWriter.State state, TActual val) => serializer.Write(ref state, val));
         }
 
         /// <summary>

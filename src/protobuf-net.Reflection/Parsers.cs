@@ -1213,7 +1213,8 @@ namespace Google.Protobuf.Reflection
             var target = extension.BeginAppend();
             try
             {
-                using (var writer = ProtoWriter.Create(out var state, target, null, null))
+                var state = ProtoWriter.State.Create(target, null, null);
+                try
                 {
                     var hive = OptionHive.Build(options.UninterpretedOptions);
 
@@ -1222,6 +1223,10 @@ namespace Google.Protobuf.Reflection
                     // second pass applies the data
                     AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, false, 0, false);
                     state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 options.UninterpretedOptions.RemoveAll(x => x.Applied);
             }

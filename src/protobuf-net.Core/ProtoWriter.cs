@@ -37,8 +37,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteObject(object value, int key, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WriteObject(value, key, writer, ref state);
+            writer.DefaultState().WriteObject(value, key);
         }
 
         /// <summary>
@@ -107,8 +106,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            return writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
+            return writer.DefaultState().StartSubItem(instance, PrefixStyle.Base128);
         }
 
         private void PreSubItem(object instance)
@@ -432,17 +430,13 @@ namespace ProtoBuf
         /// </summary>
         public static void ThrowEnumException(ProtoWriter writer, object enumValue)
         {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-#pragma warning disable RCS1097 // Remove redundant 'ToString' call.
-            string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
-#pragma warning restore RCS1097 // Remove redundant 'ToString' call.
-            ThrowHelper.ThrowProtoException("No wire-value is mapped to the enum " + rhs + " at position " + writer._position64.ToString());
+            writer.DefaultState().ThrowEnumException(enumValue);
         }
 
         internal static void ThrowException(ProtoWriter writer)
         {
             var state = writer == null ? default : writer.DefaultState();
-            throw state.ThrowInvalidSerializationOperation();
+            state.ThrowInvalidSerializationOperation();
         }
 
         /// <summary>
@@ -460,8 +454,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void AppendExtensionData(IExtensible instance, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            AppendExtensionData(instance, writer, ref state);
+            writer.DefaultState().AppendExtensionData(instance);
         }
 
 
@@ -473,9 +466,7 @@ namespace ProtoBuf
         /// </summary>
         public static void SetPackedField(int fieldNumber, ProtoWriter writer)
         {
-            if (fieldNumber <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fieldNumber));
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            writer.packedFieldNumber = fieldNumber;
+            writer.DefaultState().SetPackedField(fieldNumber);
         }
 
         /// <summary>
@@ -484,9 +475,7 @@ namespace ProtoBuf
         /// </summary>
         public static void ClearPackedField(int fieldNumber, ProtoWriter writer)
         {
-            if (fieldNumber != writer.packedFieldNumber)
-                ThrowHelper.ThrowInvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber.ToString() + " but received " + fieldNumber.ToString());
-            writer.packedFieldNumber = 0;
+            writer.DefaultState().ClearPackedField(fieldNumber);
         }
 
         /// <summary>
@@ -496,8 +485,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WritePackedPrefix(int elementCount, WireType wireType, ProtoWriter writer)
         {
-            State state = writer.DefaultState();
-            WritePackedPrefix(elementCount, wireType, writer, ref state);
+            writer.DefaultState().WritePackedPrefix(elementCount, wireType);
         }
 
         internal string SerializeType(Type type)

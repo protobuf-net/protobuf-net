@@ -26,14 +26,12 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (var loc = ctx.GetLocalWithValue(typeof(string), valueFrom))
-            {
-                ctx.LoadState();
-                ctx.LoadValue(loc);
-                ctx.LoadNullRef(); // map
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
-                    null, new[] { typeof(string), typeof(StringMap) }, null));
-            }
+            using var loc = ctx.GetLocalWithValue(typeof(string), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(loc);
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(string), typeof(StringMap) }, null));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
@@ -47,15 +45,13 @@ namespace ProtoBuf.Serializers
 
         void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (var loc = ctx.GetLocalWithValue(typeof(string), valueFrom))
-            {
-                ctx.LoadState();
-                ctx.LoadValue(fieldNumber);
-                ctx.LoadValue(loc);
-                ctx.LoadNullRef(); // map
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
-                    null, new[] { typeof(int), typeof(string), typeof(StringMap) }, null));
-            }
+            using var loc = ctx.GetLocalWithValue(typeof(string), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(fieldNumber);
+            ctx.LoadValue(loc);
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(int), typeof(string), typeof(StringMap) }, null));
         }
     }
 }

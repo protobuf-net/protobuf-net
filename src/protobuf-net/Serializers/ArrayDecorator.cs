@@ -173,14 +173,14 @@ namespace ProtoBuf.Serializers
 
                 if (fixedLengthPacked)
                 {
-                    ProtoWriter.WritePackedPrefix(arr.Count, packedWireType, dest, ref state);
+                    state.WritePackedPrefix(arr.Count, packedWireType);
                     token = new SubItemToken(); // default
                 }
                 else
                 {
-                    token = ProtoWriter.StartSubItem(value, dest, ref state);
+                    token = state.StartSubItem(value);
                 }
-                ProtoWriter.SetPackedField(fieldNumber, dest);
+                state.SetPackedField(fieldNumber);
             }
             else
             {
@@ -191,17 +191,17 @@ namespace ProtoBuf.Serializers
             {
                 object obj = arr[i];
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
-                Tail.Write(dest, ref state, obj);
+                Tail.Write(ref state, obj);
             }
             if (writePacked)
             {
                 if (fixedLengthPacked)
                 {
-                    ProtoWriter.ClearPackedField(fieldNumber, dest);
+                    state.ClearPackedField(fieldNumber);
                 }
                 else
                 {
-                    ProtoWriter.EndSubItem(token, dest, ref state);
+                    state.EndSubItem(token);
                 }
             }
         }

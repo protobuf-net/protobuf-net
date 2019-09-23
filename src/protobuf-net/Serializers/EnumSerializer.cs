@@ -128,7 +128,7 @@ namespace ProtoBuf.Serializers
                         return;
                     }
                 }
-                ProtoWriter.ThrowEnumException(dest, value);
+                state.ThrowEnumException(value);
             }
         }
 

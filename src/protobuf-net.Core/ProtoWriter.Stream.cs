@@ -16,21 +16,23 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         [Obsolete(UseStateAPI, false)]
         public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext context = null)
-            => Create(out _, dest, model, context);
+            => StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
 
-        /// <summary>
-        /// Creates a new writer against a stream
-        /// </summary>
-        /// <param name="dest">The destination stream</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="state">Writer state</param>
-        public static ProtoWriter Create(out State state, Stream dest, TypeModel model, SerializationContext context = null)
+        partial struct State
         {
-            var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
-            state = new State(writer);
-            return writer;
+            /// <summary>
+            /// Creates a new writer against a stream
+            /// </summary>
+            /// <param name="dest">The destination stream</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            public static State Create(Stream dest, TypeModel model, SerializationContext context = null)
+            {
+                var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
+                return new State(writer);
+            }
         }
+
         private class StreamProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
@@ -129,7 +131,7 @@ namespace ProtoBuf
                 {
                     // writing data that is bigger than the buffer (and the buffer
                     // isn't currently locked due to a sub-object needing the size backfilled)
-                    Flush(ref state); // commit any existing data from the buffer
+                    state.Flush(); // commit any existing data from the buffer
                                       // now just write directly to the underlying stream
                     dest.Write(data, offset, length);
                     // since we've flushed offset etc is 0, and remains
@@ -151,7 +153,7 @@ namespace ProtoBuf
                 {
                     // writing data that is bigger than the buffer (and the buffer
                     // isn't currently locked due to a sub-object needing the size backfilled)
-                    Flush(ref state); // commit any existing data from the buffer
+                    state.Flush(); // commit any existing data from the buffer
                                       // now just write directly to the underlying stream
                     foreach(var chunk in data)
                     {
@@ -256,7 +258,7 @@ namespace ProtoBuf
                 if (flushLock == 0)
                 {
                     // flush the buffer and write to the underlying stream instead
-                    Flush(ref state);
+                    state.Flush();
                     while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
                     {
                         dest.Write(buffer, 0, bytesRead);
@@ -299,7 +301,8 @@ namespace ProtoBuf
                         IncrementedAndReset(4, this); // leave 4 space (rigid) for length
                         return token;
                     default:
-                        throw CreateException(this);
+                        state.ThrowInvalidSerializationOperation();
+                        return default;
                 }
             }
 

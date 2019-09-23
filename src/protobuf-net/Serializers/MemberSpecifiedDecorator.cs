@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
         {
             if (getSpecified == null || (bool)getSpecified.Invoke(value, null))
             {
-                Tail.Write(dest, ref state, value);
+                Tail.Write(ref state, value);
             }
         }
 

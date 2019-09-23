@@ -29,11 +29,16 @@ namespace ProtoBuf.Perf
                 WellKnownSerializer.DecimalOptimized = optimized;
 #endif
                 using var ms = new MemoryStream();
-                using (var writer = ProtoWriter.Create(out var writeState, ms, RuntimeTypeModel.Default))
+                var writeState = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default);
+                try
                 {
                     writeState.WriteFieldHeader(1, WireType.String);
                     BclHelpers.WriteDecimal(ref writeState, value);
-                    writer.Close(ref writeState);
+                    writeState.Close();
+                }
+                finally
+                {
+                    writeState.Dispose();
                 }
                 var hex = BitConverter.ToString(
                     ms.GetBuffer(), 0, (int)ms.Length);
@@ -103,11 +108,16 @@ namespace ProtoBuf.Perf
         {
             ms.Position = 0;
             ms.SetLength(0);
-            using (var writer = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default))
+            var state = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default);
+            try
             {
                 state.WriteFieldHeader(1, WireType.String);
                 BclHelpers.WriteGuid(ref state, value);
-                writer.Close(ref state);
+                state.Close();
+            }
+            finally
+            {
+                state.Dispose();
             }
 
             if (expected != null)

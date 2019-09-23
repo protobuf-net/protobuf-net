@@ -508,7 +508,7 @@ namespace ProtoBuf
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = dest.WireType;
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
+            SubItemToken token = state.StartSubItem(null);
             bool writeObject = true;
             if (asReference)
             {

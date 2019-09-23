@@ -88,7 +88,7 @@ namespace ProtoBuf.Internal
             {
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
-                writer.Serialize<T>(ref state, (T)value, serializer);
+                state.Serialize<T>((T)value, serializer);
                 return true;
             }
 

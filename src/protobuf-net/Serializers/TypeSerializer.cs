@@ -291,7 +291,7 @@ namespace ProtoBuf.Serializers
                 }
             }
             //Debug.WriteLine("<< Writing fields for " + forType.FullName);
-            if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, ref state);
+            if (isExtensible) state.AppendExtensionData((IExtensible)value);
             if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, state.Context.Context);
         }
 

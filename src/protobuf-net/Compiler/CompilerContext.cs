@@ -239,6 +239,7 @@ namespace ProtoBuf.Compiler
 
         public bool IsStatic { get; }
 
+        public override string ToString() => _traceName;
         private readonly string _traceName;
 
         private readonly OpCode _state;

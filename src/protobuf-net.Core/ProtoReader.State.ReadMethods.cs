@@ -603,18 +603,20 @@ namespace ProtoBuf
                 try
                 {
                     //TODO: replace this with stream-based, buffered raw copying
-                    using (ProtoWriter writer = ProtoWriter.Create(out var writeState, dest, _reader._model, null))
+                    var writeState = ProtoWriter.State.Create(dest, _reader._model, null);
+                    try
                     {
-                        try
-                        {
-                            AppendExtensionField(writer, ref writeState);
-                            writer.Close(ref writeState);
-                        }
-                        catch
-                        {
-                            writer.Abandon();
-                            throw;
-                        }
+                        AppendExtensionField(ref writeState);
+                        writeState.Close();
+                    }
+                    catch
+                    {
+                        writeState.Abandon();
+                        throw;
+                    }
+                    finally
+                    {
+                        writeState.Dispose();
                     }
                     commit = true;
                 }
@@ -652,7 +654,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            private void AppendExtensionField(ProtoWriter writer, ref ProtoWriter.State writeState)
+            private void AppendExtensionField(ref ProtoWriter.State writeState)
             {
                 //TODO: replace this with stream-based, buffered raw copying
                 var reader = _reader;
@@ -673,7 +675,7 @@ namespace ProtoBuf
                     case WireType.StartGroup:
                         SubItemToken readerToken = StartSubItem(),
                             writerToken = writeState.StartSubItem(null);
-                        while (ReadFieldHeader() > 0) { AppendExtensionField(writer, ref writeState); }
+                        while (ReadFieldHeader() > 0) { AppendExtensionField(ref writeState); }
                         EndSubItem(readerToken);
                         writeState.EndSubItem(writerToken);
                         return;

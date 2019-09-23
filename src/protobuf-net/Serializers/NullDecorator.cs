@@ -145,12 +145,12 @@ namespace ProtoBuf.Serializers
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
+            SubItemToken token = state.StartSubItem(null);
             if (value != null)
             {
-                Tail.Write(dest, ref state, value);
+                Tail.Write(ref state, value);
             }
-            ProtoWriter.EndSubItem(token, dest, ref state);
+            state.EndSubItem(token);
         }
     }
 }
