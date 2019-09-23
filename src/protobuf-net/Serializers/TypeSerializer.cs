@@ -778,13 +778,10 @@ namespace ProtoBuf.Serializers
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterDeserialize);
             }
 
-            if (valueFrom != null)
+            if (valueFrom != null && !loc.IsSame(valueFrom))
             {
-                if (!loc.IsSame(valueFrom))
-                {
-                    LoadFromState(ctx, loc);
-                    ctx.StoreValue(valueFrom);
-                }
+                LoadFromState(ctx, loc);
+                ctx.StoreValue(valueFrom);
             }
 
             if (HasInheritance)

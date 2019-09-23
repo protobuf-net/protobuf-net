@@ -32,7 +32,7 @@ namespace Examples.Issues
 
             public IEnumerator<char> GetEnumerator()
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException(nameof(IEnumerableClass) + "." + nameof(GetEnumerator));
             }
 
             // Comment out this indexed property to prevent the crash
@@ -40,7 +40,7 @@ namespace Examples.Issues
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException(nameof(IEnumerableClass) + "." + nameof(GetEnumerator));
             }
         }
 

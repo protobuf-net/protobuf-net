@@ -35,6 +35,7 @@ namespace ProtoBuf.Serializers
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.ThrowException(typeof(NotImplementedException));
+            throw new NotImplementedException(nameof(NetObjectSerializer) + "." + nameof(EmitRead));
             //using (var val = ctx.GetLocalWithValue(ExpectedType, entity))
             //{
             //    ctx.LoadReader(true);
@@ -54,6 +55,7 @@ namespace ProtoBuf.Serializers
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.ThrowException(typeof(NotImplementedException));
+            throw new NotImplementedException(nameof(NetObjectSerializer) + "." + nameof(EmitWrite));
             //ctx.LoadValue(valueFrom);
             //ctx.CastToObject(ExpectedType);
             //ctx.LoadWriter(true);

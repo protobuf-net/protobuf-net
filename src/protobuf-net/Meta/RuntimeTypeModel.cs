@@ -1249,7 +1249,8 @@ namespace ProtoBuf.Meta
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
                     using (var ctx = new CompilerContext(scope, il, false, false, this,
-                         runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
+                        typeof(SubTypeState<>).MakeGenericType(runtimeType),
+                        nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
                     {
                         serializer.EmitRead(ctx, ctx.InputValue);
                         // note that EmitRead will unwrap the T for us on the stack
