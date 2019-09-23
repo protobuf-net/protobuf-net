@@ -200,6 +200,7 @@ namespace ProtoBuf
             private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
             {
                 long calculatedLength;
+                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
                 var nulState = NullProtoWriter.CreateNullImpl(Model, Context);
                 try
                 {
