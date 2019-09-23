@@ -24,9 +24,9 @@ namespace Benchmark
 
         static void Dispose(IDisposable input) => input?.Dispose();
 
-        [BenchmarkCategory("ROM_RefState")]
-        [Benchmark(Description = "C_Pooled")]
-        public void ROM_C_Pooled() => Dispose(ROM_NewPooled(_c));
+        //[BenchmarkCategory("ROM_RefState")]
+        //[Benchmark(Description = "C_Pooled")]
+        //public void ROM_C_Pooled() => Dispose(ROM_NewPooled(_c));
 
         [BenchmarkCategory("ROM_RefState")]
         [Benchmark(Description = "Auto")]
@@ -44,9 +44,9 @@ namespace Benchmark
         [Benchmark(Description = "C")]
         public protogen.Database MemoryStream_New_C() => MemoryStream_New(_c);
 
-        [BenchmarkCategory("MS_RefState")]
-        [Benchmark(Description = "C_Pooled")]
-        public void MemoryStream_New_C_Pooled() => Dispose(MemoryStream_NewPooled(_c));
+        //[BenchmarkCategory("MS_RefState")]
+        //[Benchmark(Description = "C_Pooled")]
+        //public void MemoryStream_New_C_Pooled() => Dispose(MemoryStream_NewPooled(_c));
 
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "Auto")]
@@ -72,17 +72,17 @@ namespace Benchmark
             return state.Deserialize<protogen.Database>();
         }
 
-        private protogen.pooled.Database MemoryStream_NewPooled(TypeModel model)
-        {
-            using var reader = ProtoReader.State.Create(ExposableData(), model ?? Throw());
-            return reader.Deserialize<protogen.pooled.Database>();
-        }
+        //private protogen.pooled.Database MemoryStream_NewPooled(TypeModel model)
+        //{
+        //    using var reader = ProtoReader.State.Create(ExposableData(), model ?? Throw());
+        //    return reader.Deserialize<protogen.pooled.Database>();
+        //}
 
-        private protogen.pooled.Database ROM_NewPooled(TypeModel model)
-        {
-            using var state = ProtoReader.State.Create(new ReadOnlyMemory<byte>(_data), model ?? Throw());
-            return state.Deserialize<protogen.pooled.Database>();
-        }
+        //private protogen.pooled.Database ROM_NewPooled(TypeModel model)
+        //{
+        //    using var state = ProtoReader.State.Create(new ReadOnlyMemory<byte>(_data), model ?? Throw());
+        //    return state.Deserialize<protogen.pooled.Database>();
+        //}
 
 
         [BenchmarkCategory("ROM_RefState")]

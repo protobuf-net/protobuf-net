@@ -91,11 +91,11 @@ namespace Benchmark
             model.Add(typeof(protogen.Database), true);
             model.Add(typeof(protogen.Order), true);
             model.Add(typeof(protogen.OrderLine), true);
-#if NEW_API
-            model.Add(typeof(protogen.pooled.Database));
-            model.Add(typeof(protogen.pooled.Order));
-            model.Add(typeof(protogen.pooled.OrderLine));
-#endif
+//#if NEW_API
+//            model.Add(typeof(protogen.pooled.Database));
+//            model.Add(typeof(protogen.pooled.Order));
+//            model.Add(typeof(protogen.pooled.OrderLine));
+//#endif
             model.CompileInPlace();
             _cip = model;
             _c = model.Compile();

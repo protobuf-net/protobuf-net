@@ -1187,6 +1187,10 @@ namespace ProtoBuf.Meta
                 var metaType = (MetaType)types[index];
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
+                if (!IsFullyPublic(runtimeType))
+                {
+                    ThrowHelper.ThrowInvalidOperationException("Full compilation is only permitted for public types; error on type " + runtimeType.FullName);
+                }
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
                 
@@ -1672,6 +1676,22 @@ namespace ProtoBuf.Meta
 
         private readonly static Hashtable s_assemblyModels = new Hashtable();
 
+        private static bool IsFullyPublic(Type type)
+        {
+            while (type != null)
+            {
+                if (type.IsNestedPublic)
+                {
+                    type = type.DeclaringType;
+                }
+                else
+                {
+                    return type.IsPublic;
+                }
+            }
+            return false;
+        }
+
         private static TypeModel CreateForAssemblyImpl(Assembly assembly)
         {
             if (assembly == null) throw new ArgumentNullException(nameof(assembly));
@@ -1683,7 +1703,7 @@ namespace ProtoBuf.Meta
                 RuntimeTypeModel model = null;
                 foreach (var type in assembly.GetTypes())
                 {
-                    if (type.IsDefined(typeof(ProtoContractAttribute), true))
+                    if (type.IsDefined(typeof(ProtoContractAttribute), true) && IsFullyPublic(type))
                     {
                         (model ?? (model = Create())).Add(type, true);
                     }
