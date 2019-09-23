@@ -24,6 +24,7 @@ namespace ProtoBuf
             private Span<byte> _span;
             private Memory<byte> _memory;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal State(ProtoWriter writer)
             {
                 this = default;

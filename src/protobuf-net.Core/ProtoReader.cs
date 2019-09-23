@@ -15,7 +15,7 @@ namespace ProtoBuf
     /// </summary>
     public abstract partial class ProtoReader : IDisposable, ISerializationContext
     {
-        internal const string UseStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version",
+        internal const string PreferStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version",
             PreferReadSubItem = "If possible, please use the ReadSubItem API; this API may not work correctly with all readers";
 
         private protected abstract int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value);
@@ -141,14 +141,17 @@ namespace ProtoBuf
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
-        public int Position { get { return checked((int)_longPosition); } }
+        public int Position
+        {
+            [MethodImpl(HotPath)]
+            get { return checked((int)_longPosition); }
+        }
+
 
         /// <summary>
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
         public long LongPosition
         {
             [MethodImpl(HotPath)]
@@ -163,44 +166,44 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public short ReadInt16() => DefaultState().ReadInt16();
 
 
         /// <summary>
         /// Reads an unsigned 16-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public ushort ReadUInt16() => DefaultState().ReadUInt16();
 
         /// <summary>
         /// Reads an unsigned 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public byte ReadByte() => DefaultState().ReadByte();
 
         /// <summary>
         /// Reads a signed 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public sbyte ReadSByte() => DefaultState().ReadSByte();
 
         /// <summary>
         /// Reads an unsigned 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public uint ReadUInt32() => DefaultState().ReadUInt32();
 
         /// <summary>
         /// Reads a signed 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public int ReadInt32() => DefaultState().ReadInt32();
 
         /// <summary>
         /// Reads a signed 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public long ReadInt64() => DefaultState().ReadInt64();
 
         private Dictionary<string, string> stringInterner;
@@ -231,20 +234,20 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a string from the stream (using UTF8); supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public string ReadString() => DefaultState().ReadString();
 
         /// <summary>
         /// Throws an exception indication that the given value cannot be mapped to an enum.
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void ThrowEnumException(Type type, int value) => DefaultState().ThrowEnumException(type, value);
 
 
         /// <summary>
         /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public double ReadDouble() => DefaultState().ReadDouble();
 
 
@@ -253,30 +256,32 @@ namespace ProtoBuf
         /// Reads (merges) a sub-message from the stream, internally calling StartSubItem and EndSubItem, and (in between)
         /// parsing the message in accordance with the model associated with the reader
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
-        public static object ReadObject(object value, int key, ProtoReader reader) => reader.DefaultState()
-            .ReadObject(value, key);
+        [MethodImpl(HotPath)]
+        public static object ReadObject(object value, int key, ProtoReader reader)
+            => reader.DefaultState().ReadObject(value, key);
 
         /// <summary>
         /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup
         /// marker, or all fields of the sub-message must have been consumed (in either case, this means ReadFieldHeader
         /// should return zero)
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
-        public static void EndSubItem(SubItemToken token, ProtoReader reader) => reader.DefaultState().EndSubItem(token);
+        [MethodImpl(HotPath)]
+        public static void EndSubItem(SubItemToken token, ProtoReader reader)
+            => reader.DefaultState().EndSubItem(token);
 
         /// <summary>
         /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
         /// </summary>
         /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
-        [Obsolete(UseStateAPI, false)]
-        public static SubItemToken StartSubItem(ProtoReader reader) => reader.DefaultState().StartSubItem();
+        [MethodImpl(HotPath)]
+        public static SubItemToken StartSubItem(ProtoReader reader)
+            => reader.DefaultState().StartSubItem();
 
         /// <summary>
         /// Reads a field header from the stream, setting the wire-type and retuning the field number. If no
         /// more fields are available, then 0 is returned. This methods respects sub-messages.
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public int ReadFieldHeader() => DefaultState().ReadFieldHeader();
 
         [MethodImpl(HotPath)]
@@ -299,7 +304,7 @@ namespace ProtoBuf
         /// Looks ahead to see whether the next field in the stream is what we expect
         /// (typically; what we've just finished reading - for example ot read successive list items)
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public bool TryReadFieldHeader(int field) => DefaultState().TryReadFieldHeader(field);
 
         /// <summary>
@@ -315,7 +320,7 @@ namespace ProtoBuf
         /// Compares the streams current wire-type to the hinted wire-type, updating the reader if necessary; for example,
         /// a Variant may be updated to SignedVariant. If the hinted wire-type is unrelated then no change is made.
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public void Hint(WireType wireType)
         {
 #pragma warning disable RCS1218 // Simplify code branching.
@@ -332,31 +337,31 @@ namespace ProtoBuf
         /// Verifies that the stream's current wire-type is as expected, or a specialized sub-type (for example,
         /// SignedVariant) - in which case the current wire-type is updated. Otherwise an exception is thrown.
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public void Assert(WireType wireType) => DefaultState().Assert(wireType);
 
         /// <summary>
         /// Discards the data for the current field.
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public void SkipField() => DefaultState().SkipField();
 
         /// <summary>
         /// Reads an unsigned 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public ulong ReadUInt64() => DefaultState().ReadUInt64();
 
         /// <summary>
         /// Reads a single-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public float ReadSingle() => DefaultState().ReadSingle();
 
         /// <summary>
         /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false), MethodImpl(HotPath)]
+        [MethodImpl(HotPath)]
         public bool ReadBoolean() => DefaultState().ReadBoolean();
 
         internal static readonly byte[] EmptyBlob = Array.Empty<byte>();
@@ -364,7 +369,7 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static byte[] AppendBytes(byte[] value, ProtoReader reader)
             => reader.DefaultState().AppendBytes(value);
 
@@ -636,7 +641,7 @@ namespace ProtoBuf
         /// <summary>
         /// Copies the current field into the instance as extension data
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public void AppendExtensionData(IExtensible instance) => DefaultState().AppendExtensionData(instance);
 
         /// <summary>
@@ -687,7 +692,6 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a Type from the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
         public Type ReadType() => DefaultState().ReadType();
 
         internal void TrapNextObject(int newObjectKey)

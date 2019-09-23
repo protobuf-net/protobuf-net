@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace ProtoBuf.Meta
 {
@@ -277,8 +278,15 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public long Serialize<T>(IBufferWriter<byte> dest, T value, SerializationContext context = null)
         {
-            using var writer = ProtoWriter.Create(out var state, dest, this, context);
-            return SerializeImpl<T>(ref state, value);
+            var state = ProtoWriter.State.Create(dest, this, context);
+            try
+            {
+                return SerializeImpl<T>(ref state, value);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         /// <summary>
@@ -286,7 +294,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination writer to write to.</param>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [Obsolete(ProtoReader.PreferStateAPI, false)]
         public void Serialize(ProtoWriter dest, object value)
         {
             ProtoWriter.State state = dest.DefaultState();
@@ -832,7 +840,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [Obsolete(ProtoReader.PreferStateAPI, false)]
         public object Deserialize(ProtoReader source, object value, Type type)
             => source.DefaultState().DeserializeFallback(value, type, this);
 
@@ -1207,7 +1215,32 @@ namespace ProtoBuf.Meta
             return found;
         }
 
-        internal static TypeModel DefaultModel { get; set; }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static TypeModel SetDefaultModel(TypeModel newValue)
+        {
+            // the point here is to allow:
+            // 1. TypeModel.DefaultModel to set a non-null NullModel instance automagically
+            // 2. RuntimeTypeModel.Default to override that, changing either a null or a NullModel
+            // to the default RuntimeTypeModel
+            // 3. there is no 3; those are the supported scenarios
+            var fieldValue = Volatile.Read(ref s_defaultModel);
+            if (fieldValue == null || fieldValue is NullModel)
+            {
+                if (newValue == null) newValue = NullModel.Instance;
+                Interlocked.CompareExchange(ref s_defaultModel, newValue, fieldValue);
+                fieldValue = Volatile.Read(ref s_defaultModel);
+            }
+            return fieldValue;
+            
+        }
+        private static TypeModel s_defaultModel;
+        internal static TypeModel DefaultModel => s_defaultModel ?? SetDefaultModel(null);
+
+        private sealed class NullModel : TypeModel
+        {
+            private NullModel() { }
+            public static NullModel Instance = new NullModel();
+        }
 
         /// <summary>
         /// Creates a new runtime model, to which the caller
@@ -1429,7 +1462,6 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Write state</param>
         protected internal virtual void Serialize(ref ProtoWriter.State state, int key, object value)
             => ThrowHelper.ThrowNotSupportedException(nameof(Serialize) + " is not supported");

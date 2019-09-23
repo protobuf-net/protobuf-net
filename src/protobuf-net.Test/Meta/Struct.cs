@@ -65,10 +65,15 @@ namespace ProtoBuf.unittest.Meta
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
             using MemoryStream ms = new MemoryStream();
-            using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, null, null))
+            var writeState = ProtoWriter.State.Create(ms, null, null);
+            try
             {
-                ser(writer, ref writeState, cs1);
-                writer.Close(ref writeState);
+                ser(ref writeState, cs1);
+                writeState.Close();
+            }
+            finally
+            {
+                writeState.Dispose();
             }
             byte[] blob = ms.ToArray();
             ms.Position = 0;

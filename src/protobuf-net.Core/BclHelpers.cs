@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
@@ -27,6 +28,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="type">The type to create</param>
         /// <returns>The new instance</returns>
+        [MethodImpl(ProtoReader.HotPath)]
         public static object GetUninitializedObject(Type type)
         {
             return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
@@ -41,7 +43,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
             var state = dest.DefaultState();
@@ -51,11 +53,13 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimeSpan(ref ProtoWriter.State state, TimeSpan value)
         {
             WriteTimeSpanImpl(ref state, value, DateTimeKind.Unspecified);
         }
 
+        [MethodImpl(ProtoReader.HotPath)]
         private static void WriteTimeSpanImpl(ref ProtoWriter.State state, TimeSpan timeSpan, DateTimeKind kind)
         {
             switch (state.WireType)
@@ -77,7 +81,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
@@ -87,6 +91,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadTimeSpan(ref ProtoReader.State state)
         {
             long ticks = ReadTimeSpanTicks(ref state, out DateTimeKind _);
@@ -98,7 +103,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadDuration(ProtoReader source)
         {
             var state = source.DefaultState();
@@ -108,13 +113,14 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadDuration(ref ProtoReader.State state)
             => state.ReadSubItem<Duration>(serializer: WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
             var state = dest.DefaultState();
@@ -124,13 +130,14 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDuration(ref ProtoWriter.State state, TimeSpan value)
             => state.WriteSubItem<Duration>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadTimestamp(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
@@ -140,6 +147,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadTimestamp(ref ProtoReader.State state)
         {
             // note: DateTime is only defined for just over 0000 to just below 10000;
@@ -151,7 +159,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimestamp(DateTime value, ProtoWriter dest)
         {
             var state = dest.DefaultState();
@@ -161,13 +169,14 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimestamp(ref ProtoWriter.State state, DateTime value)
             => state.WriteSubItem<Timestamp>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadDateTime(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
@@ -177,6 +186,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadDateTime(ref ProtoReader.State state)
         {
             long ticks = ReadTimeSpanTicks(ref state, out DateTimeKind kind);
@@ -188,7 +198,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
             ProtoWriter.State state = dest.DefaultState();
@@ -198,6 +208,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTime(ref ProtoWriter.State state, DateTime value)
         {
             WriteDateTimeImpl(ref state, value, false);
@@ -206,7 +217,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest)
         {
             ProtoWriter.State state = dest.DefaultState();
@@ -216,11 +227,13 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTimeWithKind(ref ProtoWriter.State state, DateTime value)
         {
             WriteDateTimeImpl(ref state, value, true);
         }
 
+        [MethodImpl(ProtoReader.HotPath)]
         private static void WriteDateTimeImpl(ref ProtoWriter.State state, DateTime value, bool includeKind)
         {
             TimeSpan delta;
@@ -272,7 +285,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static decimal ReadDecimal(ProtoReader reader)
         {
             ProtoReader.State state = reader.DefaultState();
@@ -281,13 +294,14 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static decimal ReadDecimal(ref ProtoReader.State state)
             => state.ReadSubItem<decimal>(serializer: WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
             ProtoWriter.State state = writer.DefaultState();
@@ -298,13 +312,14 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDecimal(ref ProtoWriter.State state, decimal value)
             => state.WriteSubItem<decimal>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteGuid(Guid value, ProtoWriter dest)
         {
             var state = dest.DefaultState();
@@ -313,14 +328,15 @@ namespace ProtoBuf
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
-        /// </summary>        
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteGuid(ref ProtoWriter.State state, Guid value)
             => state.WriteSubItem<Guid>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuid(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
@@ -330,6 +346,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuid(ref ProtoReader.State state)
             => state.ReadSubItem<Guid>(serializer: WellKnownSerializer.Instance);
 
@@ -373,7 +390,6 @@ namespace ProtoBuf
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             ProtoReader.State state = source.DefaultState();
@@ -492,7 +508,6 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
             ProtoWriter.State state = dest.DefaultState();

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
@@ -17,8 +18,9 @@ namespace ProtoBuf
     /// </summary>
     public abstract partial class ProtoWriter : IDisposable, ISerializationContext
     {
-        internal const string UseStateAPI = ProtoReader.UseStateAPI,
-            PreferWriteSubItem = "If possible, please use the WriteSubItem API; this API may not work correctly with all writers";
+        private const MethodImplOptions HotPath = ProtoReader.HotPath;
+
+        internal const string PreferWriteSubItem = "If possible, please use the WriteSubItem API; this API may not work correctly with all writers";
 
         private TypeModel model;
         private int packedFieldNumber;
@@ -34,11 +36,9 @@ namespace ProtoBuf
         /// <param name="value">The object to write.</param>
         /// <param name="key">The key that uniquely identifies the type within the model.</param>
         /// <param name="writer">The destination.</param>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteObject(object value, int key, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteObject(value, key);
-        }
+            => writer.DefaultState().WriteObject(value, key);
 
         /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
@@ -48,11 +48,9 @@ namespace ProtoBuf
         /// <param name="value">The object to write.</param>
         /// <param name="key">The key that uniquely identifies the type within the model.</param>
         /// <param name="writer">The destination.</param>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteRecursionSafeObject(value, key);
-        }
+            => writer.DefaultState().WriteRecursionSafeObject(value, key);
 
         internal int GetTypeKey(ref Type type)
         {
@@ -68,31 +66,23 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a field-header, indicating the format of the next data we plan to write.
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteFieldHeader(fieldNumber, wireType);
-        }
+            => writer.DefaultState().WriteFieldHeader(fieldNumber, wireType);
 
         /// <summary>
         /// Writes a byte-array to the stream; supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteBytes(byte[] data, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteBytes(data);
-        }
+            => writer.DefaultState().WriteBytes(data);
 
         /// <summary>
         /// Writes a byte-array to the stream; supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteBytes(data, offset, length);
-        }
-
-        
+            => writer.DefaultState().WriteBytes(data, offset, length);
 
         private int depth = 0;
         private const int RecursionCheckDepth = 25;
@@ -103,11 +93,9 @@ namespace ProtoBuf
         /// <param name="instance">The instance to write.</param>
         /// <param name="writer">The destination.</param>
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
-        {
-            return writer.DefaultState().StartSubItem(instance, PrefixStyle.Base128);
-        }
+            => writer.DefaultState().StartSubItem(instance, PrefixStyle.Base128);
 
         private void PreSubItem(object instance)
         {
@@ -143,11 +131,9 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="token">The token obtained from StartubItem.</param>
         /// <param name="writer">The destination.</param>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
-        {
-            writer.DefaultState().EndSubItem(token, PrefixStyle.Base128);
-        }
+            => writer.DefaultState().EndSubItem(token, PrefixStyle.Base128);
 
         private void PostSubItem(ref State state)
         {
@@ -274,14 +260,12 @@ namespace ProtoBuf
         /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
         /// by this operation.
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
-        public void Close()
-        {
-            DefaultState().Close();
-        }
+        [MethodImpl(HotPath)]
+        public void Close() => DefaultState().Close();
 
         internal int Depth => depth;
 
+        [MethodImpl(HotPath)]
         internal void CheckClear(ref State state)
         {
             if (depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {depth}, type: {GetType().Name})");
@@ -312,7 +296,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a string to the stream; supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteString(string value, ProtoWriter writer) => writer.DefaultState().WriteString(value);
 
         protected private abstract void ImplWriteString(ref State state, string value, int expectedBytes);
@@ -338,124 +322,92 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an unsigned 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteUInt64(ulong value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteUInt64(value);
-        }
+            => writer.DefaultState().WriteUInt64(value);
 
         /// <summary>
         /// Writes a signed 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteInt64(long value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteInt64(value);
-        }
+            => writer.DefaultState().WriteInt64(value);
 
         /// <summary>
         /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteUInt32(uint value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteUInt32(value);
-        }
+            => writer.DefaultState().WriteUInt32(value);
 
         /// <summary>
         /// Writes a signed 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteInt16(short value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteInt16(value);
-        }
+            => writer.DefaultState().WriteInt16(value);
 
         /// <summary>
         /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteUInt16(ushort value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteUInt16(value);
-        }
+            => writer.DefaultState().WriteUInt16(value);
 
         /// <summary>
         /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteByte(byte value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteByte(value);
-        }
+            => writer.DefaultState().WriteByte(value);
 
         /// <summary>
         /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteSByte(sbyte value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteSByte(value);
-        }
+            => writer.DefaultState().WriteSByte(value);
 
         /// <summary>
         /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
         public static void WriteInt32(int value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteInt32(value);
-        }
+            => writer.DefaultState().WriteInt32(value);
 
         /// <summary>
         /// Writes a double-precision number to the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteDouble(double value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteDouble(value);
-        }
+            => writer.DefaultState().WriteDouble(value);
 
         /// <summary>
         /// Writes a single-precision number to the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteSingle(float value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteSingle(value);
-        }
+            => writer.DefaultState().WriteSingle(value);
 
         /// <summary>
         /// Throws an exception indicating that the given enum cannot be mapped to a serialized value.
         /// </summary>
+        [MethodImpl(HotPath)]
         public static void ThrowEnumException(ProtoWriter writer, object enumValue)
-        {
-            writer.DefaultState().ThrowEnumException(enumValue);
-        }
-
-        internal static void ThrowException(ProtoWriter writer)
-        {
-            var state = writer == null ? default : writer.DefaultState();
-            state.ThrowInvalidSerializationOperation();
-        }
+            => writer.DefaultState().ThrowEnumException(enumValue);
 
         /// <summary>
         /// Writes a boolean to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteBoolean(bool value, ProtoWriter writer)
-        {
-            writer.DefaultState().WriteBoolean(value);
-        }
+            => writer.DefaultState().WriteBoolean(value);
 
         /// <summary>
         /// Copies any extension data stored for the instance to the underlying stream
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void AppendExtensionData(IExtensible instance, ProtoWriter writer)
-        {
-            writer.DefaultState().AppendExtensionData(instance);
-        }
+            => writer.DefaultState().AppendExtensionData(instance);
 
 
         /// <summary>
@@ -464,29 +416,25 @@ namespace ProtoBuf
         /// when the attempt is made to write the (incorrect) field. The wire-type is taken from the
         /// subsequent call to WriteFieldHeader. Only primitive types can be packed.
         /// </summary>
+        [MethodImpl(HotPath)]
         public static void SetPackedField(int fieldNumber, ProtoWriter writer)
-        {
-            writer.DefaultState().SetPackedField(fieldNumber);
-        }
+            => writer.DefaultState().SetPackedField(fieldNumber);
 
         /// <summary>
         /// Used for packed encoding; explicitly reset the packed field marker; this is not required
         /// if using StartSubItem/EndSubItem
         /// </summary>
+        [MethodImpl(HotPath)]
         public static void ClearPackedField(int fieldNumber, ProtoWriter writer)
-        {
-            writer.DefaultState().ClearPackedField(fieldNumber);
-        }
+            => writer.DefaultState().ClearPackedField(fieldNumber);
 
         /// <summary>
         /// Used for packed encoding; writes the length prefix using fixed sizes rather than using
         /// buffering. Only valid for fixed-32 and fixed-64 encoding.
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WritePackedPrefix(int elementCount, WireType wireType, ProtoWriter writer)
-        {
-            writer.DefaultState().WritePackedPrefix(elementCount, wireType);
-        }
+            => writer.DefaultState().WritePackedPrefix(elementCount, wireType);
 
         internal string SerializeType(Type type)
         {
@@ -496,6 +444,7 @@ namespace ProtoBuf
         /// <summary>
         /// Specifies a known root object to use during reference-tracked serialization
         /// </summary>
+        [MethodImpl(HotPath)]
         public void SetRootObject(object value)
         {
             NetCache.SetKeyedObject(NetObjectCache.Root, value);
@@ -504,7 +453,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
         /// </summary>
-        [Obsolete(UseStateAPI, false)]
+        [MethodImpl(HotPath)]
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
     }

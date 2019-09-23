@@ -289,8 +289,15 @@ namespace ProtoBuf
             {
                 if (instance != null)
                 {
-                    using var writer = ProtoWriter.Create(out var state, dest, RuntimeTypeModel.Default);
-                    writer.Model.SerializeFallback(writer, ref state, instance);
+                    var state = ProtoWriter.State.Create(dest, RuntimeTypeModel.Default);
+                    try
+                    {
+                        state.Model.SerializeFallback(ref state, instance);
+                    }
+                    finally
+                    {
+                        state.Dispose();
+                    }
                 }
             }
 

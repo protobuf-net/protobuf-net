@@ -551,9 +551,7 @@ namespace ProtoBuf.Serializers
             // extension data
             if (isExtensible)
             {
-                ctx.LoadValue(loc);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod(nameof(ProtoWriter.AppendExtensionData), this));
+                ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.AppendExtensionData), loc);
             }
             // post-callbacks
             EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);

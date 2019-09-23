@@ -28,7 +28,7 @@ namespace ProtoBuf.Serializers
         {
             if (!object.Equals(value, defaultValue))
             {
-                Tail.Write(dest, ref state, value);
+                Tail.Write(ref state, value);
             }
         }
 

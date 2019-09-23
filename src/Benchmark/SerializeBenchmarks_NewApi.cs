@@ -33,10 +33,15 @@ namespace Benchmark
             using var buffer = BufferWriter<byte>.Create(64 * 1024);
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
                 {
-                    writer.Serialize(ref state, _database);
-                    writer.Close(ref state);
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 AssertLength(buffer.Length);
                 buffer.Flush().Dispose();
@@ -48,10 +53,15 @@ namespace Benchmark
             using var buffer = new FakeBufferWriter();
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
                 {
-                    writer.Serialize(ref state, _database);
-                    writer.Close(ref state);
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 AssertLength(buffer.Reset());
             }

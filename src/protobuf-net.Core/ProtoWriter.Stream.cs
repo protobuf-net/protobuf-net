@@ -14,7 +14,7 @@ namespace ProtoBuf
         /// <param name="dest">The destination stream</param>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
-        [Obsolete(UseStateAPI, false)]
+        [Obsolete(ProtoReader.PreferStateAPI, false)]
         public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext context = null)
             => StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
 

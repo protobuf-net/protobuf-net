@@ -24,10 +24,15 @@ namespace Examples
 
             var ms = new MemoryStream();
             var obj = new Foo { Bar = "abc", Blap = "abc" };
-            using (var writer = ProtoWriter.Create(out var s, ms, model, null))
+            var s = ProtoWriter.State.Create(ms, model, null);
+            try
             {
-                writer.Serialize(ref s, obj);
-                writer.Close(ref s);
+                s.Serialize(obj);
+                s.Close();
+            }
+            finally
+            {
+                s.Dispose();
             }
             ms.Position = 0;
 

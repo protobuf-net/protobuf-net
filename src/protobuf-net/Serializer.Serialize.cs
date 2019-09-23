@@ -16,8 +16,15 @@ namespace ProtoBuf
         /// <param name="destination">The destination stream to write to.</param>
         public static void Serialize<T>(Stream destination, T instance)
         {
-            using var writer = ProtoWriter.Create(out var state, destination, RuntimeTypeModel.Default);
-            TypeModel.SerializeImpl<T>(writer, ref state, instance);
+            var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default);
+            try
+            {
+                TypeModel.SerializeImpl<T>(ref state, instance);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
 
@@ -29,8 +36,15 @@ namespace ProtoBuf
         /// <param name="context">Additional serialization context</param>
         public static void Serialize<T>(IBufferWriter<byte> destination, T instance, SerializationContext context = null)
         {
-            using var writer = ProtoWriter.Create(out var state, destination, RuntimeTypeModel.Default, context);
-            TypeModel.SerializeImpl<T>(writer, ref state, instance);
+            var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default, context);
+            try
+            {
+                TypeModel.SerializeImpl<T>(ref state, instance);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         /// <summary>

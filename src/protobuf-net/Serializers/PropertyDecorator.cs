@@ -51,7 +51,7 @@ namespace ProtoBuf.Serializers
         {
             Debug.Assert(value != null);
             value = property.GetValue(value, null);
-            if (value != null) Tail.Write(dest, ref state, value);
+            if (value != null) Tail.Write(ref state, value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)

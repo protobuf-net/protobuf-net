@@ -48,8 +48,15 @@ namespace ProtoBuf.Tests
         public void ManualWriter_Buffer()
         {
             using var bw = BufferWriter<byte>.Create();
-            using var w = ProtoWriter.Create(out var state, bw, RuntimeTypeModel.Default, null);
-            ManualWriter(ref state);
+            var state = ProtoWriter.State.Create(bw, RuntimeTypeModel.Default, null);
+            try
+            {
+                ManualWriter(ref state);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         class Foo
@@ -178,11 +185,18 @@ namespace ProtoBuf.Tests
         {
             using var bw = BufferWriter<byte>.Create();
             var model = RuntimeTypeModel.Default;
-            using var writer = ProtoWriter.Create(out var state, bw.Writer, model, null);
-            A obj = CreateModel(depth);
-            var ser = new ASerializer(Log);
-            ser.Write(ref state, obj);
-            state.Close();
+            var state = ProtoWriter.State.Create(bw.Writer, model, null);
+            try
+            {
+                A obj = CreateModel(depth);
+                var ser = new ASerializer(Log);
+                ser.Write(ref state, obj);
+                state.Close();
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         [Theory]

@@ -121,7 +121,7 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < tails.Length; i++)
             {
                 object val = GetValue(value, i);
-                if (val != null) tails[i].Write(dest, ref state, val);
+                if (val != null) tails[i].Write(ref state, val);
             }
         }
 

@@ -158,10 +158,10 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(@continue, false);
                     ctx.MarkLabel(tryNextValue);
                 }
-                ctx.LoadWriter(false);
+                ctx.LoadState();
                 ctx.LoadValue(loc);
                 ctx.CastToObject(ExpectedType);
-                ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.ThrowEnumException)));
                 ctx.MarkLabel(@continue);
             }
         }

@@ -9,16 +9,18 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        /// <summary>
-        /// Create a new ProtoWriter that tagets a buffer writer
-        /// </summary>
-        public static ProtoWriter Create(out State state, IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
+        partial struct State
         {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
+            /// <summary>
+            /// Create a new ProtoWriter that tagets a buffer writer
+            /// </summary>
+            public static State Create(IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
+            {
+                if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
 
-            var protoWriter = BufferWriterProtoWriter.CreateBufferWriter(writer, model, context);
-            state = new State(protoWriter);
-            return protoWriter;
+                var protoWriter = BufferWriterProtoWriter.CreateBufferWriter(writer, model, context);
+                return new State(protoWriter);
+            }
         }
 
         private sealed class BufferWriterProtoWriter : ProtoWriter

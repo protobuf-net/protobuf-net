@@ -11,9 +11,9 @@ namespace ProtoBuf
     partial class ProtoReader
     {
 #if PLAT_AGGRESSIVE_OPTIMIZE
-        private const MethodImplOptions HotPath = MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization;
+        internal const MethodImplOptions HotPath = MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization;
 #else
-        private const MethodImplOptions HotPath = MethodImplOptions.AggressiveInlining;
+        internal const MethodImplOptions HotPath = MethodImplOptions.AggressiveInlining;
 #endif
 
         ref partial struct State

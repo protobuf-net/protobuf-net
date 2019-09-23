@@ -117,26 +117,31 @@ namespace ProtoBuf.ServiceModel
             else
             {
                 using MemoryStream ms = new MemoryStream();
-                using (ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null))
+                var state = ProtoWriter.State.Create(ms, model, null);
+                try
                 {
                     if (isList)
                     {
-                        model.SerializeFallback(protoWriter, ref state, graph);
+                        model.SerializeFallback(ref state, graph);
                     }
                     else
                     {
 
                         try
                         {
-                            model.Serialize(protoWriter, ref state, key, graph);
-                            protoWriter.Close(ref state);
+                            model.Serialize(ref state, key, graph);
+                            state.Close();
                         }
                         catch
                         {
-                            protoWriter.Abandon();
+                            state.Abandon();
                             throw;
                         }
                     }
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 Helpers.GetBuffer(ms, out var segment);
                 writer.WriteBase64(segment.Array, segment.Offset, segment.Count);

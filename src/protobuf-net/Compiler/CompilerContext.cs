@@ -603,7 +603,11 @@ namespace ProtoBuf.Compiler
 
         internal void WriteNullCheckedTail(Type type, IRuntimeProtoSerializerNode tail, Compiler.Local valueFrom)
         {
-            if (type.IsValueType)
+            if (tail is TagDecorator td && td.ExpectedType == type && td.CanEmitDirectWrite())
+            {
+                td.EmitDirectWrite(this, valueFrom);
+            }
+            else if (type.IsValueType)
             {
                 Type underlyingType = Nullable.GetUnderlyingType(type);
 

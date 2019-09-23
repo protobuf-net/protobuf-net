@@ -57,10 +57,15 @@ namespace Benchmark
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
 #if NEW_API
-                using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
                 {
-                    writer.Serialize(ref state, _database);
-                    writer.Close(ref state);
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
                 }
 #else
                 using (var writer = ProtoWriter.Create(buffer, model))

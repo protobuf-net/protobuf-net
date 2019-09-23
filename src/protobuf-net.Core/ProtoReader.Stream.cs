@@ -23,7 +23,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        [Obsolete(UseStateAPI, false)]
+        [Obsolete(PreferStateAPI, false)]
         public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
             var reader = Pool<StreamProtoReader>.TryGet() ?? new StreamProtoReader();

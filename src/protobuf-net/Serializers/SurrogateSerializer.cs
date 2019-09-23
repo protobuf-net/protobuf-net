@@ -103,7 +103,7 @@ namespace ProtoBuf.Serializers
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            rootTail.Write(writer, ref state, toTail.Invoke(null, new object[] { value }));
+            rootTail.Write(ref state, toTail.Invoke(null, new object[] { value }));
         }
 
         public object Read(ref ProtoReader.State state, object value)

@@ -89,6 +89,12 @@ namespace ProtoBuf.Serializers
             }
         }
 
+        public bool CanEmitDirectWrite()
+            => Tail is IDirectWriteNode dw && dw.CanEmitDirectWrite(wireType);
+
+        public void EmitDirectWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IDirectWriteNode)Tail).EmitDirectWrite(fieldNumber, wireType, ctx, valueFrom);
+
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             if (strict || NeedsHint)

@@ -1,9 +1,8 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Reflection;
-using ProtoBuf.Internal;
-using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -85,21 +84,21 @@ namespace ProtoBuf.Serializers
                 if (fixedLengthPacked)
                 {
                     // write directly - no need for buffering
+                    ctx.LoadState();
                     ctx.LoadLength(arr, false);
                     ctx.LoadValue((int)packedWireType);
-                    ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WritePackedPrefix", this));
+                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WritePackedPrefix)));
                 }
                 else
                 {
+                    ctx.LoadState();
                     ctx.LoadValue(arr);
-                    ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
+                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.StartSubItem), new Type[] { typeof(object) }));
                     ctx.StoreValue(token);
                 }
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
-                ctx.LoadWriter(false);
-                ctx.EmitCall(mappedWriter.GetMethod("SetPackedField"));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.SetPackedField)));
             }
             EmitWriteArrayLoop(ctx, i, arr);
 
@@ -107,15 +106,13 @@ namespace ProtoBuf.Serializers
             {
                 if (fixedLengthPacked)
                 {
+                    ctx.LoadState();
                     ctx.LoadValue(fieldNumber);
-                    ctx.LoadWriter(false);
-                    ctx.EmitCall(mappedWriter.GetMethod("ClearPackedField"));
+                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.ClearPackedField)));
                 }
                 else
                 {
-                    ctx.LoadValue(token);
-                    ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
+                    ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.EndSubItem), token);
                 }
             }
         }

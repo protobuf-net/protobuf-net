@@ -400,7 +400,7 @@ namespace ProtoBuf.Meta
             }
             catch { } // this is all kinds of brittle on things like UWP
 #endif
-            if (isDefault) TypeModel.DefaultModel = this;
+            if (isDefault) TypeModel.SetDefaultModel(this);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

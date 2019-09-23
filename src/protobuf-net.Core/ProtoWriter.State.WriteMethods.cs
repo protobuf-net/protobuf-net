@@ -15,8 +15,11 @@ namespace ProtoBuf
             /// </summary>
             public void WriteString(int fieldNumber, string value, StringMap map = null)
             {
-                WriteFieldHeader(fieldNumber, WireType.String);
-                WriteStringWithLengthPrefix(value, map);
+                if (value != null)
+                {
+                    WriteFieldHeader(fieldNumber, WireType.String);
+                    WriteStringWithLengthPrefix(value, map);
+                }
             }
 
             private void WriteStringWithLengthPrefix(string value, StringMap map)
@@ -44,7 +47,7 @@ namespace ProtoBuf
                         WriteStringWithLengthPrefix(value, map);
                         break;
                     default:
-                        ThrowException(_writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -107,6 +110,9 @@ namespace ProtoBuf
                 }
             }
 
+            /// <summary>
+            /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+            /// </summary>
             public void WriteInt32Varint(int fieldNumber, int value)
             {
                 WriteFieldHeader(fieldNumber, WireType.Varint);
@@ -149,7 +155,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, Zig(value)));
                         return;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -200,7 +206,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(bytes);
                         return;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -226,7 +232,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(8);
                         return;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         return;
                 }
             }
@@ -247,7 +253,7 @@ namespace ProtoBuf
                         WriteDouble(value);
                         return;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -275,7 +281,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(4);
                         return;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -301,7 +307,7 @@ namespace ProtoBuf
                         writer.AdvanceAndReset(4);
                         return;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -317,8 +323,11 @@ namespace ProtoBuf
             /// </summary>
             public void WriteSubItem<T>(int fieldNumber, T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
             {
-                WriteFieldHeader(fieldNumber, WireType.String);
-                _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                if (!(TypeHelper<T>.IsObjectType && value is null))
+                {
+                    WriteFieldHeader(fieldNumber, WireType.String);
+                    _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                }
             }
 
             /// <summary>
@@ -413,7 +422,7 @@ namespace ProtoBuf
                         writer.ImplWriteBytes(ref this, data);
                         break;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -442,7 +451,7 @@ namespace ProtoBuf
                         writer.ImplWriteBytes(ref this, data, offset, length);
                         break;
                     default:
-                        ThrowException(writer);
+                        ThrowInvalidSerializationOperation();
                         break;
                 }
             }
@@ -482,6 +491,9 @@ namespace ProtoBuf
             /// </summary>
             public void SetRootObject(object value) => _writer.SetRootObject(value);
 
+            /// <summary>
+            /// Abandon any pending unflushed data
+            /// </summary>
             public void Abandon() => _writer?.Abandon();
 
             void CheckClear() => _writer?.CheckClear(ref this);
@@ -514,8 +526,6 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="value">The object to write.</param>
             /// <param name="key">The key that uniquely identifies the type within the model.</param>
-            /// <param name="writer">The destination.</param>
-            /// <param name="state">Writer state</param>
             public void WriteObject(object value, int key)
             {
                 var model = Model;
@@ -591,8 +601,6 @@ namespace ProtoBuf
             /// Indicates the start of a nested record.
             /// </summary>
             /// <param name="instance">The instance to write.</param>
-            /// <param name="writer">The destination.</param>
-            /// <param name="state">Writer state</param>
             /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
             [Obsolete(PreferWriteSubItem, false)]
             public SubItemToken StartSubItem(object instance) => StartSubItem(instance, PrefixStyle.Base128);
@@ -671,8 +679,6 @@ namespace ProtoBuf
             /// Indicates the end of a nested record.
             /// </summary>
             /// <param name="token">The token obtained from StartubItem.</param>
-            /// <param name="writer">The destination.</param>
-            /// <param name="state">Writer state</param>
             [Obsolete(PreferWriteSubItem, false)]
             public void EndSubItem(SubItemToken token)
                 => EndSubItem(token, PrefixStyle.Base128);

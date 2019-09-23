@@ -12,7 +12,7 @@ namespace ProtoBuf.unittest.Serializers
     {
         [Fact]
         public void TestWriteSubItemWithShortBlob() {
-            Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
+            Util.Test((ref ProtoWriter.State st) =>
             {
                 st.WriteFieldHeader(5, WireType.String);
                 SubItemToken token = st.StartSubItem(new object());

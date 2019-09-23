@@ -11,7 +11,7 @@ namespace ProtoBuf.unittest.Serializers
         [Fact]
         public void TestString_abc()
         {
-            Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
+            Util.Test((ref ProtoWriter.State st) =>
             {
                 st.WriteFieldHeader(1, WireType.String);
                 st.WriteString("abc");
@@ -22,7 +22,7 @@ namespace ProtoBuf.unittest.Serializers
         {
             for (int i = 0; i < 128; i++)
             {
-                Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
+                Util.Test((ref ProtoWriter.State st) =>
                   {
                       st.WriteFieldHeader(1, WireType.Varint);
                       st.WriteInt32(i);
@@ -30,7 +30,7 @@ namespace ProtoBuf.unittest.Serializers
                  + i.ToString("X2")
                 );
             }
-            Util.Test((ProtoWriter pw, ref ProtoWriter.State st) => {
+            Util.Test((ref ProtoWriter.State st) => {
                 st.WriteFieldHeader(1, WireType.Varint);
                 st.WriteInt32(128);
             }, "088001");

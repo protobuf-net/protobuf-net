@@ -88,40 +88,45 @@ namespace ProtoBuf.Serializers
         }
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using Compiler.Local valOrNull = ctx.GetLocalWithValue(ExpectedType, valueFrom);
-            using Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken));
-            ctx.LoadNullRef();
-            ctx.LoadWriter(true);
-            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
-            ctx.StoreValue(token);
-
-            if (ExpectedType.IsValueType)
+            if (Tail is TagDecorator td && Tail.ExpectedType == this.ExpectedType && td.CanEmitDirectWrite())
             {
-                ctx.LoadAddress(valOrNull, ExpectedType);
-                ctx.LoadValue(ExpectedType.GetProperty("HasValue"));
+                td.EmitDirectWrite(ctx, valueFrom);
             }
             else
             {
-                ctx.LoadValue(valOrNull);
-            }
-            Compiler.CodeLabel @end = ctx.DefineLabel();
-            ctx.BranchIfFalse(@end, false);
-            if (ExpectedType.IsValueType)
-            {
-                ctx.LoadAddress(valOrNull, ExpectedType);
-                ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Type.EmptyTypes));
-            }
-            else
-            {
-                ctx.LoadValue(valOrNull);
-            }
-            Tail.EmitWrite(ctx, null);
+                using Compiler.Local valOrNull = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+                using Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken));
+                ctx.LoadState();
+                ctx.LoadNullRef();
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.StartSubItem), new Type[] { typeof(object) }));
+                ctx.StoreValue(token);
 
-            ctx.MarkLabel(@end);
+                if (ExpectedType.IsValueType)
+                {
+                    ctx.LoadAddress(valOrNull, ExpectedType);
+                    ctx.LoadValue(ExpectedType.GetProperty("HasValue"));
+                }
+                else
+                {
+                    ctx.LoadValue(valOrNull);
+                }
+                Compiler.CodeLabel @end = ctx.DefineLabel();
+                ctx.BranchIfFalse(@end, false);
+                if (ExpectedType.IsValueType)
+                {
+                    ctx.LoadAddress(valOrNull, ExpectedType);
+                    ctx.EmitCall(ExpectedType.GetMethod("GetValueOrDefault", Type.EmptyTypes));
+                }
+                else
+                {
+                    ctx.LoadValue(valOrNull);
+                }
+                Tail.EmitWrite(ctx, null);
 
-            ctx.LoadValue(token);
-            ctx.LoadWriter(true);
-            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
+                ctx.MarkLabel(@end);
+
+                ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.EndSubItem), token);
+            }
         }
 
         public override object Read(ref ProtoReader.State state, object value)

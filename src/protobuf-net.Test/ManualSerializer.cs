@@ -135,10 +135,10 @@ namespace ProtoBuf
             model.AutoCompile = false;
             using var pipe = Pipelines.Sockets.Unofficial.Buffers.BufferWriter<byte>.Create();
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
-            using (var writer = ProtoWriter.Create(out var writeState, pipe.Writer, model))
+            using (var writeState = ProtoWriter.State.Create(pipe.Writer, model))
             {
                 writeState.Serialize(obj);
-                Assert.Equal(0, writer.Depth);
+                Assert.Equal(0, writeState.Depth);
                 writeState.Close();
             }
             using var result = pipe.Flush();
@@ -209,7 +209,7 @@ namespace ProtoBuf
         {
             using var pipe = Pipelines.Sockets.Unofficial.Buffers.BufferWriter<byte>.Create();
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
-            using (ProtoWriter.Create(out var writeState, pipe.Writer, null))
+            using (var writeState = ProtoWriter.State.Create(pipe.Writer, null))
             {
                 var bytes = writeState.Serialize<A>(obj, ModelSerializer.Default);
                 Assert.Equal(12, bytes);
