@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
 
                 Type itemType = null, defaultType = null;
 
-                MetaType.ResolveListTypes(model, finalType, ref itemType, ref defaultType);
+                MetaType.ResolveListTypes(finalType, ref itemType, ref defaultType);
                 Type tmp = itemType ?? finalType;
 
                 bool asReference = false;

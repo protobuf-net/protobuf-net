@@ -47,33 +47,22 @@ namespace Benchmark
         const int OperationsPerInvoke = 128;
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void MemoryStream_CIP() => MemoryStream(_cip);
+        public void MemoryStream_CIP() => MemoryStream_ViaWriter(_cip);
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void MemoryStream_C() => MemoryStream(_c);
+        public void MemoryStream_C() => MemoryStream_ViaWriter(_c);
 
-        private void MemoryStream(TypeModel model)
+        private void MemoryStream_ViaWriter(TypeModel model)
         {
             using var buffer = new MemoryStream();
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-#if NEW_API
-                var state = ProtoWriter.State.Create(buffer, model);
-                try
-                {
-                    state.Serialize(_database);
-                    state.Close();
-                }
-                finally
-                {
-                    state.Dispose();
-                }
-#else
+#pragma warning disable CS0618
                 using (var writer = ProtoWriter.Create(buffer, model))
                 {
                     model.Serialize(writer, _database);
                     writer.Close();
                 }
-#endif
+#pragma warning restore CS0618
                 AssertLength(buffer.Length);
                 buffer.Position = 0;
                 buffer.SetLength(0);

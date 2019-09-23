@@ -999,7 +999,7 @@ namespace ProtoBuf.Meta
             public void SetFrameworkOptions(MetaType from)
             {
                 if (from == null) throw new ArgumentNullException(nameof(from));
-                AttributeMap[] attribs = AttributeMap.Create(from.Model, from.Type.Assembly);
+                AttributeMap[] attribs = AttributeMap.Create(from.Type.Assembly);
                 foreach (AttributeMap attrib in attribs)
                 {
                     if (attrib.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute")
@@ -1320,7 +1320,7 @@ namespace ProtoBuf.Meta
                     if (consideredAssemblies.IndexOfReference(assembly) >= 0) continue;
                     consideredAssemblies.Add(assembly);
 
-                    AttributeMap[] assemblyAttribsMap = AttributeMap.Create(this, assembly);
+                    AttributeMap[] assemblyAttribsMap = AttributeMap.Create(assembly);
                     for (int i = 0; i < assemblyAttribsMap.Length; i++)
                     {
                         if (assemblyAttribsMap[i].AttributeType != internalsVisibleToAttribType) continue;

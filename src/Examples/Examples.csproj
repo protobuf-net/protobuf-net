@@ -6,6 +6,7 @@
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
+    <NoWarn>$(NoWarn);IDE0060;IDE0051;IDE0044;IDE0063;IDE0028;IDE0034;IDE1006;IDE0017;IDE0052</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>

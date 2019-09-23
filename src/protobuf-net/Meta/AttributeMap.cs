@@ -15,7 +15,7 @@ namespace ProtoBuf.Meta
             return TryGet(key, true, out value);
         }
         public abstract Type AttributeType { get; }
-        public static AttributeMap[] Create(TypeModel model, Type type, bool inherit)
+        public static AttributeMap[] Create(Type type, bool inherit)
         {
 
             object[] all = type.GetCustomAttributes(inherit);
@@ -27,7 +27,7 @@ namespace ProtoBuf.Meta
             return result;
         }
 
-        public static AttributeMap[] Create(TypeModel model, MemberInfo member, bool inherit)
+        public static AttributeMap[] Create(MemberInfo member, bool inherit)
         {
             object[] all = member.GetCustomAttributes(inherit);
             AttributeMap[] result = new AttributeMap[all.Length];
@@ -37,7 +37,7 @@ namespace ProtoBuf.Meta
             }
             return result;
         }
-        public static AttributeMap[] Create(TypeModel model, Assembly assembly)
+        public static AttributeMap[] Create(Assembly assembly)
         {
             object[] all = assembly.GetCustomAttributes(inherit: false);
 

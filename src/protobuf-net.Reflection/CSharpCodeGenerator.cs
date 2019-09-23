@@ -265,13 +265,13 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public override string GetAccess(Access access)
         {
-            switch (access)
+            return access switch
             {
-                case Access.Internal: return "internal";
-                case Access.Public: return "public";
-                case Access.Private: return "private";
-                default: return base.GetAccess(access);
-            }
+                Access.Internal => "internal",
+                Access.Public => "public",
+                Access.Private => "private",
+                _ => base.GetAccess(access),
+            };
         }
 
         /// <summary>

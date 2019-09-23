@@ -5,6 +5,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.IO;
 
 namespace Benchmark
 {
@@ -68,7 +69,28 @@ namespace Benchmark
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void MemoryStream_Auto() => MemoryStream(_auto);
+        public void MemoryStream_Auto() => MemoryStream_ViaState(_auto);
+
+        private void MemoryStream_ViaState(TypeModel model)
+        {
+            using var buffer = new MemoryStream();
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
+                {
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
+                }
+                AssertLength(buffer.Length);
+                buffer.Position = 0;
+                buffer.SetLength(0);
+            }
+        }
 
         sealed class FakeBufferWriter : IBufferWriter<byte>, IDisposable
         {

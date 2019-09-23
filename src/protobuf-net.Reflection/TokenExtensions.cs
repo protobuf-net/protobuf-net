@@ -271,12 +271,12 @@ namespace ProtoBuf.Reflection
         // it is the job of codegen to change this normalized form to the target language form
         internal static void ReadStringBytes(ref MemoryStream ms, string value)
         {
-            void AppendAscii(MemoryStream target, string ascii)
+            static void AppendAscii(MemoryStream target, string ascii)
             {
                 foreach (char c in ascii)
                     target.WriteByte(checked((byte)c));
             }
-            void AppendByte(MemoryStream target, ref uint codePoint, ref int len)
+            static void AppendByte(MemoryStream target, ref uint codePoint, ref int len)
             {
                 if (len != 0)
                 {
@@ -285,7 +285,7 @@ namespace ProtoBuf.Reflection
                 codePoint = 0;
                 len = 0;
             }
-            unsafe void AppendNormalized(MemoryStream target, ref uint codePoint, ref int len)
+            unsafe static void AppendNormalized(MemoryStream target, ref uint codePoint, ref int len)
             {
                 if (len == 0)
                 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reflection;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
@@ -20,7 +21,17 @@ namespace ProtoBuf
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
         /// <param name="knownType">The additional type to serialize/deserialize.</param>
         public ProtoIncludeAttribute(int tag, Type knownType)
-            : this(tag, knownType == null ? "" : knownType.AssemblyQualifiedName) { }
+        {
+            if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
+            if (knownType == null) ThrowHelper.ThrowArgumentNullException(nameof(knownType), "Known type cannot be empty");
+            Tag = tag;
+            KnownType = knownType;
+        }
+
+        internal Type Resolve(Assembly context)
+        {
+            return KnownType ?? TypeModel.ResolveKnownType((string)KnownTypeName, context);
+        }
 
         /// <summary>
         /// Creates a new instance of the ProtoIncludeAttribute.
@@ -48,7 +59,7 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
-        public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
+        public Type KnownType { get; }
 
         /// <summary>
         /// Specifies whether the inherited sype's sub-message should be

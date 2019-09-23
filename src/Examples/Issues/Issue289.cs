@@ -10,6 +10,8 @@ namespace ProtoBuf.Issues
         {
             var obj = new MyPrincipal("abc", 123);
             var clone = Serializer.DeepClone(obj);
+            Assert.Equal("abc", clone.Id);
+            Assert.Equal(123, clone.MyId);
         }
 
         [ProtoContract(SkipConstructor = true)]

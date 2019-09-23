@@ -29,15 +29,12 @@ namespace ProtoBuf.MSBuild
             if(lang == null)
                 return CSharpCodeGenerator.Default;
 
-            switch (lang)
+            return lang switch
             {
-                case "C#":
-                    return CSharpCodeGenerator.Default;
-                case "VB":
-                    return VBCodeGenerator.Default;
-                default:
-                    throw new NotSupportedException("protobuf code generation is not supported for language " + lang);
-            }
+                "C#" => CSharpCodeGenerator.Default,
+                "VB" => VBCodeGenerator.Default,
+                _ => throw new NotSupportedException("protobuf code generation is not supported for language " + lang),
+            };
         }
 
         public override bool Execute()

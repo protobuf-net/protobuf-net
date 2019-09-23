@@ -36,7 +36,7 @@ namespace Examples.Issues
         public void Execute()
         {
             Asset asset = new Plant {Blowers = new Asset(), ChildAssets = {new Plant()}};
-            var clone = Serializer.DeepClone(asset);
+            Assert.IsType<Asset>(Serializer.DeepClone(asset));
         }
     }
 }

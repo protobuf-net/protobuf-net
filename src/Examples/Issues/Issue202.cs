@@ -114,7 +114,7 @@ namespace Examples.Issues
             aff.list.Add(bf1);
             aff.list.Add(bf2);
 
-            StringWriter before = new StringWriter();
+            using StringWriter before = new StringWriter();
             before.WriteLine(Format(app));
             before.WriteLine(Format(apf));
             before.WriteLine(Format(afp));

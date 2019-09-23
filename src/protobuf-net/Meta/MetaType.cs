@@ -377,7 +377,7 @@ namespace ProtoBuf.Meta
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
                 Type defaultType = null;
-                ResolveListTypes(model, Type, ref itemType, ref defaultType);
+                ResolveListTypes(Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
                     constructType, factory, GetInheritanceRoot());
@@ -453,11 +453,11 @@ namespace ProtoBuf.Meta
         {
             return type.Type.BaseType;
         }
-        internal static bool GetAsReferenceDefault(RuntimeTypeModel model, Type type)
+        internal static bool GetAsReferenceDefault(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (type.IsEnum) return false; // never as-ref
-            AttributeMap[] typeAttribs = AttributeMap.Create(model, type, false);
+            AttributeMap[] typeAttribs = AttributeMap.Create(type, false);
             for (int i = 0; i < typeAttribs.Length; i++)
             {
                 if (typeAttribs[i].AttributeType.FullName == "ProtoBuf.ProtoContractAttribute")
@@ -477,7 +477,7 @@ namespace ProtoBuf.Meta
                 model.FindOrAddAuto(baseType, true, false, false);
             }
 
-            AttributeMap[] typeAttribs = AttributeMap.Create(model, Type, false);
+            AttributeMap[] typeAttribs = AttributeMap.Create(Type, false);
             AttributeFamily family = GetContractFamily(model, Type, typeAttribs);
             if (family == AttributeFamily.AutoTuple)
             {
@@ -633,7 +633,7 @@ namespace ProtoBuf.Meta
                     effectiveType = property.PropertyType;
                     isPublic = Helpers.GetGetMethod(property, false, false) != null;
                     isField = false;
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue, backingField);
+                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue, backingField);
                 }
                 else if (member is FieldInfo field)
                 {
@@ -644,12 +644,12 @@ namespace ProtoBuf.Meta
                     { // only care about static things on enums; WinRT has a __value instance field!
                         continue;
                     }
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue);
+                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue);
                 }
                 else if (member is MethodInfo method)
                 {
                     if (isEnum) continue;
-                    AttributeMap[] memberAttribs = AttributeMap.Create(model, method, false);
+                    AttributeMap[] memberAttribs = AttributeMap.Create(method, false);
                     if (memberAttribs != null && memberAttribs.Length > 0)
                     {
                         CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoBeforeSerializationAttribute", ref callbacks, 0);
@@ -701,7 +701,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(TypeModel model, AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
+        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -717,7 +717,7 @@ namespace ProtoBuf.Meta
             if (effectiveType.IsSubclassOf(typeof(Delegate))) effectiveType = null;
             if (effectiveType != null)
             {
-                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, ref hasConflictingEnumValue, backingMember);
+                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, ref hasConflictingEnumValue, backingMember);
                 if (normalizedAttribute != null) members.Add(normalizedAttribute);
             }
         }
@@ -732,7 +732,7 @@ namespace ProtoBuf.Meta
         {
             AttributeFamily family = AttributeFamily.None;
 
-            if (attributes == null) attributes = AttributeMap.Create(model, type, false);
+            if (attributes == null) attributes = AttributeMap.Create(type, false);
 
             for (int i = 0; i < attributes.Length; i++)
             {
@@ -872,7 +872,7 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
 
-        private static ProtoMemberAttribute NormalizeProtoMember(TypeModel model, MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
+        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
         {
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
@@ -880,7 +880,7 @@ namespace ProtoBuf.Meta
             bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, asReferenceHasValue = false, dynamicType = false, tagIsPinned = false, overwriteList = false;
             DataFormat dataFormat = DataFormat.Default;
             if (isEnum) forced = true;
-            AttributeMap[] attribs = AttributeMap.Create(model, member, true);
+            AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
             if (isEnum)
@@ -1020,7 +1020,7 @@ namespace ProtoBuf.Meta
             Type defaultType = null;
 
             // check for list types
-            ResolveListTypes(model, effectiveType, ref itemType, ref defaultType);
+            ResolveListTypes(effectiveType, ref itemType, ref defaultType);
             bool ignoreListHandling = false;
             // but take it back if it is explicitly excluded
             if (itemType != null)
@@ -1032,7 +1032,7 @@ namespace ProtoBuf.Meta
                     defaultType = null;
                 }
             }
-            AttributeMap[] attribs = AttributeMap.Create(model, member, true);
+            AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
             object defaultValue = null;
@@ -1353,7 +1353,7 @@ namespace ProtoBuf.Meta
                 default:
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
-            ResolveListTypes(model, miType, ref itemType, ref defaultType);
+            ResolveListTypes(miType, ref itemType, ref defaultType);
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
@@ -1369,7 +1369,7 @@ namespace ProtoBuf.Meta
             return newField;
         }
 
-        internal static void ResolveListTypes(TypeModel model, Type type, ref Type itemType, ref Type defaultType)
+        internal static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType)
         {
             if (type == null) return;
             // handle arrays
@@ -1396,7 +1396,7 @@ namespace ProtoBuf.Meta
             if (itemType != null)
             {
                 Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(model, itemType, ref nestedItemType, ref nestedDefaultType);
+                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
                 if (nestedItemType != null)
                 {
                     throw TypeModel.CreateNestedListsNotSupported(type);

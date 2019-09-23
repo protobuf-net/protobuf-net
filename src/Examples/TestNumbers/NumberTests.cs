@@ -104,7 +104,6 @@ namespace Examples.TestNumbers
         public void RoundTripBigNegativeZigZagInt64() {
             ZigZagInt64 obj = new ZigZagInt64 { Foo = -123456789 },
                 clone = Serializer.DeepClone(obj);
-            clone = Serializer.DeepClone(obj);
             Assert.Equal(obj.Foo, clone.Foo);
         }
 
@@ -223,11 +222,11 @@ namespace Examples.TestNumbers
                         = val;
 
                     NumRig clone = Serializer.DeepClone(rig);
-                    Assert.Equal(val, rig.Int32Default);
-                    Assert.Equal(val, rig.Int32FixedSize);
-                    Assert.Equal(val, rig.Int32TwosComplement);
-                    Assert.Equal(val, rig.Int32ZigZag);
-                    Assert.Equal(SUCCESS, rig.Foo);
+                    Assert.Equal(val, clone.Int32Default);
+                    Assert.Equal(val, clone.Int32FixedSize);
+                    Assert.Equal(val, clone.Int32TwosComplement);
+                    Assert.Equal(val, clone.Int32ZigZag);
+                    Assert.Equal(SUCCESS, clone.Foo);
                 }
             }
         }
@@ -250,7 +249,7 @@ namespace Examples.TestNumbers
 
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, rig);
-            byte[] raw = ms.ToArray();
+            _ = ms.ToArray();
             ms.Position = 0;
             NumRig clone = Serializer.Deserialize<NumRig>(ms);
 
