@@ -110,7 +110,7 @@ namespace Examples.Issues.ComplexGenerics
                 if (value == null) { Result = null; return; }
                 using (StringReader sr = new StringReader(value))
                 {
-                    DataSet ds = new DataSet();
+                    using DataSet ds = new DataSet();
                     ds.ReadXml(sr, XmlReadMode.ReadSchema);
                 }
             }

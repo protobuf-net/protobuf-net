@@ -300,7 +300,7 @@ namespace ProtoBuf.Reflection
                     target.WriteByte(b[i]);
                 }
             }
-            void AppendEscaped(MemoryStream target, char c)
+            static void AppendEscaped(MemoryStream target, char c)
             {
                 uint codePoint;
                 switch (c)
@@ -327,7 +327,7 @@ namespace ProtoBuf.Reflection
                 int len = 1;
                 AppendNormalized(target, ref codePoint, ref len);
             }
-            bool GetHexValue(char c, out uint val, ref int len)
+            static bool GetHexValue(char c, out uint val, ref int len)
             {
                 len++;
                 if (c >= '0' && c <= '9')
