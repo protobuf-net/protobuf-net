@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Reflection;
-using ProtoBuf.Internal;
+
 using ProtoBuf.Meta;
 
 namespace ProtoBuf
@@ -21,17 +20,7 @@ namespace ProtoBuf
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
         /// <param name="knownType">The additional type to serialize/deserialize.</param>
         public ProtoIncludeAttribute(int tag, Type knownType)
-        {
-            if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
-            if (knownType == null) ThrowHelper.ThrowArgumentNullException(nameof(knownType), "Known type cannot be empty");
-            Tag = tag;
-            KnownType = knownType;
-        }
-
-        internal Type Resolve(Assembly context)
-        {
-            return KnownType ?? TypeModel.ResolveKnownType((string)KnownTypeName, context);
-        }
+            : this(tag, knownType == null ? "" : knownType.AssemblyQualifiedName) { }
 
         /// <summary>
         /// Creates a new instance of the ProtoIncludeAttribute.
@@ -40,8 +29,8 @@ namespace ProtoBuf
         /// <param name="knownTypeName">The additional type to serialize/deserialize.</param>
         public ProtoIncludeAttribute(int tag, string knownTypeName)
         {
-            if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
-            if (string.IsNullOrEmpty(knownTypeName)) ThrowHelper.ThrowArgumentNullException(nameof(knownTypeName), "Known type cannot be blank");
+            if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
+            if (string.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException(nameof(knownTypeName), "Known type cannot be blank");
             Tag = tag;
             KnownTypeName = knownTypeName;
         }
@@ -59,7 +48,7 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
-        public Type KnownType { get; }
+        public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
 
         /// <summary>
         /// Specifies whether the inherited sype's sub-message should be
