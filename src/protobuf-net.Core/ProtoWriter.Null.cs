@@ -63,7 +63,7 @@ namespace ProtoBuf
                         bytes = ImplWriteVarint64(ref state, (ulong)len);
                         break;
                     default:
-                        ThrowException(this);
+                        state.ThrowInvalidSerializationOperation();
                         goto case PrefixStyle.None;
                     case PrefixStyle.None:
                         bytes = 0;
