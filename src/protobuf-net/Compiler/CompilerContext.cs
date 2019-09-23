@@ -114,50 +114,29 @@ namespace ProtoBuf.Compiler
             return (ProtoCallback)ctx.method.CreateDelegate(
                 typeof(ProtoCallback));
         }*/
+
+        public static ProtoSubTypeDeserializer<T> BuildSubTypeDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
+            where T : class
+        {
+            Type type = head.ExpectedType;
+            using CompilerContext ctx = new CompilerContext(scope, head.ExpectedType, false, true, model, typeof(SubTypeState<T>), typeof(T));
+            head.EmitRead(ctx, ctx.InputValue);
+            // note that EmitRead will unwrap the T for us on the stack
+            ctx.Return();
+
+            return (ProtoSubTypeDeserializer<T>)ctx.method.CreateDelegate(typeof(ProtoSubTypeDeserializer<T>));
+        }
+
         public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
         {
             Type type = head.ExpectedType;
             using CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(T), typeof(T));
 
-            using (Local typedVal = new Local(ctx, type))
-            {
-                if (typeof(T) == type)
-                {
-                    ctx.LoadValue(ctx.InputValue);
-                    ctx.StoreValue(typedVal);
-                }
-                else
-                {
-                    ctx.LoadValue(ctx.InputValue);
-                    CodeLabel notNull = ctx.DefineLabel(), endNull = ctx.DefineLabel();
-                    ctx.BranchIfTrue(notNull, true);
+            head.EmitRead(ctx, ctx.InputValue);
+            ctx.LoadValue(ctx.InputValue);
+            ctx.Emit(OpCodes.Ret);
 
-                    ctx.LoadAddress(typedVal, type);
-                    ctx.EmitCtor(type);
-                    ctx.Branch(endNull, true);
-                    ctx.MarkLabel(notNull);
-                    ctx.LoadValue(ctx.InputValue);
-                    ctx.CastFromObject(type);
-                    ctx.StoreValue(typedVal);
-
-                    ctx.MarkLabel(endNull);
-                }
-                head.EmitRead(ctx, typedVal);
-
-                if (head.ReturnsValue)
-                {
-                    ctx.StoreValue(typedVal);
-                }
-
-                ctx.LoadValue(typedVal);
-                if (type != typeof(T))
-                {
-                    ctx.Cast(typeof(T));
-                }
-                ctx.Emit(OpCodes.Ret);
-            }
-            return (ProtoDeserializer<T>)ctx.method.CreateDelegate(
-                typeof(ProtoDeserializer<T>));
+            return (ProtoDeserializer<T>)ctx.method.CreateDelegate(typeof(ProtoDeserializer<T>));
         }
 
         internal void Return()

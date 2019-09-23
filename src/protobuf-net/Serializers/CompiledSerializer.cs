@@ -1,15 +1,64 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class CompiledSerializer<T> : CompiledSerializer,
+    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, IProtoSerializer<T>, IProtoSubTypeSerializer<T>
+        where TBase : class
+        where T : class, TBase
+    {
+        private readonly Compiler.ProtoSerializer<T> subTypeSerializer;
+        private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDesrializer;
+
+        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+            => state.ReadBaseType<TBase, T>(value);
+
+        public override object Read(ref ProtoReader.State state, object value)
+            => state.ReadBaseType<TBase, T>((T)value);
+
+        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+            => state.WriteBaseType<TBase>(value);
+
+        public override void Write(ref ProtoWriter.State state, object value)
+            => state.WriteBaseType<TBase>((T)value);
+
+        void IProtoSubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
+            => subTypeSerializer(ref state, value);
+
+        T IProtoSubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
+            => subTypeDesrializer(ref state, value);
+
+        public InheritanceCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
+            : base(head)
+        {
+            try
+            {
+                subTypeSerializer = Compiler.CompilerContext.BuildSerializer<T>(model.Scope, head, model);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to bind serializer: " + ex.Message, ex);
+            }
+            try
+            {
+                subTypeDesrializer = Compiler.CompilerContext.BuildSubTypeDeserializer<T>(model.Scope, head, model);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to bind deserializer: " + ex.Message, ex);
+            }
+        }
+    }
+
+
+    internal sealed class SimpleCompiledSerializer<T> : CompiledSerializer,
         IProtoSerializer<T>
     {
         private readonly Compiler.ProtoSerializer<T> serializer;
         private readonly Compiler.ProtoDeserializer<T> deserializer;
-        public CompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
+        public SimpleCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
         {
             try
@@ -64,9 +113,17 @@ namespace ProtoBuf.Serializers
         {
             if (!(head is CompiledSerializer result))
             {
-                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<>).MakeGenericType(head.BaseType),
-                    new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
-
+                ConstructorInfo ctor;
+                if (head.BaseType == head.ExpectedType)
+                {
+                    ctor = Helpers.GetConstructor(typeof(InheritanceCompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
+                        new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
+                }
+                else
+                {
+                    ctor = Helpers.GetConstructor(typeof(SimpleCompiledSerializer<>).MakeGenericType(head.BaseType),
+                        new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
+                }
                 try
                 {
                     result = (CompiledSerializer)ctor.Invoke(new object[] { head, model });
