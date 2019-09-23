@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -22,6 +23,22 @@ namespace ProtoBuf
                 return new State(protoWriter);
             }
         }
+
+        internal bool TryGetKnownLength(object obj, out long length)
+        {
+            if (_knownLengths != null) return _knownLengths.TryGetValue(obj, out length);
+            length = default;
+            return false;
+        }
+
+        internal void SetKnownLength(object obj, long length) => (_knownLengths ?? CreateKnownLengths())[obj] = length;
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private Dictionary<object, long> CreateKnownLengths()
+        {
+            return _knownLengths = new Dictionary<object, long>(NetObjectCache.ReferenceComparer.Default);
+        }
+        private Dictionary<object, long> _knownLengths;
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
@@ -197,18 +214,16 @@ namespace ProtoBuf
                 }
             }
 
-            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+            private static long Measure<T>(ref State state, T value, IProtoSerializer<T> serializer)
             {
-                long calculatedLength;
-                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
-                var nulState = NullProtoWriter.CreateNullImpl(Model, Context);
+                var nulState = NullProtoWriter.CreateNullImpl(state.Model, state.Context.Context);
                 try
                 {
                     try
                     {
                         serializer.Write(ref nulState, value);
                         nulState.Close();
-                        calculatedLength = nulState.GetPosition();
+                        return nulState.GetPosition();
                     }
                     catch
                     {
@@ -219,6 +234,25 @@ namespace ProtoBuf
                 finally
                 {
                     nulState.Dispose();
+                }
+            }
+
+            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+            {
+                long calculatedLength;
+                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
+
+                if (TypeHelper<T>.IsObjectType)
+                {
+                    object o = value;
+                    if (!state.TryGetKnownLength(o, out calculatedLength))
+                    {
+                        state.SetKnownLength(o, calculatedLength = Measure<T>(ref state, value, serializer));
+                    }
+                }
+                else
+                {   // can't cache length for value-types
+                    calculatedLength = Measure<T>(ref state, value, serializer);
                 }
 
                 switch (style)

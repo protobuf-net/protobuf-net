@@ -157,7 +157,7 @@ namespace ProtoBuf
         private Dictionary<string, int> stringKeys;
 
         private System.Collections.Generic.Dictionary<object, int> objectKeys;
-        private sealed class ReferenceComparer : IEqualityComparer<object>
+        internal sealed class ReferenceComparer : IEqualityComparer<object>
         {
             public readonly static ReferenceComparer Default = new ReferenceComparer();
             private ReferenceComparer() { }

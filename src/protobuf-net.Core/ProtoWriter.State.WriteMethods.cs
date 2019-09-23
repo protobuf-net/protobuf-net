@@ -763,6 +763,12 @@ namespace ProtoBuf
 #pragma warning restore RCS1097 // Remove redundant 'ToString' call.
                 ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
             }
+
+            [MethodImpl(HotPath)]
+            internal bool TryGetKnownLength(object obj, out long length) => _writer.TryGetKnownLength(obj, out length);
+
+            [MethodImpl(HotPath)]
+            internal void SetKnownLength(object obj, long length) => _writer.SetKnownLength(obj, length);
         }
     }
 }

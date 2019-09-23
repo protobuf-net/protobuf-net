@@ -202,6 +202,7 @@ namespace ProtoBuf
                 ThrowHelper.ThrowInvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
             recursionStack?.Clear();
+            _knownLengths?.Clear();
             NetCache.Clear();
             model = null;
             Context = null;
