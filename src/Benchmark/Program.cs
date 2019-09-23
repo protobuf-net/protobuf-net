@@ -7,11 +7,9 @@ namespace Benchmark
     {
         private static void Main(string[] args)
         {
-//#if INTRINSICS
-//            var obj = new SerializeBenchmarks();
-//            obj.Setup();
-//            obj.BufferWriter_CIP();
-//#endif
+            //var obj = new SerializeBenchmarks();
+            //obj.Setup();
+
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }

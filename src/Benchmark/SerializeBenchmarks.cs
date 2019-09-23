@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Google.Protobuf;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using protogen;
@@ -10,6 +11,23 @@ namespace Benchmark
     [ClrJob, CoreJob, MemoryDiagnoser]
     public partial class SerializeBenchmarks
     {
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public void MemoryStream_Google()
+        {
+            using var ms = new MemoryStream();
+
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                ms.Position = 0;
+                ms.SetLength(0);
+                using var cos = new CodedOutputStream(ms, leaveOpen: true);
+                _googleModel.WriteTo(cos);
+            }
+        }
+
+        protoc.Database _googleModel;
+
         private byte[] _data;
         private RuntimeTypeModel _cip;
 #pragma warning disable IDE0044, IDE0051, IDE0052, CS0169
@@ -30,6 +48,7 @@ namespace Benchmark
             _c = model.Compile();
 #if WRITE_DLL
             _dll = model.Compile("MySerializer", "DalSerializer.dll");
+            Console.WriteLine("Serializer written to " + Directory.GetCurrentDirectory());
 #endif
 #if NEW_API
             _auto = RuntimeTypeModel.CreateForAssembly<Database>();
@@ -38,6 +57,7 @@ namespace Benchmark
 #pragma warning disable CS0618
             using var reader = ProtoReader.Create(Exposable(_data), model);
             _database = (Database)model.Deserialize(reader, null, typeof(Database));
+            _googleModel = protoc.Database.Parser.ParseFrom(_data);
 #pragma warning restore CS0618
         }
 
