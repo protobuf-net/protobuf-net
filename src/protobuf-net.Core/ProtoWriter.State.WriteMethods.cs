@@ -13,7 +13,9 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a string to the stream
             /// </summary>
+#pragma warning disable IDE0060 // map isn't implemented yet, but we definitely want it
             public void WriteString(int fieldNumber, string value, StringMap map = null)
+#pragma warning restore IDE0060
             {
                 if (value != null)
                 {
@@ -22,7 +24,9 @@ namespace ProtoBuf
                 }
             }
 
+#pragma warning disable IDE0060 // map isn't implemented yet, but we definitely want it
             private void WriteStringWithLengthPrefix(string value, StringMap map)
+#pragma warning restore IDE0060
             {
                 var writer = _writer;
                 if (string.IsNullOrEmpty(value))

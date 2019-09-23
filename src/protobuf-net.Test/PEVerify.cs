@@ -13,7 +13,9 @@ namespace ProtoBuf.unittest
     static class PEVerify
     {
 #if COREFX
+#pragma warning disable IDE0060 // unused params; the idea here is to make the API similar
         public static ProtoBuf.Meta.TypeModel Compile(this ProtoBuf.Meta.RuntimeTypeModel model, string name, string path)
+#pragma warning restore IDE0060 
         {
             // dummy to avoid lots of test hackery for dll compilation tests
             model.CompileInPlace();
@@ -41,15 +43,7 @@ namespace ProtoBuf.unittest
             Verify(path, exitCode, deleteOnSuccess);
         }
 #endif
-        public static void Verify(string path)
-        {
-            Verify(path, 0, true);
-        }
-        public static void Verify(string path, int exitCode)
-        {
-            Verify(path, 0, true);
-        }
-        public static void Verify(string path, int exitCode, bool deleteOnSuccess)
+        public static void Verify(string path, int exitCode = 0, bool deleteOnSuccess = true)
         {
 #if !COREFX
             if (unavailable) return;
@@ -57,21 +51,21 @@ namespace ProtoBuf.unittest
             {
                 throw new FileNotFoundException(path);
             }
-            ProcessStartInfo psi = new ProcessStartInfo(exePath, path);
-            psi.CreateNoWindow = true;
-            psi.WindowStyle = ProcessWindowStyle.Hidden;
-            using (Process proc = Process.Start(psi))
+            ProcessStartInfo psi = new ProcessStartInfo(exePath, path)
             {
-                if (proc.WaitForExit(10000))
-                {
-                    Assert.Equal(exitCode, proc.ExitCode); //, path);
-                    if (deleteOnSuccess) try { File.Delete(path); } catch { }
-                }
-                else
-                {
-                    proc.Kill();
-                    throw new TimeoutException("PEVerify " + path);
-                }
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+            using Process proc = Process.Start(psi);
+            if (proc.WaitForExit(10000))
+            {
+                Assert.Equal(exitCode, proc.ExitCode); //, path);
+                if (deleteOnSuccess) try { File.Delete(path); } catch { }
+            }
+            else
+            {
+                proc.Kill();
+                throw new TimeoutException("PEVerify " + path);
             }
 #endif
         }
