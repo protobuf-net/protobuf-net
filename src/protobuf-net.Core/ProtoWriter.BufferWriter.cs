@@ -242,10 +242,16 @@ namespace ProtoBuf
                 long calculatedLength;
                 if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
 
+                bool isNull = false;
                 if (TypeHelper<T>.IsObjectType)
                 {
                     object o = value;
-                    if (!state.TryGetKnownLength(o, out calculatedLength))
+                    if (o is null)
+                    {
+                        isNull = true;
+                        calculatedLength = 0;
+                    }
+                    else if (!state.TryGetKnownLength(o, out calculatedLength))
                     {
                         state.SetKnownLength(o, calculatedLength = Measure<T>(ref state, value, serializer));
                     }
@@ -273,14 +279,18 @@ namespace ProtoBuf
                         ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
                         break;
                 }
-                var oldPos = GetPosition(ref state);
-                serializer.Write(ref state, value);
-                var newPos = GetPosition(ref state);
 
-                var actualLength = (newPos - oldPos);
-                if (actualLength != calculatedLength)
+                if (!isNull) // don't bother serializing if null
                 {
-                    ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                    var oldPos = GetPosition(ref state);
+                    serializer.Write(ref state, value);
+                    var newPos = GetPosition(ref state);
+
+                    var actualLength = (newPos - oldPos);
+                    if (actualLength != calculatedLength)
+                    {
+                        ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                    }
                 }
             }
 
