@@ -10,8 +10,8 @@ namespace ProtoBuf.Internal
         {
             if (type == null) return false;
             if (Nullable.GetUnderlyingType(type) != null) return true;
+            if (type.IsArray) return true;
             if (type == typeof(object)) return true;
-            if (type == typeof(byte[])) return true;
             if (type.IsEnum) return true;
             if (TypeModel.GetWireType(null, Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)
                 return true;
