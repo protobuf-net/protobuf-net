@@ -1360,9 +1360,16 @@ namespace ProtoBuf.Meta
             => this as IProtoSubTypeSerializer<T>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static T NoSerializer<T>(TypeModel model) where T : class
+        private static IProtoSerializer<T> NoSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No {TypeHelper.CSName(typeof(T))} available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
+            return default;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static IProtoSubTypeSerializer<T> NoSubTypeSerializer<T>(TypeModel model) where T : class
+        {
+            ThrowHelper.ThrowInvalidOperationException($"No sub-type serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
@@ -1387,11 +1394,11 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
-           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<IProtoSerializer<T>>(model);
+           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<T>(model);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
-           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSubTypeSerializer<T> ?? NoSerializer<IProtoSubTypeSerializer<T>>(model);
+           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSubTypeSerializer<T> ?? NoSubTypeSerializer<T>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

@@ -140,7 +140,7 @@ namespace ProtoBuf.Meta
         private sealed class Singleton
         {
             private Singleton() { }
-            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true);
+            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true, "(default)");
         }
 
         /// <summary>
@@ -389,7 +389,7 @@ namespace ProtoBuf.Meta
             CascadeDependents(list, temp);
         }
 
-        internal RuntimeTypeModel(bool isDefault)
+        internal RuntimeTypeModel(bool isDefault, string name)
         {
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
@@ -402,6 +402,8 @@ namespace ProtoBuf.Meta
             catch { } // this is all kinds of brittle on things like UWP
 #endif
             if (isDefault) TypeModel.SetDefaultModel(this);
+            if (string.IsNullOrWhiteSpace(name)) name = base.ToString();
+            _name = name;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -797,6 +799,11 @@ namespace ProtoBuf.Meta
             }
             return null;
         }
+
+        /// <summary>
+        /// See Object.ToString
+        /// </summary>
+        public override string ToString() => _name;
 
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
@@ -1660,10 +1667,12 @@ namespace ProtoBuf.Meta
         /// can be used "as is", or can be compiled for
         /// optimal performance.
         /// </summary>
-        public static new RuntimeTypeModel Create()
+        public static new RuntimeTypeModel Create(string name = null)
         {
-            return new RuntimeTypeModel(false);
+            return new RuntimeTypeModel(false, name);
         }
+
+        private readonly string _name;
 
         /// <summary>
         /// Create a model that serializes all types from an
