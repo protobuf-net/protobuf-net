@@ -1202,7 +1202,7 @@ namespace ProtoBuf.Meta
                 if (runtimeType.IsEnum) continue;
                 if (!IsFullyPublic(runtimeType))
                 {
-                    ThrowHelper.ThrowInvalidOperationException("Full compilation is only permitted for public types; error on type " + runtimeType.FullName);
+                    ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + runtimeType.FullName);
                 }
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();

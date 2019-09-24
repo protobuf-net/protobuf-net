@@ -92,7 +92,7 @@ namespace Examples
             Program.ExpectFailure<InvalidOperationException>(() =>
             {
                 Compile<PrivateProperty>();
-            }, "Non-public member cannot be used with full dll compilation: Examples.NonPublic_Compile+PrivateProperty.get_Foo");
+            }, "Cannot serialize property without an accessible get accessor: Examples.NonPublic_Compile+PrivateProperty.Foo");
         }
         [ProtoContract]
         public class PrivatePropertyGet
@@ -106,7 +106,7 @@ namespace Examples
             Program.ExpectFailure<InvalidOperationException>(() =>
             {
                 Compile<PrivatePropertyGet>();
-            }, "Non-public member cannot be used with full dll compilation: Examples.NonPublic_Compile+PrivatePropertyGet.get_Foo");
+            }, "Cannot serialize property without an accessible get accessor: Examples.NonPublic_Compile+PrivatePropertyGet.Foo");
         }
         [ProtoContract]
         public class PrivatePropertySet
