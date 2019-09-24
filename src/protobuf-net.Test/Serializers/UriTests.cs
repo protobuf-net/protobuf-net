@@ -56,7 +56,7 @@ namespace ProtoBuf.unittest.Serializers
         [Fact]
         public void TestUriCanCompileFully()
         {
-            var model = CreateModel().Compile("TestUriCanCompileFully", "TestUriCanCompileFully.dll");
+            _ = CreateModel().Compile("TestUriCanCompileFully", "TestUriCanCompileFully.dll");
             PEVerify.Verify("TestUriCanCompileFully.dll");
         }
 

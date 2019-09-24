@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -9,36 +10,41 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        //        /// <summary>
-        //        /// Create a new ProtoWriter that tagets a buffer writer
-        //        /// </summary>
-        //        public static ProtoWriter CreateForBufferWriter<T>(out State state, T writer, TypeModel model, SerializationContext context = null)
-        //            where T : IBufferWriter<byte>
-        //        {
-        //#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
-        //            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-        //#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
-        //            state = default;
-        //            return new BufferWriterProtoWriter<T>(writer, model, context);
-        //        }
-
-        /// <summary>
-        /// Create a new ProtoWriter that tagets a buffer writer
-        /// </summary>
-        public static ProtoWriter Create(out State state, IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
+        partial struct State
         {
-            if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-            state = default;
+            /// <summary>
+            /// Create a new ProtoWriter that tagets a buffer writer
+            /// </summary>
+            public static State Create(IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
+            {
+                if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
 
-            return BufferWriterProtoWriter<IBufferWriter<byte>>.CreateBufferWriter(writer, model, context);
+                var protoWriter = BufferWriterProtoWriter.CreateBufferWriter(writer, model, context);
+                return new State(protoWriter);
+            }
         }
 
-        private sealed class BufferWriterProtoWriter<TBuffer> : ProtoWriter
-            where TBuffer : IBufferWriter<byte>
+        internal bool TryGetKnownLength(object obj, out long length)
         {
-            internal static BufferWriterProtoWriter<TBuffer> CreateBufferWriter(TBuffer writer, TypeModel model, SerializationContext context)
+            if (_knownLengths != null) return _knownLengths.TryGetValue(obj, out length);
+            length = default;
+            return false;
+        }
+
+        internal void SetKnownLength(object obj, long length) => (_knownLengths ?? CreateKnownLengths())[obj] = length;
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private Dictionary<object, long> CreateKnownLengths()
+        {
+            return _knownLengths = new Dictionary<object, long>(NetObjectCache.ReferenceComparer.Default);
+        }
+        private Dictionary<object, long> _knownLengths;
+
+        private sealed class BufferWriterProtoWriter : ProtoWriter
+        {
+            internal static BufferWriterProtoWriter CreateBufferWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
             {
-                var obj = Pool<BufferWriterProtoWriter<TBuffer>>.TryGet() ?? new BufferWriterProtoWriter<TBuffer>();
+                var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
                 obj.Init(model, context);
                 obj._writer = writer;
                 return obj;
@@ -47,7 +53,7 @@ namespace ProtoBuf
             private protected override void Dispose()
             {
                 base.Dispose();
-                Pool<BufferWriterProtoWriter<TBuffer>>.Put(this);
+                Pool<BufferWriterProtoWriter>.Put(this);
             }
 
             private protected override void Cleanup()
@@ -62,9 +68,8 @@ namespace ProtoBuf
                 return default;
             }
 
-#pragma warning disable IDE0044 // Add readonly modifier
-            private TBuffer _writer; // not readonly, because T could be a struct - might need in-place state changes
-#pragma warning restore IDE0044 // Add readonly modifier
+            private IBufferWriter<byte> _writer;
+
             private BufferWriterProtoWriter() { }
 
             private protected override bool ImplDemandFlushOnDispose => true;
@@ -73,7 +78,7 @@ namespace ProtoBuf
             {
                 if (state.IsActive)
                 {
-                    _writer.Advance(state.Flush());
+                    _writer.Advance(state.ConsiderWritten());
                 }
                 return true;
             }
@@ -81,18 +86,18 @@ namespace ProtoBuf
             private protected override void ImplWriteFixed32(ref State state, uint value)
             {
                 if (state.RemainingInCurrent < 4) GetBuffer(ref state);
-                state.WriteFixed32(value);
+                state.LocalWriteFixed32(value);
             }
 
             private protected override void ImplWriteFixed64(ref State state, ulong value)
             {
                 if (state.RemainingInCurrent < 8) GetBuffer(ref state);
-                state.WriteFixed64(value);
+                state.LocalWriteFixed64(value);
             }
 
             private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
             {
-                if (expectedBytes <= state.RemainingInCurrent) state.WriteString(value);
+                if (expectedBytes <= state.RemainingInCurrent) state.LocalWriteString(value);
                 else FallbackWriteString(ref state, value, expectedBytes);
             }
 
@@ -101,7 +106,7 @@ namespace ProtoBuf
                 GetBuffer(ref state);
                 if (expectedBytes <= state.RemainingInCurrent)
                 {
-                    state.WriteString(value);
+                    state.LocalWriteString(value);
                 }
                 else
                 {
@@ -122,7 +127,7 @@ namespace ProtoBuf
             private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
             {
                 var span = new ReadOnlySpan<byte>(data, offset, length);
-                if (length <= state.RemainingInCurrent) state.WriteBytes(span);
+                if (length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                 else FallbackWriteBytes(ref state, span);
             }
 
@@ -131,7 +136,7 @@ namespace ProtoBuf
                 if (data.IsSingleSegment)
                 {
                     var span = data.First.Span;
-                    if (span.Length <= state.RemainingInCurrent) state.WriteBytes(span);
+                    if (span.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                     else FallbackWriteBytes(ref state, span);
                 }
                 else
@@ -139,7 +144,7 @@ namespace ProtoBuf
                     foreach (var segment in data)
                     {
                         var span = segment.Span;
-                        if (span.Length <= state.RemainingInCurrent) state.WriteBytes(span);
+                        if (span.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                         else FallbackWriteBytes(ref state, span);
                     }
                 }
@@ -153,12 +158,12 @@ namespace ProtoBuf
                     GetBuffer(ref state);
                     if (span.Length <= state.RemainingInCurrent)
                     {
-                        state.WriteBytes(span);
+                        state.LocalWriteBytes(span);
                         return;
                     }
                     else
                     {
-                        state.WriteBytes(span.Slice(0, state.RemainingInCurrent));
+                        state.LocalWriteBytes(span.Slice(0, state.RemainingInCurrent));
                         span = span.Slice(state.RemainingInCurrent);
                     }
                 }
@@ -167,13 +172,13 @@ namespace ProtoBuf
             private protected override int ImplWriteVarint32(ref State state, uint value)
             {
                 if (state.RemainingInCurrent < 5) GetBuffer(ref state);
-                return state.WriteVarint32(value);
+                return state.LocalWriteVarint32(value);
             }
 
             private protected override int ImplWriteVarint64(ref State state, ulong value)
             {
                 if (state.RemainingInCurrent < 10) GetBuffer(ref state);
-                return state.WriteVarint64(value);
+                return state.LocalWriteVarint64(value);
             }
 
             protected internal override void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer,
@@ -185,7 +190,7 @@ namespace ProtoBuf
                     case WireType.Fixed32:
                         PreSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null);
                         WriteWithLengthPrefix<T>(ref state, value, serializer, style);
-                        PostSubItem();
+                        PostSubItem(ref state);
                         return;
                     case WireType.StartGroup:
                     default:
@@ -209,22 +214,51 @@ namespace ProtoBuf
                 }
             }
 
-            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+            private static long Measure<T>(ref State state, T value, IProtoSerializer<T> serializer)
             {
-                long calculatedLength;
-                using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))
+                var nulState = NullProtoWriter.CreateNullImpl(state.Model, state.Context.Context);
+                try
                 {
                     try
                     {
-                        serializer.Write(nullWriter, ref nulState, value);
-                        nullWriter.Close(ref nulState);
-                        calculatedLength = nullWriter.GetPosition(ref state);
+                        serializer.Write(ref nulState, value);
+                        nulState.Close();
+                        return nulState.GetPosition();
                     }
                     catch
                     {
-                        nullWriter.Abandon();
+                        nulState.Abandon();
                         throw;
                     }
+                }
+                finally
+                {
+                    nulState.Dispose();
+                }
+            }
+
+            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+            {
+                long calculatedLength;
+                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
+
+                bool isNull = false;
+                if (TypeHelper<T>.IsObjectType)
+                {
+                    object o = value;
+                    if (o is null)
+                    {
+                        isNull = true;
+                        calculatedLength = 0;
+                    }
+                    else if (!state.TryGetKnownLength(o, out calculatedLength))
+                    {
+                        state.SetKnownLength(o, calculatedLength = Measure<T>(ref state, value, serializer));
+                    }
+                }
+                else
+                {   // can't cache length for value-types
+                    calculatedLength = Measure<T>(ref state, value, serializer);
                 }
 
                 switch (style)
@@ -245,14 +279,18 @@ namespace ProtoBuf
                         ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
                         break;
                 }
-                var oldPos = GetPosition(ref state);
-                serializer.Write(this, ref state, value);
-                var newPos = GetPosition(ref state);
 
-                var actualLength = (newPos - oldPos);
-                if (actualLength != calculatedLength)
+                if (!isNull) // don't bother serializing if null
                 {
-                    ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                    var oldPos = GetPosition(ref state);
+                    serializer.Write(ref state, value);
+                    var newPos = GetPosition(ref state);
+
+                    var actualLength = (newPos - oldPos);
+                    if (actualLength != calculatedLength)
+                    {
+                        ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                    }
                 }
             }
 
@@ -260,24 +298,29 @@ namespace ProtoBuf
                 where T : class
             {
                 long calculatedLength;
-                using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))
+                var nulState = NullProtoWriter.CreateNullImpl(Model, Context);
+                try
                 {
                     try
                     {
-                        serializer.WriteSubType(nullWriter, ref nulState, value);
-                        nullWriter.Close(ref nulState);
-                        calculatedLength = nullWriter.GetPosition(ref state);
+                        serializer.WriteSubType(ref nulState, value);
+                        nulState.Close();
+                        calculatedLength = nulState.GetPosition();
                     }
                     catch
                     {
-                        nullWriter.Abandon();
+                        nulState.Abandon();
                         throw;
                     }
+                }
+                finally
+                {
+                    nulState.Dispose();
                 }
 
                 AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
                 var oldPos = GetPosition(ref state);
-                serializer.WriteSubType(this, ref state, value);
+                serializer.WriteSubType(ref state, value);
                 var newPos = GetPosition(ref state);
 
                 var actualLength = (newPos - oldPos);

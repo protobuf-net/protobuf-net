@@ -20,17 +20,17 @@ namespace ProtoBuf.Serializers
             this.setSpecified = setSpecified;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             if (getSpecified == null || (bool)getSpecified.Invoke(value, null))
             {
-                Tail.Write(dest, ref state, value);
+                Tail.Write(ref state, value);
             }
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            object result = Tail.Read(source, ref state, value);
+            object result = Tail.Read(ref state, value);
             if (setSpecified != null) setSpecified.Invoke(value, new object[] { true });
             return result;
         }
@@ -42,15 +42,13 @@ namespace ProtoBuf.Serializers
                 Tail.EmitWrite(ctx, valueFrom);
                 return;
             }
-            using (Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            {
-                ctx.LoadAddress(loc, ExpectedType);
-                ctx.EmitCall(getSpecified);
-                Compiler.CodeLabel done = ctx.DefineLabel();
-                ctx.BranchIfFalse(done, false);
-                Tail.EmitWrite(ctx, loc);
-                ctx.MarkLabel(done);
-            }
+            using Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            ctx.LoadAddress(loc, ExpectedType);
+            ctx.EmitCall(getSpecified);
+            Compiler.CodeLabel done = ctx.DefineLabel();
+            ctx.BranchIfFalse(done, false);
+            Tail.EmitWrite(ctx, loc);
+            ctx.MarkLabel(done);
         }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -59,13 +57,11 @@ namespace ProtoBuf.Serializers
                 Tail.EmitRead(ctx, valueFrom);
                 return;
             }
-            using (Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            {
-                Tail.EmitRead(ctx, loc);
-                ctx.LoadAddress(loc, ExpectedType);
-                ctx.LoadValue(1); // true
-                ctx.EmitCall(setSpecified);
-            }
+            using Compiler.Local loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            Tail.EmitRead(ctx, loc);
+            ctx.LoadAddress(loc, ExpectedType);
+            ctx.LoadValue(1); // true
+            ctx.EmitCall(setSpecified);
         }
     }
 }

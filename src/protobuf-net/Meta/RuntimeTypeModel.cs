@@ -140,7 +140,7 @@ namespace ProtoBuf.Meta
         private sealed class Singleton
         {
             private Singleton() { }
-            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true);
+            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true, "(default)");
         }
 
         /// <summary>
@@ -283,6 +283,7 @@ namespace ProtoBuf.Meta
             }
             return headerBuilder.Append(bodyBuilder).AppendLine().ToString();
         }
+
         [Flags]
         internal enum CommonImports
         {
@@ -388,7 +389,7 @@ namespace ProtoBuf.Meta
             CascadeDependents(list, temp);
         }
 
-        internal RuntimeTypeModel(bool isDefault)
+        internal RuntimeTypeModel(bool isDefault, string name)
         {
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
@@ -400,7 +401,8 @@ namespace ProtoBuf.Meta
             }
             catch { } // this is all kinds of brittle on things like UWP
 #endif
-            if (isDefault) TypeModel.DefaultModel = this;
+            if (isDefault) TypeModel.SetDefaultModel(this);
+            if (!string.IsNullOrWhiteSpace(name)) _name = name;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -797,6 +799,11 @@ namespace ProtoBuf.Meta
             return null;
         }
 
+        /// <summary>
+        /// See Object.ToString
+        /// </summary>
+        public override string ToString() => _name ?? base.ToString();
+
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
             Debug.Assert(type != null);
@@ -830,12 +837,11 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Writer state</param>
-        protected internal override void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
+        protected internal override void Serialize(ref ProtoWriter.State state, int key, object value)
         {
             //Debug.WriteLine("Serialize", value);
-            ((MetaType)types[key]).Serializer.Write(dest, ref state, value);
+            ((MetaType)types[key]).Serializer.Write(ref state, value);
         }
 
         /// <summary>
@@ -844,22 +850,18 @@ namespace ProtoBuf.Meta
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <param name="state">Reader state</param>
-        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
-        /// <returns>The updated instance; this may be different to the instance argument if
-        /// either the original instance was null, or the stream defines a known sub-type of the
-        /// original instance.</returns>
-        protected internal override object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
+        protected internal override object DeserializeCore(ref ProtoReader.State state, int key, object value)
         {
             //Debug.WriteLine("Deserialize", value);
             IRuntimeProtoSerializerNode ser = ((MetaType)types[key]).Serializer;
             if (value == null && ser.ExpectedType.IsValueType)
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType, nonPublic: true);
-                return ser.Read(source, ref state, value);
+                return ser.Read(ref state, value);
             }
             else
             {
-                return ser.Read(source, ref state, value);
+                return ser.Read(ref state, value);
             }
         }
 
@@ -871,7 +873,7 @@ namespace ProtoBuf.Meta
             if (compiled) return Compiler.CompilerContext.BuildSerializer<TActual>(Scope, serializer, this);
 
             return new Compiler.ProtoSerializer<TActual>(
-                (ProtoWriter dest, ref ProtoWriter.State state, TActual val) => serializer.Write(dest, ref state, val));
+                (ref ProtoWriter.State state, TActual val) => serializer.Write(ref state, val));
         }
 
         /// <summary>
@@ -1004,7 +1006,7 @@ namespace ProtoBuf.Meta
             public void SetFrameworkOptions(MetaType from)
             {
                 if (from == null) throw new ArgumentNullException(nameof(from));
-                AttributeMap[] attribs = AttributeMap.Create(from.Model, from.Type.Assembly);
+                AttributeMap[] attribs = AttributeMap.Create(from.Type.Assembly);
                 foreach (AttributeMap attrib in attribs)
                 {
                     if (attrib.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute")
@@ -1053,6 +1055,17 @@ namespace ProtoBuf.Meta
             /// The acecssibility of the generated serializer
             /// </summary>
             public Accessibility Accessibility { get; set; }
+
+            /// <summary>
+            /// Implements a filter for use when generating models from assemblies
+            /// </summary>
+            public event Func<Type, bool> IncludeType;
+
+            internal bool OnIncludeType(Type type)
+            {
+                var evt = IncludeType;
+                return evt == null ? true : evt(type);
+            }
         }
 
         /// <summary>
@@ -1192,6 +1205,11 @@ namespace ProtoBuf.Meta
                 var metaType = (MetaType)types[index];
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
+                if (runtimeType.IsEnum) continue;
+                if (!IsFullyPublic(runtimeType))
+                {
+                    ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + runtimeType.FullName);
+                }
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
                 
@@ -1200,7 +1218,7 @@ namespace ProtoBuf.Meta
                 type.AddInterfaceImplementation(serType);
 
                 var il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Read));
-                using (var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoSerializer<string>.Read)))
+                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(IProtoSerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
                     {
@@ -1215,7 +1233,7 @@ namespace ProtoBuf.Meta
                 }
 
                 il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
-                using (var ctx = new CompilerContext(scope, il, false, true, this, runtimeType, nameof(IProtoSerializer<string>.Write)))
+                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(IProtoSerializer<string>.Write)))
                 {
                     if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
                     else serializer.EmitWrite(ctx, ctx.InputValue);
@@ -1229,7 +1247,7 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
-                    using (var ctx = new CompilerContext(scope, il, false, true, this,
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this,
                          runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType)))
                     {
                         serializer.EmitWrite(ctx, ctx.InputValue);
@@ -1237,8 +1255,9 @@ namespace ProtoBuf.Meta
                     }
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
-                    using (var ctx = new CompilerContext(scope, il, false, false, this,
-                         runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this,
+                        typeof(SubTypeState<>).MakeGenericType(runtimeType),
+                        nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
                     {
                         serializer.EmitRead(ctx, ctx.InputValue);
                         // note that EmitRead will unwrap the T for us on the stack
@@ -1253,7 +1272,7 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
-                    using var ctx = new CompilerContext(scope, il, false, false, this,
+                    using var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.Context, this,
                          typeof(ISerializationContext), nameof(IProtoFactory<string>.Create));
                     serializer.EmitCreateInstance(ctx, false);
                     ctx.Return();
@@ -1325,7 +1344,7 @@ namespace ProtoBuf.Meta
                     if (consideredAssemblies.IndexOfReference(assembly) >= 0) continue;
                     consideredAssemblies.Add(assembly);
 
-                    AttributeMap[] assemblyAttribsMap = AttributeMap.Create(this, assembly);
+                    AttributeMap[] assemblyAttribsMap = AttributeMap.Create(assembly);
                     for (int i = 0; i < assemblyAttribsMap.Length; i++)
                     {
                         if (assemblyAttribsMap[i].AttributeType != internalsVisibleToAttribType) continue;
@@ -1647,10 +1666,13 @@ namespace ProtoBuf.Meta
         /// can be used "as is", or can be compiled for
         /// optimal performance.
         /// </summary>
-        public static new RuntimeTypeModel Create()
+        /// <param name="name">The logical name of this model</param>
+        public static RuntimeTypeModel Create([CallerMemberName] string name = null)
         {
-            return new RuntimeTypeModel(false);
+            return new RuntimeTypeModel(false, name);
         }
+
+        private readonly string _name;
 
         /// <summary>
         /// Create a model that serializes all types from an
@@ -1658,6 +1680,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static new TypeModel CreateForAssembly<T>()
             => CreateForAssembly(typeof(T).Assembly);
+
         /// <summary>
         /// Create a model that serializes all types from an
         /// assembly specified by type
@@ -1672,12 +1695,41 @@ namespace ProtoBuf.Meta
         /// Create a model that serializes all types from an assembly
         /// </summary>
         public static new TypeModel CreateForAssembly(Assembly assembly)
-            => (TypeModel)s_assemblyModels[assembly ?? throw new ArgumentNullException(nameof(assembly))]
-            ?? CreateForAssemblyImpl(assembly);
+            => CreateForAssembly(assembly, null);
+
+        /// <summary>
+        /// Create a model that serializes all types from an assembly
+        /// </summary>
+        public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            if (options == null)
+            {
+                var obj = (TypeModel)s_assemblyModels[assembly];
+                if (obj != null) return obj;
+            }
+            return CreateForAssemblyImpl(assembly, options);
+        }
 
         private readonly static Hashtable s_assemblyModels = new Hashtable();
 
-        private static TypeModel CreateForAssemblyImpl(Assembly assembly)
+        private static bool IsFullyPublic(Type type)
+        {
+            while (type != null)
+            {
+                if (type.IsNestedPublic)
+                {
+                    type = type.DeclaringType;
+                }
+                else
+                {
+                    return type.IsPublic;
+                }
+            }
+            return false;
+        }
+
+        private static TypeModel CreateForAssemblyImpl(Assembly assembly, CompilerOptions options)
         {
             if (assembly == null) throw new ArgumentNullException(nameof(assembly));
             lock (assembly)
@@ -1688,14 +1740,17 @@ namespace ProtoBuf.Meta
                 RuntimeTypeModel model = null;
                 foreach (var type in assembly.GetTypes())
                 {
-                    if (type.IsDefined(typeof(ProtoContractAttribute), true))
-                    {
-                        (model ?? (model = Create())).Add(type, true);
-                    }
+                    if (type.IsGenericTypeDefinition) continue;
+                    if (!IsFullyPublic(type)) continue;
+                    if (!type.IsDefined(typeof(ProtoContractAttribute), true)) continue;
+
+                    if (options != null && !options.OnIncludeType(type)) continue;
+
+                    (model ?? (model = Create())).Add(type, true);
                 }
                 if (model == null)
                     throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
-                var compiled = model.Compile();
+                var compiled = model.Compile(options);
                 s_assemblyModels[assembly] = compiled;
                 return compiled;
             }

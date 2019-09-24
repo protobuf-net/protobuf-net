@@ -93,10 +93,10 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            int wireValue = source.ReadInt32(ref state);
+            int wireValue = state.ReadInt32();
             if (map == null)
             {
                 return WireToEnum(wireValue);
@@ -108,15 +108,15 @@ namespace ProtoBuf.Serializers
                     return map[i].TypedValue;
                 }
             }
-            source.ThrowEnumException(ref state, ExpectedType, wireValue);
+            state.ThrowEnumException(ExpectedType, wireValue);
             return null; // to make compiler happy
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             if (map == null)
             {
-                ProtoWriter.WriteInt32(EnumToWire(value), dest, ref state);
+                state.WriteInt32(EnumToWire(value));
             }
             else
             {
@@ -124,11 +124,11 @@ namespace ProtoBuf.Serializers
                 {
                     if (object.Equals(map[i].TypedValue, value))
                     {
-                        ProtoWriter.WriteInt32(map[i].WireValue, dest, ref state);
+                        state.WriteInt32(map[i].WireValue);
                         return;
                     }
                 }
-                ProtoWriter.ThrowEnumException(dest, value);
+                state.ThrowEnumException(value);
             }
         }
 
@@ -139,7 +139,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(valueFrom);
                 ctx.ConvertToInt32(typeCode, false);
-                ctx.EmitBasicWrite("WriteInt32", null, this);
+                ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), null);
             }
             else
             {
@@ -154,14 +154,14 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(tryNextValue, true);
                     ctx.MarkLabel(processThisValue);
                     ctx.LoadValue(map[i].WireValue);
-                    ctx.EmitBasicWrite("WriteInt32", null, this);
+                    ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), null);
                     ctx.Branch(@continue, false);
                     ctx.MarkLabel(tryNextValue);
                 }
-                ctx.LoadWriter(false);
+                ctx.LoadState();
                 ctx.LoadValue(loc);
                 ctx.CastToObject(ExpectedType);
-                ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.ThrowEnumException)));
                 ctx.MarkLabel(@continue);
             }
         }
@@ -171,7 +171,7 @@ namespace ProtoBuf.Serializers
             ProtoTypeCode typeCode = GetTypeCode();
             if (map == null)
             {
-                ctx.EmitBasicRead("ReadInt32", typeof(int));
+                ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), typeof(int));
                 ctx.ConvertFromInt32(typeCode, false);
             }
             else
@@ -185,7 +185,7 @@ namespace ProtoBuf.Serializers
                 }
                 using Compiler.Local result = new Compiler.Local(ctx, ExpectedType);
                 using Compiler.Local wireValue = new Compiler.Local(ctx, typeof(int));
-                ctx.EmitBasicRead("ReadInt32", typeof(int));
+                ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), typeof(int));
                 ctx.StoreValue(wireValue);
                 Compiler.CodeLabel @continue = ctx.DefineLabel();
                 foreach (var group in BasicList.GetContiguousGroups(wireValues, values))
@@ -224,11 +224,11 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(tryNextGroup);
                 }
                 // throw source.CreateEnumException(ExpectedType, wireValue);
-                ctx.LoadReader(true);
+                ctx.LoadState();
                 ctx.LoadValue(ExpectedType);
                 ctx.LoadValue(wireValue);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("ThrowEnumException",
-                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(Type), typeof(int) }));
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ThrowEnumException),
+                    new[] { typeof(Type), typeof(int) }));
                 ctx.MarkLabel(@continue);
                 ctx.LoadValue(result);
             }

@@ -14,15 +14,15 @@ namespace ProtoBuf.Serializers
 
         public override bool ReturnsValue => true;
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
-            Tail.Write(dest, ref state, ((Uri)value).OriginalString);
+            Tail.Write(ref state, ((Uri)value).OriginalString);
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // not expecting incoming
-            string s = (string)Tail.Read(source, ref state, null);
+            string s = (string)Tail.Read(ref state, null);
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 

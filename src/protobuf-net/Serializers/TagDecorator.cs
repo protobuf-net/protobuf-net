@@ -11,7 +11,7 @@ namespace ProtoBuf.Serializers
 
         public bool CanCreateInstance() => Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
 
-        public object CreateInstance(ProtoReader source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
+        public object CreateInstance(ISerializationContext source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
             => (Tail as IProtoTypeSerializer)?.Callback(value, callbackType, context);
@@ -51,18 +51,18 @@ namespace ProtoBuf.Serializers
 
         private bool NeedsHint => ((int)wireType & ~7) != 0;
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(fieldNumber == source.FieldNumber);
-            if (strict) { source.Assert(ref state, wireType); }
-            else if (NeedsHint) { source.Hint(wireType); }
-            return Tail.Read(source, ref state, value);
+            Debug.Assert(fieldNumber == state.FieldNumber);
+            if (strict) { state.Assert(wireType); }
+            else if (NeedsHint) { state.Hint(wireType); }
+            return Tail.Read(ref state, value);
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
-            Tail.Write(dest, ref state, value);
+            state.WriteFieldHeader(fieldNumber, wireType);
+            Tail.Write(ref state, value);
         }
 
         bool IProtoTypeSerializer.HasInheritance => false;
@@ -75,28 +75,34 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.LoadValue((int)fieldNumber);
-            ctx.LoadValue((int)wireType);
-            ctx.LoadWriter(true);
-            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
-            Tail.EmitWrite(ctx, valueFrom);
+            if (Tail is IDirectWriteNode dw && dw.CanEmitDirectWrite(wireType))
+            {
+                dw.EmitDirectWrite(fieldNumber, wireType, ctx, valueFrom);
+            }
+            else
+            {
+                ctx.LoadState();
+                ctx.LoadValue((int)fieldNumber);
+                ctx.LoadValue((int)wireType);
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
+                Tail.EmitWrite(ctx, valueFrom);
+            }
         }
+
+        public bool CanEmitDirectWrite()
+            => Tail is IDirectWriteNode dw && dw.CanEmitDirectWrite(wireType);
+
+        public void EmitDirectWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IDirectWriteNode)Tail).EmitDirectWrite(fieldNumber, wireType, ctx, valueFrom);
 
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             if (strict || NeedsHint)
             {
-                ctx.LoadReader(strict);
+                ctx.LoadState();
                 ctx.LoadValue((int)wireType);
-                if (strict)
-                {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Assert",
-                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(WireType) }));
-                }
-                else
-                {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Hint"));
-                }
+                string name = strict ? nameof(ProtoReader.State.Assert) : nameof(ProtoReader.State.Hint);
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(name, new[] { typeof(WireType) }));
             }
             Tail.EmitRead(ctx, valueFrom);
         }

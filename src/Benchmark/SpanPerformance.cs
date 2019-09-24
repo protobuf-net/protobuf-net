@@ -13,16 +13,16 @@ namespace Benchmark
     {
         private MemoryStream _ms;
         private ReadOnlySequence<byte> _ros;
-        public ProtoReader ReadMS(out ProtoReader.State state)
-            => ProtoReader.Create(out state, _ms, Model);
+        public ProtoReader.State ReadMS()
+            => ProtoReader.State.Create(_ms, Model);
 
-        public ProtoReader ReadROS(out ProtoReader.State state)
-            => ProtoReader.Create(out state, _ros, Model);
+        public ProtoReader.State ReadROS()
+            => ProtoReader.State.Create(_ros, Model);
 
-        public ProtoReader ReadROM(out ProtoReader.State state)
+        public ProtoReader.State ReadROM()
         {
             if (!_ros.IsSingleSegment) throw new InvalidOperationException("Expected single segment");
-            return ProtoReader.Create(out state, _ros.First, Model);
+            return ProtoReader.State.Create(_ros.First, Model);
         }
 
         public TypeModel Model => RuntimeTypeModel.Default;
@@ -39,23 +39,23 @@ namespace Benchmark
         public void MemoryStream()
         {
             _ms.Position = 0;
-            using var reader = ReadMS(out var state);
-            var dal = reader.Deserialize<protogen.Database>(ref state);
+            using var reader = ReadMS();
+            var dal = reader.Deserialize<protogen.Database>();
             GC.KeepAlive(dal);
         }
 
         [Benchmark]
         public void ReadOnlySequence()
         {
-            using var reader = ReadROS(out var state);
-            var dal = reader.Deserialize<protogen.Database>(ref state);
+            using var reader = ReadROS();
+            var dal = reader.Deserialize<protogen.Database>();
             GC.KeepAlive(dal);
         }
         [Benchmark]
         public void ReadOnlyMemory()
         {
-            using var reader = ReadROM(out var state);
-            var dal = reader.Deserialize<protogen.Database>(ref state);
+            using var reader = ReadROM();
+            var dal = reader.Deserialize<protogen.Database>();
             GC.KeepAlive(dal);
         }
     }

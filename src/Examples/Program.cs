@@ -15,6 +15,8 @@ namespace Examples
 {
     public static class Program
     {
+
+#pragma warning disable IDE1006
 #if COREFX
         public static bool _IsValueType(this Type type)
         {
@@ -26,14 +28,15 @@ namespace Examples
             return type.IsValueType;
         }
 #endif
+#pragma warning restore IDE1006
 
-//        static void Main() {
-//#if !COREFX
-//            Console.WriteLine("CLR: " + Environment.Version);
+        //        static void Main() {
+        //#if !COREFX
+        //            Console.WriteLine("CLR: " + Environment.Version);
 
-//            new NWindTests().PerfTestDb();
-//#endif
-//        }
+        //            new NWindTests().PerfTestDb();
+        //#endif
+        //        }
 
         //static void Main2() {
         //    SimpleStreamDemo demo = new SimpleStreamDemo();

@@ -87,12 +87,12 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             }
             else
             {
-                switch (args.FormattedName)
+                args.Type = args.FormattedName switch
                 {
-                    case "Derived": args.Type = typeof(Derived); break;
-                    case "Base": args.Type = typeof(Base); break;
-                    default: throw new NotSupportedException(args.FormattedName);
-                }
+                    "Derived" => typeof(Derived),
+                    "Base" => typeof(Base),
+                    _ => throw new NotSupportedException(args.FormattedName),
+                };
             }
         }
 

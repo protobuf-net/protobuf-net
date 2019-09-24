@@ -20,15 +20,15 @@ namespace ProtoBuf.Serializers
         private readonly Type type;
         public bool ReturnsValue { get { return true; } }
         public bool RequiresOldValue { get { return true; } }
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value) { return value; }
+        public object Read(ref ProtoReader.State state, object value) { return value; }
         Type IRuntimeProtoSerializerNode.ExpectedType { get { return type; } }
         public NilSerializer(Type type) { this.type = type; }
-        void IRuntimeProtoSerializerNode.Write(ProtoWriter dest, ref ProtoWriter.State state, object value) { }
+        void IRuntimeProtoSerializerNode.Write(ref ProtoWriter.State state, object value) { }
 
         void IRuntimeProtoSerializerNode.EmitWrite(CompilerContext ctx, Local valueFrom)
         {
-            // burn the value off the stack if needed (creates a variable and does a stloc)
-            using (Local tmp = ctx.GetLocalWithValue(type, valueFrom)) { }
+            // burn the value off the stack if needed
+            if (valueFrom == null) ctx.DiscardValue();
         }
         void IRuntimeProtoSerializerNode.EmitRead(CompilerContext ctx, Local entity)
         {

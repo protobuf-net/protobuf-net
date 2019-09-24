@@ -14,12 +14,12 @@ namespace ProtoBuf
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T Read(ProtoReader reader, ref ProtoReader.State state, T value);
+        T Read(ref ProtoReader.State state, T value);
 
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void Write(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void Write(ref ProtoWriter.State state, T value);
     }
 
     /// <summary>
@@ -30,12 +30,12 @@ namespace ProtoBuf
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void WriteSubType(ref ProtoWriter.State state, T value);
 
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
+        T ReadSubType(ref ProtoReader.State state, SubTypeState<T> value);
     }
 
     /// <summary>
@@ -112,12 +112,12 @@ namespace ProtoBuf
         /// <summary>
         /// Parse the input as a sub-type of the instance
         /// </summary>
-        public void ReadSubType<TSubType>(ProtoReader reader, ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
+        public void ReadSubType<TSubType>(ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
-            var tok = ProtoReader.StartSubItem(reader, ref state);
-            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(reader, ref state,
+            var tok = state.StartSubItem();
+            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(ref state,
                 new SubTypeState<TSubType>(_context, _ctor, _value, _onBeforeDeserialize));
-            ProtoReader.EndSubItem(tok, reader, ref state);
+            state.EndSubItem(tok);
         }
 
         /// <summary>
@@ -131,16 +131,6 @@ namespace ProtoBuf
                 else if (_onBeforeDeserialize is object) ThrowHelper.ThrowInvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
                 else _onBeforeDeserialize = callback;
             }
-        }
-
-        /// <summary>
-        /// Performs a serialization callback on the instance, returning the instance; this is usually the last method in a deserializer
-        /// </summary>
-        public T OnAfterDeserialize(Action<T, ISerializationContext> callback)
-        {
-            var obj = Value;
-            callback?.Invoke(obj, _context);
-            return obj;
         }
     }
 

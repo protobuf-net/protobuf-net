@@ -22,19 +22,20 @@ namespace ProtoBuf.Serializers
 
         public bool RequiresOldValue => true;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
-            return BclHelpers.ReadNetObject(source, ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
+            return BclHelpers.ReadNetObject(ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteNetObject(value, dest, ref state, key, options);
+            BclHelpers.WriteNetObject(ref state, value, key, options);
         }
 
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.ThrowException(typeof(NotImplementedException));
+            throw new NotImplementedException(nameof(NetObjectSerializer) + "." + nameof(EmitRead));
             //using (var val = ctx.GetLocalWithValue(ExpectedType, entity))
             //{
             //    ctx.LoadReader(true);
@@ -54,6 +55,7 @@ namespace ProtoBuf.Serializers
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.ThrowException(typeof(NotImplementedException));
+            throw new NotImplementedException(nameof(NetObjectSerializer) + "." + nameof(EmitWrite));
             //ctx.LoadValue(valueFrom);
             //ctx.CastToObject(ExpectedType);
             //ctx.LoadWriter(true);

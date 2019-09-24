@@ -27,17 +27,28 @@ namespace ProtoBuf.unittest.Meta
                 }, null, false, true, null, null, null, null);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
 
-            using (var reader = ProtoReader.Create(out var state, Stream.Null, null, null))
+            var state = ProtoReader.State.Create(Stream.Null, null, null);
+            try
             {
-                var result = deser(reader, ref state, default);
+                var result = deser(ref state, default);
                 Assert.IsType<CustomerStruct>(result);
             }
-            using (var reader = ProtoReader.Create(out var state, Stream.Null, null, null))
+            finally
+            {
+                state.Dispose();
+            }
+
+            state = ProtoReader.State.Create(Stream.Null, null, null);
+            try
             {
                 CustomerStruct before = new CustomerStruct { Id = 123, Name = "abc" };
-                CustomerStruct after = (CustomerStruct)deser(reader, ref state, before);
+                CustomerStruct after = (CustomerStruct)deser(ref state, before);
                 Assert.Equal(before.Id, after.Id);
                 Assert.Equal(before.Name, after.Name);
+            }
+            finally
+            {
+                state.Dispose();
             }
         }
         [Fact]
@@ -53,23 +64,31 @@ namespace ProtoBuf.unittest.Meta
             var ser = CompilerContext.BuildSerializer<CustomerStruct>(model.Scope, head, model);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
-            using (MemoryStream ms = new MemoryStream())
+            using MemoryStream ms = new MemoryStream();
+            var writeState = ProtoWriter.State.Create(ms, null, null);
+            try
             {
-                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, null, null))
-                {
-                    ser(writer, ref state, cs1);
-                    writer.Close(ref state);
-                }
-                byte[] blob = ms.ToArray();
-                ms.Position = 0;
-                using (ProtoReader reader = ProtoReader.Create(out var state, ms, null, null))
-                {
-                    CustomerStruct? cst = (CustomerStruct?)deser(reader, ref state, default);
-                    Assert.True(cst.HasValue);
-                    CustomerStruct cs2 = cst.Value;
-                    Assert.Equal(cs1.Id, cs2.Id);
-                    Assert.Equal(cs1.Name, cs2.Name);
-                }
+                ser(ref writeState, cs1);
+                writeState.Close();
+            }
+            finally
+            {
+                writeState.Dispose();
+            }
+            byte[] blob = ms.ToArray();
+            ms.Position = 0;
+            var state = ProtoReader.State.Create(ms, null, null);
+            try
+            {
+                CustomerStruct? cst = (CustomerStruct?)deser(ref state, default);
+                Assert.True(cst.HasValue);
+                CustomerStruct cs2 = cst.Value;
+                Assert.Equal(cs1.Id, cs2.Id);
+                Assert.Equal(cs1.Name, cs2.Name);
+            }
+            finally
+            {
+                state.Dispose();
             }
         }
     }

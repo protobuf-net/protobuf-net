@@ -7,9 +7,9 @@ namespace Benchmark
     {
         private static void Main(string[] args)
         {
-//#if INTRINSICS
-//            new VarintDecodeBenchmarks().Setup();
-//#endif
+            //var obj = new SerializeBenchmarks();
+            //obj.Setup();
+
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }

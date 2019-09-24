@@ -16,12 +16,12 @@ namespace ProtoBuf.Internal
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeserialize(Type type, TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
-            => Get(type).TryDeserialize(model, reader, ref state, ref value);
+        internal static bool TryDeserialize(Type type, TypeModel model, ref ProtoReader.State state, ref object value)
+            => Get(type).TryDeserialize(model, ref state, ref value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySerialize(Type type, TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value)
-            => Get(type).TrySerialize(model, writer, ref state, value);
+        internal static bool TrySerialize(Type type, TypeModel model, ref ProtoWriter.State state, object value)
+            => Get(type).TrySerialize(model, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeepClone(TypeModel model, Type type, ref object value)
@@ -49,9 +49,9 @@ namespace ProtoBuf.Internal
             return obj;
         }
 
-        protected abstract bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value);
+        protected abstract bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value);
 
-        protected abstract bool TrySerialize(TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value);
+        protected abstract bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value);
 
         protected abstract bool TryDeepClone(TypeModel model, ref object value);
 
@@ -60,9 +60,9 @@ namespace ProtoBuf.Internal
         {
             public static DynamicStub Instance { get; } = new NilStub();
             private NilStub() { }
-            protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
                 => false;
-            protected override bool TrySerialize(TypeModel model, ProtoWriter reader, ref ProtoWriter.State state, object value)
+            protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
                 => false;
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
@@ -76,20 +76,21 @@ namespace ProtoBuf.Internal
                 try { return TypeModel.GetSerializer<T>(model); }
                 catch { return null; }
             }
-            protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
             {
-                Debug.Assert(reader != null, "reader is null");
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
-                value = reader.Deserialize<T>(ref state, (T)value, serializer);
+                // note this null-check is non-trivial; for value-type T it promotes the null to a default
+                value = state.Deserialize<T>(value == null ? default : (T)value, serializer);
                 return true;
             }
 
-            protected override bool TrySerialize(TypeModel model, ProtoWriter writer, ref ProtoWriter.State state, object value)
+            protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
             {
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
-                writer.Serialize<T>(ref state, (T)value, serializer);
+                // note this null-check is non-trivial; for value-type T it promotes the null to a default
+                state.Serialize<T>(value == null ? default : (T)value, serializer);
                 return true;
             }
 

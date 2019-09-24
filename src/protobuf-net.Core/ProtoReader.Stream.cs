@@ -13,7 +13,7 @@ namespace ProtoBuf
 #if PREFER_SPANS
         internal const bool PreferSpans = true;
 #else
-        internal const bool PreferSpans = true;
+        internal const bool PreferSpans = false;
 #endif
 
         /// <summary>
@@ -23,41 +23,37 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        [Obsolete(UseStateAPI, false)]
+        [Obsolete(PreferStateAPI, false)]
         public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
             var reader = Pool<StreamProtoReader>.TryGet() ?? new StreamProtoReader();
-            reader.Init(source, model, context, length);
+            reader.Init(source, model ?? TypeModel.DefaultModel, context, length);
             return reader;
         }
 
-        /// <summary>
-        /// Creates a new reader against a stream
-        /// </summary>
-        /// <param name="source">The source stream</param>
-        /// <param name="state">Reader state</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        public static ProtoReader Create(out State state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
+        partial struct State
         {
-            if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
+            /// <summary>
+            /// Creates a new reader against a stream
+            /// </summary>
+            /// <param name="source">The source stream</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+            public static State Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
             {
-                return Create(out state, new System.Buffers.ReadOnlySequence<byte>(
-                    segment.Array, segment.Offset, segment.Count), model, context);
-            }
+                if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
+                {
+                    return Create(new System.Buffers.ReadOnlySequence<byte>(
+                        segment.Array, segment.Offset, segment.Count), model, context);
+                }
 
-            state = default; // not used by this API
+
 #pragma warning disable CS0618 // Type or member is obsolete
-            return Create(source, model, context, length);
+                var reader = ProtoReader.Create(source, model, context, length);
 #pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        internal static ProtoReader CreateSolid(out SolidState state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
-        {
-            var reader = Create(out var liquid, source, model, context, length);
-            state = liquid.Solidify();
-            return reader;
+                return new State(reader);
+            }
         }
 
         private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
@@ -103,7 +99,7 @@ namespace ProtoBuf
 
         private sealed class StreamProtoReader : ProtoReader
         {
-            protected internal override State DefaultState() => default;
+            protected internal override State DefaultState() => new State(this);
 
             private Stream _source;
             private byte[] _ioBuffer;
@@ -199,22 +195,22 @@ namespace ProtoBuf
                 value = _ioBuffer[readPos++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (_available == 1) ThrowEoF(this, ref state);
+                if (_available == 1) state.ThrowEoF();
 
                 uint chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (_available == 2) ThrowEoF(this, ref state);
+                if (_available == 2) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (_available == 3) ThrowEoF(this, ref state);
+                if (_available == 3) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (_available == 4) ThrowEoF(this, ref state);
+                if (_available == 4) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos];
                 value |= chunk << 28; // can only use 4 bits from this chunk
@@ -231,7 +227,7 @@ namespace ProtoBuf
                 {
                     return 10;
                 }
-                ThrowOverflow(this, ref state);
+                state.ThrowOverflow();
                 return 0;
             }
 
@@ -288,52 +284,52 @@ namespace ProtoBuf
                 value = _ioBuffer[readPos++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (_available == 1) ThrowEoF(this, ref state);
+                if (_available == 1) state.ThrowEoF();
 
                 ulong chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (_available == 2) ThrowEoF(this, ref state);
+                if (_available == 2) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (_available == 3) ThrowEoF(this, ref state);
+                if (_available == 3) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (_available == 4) ThrowEoF(this, ref state);
+                if (_available == 4) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 28;
                 if ((chunk & 0x80) == 0) return 5;
-                if (_available == 5) ThrowEoF(this, ref state);
+                if (_available == 5) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 35;
                 if ((chunk & 0x80) == 0) return 6;
-                if (_available == 6) ThrowEoF(this, ref state);
+                if (_available == 6) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 42;
                 if ((chunk & 0x80) == 0) return 7;
-                if (_available == 7) ThrowEoF(this, ref state);
+                if (_available == 7) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 49;
                 if ((chunk & 0x80) == 0) return 8;
-                if (_available == 8) ThrowEoF(this, ref state);
+                if (_available == 8) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 56;
                 if ((chunk & 0x80) == 0) return 9;
-                if (_available == 9) ThrowEoF(this, ref state);
+                if (_available == 9) state.ThrowEoF();
 
                 chunk = _ioBuffer[readPos];
                 value |= chunk << 63; // can only use 1 bit from this chunk
 
-                if ((chunk & ~(ulong)0x01) != 0) throw AddErrorData(new OverflowException(), this, ref state);
+                if ((chunk & ~(ulong)0x01) != 0) state.ThrowOverflow();
                 return 10;
             }
 
@@ -396,7 +392,7 @@ namespace ProtoBuf
                 }
                 if (strict && count > 0)
                 {
-                    ThrowEoF(this, ref state);
+                    state.ThrowEoF();
                 }
             }
 
@@ -421,7 +417,7 @@ namespace ProtoBuf
 
                 if (_isFixedLength)
                 {
-                    if (count > _dataRemaining64) ThrowEoF(this, ref state);
+                    if (count > _dataRemaining64) state.ThrowEoF();
                     // else assume we're going to be OK
                     _dataRemaining64 -= count;
                 }

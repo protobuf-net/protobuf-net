@@ -102,25 +102,25 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : IProtoSerializer<ScaledTicks>
     {
-        ScaledTicks IProtoSerializer<ScaledTicks>.Read(ProtoReader reader, ref ProtoReader.State state, ScaledTicks _)
+        ScaledTicks IProtoSerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
         {
             int fieldNumber;
             TimeSpanScale scale = TimeSpanScale.Days;
             long value = 0;
             var kind = DateTimeKind.Unspecified;
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
                     case FieldTimeSpanScale:
-                        scale = (TimeSpanScale)reader.ReadInt32(ref state);
+                        scale = (TimeSpanScale)state.ReadInt32();
                         break;
                     case FieldTimeSpanValue:
-                        reader.Assert(ref state, WireType.SignedVarint);
-                        value = reader.ReadInt64(ref state);
+                        state.Assert(WireType.SignedVarint);
+                        value = state.ReadInt64();
                         break;
                     case FieldTimeSpanKind:
-                        kind = (DateTimeKind)reader.ReadInt32(ref state);
+                        kind = (DateTimeKind)state.ReadInt32();
                         switch (kind)
                         {
                             case DateTimeKind.Unspecified:
@@ -133,7 +133,7 @@ namespace ProtoBuf.WellKnownTypes
                         }
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }
@@ -143,22 +143,22 @@ namespace ProtoBuf.WellKnownTypes
         private const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02, FieldTimeSpanKind = 0x03;
 
 
-        void IProtoSerializer<ScaledTicks>.Write(ProtoWriter writer, ref ProtoWriter.State state, ScaledTicks value)
+        void IProtoSerializer<ScaledTicks>.Write(ref ProtoWriter.State state, ScaledTicks value)
         {
             if (value.Value != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVarint, writer, ref state);
-                ProtoWriter.WriteInt64(value.Value, writer, ref state);
+                state.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVarint);
+                state.WriteInt64(value.Value);
             }
             if (value.Scale != TimeSpanScale.Days)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteInt32((int)value.Scale, writer, ref state);
+                state.WriteFieldHeader(FieldTimeSpanScale, WireType.Varint);
+                state.WriteInt32((int)value.Scale);
             }
             if (value.Kind != DateTimeKind.Unspecified)
             {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteInt32((int)value.Kind, writer, ref state);
+                state.WriteFieldHeader(FieldTimeSpanKind, WireType.Varint);
+                state.WriteInt32((int)value.Kind);
             }
         }
     }

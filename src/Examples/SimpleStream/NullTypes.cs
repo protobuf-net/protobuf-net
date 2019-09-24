@@ -20,6 +20,8 @@ namespace Examples.SimpleStream
                 clone = Serializer.DeepClone(twn);
             Assert.Null(twn.Foo);
             Assert.True(Program.CheckBytes(twn, new byte[0]));
+            Assert.Null(clone.Foo);
+            Assert.True(Program.CheckBytes(clone, new byte[0]));
         }
         [Fact]
         public void TestNotNull()
@@ -28,6 +30,9 @@ namespace Examples.SimpleStream
                 clone = Serializer.DeepClone(twn);
             Assert.NotNull(twn.Foo);
             Assert.True(Program.CheckBytes(twn, 0x08, 0x96, 0x01));
+
+            Assert.NotNull(clone.Foo);
+            Assert.True(Program.CheckBytes(clone, 0x08, 0x96, 0x01));
         }
     }
 }

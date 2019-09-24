@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class SurrogateSerializer : IProtoTypeSerializer
+    internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, IProtoSerializer<T>
     {
         bool IProtoTypeSerializer.IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
@@ -13,30 +13,35 @@ namespace ProtoBuf.Serializers
         bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => throw new NotSupportedException();
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
 
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
+
+
+        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+            => (T)Read(ref state, value);
+
+        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+            => Write(ref state, value);
 
         public bool ReturnsValue => false;
 
         public bool RequiresOldValue => true;
 
-        public Type ExpectedType { get; }
+        public Type ExpectedType => typeof(T);
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
         private readonly IProtoTypeSerializer rootTail;
 
-        public SurrogateSerializer(Type forType, Type declaredType, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type declaredType, IProtoTypeSerializer rootTail)
         {
-            Debug.Assert(forType != null, "forType");
             Debug.Assert(declaredType != null, "declaredType");
             Debug.Assert(rootTail != null, "rootTail");
             Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
             Debug.Assert(!rootTail.ReturnsValue, "ReturnsValue");
             Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
-            ExpectedType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
             toTail = GetConversion(true);
@@ -101,19 +106,19 @@ namespace ProtoBuf.Serializers
                 ExpectedType.FullName + " / " + declaredType.FullName);
         }
 
-        public void Write(ProtoWriter writer, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
-            rootTail.Write(writer, ref state, toTail.Invoke(null, new object[] { value }));
+            rootTail.Write(ref state, toTail.Invoke(null, new object[] { value }));
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             // convert the incoming value
             object[] args = { value };
             value = toTail.Invoke(null, args);
 
             // invoke the tail and convert the outgoing value
-            args[0] = rootTail.Read(source, ref state, value);
+            args[0] = rootTail.Read(ref state, value);
             return fromTail.Invoke(null, args);
         }
 

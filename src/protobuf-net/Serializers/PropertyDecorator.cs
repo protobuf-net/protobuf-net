@@ -30,12 +30,12 @@ namespace ProtoBuf.Serializers
             writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) != null));
             if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) == null)
             {
-                throw new InvalidOperationException("Cannot serialize property without a get accessor");
+                throw new InvalidOperationException($"Cannot serialize property without an accessible get accessor: {property.DeclaringType.FullName}.{property.Name}");
             }
             if (!writeValue && (!tail.RequiresOldValue || tail.ExpectedType.IsValueType))
             { // so we can't save the value, and the tail doesn't use it either... not helpful
                 // or: can't write the value, so the struct value will be lost
-                throw new InvalidOperationException("Cannot apply changes to property " + property.DeclaringType.FullName + "." + property.Name);
+                throw new InvalidOperationException($"Cannot apply changes to property {property.DeclaringType.FullName}.{property.Name}");
             }
         }
         private static MethodInfo GetShadowSetter(PropertyInfo property)
@@ -47,19 +47,19 @@ namespace ProtoBuf.Serializers
             return method;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             Debug.Assert(value != null);
             value = property.GetValue(value, null);
-            if (value != null) Tail.Write(dest, ref state, value);
+            if (value != null) Tail.Write(ref state, value);
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value != null);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
-            object newVal = Tail.Read(source, ref state, oldVal);
+            object newVal = Tail.Read(ref state, oldVal);
             if (readOptionsWriteValue && newVal != null) // if the tail returns a null, intepret that as *no assign*
             {
                 if (shadowSetter == null)

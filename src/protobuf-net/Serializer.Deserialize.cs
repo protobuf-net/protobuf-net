@@ -16,8 +16,8 @@ namespace ProtoBuf
         /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source)
         {
-            using var reader = ProtoReader.Create(out var state, source, RuntimeTypeModel.Default);
-            return TypeModel.DeserializeImpl<T>(reader, ref state);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
+            return state.DeserializeImpl<T>();
         }
 
         /// <summary>
@@ -37,8 +37,8 @@ namespace ProtoBuf
         /// </summary>
         public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
-            using var reader = ProtoReader.Create(out var state, source, RuntimeTypeModel.Default, context);
-            return TypeModel.DeserializeImpl<T>(reader, ref state, value);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            return state.DeserializeImpl<T>(value);
         }
 
         /// <summary>
@@ -46,8 +46,8 @@ namespace ProtoBuf
         /// </summary>
         public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {
-            using var reader = ProtoReader.Create(out var state, source, RuntimeTypeModel.Default, context);
-            return TypeModel.DeserializeImpl<T>(reader, ref state, value);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            return state.DeserializeImpl<T>(value);
         }
     }
 }

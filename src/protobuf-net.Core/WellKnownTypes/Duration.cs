@@ -45,23 +45,23 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : IProtoSerializer<Duration>
     {
-        Duration IProtoSerializer<Duration>.Read(ProtoReader reader, ref ProtoReader.State state, Duration value)
-            => ReadDuration(reader, ref state, value);
+        Duration IProtoSerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
+            => ReadDuration(ref state, value);
 
-        private static Duration ReadDuration(ProtoReader reader, ref ProtoReader.State state, Duration value)
+        private static Duration ReadDuration(ref ProtoReader.State state, Duration value)
         {
-            if (reader.WireType == WireType.String && state.RemainingInCurrent >= 20)
+            if (state.WireType == WireType.String && state.RemainingInCurrent >= 20)
             {
-                if (TryReadDurationFast(reader, ref state, ref value)) return value;
+                if (TryReadDurationFast(ref state, ref value)) return value;
             }
-            return ReadDurationFallback(reader, ref state, value);
+            return ReadDurationFallback(ref state, value);
         }
 
-        private static bool TryReadDurationFast(ProtoReader source, ref ProtoReader.State state, ref Duration value)
+        private static bool TryReadDurationFast(ref ProtoReader.State state, ref Duration value)
         {
             int offset = state.OffsetInCurrent;
             var span = state.Span;
-            int prefixLength = ProtoReader.State.ParseVarintUInt32(span, offset, out var len);
+            int prefixLength = state.ParseVarintUInt32(span, offset, out var len);
             offset += prefixLength;
             if (len == 0) return true;
 
@@ -78,38 +78,38 @@ namespace ProtoBuf.WellKnownTypes
             }
             if (msgOffset != len) return false; // expected no more fields
             state.Skip(prefixLength + (int)len);
-            source.Advance(prefixLength + len);
+            state.Advance(prefixLength + len);
 
             value = new Duration((long)seconds, nanos);
             return true;
         }
 
-        private static Duration ReadDurationFallback(ProtoReader reader, ref ProtoReader.State state, Duration value)
+        private static Duration ReadDurationFallback(ref ProtoReader.State state, Duration value)
         {
             var seconds = value.Seconds;
             var nanos = value.Nanoseconds;
             int fieldNumber;
 
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
                     case 1:
-                        seconds = reader.ReadInt64(ref state);
+                        seconds = state.ReadInt64();
                         break;
                     case 2:
-                        nanos = reader.ReadInt32(ref state);
+                        nanos = state.ReadInt32();
                         break;
                     default:
-                        reader.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }
             return new Duration(seconds, nanos);
         }
 
-        void IProtoSerializer<Duration>.Write(ProtoWriter writer, ref ProtoWriter.State state, Duration value)
-            => WriteSecondsNanos(writer, ref state, value.Seconds, value.Nanoseconds);
+        void IProtoSerializer<Duration>.Write(ref ProtoWriter.State state, Duration value)
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
 
         internal static long ToDurationSeconds(TimeSpan value, out int nanos)
         {
@@ -125,7 +125,7 @@ namespace ProtoBuf.WellKnownTypes
             return ticks;
         }
 
-        private static void WriteSecondsNanos(ProtoWriter writer, ref ProtoWriter.State state, long seconds, int nanos)
+        private static void WriteSecondsNanos(ref ProtoWriter.State state, long seconds, int nanos)
         {
             if (nanos < 0)
             {   // from Timestamp.proto:
@@ -136,13 +136,13 @@ namespace ProtoBuf.WellKnownTypes
             }
             if (seconds != 0)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteInt64(seconds, writer, ref state);
+                state.WriteFieldHeader(1, WireType.Varint);
+                state.WriteInt64(seconds);
             }
             if (nanos != 0)
             {
-                ProtoWriter.WriteFieldHeader(2, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteInt32(nanos, writer, ref state);
+                state.WriteFieldHeader(2, WireType.Varint);
+                state.WriteInt32(nanos);
             }
         }
     }

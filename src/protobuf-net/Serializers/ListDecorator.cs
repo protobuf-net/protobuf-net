@@ -180,13 +180,13 @@ namespace ProtoBuf.Serializers
             Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();
             if (packedWireType != WireType.None)
             {
-                ctx.LoadReader(false);
-                ctx.LoadValue(typeof(ProtoReader).GetProperty("WireType"));
+                ctx.LoadState();
+                ctx.LoadValue(typeof(ProtoReader.State).GetProperty(nameof(ProtoReader.State.WireType)));
                 ctx.LoadValue((int)WireType.String);
                 ctx.BranchIfEqual(readPacked, false);
             }
-            ctx.LoadReader(false);
-            ctx.LoadValue(typeof(ProtoReader).GetProperty("FieldNumber"));
+            ctx.LoadState();
+            ctx.LoadValue(typeof(ProtoReader.State).GetProperty(nameof(ProtoReader.State.FieldNumber)));
             ctx.StoreValue(fieldNumber);
 
             Compiler.CodeLabel @continue = ctx.DefineLabel();
@@ -194,10 +194,10 @@ namespace ProtoBuf.Serializers
 
             EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
 
-            ctx.LoadReader(true);
+            ctx.LoadState();
             ctx.LoadValue(fieldNumber);
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
-                new[] { Compiler.ReaderUtil.ByRefStateType, typeof(int) }));
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.TryReadFieldHeader),
+                new[] { typeof(int) }));
             ctx.BranchIfTrue(@continue, false);
 
             if (packedWireType != WireType.None)
@@ -206,24 +206,26 @@ namespace ProtoBuf.Serializers
                 ctx.Branch(allDone, false);
                 ctx.MarkLabel(readPacked);
 
-                ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
-                    Compiler.ReaderUtil.ReaderStateTypeArray));
+                using var tok = new Compiler.Local(ctx, typeof(SubItemToken));
+                ctx.LoadState();
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.StartSubItem), Type.EmptyTypes));
+                ctx.StoreValue(tok);
 
                 Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
                 ctx.MarkLabel(testForData);
+                ctx.LoadState();
                 ctx.LoadValue((int)packedWireType);
-                ctx.LoadReader(false);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("HasSubValue"));
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.HasSubValue)));
                 ctx.BranchIfFalse(noMoreData, false);
 
                 EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
                 ctx.Branch(testForData, false);
 
                 ctx.MarkLabel(noMoreData);
-                ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                    new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
+                ctx.LoadState();
+                ctx.LoadValue(tok);
+                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.EndSubItem),
+                    new[] { typeof(SubItemToken) }));
                 ctx.MarkLabel(allDone);
             }
         }
@@ -375,19 +377,19 @@ namespace ProtoBuf.Serializers
             using Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null;
             if (writePacked)
             {
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
                 ctx.LoadValue((int)WireType.String);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
+                ctx.LoadState();
                 ctx.LoadValue(list);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.StartSubItem), new Type[] { typeof(object) }));
                 ctx.StoreValue(token);
 
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
-                ctx.LoadWriter(false);
-                ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
+                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.SetPackedField)));
             }
 
             ctx.LoadAddress(list, ExpectedType);
@@ -417,30 +419,28 @@ namespace ProtoBuf.Serializers
 
             if (writePacked)
             {
-                ctx.LoadValue(token);
-                ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
+                ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.EndSubItem), token);
             }
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             SubItemToken token;
             bool writePacked = WritePacked;
             bool fixedSizePacked = (writePacked & CanUsePackedPrefix()) && value is ICollection;
             if (writePacked)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest, ref state);
+                state.WriteFieldHeader(fieldNumber, WireType.String);
                 if (fixedSizePacked)
                 {
-                    ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest, ref state);
+                    state.WritePackedPrefix(((ICollection)value).Count, packedWireType);
                     token = default;
                 }
                 else
                 {
-                    token = ProtoWriter.StartSubItem(value, dest, ref state);
+                    token = state.StartSubItem(value);
                 }
-                ProtoWriter.SetPackedField(fieldNumber, dest);
+                state.SetPackedField(fieldNumber);
             }
             else
             {
@@ -450,17 +450,17 @@ namespace ProtoBuf.Serializers
             foreach (object subItem in (IEnumerable)value)
             {
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
-                Tail.Write(dest, ref state, subItem);
+                Tail.Write(ref state, subItem);
             }
             if (writePacked)
             {
                 if (fixedSizePacked)
                 {
-                    ProtoWriter.ClearPackedField(fieldNumber, dest);
+                    state.ClearPackedField(fieldNumber);
                 }
                 else
                 {
-                    ProtoWriter.EndSubItem(token, dest, ref state);
+                    state.EndSubItem(token);
                 }
             }
         }
@@ -468,35 +468,35 @@ namespace ProtoBuf.Serializers
         private bool CanUsePackedPrefix() =>
             ArrayDecorator.CanUsePackedPrefix(packedWireType, Tail.ExpectedType);
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             try
             {
-                int field = source.FieldNumber;
+                int field = state.FieldNumber;
                 object origValue = value;
                 if (value == null) value = Activator.CreateInstance(concreteType, nonPublic: true);
                 bool isList = IsList && !SuppressIList;
-                if (packedWireType != WireType.None && source.WireType == WireType.String)
+                if (packedWireType != WireType.None && state.WireType == WireType.String)
                 {
-                    SubItemToken token = ProtoReader.StartSubItem(source, ref state);
+                    SubItemToken token = state.StartSubItem();
                     if (isList)
                     {
                         IList list = (IList)value;
-                        while (ProtoReader.HasSubValue(packedWireType, source))
+                        while (state.HasSubValue(packedWireType))
                         {
-                            list.Add(Tail.Read(source, ref state, null));
+                            list.Add(Tail.Read(ref state, null));
                         }
                     }
                     else
                     {
                         object[] args = new object[1];
-                        while (ProtoReader.HasSubValue(packedWireType, source))
+                        while (state.HasSubValue(packedWireType))
                         {
-                            args[0] = Tail.Read(source, ref state, null);
+                            args[0] = Tail.Read(ref state, null);
                             add.Invoke(value, args);
                         }
                     }
-                    ProtoReader.EndSubItem(token, source, ref state);
+                    state.EndSubItem(token);
                 }
                 else
                 {
@@ -505,17 +505,17 @@ namespace ProtoBuf.Serializers
                         IList list = (IList)value;
                         do
                         {
-                            list.Add(Tail.Read(source, ref state, null));
-                        } while (source.TryReadFieldHeader(ref state, field));
+                            list.Add(Tail.Read(ref state, null));
+                        } while (state.TryReadFieldHeader(field));
                     }
                     else
                     {
                         object[] args = new object[1];
                         do
                         {
-                            args[0] = Tail.Read(source, ref state, null);
+                            args[0] = Tail.Read(ref state, null);
                             add.Invoke(value, args);
-                        } while (source.TryReadFieldHeader(ref state, field));
+                        } while (state.TryReadFieldHeader(field));
                     }
                 }
                 return origValue == value ? null : value;

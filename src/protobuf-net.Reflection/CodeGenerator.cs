@@ -42,11 +42,9 @@ namespace ProtoBuf.Reflection
             var set = new FileDescriptorSet();
             foreach (var file in files)
             {
-                using (var reader = new StringReader(file.Text))
-                {
-                    Console.WriteLine($"Parsing {file.Name}...");
-                    set.Add(file.Name, true, reader);
-                }
+                using var reader = new StringReader(file.Text);
+                Console.WriteLine($"Parsing {file.Name}...");
+                set.Add(file.Name, true, reader);
             }
             set.Process();
             var results = new List<CodeFile>();

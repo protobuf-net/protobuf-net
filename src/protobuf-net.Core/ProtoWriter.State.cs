@@ -17,12 +17,23 @@ namespace ProtoBuf
         /// <summary>
         /// Writer state
         /// </summary>
-        public ref struct State
+        public ref partial struct State
         {
             internal bool IsActive => !_span.IsEmpty;
 
             private Span<byte> _span;
             private Memory<byte> _memory;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal State(ProtoWriter writer)
+            {
+                this = default;
+                _writer = writer;
+            }
+
+#pragma warning disable IDE0044, IDE0052 // make readonly, remove unused
+            private ProtoWriter _writer;
+#pragma warning restore IDE0044, IDE0052 // make readonly, remove unused
 
             internal Span<byte> Remaining
             {
@@ -39,15 +50,29 @@ namespace ProtoBuf
                 _span = memory.Span;
                 RemainingInCurrent = _span.Length;
             }
-            internal int Flush()
+
+            /// <summary>
+            /// Writes any uncommitted data to the output
+            /// </summary>
+            public void Flush()
+            {
+                if (_writer.TryFlush(ref this))
+                {
+                    _writer._needFlush = false;
+                }
+            }
+
+            internal int ConsiderWritten()
             {
                 int val = OffsetInCurrent;
+                var writer = _writer;
                 this = default;
+                _writer = writer;
                 return val;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void WriteFixed32(uint value)
+            internal void LocalWriteFixed32(uint value)
             {
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(Remaining, value);
                 OffsetInCurrent += 4;
@@ -58,13 +83,13 @@ namespace ProtoBuf
             internal void ReverseLast32() => _span.Slice(OffsetInCurrent - 4, 4).Reverse();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void Advance(int bytes)
+            internal void LocalAdvance(int bytes)
             {
                 OffsetInCurrent += bytes;
                 RemainingInCurrent -= bytes;
             }
 
-            internal void WriteBytes(ReadOnlySpan<byte> span)
+            internal void LocalWriteBytes(ReadOnlySpan<byte> span)
             {
                 span.CopyTo(Remaining);
                 OffsetInCurrent += span.Length;
@@ -72,14 +97,14 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void WriteFixed64(ulong value)
+            internal void LocalWriteFixed64(ulong value)
             {
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(Remaining, value);
                 OffsetInCurrent += 8;
                 RemainingInCurrent -= 8;
             }
 
-            internal void WriteString(string value)
+            internal void LocalWriteString(string value)
             {
                 int bytes;
 #if PLAT_SPAN_OVERLOADS
@@ -101,7 +126,7 @@ namespace ProtoBuf
                 RemainingInCurrent -= bytes;
             }
 
-            internal int WriteVarint64(ulong value)
+            internal int LocalWriteVarint64(ulong value)
             {
                 int count = 0;
                 var span = _span;
@@ -144,7 +169,7 @@ namespace ProtoBuf
                 return bytes;
             }
 
-            internal int WriteVarint32(uint value)
+            internal int LocalWriteVarint32(uint value)
             {
                 int count = 0;
                 var span = _span;

@@ -379,13 +379,13 @@ namespace ProtoBuf
         /// </summary>
         public override string GetAccess(Access access)
         {
-            switch (access)
+            return access switch
             {
-                case Access.Internal: return "Friend";
-                case Access.Public: return "Public";
-                case Access.Private: return "Private";
-                default: return base.GetAccess(access);
-            }
+                Access.Internal => "Friend",
+                Access.Public => "Public",
+                Access.Private => "Private",
+                _ => base.GetAccess(access),
+            };
         }
 
         private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName)
@@ -720,8 +720,8 @@ namespace ProtoBuf
         /// </summary>
         protected override void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
-            var name = message?.Options?.GetOptions()?.ExtensionTypeName;
-            if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
+            //var name = message?.Options?.GetOptions()?.ExtensionTypeName;
+            //if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
             //ctx.WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
         }
         /// <summary>

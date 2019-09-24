@@ -137,10 +137,10 @@ namespace ProtoBuf.Serializers
             this.finish = finish;
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             object builderInstance = builderFactory.Invoke(null, null);
-            int field = source.FieldNumber;
+            int field = state.FieldNumber;
             object[] args = new object[1];
             if (AppendToCollection && value != null && (isEmpty != null ? !(bool)isEmpty.GetValue(value, null) : (int)length.GetValue(value, null) != 0))
             {
@@ -159,23 +159,23 @@ namespace ProtoBuf.Serializers
                 }
             }
 
-            if (packedWireType != WireType.None && source.WireType == WireType.String)
+            if (packedWireType != WireType.None && state.WireType == WireType.String)
             {
-                SubItemToken token = ProtoReader.StartSubItem(source, ref state);
-                while (ProtoReader.HasSubValue(packedWireType, source))
+                SubItemToken token = state.StartSubItem();
+                while (state.HasSubValue(packedWireType))
                 {
-                    args[0] = Tail.Read(source, ref state, null);
+                    args[0] = Tail.Read(ref state, null);
                     add.Invoke(builderInstance, args);
                 }
-                ProtoReader.EndSubItem(token, source, ref state);
+                state.EndSubItem(token);
             }
             else
             {
                 do
                 {
-                    args[0] = Tail.Read(source, ref state, null);
+                    args[0] = Tail.Read(ref state, null);
                     add.Invoke(builderInstance, args);
-                } while (source.TryReadFieldHeader(ref state, field));
+                } while (state.TryReadFieldHeader(field));
             }
 
             return finish.Invoke(builderInstance, null);

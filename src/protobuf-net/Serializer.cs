@@ -40,16 +40,7 @@ namespace ProtoBuf
         /// </summary>
         public static T DeepClone<T>(T instance)
         {
-            if (TypeHelper<T>.UseFallback)
-            {
-#pragma warning disable CS0618
-                return (T)RuntimeTypeModel.Default.DeepClone((object)instance);
-#pragma warning restore CS0618
-            }
-            else
-            {
-                return RuntimeTypeModel.Default.DeepClone<T>(instance);
-            }
+            return RuntimeTypeModel.Default.DeepClone<T>(instance);
         }
 
         /// <summary>
@@ -63,8 +54,8 @@ namespace ProtoBuf
         /// original instance.</returns>
         public static T Merge<T>(Stream source, T instance)
         {
-            using var reader = ProtoReader.Create(out var state, source, RuntimeTypeModel.Default);
-            return TypeModel.DeserializeImpl<T>(reader, ref state, instance);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
+            return state.DeserializeImpl<T>(instance);
         }
 
         /// <summary>
@@ -289,8 +280,15 @@ namespace ProtoBuf
             {
                 if (instance != null)
                 {
-                    using var writer = ProtoWriter.Create(out var state, dest, RuntimeTypeModel.Default);
-                    writer.Model.SerializeFallback(writer, ref state, instance);
+                    var state = ProtoWriter.State.Create(dest, RuntimeTypeModel.Default);
+                    try
+                    {
+                        state.Model.SerializeFallback(ref state, instance);
+                    }
+                    finally
+                    {
+                        state.Dispose();
+                    }
                 }
             }
 
@@ -302,8 +300,8 @@ namespace ProtoBuf
             /// <returns>A new, initialized instance.</returns>
             public static object Deserialize(Type type, Stream source)
             {
-                using var reader = ProtoReader.Create(out var state, source, RuntimeTypeModel.Default);
-                return reader.Model.DeserializeFallback(reader, ref state, null, type);
+                using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
+                return state.DeserializeFallback(null, type);
             }
 
             /// <summary>Applies a protocol-buffer stream to an existing instance.</summary>
@@ -313,8 +311,8 @@ namespace ProtoBuf
             public static object Merge(Stream source, object instance)
             {
                 if (instance == null) throw new ArgumentNullException(nameof(instance));
-                using var reader = ProtoReader.Create(out var state, source, RuntimeTypeModel.Default);
-                return reader.Model.DeserializeFallback(reader, ref state, instance, instance.GetType());
+                using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
+                return state.DeserializeFallback(instance, instance.GetType());
             }
 
             /// <summary>

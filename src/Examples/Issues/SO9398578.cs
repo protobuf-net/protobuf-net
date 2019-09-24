@@ -50,12 +50,10 @@ namespace Examples.Issues
                 Assert.True(3 > 0); // I always double-check the param order
                 Assert.True(stream.Length > 0);
 
-                using (var reader = ProtoReader.Create(out var state, stream, null, null))
+                using var state = ProtoReader.State.Create(stream, null, null);
+                while (state.ReadFieldHeader() > 0)
                 {
-                    while (reader.ReadFieldHeader(ref state) > 0)
-                    {
-                        reader.SkipField(ref state);
-                    }
+                    state.SkipField();
                 }
             });
         }

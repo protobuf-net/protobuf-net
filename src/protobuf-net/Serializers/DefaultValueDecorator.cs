@@ -24,37 +24,27 @@ namespace ProtoBuf.Serializers
             this.defaultValue = defaultValue;
         }
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
             if (!object.Equals(value, defaultValue))
             {
-                Tail.Write(dest, ref state, value);
+                Tail.Write(ref state, value);
             }
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
-            return Tail.Read(source, ref state, value);
+            return Tail.Read(ref state, value);
         }
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Compiler.CodeLabel done = ctx.DefineLabel();
-            if (valueFrom == null)
+            using(var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             {
-                ctx.CopyValue(); // on the stack
-                Compiler.CodeLabel needToPop = ctx.DefineLabel();
-                EmitBranchIfDefaultValue(ctx, needToPop);
-                Tail.EmitWrite(ctx, null);
-                ctx.Branch(done, true);
-                ctx.MarkLabel(needToPop);
-                ctx.DiscardValue();
-            }
-            else
-            {
-                ctx.LoadValue(valueFrom); // variable/parameter
+                ctx.LoadValue(loc);
                 EmitBranchIfDefaultValue(ctx, done);
-                Tail.EmitWrite(ctx, valueFrom);
+                Tail.EmitWrite(ctx, loc);
             }
             ctx.MarkLabel(done);
         }

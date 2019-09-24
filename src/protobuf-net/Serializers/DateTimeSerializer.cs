@@ -20,40 +20,40 @@ namespace ProtoBuf.Serializers
             includeKind = model?.SerializeDateTimeKind() == true;
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadTimestamp(source, ref state);
+                return BclHelpers.ReadTimestamp(ref state);
             }
             else
             {
                 Debug.Assert(value == null); // since replaces
-                return BclHelpers.ReadDateTime(source, ref state);
+                return BclHelpers.ReadDateTime(ref state);
             }
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             if (wellKnown)
-                BclHelpers.WriteTimestamp((DateTime)value, dest, ref state);
+                BclHelpers.WriteTimestamp(ref state, (DateTime)value);
             else if (includeKind)
-                BclHelpers.WriteDateTimeWithKind((DateTime)value, dest, ref state);
+                BclHelpers.WriteDateTimeWithKind(ref state, (DateTime)value);
             else
-                BclHelpers.WriteDateTime((DateTime)value, dest, ref state);
+                BclHelpers.WriteDateTime(ref state, (DateTime)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite<BclHelpers>(
+            ctx.EmitStateBasedWrite(
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
-                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, this);
+                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, typeof(BclHelpers));
         }
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
-            ctx.EmitBasicRead<BclHelpers>(
+            ctx.EmitStateBasedRead(typeof(BclHelpers),
                 wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
         }

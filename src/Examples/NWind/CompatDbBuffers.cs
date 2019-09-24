@@ -38,26 +38,27 @@ namespace ProtoBuf.NWind
             byte[] arr = File.ReadAllBytes(path);
             Log?.WriteLine($"{arr.Length} bytes loaded from {path}");
             contents = arr;
-            using var reader = ProtoReader.Create(out var readState, arr, RuntimeTypeModel.Default);
+            using var readState = ProtoReader.State.Create(arr, RuntimeTypeModel.Default);
             var watch = Stopwatch.StartNew();
-            var obj = (DatabaseCompat)reader.Deserialize<DatabaseCompat>(ref readState, null);
+            var obj = (DatabaseCompat)readState.Deserialize<DatabaseCompat>(null);
             watch.Stop();
             Log?.WriteLine($"Deserialized: {watch.ElapsedMilliseconds}ms");
             return obj;
         }
 
-        void Write(DatabaseCompat db, ProtoWriter writer, ref ProtoWriter.State state)
+        void Write(DatabaseCompat db, ref ProtoWriter.State state)
         {
             try
             {
                 var watch = Stopwatch.StartNew();
-                writer.Serialize(ref state, db);
+                state.Serialize(db);
+                state.Close();
                 watch.Stop();
                 Log?.WriteLine($"Serialized: {watch.ElapsedMilliseconds}ms");
             }
             catch
             {
-                writer.Abandon();
+                state.Abandon();
                 throw;
             }
         }
@@ -69,9 +70,14 @@ namespace ProtoBuf.NWind
             Assert.Equal(830, db.Orders.Count);
 
             using var ms = new MemoryStream();
-            using (var writer = ProtoWriter.Create(out var writeState, ms, RuntimeTypeModel.Default))
+            var writeState = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default);
+            try
             {
-                Write(db, writer, ref writeState);
+                Write(db, ref writeState);
+            }
+            finally
+            {
+                writeState.Dispose();
             }
             Assert.Equal(contents.Length, ms.Length);
 
@@ -88,9 +94,14 @@ namespace ProtoBuf.NWind
             Assert.Equal(830, db.Orders.Count);
 
             using var bw = BufferWriter<byte>.Create();
-            using (var writer = ProtoWriter.Create(out var writeState, bw.Writer, RuntimeTypeModel.Default))
+            var writeState = ProtoWriter.State.Create(bw.Writer, RuntimeTypeModel.Default);
+            try
             {
-                Write(db, writer, ref writeState);
+                Write(db, ref writeState);
+            }
+            finally
+            {
+                writeState.Dispose();
             }
 
             using var buffer = bw.Flush();

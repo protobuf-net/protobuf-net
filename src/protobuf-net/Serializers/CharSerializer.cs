@@ -9,15 +9,15 @@ namespace ProtoBuf.Serializers
 
         public override Type ExpectedType => expectedType;
 
-        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public override void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt16((ushort)(char)value, dest, ref state);
+            state.WriteUInt16((ushort)(char)value);
         }
 
-        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return (char)source.ReadUInt16(ref state);
+            return (char)state.ReadUInt16();
         }
 
         // no need for any special IL here; ushort and char are

@@ -7,21 +7,20 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static ProtoWriter CreateNull(out State state, TypeModel model, SerializationContext context = null)
-            => NullProtoWriter.CreateNullImpl(model, context, out state);
+        internal static State CreateNull(TypeModel model, SerializationContext context = null)
+            => NullProtoWriter.CreateNullImpl(model, context);
 
         private sealed class NullProtoWriter : ProtoWriter
         {
-            protected internal override State DefaultState() => default;
+            protected internal override State DefaultState() => new State(this);
 
             private NullProtoWriter() { }
 
-            public static NullProtoWriter CreateNullImpl(TypeModel model, SerializationContext context, out State state)
+            public static State CreateNullImpl(TypeModel model, SerializationContext context)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
                 obj.Init(model, context);
-                state = default;
-                return obj;
+                return new State(obj);
             }
 
             private protected override void Dispose()
@@ -64,7 +63,7 @@ namespace ProtoBuf
                         bytes = ImplWriteVarint64(ref state, (ulong)len);
                         break;
                     default:
-                        ThrowException(this);
+                        state.ThrowInvalidSerializationOperation();
                         goto case PrefixStyle.None;
                     case PrefixStyle.None:
                         bytes = 0;

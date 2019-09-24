@@ -4,7 +4,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class TupleSerializer : IProtoTypeSerializer
+    internal sealed class TupleSerializer<T> : IProtoTypeSerializer, IProtoSerializer<T>
     {
 
         bool IProtoTypeSerializer.IsSubType => false;
@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
 
                 Type itemType = null, defaultType = null;
 
-                MetaType.ResolveListTypes(model, finalType, ref itemType, ref defaultType);
+                MetaType.ResolveListTypes(finalType, ref itemType, ref defaultType);
                 Type tmp = itemType ?? finalType;
 
                 bool asReference = false;
@@ -64,11 +64,11 @@ namespace ProtoBuf.Serializers
         }
 
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, Meta.TypeModel.CallbackType callbackType) { }
-        public Type ExpectedType => ctor.DeclaringType;
-        Type IProtoTypeSerializer.BaseType => ExpectedType;
+        public Type ExpectedType => typeof(T);
+        Type IProtoTypeSerializer.BaseType => typeof(T);
 
         void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
         {
             if (members[index] is PropertyInfo prop)
@@ -89,7 +89,13 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+            => (T)Read(ref state, value);
+
+        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+            => Write(ref state, value);
+
+        public object Read(ref ProtoReader.State state, object value)
         {
             object[] values = new object[members.Length];
             bool invokeCtor = false;
@@ -100,28 +106,28 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < values.Length; i++)
                 values[i] = GetValue(value, i);
             int field;
-            while ((field = source.ReadFieldHeader(ref state)) > 0)
+            while ((field = state.ReadFieldHeader()) > 0)
             {
                 invokeCtor = true;
                 if (field <= tails.Length)
                 {
                     IRuntimeProtoSerializerNode tail = tails[field - 1];
-                    values[field - 1] = tails[field - 1].Read(source, ref state, tail.RequiresOldValue ? values[field - 1] : null);
+                    values[field - 1] = tails[field - 1].Read(ref state, tail.RequiresOldValue ? values[field - 1] : null);
                 }
                 else
                 {
-                    source.SkipField(ref state);
+                    state.SkipField();
                 }
             }
             return invokeCtor ? ctor.Invoke(values) : value;
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
             for (int i = 0; i < tails.Length; i++)
             {
                 object val = GetValue(value, i);
-                if (val != null) tails[i].Write(dest, ref state, val);
+                if (val != null) tails[i].Write(ref state, val);
             }
         }
 
@@ -303,11 +309,11 @@ namespace ProtoBuf.Serializers
                     }
 
                     ctx.MarkLabel(notRecognised);
-                    ctx.LoadReader(true);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
+                    ctx.LoadState();
+                    ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.SkipField), Type.EmptyTypes));
 
                     ctx.MarkLabel(@continue);
-                    ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
+                    ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadFieldHeader), typeof(int));
                     ctx.CopyValue();
                     ctx.StoreValue(fieldNumber);
                     ctx.LoadValue(0);

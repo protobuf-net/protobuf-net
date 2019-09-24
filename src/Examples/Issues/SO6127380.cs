@@ -41,7 +41,7 @@ namespace Examples.Issues
                 n.AddChild(child);
                 n = child;
             }
-            Node clone = Serializer.DeepClone(root);
+            _ = Serializer.DeepClone(root);
         }
         [Fact]
         public void ExecuteRecursive()
@@ -54,7 +54,7 @@ namespace Examples.Issues
                 n = child;
             }
             n.AddChild(root);
-            Node clone = Serializer.DeepClone(root);
+            _ = Serializer.DeepClone(root);
         }
         [Fact]
         public void TestSelfRecursive()

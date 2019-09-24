@@ -105,7 +105,7 @@ namespace ProtoBuf.Meta
             }
             else
             { // we need to scan the hard way; can't risk recursion by fully walking it
-                AsReference = MetaType.GetAsReferenceDefault(model, memberType);
+                AsReference = MetaType.GetAsReferenceDefault(memberType);
             }
         }
         /// <summary>
@@ -426,7 +426,7 @@ namespace ProtoBuf.Meta
 
                     if (dictionaryType == null)
                     {
-                        throw new InvalidOperationException("Unable to resolve map type for type: " + MemberType.FullName);
+                        throw new InvalidOperationException("Unable to resolve map type for type: " + MemberType.ToString());
                     }
                     var concreteType = DefaultType;
                     if (concreteType == null && MemberType.IsClass)
@@ -436,7 +436,7 @@ namespace ProtoBuf.Meta
                     var keySer = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
                     if (!AsReference)
                     {
-                        AsReference = MetaType.GetAsReferenceDefault(model, valueType);
+                        AsReference = MetaType.GetAsReferenceDefault(valueType);
                     }
                     var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
                     var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
@@ -451,7 +451,7 @@ namespace ProtoBuf.Meta
                     ser = TryGetCoreSerializer(model, dataFormat, finalType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
                     if (ser == null)
                     {
-                        throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
+                        throw new InvalidOperationException("No serializer defined for type: " + finalType.ToString());
                     }
 
                     // apply tags

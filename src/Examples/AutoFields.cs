@@ -53,7 +53,7 @@ namespace Examples
             public event EventHandler Foo;
             protected virtual void OnFoo()
             {
-                if (Foo != null) Foo(this, EventArgs.Empty);
+                Foo?.Invoke(this, EventArgs.Empty);
             }
             public Action Bar;
 

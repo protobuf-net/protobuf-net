@@ -20,17 +20,17 @@ namespace ProtoBuf.WellKnownTypes
         }
 
         private const int FieldGuidLow = 1, FieldGuidHigh = 2;
-        Guid IProtoSerializer<Guid>.Read(ProtoReader reader, ref ProtoReader.State state, Guid value)
+        Guid IProtoSerializer<Guid>.Read(ref ProtoReader.State state, Guid value)
         {
             ulong low = 0, high = 0;
             int fieldNumber;
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
-                    case FieldGuidLow: low = reader.ReadUInt64(ref state); break;
-                    case FieldGuidHigh: high = reader.ReadUInt64(ref state); break;
-                    default: reader.SkipField(ref state); break;
+                    case FieldGuidLow: low = state.ReadUInt64(); break;
+                    case FieldGuidHigh: high = state.ReadUInt64(); break;
+                    default: state.SkipField(); break;
                 }
             }
 
@@ -49,24 +49,24 @@ namespace ProtoBuf.WellKnownTypes
             }
         }
 
-        void IProtoSerializer<Guid>.Write(ProtoWriter writer, ref ProtoWriter.State state, Guid value)
+        void IProtoSerializer<Guid>.Write(ref ProtoWriter.State state, Guid value)
         {
             if (value == Guid.Empty) { }
             else if (s_guidOptimized)
             {
                 var obj = new GuidAccessor(value);
-                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, writer, ref state);
-                ProtoWriter.WriteUInt64(obj.Low, writer, ref state);
-                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, writer, ref state);
-                ProtoWriter.WriteUInt64(obj.High, writer, ref state);
+                state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
+                state.WriteUInt64(obj.Low);
+                state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
+                state.WriteUInt64(obj.High);
             }
             else
             {
                 byte[] blob = value.ToByteArray();
-                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, writer, ref state);
-                ProtoWriter.WriteBytes(blob, 0, 8, writer, ref state);
-                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, writer, ref state);
-                ProtoWriter.WriteBytes(blob, 8, 8, writer, ref state);
+                state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
+                state.WriteBytes(blob, 0, 8);
+                state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
+                state.WriteBytes(blob, 8, 8);
             }
         }
 

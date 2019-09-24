@@ -6,6 +6,7 @@
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
+    <NoWarn>$(NoWarn);IDE0060;IDE0051;IDE0044;IDE0063;IDE0028;IDE0034;IDE1006;IDE0017;IDE0052</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
@@ -22,12 +23,12 @@
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
-    <PackageReference Include="Iesi.Collections" Version="4.0.3" />
+    <PackageReference Include="Iesi.Collections" Version="4.0.4" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)' == 'net'">
     <Reference Include="Microsoft.CSharp" />
@@ -69,21 +70,21 @@
     <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.6.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.31-pre.31.gf8c8025252" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.25" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net462'">
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.31-pre.31.gf8c8025252" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-preview8.19405.3" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.25" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.6.0" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
 </Project>

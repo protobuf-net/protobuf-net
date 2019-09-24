@@ -1,35 +1,57 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class StringSerializer : IRuntimeProtoSerializerNode
+    internal sealed class StringSerializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
         private static readonly Type expectedType = typeof(string);
 
         public Type ExpectedType => expectedType;
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteString((string)value, dest, ref state);
+            state.WriteString((string)value);
         }
         bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadString(ref state);
+            return state.ReadString();
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteString", valueFrom, this);
+            using var loc = ctx.GetLocalWithValue(typeof(string), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(loc);
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(string), typeof(StringMap) }, null));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadString", ExpectedType);
+            ctx.LoadState();
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(StringMap) }, null));
+        }
+
+        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => wireType == WireType.String;
+
+        void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            using var loc = ctx.GetLocalWithValue(typeof(string), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(fieldNumber);
+            ctx.LoadValue(loc);
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(int), typeof(string), typeof(StringMap) }, null));
         }
     }
 }

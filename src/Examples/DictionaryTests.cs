@@ -272,18 +272,18 @@ namespace Examples.Dictionary
             Console.WriteLine("Ser (kv-grouped)\t" + s3);
             Console.WriteLine("Deser (kv-grouped)\t" + d3);
 
-            using var pw = ProtoWriter.Create(out var state, Stream.Null, null, null);
+            using var state = ProtoWriter.State.Create(Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++ ) {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
-                ProtoWriter.WriteString("Field1", pw, ref state);
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
-                ProtoWriter.WriteString("Field2", pw, ref state);
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
-                ProtoWriter.WriteString("Field3", pw, ref state);
+                state.WriteFieldHeader(1, WireType.String);
+                state.WriteString("Field1");
+                state.WriteFieldHeader(1, WireType.String);
+                state.WriteString("Field2");
+                state.WriteFieldHeader(1, WireType.String);
+                state.WriteString("Field3");
             }
             watch.Stop();
-            pw.Close(ref state);
+            state.Close();
             Console.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
             
         }

@@ -19,23 +19,44 @@ namespace ProtoBuf.Tests
         public void ManualWriter_Stream()
         {
             using var ms = new MemoryStream();
-            using var w = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null);
-            ManualWriter(w, ref state);
+            var state = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default, null);
+            try
+            {
+                ManualWriter(ref state);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         [Fact]
         public void ManualWriter_Null()
         {
-            using var w = ProtoWriter.CreateNull(out var state, RuntimeTypeModel.Default, null);
-            ManualWriter(w, ref state);
+            var state = ProtoWriter.CreateNull(RuntimeTypeModel.Default, null);
+            try
+            {
+                ManualWriter(ref state);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         [Fact]
         public void ManualWriter_Buffer()
         {
             using var bw = BufferWriter<byte>.Create();
-            using var w = ProtoWriter.Create(out var state, bw, RuntimeTypeModel.Default, null);
-            ManualWriter(w, ref state);
+            var state = ProtoWriter.State.Create(bw, RuntimeTypeModel.Default, null);
+            try
+            {
+                ManualWriter(ref state);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         class Foo
@@ -47,41 +68,41 @@ namespace ProtoBuf.Tests
             {
                 public static FooSerializer Instance { get; } = new FooSerializer();
                 private FooSerializer() { }
-                public Foo Read(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
+                public Foo Read(ref ProtoReader.State state, Foo value) => value;
 
-                public void Write(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
+                public void Write(ref ProtoWriter.State state, Foo value) { }
             }
         }
 
-        private void ManualWriter(ProtoWriter w, ref ProtoWriter.State state)
+        private void ManualWriter(ref ProtoWriter.State state)
         {
             try
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, w, ref state);
-                Assert.Equal(1, w.GetPosition(ref state));
-                ProtoWriter.WriteInt32(42, w, ref state);
-                Assert.Equal(2, w.GetPosition(ref state));
+                state.WriteFieldHeader(1, WireType.Varint);
+                Assert.Equal(1, state.GetPosition());
+                state.WriteInt32(42);
+                Assert.Equal(2, state.GetPosition());
 
-                ProtoWriter.WriteFieldHeader(2, WireType.String, w, ref state);
-                Assert.Equal(3, w.GetPosition(ref state));
-                ProtoWriter.WriteString("abcdefghijklmnop", w, ref state);
-                Assert.Equal(20, w.GetPosition(ref state));
+                state.WriteFieldHeader(2, WireType.String);
+                Assert.Equal(3, state.GetPosition());
+                state.WriteString("abcdefghijklmnop");
+                Assert.Equal(20, state.GetPosition());
 
-                ProtoWriter.WriteFieldHeader(3, WireType.StartGroup, w, ref state);
-                Assert.Equal(21, w.GetPosition(ref state));
-                ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
-                Assert.Equal(22, w.GetPosition(ref state));
+                state.WriteFieldHeader(3, WireType.StartGroup);
+                Assert.Equal(21, state.GetPosition());
+                state.WriteSubItem<Foo>(null, Foo.Serializer);
+                Assert.Equal(22, state.GetPosition());
 
-                ProtoWriter.WriteFieldHeader(4, WireType.String, w, ref state);
-                Assert.Equal(23, w.GetPosition(ref state));
-                ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
-                Assert.Equal(24, w.GetPosition(ref state));
+                state.WriteFieldHeader(4, WireType.String);
+                Assert.Equal(23, state.GetPosition());
+                state.WriteSubItem<Foo>(null, Foo.Serializer);
+                Assert.Equal(24, state.GetPosition());
 
-                w.Close(ref state);
+                state.Close();
             }
             catch
             {
-                w.Abandon();
+                state.Abandon();
                 throw;
             }
         }
@@ -100,44 +121,44 @@ namespace ProtoBuf.Tests
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }
-            public A Read(ProtoReader reader, ref ProtoReader.State state, A value)
+            public A Read(ref ProtoReader.State state, A value)
             {
                 int fieldHeader;
                 if (value == null) value = new A();
-                while ((fieldHeader = reader.ReadFieldHeader(ref state)) > 0)
+                while ((fieldHeader = state.ReadFieldHeader()) > 0)
                 {
                     switch (fieldHeader)
                     {
                         case 1:
-                            value.Level = reader.ReadInt32(ref state);
+                            value.Level = state.ReadInt32();
                             break;
                         case 2:
-                            value.Inner = reader.ReadSubItem<A>(ref state, value.Inner, this);
+                            value.Inner = state.ReadSubItem<A>(value.Inner, this);
                             break;
                         default:
-                            reader.SkipField(ref state);
+                            state.SkipField();
                             break;
                     }
                 }
                 return value;
             }
 
-            public void Write(ProtoWriter writer, ref ProtoWriter.State state, A value)
+            public void Write(ref ProtoWriter.State state, A value)
             {
 #pragma warning disable CS0618
-                Log?.WriteLine($"Writing to {writer.GetType().Name}");
-                Log?.WriteLine($"Writing field 1, value: {value.Level}; pos: {writer.GetPosition(ref state)}");
-                ProtoWriter.WriteFieldHeader(1, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteInt32(value.Level, writer, ref state);
-                Log?.WriteLine($"Wrote field 1... pos: {writer.GetPosition(ref state)}");
+                Log?.WriteLine($"Writing to {state.GetWriter().GetType().Name}");
+                Log?.WriteLine($"Writing field 1, value: {value.Level}; pos: {state.GetPosition()}");
+                state.WriteFieldHeader(1, WireType.Varint);
+                state.WriteInt32(value.Level);
+                Log?.WriteLine($"Wrote field 1... pos: {state.GetPosition()}");
 
                 var obj = value.Inner;
                 if (obj != null)
                 {
-                    Log?.WriteLine($"Writing field 2...; pos: {writer.GetPosition(ref state)}");
-                    ProtoWriter.WriteFieldHeader(2, WireType.String, writer, ref state);
-                    ProtoWriter.WriteSubItem<A>(obj, writer, ref state, this);
-                    Log?.WriteLine($"Wrote field 2...; pos: {writer.GetPosition(ref state)}");
+                    Log?.WriteLine($"Writing field 2...; pos: {state.GetPosition()}");
+                    state.WriteFieldHeader(2, WireType.String);
+                    state.WriteSubItem<A>(obj, this);
+                    Log?.WriteLine($"Wrote field 2...; pos: {state.GetPosition()}");
                 }
 #pragma warning restore CS0618
             }
@@ -164,11 +185,18 @@ namespace ProtoBuf.Tests
         {
             using var bw = BufferWriter<byte>.Create();
             var model = RuntimeTypeModel.Default;
-            using var writer = ProtoWriter.Create(out var state, bw.Writer, model, null);
-            A obj = CreateModel(depth);
-            var ser = new ASerializer(Log);
-            ser.Write(writer, ref state, obj);
-            writer.Close(ref state);
+            var state = ProtoWriter.State.Create(bw.Writer, model, null);
+            try
+            {
+                A obj = CreateModel(depth);
+                var ser = new ASerializer(Log);
+                ser.Write(ref state, obj);
+                state.Close();
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         [Theory]
@@ -180,11 +208,18 @@ namespace ProtoBuf.Tests
         {
             using var ms = new MemoryStream();
             var model = RuntimeTypeModel.Default;
-            using var writer = ProtoWriter.Create(out var state, ms, model, null);
-            A obj = CreateModel(depth);
-            var ser = new ASerializer(Log);
-            ser.Write(writer, ref state, obj);
-            writer.Close(ref state);
+            var state = ProtoWriter.State.Create(ms, model, null);
+            try
+            {
+                A obj = CreateModel(depth);
+                var ser = new ASerializer(Log);
+                ser.Write(ref state, obj);
+                state.Close();
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         [Theory]

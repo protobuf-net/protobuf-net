@@ -13,24 +13,24 @@ namespace ProtoBuf.Serializers
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        public virtual object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public virtual object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadUInt16(ref state);
+            return state.ReadUInt16();
         }
 
-        public virtual void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public virtual void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt16((ushort)value, dest, ref state);
+            state.WriteUInt16((ushort)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteUInt16", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteUInt16), valueFrom);
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadUInt16", typeof(ushort));
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadUInt16), typeof(ushort));
         }
     }
 }

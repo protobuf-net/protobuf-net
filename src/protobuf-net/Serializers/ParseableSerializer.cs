@@ -40,15 +40,15 @@ namespace ProtoBuf.Serializers
         bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return false; } }
         bool IRuntimeProtoSerializerNode.ReturnsValue { get { return true; } }
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return parse.Invoke(null, new object[] { source.ReadString(ref state) });
+            return parse.Invoke(null, new object[] { state.ReadString() });
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteString(value.ToString(), dest, ref state);
+            state.WriteString(value.ToString());
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -67,11 +67,11 @@ namespace ProtoBuf.Serializers
             {
                 ctx.EmitCall(typeof(object).GetMethod("ToString"));
             }
-            ctx.EmitBasicWrite("WriteString", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteString), valueFrom);
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadString", typeof(string));
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadString), typeof(string));
             ctx.EmitCall(parse);
         }
     }

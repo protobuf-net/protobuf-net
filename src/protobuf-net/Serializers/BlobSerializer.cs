@@ -15,14 +15,14 @@ namespace ProtoBuf.Serializers
 
         private readonly bool overwriteList;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
-            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source, ref state);
+            return state.AppendBytes(overwriteList ? null : (byte[])value);
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteBytes((byte[])value, dest, ref state);
+            state.WriteBytes((byte[])value);
         }
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return !overwriteList; } }
@@ -30,22 +30,23 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteBytes", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteBytes), valueFrom, argType: typeof(byte[]));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
+            using var tmp = overwriteList ? default : ctx.GetLocalWithValue(typeof(byte[]), entity);
+            ctx.LoadState();
             if (overwriteList)
             {
                 ctx.LoadNullRef();
             }
             else
             {
-                ctx.LoadValue(entity);
+                ctx.LoadValue(tmp);
             }
-            ctx.LoadReader(true);
-            ctx.EmitCall(typeof(ProtoReader)
-               .GetMethod(nameof(ProtoReader.AppendBytes),
-               new[] { typeof(byte[]), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType}));
+            ctx.EmitCall(typeof(ProtoReader.State)
+               .GetMethod(nameof(ProtoReader.State.AppendBytes),
+               new[] { typeof(byte[])}));
         }
     }
 }

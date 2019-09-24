@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
@@ -20,14 +21,14 @@ namespace ProtoBuf
     /// Provides support for common .NET types that do not have a direct representation
     /// in protobuf, using the definitions from bcl.proto
     /// </summary>
-    public sealed class BclHelpers // should really be static, but I'm cheating with a <T>
+    public static class BclHelpers
     {
-        private BclHelpers() { }
         /// <summary>
         /// Creates a new instance of the specified type, bypassing the constructor.
         /// </summary>
         /// <param name="type">The type to create</param>
         /// <returns>The new instance</returns>
+        [MethodImpl(ProtoReader.HotPath)]
         public static object GetUninitializedObject(Type type)
         {
             return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
@@ -42,37 +43,37 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
+            var state = dest.DefaultState();
+            WriteTimeSpanImpl(ref state, timeSpan, DateTimeKind.Unspecified);
         }
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest, ref ProtoWriter.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteTimeSpan(ref ProtoWriter.State state, TimeSpan value)
         {
-            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
+            WriteTimeSpanImpl(ref state, value, DateTimeKind.Unspecified);
         }
 
-        private static void WriteTimeSpanImpl(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind kind, ref ProtoWriter.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        private static void WriteTimeSpanImpl(ref ProtoWriter.State state, TimeSpan timeSpan, DateTimeKind kind)
         {
-            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
-
-            switch (dest.WireType)
+            switch (state.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
                     var scaled = new ScaledTicks(timeSpan, kind);
-                    ProtoWriter.WriteSubItem<ScaledTicks>(scaled, dest, ref state, WellKnownSerializer.Instance);
+                    state.WriteSubItem<ScaledTicks>(scaled, WellKnownSerializer.Instance);
                     break;
                 case WireType.Fixed64:
-                    ProtoWriter.WriteInt64(timeSpan.Ticks, dest, ref state);
+                    state.WriteInt64(timeSpan.Ticks);
                     break;
                 default:
-                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + dest.WireType.ToString());
+                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + state.WireType.ToString());
                     break;
             }
         }
@@ -80,19 +81,20 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
-            return ReadTimeSpan(source, ref state);
+            return ReadTimeSpan(ref state);
         }
 
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
-        public static TimeSpan ReadTimeSpan(ProtoReader source, ref ProtoReader.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        public static TimeSpan ReadTimeSpan(ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind _);
+            long ticks = ReadTimeSpanTicks(ref state, out DateTimeKind _);
             if (ticks == long.MinValue) return TimeSpan.MinValue;
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
@@ -101,88 +103,93 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadDuration(ProtoReader source)
         {
-            ProtoReader.State state = source.DefaultState();
-            return ReadDuration(source, ref state);
+            var state = source.DefaultState();
+            return ReadDuration(ref state);
         }
 
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        public static TimeSpan ReadDuration(ProtoReader source, ref ProtoReader.State state)
-            => source.ReadSubItem<Duration>(ref state, serializer: WellKnownSerializer.Instance);
+        [MethodImpl(ProtoReader.HotPath)]
+        public static TimeSpan ReadDuration(ref ProtoReader.State state)
+            => state.ReadSubItem<Duration>(serializer: WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteDuration(value, dest, ref state);
+            var state = dest.DefaultState();
+            WriteDuration(ref state, value);
         }
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        public static void WriteDuration(TimeSpan value, ProtoWriter dest, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<Duration>(value, dest, ref state, WellKnownSerializer.Instance);
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDuration(ref ProtoWriter.State state, TimeSpan value)
+            => state.WriteSubItem<Duration>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadTimestamp(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
-            return ReadTimestamp(source, ref state);
+            return ReadTimestamp(ref state);
         }
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        public static DateTime ReadTimestamp(ProtoReader source, ref ProtoReader.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        public static DateTime ReadTimestamp(ref ProtoReader.State state)
         {
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            return source.ReadSubItem<Timestamp>(ref state, serializer: WellKnownSerializer.Instance);
+            return state.ReadSubItem<Timestamp>(serializer: WellKnownSerializer.Instance);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimestamp(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteTimestamp(value, dest, ref state);
+            var state = dest.DefaultState();
+            WriteTimestamp(ref state, value);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        public static void WriteTimestamp(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<Timestamp>(value, dest, ref state, WellKnownSerializer.Instance);
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteTimestamp(ref ProtoWriter.State state, DateTime value)
+            => state.WriteSubItem<Timestamp>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadDateTime(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
-            return ReadDateTime(source, ref state);
+            return ReadDateTime(ref state);
         }
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
-        public static DateTime ReadDateTime(ProtoReader source, ref ProtoReader.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        public static DateTime ReadDateTime(ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind kind);
+            long ticks = ReadTimeSpanTicks(ref state, out DateTimeKind kind);
             if (ticks == long.MinValue) return DateTime.MinValue;
             if (ticks == long.MaxValue) return DateTime.MaxValue;
             return EpochOrigin[(int)kind].AddTicks(ticks);
@@ -191,44 +198,46 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
             ProtoWriter.State state = dest.DefaultState();
-            WriteDateTimeImpl(value, dest, false, ref state);
+            WriteDateTimeImpl(ref state, value, false);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
-        public static void WriteDateTime(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDateTime(ref ProtoWriter.State state, DateTime value)
         {
-            WriteDateTimeImpl(value, dest, false, ref state);
+            WriteDateTimeImpl(ref state, value, false);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest)
         {
             ProtoWriter.State state = dest.DefaultState();
-            WriteDateTimeImpl(value, dest, true, ref state);
+            WriteDateTimeImpl(ref state, value, true);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
-        public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDateTimeWithKind(ref ProtoWriter.State state, DateTime value)
         {
-            WriteDateTimeImpl(value, dest, true, ref state);
+            WriteDateTimeImpl(ref state, value, true);
         }
 
-        private static void WriteDateTimeImpl(DateTime value, ProtoWriter dest, bool includeKind, ref ProtoWriter.State state)
+        [MethodImpl(ProtoReader.HotPath)]
+        private static void WriteDateTimeImpl(ref ProtoWriter.State state, DateTime value, bool includeKind)
         {
-            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
             TimeSpan delta;
-            switch (dest.WireType)
+            switch (state.WireType)
             {
                 case WireType.StartGroup:
                 case WireType.String:
@@ -251,23 +260,23 @@ namespace ProtoBuf
                     delta = value - EpochOrigin[0];
                     break;
             }
-            WriteTimeSpanImpl(delta, dest, includeKind ? value.Kind : DateTimeKind.Unspecified, ref state);
+            WriteTimeSpanImpl(ref state, delta, includeKind ? value.Kind : DateTimeKind.Unspecified);
         }
 
-        private static long ReadTimeSpanTicks(ProtoReader source, ref ProtoReader.State state, out DateTimeKind kind)
+        private static long ReadTimeSpanTicks(ref ProtoReader.State state, out DateTimeKind kind)
         {
-            switch (source.WireType)
+            switch (state.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    var scaled = source.ReadSubItem<ScaledTicks>(ref state, serializer: WellKnownSerializer.Instance);
+                    var scaled = state.ReadSubItem<ScaledTicks>(serializer: WellKnownSerializer.Instance);
                     kind = scaled.Kind;
                     return scaled.ToTicks();
                 case WireType.Fixed64:
                     kind = DateTimeKind.Unspecified;
-                    return source.ReadInt64(ref state);
+                    return state.ReadInt64();
                 default:
-                    ThrowHelper.ThrowProtoException("Unexpected wire-type: " + source.WireType.ToString());
+                    ThrowHelper.ThrowProtoException($"Unexpected wire-type: {state.WireType}");
                     kind = default;
                     return default;
             }
@@ -276,66 +285,70 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static decimal ReadDecimal(ProtoReader reader)
         {
             ProtoReader.State state = reader.DefaultState();
-            return ReadDecimal(reader, ref state);
+            return ReadDecimal(ref state);
         }
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
-        public static decimal ReadDecimal(ProtoReader reader, ref ProtoReader.State state)
-            => reader.ReadSubItem<decimal>(ref state, serializer: WellKnownSerializer.Instance);
+        [MethodImpl(ProtoReader.HotPath)]
+        public static decimal ReadDecimal(ref ProtoReader.State state)
+            => state.ReadSubItem<decimal>(serializer: WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
             ProtoWriter.State state = writer.DefaultState();
-            WriteDecimal(value, writer, ref state);
+            WriteDecimal(ref state, value);
         }
 
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
-        public static void WriteDecimal(decimal value, ProtoWriter writer, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<decimal>(value, writer, ref state, WellKnownSerializer.Instance);
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDecimal(ref ProtoWriter.State state, decimal value)
+            => state.WriteSubItem<decimal>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static void WriteGuid(Guid value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
-            WriteGuid(value, dest, ref state);
+            var state = dest.DefaultState();
+            WriteGuid(ref state, value);
         }
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
-        /// </summary>        
-        public static void WriteGuid(Guid value, ProtoWriter dest, ref ProtoWriter.State state)
-            => ProtoWriter.WriteSubItem<Guid>(value, dest, ref state, WellKnownSerializer.Instance);
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteGuid(ref ProtoWriter.State state, Guid value)
+            => state.WriteSubItem<Guid>(value, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuid(ProtoReader source)
         {
             ProtoReader.State state = source.DefaultState();
-            return ReadGuid(source, ref state);
+            return ReadGuid(ref state);
         }
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
-        public static Guid ReadGuid(ProtoReader source, ref ProtoReader.State state)
-            => source.ReadSubItem<Guid>(ref state, serializer: WellKnownSerializer.Instance);
+        [MethodImpl(ProtoReader.HotPath)]
+        public static Guid ReadGuid(ref ProtoReader.State state)
+            => state.ReadSubItem<Guid>(serializer: WellKnownSerializer.Instance);
 
         private const int
             FieldExistingObjectKey = 1,
@@ -377,42 +390,42 @@ namespace ProtoBuf
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             ProtoReader.State state = source.DefaultState();
-            return ReadNetObject(source, ref state, value, key, type, options);
+            return ReadNetObject(ref state, value, key, type, options);
         }
 
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static object ReadNetObject(ProtoReader source, ref ProtoReader.State state, object value, int key, Type type, NetObjectOptions options)
+        internal static object ReadNetObject(ref ProtoReader.State state, object value, int key, Type type, NetObjectOptions options)
         {
-            SubItemToken token = ProtoReader.StartSubItem(source, ref state);
+            var source = state.GetReader();
+            SubItemToken token = state.StartSubItem();
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1, tmp;
-            while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
                     case FieldExistingObjectKey:
-                        tmp = source.ReadInt32(ref state);
+                        tmp = state.ReadInt32();
                         value = source.NetCache.GetKeyedObject(tmp);
                         break;
                     case FieldNewObjectKey:
-                        newObjectKey = source.ReadInt32(ref state);
+                        newObjectKey = state.ReadInt32();
                         break;
                     case FieldExistingTypeKey:
-                        tmp = source.ReadInt32(ref state);
+                        tmp = state.ReadInt32();
                         type = (Type)source.NetCache.GetKeyedObject(tmp);
                         key = source.GetTypeKey(ref type);
                         break;
                     case FieldNewTypeKey:
-                        newTypeKey = source.ReadInt32(ref state);
+                        newTypeKey = state.ReadInt32();
                         break;
                     case FieldTypeName:
-                        string typeName = source.ReadString(ref state);
+                        string typeName = state.ReadString();
                         type = source.DeserializeType(typeName);
                         if (type == null)
                         {
@@ -449,11 +462,11 @@ namespace ProtoBuf
                         object oldValue = value;
                         if (isString)
                         {
-                            value = source.ReadString(ref state);
+                            value = state.ReadString();
                         }
                         else
                         {
-                            value = ProtoReader.ReadTypedObject(source, ref state, oldValue, key, type);
+                            value = state.ReadTypedObject(oldValue, key, type);
                         }
 
                         if (newObjectKey >= 0)
@@ -479,7 +492,7 @@ namespace ProtoBuf
                         }
                         break;
                     default:
-                        source.SkipField(ref state);
+                        state.SkipField();
                         break;
                 }
             }
@@ -487,7 +500,7 @@ namespace ProtoBuf
             {
                 ThrowHelper.ThrowProtoException("Object key in input stream, but reference-tracking was not expected");
             }
-            ProtoReader.EndSubItem(token, source, ref state);
+            state.EndSubItem(token);
 
             return value;
         }
@@ -495,29 +508,28 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
             ProtoWriter.State state = dest.DefaultState();
-            WriteNetObject(value, dest, ref state, key, options);
+            WriteNetObject(ref state, value, key, options);
         }
 
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static void WriteNetObject(object value, ProtoWriter dest, ref ProtoWriter.State state, int key, NetObjectOptions options)
+        internal static void WriteNetObject(ref ProtoWriter.State state, object value, int key, NetObjectOptions options)
         {
-            if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+            var dest = state.GetWriter();
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = dest.WireType;
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
+            SubItemToken token = state.StartSubItem(null);
             bool writeObject = true;
             if (asReference)
             {
                 int objectKey = dest.NetCache.AddObjectKey(value, out bool existing);
-                ProtoWriter.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Varint, dest, ref state);
-                ProtoWriter.WriteInt32(objectKey, dest, ref state);
+                state.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Varint);
+                state.WriteInt32(objectKey);
                 if (existing)
                 {
                     writeObject = false;
@@ -536,25 +548,25 @@ namespace ProtoBuf
                         if (key < 0) ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }
                     int typeKey = dest.NetCache.AddObjectKey(type, out bool existing);
-                    ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint, dest, ref state);
-                    ProtoWriter.WriteInt32(typeKey, dest, ref state);
+                    state.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint);
+                    state.WriteInt32(typeKey);
                     if (!existing)
                     {
-                        ProtoWriter.WriteFieldHeader(FieldTypeName, WireType.String, dest, ref state);
-                        ProtoWriter.WriteString(dest.SerializeType(type), dest, ref state);
+                        state.WriteFieldHeader(FieldTypeName, WireType.String);
+                        state.WriteType(type);
                     }
                 }
-                ProtoWriter.WriteFieldHeader(FieldObject, wireType, dest, ref state);
+                state.WriteFieldHeader(FieldObject, wireType);
                 if (value is string s)
                 {
-                    ProtoWriter.WriteString(s, dest, ref state);
+                    state.WriteString(s);
                 }
                 else
                 {
-                    ProtoWriter.WriteObject(value, key, dest, ref state);
+                    state.WriteObject(value, key);
                 }
             }
-            ProtoWriter.EndSubItem(token, dest, ref state);
+            state.EndSubItem(token);
         }
     }
 }

@@ -9,15 +9,15 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType => expectedType;
 
-        void IRuntimeProtoSerializerNode.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        void IRuntimeProtoSerializerNode.Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteType((Type)value, dest, ref state);
+            state.WriteType((Type)value);
         }
 
-        object IRuntimeProtoSerializerNode.Read(ProtoReader source, ref ProtoReader.State state, object value)
+        object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadType(ref state);
+            return state.ReadType();
         }
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
@@ -26,11 +26,11 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteType", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteType), valueFrom);
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadType", ExpectedType);
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadType), ExpectedType);
         }
     }
 }

@@ -110,8 +110,7 @@ namespace Examples.Issues
             Assert.Contains("def", data.Bag); //, caption + ":Bag - try 2");
 
             Assert.Equal(2, data.Dictionary.Count); //, caption + ":Dictionary.Count");
-            string s;
-            Assert.True(data.Dictionary.TryGetValue(1, out s)); //, caption + ":Dictionary - try 1");
+            Assert.True(data.Dictionary.TryGetValue(1, out string s)); //, caption + ":Dictionary - try 1");
             Assert.Equal("abc", s); //, caption + ":Dictionary - val 1");
             Assert.True(data.Dictionary.TryGetValue(2, out s)); //, caption + ":Dictionary - try 2");
             Assert.Equal("def", s); //, caption + ":Dictionary - val 2");

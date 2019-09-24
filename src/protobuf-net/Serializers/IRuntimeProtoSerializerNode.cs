@@ -18,17 +18,15 @@ namespace ProtoBuf.Serializers
         /// </summary>
         /// <param name="value">The value to be serialized.</param>
         /// <param name="state">Writer state</param>
-        /// <param name="dest">The writer entity that is accumulating the output data.</param>
-        void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
+        void Write(ref ProtoWriter.State state, object value);
 
         /// <summary>
         /// Perform the steps necessary to deserialize this data.
         /// </summary>
         /// <param name="value">The current value, if appropriate.</param>
-        /// <param name="source">The reader providing the input data.</param>
         /// <param name="state">Reader state</param>
         /// <returns>The updated / replacement value.</returns>
-        object Read(ProtoReader source, ref ProtoReader.State state, object value);
+        object Read(ref ProtoReader.State state, object value);
 
         /// <summary>
         /// Indicates whether a Read operation <em>replaces</em> the existing value, or

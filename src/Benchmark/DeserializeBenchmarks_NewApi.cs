@@ -24,9 +24,9 @@ namespace Benchmark
 
         static void Dispose(IDisposable input) => input?.Dispose();
 
-        [BenchmarkCategory("ROM_RefState")]
-        [Benchmark(Description = "C_Pooled")]
-        public void ROM_C_Pooled() => Dispose(ROM_NewPooled(_c));
+        //[BenchmarkCategory("ROM_RefState")]
+        //[Benchmark(Description = "C_Pooled")]
+        //public void ROM_C_Pooled() => Dispose(ROM_NewPooled(_c));
 
         [BenchmarkCategory("ROM_RefState")]
         [Benchmark(Description = "Auto")]
@@ -44,9 +44,9 @@ namespace Benchmark
         [Benchmark(Description = "C")]
         public protogen.Database MemoryStream_New_C() => MemoryStream_New(_c);
 
-        [BenchmarkCategory("MS_RefState")]
-        [Benchmark(Description = "C_Pooled")]
-        public void MemoryStream_New_C_Pooled() => Dispose(MemoryStream_NewPooled(_c));
+        //[BenchmarkCategory("MS_RefState")]
+        //[Benchmark(Description = "C_Pooled")]
+        //public void MemoryStream_New_C_Pooled() => Dispose(MemoryStream_NewPooled(_c));
 
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "Auto")]
@@ -62,57 +62,71 @@ namespace Benchmark
 
         private protogen.Database MemoryStream_New(TypeModel model)
         {
-            using var reader = ProtoReader.Create(out var state, ExposableData(), model ?? Throw());
-            return reader.Deserialize<protogen.Database>(ref state);
+            using var state = ProtoReader.State.Create(ExposableData(), model ?? Throw());
+            return state.Deserialize<protogen.Database>();
         }
 
         private protogen.Database ROM_New(TypeModel model)
         {
-            using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw());
-            return reader.Deserialize<protogen.Database>(ref state);
+            using var state = ProtoReader.State.Create(new ReadOnlyMemory<byte>(_data), model ?? Throw());
+            return state.Deserialize<protogen.Database>();
         }
 
-        private protogen.pooled.Database MemoryStream_NewPooled(TypeModel model)
-        {
-            using var reader = ProtoReader.Create(out var state, ExposableData(), model ?? Throw());
-            return reader.Deserialize<protogen.pooled.Database>(ref state);
-        }
+        //private protogen.pooled.Database MemoryStream_NewPooled(TypeModel model)
+        //{
+        //    using var reader = ProtoReader.State.Create(ExposableData(), model ?? Throw());
+        //    return reader.Deserialize<protogen.pooled.Database>();
+        //}
 
-        private protogen.pooled.Database ROM_NewPooled(TypeModel model)
-        {
-            using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw());
-            return reader.Deserialize<protogen.pooled.Database>(ref state);
-        }
+        //private protogen.pooled.Database ROM_NewPooled(TypeModel model)
+        //{
+        //    using var state = ProtoReader.State.Create(new ReadOnlyMemory<byte>(_data), model ?? Throw());
+        //    return state.Deserialize<protogen.pooled.Database>();
+        //}
 
 
         [BenchmarkCategory("ROM_RefState")]
         [Benchmark(Description = "Manual")]
         public protogen.Database ROM_Manual()
         {
-            using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), RuntimeTypeModel.Default);
-            protogen.Database obj = default;
-            Merge(reader, ref state, ref obj);
-            return obj;
+            var state = ProtoReader.State.Create(new ReadOnlyMemory<byte>(_data), RuntimeTypeModel.Default);
+            try
+            {
+                protogen.Database obj = default;
+                Merge(ref state, ref obj);
+                return obj;
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "Manual")]
         public protogen.Database MemoryStream_Manual()
         {
-            using var reader = ProtoReader.Create(out var state, ExposableData(), RuntimeTypeModel.Default);
-            protogen.Database obj = default;
-            Merge(reader, ref state, ref obj);
-            return obj;
+            var state = ProtoReader.State.Create(ExposableData(), RuntimeTypeModel.Default);
+            try
+            {
+                protogen.Database obj = default;
+                Merge(ref state, ref obj);
+                return obj;
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         public TypeModel Auto => _auto;
 
-        private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
+        private static void Merge(ref ProtoReader.State state, ref protogen.Database obj)
         {
             SubItemToken tok;
             int field;
             if (obj == null) obj = new protogen.Database();
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
@@ -120,112 +134,112 @@ namespace Benchmark
                         do
                         {
                             protogen.Order _1 = default;
-                            tok = ProtoReader.StartSubItem(reader, ref state);
-                            Merge(reader, ref state, ref _1);
-                            ProtoReader.EndSubItem(tok, reader, ref state);
+                            tok = state.StartSubItem();
+                            Merge(ref state, ref _1);
+                            state.EndSubItem(tok);
                             obj.Orders.Add(_1);
-                        } while (reader.TryReadFieldHeader(ref state, 1));
+                        } while (state.TryReadFieldHeader(1));
                         break;
                     default:
-                        reader.AppendExtensionData(ref state, obj);
+                        state.AppendExtensionData(obj);
                         break;
                 }
             }
         }
-        private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Order obj)
+        private static void Merge(ref ProtoReader.State state, ref protogen.Order obj)
         {
             SubItemToken tok;
             int field;
             if (obj == null) obj = new protogen.Order();
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
                     case 1:
-                        obj.OrderID = reader.ReadInt32(ref state);
+                        obj.OrderID = state.ReadInt32();
                         break;
                     case 2:
-                        obj.CustomerID = reader.ReadString(ref state);
+                        obj.CustomerID = state.ReadString();
                         break;
                     case 3:
-                        obj.EmployeeID = reader.ReadInt32(ref state);
+                        obj.EmployeeID = state.ReadInt32();
                         break;
                     case 4:
-                        obj.OrderDate = BclHelpers.ReadTimestamp(reader, ref state);
+                        obj.OrderDate = BclHelpers.ReadTimestamp(ref state);
                         break;
                     case 5:
-                        obj.RequiredDate = BclHelpers.ReadTimestamp(reader, ref state);
+                        obj.RequiredDate = BclHelpers.ReadTimestamp(ref state);
                         break;
                     case 6:
-                        obj.ShippedDate = BclHelpers.ReadTimestamp(reader, ref state);
+                        obj.ShippedDate = BclHelpers.ReadTimestamp(ref state);
                         break;
                     case 7:
-                        obj.ShipVia = reader.ReadInt32(ref state);
+                        obj.ShipVia = state.ReadInt32();
                         break;
                     case 8:
-                        obj.Freight = reader.ReadDouble(ref state);
+                        obj.Freight = state.ReadDouble();
                         break;
                     case 9:
-                        obj.ShipName = reader.ReadString(ref state);
+                        obj.ShipName = state.ReadString();
                         break;
                     case 10:
-                        obj.ShipAddress = reader.ReadString(ref state);
+                        obj.ShipAddress = state.ReadString();
                         break;
                     case 11:
-                        obj.ShipCity = reader.ReadString(ref state);
+                        obj.ShipCity = state.ReadString();
                         break;
                     case 12:
-                        obj.ShipRegion = reader.ReadString(ref state);
+                        obj.ShipRegion = state.ReadString();
                         break;
                     case 13:
-                        obj.ShipPostalCode = reader.ReadString(ref state);
+                        obj.ShipPostalCode = state.ReadString();
                         break;
                     case 14:
-                        obj.ShipCountry = reader.ReadString(ref state);
+                        obj.ShipCountry = state.ReadString();
                         break;
                     case 15:
                         do
                         {
                             protogen.OrderLine _15 = default;
-                            tok = ProtoReader.StartSubItem(reader, ref state);
-                            Merge(reader, ref state, ref _15);
-                            ProtoReader.EndSubItem(tok, reader, ref state);
+                            tok = state.StartSubItem();
+                            Merge(ref state, ref _15);
+                            state.EndSubItem(tok);
                             obj.Lines.Add(_15);
-                        } while (reader.TryReadFieldHeader(ref state, 1));
+                        } while (state.TryReadFieldHeader(1));
                         break;
                     default:
-                        reader.AppendExtensionData(ref state, obj);
+                        state.AppendExtensionData(obj);
                         break;
                 }
             }
         }
 
-        private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.OrderLine obj)
+        private static void Merge(ref ProtoReader.State state, ref protogen.OrderLine obj)
         {
             int field;
             if (obj == null) obj = new protogen.OrderLine();
-            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
                 {
                     case 1:
-                        obj.OrderID = reader.ReadInt32(ref state);
+                        obj.OrderID = state.ReadInt32();
                         break;
                     case 2:
-                        obj.ProductID = reader.ReadInt32(ref state);
+                        obj.ProductID = state.ReadInt32();
                         break;
                     case 3:
-                        obj.UnitPrice = reader.ReadDouble(ref state);
+                        obj.UnitPrice = state.ReadDouble();
                         break;
                     case 4:
-                        reader.Hint(WireType.SignedVarint);
-                        obj.Quantity = reader.ReadInt32(ref state);
+                        state.Hint(WireType.SignedVarint);
+                        obj.Quantity = state.ReadInt32();
                         break;
                     case 5:
-                        obj.Discount = reader.ReadSingle(ref state);
+                        obj.Discount = state.ReadSingle();
                         break;
                     default:
-                        reader.AppendExtensionData(ref state, obj);
+                        state.AppendExtensionData(obj);
                         break;
                 }
             }

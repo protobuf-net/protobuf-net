@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using ProtoBuf.Internal;
+
 using ProtoBuf.Meta;
 
 namespace ProtoBuf
@@ -29,8 +29,8 @@ namespace ProtoBuf
         /// <param name="knownTypeName">The additional type to serialize/deserialize.</param>
         public ProtoIncludeAttribute(int tag, string knownTypeName)
         {
-            if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
-            if (string.IsNullOrEmpty(knownTypeName)) ThrowHelper.ThrowArgumentNullException(nameof(knownTypeName), "Known type cannot be blank");
+            if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
+            if (string.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException(nameof(knownTypeName), "Known type cannot be blank");
             Tag = tag;
             KnownTypeName = knownTypeName;
         }

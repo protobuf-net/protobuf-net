@@ -6,20 +6,20 @@ namespace ProtoBuf.WellKnownTypes
     {
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
-        decimal IProtoSerializer<decimal>.Read(ProtoReader reader, ref ProtoReader.State state, decimal value)
+        decimal IProtoSerializer<decimal>.Read(ref ProtoReader.State state, decimal value)
         {
             ulong low = 0;
             uint high = 0;
             uint signScale = 0;
             int fieldNumber;
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
-                    case FieldDecimalLow: low = reader.ReadUInt64(ref state); break;
-                    case FieldDecimalHigh: high = reader.ReadUInt32(ref state); break;
-                    case FieldDecimalSignScale: signScale = reader.ReadUInt32(ref state); break;
-                    default: reader.SkipField(ref state); break;
+                    case FieldDecimalLow: low = state.ReadUInt64(); break;
+                    case FieldDecimalHigh: high = state.ReadUInt32(); break;
+                    case FieldDecimalSignScale: signScale = state.ReadUInt32(); break;
+                    default: state.SkipField(); break;
                 }
             }
             int lo = (int)(low & 0xFFFFFFFFL),
@@ -30,7 +30,7 @@ namespace ProtoBuf.WellKnownTypes
             return new decimal(lo, mid, hi, isNeg, scale);
         }
 
-        void IProtoSerializer<decimal>.Write(ProtoWriter writer, ref ProtoWriter.State state, decimal value)
+        void IProtoSerializer<decimal>.Write(ref ProtoWriter.State state, decimal value)
         {
             ulong low;
             uint high, signScale;
@@ -53,18 +53,18 @@ namespace ProtoBuf.WellKnownTypes
 
             if (low != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalLow, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteUInt64(low, writer, ref state);
+                state.WriteFieldHeader(FieldDecimalLow, WireType.Varint);
+                state.WriteUInt64(low);
             }
             if (high != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalHigh, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteUInt32(high, writer, ref state);
+                state.WriteFieldHeader(FieldDecimalHigh, WireType.Varint);
+                state.WriteUInt32(high);
             }
             if (signScale != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalSignScale, WireType.Varint, writer, ref state);
-                ProtoWriter.WriteUInt32(signScale, writer, ref state);
+                state.WriteFieldHeader(FieldDecimalSignScale, WireType.Varint);
+                state.WriteUInt32(signScale);
             }
         }
 

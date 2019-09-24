@@ -223,7 +223,9 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "known variation")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void TestEmptyArray()
         {
             Node node = new Node
@@ -299,7 +301,7 @@ namespace Examples
             var foo = new List<string> { "abc", "def", "ghi" };
 
             var clone = Serializer.DeepClone(foo);
-                
+            Assert.Equal(3, clone.Count);
         }
 
         [ProtoContract]
@@ -340,8 +342,7 @@ namespace Examples
         }
         static void VerifyNodeTree(Node node) {
             Node clone = Serializer.DeepClone(node);
-            string msg;
-            bool eq = AreEqual(node, clone, out msg);
+            bool eq = AreEqual(node, clone, out string msg);
             Assert.True(eq, msg);
         }
 

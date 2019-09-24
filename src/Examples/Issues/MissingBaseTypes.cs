@@ -68,7 +68,7 @@ namespace Examples.Issues
             model.Add(typeof(D), true);
             model.Add(typeof(TestCase), true);
 
-            string s = model.GetSchema(null);
+            _ = model.GetSchema(null);
 
             Assert.Null(model[typeof(A)].BaseType); //, "A");
             Assert.Same(model[typeof(A)], model[typeof(B)].BaseType); //, "B");

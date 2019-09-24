@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class Int32Serializer : IRuntimeProtoSerializerNode
+    internal sealed class Int32Serializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
         private static readonly Type expectedType = typeof(int);
 
@@ -13,24 +14,36 @@ namespace ProtoBuf.Serializers
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
+        public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadInt32(ref state);
+            return state.ReadInt32();
         }
 
-        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        public void Write(ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteInt32((int)value, dest, ref state);
+            state.WriteInt32((int)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteInt32", valueFrom, this);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), valueFrom);
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadInt32", ExpectedType);
+            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), ExpectedType);
+        }
+
+        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => wireType == WireType.Varint;
+
+        void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            using var loc = ctx.GetLocalWithValue(typeof(int), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(fieldNumber);
+            ctx.LoadValue(loc);
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteInt32Varint), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(int), typeof(int) }, null));
         }
     }
 }

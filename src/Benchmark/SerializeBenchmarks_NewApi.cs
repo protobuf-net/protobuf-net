@@ -5,6 +5,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.IO;
 
 namespace Benchmark
 {
@@ -33,10 +34,15 @@ namespace Benchmark
             using var buffer = BufferWriter<byte>.Create(64 * 1024);
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
                 {
-                    writer.Serialize(ref state, _database);
-                    writer.Close(ref state);
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 AssertLength(buffer.Length);
                 buffer.Flush().Dispose();
@@ -48,17 +54,43 @@ namespace Benchmark
             using var buffer = new FakeBufferWriter();
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
                 {
-                    writer.Serialize(ref state, _database);
-                    writer.Close(ref state);
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 AssertLength(buffer.Reset());
             }
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void MemoryStream_Auto() => MemoryStream(_auto);
+        public void MemoryStream_Auto() => MemoryStream_ViaState(_auto);
+
+        private void MemoryStream_ViaState(TypeModel model)
+        {
+            using var buffer = new MemoryStream();
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                var state = ProtoWriter.State.Create(buffer, model);
+                try
+                {
+                    state.Serialize(_database);
+                    state.Close();
+                }
+                finally
+                {
+                    state.Dispose();
+                }
+                AssertLength(buffer.Length);
+                buffer.Position = 0;
+                buffer.SetLength(0);
+            }
+        }
 
         sealed class FakeBufferWriter : IBufferWriter<byte>, IDisposable
         {

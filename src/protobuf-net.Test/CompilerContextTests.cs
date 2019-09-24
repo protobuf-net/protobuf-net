@@ -59,8 +59,8 @@ namespace ProtoBuf
     public sealed class MyModel : TypeModel
     {
         protected override int GetKeyImpl(Type type) => 42;
-        protected internal override void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
+        protected internal override void Serialize(ref ProtoWriter.State state, int key, object value)
         { }
-        protected internal override object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value) => null;
+        protected internal override object DeserializeCore(ref ProtoReader.State state, int key, object value) => null;
     }
 }

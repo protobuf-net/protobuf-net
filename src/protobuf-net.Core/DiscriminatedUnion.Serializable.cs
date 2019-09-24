@@ -10,7 +10,7 @@ namespace ProtoBuf
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (Discriminator != default) info.AddValue("d", Discriminator);
-            if (Object != default) info.AddValue("o", Object);
+            if (Object is object) info.AddValue("o", Object);
         }
         private DiscriminatedUnionObject(SerializationInfo info, StreamingContext context)
         {
@@ -109,7 +109,7 @@ namespace ProtoBuf
         {
             if (_discriminator != default) info.AddValue("d", _discriminator);
             if (Int64 != default) info.AddValue("i", Int64);
-            if (Object != default) info.AddValue("o", Object);
+            if (Object is object) info.AddValue("o", Object);
         }
         private DiscriminatedUnion64Object(SerializationInfo info, StreamingContext context)
         {
@@ -155,7 +155,7 @@ namespace ProtoBuf
         {
             if (_discriminator != default) info.AddValue("d", _discriminator);
             if (Int32 != default) info.AddValue("i", Int32);
-            if (Object != default) info.AddValue("o", Object);
+            if (Object is object) info.AddValue("o", Object);
         }
         private DiscriminatedUnion32Object(SerializationInfo info, StreamingContext context)
         {
