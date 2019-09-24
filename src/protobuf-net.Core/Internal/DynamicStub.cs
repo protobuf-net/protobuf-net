@@ -80,7 +80,8 @@ namespace ProtoBuf.Internal
             {
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
-                value = state.Deserialize<T>((T)value, serializer);
+                // note this null-check is non-trivial; for value-type T it promotes the null to a default
+                value = state.Deserialize<T>(value == null ? default : (T)value, serializer);
                 return true;
             }
 
@@ -88,7 +89,8 @@ namespace ProtoBuf.Internal
             {
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
-                state.Serialize<T>((T)value, serializer);
+                // note this null-check is non-trivial; for value-type T it promotes the null to a default
+                state.Serialize<T>(value == null ? default : (T)value, serializer);
                 return true;
             }
 

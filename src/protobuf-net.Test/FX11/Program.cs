@@ -28,7 +28,7 @@ namespace FX11
                 Console.WriteLine("\t" + prop.Name + "\t" + Convert.ToString(prop.GetValue(obj, null)));
             }
         }
-        public static RuntimeTypeModel BuildMeta()
+        public static RuntimeTypeModel BuildMeta(int loop = 100000)
         {
             RuntimeTypeModel model;
 #if !FX11
@@ -84,7 +84,6 @@ namespace FX11
 
             DumpObject("Original", props, prod);
 
-            const int loop = 100000;
             Console.WriteLine("Iterations: " + loop);
             Stopwatch watch;
             MemoryStream reuseDump = new MemoryStream(100 * 1024);
@@ -187,13 +186,16 @@ namespace FX11
             }
             watch.Stop();
 
-            Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
+            if (loop > 0)
             {
-                reuseDump.Position = 0;
+                Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
+                {
+                    reuseDump.Position = 0;
 #pragma warning disable CS0618
-                Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
+                    Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
 #pragma warning restore CS0618
-                DumpObject("protobuf-net v2", props, p1);
+                    DumpObject("protobuf-net v2", props, p1);
+                }
             }
 
             // 080d 1203(616263) 207b
@@ -225,12 +227,15 @@ namespace FX11
             // 20    08 = 1|000 = field 1, variant
             // 21    cede01 = 1:1011110:1001110 = 28494 (days, signed) = 14247 = 03/01/2009
 
-            Product clone = (Product)compiled.DeepClone(prod);
-            Console.WriteLine(clone.CategoryID);
-            Console.WriteLine(clone.ProductName);
-            Console.WriteLine(clone.CreationDate);
-            Console.WriteLine(clone.ProductID);
-            Console.WriteLine(clone.UnitPrice);
+            if (loop > 0)
+            {
+                Product clone = (Product)compiled.DeepClone(prod);
+                Console.WriteLine(clone.CategoryID);
+                Console.WriteLine(clone.ProductName);
+                Console.WriteLine(clone.CreationDate);
+                Console.WriteLine(clone.ProductID);
+                Console.WriteLine(clone.UnitPrice);
+            }
 
 #endif
                 model = RuntimeTypeModel.Create();
