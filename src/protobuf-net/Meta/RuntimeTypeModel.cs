@@ -402,8 +402,7 @@ namespace ProtoBuf.Meta
             catch { } // this is all kinds of brittle on things like UWP
 #endif
             if (isDefault) TypeModel.SetDefaultModel(this);
-            if (string.IsNullOrWhiteSpace(name)) name = base.ToString();
-            _name = name;
+            if (!string.IsNullOrWhiteSpace(name)) _name = name;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -803,7 +802,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// See Object.ToString
         /// </summary>
-        public override string ToString() => _name;
+        public override string ToString() => _name ?? base.ToString();
 
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
@@ -1667,7 +1666,8 @@ namespace ProtoBuf.Meta
         /// can be used "as is", or can be compiled for
         /// optimal performance.
         /// </summary>
-        public static new RuntimeTypeModel Create(string name = null)
+        /// <param name="name">The logical name of this model</param>
+        public static RuntimeTypeModel Create([CallerMemberName] string name = null)
         {
             return new RuntimeTypeModel(false, name);
         }

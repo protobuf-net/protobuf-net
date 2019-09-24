@@ -40,16 +40,7 @@ namespace ProtoBuf
         /// </summary>
         public static T DeepClone<T>(T instance)
         {
-            if (TypeHelper<T>.UseFallback)
-            {
-#pragma warning disable CS0618
-                return (T)RuntimeTypeModel.Default.DeepClone((object)instance);
-#pragma warning restore CS0618
-            }
-            else
-            {
-                return RuntimeTypeModel.Default.DeepClone<T>(instance);
-            }
+            return RuntimeTypeModel.Default.DeepClone<T>(instance);
         }
 
         /// <summary>
