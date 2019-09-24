@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteBytes), valueFrom);
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteBytes), valueFrom, argType: typeof(byte[]));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

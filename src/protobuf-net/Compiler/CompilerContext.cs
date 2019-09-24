@@ -562,23 +562,35 @@ namespace ProtoBuf.Compiler
             EmitCall(method);
         }
 
-        internal void EmitStateBasedWrite(string methodName, Local fromValue, Type type = null)
+        internal void EmitStateBasedWrite(string methodName, Local fromValue, Type type = null, Type argType = null)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             if (type == null) type = typeof(ProtoWriter.State);
 
-            var found = (from method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
-                           where method.Name == methodName && !method.IsGenericMethodDefinition
-                           && method.ReturnType == typeof(void)
-                           let args = method.GetParameters()
-                           where args.Length == (method.IsStatic ? 2 : 1)
-                           && (!method.IsStatic || args[0].ParameterType == WriterUtil.ByRefStateType)
-                           select new { Method = method, Type = args[method.IsStatic ? 1 : 0].ParameterType }).Single();
-
-            using var tmp = GetLocalWithValue(found.Type, fromValue);
+            Type foundType;
+            MethodInfo foundMethod;
+            try
+            {
+                var found = (from method in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
+                         where method.Name == methodName && !method.IsGenericMethodDefinition
+                         && method.ReturnType == typeof(void)
+                         let args = method.GetParameters()
+                         where args.Length == (method.IsStatic ? 2 : 1)
+                         && (!method.IsStatic || args[0].ParameterType == WriterUtil.ByRefStateType)
+                         let paramType = args[method.IsStatic ? 1 : 0].ParameterType
+                         where argType == null || argType == paramType // if argType specified: must match
+                         select new { Method = method, Type = paramType }).Single();
+                foundType = found.Type;
+                foundMethod = found.Method;
+            }
+            catch(Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to uniquely resolve {type.Name}.{methodName}", ex);
+            }
+            using var tmp = GetLocalWithValue(foundType, fromValue);
             LoadState();
             LoadValue(tmp);
-            EmitCall(found.Method);
+            EmitCall(foundMethod);
         }
 
         public void EmitCall(MethodInfo method) { EmitCall(method, null); }

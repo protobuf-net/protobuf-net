@@ -4,7 +4,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class TupleSerializer : IProtoTypeSerializer
+    internal sealed class TupleSerializer<T> : IProtoTypeSerializer, IProtoSerializer<T>
     {
 
         bool IProtoTypeSerializer.IsSubType => false;
@@ -64,8 +64,8 @@ namespace ProtoBuf.Serializers
         }
 
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, Meta.TypeModel.CallbackType callbackType) { }
-        public Type ExpectedType => ctor.DeclaringType;
-        Type IProtoTypeSerializer.BaseType => ExpectedType;
+        public Type ExpectedType => typeof(T);
+        Type IProtoTypeSerializer.BaseType => typeof(T);
 
         void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) { throw new NotSupportedException(); }
@@ -88,6 +88,12 @@ namespace ProtoBuf.Serializers
                 throw new InvalidOperationException();
             }
         }
+
+        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+            => (T)Read(ref state, value);
+
+        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+            => Write(ref state, value);
 
         public object Read(ref ProtoReader.State state, object value)
         {

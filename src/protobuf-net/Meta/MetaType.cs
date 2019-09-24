@@ -393,7 +393,8 @@ namespace ProtoBuf.Meta
             {
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor == null) throw new InvalidOperationException();
-                return new TupleSerializer(model, ctor, mapping);
+                return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
+                    args: new object[] { model, ctor, mapping });
             }
 
             fields.Trim();
