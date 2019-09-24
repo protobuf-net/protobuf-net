@@ -343,10 +343,17 @@ namespace ProtoBuf.Serializers
                         else
                         {
                             var value = getter(ref bodyState);
-                            object result = ser.Read(ref state, value);
-                            if (ser.ReturnsValue) setter(ref bodyState, (T)result);
+                            object boxed = value;
+                            object result = ser.Read(ref state, boxed);
+                            if (ser.ReturnsValue)
+                            {
+                                setter(ref bodyState, (T)result);
+                            }
+                            else if (ExpectedType.IsValueType)
+                            {   // make sure changes to structs are preserved
+                                setter(ref bodyState, (T)boxed);
+                            }
                         }
-                        
 
                         lastFieldIndex = i;
                         lastFieldNumber = fieldNumber;

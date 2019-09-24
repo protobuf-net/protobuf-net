@@ -229,7 +229,7 @@ namespace Examples
             where TCreate : T, new()
             where T : ICallbackTest
         {
-            try
+            //try
             {
                 // mode = ":" + mode;
                 TCreate cs = new TCreate
@@ -266,10 +266,10 @@ namespace Examples
                 Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone2.History); //, "clone2 after" + mode);
                 Assert.Equal("abc", clone2.Bar); //, "clone2 after" + mode);
             }
-            catch(Exception ex)
-            {
-                throw new InvalidOperationException(mode, ex);
-            }
+            //catch(Exception ex)
+            //{
+            //    throw new InvalidOperationException(mode, ex);
+            //}
             
         }
 #pragma warning restore xUnit2002, xUnit2005
