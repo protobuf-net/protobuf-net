@@ -331,7 +331,8 @@ namespace ProtoBuf
                         break;
                 }
             }
-            return value.OnAfterDeserialize((obj, ctx) => obj.OnAfterDeserialize());
+            value.Value.OnAfterDeserialize();
+            return value.Value;
         }
 
         void IProtoSubTypeSerializer<B>.WriteSubType(ref ProtoWriter.State state, B value)
@@ -441,9 +442,17 @@ namespace ProtoBuf
         [ProtoMember(1)]
         public int AVal { get; set; }
 
-        internal void OnAfterDeserialize() { }
+        [ProtoAfterDeserialization]
+        public void OnAfterDeserialize() { }
 
-        internal void OnBeforeDeserialize() { }
+        [ProtoBeforeDeserialization]
+        public void OnBeforeDeserialize() { }
+
+        [ProtoAfterSerialization]
+        public void OnAfterSerialize() { }
+
+        [ProtoBeforeSerialization]
+        public void OnBeforeSerialize() { }
     }
 
     [ProtoContract]

@@ -152,19 +152,28 @@ namespace Examples
 
         protected TestInheritedImplementedAtChild() { History = "ctor"; }
         public string History { get; protected set; }
+
+        [OnDeserialized]
+        protected virtual void OnDeserialized() { }
+        [OnDeserializing]
+        protected virtual void OnDeserializing() { }
+        [OnSerialized]
+        protected virtual void OnSerialized() { }
+        [OnSerializing]
+        protected virtual void OnSerializing() { }
     }
 
     [ProtoContract]
     class TestInheritedImplementedAtChildDerived : TestInheritedImplementedAtChild
     {
-        [OnDeserialized]
-        void OnDeserialized() { History += ";OnDeserialized"; }
-        [OnDeserializing]
-        void OnDeserializing() { History += ";OnDeserializing"; }
-        [OnSerialized]
-        void OnSerialized() { History += ";OnSerialized"; }
-        [OnSerializing]
-        void OnSerializing() { History += ";OnSerializing"; }
+        
+        protected override void OnDeserialized() { History += ";OnDeserialized"; }
+
+        protected override void OnDeserializing() { History += ";OnDeserializing"; }
+
+        protected override void OnSerialized() { History += ";OnSerialized"; }
+
+        protected override void OnSerializing() { History += ";OnSerializing"; }
 
         protected override string BarCore
         {

@@ -1264,7 +1264,7 @@ namespace ProtoBuf.Compiler
         {
             il.Emit(OpCodes.Ldtoken, type);
             TraceCompile(OpCodes.Ldtoken + ": " + type);
-            EmitCall(typeof(Type).GetMethod("GetTypeFromHandle"));
+            EmitCall(typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)));
         }
 
         internal void ConvertToInt32(ProtoTypeCode typeCode, bool uint32Overflow)

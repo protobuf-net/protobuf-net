@@ -50,7 +50,9 @@ namespace ProtoBuf
             var options = new RuntimeTypeModel.CompilerOptions
             {
                 TypeName = nameof(ExportEverything),
+#pragma warning disable CS0618
                 OutputPath = path,
+#pragma warning restore CS0618
             };
             options.IncludeType += t =>
             {

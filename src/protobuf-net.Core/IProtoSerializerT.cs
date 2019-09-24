@@ -132,16 +132,6 @@ namespace ProtoBuf
                 else _onBeforeDeserialize = callback;
             }
         }
-
-        /// <summary>
-        /// Performs a serialization callback on the instance, returning the instance; this is usually the last method in a deserializer
-        /// </summary>
-        public T OnAfterDeserialize(Action<T, ISerializationContext> callback)
-        {
-            var obj = Value;
-            callback?.Invoke(obj, _context);
-            return obj;
-        }
     }
 
     /// <summary>
