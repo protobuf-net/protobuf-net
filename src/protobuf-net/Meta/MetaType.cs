@@ -386,7 +386,8 @@ namespace ProtoBuf.Meta
             {
                 MetaType mt = model[surrogate], mtBase;
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
-                return new SurrogateSerializer(Type, surrogate, mt.Serializer);
+                return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
+                    args: new object[] { surrogate, mt.Serializer });
             }
             if (IsAutoTuple)
             {

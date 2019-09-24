@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class SurrogateSerializer : IProtoTypeSerializer
+    internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, IProtoSerializer<T>
     {
         bool IProtoTypeSerializer.IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
@@ -17,26 +17,31 @@ namespace ProtoBuf.Serializers
 
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
 
+
+        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+            => (T)Read(ref state, value);
+
+        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+            => Write(ref state, value);
+
         public bool ReturnsValue => false;
 
         public bool RequiresOldValue => true;
 
-        public Type ExpectedType { get; }
+        public Type ExpectedType => typeof(T);
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
         private readonly IProtoTypeSerializer rootTail;
 
-        public SurrogateSerializer(Type forType, Type declaredType, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type declaredType, IProtoTypeSerializer rootTail)
         {
-            Debug.Assert(forType != null, "forType");
             Debug.Assert(declaredType != null, "declaredType");
             Debug.Assert(rootTail != null, "rootTail");
             Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
             Debug.Assert(!rootTail.ReturnsValue, "ReturnsValue");
             Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
-            ExpectedType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
             toTail = GetConversion(true);
