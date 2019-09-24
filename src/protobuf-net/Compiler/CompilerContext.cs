@@ -71,7 +71,7 @@ namespace ProtoBuf.Compiler
             Type type = head.ExpectedType;
             try
             {
-                using CompilerContext ctx = new CompilerContext(scope, type, true, true, model, typeof(TActual), null);
+                using CompilerContext ctx = new CompilerContext(scope, type, SignatureType.WriterScope_Input, true, model, typeof(TActual), null);
                 ctx.WriteNullCheckedTail(type, head, ctx.InputValue);
                 ctx.Emit(OpCodes.Ret);
                 return (ProtoSerializer<TActual>)ctx.method.CreateDelegate(
@@ -119,7 +119,7 @@ namespace ProtoBuf.Compiler
             where T : class
         {
             Type type = head.ExpectedType;
-            using CompilerContext ctx = new CompilerContext(scope, head.ExpectedType, false, true, model, typeof(SubTypeState<T>), typeof(T));
+            using CompilerContext ctx = new CompilerContext(scope, head.ExpectedType, SignatureType.ReaderScope_Input, true, model, typeof(SubTypeState<T>), typeof(T));
             head.EmitRead(ctx, ctx.InputValue);
             // note that EmitRead will unwrap the T for us on the stack
             ctx.Return();
@@ -130,13 +130,29 @@ namespace ProtoBuf.Compiler
         public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
         {
             Type type = head.ExpectedType;
-            using CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(T), typeof(T));
+            using CompilerContext ctx = new CompilerContext(scope, type, SignatureType.ReaderScope_Input, true, model, typeof(T), typeof(T));
 
             head.EmitRead(ctx, ctx.InputValue);
             ctx.LoadValue(ctx.InputValue);
-            ctx.Emit(OpCodes.Ret);
+            ctx.Return();
 
             return (ProtoDeserializer<T>)ctx.method.CreateDelegate(typeof(ProtoDeserializer<T>));
+        }
+
+        public static Func<ISerializationContext, T> BuildFactory<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
+        {
+            if (head is IProtoTypeSerializer pts && pts.ShouldEmitCreateInstance)
+            {
+                using var ctx = new CompilerContext(scope, head.ExpectedType, SignatureType.Context, true , model, typeof(ISerializationContext), typeof(T));
+                pts.EmitCreateInstance(ctx, false);
+                ctx.Return();
+
+                return (Func<ISerializationContext, T>)ctx.method.CreateDelegate(typeof(Func<ISerializationContext, T>));
+            }
+            else
+            {
+                return ctx => Activator.CreateInstance<T>();
+            }
         }
 
         internal void Return()
@@ -181,14 +197,12 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private readonly bool isWriter;
-
         internal bool NonPublic { get; }
 
         public Local InputValue { get; }
 
-        internal CompilerContext(CompilerContext parent, ILGenerator il, bool isStatic, bool isWriter, Type inputType, string traceName)
-            : this(parent.Scope, il, isStatic, isWriter, parent.Model, inputType, traceName)
+        internal CompilerContext(CompilerContext parent, ILGenerator il, bool isStatic, SignatureType signature, Type inputType, string traceName)
+            : this(parent.Scope, il, isStatic, signature, parent.Model, inputType, traceName)
         { }
 
         internal void ThrowException(Type exceptionType) => il.ThrowException(exceptionType);
@@ -200,20 +214,20 @@ namespace ProtoBuf.Compiler
             Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
             => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize);
 
-        internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, bool isWriter,
+        internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, SignatureType signature,
             TypeModel model, Type inputType, string traceName)
         {
             Scope = scope;
 
             this.il = il ?? throw new ArgumentNullException(nameof(il));
             // NonPublic = false; <== implicit
-            this.isWriter = isWriter;
             this.Model = model ?? throw new ArgumentNullException(nameof(model));
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
             _traceName = traceName;
             IsStatic = isStatic;
-            GetOpCodes(isWriter, isStatic, out _state, out _inputArg);
+            _signature = signature;
+            GetOpCodes(signature, isStatic, out _state, out _inputArg);
         }
 
         public bool IsStatic { get; }
@@ -225,29 +239,52 @@ namespace ProtoBuf.Compiler
         private readonly byte _inputArg;
 
 #pragma warning disable RCS1163, IDE0060 // Unused parameter.
-        private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode state, out byte inputArg)
+        private static void GetOpCodes(SignatureType signature, bool isStatic, out OpCode state, out byte inputArg)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            state = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
-            inputArg = (byte)(isStatic ? 1 : 2);
+            switch(signature)
+            {
+                case SignatureType.ReaderScope_Input:
+                case SignatureType.WriterScope_Input:
+                    state = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
+                    inputArg = (byte)(isStatic ? 1 : 2);
+                    break;
+                default:
+                    state = default;
+                    inputArg = (byte)(isStatic ? 0 : 1);
+                    break;
+            }
+            
         }
 
+        internal enum SignatureType
+        {
+            WriterScope_Input,
+            ReaderScope_Input,
+            Context,
+        }
+        private readonly SignatureType _signature;
+
         internal CompilerContextScope Scope { get; }
-        private CompilerContext(CompilerContextScope scope, Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType, Type returnType)
+        private CompilerContext(CompilerContextScope scope, Type associatedType, SignatureType signature, bool isStatic, TypeModel model, Type inputType, Type returnType)
         {
             Scope = scope;
-            this.isWriter = isWriter;
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;
             Type[] paramTypes;
-            GetOpCodes(isWriter, isStatic, out _state, out _inputArg);
-            if (isWriter)
+            _signature = signature;
+            GetOpCodes(signature, isStatic, out _state, out _inputArg);
+            switch (signature)
             {
-                paramTypes = new Type[] { WriterUtil.ByRefStateType, inputType };
-            }
-            else
-            {
-                paramTypes = new Type[] { StateBasedReadMethods.ByRefStateType, inputType };
+                case SignatureType.ReaderScope_Input:
+                    paramTypes = new Type[] { StateBasedReadMethods.ByRefStateType, inputType };
+                    break;
+                case SignatureType.WriterScope_Input:
+                    paramTypes = new Type[] { WriterUtil.ByRefStateType, inputType };
+                    break;
+                default:
+                    paramTypes = new Type[] { inputType };
+                    break;
             }
             int uniqueIdentifier = Interlocked.Increment(ref next);
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
@@ -1360,13 +1397,20 @@ namespace ProtoBuf.Compiler
         internal void LoadSerializationContext(bool oldApi) // old api = SerializationContext; new api = ISerializationContext
         {
             LoadState();
-            if (isWriter)
+            switch (_signature)
             {
-                LoadValue(typeof(ProtoWriter.State).GetProperty(nameof(ProtoWriter.State.Context)));
-            }
-            else
-            {
-                LoadValue(typeof(ProtoReader.State).GetProperty(nameof(ProtoReader.State.Context)));
+                case SignatureType.WriterScope_Input:
+                    LoadValue(typeof(ProtoWriter.State).GetProperty(nameof(ProtoWriter.State.Context)));
+                    break;
+                case SignatureType.ReaderScope_Input:
+                    LoadValue(typeof(ProtoReader.State).GetProperty(nameof(ProtoReader.State.Context)));
+                    break;
+                case SignatureType.Context:
+                    LoadValue(InputValue);
+                    break;
+                default:
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot load context for {_signature}");
+                    break;
             }
             if (oldApi)
             {

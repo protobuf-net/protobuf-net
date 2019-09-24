@@ -1212,7 +1212,7 @@ namespace ProtoBuf.Meta
                 type.AddInterfaceImplementation(serType);
 
                 var il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Read));
-                using (var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoSerializer<string>.Read)))
+                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(IProtoSerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
                     {
@@ -1227,7 +1227,7 @@ namespace ProtoBuf.Meta
                 }
 
                 il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
-                using (var ctx = new CompilerContext(scope, il, false, true, this, runtimeType, nameof(IProtoSerializer<string>.Write)))
+                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(IProtoSerializer<string>.Write)))
                 {
                     if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
                     else serializer.EmitWrite(ctx, ctx.InputValue);
@@ -1241,7 +1241,7 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
-                    using (var ctx = new CompilerContext(scope, il, false, true, this,
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this,
                          runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType)))
                     {
                         serializer.EmitWrite(ctx, ctx.InputValue);
@@ -1249,7 +1249,7 @@ namespace ProtoBuf.Meta
                     }
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
-                    using (var ctx = new CompilerContext(scope, il, false, false, this,
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this,
                         typeof(SubTypeState<>).MakeGenericType(runtimeType),
                         nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
                     {
@@ -1266,7 +1266,7 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
-                    using var ctx = new CompilerContext(scope, il, false, false, this,
+                    using var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.Context, this,
                          typeof(ISerializationContext), nameof(IProtoFactory<string>.Create));
                     serializer.EmitCreateInstance(ctx, false);
                     ctx.Return();

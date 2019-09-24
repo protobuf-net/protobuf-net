@@ -91,7 +91,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    using var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
+                    using var ctx = new CompilerContext(parent, il, false, CompilerContext.SignatureType.WriterScope_Input, typeof(T), typeof(T).Name + ".Serialize");
                     serialize(key, ctx);
                     ctx.Return();
                 }
@@ -103,7 +103,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    using var ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
+                    using var ctx = new CompilerContext(parent, il, false, CompilerContext.SignatureType.ReaderScope_Input, typeof(T), typeof(T).Name + ".Deserialize");
                     deserialize(key, ctx);
                     ctx.Return();
                 }

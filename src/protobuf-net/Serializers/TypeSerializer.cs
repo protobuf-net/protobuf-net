@@ -699,7 +699,7 @@ namespace ProtoBuf.Serializers
 
             if (actuallyHasInheritance)
             {
-                throw new NotSupportedException("Currently, serializatation callbacks are limited to the base-type in a hierarchy; this may be resolved in later versions");
+                throw new NotSupportedException($"Currently, serializatation callbacks are limited to the base-type in a hierarchy, but {ExpectedType} defines callbacks; this may be resolved in later versions; it is recommended to make the serialization callbacks 'virtual' methods on {BaseType.Name}; or for the best compatibility with other serializers (DataContractSerializer, etc) - make the callbacks non-virtual methods on {BaseType.Name} that *call* protected virtual methods on {BaseType.Name}");
 
                 //Compiler.CodeLabel @break = ctx.DefineLabel();
                 //for (int i = 0; i < serializers.Length; i++)
