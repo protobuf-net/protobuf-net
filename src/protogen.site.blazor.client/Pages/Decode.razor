@@ -93,7 +93,7 @@
         }
     }
 
-    async Task HandleSelection(IFileListEntry[] files)
+    void HandleSelection(IFileListEntry[] files)
     {
         var file = files.FirstOrDefault();
         if (file != null)
