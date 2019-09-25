@@ -81,7 +81,7 @@ namespace ProtoBuf.Internal
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
-                value = state.Deserialize<T>(value == null ? default : (T)value, serializer);
+                value = state.Deserialize<T>(TypeHelper<T>.FromObject(value), serializer);
                 return true;
             }
 
@@ -90,13 +90,13 @@ namespace ProtoBuf.Internal
                 var serializer = GetSerializer(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
-                state.Serialize<T>(value == null ? default : (T)value, serializer);
+                state.Serialize<T>(TypeHelper<T>.FromObject(value), serializer);
                 return true;
             }
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
             {
-                value = model.DeepClone<T>((T)value);
+                value = model.DeepClone<T>(TypeHelper<T>.FromObject(value));
                 return true;
             }
         }

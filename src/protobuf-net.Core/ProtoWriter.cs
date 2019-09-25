@@ -57,7 +57,7 @@ namespace ProtoBuf
             return model.GetKey(ref type);
         }
 
-        internal NetObjectCache NetCache { get; } = new NetObjectCache();
+        private protected readonly NetObjectCache netCache;
 
         private int fieldNumber;
 
@@ -146,7 +146,11 @@ namespace ProtoBuf
             packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
         }
 
-        protected private ProtoWriter() { }
+        protected private ProtoWriter()
+            => netCache = new NetObjectCache();
+
+        protected private ProtoWriter(NetObjectCache knownObjects)
+            => netCache = knownObjects;
 
         /// <summary>
         /// Creates a new writer against a stream
@@ -166,6 +170,33 @@ namespace ProtoBuf
             if (context == null) { context = SerializationContext.Default; }
             else { context.Freeze(); }
             Context = context;
+        }
+
+        internal readonly struct WriteState
+        {
+            internal WriteState(long position, int fieldNumber, WireType wireType)
+            {
+                Position = position;
+                FieldNumber = fieldNumber;
+                WireType = wireType;
+            }
+            internal readonly long Position;
+            internal readonly WireType WireType;
+            internal readonly int FieldNumber;
+        }
+        internal WriteState ResetWriteState()
+        {
+            var state = new WriteState(_position64, fieldNumber, WireType);
+            _position64 = 0;
+            fieldNumber = 0;
+            WireType = WireType.None;
+            return state;
+        }
+        internal void SetWriteState(WriteState state)
+        {
+            _position64 = state.Position;
+            fieldNumber = state.FieldNumber;
+            WireType = state.WireType;
         }
 
         /// <summary>
@@ -202,11 +233,13 @@ namespace ProtoBuf
                 ThrowHelper.ThrowInvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
             recursionStack?.Clear();
-            _knownLengths?.Clear();
-            NetCache.Clear();
+            ClearKnownObjects();
             model = null;
             Context = null;
         }
+
+        protected private virtual void ClearKnownObjects()
+            => netCache?.Clear();
 
 
         /// <summary>
@@ -446,10 +479,13 @@ namespace ProtoBuf
         /// Specifies a known root object to use during reference-tracked serialization
         /// </summary>
         [MethodImpl(HotPath)]
-        public void SetRootObject(object value)
-        {
-            NetCache.SetKeyedObject(NetObjectCache.Root, value);
-        }
+        public void SetRootObject(object value) => netCache.SetKeyedObject(NetObjectCache.Root, value);
+
+        /// <summary>
+        /// Specifies a known root object to use during reference-tracked serialization
+        /// </summary>
+        [MethodImpl(HotPath)]
+        internal int AddObjectKey(object value, out bool existing) => netCache.AddObjectKey(value, out existing);
 
         /// <summary>
         /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
@@ -457,5 +493,50 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
+
+        internal static long Measure<T>(NullProtoWriter writer, T value, IProtoSerializer<T> serializer)
+        {
+            long length;
+            object obj = default;
+            if (TypeHelper<T>.IsObjectType)
+            {
+                obj = value;
+                if (obj is null) return 0;
+                if (writer.netCache.TryGetKnownLength(obj, typeof(T), out length))
+                    return length;
+            }
+
+            // do the actual work
+            var oldState = writer.ResetWriteState();
+            var nulState = new State(writer);
+            serializer.Write(ref nulState, value);
+            length = nulState.GetPosition();
+            writer.SetWriteState(oldState); // make sure we leave it how we found it
+
+            // cache it if we can
+            if (TypeHelper<T>.IsObjectType)
+            {   // we know it isn't null; we'd have exited above
+                writer.netCache.SetKnownLength(obj, typeof(T), length);
+            }
+            return length;
+        }
+
+        internal static long Measure<T>(NullProtoWriter writer, T value, IProtoSubTypeSerializer<T> serializer) where T : class
+        {
+            object obj = value;
+            if (obj is null) return 0;
+            if (writer.netCache.TryGetKnownLength(obj, typeof(T), out var length))
+            {
+                return length;
+            }
+
+            var oldState = writer.ResetWriteState();
+            var nulState = new State(writer);
+            serializer.WriteSubType(ref nulState, value);
+            length = nulState.GetPosition();
+            writer.SetWriteState(oldState); // make sure we leave it how we found it
+            writer.netCache.SetKnownLength(obj, typeof(T), length);
+            return length;
+        }
     }
 }

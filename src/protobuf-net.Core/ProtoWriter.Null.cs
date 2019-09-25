@@ -8,20 +8,23 @@ namespace ProtoBuf
     public partial class ProtoWriter
     {
         internal static State CreateNull(TypeModel model, SerializationContext context = null)
-            => NullProtoWriter.CreateNullImpl(model, context);
+            => NullProtoWriter.CreateNullProtoWriter(model, context);
 
-        private sealed class NullProtoWriter : ProtoWriter
+        internal sealed class NullProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
 
-            private NullProtoWriter() { }
-
-            public static State CreateNullImpl(TypeModel model, SerializationContext context)
+            internal static State CreateNullProtoWriter(TypeModel model, SerializationContext context)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
                 obj.Init(model, context);
                 return new State(obj);
             }
+
+            private NullProtoWriter() { } // gets own object cache
+
+            // this is for use as a sub-component of the buffer-writer
+            internal NullProtoWriter(NetObjectCache knownObjects) : base(knownObjects) { }
 
             private protected override void Dispose()
             {
@@ -41,6 +44,56 @@ namespace ProtoBuf
                     Advance(bytes);
                 }
                 ArrayPool<byte>.Shared.Return(buffer);
+            }
+
+            protected internal override void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+            {
+                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
+                var len = Measure<T>(this, value, serializer);
+                AdvanceSubMessage(ref state, len, style);
+            }
+            private void AdvanceSubMessage(ref State state, long length, PrefixStyle style)
+            {
+                long preamble;
+                switch (WireType)
+                {
+                    case WireType.String:
+                    case WireType.Fixed32:
+                        switch (style)
+                        {
+                            case PrefixStyle.None:
+                                preamble = 0;
+                                break;
+                            case PrefixStyle.Fixed32:
+                            case PrefixStyle.Fixed32BigEndian:
+                                preamble = 4;
+                                break;
+                            case PrefixStyle.Base128:
+                                preamble = ImplWriteVarint64(ref state, (ulong)length);
+                                break;
+                            default:
+                                state.ThrowInvalidSerializationOperation();
+                                preamble = default;
+                                break;
+                        }
+                        break;
+                    case WireType.StartGroup:
+                        // the start group is already written, so w just need to leave the end group
+                        preamble = ImplWriteVarint32(ref state, (uint)(fieldNumber << 3));
+                        break;
+                    default:
+                        state.ThrowInvalidSerializationOperation();
+                        preamble = default;
+                        break;
+                }
+                Advance(preamble + length);
+                WireType = WireType.None;
+            }
+            protected internal override void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
+            {
+                if (serializer == null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
+                var len = Measure<T>(this, value, serializer);
+                AdvanceSubMessage(ref state, len, PrefixStyle.Base128);
             }
 
             private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)

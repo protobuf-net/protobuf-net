@@ -954,17 +954,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-        /// <summary>
-        /// Fully compiles the current model into a static-compiled model instance
-        /// </summary>
-        /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
-        /// <returns>An instance of the newly created compiled type-model</returns>
-        public TypeModel Compile()
-        {
-            CompilerOptions options = new CompilerOptions();
-            return Compile(options);
-        }
-
         internal static ILGenerator Override(TypeBuilder type, string name)
         {
             MethodInfo baseMethod;
@@ -1110,9 +1099,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
         /// <returns>An instance of the newly created compiled type-model</returns>
-        public TypeModel Compile(CompilerOptions options)
+        public TypeModel Compile(CompilerOptions options = null)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            options ??= new CompilerOptions();
             string typeName = options.TypeName;
 #pragma warning disable 0618
             string path = options.OutputPath;

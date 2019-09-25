@@ -401,7 +401,7 @@ namespace ProtoBuf
         /// </summary>
         internal static object ReadNetObject(ref ProtoReader.State state, object value, int key, Type type, NetObjectOptions options)
         {
-            var source = state.GetReader();
+            // var source = state.GetReader();
             SubItemToken token = state.StartSubItem();
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1, tmp;
@@ -411,22 +411,22 @@ namespace ProtoBuf
                 {
                     case FieldExistingObjectKey:
                         tmp = state.ReadInt32();
-                        value = source.NetCache.GetKeyedObject(tmp);
+                        value = state.GetKeyedObject(tmp);
                         break;
                     case FieldNewObjectKey:
                         newObjectKey = state.ReadInt32();
                         break;
                     case FieldExistingTypeKey:
                         tmp = state.ReadInt32();
-                        type = (Type)source.NetCache.GetKeyedObject(tmp);
-                        key = source.GetTypeKey(ref type);
+                        type = (Type)state.GetKeyedObject(tmp);
+                        key = state.GetReader().GetTypeKey(ref type);
                         break;
                     case FieldNewTypeKey:
                         newTypeKey = state.ReadInt32();
                         break;
                     case FieldTypeName:
                         string typeName = state.ReadString();
-                        type = source.DeserializeType(typeName);
+                        type = state.DeserializeType(typeName);
                         if (type == null)
                         {
                             ThrowHelper.ThrowProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
@@ -437,7 +437,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            key = source.GetTypeKey(ref type);
+                            key = state.GetReader().GetTypeKey(ref type);
                             if (key < 0)
                                 ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                         }
@@ -451,13 +451,13 @@ namespace ProtoBuf
                         {
                             if (value == null)
                             {
-                                source.TrapNextObject(newObjectKey);
+                                state.TrapNextObject(newObjectKey);
                             }
                             else
                             {
-                                source.NetCache.SetKeyedObject(newObjectKey, value);
+                                state.SetKeyedObject(newObjectKey, value);
                             }
-                            if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+                            if (newTypeKey >= 0) state.SetKeyedObject(newTypeKey, type);
                         }
                         object oldValue = value;
                         if (isString)
@@ -474,12 +474,12 @@ namespace ProtoBuf
                             if (wasNull && !lateSet)
                             { // this both ensures (via exception) that it *was* set, and makes sure we don't shout
                                 // about changed references
-                                oldValue = source.NetCache.GetKeyedObject(newObjectKey);
+                                oldValue = state.GetKeyedObject(newObjectKey);
                             }
                             if (lateSet)
                             {
-                                source.NetCache.SetKeyedObject(newObjectKey, value);
-                                if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+                                state.SetKeyedObject(newObjectKey, value);
+                                if (newTypeKey >= 0) state.SetKeyedObject(newTypeKey, type);
                             }
                         }
                         if (newObjectKey >= 0 && !lateSet && !ReferenceEquals(oldValue, value))
@@ -488,7 +488,7 @@ namespace ProtoBuf
                         }
                         if (newObjectKey < 0 && newTypeKey >= 0)
                         {  // have a new type, but not a new object
-                            source.NetCache.SetKeyedObject(newTypeKey, type);
+                            state.SetKeyedObject(newTypeKey, type);
                         }
                         break;
                     default:
@@ -519,15 +519,14 @@ namespace ProtoBuf
         /// </summary>
         internal static void WriteNetObject(ref ProtoWriter.State state, object value, int key, NetObjectOptions options)
         {
-            var dest = state.GetWriter();
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
-            WireType wireType = dest.WireType;
+            WireType wireType = state.WireType;
             SubItemToken token = state.StartSubItem(null);
             bool writeObject = true;
             if (asReference)
             {
-                int objectKey = dest.NetCache.AddObjectKey(value, out bool existing);
+                int objectKey = state.AddObjectKey(value, out bool existing);
                 state.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Varint);
                 state.WriteInt32(objectKey);
                 if (existing)
@@ -544,10 +543,10 @@ namespace ProtoBuf
 
                     if (!(value is string))
                     {
-                        key = dest.GetTypeKey(ref type);
+                        key = state.GetWriter().GetTypeKey(ref type);
                         if (key < 0) ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }
-                    int typeKey = dest.NetCache.AddObjectKey(type, out bool existing);
+                    int typeKey = state.AddObjectKey(type, out bool existing);
                     state.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Varint);
                     state.WriteInt32(typeKey);
                     if (!existing)

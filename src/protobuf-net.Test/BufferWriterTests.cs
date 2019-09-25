@@ -3,6 +3,7 @@
 using Pipelines.Sockets.Unofficial.Buffers;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.IO;
 using Xunit;
 using Xunit.Abstractions;
@@ -28,6 +29,8 @@ namespace ProtoBuf.Tests
             {
                 state.Dispose();
             }
+            var hex = BitConverter.ToString(ms.ToArray());
+            Assert.Equal("08-2A-12-10-61-62-63-64-65-66-67-68-69-6A-6B-6C-6D-6E-6F-70-1B-1C-22-00", hex);
         }
 
         [Fact]
@@ -57,6 +60,9 @@ namespace ProtoBuf.Tests
             {
                 state.Dispose();
             }
+            using var segment = bw.Flush();
+            var hex = BitConverter.ToString(segment.Value.ToArray());
+            Assert.Equal("08-2A-12-10-61-62-63-64-65-66-67-68-69-6A-6B-6C-6D-6E-6F-70-1B-1C-22-00", hex);
         }
 
         class Foo
@@ -105,6 +111,8 @@ namespace ProtoBuf.Tests
                 state.Abandon();
                 throw;
             }
+
+            Assert.Equal(24, state.GetPosition());
         }
 
         [ProtoContract]

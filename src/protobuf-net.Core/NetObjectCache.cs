@@ -2,11 +2,53 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
     internal sealed class NetObjectCache
     {
+        private readonly Dictionary<ObjectKey, long> _knownLengths = new Dictionary<ObjectKey, long>();
+
+        private readonly struct ObjectKey : IEquatable<ObjectKey>
+        {
+            private readonly object _obj;
+            private readonly Type _subTypeLevel;
+            [MethodImpl(ProtoReader.HotPath)]
+            public ObjectKey(object obj, Type subTypeLevel)
+            {
+                _obj = obj;
+                _subTypeLevel = subTypeLevel;
+            }
+            public override string ToString() => $"{_subTypeLevel}/{_obj}";
+            [MethodImpl(ProtoReader.HotPath)]
+            public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ _subTypeLevel.GetHashCode();
+            [MethodImpl(ProtoReader.HotPath)]
+            public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
+            [MethodImpl(ProtoReader.HotPath)]
+            public bool Equals(ObjectKey other) => this._obj == other._obj & this._subTypeLevel == other._subTypeLevel;
+        }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public bool TryGetKnownLength(object obj, Type subTypeLevel, out long length)
+        {
+            if (_knownLengths.TryGetValue(new ObjectKey(obj, subTypeLevel), out length))
+            {
+                return true;
+            }
+            else
+            {
+                length = default;
+                return false;
+            }
+        }
+
+        public void SetKnownLength(object obj, Type subTypeLevel, long length)
+        {
+            var key = new ObjectKey(obj, subTypeLevel);
+            _knownLengths[key] = length;
+        }
+
         internal const int Root = 0;
         private List<object> underlyingList;
 
@@ -180,6 +222,7 @@ namespace ProtoBuf
             if (underlyingList != null) underlyingList.Clear();
             if (stringKeys != null) stringKeys.Clear();
             if (objectKeys != null) objectKeys.Clear();
+            _knownLengths.Clear();
         }
     }
 }

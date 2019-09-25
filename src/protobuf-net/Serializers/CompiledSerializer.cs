@@ -21,13 +21,13 @@ namespace ProtoBuf.Serializers
             => factory(context);
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadBaseType<TBase, T>((T)value);
+            => state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
 
         void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
             => state.WriteBaseType<TBase>(value);
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteBaseType<TBase>((T)value);
+            => state.WriteBaseType<TBase>(TypeHelper<T>.FromObject(value));
 
         void IProtoSubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
             => subTypeSerializer(ref state, value);
@@ -91,13 +91,13 @@ namespace ProtoBuf.Serializers
             => deserializer(ref state, value);
 
         public override object Read(ref ProtoReader.State state, object value)
-            => deserializer(ref state, (T)value);
+            => deserializer(ref state, TypeHelper<T>.FromObject(value));
 
         void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
             => serializer(ref state, value);
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => serializer(ref state, (T)value);
+            => serializer(ref state, TypeHelper<T>.FromObject(value));
 
         T IProtoFactory<T>.Create(ISerializationContext context)
             => factory(context);

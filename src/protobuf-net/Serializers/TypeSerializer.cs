@@ -128,10 +128,10 @@ namespace ProtoBuf.Serializers
         public virtual bool IsSubType => false;
 
         void IRuntimeProtoSerializerNode.Write(ref ProtoWriter.State state, object value)
-            => Write(ref state, (T)value);
+            => Write(ref state, TypeHelper<T>.FromObject(value));
 
         object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
-            => Read(ref state, (T)value);
+            => Read(ref state, TypeHelper<T>.FromObject(value));
 
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {

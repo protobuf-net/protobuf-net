@@ -70,6 +70,9 @@ namespace ProtoBuf.Internal
         // these are things that require special primitive handling that is not implemented in the <T> versions
         public static readonly bool UseFallback = TypeHelper.UseFallback(typeof(T));
 
+        // make sure we don't cast null value-types to NREs
+        public static T FromObject(object value) => value == null ? default : (T)value;
+
 #if PLAT_ISREF
         private static bool GetContainsReferences()
             => System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>();

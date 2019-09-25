@@ -92,7 +92,7 @@ namespace Benchmark
             }
         }
 
-        sealed class FakeBufferWriter : IBufferWriter<byte>, IDisposable
+        private sealed class FakeBufferWriter : IBufferWriter<byte>, IDisposable
         {
             public long Length { get; private set; }
             public long Reset()

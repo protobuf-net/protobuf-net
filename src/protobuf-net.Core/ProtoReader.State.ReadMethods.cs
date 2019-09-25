@@ -391,6 +391,11 @@ namespace ProtoBuf
                 }
             }
 
+            internal object GetKeyedObject(int key) => _reader.GetKeyedObject(key);
+
+            internal void SetKeyedObject(int key, object value) => _reader.SetKeyedObject(key, value);
+
+            internal void TrapNextObject(int key) => _reader.TrapNextObject(key);
 
             /// <summary>
             /// Discards the data for the current field.
@@ -424,6 +429,8 @@ namespace ProtoBuf
                         break;
                 }
             }
+
+            internal Type DeserializeType(string typeName) => _reader.DeserializeType(typeName);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             private void SkipGroup()
@@ -756,7 +763,7 @@ namespace ProtoBuf
             /// This is used when decoding packed data.
             /// </summary>
             [MethodImpl(HotPath)]
-            public bool HasSubValue(WireType wireType) => ProtoReader.HasSubValue(wireType, _reader); 
+            public bool HasSubValue(WireType wireType) => ProtoReader.HasSubValue(wireType, _reader);
 
             /// <summary>
             /// Create an instance of the provided type, respecting any custom factory rules

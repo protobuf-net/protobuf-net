@@ -16,39 +16,37 @@ namespace ProtoBuf
             /// Create a new ProtoWriter that tagets a buffer writer
             /// </summary>
             public static State Create(IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
-            {
-                if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
-
-                var protoWriter = BufferWriterProtoWriter.CreateBufferWriter(writer, model, context);
-                return new State(protoWriter);
-            }
+                => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, context);
         }
-
-        internal bool TryGetKnownLength(object obj, out long length)
-        {
-            if (_knownLengths != null) return _knownLengths.TryGetValue(obj, out length);
-            length = default;
-            return false;
-        }
-
-        internal void SetKnownLength(object obj, long length) => (_knownLengths ?? CreateKnownLengths())[obj] = length;
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private Dictionary<object, long> CreateKnownLengths()
-        {
-            return _knownLengths = new Dictionary<object, long>(NetObjectCache.ReferenceComparer.Default);
-        }
-        private Dictionary<object, long> _knownLengths;
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            internal static BufferWriterProtoWriter CreateBufferWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
+            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
             {
+                if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
                 obj.Init(model, context);
                 obj._writer = writer;
-                return obj;
+                return new State(obj);
             }
+
+            internal override void Init(TypeModel model, SerializationContext context)
+            {
+                base.Init(model, context);
+                _nullWriter.Init(model, context);
+            }
+
+            private IBufferWriter<byte> _writer;
+
+            private BufferWriterProtoWriter()
+            {
+                // share the *same* known objects key
+                _nullWriter = new NullProtoWriter(netCache);
+            }
+
+            private protected override void ClearKnownObjects() { }
+
+            private readonly NullProtoWriter _nullWriter;
 
             private protected override void Dispose()
             {
@@ -59,6 +57,7 @@ namespace ProtoBuf
             private protected override void Cleanup()
             {
                 base.Cleanup();
+                _nullWriter.Cleanup();
                 _writer = default;
             }
 
@@ -67,10 +66,6 @@ namespace ProtoBuf
                 ThrowHelper.ThrowInvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
                 return default;
             }
-
-            private IBufferWriter<byte> _writer;
-
-            private BufferWriterProtoWriter() { }
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
@@ -214,52 +209,10 @@ namespace ProtoBuf
                 }
             }
 
-            private static long Measure<T>(ref State state, T value, IProtoSerializer<T> serializer)
-            {
-                var nulState = NullProtoWriter.CreateNullImpl(state.Model, state.Context.Context);
-                try
-                {
-                    try
-                    {
-                        serializer.Write(ref nulState, value);
-                        nulState.Close();
-                        return nulState.GetPosition();
-                    }
-                    catch
-                    {
-                        nulState.Abandon();
-                        throw;
-                    }
-                }
-                finally
-                {
-                    nulState.Dispose();
-                }
-            }
-
             private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
             {
-                long calculatedLength;
                 if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
-
-                bool isNull = false;
-                if (TypeHelper<T>.IsObjectType)
-                {
-                    object o = value;
-                    if (o is null)
-                    {
-                        isNull = true;
-                        calculatedLength = 0;
-                    }
-                    else if (!state.TryGetKnownLength(o, out calculatedLength))
-                    {
-                        state.SetKnownLength(o, calculatedLength = Measure<T>(ref state, value, serializer));
-                    }
-                }
-                else
-                {   // can't cache length for value-types
-                    calculatedLength = Measure<T>(ref state, value, serializer);
-                }
+                long calculatedLength = Measure<T>(_nullWriter, value, serializer);
 
                 switch (style)
                 {
@@ -280,7 +233,7 @@ namespace ProtoBuf
                         break;
                 }
 
-                if (!isNull) // don't bother serializing if null
+                if (calculatedLength != 0) // don't bother serializing if nothing there
                 {
                     var oldPos = GetPosition(ref state);
                     serializer.Write(ref state, value);
@@ -297,27 +250,10 @@ namespace ProtoBuf
             private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
                 where T : class
             {
-                long calculatedLength;
-                var nulState = NullProtoWriter.CreateNullImpl(Model, Context);
-                try
-                {
-                    try
-                    {
-                        serializer.WriteSubType(ref nulState, value);
-                        nulState.Close();
-                        calculatedLength = nulState.GetPosition();
-                    }
-                    catch
-                    {
-                        nulState.Abandon();
-                        throw;
-                    }
-                }
-                finally
-                {
-                    nulState.Dispose();
-                }
-
+                if (serializer == null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
+                long calculatedLength = Measure<T>(_nullWriter, value, serializer);
+                
+                // we'll always use varint here
                 AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
                 var oldPos = GetPosition(ref state);
                 serializer.WriteSubType(ref state, value);

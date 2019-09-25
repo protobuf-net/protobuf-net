@@ -68,7 +68,7 @@ namespace ProtoBuf
             public void WriteFieldHeader(int fieldNumber, WireType wireType)
             {
                 var writer = _writer;
-                if (writer.WireType != WireType.None) FailPendingField(writer, wireType);
+                if (writer.WireType != WireType.None) FailPendingField(writer, fieldNumber, wireType);
                 if (fieldNumber < 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fieldNumber));
                 writer._needFlush = true;
                 if (writer.packedFieldNumber == 0)
@@ -82,10 +82,9 @@ namespace ProtoBuf
                     WritePackedField(writer, fieldNumber, wireType);
                 }
 
-                static void FailPendingField(ProtoWriter writer, WireType wireType)
+                static void FailPendingField(ProtoWriter writer, int fieldNumber, WireType wireType)
                 {
-                    ThrowHelper.ThrowInvalidOperationException("Cannot write a " + wireType.ToString()
-                    + " header until the " + writer.WireType.ToString() + " data has been written");
+                    ThrowHelper.ThrowInvalidOperationException($"Cannot write a {wireType}/{fieldNumber} header until the {writer.WireType}/{writer.fieldNumber} data has been written; writer: {writer}");
                 }
                 static void WritePackedField(ProtoWriter writer, int fieldNumber, WireType wireType)
                 {
@@ -491,11 +490,16 @@ namespace ProtoBuf
             /// <summary>
             /// Specifies a known root object to use during reference-tracked serialization
             /// </summary>
-            public void SetRootObject(object value) => _writer.SetRootObject(value);
+            [MethodImpl(HotPath)]
+            internal void SetRootObject(object value) => _writer.SetRootObject(value);
+
+            [MethodImpl(HotPath)]
+            internal int AddObjectKey(object value, out bool existing) => _writer.AddObjectKey(value, out existing);
 
             /// <summary>
             /// Abandon any pending unflushed data
             /// </summary>
+            [MethodImpl(HotPath)]
             public void Abandon() => _writer?.Abandon();
 
             void CheckClear() => _writer?.CheckClear(ref this);
@@ -763,12 +767,6 @@ namespace ProtoBuf
 #pragma warning restore RCS1097 // Remove redundant 'ToString' call.
                 ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
             }
-
-            [MethodImpl(HotPath)]
-            internal bool TryGetKnownLength(object obj, out long length) => _writer.TryGetKnownLength(obj, out length);
-
-            [MethodImpl(HotPath)]
-            internal void SetKnownLength(object obj, long length) => _writer.SetKnownLength(obj, length);
         }
     }
 }

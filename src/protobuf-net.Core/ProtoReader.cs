@@ -30,7 +30,7 @@ namespace ProtoBuf
         private TypeModel _model;
         private int _fieldNumber, _depth;
         private long blockEnd64;
-        private NetObjectCache netCache;
+        private NetObjectCache netCache = new NetObjectCache();
 
         // this is how many outstanding objects do not currently have
         // values for the purposes of reference tracking; we'll default
@@ -103,7 +103,6 @@ namespace ProtoBuf
             InternStrings = (model ?? TypeModel.DefaultModel)?.InternStrings ?? false;
             WireType = WireType.None;
             trapCount = 1;
-            if (netCache == null) netCache = new NetObjectCache();
         }
 
         private SerializationContext context;
@@ -127,7 +126,7 @@ namespace ProtoBuf
                 stringInterner.Clear();
                 stringInterner = null;
             }
-            netCache?.Clear();
+            netCache.Clear();
         }
 
         private protected enum Read32VarintMode
@@ -663,8 +662,6 @@ namespace ProtoBuf
             return _model.GetKey(ref type);
         }
 
-        internal NetObjectCache NetCache => netCache;
-
         internal Type DeserializeType(string value)
         {
             return TypeModel.DeserializeType(_model, value);
@@ -675,6 +672,10 @@ namespace ProtoBuf
             netCache.SetKeyedObject(NetObjectCache.Root, value);
             trapCount--;
         }
+
+        internal object GetKeyedObject(int key) => netCache.GetKeyedObject(key);
+
+        internal void SetKeyedObject(int key, object value) => netCache.SetKeyedObject(key, value);
 
         /// <summary>
         /// Utility method, not intended for public use; this helps maintain the root object is complex scenarios

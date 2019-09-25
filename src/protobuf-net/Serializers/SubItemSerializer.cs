@@ -75,10 +75,10 @@ namespace ProtoBuf.Serializers
 
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteSubItem<T>(value == null ? default : (T)value);
+            => state.WriteSubItem<T>(TypeHelper<T>.FromObject(value));
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadSubItem<T>(value == null ? default : (T) value, null);
+            => state.ReadSubItem<T>(TypeHelper<T>.FromObject(value), null);
 
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
             => SubItemSerializer.EmitWriteSubItem<T>(null, ctx, valueFrom);
