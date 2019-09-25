@@ -34,7 +34,6 @@ namespace ProtoBuf.Models
                     Hexadecimal = Hexadecimal.Replace(" ", "").Replace("-", "").Trim();
 
                     int len = Hexadecimal.Length / 2;
-                    Console.WriteLine("data.length = " + len);
 
                     var tmp = new byte[len];
                     for (int i = 0; i < len; i++)
