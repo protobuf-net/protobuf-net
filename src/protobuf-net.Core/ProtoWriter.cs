@@ -485,7 +485,11 @@ namespace ProtoBuf
         /// Specifies a known root object to use during reference-tracked serialization
         /// </summary>
         [MethodImpl(HotPath)]
-        internal int AddObjectKey(object value, out bool existing) => netCache.AddObjectKey(value, out existing);
+        internal int AddObjectKey(object value, out bool existing)
+        {
+            if (!(this is StreamProtoWriter)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            return netCache.AddObjectKey(value, out existing);
+        }
 
         /// <summary>
         /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String

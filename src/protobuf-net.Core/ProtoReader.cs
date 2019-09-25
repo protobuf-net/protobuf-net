@@ -673,9 +673,17 @@ namespace ProtoBuf
             trapCount--;
         }
 
-        internal object GetKeyedObject(int key) => netCache.GetKeyedObject(key);
+        internal object GetKeyedObject(int key)
+        {
+            if (!(this is StreamProtoReader)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            return netCache.GetKeyedObject(key);
+        }
 
-        internal void SetKeyedObject(int key, object value) => netCache.SetKeyedObject(key, value);
+        internal void SetKeyedObject(int key, object value)
+        {
+            if (!(this is StreamProtoReader)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            netCache.SetKeyedObject(key, value);
+        }
 
         /// <summary>
         /// Utility method, not intended for public use; this helps maintain the root object is complex scenarios
@@ -697,6 +705,7 @@ namespace ProtoBuf
 
         internal void TrapNextObject(int newObjectKey)
         {
+            if (!(this is StreamProtoReader)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
             trapCount++;
             netCache.SetKeyedObject(newObjectKey, null); // use null as a temp
         }
