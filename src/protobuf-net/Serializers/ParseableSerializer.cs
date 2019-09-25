@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
         public static ParseableSerializer TryCreate(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            MethodInfo method = type.GetMethod("Parse",
+            MethodInfo method = type.GetMethod(nameof(int.Parse),
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
                 null, new Type[] { typeof(string) }, null);
             if (method != null && method.ReturnType == type)
@@ -54,7 +54,7 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type type = ExpectedType;
-            using var loc = ctx.GetLocalWithValue(typeof(string), valueFrom);
+            using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
             ctx.LoadState();
             ctx.LoadAddress(loc, type);
             if (type.IsValueType)

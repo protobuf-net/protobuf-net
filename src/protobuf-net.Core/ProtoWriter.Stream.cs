@@ -46,7 +46,7 @@ namespace ProtoBuf
             internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
-                obj.Init(model, context);
+                obj.Init(model, context, true);
                 if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
                 if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
                 //if (model == null) ThrowHelper.ThrowArgumentNullException("model");
@@ -55,9 +55,9 @@ namespace ProtoBuf
                 return obj;
             }
 
-            internal override void Init(TypeModel model, SerializationContext context)
+            internal override void Init(TypeModel model, SerializationContext context, bool impactCount)
             {
-                base.Init(model, context);
+                base.Init(model, context, impactCount);
                 ioIndex = 0;
                 flushLock = 0;
             }

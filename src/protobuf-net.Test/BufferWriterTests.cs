@@ -69,8 +69,8 @@ namespace ProtoBuf.Tests
         {
             private Foo() { }
 
-            public static IProtoSerializer<Foo> Serializer => FooSerializer.Instance;
-            sealed class FooSerializer : IProtoSerializer<Foo>
+            public static IMessageSerializer<Foo> Serializer => FooSerializer.Instance;
+            sealed class FooSerializer : IMessageSerializer<Foo>
             {
                 public static FooSerializer Instance { get; } = new FooSerializer();
                 private FooSerializer() { }
@@ -96,12 +96,12 @@ namespace ProtoBuf.Tests
 
                 state.WriteFieldHeader(3, WireType.StartGroup);
                 Assert.Equal(21, state.GetPosition());
-                state.WriteSubItem<Foo>(null, Foo.Serializer);
+                state.WriteMessage<Foo>(null, Foo.Serializer);
                 Assert.Equal(22, state.GetPosition());
 
                 state.WriteFieldHeader(4, WireType.String);
                 Assert.Equal(23, state.GetPosition());
-                state.WriteSubItem<Foo>(null, Foo.Serializer);
+                state.WriteMessage<Foo>(null, Foo.Serializer);
                 Assert.Equal(24, state.GetPosition());
 
                 state.Close();
@@ -125,7 +125,7 @@ namespace ProtoBuf.Tests
             public A Inner { get; set; }
         }
 
-        class ASerializer : IProtoSerializer<A>
+        class ASerializer : IMessageSerializer<A>
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }
@@ -141,7 +141,7 @@ namespace ProtoBuf.Tests
                             value.Level = state.ReadInt32();
                             break;
                         case 2:
-                            value.Inner = state.ReadSubItem<A>(value.Inner, this);
+                            value.Inner = state.ReadMessage<A>(value.Inner, this);
                             break;
                         default:
                             state.SkipField();
@@ -165,7 +165,7 @@ namespace ProtoBuf.Tests
                 {
                     Log?.WriteLine($"Writing field 2...; pos: {state.GetPosition()}");
                     state.WriteFieldHeader(2, WireType.String);
-                    state.WriteSubItem<A>(obj, this);
+                    state.WriteMessage<A>(obj, this);
                     Log?.WriteLine($"Wrote field 2...; pos: {state.GetPosition()}");
                 }
 #pragma warning restore CS0618

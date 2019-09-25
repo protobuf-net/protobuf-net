@@ -20,7 +20,7 @@ namespace ProtoBuf
     {
         private const MethodImplOptions HotPath = ProtoReader.HotPath;
 
-        internal const string PreferWriteSubItem = "If possible, please use the WriteSubItem API; this API may not work correctly with all writers";
+        internal const string PreferWriteMessage = "If possible, please use the WriteMessage API; this API may not work correctly with all writers";
 
         private TypeModel model;
         private int packedFieldNumber;
@@ -34,11 +34,11 @@ namespace ProtoBuf
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type).
         /// </summary>
         /// <param name="value">The object to write.</param>
-        /// <param name="key">The key that uniquely identifies the type within the model.</param>
+        /// <param name="type">The key that uniquely identifies the type within the model.</param>
         /// <param name="writer">The destination.</param>
         [MethodImpl(HotPath)]
-        public static void WriteObject(object value, int key, ProtoWriter writer)
-            => writer.DefaultState().WriteObject(value, key);
+        public static void WriteObject(object value, Type type, ProtoWriter writer)
+            => writer.DefaultState().WriteObject(value, type);
 
         /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
@@ -46,16 +46,11 @@ namespace ProtoBuf
         /// performed.
         /// </summary>
         /// <param name="value">The object to write.</param>
-        /// <param name="key">The key that uniquely identifies the type within the model.</param>
+        /// <param name="type">The key that uniquely identifies the type within the model.</param>
         /// <param name="writer">The destination.</param>
         [MethodImpl(HotPath)]
-        public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer)
-            => writer.DefaultState().WriteRecursionSafeObject(value, key);
-
-        internal int GetTypeKey(ref Type type)
-        {
-            return model.GetKey(ref type);
-        }
+        public static void WriteRecursionSafeObject(object value, Type type, ProtoWriter writer)
+            => writer.DefaultState().WriteRecursionSafeObject(value, type);
 
         private protected readonly NetObjectCache netCache;
 
@@ -157,9 +152,9 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
-        internal virtual void Init(TypeModel model, SerializationContext context)
+        internal virtual void Init(TypeModel model, SerializationContext context, bool impactCount)
         {
-            OnInit();
+            OnInit(impactCount);
             _position64 = 0;
             _needFlush = false;
             this.packedFieldNumber = 0;
@@ -211,14 +206,21 @@ namespace ProtoBuf
             int count = System.Threading.Interlocked.Decrement(ref _usageCount);
             if (count != 0) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 0, was {count}");
         }
-        partial void OnInit()
+        partial void OnInit(bool impactCount)
         {
-            int count = System.Threading.Interlocked.Increment(ref _usageCount);
-            if (count != 1) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 1, was {count}");
+            if (impactCount)
+            {
+                int count = System.Threading.Interlocked.Increment(ref _usageCount);
+                if (count != 1) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 1, was {count}");
+            }
+            else
+            {
+                _usageCount = 1;
+            }
         }
 #endif
         partial void OnDispose();
-        partial void OnInit();
+        partial void OnInit(bool impactCount);
 
         protected private virtual void Dispose()
         {
@@ -245,7 +247,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+        protected internal virtual void WriteMessage<T>(ref State state, T value, IMessageSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = state.StartSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
@@ -257,7 +259,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer) where T : class
+        protected internal virtual void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer) where T : class
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = state.StartSubItem(null, PrefixStyle.Base128);
@@ -487,7 +489,7 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         internal int AddObjectKey(object value, out bool existing)
         {
-            if (!(this is StreamProtoWriter)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            if (!(this is StreamProtoWriter)) ThrowHelper.ThrowTrackedObjects(this);
             return netCache.AddObjectKey(value, out existing);
         }
 
@@ -498,7 +500,7 @@ namespace ProtoBuf
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
 
-        internal static long Measure<T>(NullProtoWriter writer, T value, IProtoSerializer<T> serializer)
+        internal static long Measure<T>(NullProtoWriter writer, T value, IMessageSerializer<T> serializer)
         {
             long length;
             object obj = default;
@@ -525,7 +527,7 @@ namespace ProtoBuf
             return length;
         }
 
-        internal static long Measure<T>(NullProtoWriter writer, T value, IProtoSubTypeSerializer<T> serializer) where T : class
+        internal static long Measure<T>(NullProtoWriter writer, T value, ISubTypeSerializer<T> serializer) where T : class
         {
             object obj = value;
             if (obj is null) return 0;

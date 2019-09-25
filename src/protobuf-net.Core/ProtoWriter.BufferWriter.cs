@@ -25,15 +25,15 @@ namespace ProtoBuf
             {
                 if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
-                obj.Init(model, context);
+                obj.Init(model, context, true);
                 obj._writer = writer;
                 return new State(obj);
             }
 
-            internal override void Init(TypeModel model, SerializationContext context)
+            internal override void Init(TypeModel model, SerializationContext context, bool impactCount)
             {
-                base.Init(model, context);
-                _nullWriter.Init(model, context);
+                base.Init(model, context, impactCount);
+                _nullWriter.Init(model, context, impactCount: false);
             }
 
             private IBufferWriter<byte> _writer;
@@ -52,6 +52,7 @@ namespace ProtoBuf
             {
                 base.Dispose();
                 Pool<BufferWriterProtoWriter>.Put(this);
+                // don't cascade dispose to the null one; we're leaving that attached etc
             }
 
             private protected override void Cleanup()
@@ -176,7 +177,7 @@ namespace ProtoBuf
                 return state.LocalWriteVarint64(value);
             }
 
-            protected internal override void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer,
+            protected internal override void WriteMessage<T>(ref State state, T value, IMessageSerializer<T> serializer,
                 PrefixStyle style, bool recursionCheck)
             {
                 switch (WireType)
@@ -189,12 +190,12 @@ namespace ProtoBuf
                         return;
                     case WireType.StartGroup:
                     default:
-                        base.WriteSubItem<T>(ref state, value, serializer, style, recursionCheck);
+                        base.WriteMessage<T>(ref state, value, serializer, style, recursionCheck);
                         return;
                 }
             }
 
-            protected internal override void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
+            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
             {
                 switch (WireType)
                 {
@@ -209,7 +210,7 @@ namespace ProtoBuf
                 }
             }
 
-            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+            private void WriteWithLengthPrefix<T>(ref State state, T value, IMessageSerializer<T> serializer, PrefixStyle style)
             {
                 if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
@@ -247,7 +248,7 @@ namespace ProtoBuf
                 }
             }
 
-            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
+            private void WriteWithLengthPrefix<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
                 where T : class
             {
                 if (serializer == null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
@@ -267,11 +268,11 @@ namespace ProtoBuf
             }
 
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
-                => ThrowHelper.ThrowNotSupportedException("You must use the WriteSubItem API with this writer type");
+                => ThrowHelper.ThrowNotSupportedException("You must use the WriteMessage API with this writer type");
 
             private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
             {
-                ThrowHelper.ThrowNotSupportedException("You must use the WriteSubItem API with this writer type");
+                ThrowHelper.ThrowNotSupportedException("You must use the WriteMessage API with this writer type");
                 return default;
             }
 

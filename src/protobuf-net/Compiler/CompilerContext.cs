@@ -271,21 +271,14 @@ namespace ProtoBuf.Compiler
             Scope = scope;
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;
-            Type[] paramTypes;
             _signature = signature;
             GetOpCodes(signature, isStatic, out _state, out _inputArg);
-            switch (signature)
+            var paramTypes = signature switch
             {
-                case SignatureType.ReaderScope_Input:
-                    paramTypes = new Type[] { StateBasedReadMethods.ByRefStateType, inputType };
-                    break;
-                case SignatureType.WriterScope_Input:
-                    paramTypes = new Type[] { WriterUtil.ByRefStateType, inputType };
-                    break;
-                default:
-                    paramTypes = new Type[] { inputType };
-                    break;
-            }
+                SignatureType.ReaderScope_Input => new Type[] { StateBasedReadMethods.ByRefStateType, inputType },
+                SignatureType.WriterScope_Input => new Type[] { WriterUtil.ByRefStateType, inputType },
+                _ => new Type[] { inputType },
+            };
             int uniqueIdentifier = Interlocked.Increment(ref next);
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
                 associatedType.IsInterface ? typeof(object) : associatedType, true);

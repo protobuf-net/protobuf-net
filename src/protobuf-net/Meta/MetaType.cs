@@ -101,7 +101,6 @@ namespace ProtoBuf.Meta
 
             derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
             (subTypes ?? (subTypes = new BasicList())).Add(subType);
-            model.ResetKeyCache();
             return this;
         }
 
@@ -198,9 +197,9 @@ namespace ProtoBuf.Meta
                 {
                     sb.Append('_');
                     Type tmp = arg;
-                    int key = model.GetKey(ref tmp);
+                    bool isKnown = model.IsKnownType(ref tmp);
                     MetaType mt;
-                    if (key >= 0 && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
+                    if (isKnown && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
                     {
                         sb.Append(mt.GetSchemaTypeName());
                     }
@@ -1540,11 +1539,6 @@ namespace ProtoBuf.Meta
                 if (field.FieldNumber == fieldNumber) return true;
             }
             return false;
-        }
-
-        internal int GetKey(bool demand, bool getBaseKey)
-        {
-            return model.GetKey(Type, demand, getBaseKey);
         }
 
         internal EnumSerializer.EnumPair[] GetEnumMap()

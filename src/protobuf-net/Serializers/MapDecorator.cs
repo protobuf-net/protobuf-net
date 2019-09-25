@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
             do
             {
                 var pair = new KeyValuePair<TKey, TValue>(DefaultKey, DefaultValue);
-                pair = state.ReadSubItem<KeyValuePair<TKey, TValue>>(pair, _runtimeSerializer);
+                pair = state.ReadMessage<KeyValuePair<TKey, TValue>>(pair, _runtimeSerializer);
                 typed[pair.Key] = pair.Value;
             } while (state.TryReadFieldHeader(fieldNumber));
 
@@ -62,13 +62,13 @@ namespace ProtoBuf.Serializers
             foreach (var pair in (TDictionary)value)
             {
                 state.WriteFieldHeader(fieldNumber, wireType);
-                state.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, _runtimeSerializer);
+                state.WriteMessage<KeyValuePair<TKey, TValue>>(pair, _runtimeSerializer);
             }
         }
 
         private readonly RuntimePairSerializer _runtimeSerializer;
 
-        sealed class RuntimePairSerializer : IProtoSerializer<KeyValuePair<TKey, TValue>>
+        sealed class RuntimePairSerializer : IMessageSerializer<KeyValuePair<TKey, TValue>>
         {
             private readonly IRuntimeProtoSerializerNode _keyTail, _valueTail;
             public RuntimePairSerializer(IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail)
@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                 _valueTail = valueTail;
             }
 
-            KeyValuePair<TKey, TValue> IProtoSerializer<KeyValuePair<TKey, TValue>>.Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            KeyValuePair<TKey, TValue> IMessageSerializer<KeyValuePair<TKey, TValue>>.Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
             {
                 var key = pair.Key;
                 var value = pair.Value;
@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
 
-            void IProtoSerializer<KeyValuePair<TKey, TValue>>.Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
+            void IMessageSerializer<KeyValuePair<TKey, TValue>>.Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
             {
                 if (pair.Key != null) _keyTail.Write(ref state, pair.Key);
                 if (pair.Value != null) _valueTail.Write(ref state, pair.Value);
@@ -189,7 +189,7 @@ namespace ProtoBuf.Serializers
 
                 if (wireType == WireType.String)
                 {
-                    SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(fieldNumber, ctx, kvp, pairSerializer, false);
+                    SubItemSerializer.EmitWriteMessage<KeyValuePair<TKey, TValue>>(fieldNumber, ctx, kvp, pairSerializer, false);
                 }
                 else
                 {
@@ -199,8 +199,8 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue((int)wireType);
                     ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
-                    // ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
-                    SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(null, ctx, kvp, pairSerializer, false);
+                    // ProtoWriter.WriteMessage<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
+                    SubItemSerializer.EmitWriteMessage<KeyValuePair<TKey, TValue>>(null, ctx, kvp, pairSerializer, false);
                 }
 
                 ctx.MarkLabel(@next);

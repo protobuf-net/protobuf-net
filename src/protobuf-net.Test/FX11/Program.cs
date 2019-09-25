@@ -86,7 +86,7 @@ namespace FX11
 
             Console.WriteLine("Iterations: " + loop);
             Stopwatch watch;
-            MemoryStream reuseDump = new MemoryStream(100 * 1024);
+            using MemoryStream reuseDump = new MemoryStream(100 * 1024);
 #if FX30
             System.Runtime.Serialization.DataContractSerializer dcs = new System.Runtime.Serialization.DataContractSerializer(type);
 

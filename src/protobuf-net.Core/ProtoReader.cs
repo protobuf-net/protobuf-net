@@ -16,7 +16,7 @@ namespace ProtoBuf
     public abstract partial class ProtoReader : IDisposable, ISerializationContext
     {
         internal const string PreferStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version",
-            PreferReadSubItem = "If possible, please use the ReadSubItem API; this API may not work correctly with all readers";
+            PreferReadMessage = "If possible, please use the ReadMessage API; this API may not work correctly with all readers";
 
         private protected abstract int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value);
         private protected abstract uint ImplReadUInt32Fixed(ref State state);
@@ -30,7 +30,7 @@ namespace ProtoBuf
         private TypeModel _model;
         private int _fieldNumber, _depth;
         private long blockEnd64;
-        private NetObjectCache netCache = new NetObjectCache();
+        private readonly NetObjectCache netCache = new NetObjectCache();
 
         // this is how many outstanding objects do not currently have
         // values for the purposes of reference tracking; we'll default
@@ -256,8 +256,8 @@ namespace ProtoBuf
         /// parsing the message in accordance with the model associated with the reader
         /// </summary>
         [MethodImpl(HotPath)]
-        public static object ReadObject(object value, int key, ProtoReader reader)
-            => reader.DefaultState().ReadObject(value, key);
+        public static object ReadObject(object value, Type type, ProtoReader reader)
+            => reader.DefaultState().ReadObject(value, type);
 
         /// <summary>
         /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup
@@ -657,11 +657,6 @@ namespace ProtoBuf
             return true;
         }
 
-        internal int GetTypeKey(ref Type type)
-        {
-            return _model.GetKey(ref type);
-        }
-
         internal Type DeserializeType(string value)
         {
             return TypeModel.DeserializeType(_model, value);
@@ -675,13 +670,13 @@ namespace ProtoBuf
 
         internal object GetKeyedObject(int key)
         {
-            if (!(this is StreamProtoReader)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            if (!(this is StreamProtoReader)) ThrowHelper.ThrowTrackedObjects(this);
             return netCache.GetKeyedObject(key);
         }
 
         internal void SetKeyedObject(int key, object value)
         {
-            if (!(this is StreamProtoReader)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            if (!(this is StreamProtoReader)) ThrowHelper.ThrowTrackedObjects(this); 
             netCache.SetKeyedObject(key, value);
         }
 
@@ -705,7 +700,7 @@ namespace ProtoBuf
 
         internal void TrapNextObject(int newObjectKey)
         {
-            if (!(this is StreamProtoReader)) ThrowHelper.ThrowNotImplementedException("tracked objects are not supported on this writer");
+            if (!(this is StreamProtoReader)) ThrowHelper.ThrowTrackedObjects(this);
             trapCount++;
             netCache.SetKeyedObject(newObjectKey, null); // use null as a temp
         }

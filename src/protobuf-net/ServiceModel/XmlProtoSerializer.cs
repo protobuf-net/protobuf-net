@@ -14,14 +14,11 @@ namespace ProtoBuf.ServiceModel
     public sealed class XmlProtoSerializer : XmlObjectSerializer
     {
         private readonly TypeModel model;
-        private readonly int key;
         private readonly bool isList, isEnum;
         private readonly Type type;
-        internal XmlProtoSerializer(TypeModel model, int key, Type type, bool isList)
+        internal XmlProtoSerializer(TypeModel model, Type type, bool isList)
         {
-            if (key < 0) throw new ArgumentOutOfRangeException(nameof(key));
             this.model = model ?? throw new ArgumentNullException(nameof(model));
-            this.key = key;
             this.isList = isList;
             this.type = type ?? throw new ArgumentOutOfRangeException(nameof(type));
             this.isEnum = type.IsEnum;
@@ -35,10 +32,9 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            int key = GetKey(model, ref type, out bool isList);
-            if (key >= 0)
+            if (IsKnownType(model, ref type, out bool isList))
             {
-                return new XmlProtoSerializer(model, key, type, isList);
+                return new XmlProtoSerializer(model, type, isList);
             }
             return null;
         }
@@ -51,37 +47,35 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            key = GetKey(model, ref type, out isList);
+            bool known = IsKnownType(model, ref type, out isList);
+            if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
             this.model = model;
             this.type = type;
             this.isEnum = type.IsEnum;
-            if (key < 0) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
         }
 
-        private static int GetKey(TypeModel model, ref Type type, out bool isList)
+        private static bool IsKnownType(TypeModel model, ref Type type, out bool isList)
         {
             if (model != null && type != null)
             {
-                int key = model.GetKey(ref type);
-                if (key >= 0)
+                if (model.IsKnownType(ref type))
                 {
                     isList = false;
-                    return key;
+                    return true;
                 }
                 Type itemType = TypeModel.GetListItemType(type);
                 if (itemType != null)
                 {
-                    key = model.GetKey(ref itemType);
-                    if (key >= 0)
+                    if (model.IsKnownType(ref itemType))
                     {
                         isList = true;
-                        return key;
+                        return true;
                     }
                 }
             }
 
             isList = false;
-            return -1;
+            return false;
         }
 
         /// <summary>
@@ -129,7 +123,7 @@ namespace ProtoBuf.ServiceModel
 
                         try
                         {
-                            model.Serialize(ref state, key, graph);
+                            model.Serialize(ref state, type, graph);
                             state.Close();
                         }
                         catch
@@ -188,7 +182,7 @@ namespace ProtoBuf.ServiceModel
                     else
                     {
 
-                        return model.DeserializeCore(ref state, key, null);
+                        return model.Deserialize(ref state, type, null);
                     }
                 }
                 finally
@@ -212,7 +206,7 @@ namespace ProtoBuf.ServiceModel
                     }
                     else
                     {
-                        result = model.DeserializeCore(ref state, key, null);
+                        result = model.Deserialize(ref state, type, null);
                     }
                 }
             }

@@ -116,7 +116,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
                 // this would be nice...
                 Assert.Equal(typeof(Base[]), cloned.BaseArray.GetType()); //, "array type");
-            }, "Conflicting item/add type");
+            }, "Unable to wrap BaseClassArrayContainerClass/BaseClassArrayContainerClass: Unable to bind deserializer: Conflicting item/add type");
         }
 
         RuntimeTypeModel CreateModel()

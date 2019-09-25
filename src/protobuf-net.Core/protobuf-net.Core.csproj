@@ -16,17 +16,17 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PREFER_SPANS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.0'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PREFER_SPANS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE</DefineConstants>
   </PropertyGroup>
-  
-  <!--
-  PREFER_SPANS              : if the Stream resolves to something that can be processed another way, allow it
-  PLAT_ISREF                : does System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences-T() exist?
-  PLAT_SPAN_OVERLOADS       : do common methods like string encode have APIs that take spans
-  PLAT_INTRINSICS           : make use of CPU intrinsics
-  PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
-  -->
+
+<!--
+PREFER_SPANS              : if the Stream resolves to something that can be processed another way, allow it
+PLAT_ISREF                : does System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences-T() exist?
+PLAT_SPAN_OVERLOADS       : do common methods like string encode have APIs that take spans
+PLAT_INTRINSICS           : make use of CPU intrinsics
+PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
+-->
 </Project>

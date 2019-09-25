@@ -17,7 +17,7 @@ namespace ProtoBuf
             internal static State CreateNullProtoWriter(TypeModel model, SerializationContext context)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
-                obj.Init(model, context);
+                obj.Init(model, context, true);
                 return new State(obj);
             }
 
@@ -46,7 +46,7 @@ namespace ProtoBuf
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 
-            protected internal override void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+            protected internal override void WriteMessage<T>(ref State state, T value, IMessageSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
             {
                 if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
@@ -89,7 +89,7 @@ namespace ProtoBuf
                 Advance(preamble + length);
                 WireType = WireType.None;
             }
-            protected internal override void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
+            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
             {
                 if (serializer == null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);

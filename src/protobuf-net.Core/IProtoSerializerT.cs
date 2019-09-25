@@ -6,11 +6,10 @@ using System.Runtime.CompilerServices;
 namespace ProtoBuf
 {
     /// <summary>
-    /// Abstract API capable of serializing/deserializing
+    /// Abstract API capable of serializing/deserializing messages
     /// </summary>
-    public interface IProtoSerializer<T>
+    public interface IMessageSerializer<T>
     {
-
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
@@ -23,9 +22,26 @@ namespace ProtoBuf
     }
 
     /// <summary>
+    /// Abstract API capable of serializing/deserializing scalar values (scalars are things like enums; the values are never merged)
+    /// </summary>
+    public interface IScalarSerializer<T>
+    {
+        /// <summary>
+        /// Deserialize an instance from the supplied writer
+        /// </summary>
+        T Read(ref ProtoReader.State state);
+
+        /// <summary>
+        /// Serialize an instance to the supplied writer
+        /// </summary>
+        void Write(ref ProtoWriter.State state, T value);
+    }
+
+
+    /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy
     /// </summary>
-    public interface IProtoSubTypeSerializer<T> where T : class
+    public interface ISubTypeSerializer<T> where T : class
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
@@ -112,7 +128,7 @@ namespace ProtoBuf
         /// <summary>
         /// Parse the input as a sub-type of the instance
         /// </summary>
-        public void ReadSubType<TSubType>(ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
+        public void ReadSubType<TSubType>(ref ProtoReader.State state, ISubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
             var tok = state.StartSubItem();
             _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(ref state,
@@ -137,7 +153,7 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of serializing/deserializing complex objects with inheritance
     /// </summary>
-    public interface IProtoFactory<T>
+    public interface IFactory<T>
     {
         /// <summary>
         /// Create a new instance of the type

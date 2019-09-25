@@ -588,7 +588,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
-                        return new NetObjectSerializer(typeof(string), 0, BclHelpers.NetObjectOptions.AsReference);
+                        return new NetObjectSerializer(typeof(string), BclHelpers.NetObjectOptions.AsReference);
                     }
                     return PrimitiveSerializer<StringSerializer>.Singleton;
                 case ProtoTypeCode.Single:
@@ -645,9 +645,8 @@ namespace ProtoBuf.Meta
             }
             if (allowComplexTypes && model != null)
             {
-                int key = model.GetKey(type, false, true);
                 MetaType meta = null;
-                if (key >= 0)
+                if (model.IsKnownType(ref type))
                 {
                     meta = model[type];
                     if (dataFormat == DataFormat.Default && meta.IsGroup)
@@ -682,9 +681,9 @@ namespace ProtoBuf.Meta
                         if (meta.UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
                     }
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return new NetObjectSerializer(type, key, options);
+                    return new NetObjectSerializer(type, options);
                 }
-                if (key >= 0)
+                if (model.IsKnownType(ref type))
                 {
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return SubItemSerializer.Create(type, meta);

@@ -186,6 +186,8 @@ namespace ProtoBuf
             /// </summary>
             public void WriteBoolean(bool value) => WriteUInt32(value ? (uint)1 : (uint)0);
 
+            internal bool IsKnownType(ref Type type) => Model != null && Model.IsKnownType(ref type);
+
             /// <summary>
             /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
             /// </summary>
@@ -316,25 +318,25 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteSubItem<T>(T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
-                => _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+            public void WriteMessage<T>(T value, IMessageSerializer<T> serializer = null, bool recursionCheck = true)
+                => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteSubItem<T>(int fieldNumber, T value, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
+            public void WriteMessage<T>(int fieldNumber, T value, IMessageSerializer<T> serializer = null, bool recursionCheck = true)
             {
                 if (!(TypeHelper<T>.IsObjectType && value is null))
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
-                    _writer.WriteSubItem<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
                 }
             }
 
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
-            public void WriteSubType<T>(T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+            public void WriteSubType<T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
             {
                 _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
             }
@@ -342,7 +344,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
-            public void WriteSubType<T>(int fieldNumber, T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+            public void WriteSubType<T>(int fieldNumber, T value, ISubTypeSerializer<T> serializer = null) where T : class
             {
                 WriteFieldHeader(fieldNumber, WireType.String);
                 _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
@@ -351,7 +353,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a base-type to the input writer
             /// </summary>
-            public void WriteBaseType<T>(T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+            public void WriteBaseType<T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(ref this, value);
 
             internal TypeModel Model => _writer?.Model;
@@ -380,16 +382,18 @@ namespace ProtoBuf
             /// performed.
             /// </summary>
             /// <param name="value">The object to write.</param>
-            /// <param name="key">The key that uniquely identifies the type within the model.</param>
-            public void WriteRecursionSafeObject(object value, int key)
+            /// <param name="type">The type that uniquely identifies the type within the model.</param>
+            public void WriteRecursionSafeObject(object value, Type type)
             {
                 var writer = _writer;
                 if (writer.model == null)
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
+                if (type == null) type = value.GetType();
+
                 SubItemToken token = StartSubItem(null);
-                writer.model.Serialize(ref this, key, value);
+                writer.model.Serialize(ref this, type, value);
                 EndSubItem(token);
             }
 
@@ -465,7 +469,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes an object to the input writer
             /// </summary>
-            public long Serialize<T>(T value, IProtoSerializer<T> serializer = null)
+            public long Serialize<T>(T value, IMessageSerializer<T> serializer = null)
             {
                 try
                 {
@@ -531,21 +535,22 @@ namespace ProtoBuf
             /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type).
             /// </summary>
             /// <param name="value">The object to write.</param>
-            /// <param name="key">The key that uniquely identifies the type within the model.</param>
-            public void WriteObject(object value, int key)
+            /// <param name="type">The type that uniquely identifies the type within the model.</param>
+            public void WriteObject(object value, Type type)
             {
                 var model = Model;
                 if (model == null)
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
+                if (type == null) type = value.GetType();
 
                 SubItemToken token = StartSubItem(value);
-                if (key >= 0)
+                if (model.IsKnownType(ref type))
                 {
-                    model.Serialize(ref this, key, value);
+                    DynamicStub.WriteMessage(type, model, ref this, value);
                 }
-                else if (model != null && model.TrySerializeAuxiliaryType(ref this, value.GetType(), DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                else if (model != null && model.TrySerializeAuxiliaryType(ref this, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
                 {
                     // all ok
                 }
@@ -556,13 +561,14 @@ namespace ProtoBuf
                 EndSubItem(token);
             }
 
-            internal void WriteObject(object value, int key, PrefixStyle style, int fieldNumber)
+            internal void WriteObject(object value, Type type, PrefixStyle style, int fieldNumber)
             {
                 var model = Model;
                 if (model == null)
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
+                if (type == null) type = value.GetType();
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();
 
                 switch (style)
@@ -582,16 +588,16 @@ namespace ProtoBuf
                         break;
                 }
                 SubItemToken token = StartSubItem(value, style);
-                if (key < 0)
+                if (!Model.IsKnownType(ref type))
                 {
-                    if (!model.TrySerializeAuxiliaryType(ref this, value.GetType(), DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                    if (!model.TrySerializeAuxiliaryType(ref this, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
                     {
                         TypeModel.ThrowUnexpectedType(value.GetType());
                     }
                 }
                 else
                 {
-                    model.Serialize(ref this, key, value);
+                    model.Serialize(ref this, type, value);
                 }
                 EndSubItem(token, style);
             }
@@ -608,7 +614,7 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="instance">The instance to write.</param>
             /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
-            [Obsolete(PreferWriteSubItem, false)]
+            [Obsolete(PreferWriteMessage, false)]
             public SubItemToken StartSubItem(object instance) => StartSubItem(instance, PrefixStyle.Base128);
 
             /// <summary>
@@ -621,7 +627,7 @@ namespace ProtoBuf
                 writer?.Dispose();
             }
 
-            [Obsolete(PreferWriteSubItem, false)]
+            [Obsolete(PreferWriteMessage, false)]
             internal SubItemToken StartSubItem(object instance, PrefixStyle style)
             {
                 _writer.PreSubItem(instance);
@@ -655,7 +661,7 @@ namespace ProtoBuf
                 }
             }
 
-            [Obsolete(PreferWriteSubItem, false)]
+            [Obsolete(PreferWriteMessage, false)]
             internal void EndSubItem(SubItemToken token, PrefixStyle style)
             {
                 _writer.PostSubItem(ref this);
@@ -685,7 +691,7 @@ namespace ProtoBuf
             /// Indicates the end of a nested record.
             /// </summary>
             /// <param name="token">The token obtained from StartubItem.</param>
-            [Obsolete(PreferWriteSubItem, false)]
+            [Obsolete(PreferWriteMessage, false)]
             public void EndSubItem(SubItemToken token)
                 => EndSubItem(token, PrefixStyle.Base128);
 

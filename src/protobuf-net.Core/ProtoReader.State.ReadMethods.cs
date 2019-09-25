@@ -239,7 +239,7 @@ namespace ProtoBuf
             /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
             /// </summary>
             /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
-            // [Obsolete(PreferReadSubItem, false)]
+            // [Obsolete(PreferReadMessage, false)]
             [MethodImpl(MethodImplOptions.NoInlining)]
             public SubItemToken StartSubItem()
             {
@@ -268,7 +268,7 @@ namespace ProtoBuf
             /// marker, or all fields of the sub-message must have been consumed (in either case, this means ReadFieldHeader
             /// should return zero)
             /// </summary>
-            // [Obsolete(PreferReadSubItem, false)]
+            // [Obsolete(PreferReadMessage, false)]
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void EndSubItem(SubItemToken token)
             {
@@ -303,18 +303,18 @@ namespace ProtoBuf
             /// parsing the message in accordance with the model associated with the reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public object ReadObject(object value, int key) => ReadTypedObject(value, key, null);
+            public object ReadObject(object value, Type type) => ReadTypedObject(value, type);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object ReadTypedObject(object value, int key, Type type)
+            internal object ReadTypedObject(object value, Type type)
             {
                 var model = Model;
                 if (model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
 
                 SubItemToken token = StartSubItem();
-                if (key >= 0)
+                if (model.IsKnownType(ref type))
                 {
-                    value = model.DeserializeCore(ref this, key, value);
+                    value = DynamicStub.ReadMessage(type, model, ref this, value);
                 }
                 else if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
                 {
@@ -429,6 +429,8 @@ namespace ProtoBuf
                         break;
                 }
             }
+
+            internal bool IsKnownType(ref Type type) => Model != null && Model.IsKnownType(ref type);
 
             internal Type DeserializeType(string typeName) => _reader.DeserializeType(typeName);
 
@@ -706,7 +708,7 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T ReadSubItem<T>(T value = default, IProtoSerializer<T> serializer = null)
+            public T ReadMessage<T>(T value = default, IMessageSerializer<T> serializer = null)
             {
                 var tok = StartSubItem();
                 var result = (serializer ?? TypeModel.GetSerializer<T>(_reader._model)).Read(ref this, value);
@@ -725,7 +727,7 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T ReadBaseType<TBaseType, T>(T value = null, IProtoSubTypeSerializer<TBaseType> serializer = null)
+            public T ReadBaseType<TBaseType, T>(T value = null, ISubTypeSerializer<TBaseType> serializer = null)
                 where TBaseType : class
                 where T : class, TBaseType
             {
@@ -736,7 +738,7 @@ namespace ProtoBuf
             /// Deserialize an instance of the provided type
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T Deserialize<T>(T value = default, IProtoSerializer<T> serializer = null)
+            public T Deserialize<T>(T value = default, IMessageSerializer<T> serializer = null)
             {
                 if (TypeHelper<T>.IsObjectType && value != null)
                 {
@@ -769,7 +771,7 @@ namespace ProtoBuf
             /// Create an instance of the provided type, respecting any custom factory rules
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T CreateInstance<T>(IProtoFactory<T> factory = null)
+            public T CreateInstance<T>(IFactory<T> factory = null)
             {
                 var obj = TypeModel.CreateInstance<T>(Context, factory);
                 if (TypeHelper<T>.IsObjectType) NoteObject(obj);

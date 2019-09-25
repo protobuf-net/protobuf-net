@@ -68,5 +68,9 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNullReferenceException()
             => throw new NullReferenceException();
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowTrackedObjects(object obj)
+            => throw new NotSupportedException("tracked objects are not supported on " + obj.GetType().Name);
     }
 }

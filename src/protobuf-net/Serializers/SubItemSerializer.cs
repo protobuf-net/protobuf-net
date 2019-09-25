@@ -34,7 +34,7 @@ namespace ProtoBuf.Serializers
             using var tmp = ctx.GetLocalWithValue(typeof(TChild), valueFrom);
             ctx.LoadState();
             ctx.LoadValue(tmp);
-            ctx.LoadSelfAsService<IProtoSubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>>(assertImplemented: true);
             ctx.EmitCall(s_WriteSubType[2].MakeGenericMethod(typeof(TChild)));
         }
 
@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadState();
             ctx.LoadValue(fieldNumber);
             ctx.LoadValue(tmp);
-            ctx.LoadSelfAsService<IProtoSubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>>(assertImplemented: true);
             ctx.EmitCall(s_WriteSubType[3].MakeGenericMethod(typeof(TChild)));
         }
 
@@ -63,7 +63,7 @@ namespace ProtoBuf.Serializers
             var type = typeof(SubTypeState<TParent>);
             ctx.LoadAddress(valueFrom, type);
             ctx.LoadState();
-            ctx.LoadSelfAsService<IProtoSubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>>(assertImplemented: true);
             ctx.EmitCall(type.GetMethod(nameof(SubTypeState<TParent>.ReadSubType)).MakeGenericMethod(typeof(TChild)));
         }
     }
@@ -75,25 +75,25 @@ namespace ProtoBuf.Serializers
 
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteSubItem<T>(TypeHelper<T>.FromObject(value));
+            => state.WriteMessage<T>(TypeHelper<T>.FromObject(value));
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadSubItem<T>(TypeHelper<T>.FromObject(value), null);
+            => state.ReadMessage<T>(TypeHelper<T>.FromObject(value), null);
 
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
-            => SubItemSerializer.EmitWriteSubItem<T>(null, ctx, valueFrom);
+            => SubItemSerializer.EmitWriteMessage<T>(null, ctx, valueFrom);
 
         public override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
             using var tmp = ctx.GetLocalWithValue(typeof(T), valueFrom);
             // and make sure we have a non-stack-based source
-            SubItemSerializer.EmitReadSubItem<T>(ctx, tmp);
+            SubItemSerializer.EmitReadMessage<T>(ctx, tmp);
         }
 
         bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => wireType == WireType.String;
 
         void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, CompilerContext ctx, Local valueFrom)
-            => SubItemSerializer.EmitWriteSubItem<T>(fieldNumber, ctx, valueFrom);
+            => SubItemSerializer.EmitWriteMessage<T>(fieldNumber, ctx, valueFrom);
     }
 
 
@@ -150,7 +150,7 @@ namespace ProtoBuf.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }
 
-        public static void EmitWriteSubItem<T>(int? fieldNumber, CompilerContext ctx, Local value = null,
+        public static void EmitWriteMessage<T>(int? fieldNumber, CompilerContext ctx, Local value = null,
             FieldInfo serializer = null, bool applyRecursionCheck = true, bool assertImplemented = true)
         {
             using var tmp = ctx.GetLocalWithValue(typeof(T), value);
@@ -159,19 +159,19 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(tmp);
             if (serializer == null)
             {
-                ctx.LoadSelfAsService<IProtoSerializer<T>>(assertImplemented);
+                ctx.LoadSelfAsService<IMessageSerializer<T>>(assertImplemented);
             }
             else
             {
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }
             ctx.LoadValue(applyRecursionCheck);
-            ctx.EmitCall(s_WriteSubItem[fieldNumber.HasValue ? 4 : 3].MakeGenericMethod(typeof(T)));
+            ctx.EmitCall(s_WriteMessage[fieldNumber.HasValue ? 4 : 3].MakeGenericMethod(typeof(T)));
         }
 
-        public static void EmitReadSubItem<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null)
+        public static void EmitReadMessage<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null)
         {
-            // state.ReadSubItem<T>(value, serializer);
+            // state.ReadMessage<T>(value, serializer);
             ctx.LoadState();
             if (value == null)
             {
@@ -198,18 +198,18 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }
-            ctx.EmitCall(s_ReadSubItem.MakeGenericMethod(typeof(T)));
+            ctx.EmitCall(s_ReadMessage.MakeGenericMethod(typeof(T)));
         }
 
-        private static readonly Dictionary<int, MethodInfo> s_WriteSubItem =
+        private static readonly Dictionary<int, MethodInfo> s_WriteMessage =
             (from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-             where method.Name == nameof(ProtoWriter.State.WriteSubItem)
+             where method.Name == nameof(ProtoWriter.State.WriteMessage)
                 && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
              select new { ArgCount = method.GetParameters().Length, Method = method }).ToDictionary(x => x.ArgCount, x => x.Method);
 
-        private static readonly MethodInfo s_ReadSubItem =
+        private static readonly MethodInfo s_ReadMessage =
             (from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-             where method.Name == nameof(ProtoReader.State.ReadSubItem)
+             where method.Name == nameof(ProtoReader.State.ReadMessage)
                 && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
                 && method.GetParameters().Length == 2
              select method).Single();

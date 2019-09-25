@@ -6,7 +6,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, IProtoSerializer<T>, IProtoSubTypeSerializer<T>, IProtoFactory<T>
+    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, IMessageSerializer<T>, ISubTypeSerializer<T>, IFactory<T>
         where TBase : class
         where T : class, TBase
     {
@@ -14,25 +14,25 @@ namespace ProtoBuf.Serializers
         private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
         private readonly Func<ISerializationContext, T> factory;
 
-        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+        T IMessageSerializer<T>.Read(ref ProtoReader.State state, T value)
             => state.ReadBaseType<TBase, T>(value);
 
-        T IProtoFactory<T>.Create(ISerializationContext context)
+        T IFactory<T>.Create(ISerializationContext context)
             => factory(context);
 
         public override object Read(ref ProtoReader.State state, object value)
             => state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
 
-        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void IMessageSerializer<T>.Write(ref ProtoWriter.State state, T value)
             => state.WriteBaseType<TBase>(value);
 
         public override void Write(ref ProtoWriter.State state, object value)
             => state.WriteBaseType<TBase>(TypeHelper<T>.FromObject(value));
 
-        void IProtoSubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
+        void ISubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
             => subTypeSerializer(ref state, value);
 
-        T IProtoSubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
+        T ISubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
             => subTypeDeserializer(ref state, value);
 
         public InheritanceCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
@@ -60,7 +60,7 @@ namespace ProtoBuf.Serializers
 
 
     internal sealed class SimpleCompiledSerializer<T> : CompiledSerializer,
-        IProtoSerializer<T>, IProtoFactory<T>
+        IMessageSerializer<T>, IFactory<T>
     {
         private readonly Compiler.ProtoSerializer<T> serializer;
         private readonly Compiler.ProtoDeserializer<T> deserializer;
@@ -87,19 +87,19 @@ namespace ProtoBuf.Serializers
             factory = Compiler.CompilerContext.BuildFactory<T>(model.Scope, head, model);
         }
 
-        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+        T IMessageSerializer<T>.Read(ref ProtoReader.State state, T value)
             => deserializer(ref state, value);
 
         public override object Read(ref ProtoReader.State state, object value)
             => deserializer(ref state, TypeHelper<T>.FromObject(value));
 
-        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void IMessageSerializer<T>.Write(ref ProtoWriter.State state, T value)
             => serializer(ref state, value);
 
         public override void Write(ref ProtoWriter.State state, object value)
             => serializer(ref state, TypeHelper<T>.FromObject(value));
 
-        T IProtoFactory<T>.Create(ISerializationContext context)
+        T IFactory<T>.Create(ISerializationContext context)
             => factory(context);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer

@@ -4,14 +4,11 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class NetObjectSerializer : IRuntimeProtoSerializerNode
     {
-        private readonly int key;
-
         private readonly BclHelpers.NetObjectOptions options;
 
-        public NetObjectSerializer(Type type, int key, BclHelpers.NetObjectOptions options)
+        public NetObjectSerializer(Type type, BclHelpers.NetObjectOptions options)
         {
             bool dynamicType = (options & BclHelpers.NetObjectOptions.DynamicType) != 0;
-            this.key = dynamicType ? -1 : key;
             ExpectedType = dynamicType ? typeof(object) : type;
             this.options = options;
         }
@@ -24,44 +21,42 @@ namespace ProtoBuf.Serializers
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            return BclHelpers.ReadNetObject(ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
+            return BclHelpers.ReadNetObject(ref state, value, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteNetObject(ref state, value, key, options);
+            BclHelpers.WriteNetObject(ref state, value, options);
         }
 
-        public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.ThrowException(typeof(NotImplementedException));
-            throw new NotImplementedException(nameof(NetObjectSerializer) + "." + nameof(EmitRead));
-            //using (var val = ctx.GetLocalWithValue(ExpectedType, entity))
-            //{
-            //    ctx.LoadReader(true);
-            //    ctx.LoadValue(val);
-            //    ctx.CastToObject(ExpectedType);
-            //    ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
-            //    if (ExpectedType == typeof(object)) ctx.LoadNullRef();
-            //    else ctx.LoadValue(ExpectedType);
-            //    ctx.LoadValue((int)options);
-
-            //    ctx.EmitCall(typeof(BclHelpers).GetMethod("ReadNetObject",
-            //        new[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object),
-            //        typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
-            //    ctx.CastFromObject(ExpectedType);
-            //}
+            // BclHelpers.ReadNetObject(ref state, value, ExpectedType == typeof(object) ? null : ExpectedType, options);
+            using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(loc);
+            if (ExpectedType == typeof(object))
+                ctx.LoadNullRef();
+            else
+                ctx.LoadValue(ExpectedType);
+            ctx.LoadValue((int)options);
+            ctx.EmitCall(typeof(BclHelpers).GetMethod(nameof(BclHelpers.ReadNetObject),
+                new[] { Compiler.CompilerContext.StateBasedReadMethods.ByRefStateType, typeof(object),
+                    typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
         }
+
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.ThrowException(typeof(NotImplementedException));
-            throw new NotImplementedException(nameof(NetObjectSerializer) + "." + nameof(EmitWrite));
-            //ctx.LoadValue(valueFrom);
-            //ctx.CastToObject(ExpectedType);
-            //ctx.LoadWriter(true);
-            //ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
-            //ctx.LoadValue((int)options);
-            //ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod<BclHelpers>("WriteNetObject", this));
+            // BclHelpers.WriteNetObject(ref state, value, options);
+            using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(loc);
+            ctx.CastToObject(ExpectedType);
+            ctx.LoadValue((int)options);
+            ctx.EmitCall(typeof(BclHelpers).GetMethod(nameof(BclHelpers.WriteNetObject),
+                new[] { Compiler.WriterUtil.ByRefStateType, typeof(object),
+                    typeof(BclHelpers.NetObjectOptions)}));
+
         }
     }
 }

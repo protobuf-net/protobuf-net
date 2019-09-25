@@ -597,10 +597,6 @@ namespace ProtoBuf.Meta
                 finally
                 {
                     ReleaseLock(opaqueToken);
-                    if (weAdded)
-                    {
-                        ResetKeyCache();
-                    }
                 }
             }
             return key;
@@ -693,7 +689,6 @@ namespace ProtoBuf.Meta
             finally
             {
                 ReleaseLock(opaqueToken);
-                ResetKeyCache();
             }
 
             return newType;
@@ -746,25 +741,25 @@ namespace ProtoBuf.Meta
 
         private readonly BasicList types = new BasicList();
 
-        /// <summary>
-        /// Provides the key that represents a given type in the current model.
-        /// </summary>
-        protected override int GetKeyImpl(Type type)
-        {
-            return GetKey(type, false, true);
-        }
+        /// <summary>Resolve a service relative to T</summary>
+        protected internal override IMessageSerializer<T> GetMessageSerializer<T>()
+            => GetServices<T>() as IMessageSerializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override IProtoSerializer<T> GetSerializer<T>()
-            => GetServices<T>() as IProtoSerializer<T>;
+        protected internal override IScalarSerializer<T> GetScalarSerializer<T>()
+            => GetServices<T>() as IScalarSerializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>()
-            => GetServices<T>() as IProtoSubTypeSerializer<T>;
+        protected internal override ISubTypeSerializer<T> GetSubTypeSerializer<T>()
+            => GetServices<T>() as ISubTypeSerializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override IProtoFactory<T> GetFactory<T>()
-            => GetServices<T>() as IProtoFactory<T>;
+        protected internal override IFactory<T> GetFactory<T>()
+            => GetServices<T>() as IFactory<T>;
+
+        /// <summary>Indicates whether a type is known to the model</summary>
+        protected internal override bool IsKnownType<T>()
+            => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetServices<T>()
@@ -785,7 +780,7 @@ namespace ProtoBuf.Meta
 
         private object GetServicesSlow(Type type)
         {
-            int typeIndex = GetKey(type, false, false);
+            int typeIndex = FindOrAddAuto(type, false, true, false);
             if (typeIndex >= 0)
             {
                 var mt = (MetaType)types[typeIndex];
@@ -804,56 +799,28 @@ namespace ProtoBuf.Meta
         /// </summary>
         public override string ToString() => _name ?? base.ToString();
 
-        internal int GetKey(Type type, bool demand, bool getBaseKey)
-        {
-            Debug.Assert(type != null);
-            try
-            {
-                int typeIndex = FindOrAddAuto(type, demand, true, false);
-                if (typeIndex >= 0)
-                {
-                    MetaType mt = (MetaType)types[typeIndex];
-                    if (getBaseKey)
-                    {
-                        mt = MetaType.GetRootType(mt);
-                        typeIndex = FindOrAddAuto(mt.Type, true, true, false);
-                    }
-                }
-                return typeIndex;
-            }
-            catch (NotSupportedException)
-            {
-                throw; // re-surface "as-is"
-            }
-            catch (Exception ex)
-            {
-                if (ex.Message.IndexOf(type.FullName) >= 0) throw;  // already enough info
-                throw new ProtoException(ex.Message + " (" + type.FullName + ")", ex);
-            }
-        }
-
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
-        /// <param name="key">Represents the type (including inheritance) to consider.</param>
+        /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="state">Writer state</param>
-        protected internal override void Serialize(ref ProtoWriter.State state, int key, object value)
+        protected internal override void Serialize(ref ProtoWriter.State state, Type type, object value)
         {
             //Debug.WriteLine("Serialize", value);
-            ((MetaType)types[key]).Serializer.Write(ref state, value);
+            this[type].Serializer.Write(ref state, value);
         }
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
-        /// <param name="key">Represents the type (including inheritance) to consider.</param>
+        /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <param name="state">Reader state</param>
-        protected internal override object DeserializeCore(ref ProtoReader.State state, int key, object value)
+        protected internal override object Deserialize(ref ProtoReader.State state, Type type, object value)
         {
             //Debug.WriteLine("Deserialize", value);
-            IRuntimeProtoSerializerNode ser = ((MetaType)types[key]).Serializer;
+            IRuntimeProtoSerializerNode ser = this[type].Serializer;
             if (value == null && ser.ExpectedType.IsValueType)
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType, nonPublic: true);
@@ -1112,7 +1079,7 @@ namespace ProtoBuf.Meta
             if (string.IsNullOrEmpty(typeName))
             {
                 if (save) throw new ArgumentNullException("typeName");
-                typeName = Guid.NewGuid().ToString();
+                typeName = "CompiledModel_" + Guid.NewGuid().ToString();
             }
 
             string assemblyName, moduleName;
@@ -1194,7 +1161,19 @@ namespace ProtoBuf.Meta
                 var metaType = (MetaType)types[index];
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
-                if (runtimeType.IsEnum) continue;
+                ILGenerator il;
+                if (runtimeType.IsEnum)
+                {
+                    // this is mostly used to properly understand which types we recognize;
+                    // it is not actually used right now
+                    var iType = typeof(IScalarSerializer<>).MakeGenericType(runtimeType);
+                    type.AddInterfaceImplementation(iType);
+                    il = CompilerContextScope.Implement(type, iType, nameof(IScalarSerializer<string>.Read));
+                    il.ThrowException(typeof(NotImplementedException));
+                    il = CompilerContextScope.Implement(type, iType, nameof(IScalarSerializer<string>.Write));
+                    il.ThrowException(typeof(NotImplementedException));
+                    continue;
+                }
                 if (!IsFullyPublic(runtimeType))
                 {
                     ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + runtimeType.FullName);
@@ -1203,11 +1182,11 @@ namespace ProtoBuf.Meta
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
                 
                 // we always emit the serializer API
-                var serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
+                var serType = typeof(IMessageSerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
 
-                var il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Read));
-                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(IProtoSerializer<string>.Read)))
+                il = CompilerContextScope.Implement(type, serType, nameof(IMessageSerializer<string>.Read));
+                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(IMessageSerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
                     {
@@ -1221,8 +1200,8 @@ namespace ProtoBuf.Meta
                     ctx.Return();
                 }
 
-                il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
-                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(IProtoSerializer<string>.Write)))
+                il = CompilerContextScope.Implement(type, serType, nameof(IMessageSerializer<string>.Write));
+                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(IMessageSerializer<string>.Write)))
                 {
                     if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
                     else serializer.EmitWrite(ctx, ctx.InputValue);
@@ -1232,21 +1211,21 @@ namespace ProtoBuf.Meta
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)
                 {
-                    serType = typeof(IProtoSubTypeSerializer<>).MakeGenericType(runtimeType);
+                    serType = typeof(ISubTypeSerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(serType);
 
-                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
+                    il = CompilerContextScope.Implement(type, serType, nameof(ISubTypeSerializer<string>.WriteSubType));
                     using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this,
-                         runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType)))
+                         runtimeType, nameof(ISubTypeSerializer<string>.WriteSubType)))
                     {
                         serializer.EmitWrite(ctx, ctx.InputValue);
                         ctx.Return();
                     }
 
-                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
+                    il = CompilerContextScope.Implement(type, serType, nameof(ISubTypeSerializer<string>.ReadSubType));
                     using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this,
                         typeof(SubTypeState<>).MakeGenericType(runtimeType),
-                        nameof(IProtoSubTypeSerializer<string>.ReadSubType)))
+                        nameof(ISubTypeSerializer<string>.ReadSubType)))
                     {
                         serializer.EmitRead(ctx, ctx.InputValue);
                         // note that EmitRead will unwrap the T for us on the stack
@@ -1257,12 +1236,12 @@ namespace ProtoBuf.Meta
                 // if we're constructor skipping, provide a factory for that
                 if (serializer.ShouldEmitCreateInstance)
                 {
-                    serType = typeof(IProtoFactory<>).MakeGenericType(runtimeType);
+                    serType = typeof(IFactory<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(serType);
 
-                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
+                    il = CompilerContextScope.Implement(type, serType, nameof(IFactory<string>.Create));
                     using var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.Context, this,
-                         typeof(ISerializationContext), nameof(IProtoFactory<string>.Create));
+                         typeof(ISerializationContext), nameof(IFactory<string>.Create));
                     serializer.EmitCreateInstance(ctx, false);
                     ctx.Return();
                 }

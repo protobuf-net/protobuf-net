@@ -23,7 +23,7 @@ namespace ProtoBuf.Serializers
         abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory);
     }
 
-    internal sealed class InheritanceTypeSerializer<TBase, T> : TypeSerializer<T>, IProtoSubTypeSerializer<T>
+    internal sealed class InheritanceTypeSerializer<TBase, T> : TypeSerializer<T>, ISubTypeSerializer<T>
         where TBase : class
         where T : class, TBase
     {
@@ -37,7 +37,7 @@ namespace ProtoBuf.Serializers
         public override T Read(ref ProtoReader.State state, T value)
             => state.ReadBaseType<TBase, T>(value);
 
-        T IProtoSubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
+        T ISubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
         {
             value.OnBeforeDeserialize(_subTypeOnBeforeDeserialize);
             DeserializeBody(ref state, ref value, (ref SubTypeState<T> s) => s.Value, (ref SubTypeState<T> s, T v) => s.Value = v);
@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
             return val;
         }
 
-        void IProtoSubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
+        void ISubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
             => SerializeImpl(ref state, value);
 
         public override void EmitReadRoot(CompilerContext context, Local valueFrom)
@@ -56,7 +56,7 @@ namespace ProtoBuf.Serializers
             if (context.IsService)
             {
                 using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
-                context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
                 context.LoadState();
 
                 // sub-state
@@ -64,15 +64,15 @@ namespace ProtoBuf.Serializers
                 context.LoadValue(tmp);
                 context.EmitCall(typeof(SubTypeState<TBase>)
                     .GetMethod(nameof(SubTypeState<string>.Create), BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(typeof(T)));
-                context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
-                    .GetMethod(nameof(IProtoSubTypeSerializer<string>.ReadSubType), BindingFlags.Public | BindingFlags.Instance));
+                context.EmitCall(typeof(ISubTypeSerializer<TBase>)
+                    .GetMethod(nameof(ISubTypeSerializer<string>.ReadSubType), BindingFlags.Public | BindingFlags.Instance));
                 if (typeof(T) != typeof(TBase)) context.Cast(typeof(T));
             }
             else
             {
                 context.LoadState();
                 context.LoadValue(valueFrom);
-                context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
                 context.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(typeof(TBase), typeof(T)));
             }
@@ -85,17 +85,17 @@ namespace ProtoBuf.Serializers
             using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
             if (context.IsService)
             {
-                context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
                 context.LoadState();
                 context.LoadValue(tmp);
-                context.EmitCall(typeof(IProtoSubTypeSerializer<TBase>)
-                    .GetMethod(nameof(IProtoSubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
+                context.EmitCall(typeof(ISubTypeSerializer<TBase>)
+                    .GetMethod(nameof(ISubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
             }
             else
             {
                 context.LoadState();
                 context.LoadValue(tmp);
-                context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
                 context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.State.WriteBaseType), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(typeof(TBase)));
             }
@@ -103,7 +103,7 @@ namespace ProtoBuf.Serializers
 
         public override bool IsSubType => true;
     }
-    internal class TypeSerializer<T> : TypeSerializer, IProtoSerializer<T>, IProtoFactory<T>, IProtoTypeSerializer
+    internal class TypeSerializer<T> : TypeSerializer, IMessageSerializer<T>, IFactory<T>, IProtoTypeSerializer
     {
         public virtual bool HasInheritance => false;
         public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)
@@ -111,7 +111,7 @@ namespace ProtoBuf.Serializers
         public virtual void EmitWriteRoot(CompilerContext context, Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitWrite(context, valueFrom);
 
-        T IProtoFactory<T>.Create(ISerializationContext context) => (T)CreateInstance(context);
+        T IFactory<T>.Create(ISerializationContext context) => (T)CreateInstance(context);
 
         public virtual void Write(ref ProtoWriter.State state, T value)
             => SerializeImpl(ref state, value);

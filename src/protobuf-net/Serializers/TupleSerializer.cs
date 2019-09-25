@@ -4,7 +4,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class TupleSerializer<T> : IProtoTypeSerializer, IProtoSerializer<T>
+    internal sealed class TupleSerializer<T> : IProtoTypeSerializer, IMessageSerializer<T>
     {
 
         bool IProtoTypeSerializer.IsSubType => false;
@@ -89,10 +89,10 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        T IProtoSerializer<T>.Read(ref ProtoReader.State state, T value)
+        T IMessageSerializer<T>.Read(ref ProtoReader.State state, T value)
             => (T)Read(ref state, value);
 
-        void IProtoSerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void IMessageSerializer<T>.Write(ref ProtoWriter.State state, T value)
             => Write(ref state, value);
 
         public object Read(ref ProtoReader.State state, object value)

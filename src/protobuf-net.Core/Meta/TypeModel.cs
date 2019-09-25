@@ -36,13 +36,13 @@ namespace ProtoBuf.Meta
         protected internal Type MapType(Type type, bool demand) => type;
 #pragma warning restore RCS1163 // Unused parameter.
 
-        internal static WireType GetWireType(TypeModel model, ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
+        internal static WireType GetWireType(TypeModel model, ProtoTypeCode code, DataFormat format, ref Type type, out bool isKnownType)
         {
-            modelKey = -1;
+            isKnownType = false;
             if (type.IsEnum)
             {
                 if (model != null)
-                    modelKey = model.GetKey(ref type);
+                    isKnownType = model.IsKnownType(ref type);
                 return WireType.Varint;
             }
             switch (code)
@@ -73,12 +73,17 @@ namespace ProtoBuf.Meta
                     return WireType.String;
             }
 
-            if (model != null && (modelKey = model.GetKey(ref type)) >= 0)
+            if (model != null && (isKnownType = model.IsKnownType(ref type)))
             {
                 return WireType.String;
             }
             return WireType.None;
         }
+
+        /// <summary>
+        /// Indicates whether a type is known to the model
+        /// </summary>
+        protected internal virtual bool IsKnownType<T>() => GetMessageSerializer<T>() != null || GetScalarSerializer<T>() != null;
 
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
@@ -95,13 +100,13 @@ namespace ProtoBuf.Meta
 
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             // note the "ref type" here normalizes against proxies
-            WireType wireType = GetWireType(this, typecode, format, ref type, out int modelKey);
+            WireType wireType = GetWireType(this, typecode, format, ref type, out bool isKnown);
 
-            if (modelKey >= 0)
+            if (isKnown)
             {   // write the header, but defer to the model
                 if (type.IsEnum)
                 { // no header
-                    Serialize(ref state, modelKey, value);
+                    Serialize(ref state, type, value);
                     return true;
                 }
                 else
@@ -116,11 +121,11 @@ namespace ProtoBuf.Meta
                         case WireType.String:
                             // needs a wrapping length etc
                             SubItemToken token = state.StartSubItem(value);
-                            Serialize(ref state, modelKey, value);
+                            Serialize(ref state, type, value);
                             state.EndSubItem(token);
                             return true;
                         default:
-                            Serialize(ref state, modelKey, value);
+                            Serialize(ref state, type, value);
                             return true;
                     }
                 }
@@ -179,14 +184,13 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        private void SerializeCore(ref ProtoWriter.State state, object value)
+        internal void SerializeCore(ref ProtoWriter.State state, object value)
         {
             if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
             Type type = value.GetType();
-            int key = GetKey(ref type);
-            if (key >= 0)
+            if (state.IsKnownType(ref type))
             {
-                Serialize(ref state, key, value);
+                Serialize(ref state, type, value);
             }
             else if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
             {
@@ -445,10 +449,9 @@ namespace ProtoBuf.Meta
             var state = ProtoReader.State.Create(source, this, context, len);
             try
             {
-                int key = GetKey(ref type);
-                if (key >= 0 && !type.IsEnum)
+                if (IsKnownType(ref type) && !type.IsEnum)
                 {
-                    value = DeserializeCore(ref state, key, value);
+                    value = Deserialize(ref state, type, value);
                 }
                 else
                 {
@@ -630,7 +633,6 @@ namespace ProtoBuf.Meta
                 if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
                 type = value.GetType();
             }
-            int key = GetKey(ref type);
 
             var state = ProtoWriter.State.Create(dest, this, context);
             try
@@ -638,12 +640,12 @@ namespace ProtoBuf.Meta
                 switch (style)
                 {
                     case PrefixStyle.None:
-                        Serialize(ref state, key, value);
+                        Serialize(ref state, type, value);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
                     case PrefixStyle.Fixed32BigEndian:
-                        state.WriteObject(value, key, style, fieldNumber);
+                        state.WriteObject(value, type, style, fieldNumber);
                         break;
                     default:
                         ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
@@ -864,10 +866,9 @@ namespace ProtoBuf.Meta
         {
             if (!DynamicStub.TryDeserialize(type, this, ref state, ref value))
             {
-                int key = GetKey(ref type);
-                if (key >= 0 && !type.IsEnum)
+                if (IsKnownType(ref type) && !type.IsEnum)
                 {
-                    return DeserializeCore(ref state, key, value);
+                    return Deserialize(ref state, type, value);
                 }
                 // this returns true to say we actively found something, but a value is assigned either way (or throws)
                 TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
@@ -1133,7 +1134,7 @@ namespace ProtoBuf.Meta
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             Type itemType;
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            WireType wiretype = GetWireType(this, typecode, format, ref type, out int modelKey);
+            WireType wiretype = GetWireType(this, typecode, format, ref type, out bool isKnown);
 
             bool found = false;
             if (wiretype == WireType.None)
@@ -1183,18 +1184,18 @@ namespace ProtoBuf.Meta
                 found = true;
                 state.Hint(wiretype); // handle signed data etc
 
-                if (modelKey >= 0)
+                if (isKnown)
                 {
                     switch (wiretype)
                     {
                         case WireType.String:
                         case WireType.StartGroup:
                             SubItemToken token = state.StartSubItem();
-                            value = DeserializeCore(ref state, modelKey, value);
+                            value = Deserialize(ref state, type, value);
                             state.EndSubItem(token);
                             continue;
                         default:
-                            value = DeserializeCore(ref state, modelKey, value);
+                            value = Deserialize(ref state, type, value);
                             continue;
                     }
                 }
@@ -1339,57 +1340,47 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether the supplied type is explicitly modelled by the model
         /// </summary>
-        public bool IsDefined(Type type) => GetKey(ref type) >= 0;
-
-        private readonly Dictionary<Type, KnownTypeKey> knownKeys = new Dictionary<Type, KnownTypeKey>();
-
-        // essentially just a ValueTuple<int,Type> - I just don't want the extra dependency
-        private readonly struct KnownTypeKey
-        {
-            public KnownTypeKey(Type type, int key)
-            {
-                Type = type;
-                Key = key;
-            }
-
-            public int Key { get; }
-
-            public Type Type { get; }
-        }
+        public bool IsDefined(Type type) => IsKnownType(ref type);
 
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual IProtoSerializer<T> GetSerializer<T>()
-            => this as IProtoSerializer<T>;
+        protected internal virtual IMessageSerializer<T> GetMessageSerializer<T>()
+            => this as IMessageSerializer<T>;
+
+        /// <summary>
+        /// Get a typed serializer for <typeparamref name="T"/>
+        /// </summary>
+        protected internal virtual IScalarSerializer<T> GetScalarSerializer<T>()
+            => this as IScalarSerializer<T>;
 
         /// <summary>
         /// Get a factory for creating <typeparamref name="T"/> values
         /// </summary>
-        protected internal virtual IProtoFactory<T> GetFactory<T>()
-            => this as IProtoFactory<T>;
+        protected internal virtual IFactory<T> GetFactory<T>()
+            => this as IFactory<T>;
 
         /// <summary>
         /// Get a typed serializer for deserialzing <typeparamref name="T"/> as part of an inheritance model
         /// </summary>
-        protected internal virtual IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
-            => this as IProtoSubTypeSerializer<T>;
+        protected internal virtual ISubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
+            => this as ISubTypeSerializer<T>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IProtoSerializer<T> NoSerializer<T>(TypeModel model)
+        private static IMessageSerializer<T> NoSerializer<T>(TypeModel model)
         {
             ThrowHelper.ThrowInvalidOperationException($"No serializer for type {(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IProtoSubTypeSerializer<T> NoSubTypeSerializer<T>(TypeModel model) where T : class
+        private static ISubTypeSerializer<T> NoSubTypeSerializer<T>(TypeModel model) where T : class
         {
             ThrowHelper.ThrowInvalidOperationException($"No sub-type serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
-        internal static T CreateInstance<T>(ISerializationContext context = null, IProtoFactory<T> factory = null)
+        internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null)
         {
             if (factory == null) factory = context?.Model?.GetFactory<T>();
             if (factory != null)
@@ -1409,98 +1400,65 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
-           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<T>(model);
+        internal static IMessageSerializer<T> GetSerializer<T>(TypeModel model)
+           => model?.GetMessageSerializer<T>() ?? WellKnownSerializer.Instance as IMessageSerializer<T> ?? NoSerializer<T>(model);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
-           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSubTypeSerializer<T> ?? NoSubTypeSerializer<T>(model);
+        internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
+           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as ISubTypeSerializer<T> ?? NoSubTypeSerializer<T>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// The type is also normalized for proxies at the same time.
         /// </summary>
-        protected internal int GetKey(ref Type type)
+        protected internal bool IsKnownType(ref Type type)
         {
-            if (type == null) return -1;
-            int key;
-            lock (knownKeys)
+            if (type == null) return false;
+            if (IsKnownTypeCore(type)) return true;
+
+            return IsKnownTypeViaProxy(ref type);
+        }
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private bool IsKnownTypeViaProxy(ref Type type)
+        {
+            Type normalized = ResolveProxies(type);
+            if (normalized != null && normalized != type)
             {
-                if (knownKeys.TryGetValue(type, out var tuple))
+                if (IsKnownTypeCore(normalized))
                 {
-                    // the type can be changed via ResolveProxies etc
-#if DEBUG
-                    var actualKey = GetKeyImpl(type);
-                    if(actualKey != tuple.Key)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException(
-                            $"Key cache failure; got {tuple.Key} instead of {actualKey} for '{type.Name}'");
-                    }
-#endif
-                    type = tuple.Type;
-                    return tuple.Key;
+                    type = normalized;
+                    return true;
                 }
             }
-            key = GetKeyImpl(type);
-            Type originalType = type;
-            if (key < 0)
-            {
-                Type normalized = ResolveProxies(type);
-                if (normalized != null && normalized != type)
-                {
-                    type = normalized; // hence ref
-                    key = GetKeyImpl(type);
-                }
-            }
-            lock (knownKeys)
-            {
-                knownKeys[originalType] = new KnownTypeKey(type, key);
-            }
-            return key;
+            return false;
         }
 
         /// <summary>
-        /// Advertise that a type's key can have changed
+        /// Indicates whether a type is known to the serializer
         /// </summary>
-        internal void ResetKeyCache()
-        {
-            // clear *everything* (think: multi-level - can be many descendents)
-            lock (knownKeys)
-            {
-                knownKeys.Clear();
-            }
-        }
-
-        /// <summary>
-        /// Provides the key that represents a given type in the current model.
-        /// </summary>
-        protected virtual int GetKeyImpl(Type type)
-        {
-            ThrowHelper.ThrowNotSupportedException(nameof(GetKeyImpl) + " is not supported");
-            return default;
-        }
+        private bool IsKnownTypeCore(Type type) => DynamicStub.IsKnownType(type, this);
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
-        /// <param name="key">Represents the type (including inheritance) to consider.</param>
+        /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="state">Write state</param>
-        protected internal virtual void Serialize(ref ProtoWriter.State state, int key, object value)
-            => ThrowHelper.ThrowNotSupportedException(nameof(Serialize) + " is not supported");
+        protected internal virtual void Serialize(ref ProtoWriter.State state, Type type, object value)
+            => ThrowHelper.ThrowNotSupportedException($"{nameof(Serialize)} is not supported for {type} by {this}");
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
-        /// <param name="key">Represents the type (including inheritance) to consider.</param>
+        /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <param name="state">Reader state</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal virtual object DeserializeCore(ref ProtoReader.State state, int key, object value)
+        protected internal virtual object Deserialize(ref ProtoReader.State state, Type type, object value)
         {
-            ThrowHelper.ThrowNotSupportedException(nameof(DeserializeCore) + " is not supported");
+            ThrowHelper.ThrowNotSupportedException($"{nameof(Deserialize)} is not supported for {type} by {this}");
             return default;
         }
 
@@ -1530,7 +1488,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public T DeepClone<T>(T value)
+        public T DeepClone<T>(T value, SerializationContext context = null)
         {
             if (TypeHelper<T>.IsObjectType && value == null) return value;
             if (TypeHelper<T>.UseFallback)
@@ -1542,9 +1500,9 @@ namespace ProtoBuf.Meta
             else
             {
                 using var ms = new MemoryStream();
-                Serialize<T>(ms, value);
+                Serialize<T>(ms, value, context);
                 ms.Position = 0;
-                return Deserialize<T>(ms);
+                return Deserialize<T>(ms, default, context);
             }
         }
 
@@ -1556,15 +1514,13 @@ namespace ProtoBuf.Meta
         {
             if (value == null) return null;
             Type type = value.GetType();
-            if (DynamicStub.TryDeepClone(this, type, ref value))
+            if (DynamicStub.TryDeepClone(type, this, ref value))
             {
                 return value;
             }
             else
             {
-                int key = GetKey(ref type);
-
-                if (key >= 0 && !type.IsEnum)
+                if (IsKnownType(ref type) && !type.IsEnum)
                 {
                     using MemoryStream ms = new MemoryStream();
                     var writeState = ProtoWriter.State.Create(ms, this, null);
@@ -1573,7 +1529,7 @@ namespace ProtoBuf.Meta
                         writeState.SetRootObject(value);
                         try
                         {
-                            Serialize(ref writeState, key, value);
+                            Serialize(ref writeState, type, value);
                         }
                         catch
                         {
@@ -1590,7 +1546,7 @@ namespace ProtoBuf.Meta
                     var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
                     try
                     {
-                        return DeserializeCore(ref readState, key, null);
+                        return Deserialize(ref readState, type, null);
                     }
                     finally
                     {
@@ -1603,7 +1559,7 @@ namespace ProtoBuf.Meta
                     Buffer.BlockCopy(orig, 0, clone, 0, orig.Length);
                     return clone;
                 }
-                else if (GetWireType(this, Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)
+                else if (GetWireType(this, Helpers.GetTypeCode(type), DataFormat.Default, ref type, out bool isKnown) != WireType.None && !isKnown)
                 {   // immutable; just return the original value
                     return value;
                 }
@@ -1794,8 +1750,8 @@ namespace ProtoBuf.Meta
                 default:
                     return allowBasic; // well-known basic type
             }
-            int modelKey = GetKey(ref type);
-            if (modelKey >= 0) return allowContract; // known contract type
+
+            if (IsKnownType(ref type)) return allowContract; // known contract type
 
             // is it a list?
             if (allowLists)

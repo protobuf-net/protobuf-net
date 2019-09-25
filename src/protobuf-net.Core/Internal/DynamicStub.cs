@@ -24,8 +24,20 @@ namespace ProtoBuf.Internal
             => Get(type).TrySerialize(model, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeepClone(TypeModel model, Type type, ref object value)
+        internal static bool TryDeepClone(Type type, TypeModel model, ref object value)
             => Get(type).TryDeepClone(model, ref value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool IsKnownType(Type type, TypeModel model)
+            => Get(type).IsKnownType(model);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void WriteMessage(Type type, TypeModel model, ref ProtoWriter.State state, object value)
+            => Get(type).WriteMessage(model, type, ref state, value);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static object ReadMessage(Type type, TypeModel model, ref ProtoReader.State state, object value)
+            => Get(type).ReadMessage(model, type, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DynamicStub Get(Type type) => (DynamicStub)s_byType[type] ?? SlowGet(type);
@@ -33,20 +45,36 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static DynamicStub SlowGet(Type type)
         {
-            var obj = NilStub.Instance;
-            if (!TypeHelper.UseFallback(type))
+            DynamicStub obj = NilStub.Instance;
+            if (type != null)
+            {
+                if (TypeHelper.UseFallback(type))
+                {
+                    if (type.IsEnum) obj = TryCreate(typeof(EnumLookup<>), type);
+                }
+                else
+                {
+                    obj = TryCreate(typeof(ConcreteStub<>), type);
+                }
+
+                lock (s_byType)
+                {
+                    s_byType[type] = obj;
+                }
+            }
+            return obj;
+
+            static DynamicStub TryCreate(Type openGenericType, Type type)
             {
                 try
                 {
-                    obj = (DynamicStub)Activator.CreateInstance(typeof(ConcreteStub<>).MakeGenericType(type), nonPublic: true);
+                    return (DynamicStub)Activator.CreateInstance(openGenericType.MakeGenericType(type), nonPublic: true);
                 }
-                catch { }
+                catch
+                {
+                    return NilStub.Instance;
+                }
             }
-            lock (s_byType)
-            {
-                s_byType[type] = obj;
-            }
-            return obj;
         }
 
         protected abstract bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value);
@@ -55,11 +83,19 @@ namespace ProtoBuf.Internal
 
         protected abstract bool TryDeepClone(TypeModel model, ref object value);
 
+        protected abstract bool IsKnownType(TypeModel model);
 
-        private sealed class NilStub : DynamicStub
+        protected virtual void WriteMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
+            => model.Serialize(ref state, type, value);
+
+        protected virtual object ReadMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
+            => model.Deserialize(ref state, type, value);
+
+        private class NilStub : DynamicStub
         {
-            public static DynamicStub Instance { get; } = new NilStub();
-            private NilStub() { }
+            protected NilStub() { }
+            public static readonly NilStub Instance = new NilStub();
+
             protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
                 => false;
             protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
@@ -67,11 +103,20 @@ namespace ProtoBuf.Internal
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
                 => false;
+
+            protected override bool IsKnownType(TypeModel model)
+                => false;
+        }
+        private sealed class EnumLookup<T> : NilStub where T : struct
+        {
+            private EnumLookup() { }
+            protected override bool IsKnownType(TypeModel model)
+                => model.IsKnownType<T>();
         }
         private sealed class ConcreteStub<T> : DynamicStub
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static IProtoSerializer<T> GetSerializer(TypeModel model)
+            private static IMessageSerializer<T> GetSerializer(TypeModel model)
             {
                 try { return TypeModel.GetSerializer<T>(model); }
                 catch { return null; }
@@ -84,6 +129,34 @@ namespace ProtoBuf.Internal
                 value = state.Deserialize<T>(TypeHelper<T>.FromObject(value), serializer);
                 return true;
             }
+
+            protected override void WriteMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
+            {
+                var serializer = GetSerializer(model);
+                if (serializer != null)
+                {
+                    serializer.Write(ref state, TypeHelper<T>.FromObject(value)); 
+                }
+                else
+                {
+                    base.WriteMessage(model, type, ref state, value);
+                }
+            }
+
+            protected override object ReadMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
+            {
+                var serializer = GetSerializer(model);
+                if (serializer != null)
+                {
+                    return serializer.Read(ref state, TypeHelper<T>.FromObject(value));
+                }
+                else
+                {
+                    return base.ReadMessage(model, type, ref state, value);
+                }
+            }
+
+            protected override bool IsKnownType(TypeModel model) => model.IsKnownType<T>();
 
             protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
             {

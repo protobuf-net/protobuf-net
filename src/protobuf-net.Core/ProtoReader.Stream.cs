@@ -9,13 +9,6 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
-
-#if PREFER_SPANS
-        internal const bool PreferSpans = true;
-#else
-        internal const bool PreferSpans = false;
-#endif
-
         /// <summary>
         /// Creates a new reader against a stream
         /// </summary>
@@ -42,11 +35,13 @@ namespace ProtoBuf
             /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
             public static State Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
             {
-                if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
+#if PREFER_SPANS
+                if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
                 {
                     return Create(new System.Buffers.ReadOnlySequence<byte>(
                         segment.Array, segment.Offset, segment.Count), model, context);
                 }
+#endif
 
 
 #pragma warning disable CS0618 // Type or member is obsolete

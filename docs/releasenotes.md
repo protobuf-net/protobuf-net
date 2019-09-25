@@ -18,8 +18,8 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 
 - **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
 - **breaking change** serialization callbacks on inheritance models are currently only supported at the root type
-- **breaking change** undclared inheritance base-types are no longer supported; meaning: if you serialize a `Foo : FooBase` **as a `FooBase`**, but only tell the serializer about `Foo` (never mentioning `FooBase`), it will fail
-- "pipelines" (`ReadOnlySequence<byte>`) support for the **read** API
+- **breaking change** all APIs that take `int key` referring to `Type` are deprecated; user code should not be using these APIs, so no impact is expected
+- **breaking change** undeclared inheritance base-types are no longer supported; meaning: if you serialize a `Foo : FooBase` **as a `FooBase`**, but only tell the serializer about `Foo` (never mentioning `FooBase`), it will fail
 - new state-based reader/writer API (works with streams, buffers, etc)
 - new `CreateForAssembly(...)` API (various overloads) for working with precompiled (at runtime) type models (faster than `RuntimeTypeModel`, but less flexible)
 - significant amounts of code tidying; many yaks were shawn

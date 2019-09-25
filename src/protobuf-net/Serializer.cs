@@ -38,10 +38,16 @@ namespace ProtoBuf
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public static T DeepClone<T>(T instance)
+        public static T DeepClone<T>(T instance, SerializationContext context = null)
         {
-            return RuntimeTypeModel.Default.DeepClone<T>(instance);
+            return RuntimeTypeModel.Default.DeepClone<T>(instance, context);
         }
+
+        /// <summary>
+        /// Calculates the length of a protocol-buffer payload for an item
+        /// </summary>
+        public static long Measure<T>(T value, SerializationContext context = null)
+            => RuntimeTypeModel.Default.Measure<T>(value, context);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance.

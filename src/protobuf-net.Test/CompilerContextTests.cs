@@ -1,11 +1,7 @@
 ﻿using ProtoBuf.Meta;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace ProtoBuf
@@ -35,9 +31,6 @@ namespace ProtoBuf
             il.Emit(OpCodes.Ret);
             type.DefineMethodOverride(method, baseMethod);
 
-            //var il = RuntimeTypeModel.Override(type, "GetKeyImpl");
-            //il.ThrowException(typeof(NotImplementedException));
-
             il = RuntimeTypeModel.Override(type, "Serialize");
             il.ThrowException(typeof(NotImplementedException));
 
@@ -49,18 +42,16 @@ namespace ProtoBuf
 
             TypeModel tm = (TypeModel)Activator.CreateInstance(t);
             Type kt = typeof(string);
-            int key = tm.GetKey(ref kt);
-            Assert.Equal(42, key);
-            Console.WriteLine(key);
+            bool known = tm.IsKnownType(ref kt);
+            Assert.True(known);
         }
 #endif
     }
 
     public sealed class MyModel : TypeModel
     {
-        protected override int GetKeyImpl(Type type) => 42;
-        protected internal override void Serialize(ref ProtoWriter.State state, int key, object value)
+        protected internal override void Serialize(ref ProtoWriter.State state, Type type, object value)
         { }
-        protected internal override object DeserializeCore(ref ProtoReader.State state, int key, object value) => null;
+        protected internal override object Deserialize(ref ProtoReader.State state, Type type, object value) => null;
     }
 }
