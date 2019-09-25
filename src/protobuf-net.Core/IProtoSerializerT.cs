@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
@@ -108,22 +109,29 @@ namespace ProtoBuf
         [MethodImpl(MethodImplOptions.NoInlining)]
         private T Cast()
         {
-            if (_value == null)
-            {
-                // pick the best available constructor; conside C : B : A, and we're currently deserializing
-                // layer B at the point the object is first needed; the caller could have asked
-                // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
-                // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
-                // what they asked for)
-                var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
-                _value = typed;
-                _onBeforeDeserialize?.Invoke(typed, _context);
-                return typed;
-            }
+            // pick the best available constructor; conside C : B : A, and we're currently deserializing
+            // layer B at the point the object is first needed; the caller could have asked
+            // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
+            // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
+            // what they asked for)
+            var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
 
-            ThrowHelper.ThrowNotImplementedException("upcast");
-            return default;
+            if (_value != null) typed = Merge(_context, _value, typed);
+            _onBeforeDeserialize?.Invoke(typed, _context);
+            _value = typed;
+            return typed;
+
+            // this isn't especially efficient, but it should work
+            static T Merge(ISerializationContext context, object value, T typed)
+            {
+                using var ms = new MemoryStream();
+                // this <object> sneakily finds the correct base-type
+                context.Model.Serialize<object>(ms, value, context.Context);
+                ms.Position = 0;
+                return context.Model.Deserialize<T>(ms, typed, context.Context);
+            }
         }
+
 
         /// <summary>
         /// Parse the input as a sub-type of the instance
