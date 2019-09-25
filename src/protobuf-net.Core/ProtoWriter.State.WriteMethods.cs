@@ -478,7 +478,7 @@ namespace ProtoBuf
                     if (value != null)
                     {
                         SetRootObject(value);
-                        (serializer ?? TypeModel.GetSerializer<T>(Model)).Write(ref this, value);
+                        (serializer ?? TypeModel.GetMessageSerializer<T>(Model)).Write(ref this, value);
                     }
                     CheckClear();
                     long after = GetPosition();

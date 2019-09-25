@@ -212,7 +212,7 @@ namespace ProtoBuf
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, IMessageSerializer<T> serializer, PrefixStyle style)
             {
-                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
+                if (serializer == null) serializer = TypeModel.GetMessageSerializer<T>(Model);
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
 
                 switch (style)

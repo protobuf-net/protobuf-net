@@ -711,7 +711,7 @@ namespace ProtoBuf
             public T ReadMessage<T>(T value = default, IMessageSerializer<T> serializer = null)
             {
                 var tok = StartSubItem();
-                var result = (serializer ?? TypeModel.GetSerializer<T>(_reader._model)).Read(ref this, value);
+                var result = (serializer ?? TypeModel.GetMessageSerializer<T>(_reader._model)).Read(ref this, value);
                 EndSubItem(tok);
                 return result;
             }
@@ -745,7 +745,7 @@ namespace ProtoBuf
                     _reader.SetRootObject(value);
                 }
 
-                var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
+                var result = (serializer ?? TypeModel.GetMessageSerializer<T>(Model)).Read(ref this, value);
                 CheckFullyConsumed();
                 return result;
             }

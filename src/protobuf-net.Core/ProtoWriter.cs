@@ -251,7 +251,7 @@ namespace ProtoBuf
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = state.StartSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
+            (serializer ?? TypeModel.GetMessageSerializer<T>(model)).Write(ref state, value);
             state.EndSubItem(tok, style);
 #pragma warning restore CS0618
         }

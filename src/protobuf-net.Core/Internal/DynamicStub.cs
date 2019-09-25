@@ -116,14 +116,14 @@ namespace ProtoBuf.Internal
         private sealed class ConcreteStub<T> : DynamicStub
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static IMessageSerializer<T> GetSerializer(TypeModel model)
+            private static IMessageSerializer<T> GetMessageSerializer(TypeModel model)
             {
-                try { return TypeModel.GetSerializer<T>(model); }
+                try { return TypeModel.GetMessageSerializer<T>(model); }
                 catch { return null; }
             }
             protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)
             {
-                var serializer = GetSerializer(model);
+                var serializer = GetMessageSerializer(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
                 value = state.Deserialize<T>(TypeHelper<T>.FromObject(value), serializer);
@@ -132,7 +132,7 @@ namespace ProtoBuf.Internal
 
             protected override void WriteMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
             {
-                var serializer = GetSerializer(model);
+                var serializer = GetMessageSerializer(model);
                 if (serializer != null)
                 {
                     serializer.Write(ref state, TypeHelper<T>.FromObject(value)); 
@@ -145,7 +145,7 @@ namespace ProtoBuf.Internal
 
             protected override object ReadMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
             {
-                var serializer = GetSerializer(model);
+                var serializer = GetMessageSerializer(model);
                 if (serializer != null)
                 {
                     return serializer.Read(ref state, TypeHelper<T>.FromObject(value));
@@ -160,7 +160,7 @@ namespace ProtoBuf.Internal
 
             protected override bool TrySerialize(TypeModel model, ref ProtoWriter.State state, object value)
             {
-                var serializer = GetSerializer(model);
+                var serializer = GetMessageSerializer(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
                 state.Serialize<T>(TypeHelper<T>.FromObject(value), serializer);
