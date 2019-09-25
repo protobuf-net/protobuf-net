@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
         }
         private static MethodInfo GetCustomToString(Type type)
         {
-            return type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
+            return type.GetMethod(nameof(object.ToString), BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
                         null, Type.EmptyTypes, null);
         }
 
@@ -54,24 +54,30 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type type = ExpectedType;
+            using var loc = ctx.GetLocalWithValue(typeof(string), valueFrom);
+            ctx.LoadState();
+            ctx.LoadAddress(loc, type);
             if (type.IsValueType)
             {   // note that for structs, we've already asserted that a custom ToString
                 // exists; no need to handle the box/callvirt scenario
 
                 // force it to a variable if needed, so we can take the address
-                using Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom);
-                ctx.LoadAddress(loc, type);
                 ctx.EmitCall(GetCustomToString(type));
             }
             else
             {
-                ctx.EmitCall(typeof(object).GetMethod("ToString"));
+                ctx.EmitCall(typeof(object).GetMethod(nameof(object.ToString)));
             }
-            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteString), valueFrom);
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(string), typeof(StringMap) }, null));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadString), typeof(string));
+            ctx.LoadState();
+            ctx.LoadNullRef(); // map
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadString), BindingFlags.Instance | BindingFlags.Public,
+                null, new[] { typeof(StringMap) }, null));
             ctx.EmitCall(parse);
         }
     }
