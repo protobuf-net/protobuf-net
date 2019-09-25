@@ -1,21 +1,15 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
+﻿using BlazorInputFile;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ProtoBuf.Models
 {
     public class DecodeViewModel
     {
-        private readonly IJSRuntime jSRuntime;
 
-        public DecodeViewModel(IJSRuntime jSRuntime)
+        public DecodeViewModel()
         {
-            this.jSRuntime = jSRuntime;
         }
         public enum DecodeContentTypeEnum
         {
@@ -27,8 +21,8 @@ namespace ProtoBuf.Models
         public string Hexadecimal { get; set; }
         [RegularExpression(@"^[a-zA-Z0-9\+/]*={0,3}$")]
         public string Base64 { get; set; }
-        public ElementReference FileInput { get; set; }
         public bool Recursive { get; set; }
+        public IFileListEntry File { get; set; }
         public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.Hexa;
 
         private async Task<byte[]> GetData()
@@ -51,8 +45,9 @@ namespace ProtoBuf.Models
                 case DecodeContentTypeEnum.Base64:
                     return Convert.FromBase64String(Base64);
                 case DecodeContentTypeEnum.File:
-                    var content = await jSRuntime.InvokeAsync<string>("getFileContent", FileInput);
-                    return Convert.FromBase64String(content);
+                    var ms = new System.IO.MemoryStream();
+                    await File.Data.CopyToAsync(ms);
+                    return ms.ToArray();
 
                 default:
                     throw new ArgumentOutOfRangeException($"Decode content type not implemented {DecodeContentType}");

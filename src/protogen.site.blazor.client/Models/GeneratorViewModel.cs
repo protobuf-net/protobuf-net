@@ -41,7 +41,6 @@ namespace ProtoBuf.Models {
         public bool? OneOfEnum { get; set; } = false;
         public bool? RepeatedEmitSetAccessors { get; set; } = false;
 
-        public bool SpecifyOptInProto { get; set; } = false;
         public string LanguageVersion { get; set; }
         public NamingConventionEnum NamingConvention { get; set; } = NamingConventionEnum.Auto;
 

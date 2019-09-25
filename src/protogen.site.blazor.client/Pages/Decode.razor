@@ -1,6 +1,5 @@
 ﻿@using ProtoBuf.Models;
-@using System.Text.RegularExpressions;
-@inject IJSRuntime JsRuntime;
+@using BlazorInputFile
 
 @page "/decode"
 <h3>
@@ -35,8 +34,7 @@
             break;
         case DecodeViewModel.DecodeContentTypeEnum.File:
             <div class="form-group">
-
-                <input type="file" @ref="fileUpload" id="customFile"  class="form-control-file" />
+                <InputFile OnChange="HandleSelection" />
             </div>
             break;
         default:
@@ -51,7 +49,17 @@
         </div>
     </div>
     <div class="form-group">
-        <input type="submit" class="btn btn-primary" value="Decode" />
+        <button type="submit" class="btn btn-primary btn-block" disabled="@loading">
+            @if (loading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <text> Decoding </text>
+            }
+            else
+            {
+                <text> Decode </text>
+            }
+        </button>
     </div>
 
     <ValidationSummary />
@@ -65,15 +73,33 @@
 @code {
     DecodeViewModel model;
     DecodeModel decodeModel;
-    ElementReference fileUpload;
+    bool loading = false;
     protected override void OnInitialized()
     {
-        model = new DecodeViewModel(JsRuntime);
+        model = new DecodeViewModel();
     }
     async Task DoDecode()
     {
-        model.FileInput = this.fileUpload;
-        decodeModel = await model.GetDecodeModel();
+        loading = true;
+        StateHasChanged();
+        try
+        {
+            decodeModel = await model.GetDecodeModel();
+
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    async Task HandleSelection(IFileListEntry[] files)
+    {
+        var file = files.FirstOrDefault();
+        if (file != null)
+        {
+            model.File = file;
+        }
     }
 
 }

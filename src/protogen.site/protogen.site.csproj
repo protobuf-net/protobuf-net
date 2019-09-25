@@ -42,9 +42,6 @@
     <None Update=".npmrc">
       <DependentUpon>package.json</DependentUpon>
     </None>
-    <None Update="postinstall.js">
-      <DependentUpon>package.json</DependentUpon>
-    </None>
     <None Update="protoc.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
