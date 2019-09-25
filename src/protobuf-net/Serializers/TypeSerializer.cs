@@ -976,6 +976,7 @@ namespace ProtoBuf.Serializers
             else
             {
                 ctx.LoadValue(ExpectedType);
+                ctx.LoadNullRef();
                 ctx.EmitCall(typeof(TypeModel).GetMethod(nameof(TypeModel.ThrowCannotCreateInstance),
                     BindingFlags.Static | BindingFlags.Public));
                 ctx.LoadNullRef();

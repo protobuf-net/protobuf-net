@@ -151,7 +151,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                return ctx => Activator.CreateInstance<T>();
+                return ctx => TypeModel.WrappedCreateInstance<T>();
             }
         }
 

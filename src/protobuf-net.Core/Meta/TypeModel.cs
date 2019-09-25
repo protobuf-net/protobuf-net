@@ -1396,7 +1396,20 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            return Activator.CreateInstance<T>();
+            return WrappedCreateInstance<T>();
+        }
+
+        internal static T WrappedCreateInstance<T>()
+        {
+            try
+            {
+                return Activator.CreateInstance<T>();
+            }
+            catch (MissingMethodException mme)
+            {
+                ThrowCannotCreateInstance(typeof(T), mme);
+                return default;
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1678,9 +1691,9 @@ namespace ProtoBuf.Meta
         /// Indicates that the given type cannot be constructed; it may still be possible to 
         /// deserialize into existing instances.
         /// </summary>
-        public static void ThrowCannotCreateInstance(Type type)
+        public static void ThrowCannotCreateInstance(Type type, Exception inner = null)
         {
-            ThrowHelper.ThrowProtoException("No parameterless constructor found for " + (type?.FullName ?? "(null)"));
+            ThrowHelper.ThrowProtoException("No parameterless constructor found for " + (type?.FullName ?? "(null)"), inner);
         }
 
         internal static string SerializeType(TypeModel model, System.Type type)

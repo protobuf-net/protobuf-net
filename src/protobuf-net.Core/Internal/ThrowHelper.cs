@@ -54,8 +54,8 @@ namespace ProtoBuf.Internal
             => throw new NotSupportedException(message);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowProtoException(string message)
-            => throw new ProtoException(message);
+        internal static void ThrowProtoException(string message, Exception inner = null)
+            => throw (inner == null ? new ProtoException(message) : new ProtoException(message, inner));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowOverflowException()
