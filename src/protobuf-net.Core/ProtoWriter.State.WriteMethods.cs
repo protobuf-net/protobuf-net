@@ -742,8 +742,8 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidSerializationOperation()
             {
-                if (_writer == null) throw new ProtoException("No underlying writer");
-                throw new ProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}");
+                if (_writer == null) ThrowHelper.ThrowProtoException("No underlying writer");
+                ThrowHelper.ThrowProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}");
             }
 
             /// <summary>
