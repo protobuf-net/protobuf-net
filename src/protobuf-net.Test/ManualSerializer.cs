@@ -445,6 +445,8 @@ namespace ProtoBuf
         SomeEnum IScalarSerializer<SomeEnum>.Read(ref ProtoReader.State state) => throw new NotImplementedException();
 
         void IScalarSerializer<SomeEnum>.Write(ref ProtoWriter.State state, SomeEnum value) => throw new NotImplementedException();
+
+        WireType IScalarSerializer<SomeEnum>.DefaultWireType => WireType.Varint;
     }
 
 

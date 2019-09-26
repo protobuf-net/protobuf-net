@@ -36,6 +36,11 @@ namespace ProtoBuf
         /// Serialize an instance to the supplied writer
         /// </summary>
         void Write(ref ProtoWriter.State state, T value);
+
+        /// <summary>
+        /// Indicates the default wire-type for this type
+        /// </summary>
+        WireType DefaultWireType { get; }
     }
 
 

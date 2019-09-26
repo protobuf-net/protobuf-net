@@ -11,7 +11,7 @@ namespace ProtoBuf.WellKnownTypes
     /// from a Timestamp. 
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Duration")]
-    internal readonly struct Duration
+    public readonly struct Duration
     {
         /// <summary>
         /// Signed seconds of the span of time.
@@ -25,26 +25,37 @@ namespace ProtoBuf.WellKnownTypes
         [ProtoMember(2, Name = "nanos", DataFormat = DataFormat.Default)]
         public int Nanoseconds { get; }
 
+        /// <summary>Creates a new Duration with the supplied values</summary>
         public Duration(long seconds, int nanoseconds)
         {
             Seconds = seconds;
             Nanoseconds = nanoseconds;
         }
 
+        /// <summary>Converts a TimeSpan to a Duration</summary>
         public Duration(TimeSpan value)
         {
             Seconds = WellKnownSerializer.ToDurationSeconds(value, out var nanoseconds);
             Nanoseconds = nanoseconds;
         }
 
+        /// <summary>Converts a Duration to a TimeSpan</summary>
         public TimeSpan AsTimeSpan() => TimeSpan.FromTicks(WellKnownSerializer.ToTicks(Seconds, Nanoseconds));
 
+        /// <summary>Converts a Duration to a TimeSpan</summary>
         public static implicit operator TimeSpan(Duration value) => value.AsTimeSpan();
+        /// <summary>Converts a TimeSpan to a Duration</summary>
         public static implicit operator Duration(TimeSpan value) => new Duration(value);
     }
 
-    partial class WellKnownSerializer : IMessageSerializer<Duration>
+    partial class WellKnownSerializer : IMessageSerializer<Duration>, IMessageSerializer<TimeSpan>
     {
+        TimeSpan IMessageSerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
+            => BclHelpers.ReadTimeSpan(ref state);
+
+        void IMessageSerializer<TimeSpan>.Write(ref ProtoWriter.State state, TimeSpan value)
+            => BclHelpers.WriteTimeSpan(ref state, value);
+
         Duration IMessageSerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);
 

@@ -152,6 +152,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="impactCount">Whether this initialization should impact usage counters (to check for double-usage)</param>
         internal virtual void Init(TypeModel model, SerializationContext context, bool impactCount)
         {
             OnInit(impactCount);

@@ -1172,7 +1172,11 @@ namespace ProtoBuf.Meta
                     il.ThrowException(typeof(NotImplementedException));
                     il = CompilerContextScope.Implement(type, iType, nameof(IScalarSerializer<string>.Write));
                     il.ThrowException(typeof(NotImplementedException));
-                    continue;
+                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(IScalarSerializer<string>.DefaultWireType));
+                    il.Emit(OpCodes.Ldc_I4_0); // Varint == 0
+                    il.Emit(OpCodes.Ret);
+
+                    continue; // *only* write it as a scalar
                 }
                 if (!IsFullyPublic(runtimeType))
                 {

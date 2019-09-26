@@ -4,7 +4,7 @@
     /// A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Empty")]
-    internal readonly struct Empty { }
+    public readonly struct Empty { }
 
     partial class WellKnownSerializer : IMessageSerializer<Empty>
     {
