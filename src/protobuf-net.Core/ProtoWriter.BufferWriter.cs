@@ -184,7 +184,7 @@ namespace ProtoBuf
                 {
                     case WireType.String:
                     case WireType.Fixed32:
-                        PreSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null);
+                        PreSubItem(TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null);
                         WriteWithLengthPrefix<T>(ref state, value, serializer, style);
                         PostSubItem(ref state);
                         return;

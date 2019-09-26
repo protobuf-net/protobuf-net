@@ -175,7 +175,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadState();
             if (value == null)
             {
-                if (TypeHelper<T>.IsObjectType)
+                if (TypeHelper<T>.IsReferenceType)
                 {
                     ctx.LoadNullRef();
                 }

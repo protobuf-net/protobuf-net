@@ -8,7 +8,6 @@ using System.Reflection.Emit;
 using System.Collections.Generic;
 using System.Diagnostics;
 using ProtoBuf.Internal;
-using ProtoBuf.Collections;
 using System.Collections;
 using System.Linq;
 
@@ -384,9 +383,9 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private readonly PooledList<LocalBuilder> locals = PooledList<LocalBuilder>.Create();
+        private readonly List<LocalBuilder> locals = new List<LocalBuilder>();
 
-        void IDisposable.Dispose() => locals.Dispose();
+        void IDisposable.Dispose() { }
 
         internal LocalBuilder GetFromPool(Type type)
         {

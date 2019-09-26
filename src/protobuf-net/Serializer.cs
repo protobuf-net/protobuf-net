@@ -61,7 +61,7 @@ namespace ProtoBuf
         public static T Merge<T>(Stream source, T instance)
         {
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
-            return state.DeserializeImpl<T>(instance);
+            return state.DeserializeRootImpl<T>(instance);
         }
 
         /// <summary>
@@ -264,7 +264,6 @@ namespace ProtoBuf
         /// <summary>
         /// Provides non-generic access to the default serializer.
         /// </summary>
-        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public static class NonGeneric
         {
             /// <summary>
@@ -289,7 +288,7 @@ namespace ProtoBuf
                     var state = ProtoWriter.State.Create(dest, RuntimeTypeModel.Default);
                     try
                     {
-                        state.Model.SerializeFallback(ref state, instance);
+                        state.Model.SerializeRootFallback(ref state, instance);
                     }
                     finally
                     {
@@ -307,7 +306,7 @@ namespace ProtoBuf
             public static object Deserialize(Type type, Stream source)
             {
                 using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
-                return state.DeserializeFallback(null, type);
+                return state.DeserializeRootFallback(null, type);
             }
 
             /// <summary>Applies a protocol-buffer stream to an existing instance.</summary>
@@ -318,7 +317,7 @@ namespace ProtoBuf
             {
                 if (instance == null) throw new ArgumentNullException(nameof(instance));
                 using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
-                return state.DeserializeFallback(instance, instance.GetType());
+                return state.DeserializeRootFallback(instance, instance.GetType());
             }
 
             /// <summary>

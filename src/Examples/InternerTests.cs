@@ -27,7 +27,7 @@ namespace Examples
             var s = ProtoWriter.State.Create(ms, model, null);
             try
             {
-                s.Serialize(obj);
+                s.SerializeRoot(obj);
                 s.Close();
             }
             finally
@@ -44,7 +44,7 @@ namespace Examples
             Foo foo;
             using (var state = GetReader())
             {
-                foo = (Foo)state.Deserialize<Foo>(null);
+                foo = (Foo)state.DeserializeRoot<Foo>(null);
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -59,7 +59,7 @@ namespace Examples
             try
             {
                 state.InternStrings = true;
-                foo = (Foo)state.Deserialize<Foo>(null);
+                foo = (Foo)state.DeserializeRoot<Foo>(null);
             }
             finally
             {
@@ -78,7 +78,7 @@ namespace Examples
             try
             {
                 state.InternStrings = false;
-                foo = (Foo)state.Deserialize<Foo>(null);
+                foo = (Foo)state.DeserializeRoot<Foo>(null);
             }
             finally
             {

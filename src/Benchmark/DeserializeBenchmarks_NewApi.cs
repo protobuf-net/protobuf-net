@@ -63,13 +63,13 @@ namespace Benchmark
         private protogen.Database MemoryStream_New(TypeModel model)
         {
             using var state = ProtoReader.State.Create(ExposableData(), model ?? Throw());
-            return state.Deserialize<protogen.Database>();
+            return state.DeserializeRoot<protogen.Database>();
         }
 
         private protogen.Database ROM_New(TypeModel model)
         {
             using var state = ProtoReader.State.Create(new ReadOnlyMemory<byte>(_data), model ?? Throw());
-            return state.Deserialize<protogen.Database>();
+            return state.DeserializeRoot<protogen.Database>();
         }
 
         //private protogen.pooled.Database MemoryStream_NewPooled(TypeModel model)

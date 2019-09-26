@@ -743,17 +743,43 @@ namespace ProtoBuf
             /// Deserialize an instance of the provided type
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T Deserialize<T>(T value = default, ISerializer<T> serializer = null)
+            public T DeserializeRoot<T>(T value = default, ISerializer<T> serializer = null)
             {
-                if (TypeHelper<T>.IsObjectType && value != null)
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                if (serializer is IScalarSerializer<T> scalar)
                 {
-                    _reader.SetRootObject(value);
+                    value = ReadFieldOne(ref this, value, scalar);
                 }
-
-                var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
+                else
+                {
+                    if (TypeHelper<T>.IsReferenceType && value != null)
+                        SetRootObject(value);
+                    value = serializer.Read(ref this, value);
+                }
                 CheckFullyConsumed();
-                return result;
+                return value;
+
+                static T ReadFieldOne(ref State state, T value, IScalarSerializer<T> serializer)
+                {
+                    int field;
+                    while ((field = state.ReadFieldHeader()) > 0)
+                    {
+                        if (field == 1)
+                        {
+                            value = serializer.Read(ref state, value);
+                        }
+                        else
+                        {
+                            state.SkipField();
+                        }
+                    }
+                    return value;
+                }
             }
+
+            //[MethodImpl(HotPath)]
+            //internal T DeserializeRaw<T>(T value = default, ISerializer<T> serializer = null)
+            //    => (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
 
             /// <summary>
             /// Gets the serialization context associated with this instance;
@@ -779,18 +805,18 @@ namespace ProtoBuf
             public T CreateInstance<T>(IFactory<T> factory = null)
             {
                 var obj = TypeModel.CreateInstance<T>(Context, factory);
-                if (TypeHelper<T>.IsObjectType) NoteObject(obj);
+                if (TypeHelper<T>.IsReferenceType) NoteObject(obj);
                 return obj;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object DeserializeFallback(object value, Type type, TypeModel overrideModel)
+            internal object DeserializeRootFallbackWithModel(object value, Type type, TypeModel overrideModel)
             {
                 var oldModel = Model;
                 try
                 {
                     Model = overrideModel;
-                    return DeserializeFallback(value, type);
+                    return DeserializeRootFallback(value, type);
                 }
                 finally
                 {
@@ -799,29 +825,29 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal object DeserializeFallback(object value, Type type)
+            internal object DeserializeRootFallback(object value, Type type)
             {
                 if (type == null || type == typeof(object))
                     type = value?.GetType() ?? typeof(object);
 
                 bool autoCreate = Model.PrepareDeserialize(value, ref type);
                 if (value != null) _reader.SetRootObject(value);
-                object obj = Model.DeserializeAny(ref this, type, value, autoCreate);
+                object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);
                 CheckFullyConsumed();
                 return obj;
             }
 
             [MethodImpl(HotPath)]
-            internal T DeserializeImpl<T>(T value = default)
+            internal T DeserializeRootImpl<T>(T value = default)
             {
                 if (TypeHelper<T>.UseFallback)
                 {
                     Debug.Assert(Model != null, "Model is null");
-                    return (T)DeserializeFallback(value, typeof(T));
+                    return (T)DeserializeRootFallback(value, typeof(T));
                 }
                 else
                 {
-                    return Deserialize<T>(value);
+                    return DeserializeRoot<T>(value);
                 }
             }
 

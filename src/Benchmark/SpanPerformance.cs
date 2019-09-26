@@ -40,7 +40,7 @@ namespace Benchmark
         {
             _ms.Position = 0;
             using var reader = ReadMS();
-            var dal = reader.Deserialize<protogen.Database>();
+            var dal = reader.DeserializeRoot<protogen.Database>();
             GC.KeepAlive(dal);
         }
 
@@ -48,14 +48,14 @@ namespace Benchmark
         public void ReadOnlySequence()
         {
             using var reader = ReadROS();
-            var dal = reader.Deserialize<protogen.Database>();
+            var dal = reader.DeserializeRoot<protogen.Database>();
             GC.KeepAlive(dal);
         }
         [Benchmark]
         public void ReadOnlyMemory()
         {
             using var reader = ReadROM();
-            var dal = reader.Deserialize<protogen.Database>();
+            var dal = reader.DeserializeRoot<protogen.Database>();
             GC.KeepAlive(dal);
         }
     }

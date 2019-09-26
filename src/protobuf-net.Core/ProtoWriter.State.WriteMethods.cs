@@ -326,7 +326,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteMessage<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
             {
-                if (!(TypeHelper<T>.IsObjectType && value is null))
+                if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
@@ -471,26 +471,24 @@ namespace ProtoBuf
             /// object is determined to be a scalar, it is written as though it were
             /// part of a message with field-number 1
             /// </summary>
-            public long Serialize<T>(T value, ISerializer<T> serializer = null)
+            public long SerializeRoot<T>(T value, ISerializer<T> serializer = null)
             {
                 try
                 {
                     CheckClear();
-                    if (value == null) return 0;
+                    if (TypeHelper<T>.CanBeNull && value == null) return 0;
                     long before = GetPosition();
-
-                    serializer ??=  TypeModel.GetSerializer<T>(Model);
-
+                    serializer ??= TypeModel.GetSerializer<T>(Model);
                     if (serializer is IScalarSerializer<T> scalar)
                     {
                         WriteFieldHeader(1, scalar.DefaultWireType);
                     }
                     else
                     {
-                        SetRootObject(value);
+                        if (TypeHelper<T>.IsReferenceType && value != null)
+                            SetRootObject(value);
                     }
                     serializer.Write(ref this, value);
-
                     CheckClear();
                     long after = GetPosition();
                     return after - before;
@@ -501,6 +499,11 @@ namespace ProtoBuf
                     throw;
                 }
             }
+
+            //[MethodImpl(HotPath)]
+            //internal void SerializeRaw<T>(T value, ISerializer<T> serializer)
+            //    => (serializer ?? TypeModel.GetSerializer<T>(Model)).Write(ref this, value);
+
 
             /// <summary>
             /// Specifies a known root object to use during reference-tracked serialization

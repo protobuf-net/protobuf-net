@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.WellKnownTypes;
 using System;
 using System.Text;
 
@@ -9,15 +10,13 @@ namespace ProtoBuf.Internal
         public static bool UseFallback(Type type)
         {
             if (type == null) return false;
-            if (Nullable.GetUnderlyingType(type) != null) return true;
-            if (type.IsArray) return true;
             if (type == typeof(object)) return true;
-            if (type.IsEnum) return true;
-            if (TypeModel.GetWireType(null, Helpers.GetTypeCode(type), DataFormat.Default, ref type, out bool isKnown) != WireType.None && !isKnown)
-                return true;
-            if (TypeModel.GetListItemType(type) != null)
-                return true;
+            var wellKnown = typeof(ISerializer<>).MakeGenericType(type);
+            if (wellKnown.IsInstanceOfType(WellKnownSerializer.Instance)) return false;
 
+            // just lists and arrays, then?
+            if (type.IsArray) return true;
+            if (TypeModel.GetListItemType(type) != null) return true;
             return false;
         }
         internal static string CSName(Type type)
@@ -67,13 +66,16 @@ namespace ProtoBuf.Internal
     }
     internal static class TypeHelper<T>
     {
-        public static readonly bool IsObjectType = !typeof(T).IsValueType;
+        public static bool IsReferenceType = !typeof(T).IsValueType;
+
+        public static readonly bool CanBeNull = IsReferenceType || Nullable.GetUnderlyingType(typeof(T)) != null;
+
         public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx);
 
-        public static readonly bool IsReferenceOrContainsReferences = GetContainsReferences();
+        public static readonly bool IsReferenceOrContainsReferences = IsReferenceType || GetContainsReferences();
 
         // these are things that require special primitive handling that is not implemented in the <T> versions
-        public static readonly bool UseFallback = TypeHelper.UseFallback(typeof(T));
+        public static readonly bool UseFallback = !(WellKnownSerializer.Instance is ISerializer<T>) && TypeHelper.UseFallback(typeof(T));
 
         // make sure we don't cast null value-types to NREs
         public static T FromObject(object value) => value == null ? default : (T)value;

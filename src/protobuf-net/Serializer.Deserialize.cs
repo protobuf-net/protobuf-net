@@ -17,7 +17,7 @@ namespace ProtoBuf
         public static T Deserialize<T>(Stream source)
         {
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
-            return state.DeserializeImpl<T>();
+            return state.DeserializeRootImpl<T>();
         }
 
         /// <summary>
@@ -26,10 +26,10 @@ namespace ProtoBuf
 		/// <param name="type">The type to be created.</param>
 		/// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
 		/// <returns>A new, initialized instance.</returns>
-        [Obsolete(TypeModel.PreferGenericAPI, TypeModel.DemandGenericAPI)]
         public static object Deserialize(Type type, Stream source)
         {
-            return RuntimeTypeModel.Default.Deserialize(source, null, type);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, null, ProtoReader.TO_EOF);
+            return state.DeserializeRootFallback(null, type);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace ProtoBuf
         public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
-            return state.DeserializeImpl<T>(value);
+            return state.DeserializeRootImpl<T>(value);
         }
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace ProtoBuf
         public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
-            return state.DeserializeImpl<T>(value);
+            return state.DeserializeRootImpl<T>(value);
         }
     }
 }

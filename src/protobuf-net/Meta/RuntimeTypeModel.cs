@@ -754,7 +754,9 @@ namespace ProtoBuf.Meta
             => GetServices<T>() as IFactory<T>;
 
         /// <summary>Indicates whether a type is known to the model</summary>
-        protected internal override bool IsKnownType<T>()
+        internal override bool IsKnownType<T>() // the point of this override is to avoid loops
+            // when trying to *build* a model; we don't actually need the service (which may not exist yet);
+            // we just need to know whether we should *expect one*
             => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

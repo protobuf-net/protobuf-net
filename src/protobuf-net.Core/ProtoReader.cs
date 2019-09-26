@@ -720,7 +720,7 @@ namespace ProtoBuf
             var writeState = ProtoWriter.State.Create(ms, model, ctx);
             try
             {
-                model.SerializeFallback(ref writeState, from);
+                model.SerializeRootFallback(ref writeState, from);
             }
             finally
             {
@@ -728,7 +728,7 @@ namespace ProtoBuf
             }
             ms.Position = 0;
             using var state = ProtoReader.State.Create(ms, model);
-            return state.DeserializeFallback(to, type: null);
+            return state.DeserializeRootFallback(to, type: null);
         }
     }
 }

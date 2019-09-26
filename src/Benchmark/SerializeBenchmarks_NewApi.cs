@@ -37,7 +37,7 @@ namespace Benchmark
                 var state = ProtoWriter.State.Create(buffer, model);
                 try
                 {
-                    state.Serialize(_database);
+                    state.SerializeRoot(_database);
                     state.Close();
                 }
                 finally
@@ -57,7 +57,7 @@ namespace Benchmark
                 var state = ProtoWriter.State.Create(buffer, model);
                 try
                 {
-                    state.Serialize(_database);
+                    state.SerializeRoot(_database);
                     state.Close();
                 }
                 finally
@@ -79,7 +79,7 @@ namespace Benchmark
                 var state = ProtoWriter.State.Create(buffer, model);
                 try
                 {
-                    state.Serialize(_database);
+                    state.SerializeRoot(_database);
                     state.Close();
                 }
                 finally

@@ -300,7 +300,15 @@ namespace Examples
         {
             var foo = new List<string> { "abc", "def", "ghi" };
 
-            var clone = Serializer.DeepClone(foo);
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, foo);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-03-61-62-63-0A-03-64-65-66-0A-03-67-68-69", hex);
+            ms.Position = 0;
+            var clone = (List<string>)Serializer.Deserialize(foo.GetType(), ms);
+            Assert.Equal(3, clone.Count);
+
+            clone = Serializer.DeepClone(foo);
             Assert.Equal(3, clone.Count);
         }
 

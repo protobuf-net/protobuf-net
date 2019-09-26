@@ -39,7 +39,7 @@ namespace ProtoBuf
             if (withState)
             {
                 using var writeState = ProtoWriter.State.Create(ms, model);
-                writeState.Serialize(obj);
+                writeState.SerializeRoot(obj);
                 Assert.Equal(0, writeState.Depth);
                 writeState.Close();
             }
@@ -70,14 +70,14 @@ namespace ProtoBuf
             if (withState)
             {
                 using var readState = ProtoReader.State.Create(ms, model);
-                raw = readState.Deserialize<A>(null);
+                raw = readState.DeserializeRoot<A>(null);
             }
             else
             {
 #pragma warning disable CS0618
                 using var reader = ProtoReader.Create(ms, model);
 #pragma warning restore CS0618
-                raw = reader.DefaultState().Deserialize<A>(null);
+                raw = reader.DefaultState().DeserializeRoot<A>(null);
             }
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
@@ -136,7 +136,7 @@ namespace ProtoBuf
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
             using (var writeState = ProtoWriter.State.Create(pipe.Writer, model))
             {
-                writeState.Serialize(obj);
+                writeState.SerializeRoot(obj);
                 Assert.Equal(0, writeState.Depth);
                 writeState.Close();
             }
@@ -155,7 +155,7 @@ namespace ProtoBuf
             // 7B = 123(raw) or - 62(zigzag)
 
             using var readState = ProtoReader.State.Create(result.Value, model);
-            var raw = readState.Deserialize<A>(null);
+            var raw = readState.DeserializeRoot<A>(null);
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);
@@ -173,7 +173,7 @@ namespace ProtoBuf
 
             using (var writeState = ProtoWriter.State.Create(ms, null))
             {
-                writeState.Serialize(obj, ModelSerializer.Default);
+                writeState.SerializeRoot(obj, ModelSerializer.Default);
                 Assert.Equal(0, writeState.Depth);
                 writeState.Close();
             }
@@ -187,14 +187,14 @@ namespace ProtoBuf
             if (withState)
             {
                 using var readState = ProtoReader.State.Create(ms, null);
-                raw = readState.Deserialize<A>(serializer: ModelSerializer.Default);
+                raw = readState.DeserializeRoot<A>(serializer: ModelSerializer.Default);
             }
             else
             {
 #pragma warning disable CS0618
                 using var reader = ProtoReader.Create(ms, null);
 #pragma warning restore CS0618
-                raw = reader.DefaultState().Deserialize<A>(serializer: ModelSerializer.Default);
+                raw = reader.DefaultState().DeserializeRoot<A>(serializer: ModelSerializer.Default);
             }
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
@@ -210,7 +210,7 @@ namespace ProtoBuf
             var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
             using (var writeState = ProtoWriter.State.Create(pipe.Writer, null))
             {
-                var bytes = writeState.Serialize<A>(obj, ModelSerializer.Default);
+                var bytes = writeState.SerializeRoot<A>(obj, ModelSerializer.Default);
                 Assert.Equal(12, bytes);
                 Assert.Equal(0, writeState.Depth);
                 writeState.Close();
@@ -222,7 +222,7 @@ namespace ProtoBuf
             Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
 
             using var readState = ProtoReader.State.Create(result.Value, null);
-            var raw = readState.Deserialize<A>(null, ModelSerializer.Default);
+            var raw = readState.DeserializeRoot<A>(null, ModelSerializer.Default);
             var clone = Assert.IsType<C>(raw);
             Assert.NotSame(obj, clone);
             Assert.Equal(123, clone.AVal);

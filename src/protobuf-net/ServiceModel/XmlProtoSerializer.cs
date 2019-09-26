@@ -14,14 +14,13 @@ namespace ProtoBuf.ServiceModel
     public sealed class XmlProtoSerializer : XmlObjectSerializer
     {
         private readonly TypeModel model;
-        private readonly bool isList, isEnum;
+        private readonly bool isList;
         private readonly Type type;
         internal XmlProtoSerializer(TypeModel model, Type type, bool isList)
         {
             this.model = model ?? throw new ArgumentNullException(nameof(model));
             this.isList = isList;
             this.type = type ?? throw new ArgumentOutOfRangeException(nameof(type));
-            this.isEnum = type.IsEnum;
         }
         /// <summary>
         /// Attempt to create a new serializer for the given model and type
@@ -51,7 +50,6 @@ namespace ProtoBuf.ServiceModel
             if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
             this.model = model;
             this.type = type;
-            this.isEnum = type.IsEnum;
         }
 
         private static bool IsKnownType(TypeModel model, ref Type type, out bool isList)
@@ -116,7 +114,7 @@ namespace ProtoBuf.ServiceModel
                 {
                     if (isList)
                     {
-                        model.SerializeFallback(ref state, graph);
+                        model.SerializeRootFallback(ref state, graph);
                     }
                     else
                     {
@@ -175,9 +173,9 @@ namespace ProtoBuf.ServiceModel
                 state = ProtoReader.State.Create(Stream.Null, model, null, ProtoReader.TO_EOF);
                 try
                 {
-                    if (isList || isEnum)
+                    if (isList)
                     {
-                        return state.DeserializeFallback(null, type);
+                        return state.DeserializeRootFallback(null, type);
                     }
                     else
                     {
@@ -198,11 +196,11 @@ namespace ProtoBuf.ServiceModel
             try
             {
                 {
-                    if (DynamicStub.TryDeserialize(type, model, ref state, ref result))
+                    if (DynamicStub.TryDeserializeRoot(type, model, ref state, ref result))
                     { } // winning!
-                    else if (isList || isEnum)
+                    else if (isList)
                     {
-                        result = state.DeserializeFallback(null, type);
+                        result = state.DeserializeRootFallback(null, type);
                     }
                     else
                     {

@@ -28,7 +28,9 @@ namespace ProtoBuf.WellKnownTypes
         IScalarSerializer<uint?>,
         IScalarSerializer<ulong?>,
         IScalarSerializer<sbyte?>,
-        IScalarSerializer<short?>
+        IScalarSerializer<short?>,
+        IScalarSerializer<char>,
+        IScalarSerializer<char?>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -134,5 +136,13 @@ namespace ProtoBuf.WellKnownTypes
         }
         void ISerializer<Uri>.Write(ref ProtoWriter.State state, Uri value) => state.WriteString(value.OriginalString);
         WireType IScalarSerializer<Uri>.DefaultWireType => WireType.String;
+
+        char ISerializer<char>.Read(ref ProtoReader.State state, char value) => (char)state.ReadUInt16();
+        void ISerializer<char>.Write(ref ProtoWriter.State state, char value) => state.WriteUInt16(value);
+        WireType IScalarSerializer<char>.DefaultWireType => WireType.Varint;
+
+        char? ISerializer<char?>.Read(ref ProtoReader.State state, char? value) => (char)state.ReadUInt16();
+        void ISerializer<char?>.Write(ref ProtoWriter.State state, char? value) => state.WriteUInt16(value.Value);
+        WireType IScalarSerializer<char?>.DefaultWireType => WireType.Varint;
     }
 }
