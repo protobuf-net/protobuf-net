@@ -41,8 +41,5 @@ namespace ProtoBuf
 
     public sealed class MyModel : TypeModel
     {
-        protected internal override void Serialize(ref ProtoWriter.State state, Type type, object value)
-        { }
-        protected internal override object Deserialize(ref ProtoReader.State state, Type type, object value) => null;
     }
 }

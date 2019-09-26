@@ -81,7 +81,7 @@ namespace ProtoBuf.Serializers
             => state.ReadMessage<T>(TypeHelper<T>.FromObject(value), null);
 
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
-            => SubItemSerializer.EmitWriteMessage<T>(null, ctx, valueFrom);
+            => SubItemSerializer.EmitWriteMessage<T>(null, WireType.String, ctx, valueFrom);
 
         public override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
@@ -90,15 +90,28 @@ namespace ProtoBuf.Serializers
             SubItemSerializer.EmitReadMessage<T>(ctx, tmp);
         }
 
-        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => wireType == WireType.String;
+        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType)
+            => wireType switch {
+                WireType.String => true,
+                WireType.StartGroup => true,
+                _ => false
+            };
 
         void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, CompilerContext ctx, Local valueFrom)
-            => SubItemSerializer.EmitWriteMessage<T>(fieldNumber, ctx, valueFrom);
+            => SubItemSerializer.EmitWriteMessage<T>(fieldNumber, wireType, ctx, valueFrom);
     }
 
 
     internal abstract class SubItemSerializer : IProtoTypeSerializer
     {
+        WireType IProtoTypeSerializer.DefaultWireType
+        {
+            get
+            {
+                ThrowHelper.ThrowNotImplementedException(nameof(IProtoTypeSerializer.DefaultWireType));
+                return default;
+            }
+        }
         public abstract bool IsSubType { get; }
         public abstract Type ExpectedType { get; }
         public virtual Type BaseType => ExpectedType;
@@ -150,7 +163,7 @@ namespace ProtoBuf.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }
 
-        public static void EmitWriteMessage<T>(int? fieldNumber, CompilerContext ctx, Local value = null,
+        public static void EmitWriteMessage<T>(int? fieldNumber, WireType wireType, CompilerContext ctx, Local value = null,
             FieldInfo serializer = null, bool applyRecursionCheck = true, bool assertImplemented = true)
         {
             using var tmp = ctx.GetLocalWithValue(typeof(T), value);
@@ -166,7 +179,12 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }
             ctx.LoadValue(applyRecursionCheck);
-            ctx.EmitCall(s_WriteMessage[fieldNumber.HasValue ? 4 : 3].MakeGenericMethod(typeof(T)));
+            var methodFamily = wireType switch
+            {
+                WireType.StartGroup => s_WriteGroup,
+                _ => s_WriteMessage,
+            };
+            ctx.EmitCall(methodFamily[fieldNumber.HasValue ? 4 : 3].MakeGenericMethod(typeof(T)));
         }
 
         public static void EmitReadMessage<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null)
@@ -204,6 +222,12 @@ namespace ProtoBuf.Serializers
         private static readonly Dictionary<int, MethodInfo> s_WriteMessage =
             (from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
              where method.Name == nameof(ProtoWriter.State.WriteMessage)
+                && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
+             select new { ArgCount = method.GetParameters().Length, Method = method }).ToDictionary(x => x.ArgCount, x => x.Method);
+
+        private static readonly Dictionary<int, MethodInfo> s_WriteGroup =
+            (from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+             where method.Name == nameof(ProtoWriter.State.WriteGroup)
                 && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
              select new { ArgCount = method.GetParameters().Length, Method = method }).ToDictionary(x => x.ArgCount, x => x.Method);
 

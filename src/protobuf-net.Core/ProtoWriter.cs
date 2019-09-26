@@ -492,8 +492,14 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         internal int AddObjectKey(object value, out bool existing)
         {
-            if (!(this is StreamProtoWriter)) ThrowHelper.ThrowTrackedObjects(this);
+            AssertTrackedObjects();
             return netCache.AddObjectKey(value, out existing);
+        }
+
+        [MethodImpl(HotPath)]
+        internal void AssertTrackedObjects()
+        {
+            if (!(this is StreamProtoWriter)) ThrowHelper.ThrowTrackedObjects(this);
         }
 
         /// <summary>

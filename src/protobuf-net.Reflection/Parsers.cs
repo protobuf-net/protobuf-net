@@ -1353,6 +1353,7 @@ namespace Google.Protobuf.Reflection
 
                     if (option.Children.Count != 0)
                     {
+#pragma warning disable CS0618 // legacy StartSubItem API
                         if (resolveOnly)
                         {
                             AppendOptions(nextFile, ref state, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
@@ -1410,6 +1411,7 @@ namespace Google.Protobuf.Reflection
                             state.EndSubItem(payload);
                         }
                         option.Options.Single().Applied = true;
+#pragma warning restore CS0618 // legacy StartSubItem API
                     }
                     else
                     {

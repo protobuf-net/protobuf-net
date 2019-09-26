@@ -797,39 +797,6 @@ namespace ProtoBuf.Meta
         /// </summary>
         public override string ToString() => _name ?? base.ToString();
 
-        /// <summary>
-        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
-        /// </summary>
-        /// <param name="type">Represents the type (including inheritance) to consider.</param>
-        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="state">Writer state</param>
-        protected internal override void Serialize(ref ProtoWriter.State state, Type type, object value)
-        {
-            //Debug.WriteLine("Serialize", value);
-            this[type].Serializer.Write(ref state, value);
-        }
-
-        /// <summary>
-        /// Applies a protocol-buffer stream to an existing instance (which may be null).
-        /// </summary>
-        /// <param name="type">Represents the type (including inheritance) to consider.</param>
-        /// <param name="value">The existing instance to be modified (can be null).</param>
-        /// <param name="state">Reader state</param>
-        protected internal override object Deserialize(ref ProtoReader.State state, Type type, object value)
-        {
-            //Debug.WriteLine("Deserialize", value);
-            IRuntimeProtoSerializerNode ser = this[type].Serializer;
-            if (value == null && ser.ExpectedType.IsValueType)
-            {
-                if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType, nonPublic: true);
-                return ser.Read(ref state, value);
-            }
-            else
-            {
-                return ser.Read(ref state, value);
-            }
-        }
-
         // this is used by some unit-tests; do not remove
         internal Compiler.ProtoSerializer<TActual> GetSerializer<TActual>(IRuntimeProtoSerializerNode serializer, bool compiled)
         {
@@ -1154,6 +1121,24 @@ namespace ProtoBuf.Meta
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
         {
+            static void WriteWireType(ILGenerator il, WireType wireType)
+            {
+                switch((int)wireType)
+                {
+                    case 0: il.Emit(OpCodes.Ldc_I4_0); break;
+                    case 1: il.Emit(OpCodes.Ldc_I4_1); break;
+                    case 2: il.Emit(OpCodes.Ldc_I4_2); break;
+                    case 3: il.Emit(OpCodes.Ldc_I4_3); break;
+                    case 4: il.Emit(OpCodes.Ldc_I4_4); break;
+                    case 5: il.Emit(OpCodes.Ldc_I4_5); break;
+                    case 6: il.Emit(OpCodes.Ldc_I4_6); break;
+                    case 7: il.Emit(OpCodes.Ldc_I4_7); break;
+                        
+                    default: // only 3 bits are defined
+                        ThrowHelper.ThrowArgumentOutOfRangeException(nameof(wireType));
+                        break;
+                }
+            }
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
@@ -1179,11 +1164,13 @@ namespace ProtoBuf.Meta
                         ctx.Return();
                     }
 
+                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(ISerializer<string>.DefaultWireType));
+                    WriteWireType(il, serializer.DefaultWireType);
+                    il.Emit(OpCodes.Ret);
+
                     iType = typeof(IScalarSerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(iType);
-                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(IScalarSerializer<string>.DefaultWireType));
-                    il.Emit(OpCodes.Ldc_I4_0); // Varint == 0
-                    il.Emit(OpCodes.Ret);
+
 
                     // implement both IScalarSerializer<Foo> and IScalarSerializer<Foo?>
                     Type[] nullable = { typeof(Nullable<>).MakeGenericType(runtimeType) };
@@ -1205,12 +1192,12 @@ namespace ProtoBuf.Meta
                         ctx.Return();
                     }
 
-                    iType = typeof(IScalarSerializer<>).MakeGenericType(nullable);
-                    type.AddInterfaceImplementation(iType);
-                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(IScalarSerializer<string>.DefaultWireType));
-                    il.Emit(OpCodes.Ldc_I4_0); // Varint == 0
+                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(ISerializer<string>.DefaultWireType));
+                    WriteWireType(il, serializer.DefaultWireType);
                     il.Emit(OpCodes.Ret);
 
+                    iType = typeof(IScalarSerializer<>).MakeGenericType(nullable);
+                    type.AddInterfaceImplementation(iType);
 
                     continue; // *only* write it as a scalar
                 }
@@ -1247,6 +1234,10 @@ namespace ProtoBuf.Meta
                     else serializer.EmitWrite(ctx, ctx.InputValue);
                     ctx.Return();
                 }
+
+                il = CompilerContextScope.Implement(type, serType, "get_" + nameof(ISerializer<string>.DefaultWireType));
+                WriteWireType(il, serializer.DefaultWireType);
+                il.Emit(OpCodes.Ret);
 
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)

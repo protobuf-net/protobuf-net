@@ -20,7 +20,17 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Should the <c>Kind</c> be included on date/time values?
         /// </summary>
-        protected internal virtual bool SerializeDateTimeKind() { return false; }
+        protected internal virtual bool SerializeDateTimeKind() => false;
+
+         /// <summary>
+         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+         /// </summary>
+         public bool InternStrings => GetInternStrings();
+ 
+         /// <summary>
+         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+         /// </summary>
+         protected internal virtual bool GetInternStrings() => false;
 
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
@@ -94,76 +104,32 @@ namespace ProtoBuf.Meta
         /// </summary>
         internal bool TrySerializeAuxiliaryType(ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
         {
-            if (type == null) { type = value.GetType(); }
+            type ??= value.GetType();
 
-            ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            // note the "ref type" here normalizes against proxies
-            WireType wireType = GetWireType(this, typecode, format, ref type, out bool isKnown);
-
-            if (isKnown)
-            {   // write the header, but defer to the model
-                if (type.IsEnum)
-                { // no header
+            if (DynamicStub.CanSerialize(type, this, out var isScalar, out var wireType))
+            {
+                state.WriteFieldHeader(tag, wireType);
+                if (isScalar)
+                {
+                    // no header
                     Serialize(ref state, type, value);
                     return true;
                 }
-                else
+
+                switch (wireType)
                 {
-                    state.WriteFieldHeader(tag, wireType);
-                    switch (wireType)
-                    {
-                        case WireType.None:
-                            state.ThrowInvalidSerializationOperation();
-                            return false;
-                        case WireType.StartGroup:
-                        case WireType.String:
-                            // needs a wrapping length etc
-                            SubItemToken token = state.StartSubItem(value);
-                            Serialize(ref state, type, value);
-                            state.EndSubItem(token);
-                            return true;
-                        default:
-                            Serialize(ref state, type, value);
-                            return true;
-                    }
+                    case WireType.None:
+                        state.ThrowInvalidSerializationOperation();
+                        return false;
+                    case WireType.StartGroup:
+                    case WireType.String:
+                        DynamicStub.WriteWrappedMessage(type, this, ref state, value);
+                        return true;
+                    default:
+                        Serialize(ref state, type, value);
+                        return true;
                 }
             }
-
-            if (wireType != WireType.None)
-            {
-                state.WriteFieldHeader(tag, wireType);
-            }
-            switch (typecode)
-            {
-                case ProtoTypeCode.Int16: state.WriteInt16((short)value); return true;
-                case ProtoTypeCode.Int32: state.WriteInt32((int)value); return true;
-                case ProtoTypeCode.Int64: state.WriteInt64((long)value); return true;
-                case ProtoTypeCode.UInt16: state.WriteUInt16((ushort)value); return true;
-                case ProtoTypeCode.UInt32: state.WriteUInt32((uint)value); return true;
-                case ProtoTypeCode.UInt64: state.WriteUInt64((ulong)value); return true;
-                case ProtoTypeCode.Boolean: state.WriteBoolean((bool)value); return true;
-                case ProtoTypeCode.SByte: state.WriteSByte((sbyte)value); return true;
-                case ProtoTypeCode.Byte: state.WriteByte((byte)value); return true;
-                case ProtoTypeCode.Char: state.WriteUInt16((ushort)(char)value); return true;
-                case ProtoTypeCode.Double: state.WriteDouble((double)value); return true;
-                case ProtoTypeCode.Single: state.WriteSingle((float)value); return true;
-                case ProtoTypeCode.DateTime:
-                    if (SerializeDateTimeKind())
-                        BclHelpers.WriteDateTimeWithKind(ref state, (DateTime)value);
-                    else
-                        BclHelpers.WriteDateTime(ref state, (DateTime)value);
-                    return true;
-                case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal(ref state, (decimal)value); return true;
-                case ProtoTypeCode.String: state.WriteString((string)value); return true;
-                case ProtoTypeCode.ByteArray: state.WriteBytes((byte[])value); return true;
-                case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan(ref state, (TimeSpan)value); return true;
-                case ProtoTypeCode.Guid: BclHelpers.WriteGuid(ref state, (Guid)value); return true;
-                case ProtoTypeCode.Uri: state.WriteString(((Uri)value).OriginalString); return true;
-            }
-
-            // by now, we should have covered all the simple cases; if we wrote a field-header, we have
-            // forgotten something!
-            Debug.Assert(wireType == WireType.None);
 
             // now attempt to handle sequences (including arrays and lists)
             if (value is IEnumerable sequence)
@@ -180,20 +146,6 @@ namespace ProtoBuf.Meta
                 return true;
             }
             return false;
-        }
-
-        internal void SerializeCore(ref ProtoWriter.State state, object value)
-        {
-            if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
-            Type type = value.GetType();
-            if (state.IsKnownType(ref type))
-            {
-                Serialize(ref state, type, value);
-            }
-            else if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
-            {
-                ThrowUnexpectedType(type);
-            }
         }
 
         /// <summary>
@@ -235,19 +187,23 @@ namespace ProtoBuf.Meta
 
         internal void SerializeRootFallback(ref ProtoWriter.State state, object value)
         {
-            if (!DynamicStub.TrySerializeRoot(value.GetType(), this, ref state, value))
+            var type = value.GetType();
+            try
             {
-                try
+                if (!DynamicStub.TrySerializeRoot(type, this, ref state, value))
                 {
                     state.SetRootObject(value);
-                    SerializeCore(ref state, value);
+                    if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                    {
+                        ThrowUnexpectedType(type);
+                    }
                     state.Close();
                 }
-                catch
-                {
-                    state.Abandon();
-                    throw;
-                }
+            }
+            catch
+            {
+                state.Abandon();
+                throw;
             }
         }
 
@@ -1424,7 +1380,7 @@ namespace ProtoBuf.Meta
         /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="state">Write state</param>
-        protected internal virtual void Serialize(ref ProtoWriter.State state, Type type, object value)
+        internal void Serialize(ref ProtoWriter.State state, Type type, object value)
         {
             if (!DynamicStub.TrySerializeRaw(type, this, ref state, value))
             {
@@ -1441,7 +1397,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal virtual object Deserialize(ref ProtoReader.State state, Type type, object value)
+        internal object Deserialize(ref ProtoReader.State state, Type type, object value)
         {
             if (!DynamicStub.TryDeserializeRaw(type, this, ref state, ref value))
             {
@@ -1607,16 +1563,6 @@ namespace ProtoBuf.Meta
             ThrowHelper.ThrowInvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
         }
 
-        /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-        /// </summary>
-        public bool InternStrings => GetInternStrings();
-
-        /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-        /// </summary>
-        protected internal virtual bool GetInternStrings() => false;
-
         internal static Exception CreateNestedListsNotSupported(Type type)
         {
             return new NotSupportedException("Nested or jagged lists and arrays are not supported: " + (type?.FullName ?? "(null)"));
@@ -1685,14 +1631,14 @@ namespace ProtoBuf.Meta
         private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-            if (DynamicStub.CanSerialize(type, this, out var isScalar))
+            if (DynamicStub.CanSerialize(type, this, out var isScalar, out _))
                 return isScalar ? allowBasic : allowContract;
 
             Type tmp = Nullable.GetUnderlyingType(type);
             if (tmp != null)
             {
                 type = tmp;
-                if (DynamicStub.CanSerialize(type, this, out isScalar))
+                if (DynamicStub.CanSerialize(type, this, out isScalar, out _))
                     return isScalar ? allowBasic : allowContract;
             }
 

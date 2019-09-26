@@ -518,6 +518,9 @@ namespace ProtoBuf
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = state.WireType;
+#pragma warning disable CS0618
+            if (wireType != WireType.StartGroup)
+                state.GetWriter().AssertTrackedObjects(); // net-objects - sorry, but they may not play well on newer transports
             SubItemToken token = state.StartSubItem(null);
             bool writeObject = true;
             if (asReference)
@@ -561,6 +564,7 @@ namespace ProtoBuf
                 }
             }
             state.EndSubItem(token);
+#pragma warning restore CS0618 // net-objects - sorry, but they may not play well on newer transports
         }
     }
 }

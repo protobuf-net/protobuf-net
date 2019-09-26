@@ -211,7 +211,7 @@ namespace ProtoBuf.Compiler
 
         internal FieldInfo DefineAdditionalSerializerInstance<T>(object key,
             Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
-            => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize);
+            => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize, WireType.String);
 
         internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, SignatureType signature,
             TypeModel model, Type inputType, string traceName)

@@ -55,6 +55,8 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : ISerializer<Timestamp>, ISerializer<DateTime>
     {
+        WireType ISerializer<Timestamp>.DefaultWireType => WireType.String;
+        WireType ISerializer<DateTime>.DefaultWireType => WireType.String;
         Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);

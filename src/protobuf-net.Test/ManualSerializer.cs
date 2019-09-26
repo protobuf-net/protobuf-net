@@ -22,6 +22,7 @@ namespace ProtoBuf
             model.Add(typeof(C));
             model.Add(typeof(D));
             model.Add(typeof(E));
+            model.Add(typeof(F));
             model.CompileAndVerify(deleteOnSuccess: false);
         }
 #endif
@@ -240,6 +241,10 @@ namespace ProtoBuf
         public static ModelSerializer Default = new ModelSerializer();
         public ModelSerializer() { }
 
+        WireType ISerializer<A>.DefaultWireType => WireType.String;
+        WireType ISerializer<B>.DefaultWireType => WireType.String;
+        WireType ISerializer<C>.DefaultWireType => WireType.String;
+        WireType ISerializer<D>.DefaultWireType => WireType.String;
         A IFactory<A>.Create(ISerializationContext context) => new A();
         B IFactory<B>.Create(ISerializationContext context) => new B();
         C IFactory<C>.Create(ISerializationContext context) => new C();
@@ -446,7 +451,7 @@ namespace ProtoBuf
 
         void ISerializer<SomeEnum>.Write(ref ProtoWriter.State state, SomeEnum value) => throw new NotImplementedException();
 
-        WireType IScalarSerializer<SomeEnum>.DefaultWireType => WireType.Varint;
+        WireType ISerializer<SomeEnum>.DefaultWireType => WireType.Varint;
     }
 
 
@@ -505,6 +510,14 @@ namespace ProtoBuf
         X, Y, Z
     }
 
+    [ProtoInclude(7, typeof(G))]
+    [ProtoContract(IsGroup = true)]
+    public class F {}
+
+    [ProtoContract]
+    public sealed class G : F
+    { }
+
     [ProtoContract]
     public sealed class E
     {
@@ -527,6 +540,12 @@ namespace ProtoBuf
         [ProtoMember(6)]
         public List<E> NonAssignableList => _nonAssignableList ?? (_nonAssignableList = new List<E>());
         public List<E> _nonAssignableList;
+        
+        [ProtoMember(7)]
+        public F Group { get; set; }
+
+        [ProtoMember(8)]
+        public G GroupSubClass { get; set; }
 
         [Browsable(false)]
         public bool ShouldSerializeNonAssignableList() => _nonAssignableList != null && _nonAssignableList.Count != 0;

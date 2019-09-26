@@ -6,17 +6,19 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TupleSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
+        public WireType DefaultWireType { get; private set; } = WireType.String;
 
         bool IProtoTypeSerializer.IsSubType => false;
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
         private readonly IRuntimeProtoSerializerNode[] tails;
-        public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members)
+        public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members, WireType defaultWireType)
         {
             this.ctor = ctor ?? throw new ArgumentNullException(nameof(ctor));
             this.members = members ?? throw new ArgumentNullException(nameof(members));
             this.tails = new IRuntimeProtoSerializerNode[members.Length];
 
+            DefaultWireType = defaultWireType;
             ParameterInfo[] parameters = ctor.GetParameters();
             for (int i = 0; i < members.Length; i++)
             {

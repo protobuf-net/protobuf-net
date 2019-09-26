@@ -5,6 +5,7 @@ namespace ProtoBuf.WellKnownTypes
 {
     partial class WellKnownSerializer : ISerializer<Guid>
     {
+        WireType ISerializer<Guid>.DefaultWireType => WireType.String;
         private static
 #if !DEBUG
             readonly

@@ -4,6 +4,7 @@ namespace ProtoBuf.WellKnownTypes
 {
     partial class WellKnownSerializer : ISerializer<decimal>
     {
+        WireType ISerializer<decimal>.DefaultWireType => WireType.String;
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
         decimal ISerializer<decimal>.Read(ref ProtoReader.State state, decimal value)

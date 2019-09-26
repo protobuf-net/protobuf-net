@@ -50,6 +50,8 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : ISerializer<Duration>, ISerializer<TimeSpan>
     {
+        WireType ISerializer<Duration>.DefaultWireType => WireType.String;
+        WireType ISerializer<TimeSpan>.DefaultWireType => WireType.String;
         TimeSpan ISerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
             => BclHelpers.ReadTimeSpan(ref state);
 

@@ -38,16 +38,16 @@ namespace ProtoBuf.Internal
         internal static bool IsKnownType(Type type, TypeModel model)
             => Get(type).IsKnownType(model);
 
-        internal static bool CanSerialize(Type type, TypeModel model, out bool isScalar)
-            => Get(type).CanSerialize(model, out isScalar);
+        internal static bool CanSerialize(Type type, TypeModel model, out bool isScalar, out WireType defaultWireType)
+            => Get(type).CanSerialize(model, out isScalar, out defaultWireType);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void WriteMessage(Type type, TypeModel model, ref ProtoWriter.State state, object value)
-            => Get(type).WriteMessage(model, type, ref state, value);
+        internal static void WriteWrappedMessage(Type type, TypeModel model, ref ProtoWriter.State state, object value)
+            => Get(type).WriteWrappedMessage(model, type, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static object ReadMessage(Type type, TypeModel model, ref ProtoReader.State state, object value)
-            => Get(type).ReadMessage(model, type, ref state, value);
+            => Get(type).ReadWrappedMessage(model, type, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DynamicStub Get(Type type) => (DynamicStub)s_byType[type] ?? SlowGet(type);
@@ -93,13 +93,24 @@ namespace ProtoBuf.Internal
 
         protected abstract bool IsKnownType(TypeModel model);
 
-        protected abstract bool CanSerialize(TypeModel model, out bool isScalar);
+        protected abstract bool CanSerialize(TypeModel model, out bool isScalar, out WireType scalarWireType);
 
-        protected virtual void WriteMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
-            => model.Serialize(ref state, type, value);
+        protected virtual void WriteWrappedMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
+        {
+#pragma warning disable CS0618
+            var tok = state.StartSubItem(value);
+            model.Serialize(ref state, type, value);
+            state.EndSubItem(tok);
+#pragma warning restore CS0618
+        }
 
-        protected virtual object ReadMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
-            => model.Deserialize(ref state, type, value);
+        protected virtual object ReadWrappedMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
+        {
+            var tok = state.StartSubItem();
+            var obj = model.Deserialize(ref state, type, value);
+            state.EndSubItem(tok);
+            return obj;
+        }
 
         private class NilStub : DynamicStub
         {
@@ -121,9 +132,10 @@ namespace ProtoBuf.Internal
             protected override bool IsKnownType(TypeModel model)
                 => false;
 
-            protected override bool CanSerialize(TypeModel model, out bool isScalar)
+            protected override bool CanSerialize(TypeModel model, out bool isScalar, out WireType scalarWireType)
             {
-                isScalar = false;
+                scalarWireType = default;
+                isScalar = default;
                 return false;
             }
         }
@@ -147,29 +159,29 @@ namespace ProtoBuf.Internal
                 return true;
             }
 
-            protected override void WriteMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
+            protected override void WriteWrappedMessage(TypeModel model, Type type, ref ProtoWriter.State state, object value)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(model);
                 if (serializer != null)
                 {
-                    serializer.Write(ref state, TypeHelper<T>.FromObject(value)); 
+                    state.WriteMessage<T>(TypeHelper<T>.FromObject(value), serializer, value != null);
                 }
                 else
                 {
-                    base.WriteMessage(model, type, ref state, value);
+                    base.WriteWrappedMessage(model, type, ref state, value);
                 }
             }
 
-            protected override object ReadMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
+            protected override object ReadWrappedMessage(TypeModel model, Type type, ref ProtoReader.State state, object value)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(model);
                 if (serializer != null)
                 {
-                    return serializer.Read(ref state, TypeHelper<T>.FromObject(value));
+                    return state.ReadMessage<T>(TypeHelper<T>.FromObject(value), serializer);
                 }
                 else
                 {
-                    return base.ReadMessage(model, type, ref state, value);
+                    return base.ReadWrappedMessage(model, type, ref state, value);
                 }
             }
 
@@ -177,11 +189,18 @@ namespace ProtoBuf.Internal
             // the model unless we actually need it, as that can cause re-entrancy loops
             protected override bool IsKnownType(TypeModel model) => model != null && model.IsKnownType<T>();
 
-            protected override bool CanSerialize(TypeModel model, out bool isScalar)
+            protected override bool CanSerialize(TypeModel model, out bool isScalar, out WireType defaultWireType)
             {
                 var ser = IsKnownType(model) ? model.GetSerializer<T>() : TypeModel.TryGetSerializer<T>(null);
+                if (ser == null)
+                {
+                    isScalar = default;
+                    defaultWireType = default;
+                    return false;
+                }
+                defaultWireType = ser.DefaultWireType;
                 isScalar = ser is IScalarSerializer<T>;
-                return ser != null;
+                return true;
             }
 
             protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)

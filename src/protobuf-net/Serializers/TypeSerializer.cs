@@ -11,16 +11,16 @@ namespace ProtoBuf.Serializers
 {
     internal abstract class TypeSerializer
     {
-        public static IProtoTypeSerializer Create(Type forType, int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, Type rootType)
+        public static IProtoTypeSerializer Create(Type forType, int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, Type rootType, WireType defaultWireType)
         {
             var obj = (TypeSerializer)(rootType != null
                 ? Activator.CreateInstance(typeof(InheritanceTypeSerializer<,>).MakeGenericType(rootType, forType), nonPublic: true)
                 : Activator.CreateInstance(typeof(TypeSerializer<>).MakeGenericType(forType), nonPublic: true));
             
-            obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, callbacks, constructType, factory);
+            obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, callbacks, constructType, factory, defaultWireType);
             return (IProtoTypeSerializer)obj;
         }
-        abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory);
+        abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, WireType defaultWireType);
     }
 
     internal sealed class InheritanceTypeSerializer<TBase, T> : TypeSerializer<T>, ISubTypeSerializer<T>
@@ -155,13 +155,16 @@ namespace ProtoBuf.Serializers
         private MethodInfo[] baseCtorCallbacks;
         private MethodInfo factory;
 
-        internal override void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
+        public WireType DefaultWireType { get; private set; } = WireType.String;
+
+        internal override void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, WireType defaultWireType)
         {
             Debug.Assert(fieldNumbers != null);
             Debug.Assert(serializers != null);
             Debug.Assert(fieldNumbers.Length == serializers.Length);
 
             Array.Sort(fieldNumbers, serializers);
+            DefaultWireType = defaultWireType;
             bool hasSubTypes = false;
             var forType = ExpectedType;
             for (int i = 0; i < fieldNumbers.Length; i++)

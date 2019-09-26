@@ -71,6 +71,6 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowTrackedObjects(object obj)
-            => throw new NotSupportedException("tracked objects are not supported on " + obj.GetType().Name);
+            => throw new NotSupportedException("tracked objects and featured related to stream rewriting are not supported on " + obj.GetType().Name);
     }
 }

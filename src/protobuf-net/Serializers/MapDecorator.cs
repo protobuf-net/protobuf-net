@@ -70,6 +70,7 @@ namespace ProtoBuf.Serializers
 
         sealed class RuntimePairSerializer : ISerializer<KeyValuePair<TKey, TValue>>
         {
+            WireType ISerializer<KeyValuePair<TKey, TValue>>.DefaultWireType => WireType.String;
             private readonly IRuntimeProtoSerializerNode _keyTail, _valueTail;
             public RuntimePairSerializer(IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail)
             {
@@ -187,20 +188,22 @@ namespace ProtoBuf.Serializers
                 }
                 ctx.StoreValue(kvp);
 
-                if (wireType == WireType.String)
+                switch (wireType)
                 {
-                    SubItemSerializer.EmitWriteMessage<KeyValuePair<TKey, TValue>>(fieldNumber, ctx, kvp, pairSerializer, false);
-                }
-                else
-                {
-                    // ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
-                    ctx.LoadState();
-                    ctx.LoadValue(fieldNumber);
-                    ctx.LoadValue((int)wireType);
-                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
+                    case WireType.String:
+                    case WireType.StartGroup:
+                        SubItemSerializer.EmitWriteMessage<KeyValuePair<TKey, TValue>>(fieldNumber, wireType, ctx, kvp, pairSerializer, false);
+                        break;
+                    default:
+                        // ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+                        ctx.LoadState();
+                        ctx.LoadValue(fieldNumber);
+                        ctx.LoadValue((int)wireType);
+                        ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
 
-                    // ProtoWriter.WriteMessage<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
-                    SubItemSerializer.EmitWriteMessage<KeyValuePair<TKey, TValue>>(null, ctx, kvp, pairSerializer, false);
+                        // ProtoWriter.WriteMessage<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
+                        SubItemSerializer.EmitWriteMessage<KeyValuePair<TKey, TValue>>(null, WireType.String, ctx, kvp, pairSerializer, false);
+                        break;
                 }
 
                 ctx.MarkLabel(@next);

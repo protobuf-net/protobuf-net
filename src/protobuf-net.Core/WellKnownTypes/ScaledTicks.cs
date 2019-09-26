@@ -102,6 +102,7 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : ISerializer<ScaledTicks>
     {
+        WireType ISerializer<ScaledTicks>.DefaultWireType => WireType.String;
         ScaledTicks ISerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
         {
             int fieldNumber;

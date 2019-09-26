@@ -10,6 +10,7 @@
 
     partial class WellKnownSerializer : ISerializer<Empty>
     {
+        WireType ISerializer<Empty>.DefaultWireType => WireType.String;
         Empty ISerializer<Empty>.Read(ref ProtoReader.State state, Empty value)
         {
             state.SkipAllFields();

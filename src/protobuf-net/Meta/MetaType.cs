@@ -358,6 +358,18 @@ namespace ProtoBuf.Meta
             return null;
         }
 
+        private WireType GetDefaultWireType()
+        {
+            if (Type.IsEnum) return WireType.Varint;
+            if (IsGroup) return WireType.StartGroup;
+            if (!Type.IsValueType)
+            {
+                var bt = GetRootType(this);
+                if (!ReferenceEquals(bt, this)) return bt.GetDefaultWireType();
+            }
+            return WireType.String;
+        }
+
         private IProtoTypeSerializer BuildSerializer()
         {
             if (Type.IsEnum)
@@ -380,7 +392,7 @@ namespace ProtoBuf.Meta
                 ResolveListTypes(Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
-                    constructType, factory, GetInheritanceRoot());
+                    constructType, factory, GetInheritanceRoot(), GetDefaultWireType());
             }
             if (surrogate != null)
             {
@@ -394,7 +406,7 @@ namespace ProtoBuf.Meta
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor == null) throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
-                    args: new object[] { model, ctor, mapping });
+                    args: new object[] { model, ctor, mapping, GetDefaultWireType() });
             }
 
             fields.Trim();
@@ -443,7 +455,8 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory, GetInheritanceRoot());
+            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor,
+                callbacks, constructType, factory, GetInheritanceRoot(), GetDefaultWireType());
         }
 
         [Flags]

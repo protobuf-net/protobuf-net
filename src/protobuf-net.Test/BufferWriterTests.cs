@@ -72,6 +72,7 @@ namespace ProtoBuf.Tests
             public static ISerializer<Foo> Serializer => FooSerializer.Instance;
             sealed class FooSerializer : ISerializer<Foo>
             {
+                WireType ISerializer<Foo>.DefaultWireType => WireType.String;
                 public static FooSerializer Instance { get; } = new FooSerializer();
                 private FooSerializer() { }
                 public Foo Read(ref ProtoReader.State state, Foo value) => value;
@@ -127,6 +128,7 @@ namespace ProtoBuf.Tests
 
         class ASerializer : ISerializer<A>
         {
+            WireType ISerializer<A>.DefaultWireType => WireType.String;
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }
             public A Read(ref ProtoReader.State state, A value)

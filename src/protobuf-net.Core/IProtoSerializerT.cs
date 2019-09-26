@@ -20,18 +20,17 @@ namespace ProtoBuf
         /// Serialize an instance to the supplied writer
         /// </summary>
         void Write(ref ProtoWriter.State state, T value);
-    }
 
-    /// <summary>
-    /// Abstract API capable of serializing/deserializing scalar values (scalars are things like enums; the values are never merged)
-    /// </summary>
-    public interface IScalarSerializer<T> : ISerializer<T>
-    {
         /// <summary>
         /// Indicates the default wire-type for this type
         /// </summary>
         WireType DefaultWireType { get; }
     }
+
+    /// <summary>
+    /// Abstract API capable of serializing/deserializing scalar values (scalars are things like enums; the values are never merged)
+    /// </summary>
+    public interface IScalarSerializer<T> : ISerializer<T> { }
 
 
     /// <summary>

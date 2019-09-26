@@ -54,7 +54,7 @@ namespace ProtoBuf.Compiler
         }
 
         internal FieldInfo DefineAdditionalSerializerInstance<T>(CompilerContext parent, object key,
-            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
+            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize, WireType defaultWireType)
         {
             if (_additionalSerializers == null) _additionalSerializers = new Dictionary<object, FieldInfo>();
             if (_additionalSerializers.ContainsKey(key)) throw new ArgumentException(nameof(key));
@@ -108,6 +108,10 @@ namespace ProtoBuf.Compiler
                     ctx.Return();
                 }
 
+                il = Implement(type, iType, "get_" + nameof(ISerializer<T>.DefaultWireType));
+                il.Emit(OpCodes.Ldc_I4, (int)defaultWireType);
+                il.Emit(OpCodes.Ret);
+
 
                 Type finalType = type.CreateTypeInfo();
                 var result = finalType.GetField(InstanceFieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
@@ -122,13 +126,14 @@ namespace ProtoBuf.Compiler
             var decl = interfaceType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
             if (decl == null) throw new ArgumentException(nameof(name));
             var args = decl.GetParameters();
-            string implName = name;
+            string implName = name; // name.StartsWith("get_") ? name.Substring(4) : name;
             var attribs = (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final;
+
             if (@explicit)
             {
-                implName = TypeHelper.CSName(interfaceType) + "." + name;
-                attribs |= MethodAttributes.HideBySig;
-                attribs &= ~MethodAttributes.Public;
+                implName = TypeHelper.CSName(interfaceType) + "." + implName;
+                attribs &= ~MethodAttributes.MemberAccessMask;
+                attribs |= MethodAttributes.Private | MethodAttributes.HideBySig;
             }
             var method = type.DefineMethod(implName, attribs,
                 decl.ReturnType, Array.ConvertAll(args, x => x.ParameterType));

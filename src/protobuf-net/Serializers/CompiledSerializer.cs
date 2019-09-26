@@ -9,7 +9,7 @@ namespace ProtoBuf.Serializers
     internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, ISerializer<T>, ISubTypeSerializer<T>, IFactory<T>
         where TBase : class
         where T : class, TBase
-    {
+    { 
         private readonly Compiler.ProtoSerializer<T> subTypeSerializer;
         private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
         private readonly Func<ISerializationContext, T> factory;
@@ -61,8 +61,6 @@ namespace ProtoBuf.Serializers
     internal sealed class EnumCompiledSerializer<T> : SimpleCompiledSerializer<T>, IScalarSerializer<T>, IScalarSerializer<T?>
         where T : struct
     {
-        public WireType DefaultWireType => WireType.Varint;
-
         public EnumCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model) : base(head, model) { }
 
         T? ISerializer<T?>.Read(ref ProtoReader.State state, T? value)
@@ -118,6 +116,7 @@ namespace ProtoBuf.Serializers
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
+        public WireType DefaultWireType => head.DefaultWireType;
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
             return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled

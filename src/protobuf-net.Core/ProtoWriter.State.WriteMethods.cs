@@ -334,6 +334,18 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Writes a sub-item to the writer
+            /// </summary>
+            public void WriteGroup<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
+            {
+                if (!(TypeHelper<T>.CanBeNull && value is null))
+                {
+                    WriteFieldHeader(fieldNumber, WireType.StartGroup);
+                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.None, recursionCheck);
+                }
+            }
+
+            /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
             public void WriteSubType<T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
@@ -385,16 +397,13 @@ namespace ProtoBuf
             /// <param name="type">The type that uniquely identifies the type within the model.</param>
             public void WriteRecursionSafeObject(object value, Type type)
             {
-                var writer = _writer;
-                if (writer.model == null)
+                if (Model == null)
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
                 if (type == null) type = value.GetType();
 
-                SubItemToken token = StartSubItem(null);
-                writer.model.Serialize(ref this, type, value);
-                EndSubItem(token);
+                DynamicStub.WriteWrappedMessage(type, Model, ref this, value);
             }
 
             /// <summary>
@@ -559,20 +568,27 @@ namespace ProtoBuf
                 }
                 if (type == null) type = value.GetType();
 
-                SubItemToken token = StartSubItem(value);
-                if (model.IsKnownType(ref type))
+                
+                if (model.CanSerialize(type) || model.IsKnownType(ref type)) // this second part is for the "ref" checks
                 {
-                    DynamicStub.WriteMessage(type, model, ref this, value);
-                }
-                else if (model != null && model.TrySerializeAuxiliaryType(ref this, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
-                {
-                    // all ok
+                    DynamicStub.WriteWrappedMessage(type, model, ref this, value);
                 }
                 else
                 {
-                    TypeModel.ThrowUnexpectedType(value.GetType());
+#pragma warning disable CS0618
+                    SubItemToken token = StartSubItem(value);
+                    if (model.TrySerializeAuxiliaryType(ref this, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                    {
+                        // all ok
+                    }
+                    else
+                    {
+                        TypeModel.ThrowUnexpectedType(value.GetType());
+                    }
+                    EndSubItem(token);
+#pragma warning restore CS0618
                 }
-                EndSubItem(token);
+
             }
 
             internal void WriteObject(object value, Type type, PrefixStyle style, int fieldNumber)
@@ -601,6 +617,8 @@ namespace ProtoBuf
                         ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
                         break;
                 }
+                GetWriter().AssertTrackedObjects();
+#pragma warning disable CS0618
                 SubItemToken token = StartSubItem(value, style);
                 if (!Model.IsKnownType(ref type))
                 {
@@ -614,6 +632,7 @@ namespace ProtoBuf
                     model.Serialize(ref this, type, value);
                 }
                 EndSubItem(token, style);
+#pragma warning restore CS0618
             }
             internal void WriteHeaderCore(int fieldNumber, WireType wireType)
             {

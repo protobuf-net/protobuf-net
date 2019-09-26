@@ -690,10 +690,12 @@ namespace ProtoBuf
                         return;
                     case WireType.StartGroup:
                         SubItemToken readerToken = StartSubItem(),
+#pragma warning disable CS0618 // fine for groups
                             writerToken = writeState.StartSubItem(null);
                         while (ReadFieldHeader() > 0) { AppendExtensionField(ref writeState); }
                         EndSubItem(readerToken);
                         writeState.EndSubItem(writerToken);
+#pragma warning restore CS0618 // fine for groups
                         return;
                     case WireType.None: // treat as explicit errorr
                     case WireType.EndGroup: // treat as explicit error
