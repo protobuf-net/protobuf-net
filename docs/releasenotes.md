@@ -17,12 +17,25 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 ## v3.0.0-alpha.3
 
 - **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
-- **breaking change** serialization callbacks on inheritance models are currently only supported at the root type
-- **breaking change** all APIs that take `int key` referring to `Type` are deprecated; user code should not be using these APIs, so no impact is expected
-- **breaking change** undeclared inheritance base-types are no longer supported; meaning: if you serialize a `Foo : FooBase` **as a `FooBase`**, but only tell the serializer about `Foo` (never mentioning `FooBase`), it will fail
+
 - new state-based reader/writer API (works with streams, buffers, etc)
+- entire new custom serializer API
 - new `CreateForAssembly(...)` API (various overloads) for working with precompiled (at runtime) type models (faster than `RuntimeTypeModel`, but less flexible)
-- significant amounts of code tidying; many yaks were shawn
+
+Some features are currently incomplete; this may restrict usage for some scenarios:
+
+- serialization callbacks on inheritance models are currently only supported at the root type
+- tracked objects and dynamic types are ... glitching
+- "map" (dictionary) is only currently usable with public types
+
+There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably
+never should have been allowed; these changes should not impact most people!
+
+- it is no longer valid to attempt to configure `object`
+- it is no longer valid to define an inheritance involving value-types
+- undeclared inheritance base-types are no longer supported; meaning: if you serialize a `Foo : FooBase` **as a `FooBase`**, but only tell the serializer about `Foo` (never mentioning `FooBase`), it will fail
+- all APIs that take `int key` referring to `Type` are deprecated; user code should not be directly using these APIs, so no impact is expected
+- the `TypeModel` API surface (for implementing custom models) has changed; user code should not be directly using these APIs, so no impact is expected
 
 ## v2.4.0
 

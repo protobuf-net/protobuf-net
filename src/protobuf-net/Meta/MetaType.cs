@@ -69,7 +69,8 @@ namespace ProtoBuf.Meta
         private BasicList subTypes;
         private bool IsValidSubType(Type subType)
         {
-            return Type.IsAssignableFrom(subType);
+            return subType != null && !subType.IsValueType
+                && Type.IsAssignableFrom(subType);
         }
         /// <summary>
         /// Adds a known sub-type to the inheritance model

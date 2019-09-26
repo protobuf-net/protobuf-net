@@ -653,6 +653,8 @@ namespace ProtoBuf.Meta
         public MetaType Add(Type type, bool applyDefaultBehaviour = true)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type == typeof(object))
+                throw new ArgumentException("You cannot reconfigure " + type.FullName);
             MetaType newType = FindWithoutAdd(type);
             if (newType != null) return newType; // return existing
             int opaqueToken = 0;
@@ -1201,9 +1203,9 @@ namespace ProtoBuf.Meta
 
                     continue; // *only* write it as a scalar
                 }
-                if (!IsFullyPublic(runtimeType))
+                if (!IsFullyPublic(runtimeType, out var problem))
                 {
-                    ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + runtimeType.FullName);
+                    ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + TypeHelper.CSName(problem));
                 }
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
@@ -1712,10 +1714,26 @@ namespace ProtoBuf.Meta
 
         private readonly static Hashtable s_assemblyModels = new Hashtable();
 
-        private static bool IsFullyPublic(Type type)
+        internal static bool IsFullyPublic(Type type) => IsFullyPublic(type, out _);
+
+        internal static bool IsFullyPublic(Type type, out Type cause)
         {
+            Type originalType = type;
             while (type != null)
             {
+                if (type.IsGenericType)
+                {
+                    var args = type.GetGenericArguments();
+                    foreach(var arg in args)
+                    {
+                        if (!IsFullyPublic(arg))
+                        {
+                            cause = arg;
+                            return false;
+                        }
+                    }
+                }
+                cause = type;
                 if (type.IsNestedPublic)
                 {
                     type = type.DeclaringType;
@@ -1725,6 +1743,7 @@ namespace ProtoBuf.Meta
                     return type.IsPublic;
                 }
             }
+            cause = originalType;
             return false;
         }
 

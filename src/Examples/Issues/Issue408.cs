@@ -28,12 +28,15 @@ namespace Examples.Issues
         {
             var model = RuntimeTypeModel.Create();
 
-            ConfigureTypeModel(model);
-            model.Compile("ShouldSerializeValueTypeSubTypes", "ShouldSerializeValueTypeSubTypes.dll");
-            PEVerify.AssertValid("ShouldSerializeValueTypeSubTypes.dll");
-            TestValueType(model);
-            // This bug only occured in compiled type models
-            TestValueType(model.Compile());
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                ConfigureTypeModel(model);
+            }, "You cannot reconfigure System.Object");
+            //model.Compile("ShouldSerializeValueTypeSubTypes", "ShouldSerializeValueTypeSubTypes.dll");
+            //PEVerify.AssertValid("ShouldSerializeValueTypeSubTypes.dll");
+            //TestValueType(model);
+            //// This bug only occured in compiled type models
+            //TestValueType(model.Compile());
         }
 
         [Fact]
@@ -41,11 +44,14 @@ namespace Examples.Issues
         {
             var model = RuntimeTypeModel.Create();
 
-            ConfigureTypeModel(model);
-            model.Add(typeof(Container), true);
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                ConfigureTypeModel(model);
+            }, "You cannot reconfigure System.Object");
+            //model.Add(typeof(Container), true);
 
-            TestBoxedValueType(model);
-            TestValueType(model.Compile());
+            //TestBoxedValueType(model);
+            //TestValueType(model.Compile());
         }
 
         private static void ConfigureTypeModel(RuntimeTypeModel model)

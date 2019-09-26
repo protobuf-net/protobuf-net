@@ -4,6 +4,8 @@ using ProtoBuf.Compiler;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using ProtoBuf.Meta;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Serializers
 {
@@ -157,9 +159,12 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
-            var pairSerializer = GetPairSerializer(ctx);
-
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
+            if (!RuntimeTypeModel.IsFullyPublic(itemType, out var problem))
+            {
+                throw new NotSupportedException("Cannot produce a map serializer involving non-public type: " + TypeHelper.CSName(problem));
+            }
+            var pairSerializer = GetPairSerializer(ctx);
             MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(
                 ExpectedType, itemType, out moveNext, out current);
             Type enumeratorType = getEnumerator.ReturnType;
