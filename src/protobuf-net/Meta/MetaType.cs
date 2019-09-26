@@ -362,7 +362,8 @@ namespace ProtoBuf.Meta
         {
             if (Type.IsEnum)
             {
-                return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Varint, false, new EnumSerializer(Type, GetEnumMap()));
+                return (IProtoTypeSerializer)Activator.CreateInstance(
+                    typeof(EnumTypeSerializer<>).MakeGenericType(Type), args: new object[] { GetEnumMap() });
             }
             Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
             if (itemType != null)
@@ -1541,16 +1542,16 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        internal EnumSerializer.EnumPair[] GetEnumMap()
+        internal EnumMemberSerializer.EnumPair[] GetEnumMap()
         {
             if (HasFlag(OPTIONS_EnumPassThru)) return null;
-            EnumSerializer.EnumPair[] result = new EnumSerializer.EnumPair[fields.Count];
+            EnumMemberSerializer.EnumPair[] result = new EnumMemberSerializer.EnumPair[fields.Count];
             for (int i = 0; i < result.Length; i++)
             {
                 ValueMember member = (ValueMember)fields[i];
                 int wireValue = member.FieldNumber;
                 object value = member.GetRawEnumValue();
-                result[i] = new EnumSerializer.EnumPair(wireValue, value, member.MemberType);
+                result[i] = new EnumMemberSerializer.EnumPair(wireValue, value, member.MemberType);
             }
             return result;
         }

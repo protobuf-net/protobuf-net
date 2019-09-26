@@ -126,13 +126,13 @@ namespace ProtoBuf.Compiler
             return (ProtoSubTypeDeserializer<T>)ctx.method.CreateDelegate(typeof(ProtoSubTypeDeserializer<T>));
         }
 
-        public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
+        public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model, bool isScalar = false)
         {
             Type type = head.ExpectedType;
             using CompilerContext ctx = new CompilerContext(scope, type, SignatureType.ReaderScope_Input, true, model, typeof(T), typeof(T));
 
             head.EmitRead(ctx, ctx.InputValue);
-            ctx.LoadValue(ctx.InputValue);
+            if (!isScalar) ctx.LoadValue(ctx.InputValue);
             ctx.Return();
 
             return (ProtoDeserializer<T>)ctx.method.CreateDelegate(typeof(ProtoDeserializer<T>));

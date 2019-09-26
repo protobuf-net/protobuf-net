@@ -755,8 +755,8 @@ namespace ProtoBuf.Meta
 
         /// <summary>Indicates whether a type is known to the model</summary>
         internal override bool IsKnownType<T>() // the point of this override is to avoid loops
-            // when trying to *build* a model; we don't actually need the service (which may not exist yet);
-            // we just need to know whether we should *expect one*
+                                                // when trying to *build* a model; we don't actually need the service (which may not exist yet);
+                                                // we just need to know whether we should *expect one*
             => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1167,9 +1167,17 @@ namespace ProtoBuf.Meta
                     var iType = typeof(ISerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(iType);
                     il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
-                    il.ThrowException(typeof(NotImplementedException));
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
+                    {
+                        serializer.EmitRead(ctx, ctx.InputValue);
+                        ctx.Return();
+                    }
                     il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
-                    il.ThrowException(typeof(NotImplementedException));
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(ISerializer<string>.Write)))
+                    {
+                        serializer.EmitWrite(ctx, ctx.InputValue);
+                        ctx.Return();
+                    }
 
                     iType = typeof(IScalarSerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(iType);
@@ -1182,9 +1190,20 @@ namespace ProtoBuf.Meta
                     iType = typeof(ISerializer<>).MakeGenericType(nullable);
                     type.AddInterfaceImplementation(iType);
                     il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
-                    il.ThrowException(typeof(NotImplementedException));
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, nullable[0], nameof(ISerializer<string>.Read)))
+                    {
+                        serializer.EmitRead(ctx, ctx.InputValue);
+                        ctx.EmitCtor(nullable[0], runtimeType);
+                        ctx.Return();
+                    }
                     il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
-                    il.ThrowException(typeof(NotImplementedException));
+                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, nullable[0], nameof(ISerializer<string>.Write)))
+                    {
+                        ctx.LoadAddress(ctx.InputValue, nullable[0]);
+                        ctx.EmitCall(nullable[0].GetMethod(nameof(Nullable<int>.GetValueOrDefault), Type.EmptyTypes));
+                        serializer.EmitWrite(ctx, null);
+                        ctx.Return();
+                    }
 
                     iType = typeof(IScalarSerializer<>).MakeGenericType(nullable);
                     type.AddInterfaceImplementation(iType);
@@ -1201,13 +1220,13 @@ namespace ProtoBuf.Meta
                 }
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
-                
+
                 // we always emit the serializer API
                 var serType = typeof(ISerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
 
                 il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Read));
-                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
+                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
                     {
@@ -1361,7 +1380,7 @@ namespace ProtoBuf.Meta
             return meta != null && meta.IsPrepared();
         }
 
-        internal EnumSerializer.EnumPair[] GetEnumMap(Type type)
+        internal EnumMemberSerializer.EnumPair[] GetEnumMap(Type type)
         {
             int index = FindOrAddAuto(type, false, false, false);
             return index < 0 ? null : ((MetaType)types[index]).GetEnumMap();

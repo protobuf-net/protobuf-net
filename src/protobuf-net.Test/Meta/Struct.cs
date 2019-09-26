@@ -4,6 +4,9 @@ using Xunit;
 using System.Reflection;
 using ProtoBuf.Serializers;
 using ProtoBuf.Compiler;
+using System;
+using ProtoBuf.Meta;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.unittest.Meta
 {
@@ -15,6 +18,63 @@ namespace ProtoBuf.unittest.Meta
 
     public class TestCustomerStruct
     {
+        public enum Foo
+        {
+            A, B, C
+        }
+
+        static RuntimeTypeModel CreateEnumModel()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(Foo), true);
+            return model;
+        }
+        [Fact]
+        public void TestEnumTopLevel_Runtime() => TestEnumModel(CreateEnumModel());
+
+        [Fact]
+        public void TestEnumTopLevel_CompileInPlace()
+        {
+            var model = CreateEnumModel();
+            model.CompileInPlace();
+            TestEnumModel(model);
+        }
+
+        [Fact]
+        public void TestEnumTopLevel_Compile() => TestEnumModel(CreateEnumModel().Compile());
+
+        [Fact]
+        public void TestEnumTopLevel_CompileFull()
+        {
+            var model = CreateEnumModel();
+            var compiled = model.Compile("TestEnumTopLevel_CompileFull", "TestEnumTopLevel_CompileFull.dll");
+            PEVerify.Verify("TestEnumTopLevel_CompileFull.dll", deleteOnSuccess: false);
+            TestEnumModel(compiled);
+        }
+
+        static void TestEnumModel(TypeModel model)
+        {
+            var obj = model.GetSerializer<Foo>();
+            Assert.NotNull(obj);
+
+            Assert.True(obj is IScalarSerializer<Foo>, "should be a scalar serializer; is " + TypeHelper.CSName(obj.GetType()));
+
+            using var ms = new MemoryStream();
+            Assert.False(model.CanSerializeContractType(typeof(Foo)), "should not be a contract type");
+            Assert.True(model.CanSerializeBasicType(typeof(Foo)), "should be a basic type");
+            model.Serialize(ms, Foo.B);
+            
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("08-01", hex);
+            ms.Position = 0;
+            var val = model.Deserialize<Foo>(ms);
+            Assert.Equal(Foo.B, val);
+
+            val = model.DeepClone(Foo.B);
+            Assert.Equal(Foo.B, val);
+        }
+
         [Fact]
         public void RunStructDesrializerForEmptyStream()
         {

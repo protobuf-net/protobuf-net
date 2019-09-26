@@ -58,12 +58,24 @@ namespace ProtoBuf.Serializers
         }
     }
 
+    internal sealed class EnumCompiledSerializer<T> : SimpleCompiledSerializer<T>, IScalarSerializer<T>, IScalarSerializer<T?>
+        where T : struct
+    {
+        public WireType DefaultWireType => WireType.Varint;
 
-    internal sealed class SimpleCompiledSerializer<T> : CompiledSerializer,
+        public EnumCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model) : base(head, model) { }
+
+        T? ISerializer<T?>.Read(ref ProtoReader.State state, T? value)
+            => deserializer(ref state, default);
+
+        void ISerializer<T?>.Write(ref ProtoWriter.State state, T? value)
+            => serializer(ref state, value.Value);
+    }
+    internal class SimpleCompiledSerializer<T> : CompiledSerializer,
         ISerializer<T>, IFactory<T>
     {
-        private readonly Compiler.ProtoSerializer<T> serializer;
-        private readonly Compiler.ProtoDeserializer<T> deserializer;
+        protected readonly Compiler.ProtoSerializer<T> serializer;
+        protected readonly Compiler.ProtoDeserializer<T> deserializer;
         private readonly Func<ISerializationContext, T> factory;
         public SimpleCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
@@ -76,15 +88,17 @@ namespace ProtoBuf.Serializers
             {
                 throw new InvalidOperationException($"Unable to bind serializer: " + ex.Message, ex);
             }
+
+            bool isScalar = this is IScalarSerializer<T>;
             try
             {
-                deserializer = Compiler.CompilerContext.BuildDeserializer<T>(model.Scope, head, model);
+                deserializer = Compiler.CompilerContext.BuildDeserializer<T>(model.Scope, head, model, isScalar);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Unable to bind deserializer: " + ex.Message, ex);
             }
-            factory = Compiler.CompilerContext.BuildFactory<T>(model.Scope, head, model);
+            factory = isScalar ? ctx => default : Compiler.CompilerContext.BuildFactory<T>(model.Scope, head, model);
         }
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
@@ -130,6 +144,11 @@ namespace ProtoBuf.Serializers
                     if (head.IsSubType)
                     {
                         ctor = Helpers.GetConstructor(typeof(InheritanceCompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
+                            new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
+                    }
+                    else if (head.ExpectedType.IsEnum)
+                    {
+                        ctor = Helpers.GetConstructor(typeof(EnumCompiledSerializer<>).MakeGenericType(head.BaseType),
                             new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
                     }
                     else
