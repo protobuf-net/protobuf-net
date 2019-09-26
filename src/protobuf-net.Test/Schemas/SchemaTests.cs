@@ -32,6 +32,7 @@ namespace ProtoBuf.Schemas
         [Fact]
         public void CanWriteMessageSetData()
         {
+#pragma warning disable CS0618
             using var ms = new MemoryStream();
             using (var state = ProtoWriter.State.Create(ms, null, null))
             {
@@ -56,6 +57,7 @@ namespace ProtoBuf.Schemas
                 state.EndSubItem(tok);
 
                 state.Close();
+#pragma warning restore CS0618
             }
 
             var hex = BitConverter.ToString(ms.ToArray(), 0, (int)ms.Length);

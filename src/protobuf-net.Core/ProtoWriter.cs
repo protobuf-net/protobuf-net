@@ -89,6 +89,7 @@ namespace ProtoBuf
         /// <param name="writer">The destination.</param>
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
         [MethodImpl(HotPath)]
+        [Obsolete(PreferWriteMessage, false)]
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
             => writer.DefaultState().StartSubItem(instance, PrefixStyle.Base128);
 
@@ -127,6 +128,7 @@ namespace ProtoBuf
         /// <param name="token">The token obtained from StartubItem.</param>
         /// <param name="writer">The destination.</param>
         [MethodImpl(HotPath)]
+        [Obsolete(PreferWriteMessage, false)]
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
             => writer.DefaultState().EndSubItem(token, PrefixStyle.Base128);
 

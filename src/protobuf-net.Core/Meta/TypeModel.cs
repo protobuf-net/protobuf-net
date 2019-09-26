@@ -1513,37 +1513,35 @@ namespace ProtoBuf.Meta
             else
             {
                 // must be some kind of aux scenario, then
-                using (MemoryStream ms = new MemoryStream())
+                using MemoryStream ms = new MemoryStream();
+                var writeState = ProtoWriter.State.Create(ms, this, null);
+                try
                 {
-                    var writeState = ProtoWriter.State.Create(ms, this, null);
-                    try
-                    {
-                        if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
-                        writeState.Close();
-                    }
-                    catch
-                    {
-                        writeState.Abandon();
-                        throw;
-                    }
-                    finally
-                    {
-                        writeState.Dispose();
-                    }
-                    ms.Position = 0;
-                    var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
-                    try
-                    {
-                        value = null; // start from scratch!
-                        TryDeserializeAuxiliaryType(ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
-                    }
-                    finally
-                    {
-                        readState.Dispose();
-                    }
-
-                    return value;
+                    if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                    writeState.Close();
                 }
+                catch
+                {
+                    writeState.Abandon();
+                    throw;
+                }
+                finally
+                {
+                    writeState.Dispose();
+                }
+                ms.Position = 0;
+                var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
+                try
+                {
+                    value = null; // start from scratch!
+                    TryDeserializeAuxiliaryType(ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
+                }
+                finally
+                {
+                    readState.Dispose();
+                }
+
+                return value;
             }
         }
 
