@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, IMessageSerializer<T>
+    internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
         bool IProtoTypeSerializer.IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
@@ -18,10 +18,10 @@ namespace ProtoBuf.Serializers
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
 
 
-        T IMessageSerializer<T>.Read(ref ProtoReader.State state, T value)
+        T ISerializer<T>.Read(ref ProtoReader.State state, T value)
             => (T)Read(ref state, value);
 
-        void IMessageSerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
             => Write(ref state, value);
 
         public bool ReturnsValue => false;

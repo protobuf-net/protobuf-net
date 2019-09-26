@@ -69,8 +69,8 @@ namespace ProtoBuf.Tests
         {
             private Foo() { }
 
-            public static IMessageSerializer<Foo> Serializer => FooSerializer.Instance;
-            sealed class FooSerializer : IMessageSerializer<Foo>
+            public static ISerializer<Foo> Serializer => FooSerializer.Instance;
+            sealed class FooSerializer : ISerializer<Foo>
             {
                 public static FooSerializer Instance { get; } = new FooSerializer();
                 private FooSerializer() { }
@@ -125,7 +125,7 @@ namespace ProtoBuf.Tests
             public A Inner { get; set; }
         }
 
-        class ASerializer : IMessageSerializer<A>
+        class ASerializer : ISerializer<A>
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }

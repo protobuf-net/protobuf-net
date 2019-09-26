@@ -100,9 +100,9 @@ namespace ProtoBuf.WellKnownTypes
         }
     }
 
-    partial class WellKnownSerializer : IMessageSerializer<ScaledTicks>
+    partial class WellKnownSerializer : ISerializer<ScaledTicks>
     {
-        ScaledTicks IMessageSerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
+        ScaledTicks ISerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
         {
             int fieldNumber;
             TimeSpanScale scale = TimeSpanScale.Days;
@@ -143,7 +143,7 @@ namespace ProtoBuf.WellKnownTypes
         private const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02, FieldTimeSpanKind = 0x03;
 
 
-        void IMessageSerializer<ScaledTicks>.Write(ref ProtoWriter.State state, ScaledTicks value)
+        void ISerializer<ScaledTicks>.Write(ref ProtoWriter.State state, ScaledTicks value)
         {
             if (value.Value != 0)
             {

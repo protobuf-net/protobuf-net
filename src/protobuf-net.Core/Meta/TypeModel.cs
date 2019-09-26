@@ -83,7 +83,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether a type is known to the model
         /// </summary>
-        protected internal virtual bool IsKnownType<T>() => GetMessageSerializer<T>() != null || GetScalarSerializer<T>() != null;
+        protected internal virtual bool IsKnownType<T>() => GetSerializer<T>() != null;
 
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
@@ -1345,14 +1345,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual IMessageSerializer<T> GetMessageSerializer<T>()
-            => this as IMessageSerializer<T>;
-
-        /// <summary>
-        /// Get a typed serializer for <typeparamref name="T"/>
-        /// </summary>
-        protected internal virtual IScalarSerializer<T> GetScalarSerializer<T>()
-            => this as IScalarSerializer<T>;
+        protected internal virtual ISerializer<T> GetSerializer<T>()
+            => this as ISerializer<T>;
 
         /// <summary>
         /// Get a factory for creating <typeparamref name="T"/> values
@@ -1367,9 +1361,9 @@ namespace ProtoBuf.Meta
             => this as ISubTypeSerializer<T>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IMessageSerializer<T> NoMessageSerializer<T>(TypeModel model)
+        private static ISerializer<T> NoSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No message serializer for type {(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
@@ -1420,16 +1414,16 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IMessageSerializer<T> GetMessageSerializer<T>(TypeModel model)
-           => model?.GetMessageSerializer<T>() ?? WellKnownSerializer.Instance as IMessageSerializer<T> ?? NoMessageSerializer<T>(model);
+        internal static ISerializer<T> GetSerializer<T>(TypeModel model)
+           => model?.GetSerializer<T>()
+            ?? WellKnownSerializer.Instance as ISerializer<T>
+            ?? NoSerializer<T>(model);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
-           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as ISubTypeSerializer<T> ?? NoSubTypeSerializer<T>(model);
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IScalarSerializer<T> GetScalarSerializer<T>(TypeModel model)
-            => model?.GetScalarSerializer<T>() ?? WellKnownSerializer.Instance as IScalarSerializer<T> ?? NoScalarSerializer<T>(model);
+           => model?.GetSubTypeSerializer<T>()
+            ?? WellKnownSerializer.Instance as ISubTypeSerializer<T>
+            ?? NoSubTypeSerializer<T>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

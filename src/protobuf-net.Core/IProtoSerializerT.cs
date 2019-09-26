@@ -7,9 +7,9 @@ using System.Runtime.CompilerServices;
 namespace ProtoBuf
 {
     /// <summary>
-    /// Abstract API capable of serializing/deserializing messages
+    /// Abstract API capable of serializing/deserializing messages or values
     /// </summary>
-    public interface IMessageSerializer<T>
+    public interface ISerializer<T>
     {
         /// <summary>
         /// Deserialize an instance from the supplied writer
@@ -25,18 +25,8 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of serializing/deserializing scalar values (scalars are things like enums; the values are never merged)
     /// </summary>
-    public interface IScalarSerializer<T>
+    public interface IScalarSerializer<T> : ISerializer<T>
     {
-        /// <summary>
-        /// Deserialize an instance from the supplied writer
-        /// </summary>
-        T Read(ref ProtoReader.State state);
-
-        /// <summary>
-        /// Serialize an instance to the supplied writer
-        /// </summary>
-        void Write(ref ProtoWriter.State state, T value);
-
         /// <summary>
         /// Indicates the default wire-type for this type
         /// </summary>

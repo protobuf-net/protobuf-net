@@ -82,9 +82,9 @@ namespace ProtoBuf.Compiler
                 il.Emit(OpCodes.Stsfld, instance);
                 il.Emit(OpCodes.Ret);
 
-                var iType = typeof(IMessageSerializer<T>);
+                var iType = typeof(ISerializer<T>);
                 type.AddInterfaceImplementation(iType);
-                il = Implement(type, iType, nameof(IMessageSerializer<T>.Write));
+                il = Implement(type, iType, nameof(ISerializer<T>.Write));
                 if (serialize == null)
                 {
                     il.ThrowException(typeof(NotImplementedException));
@@ -96,7 +96,7 @@ namespace ProtoBuf.Compiler
                     ctx.Return();
                 }
 
-                il = Implement(type, iType, nameof(IMessageSerializer<T>.Read));
+                il = Implement(type, iType, nameof(ISerializer<T>.Read));
                 if (deserialize == null)
                 {
                     il.ThrowException(typeof(NotImplementedException));

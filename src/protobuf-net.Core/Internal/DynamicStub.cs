@@ -116,9 +116,9 @@ namespace ProtoBuf.Internal
         private sealed class ConcreteStub<T> : DynamicStub
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static IMessageSerializer<T> GetMessageSerializer(TypeModel model)
+            private static ISerializer<T> GetMessageSerializer(TypeModel model)
             {
-                try { return TypeModel.GetMessageSerializer<T>(model); }
+                try { return TypeModel.GetSerializer<T>(model); }
                 catch { return null; }
             }
             protected override bool TryDeserialize(TypeModel model, ref ProtoReader.State state, ref object value)

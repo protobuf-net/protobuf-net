@@ -329,6 +329,11 @@ namespace ProtoBuf
             }
 
 
+            internal void SkipAllFields()
+            {
+                while (ReadFieldHeader() > 0) SkipField();
+            }
+
             /// <summary>
             /// Reads a string from the stream (using UTF8); supported wire-types: String
             /// </summary>
@@ -708,10 +713,10 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T ReadMessage<T>(T value = default, IMessageSerializer<T> serializer = null)
+            public T ReadMessage<T>(T value = default, ISerializer<T> serializer = null)
             {
                 var tok = StartSubItem();
-                var result = (serializer ?? TypeModel.GetMessageSerializer<T>(_reader._model)).Read(ref this, value);
+                var result = (serializer ?? TypeModel.GetSerializer<T>(_reader._model)).Read(ref this, value);
                 EndSubItem(tok);
                 return result;
             }
@@ -738,14 +743,14 @@ namespace ProtoBuf
             /// Deserialize an instance of the provided type
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T Deserialize<T>(T value = default, IMessageSerializer<T> serializer = null)
+            public T Deserialize<T>(T value = default, ISerializer<T> serializer = null)
             {
                 if (TypeHelper<T>.IsObjectType && value != null)
                 {
                     _reader.SetRootObject(value);
                 }
 
-                var result = (serializer ?? TypeModel.GetMessageSerializer<T>(Model)).Read(ref this, value);
+                var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
                 CheckFullyConsumed();
                 return result;
             }

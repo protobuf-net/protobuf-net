@@ -318,13 +318,13 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteMessage<T>(T value, IMessageSerializer<T> serializer = null, bool recursionCheck = true)
+            public void WriteMessage<T>(T value, ISerializer<T> serializer = null, bool recursionCheck = true)
                 => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteMessage<T>(int fieldNumber, T value, IMessageSerializer<T> serializer = null, bool recursionCheck = true)
+            public void WriteMessage<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
             {
                 if (!(TypeHelper<T>.IsObjectType && value is null))
                 {
@@ -467,19 +467,30 @@ namespace ProtoBuf
             public void WriteBytes(byte[] data) => WriteBytes(data, 0, data.Length);
 
             /// <summary>
-            /// Writes an object to the input writer
+            /// Writes an object to the input writer as a root value; if the
+            /// object is determined to be a scalar, it is written as though it were
+            /// part of a message with field-number 1
             /// </summary>
-            public long Serialize<T>(T value, IMessageSerializer<T> serializer = null)
+            public long Serialize<T>(T value, ISerializer<T> serializer = null)
             {
                 try
                 {
                     CheckClear();
+                    if (value == null) return 0;
                     long before = GetPosition();
-                    if (value != null)
+
+                    serializer ??=  TypeModel.GetSerializer<T>(Model);
+
+                    if (serializer is IScalarSerializer<T> scalar)
+                    {
+                        WriteFieldHeader(1, scalar.DefaultWireType);
+                    }
+                    else
                     {
                         SetRootObject(value);
-                        (serializer ?? TypeModel.GetMessageSerializer<T>(Model)).Write(ref this, value);
                     }
+                    serializer.Write(ref this, value);
+
                     CheckClear();
                     long after = GetPosition();
                     return after - before;

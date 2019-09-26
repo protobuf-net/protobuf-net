@@ -103,7 +103,7 @@ namespace ProtoBuf.Serializers
 
         public override bool IsSubType => true;
     }
-    internal class TypeSerializer<T> : TypeSerializer, IMessageSerializer<T>, IFactory<T>, IProtoTypeSerializer
+    internal class TypeSerializer<T> : TypeSerializer, ISerializer<T>, IFactory<T>, IProtoTypeSerializer
     {
         public virtual bool HasInheritance => false;
         public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)

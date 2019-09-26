@@ -53,22 +53,22 @@ namespace ProtoBuf.WellKnownTypes
         private static readonly DateTime TimestampEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
     }
 
-    partial class WellKnownSerializer : IMessageSerializer<Timestamp>, IMessageSerializer<DateTime>
+    partial class WellKnownSerializer : ISerializer<Timestamp>, ISerializer<DateTime>
     {
-        Timestamp IMessageSerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
+        Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);
             duration = ReadDuration(ref state, duration);
             return new Timestamp(duration.Seconds, duration.Nanoseconds);
         }
 
-        void IMessageSerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
+        void ISerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
 
-        DateTime IMessageSerializer<DateTime>.Read(ref ProtoReader.State state, DateTime value)
+        DateTime ISerializer<DateTime>.Read(ref ProtoReader.State state, DateTime value)
             => BclHelpers.ReadDateTime(ref state);
 
-        void IMessageSerializer<DateTime>.Write(ref ProtoWriter.State state, DateTime value)
+        void ISerializer<DateTime>.Write(ref ProtoWriter.State state, DateTime value)
         {
             var model = state.Model;
             if (model != null && state.Model.SerializeDateTimeKind())

@@ -248,11 +248,11 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteMessage<T>(ref State state, T value, IMessageSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+        protected internal virtual void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = state.StartSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetMessageSerializer<T>(model)).Write(ref state, value);
+            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
             state.EndSubItem(tok, style);
 #pragma warning restore CS0618
         }
@@ -501,7 +501,7 @@ namespace ProtoBuf
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
 
-        internal static long Measure<T>(NullProtoWriter writer, T value, IMessageSerializer<T> serializer)
+        internal static long Measure<T>(NullProtoWriter writer, T value, ISerializer<T> serializer)
         {
             long length;
             object obj = default;

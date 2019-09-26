@@ -68,7 +68,7 @@ namespace ProtoBuf.Serializers
 
         private readonly RuntimePairSerializer _runtimeSerializer;
 
-        sealed class RuntimePairSerializer : IMessageSerializer<KeyValuePair<TKey, TValue>>
+        sealed class RuntimePairSerializer : ISerializer<KeyValuePair<TKey, TValue>>
         {
             private readonly IRuntimeProtoSerializerNode _keyTail, _valueTail;
             public RuntimePairSerializer(IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail)
@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                 _valueTail = valueTail;
             }
 
-            KeyValuePair<TKey, TValue> IMessageSerializer<KeyValuePair<TKey, TValue>>.Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            KeyValuePair<TKey, TValue> ISerializer<KeyValuePair<TKey, TValue>>.Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
             {
                 var key = pair.Key;
                 var value = pair.Value;
@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
 
-            void IMessageSerializer<KeyValuePair<TKey, TValue>>.Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
+            void ISerializer<KeyValuePair<TKey, TValue>>.Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
             {
                 if (pair.Key != null) _keyTail.Write(ref state, pair.Key);
                 if (pair.Value != null) _valueTail.Write(ref state, pair.Value);

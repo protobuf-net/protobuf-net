@@ -6,7 +6,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, IMessageSerializer<T>, ISubTypeSerializer<T>, IFactory<T>
+    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, ISerializer<T>, ISubTypeSerializer<T>, IFactory<T>
         where TBase : class
         where T : class, TBase
     {
@@ -14,7 +14,7 @@ namespace ProtoBuf.Serializers
         private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
         private readonly Func<ISerializationContext, T> factory;
 
-        T IMessageSerializer<T>.Read(ref ProtoReader.State state, T value)
+        T ISerializer<T>.Read(ref ProtoReader.State state, T value)
             => state.ReadBaseType<TBase, T>(value);
 
         T IFactory<T>.Create(ISerializationContext context)
@@ -23,7 +23,7 @@ namespace ProtoBuf.Serializers
         public override object Read(ref ProtoReader.State state, object value)
             => state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
 
-        void IMessageSerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
             => state.WriteBaseType<TBase>(value);
 
         public override void Write(ref ProtoWriter.State state, object value)
@@ -60,7 +60,7 @@ namespace ProtoBuf.Serializers
 
 
     internal sealed class SimpleCompiledSerializer<T> : CompiledSerializer,
-        IMessageSerializer<T>, IFactory<T>
+        ISerializer<T>, IFactory<T>
     {
         private readonly Compiler.ProtoSerializer<T> serializer;
         private readonly Compiler.ProtoDeserializer<T> deserializer;
@@ -87,13 +87,13 @@ namespace ProtoBuf.Serializers
             factory = Compiler.CompilerContext.BuildFactory<T>(model.Scope, head, model);
         }
 
-        T IMessageSerializer<T>.Read(ref ProtoReader.State state, T value)
+        T ISerializer<T>.Read(ref ProtoReader.State state, T value)
             => deserializer(ref state, value);
 
         public override object Read(ref ProtoReader.State state, object value)
             => deserializer(ref state, TypeHelper<T>.FromObject(value));
 
-        void IMessageSerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
             => serializer(ref state, value);
 
         public override void Write(ref ProtoWriter.State state, object value)

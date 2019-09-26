@@ -159,7 +159,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(tmp);
             if (serializer == null)
             {
-                ctx.LoadSelfAsService<IMessageSerializer<T>>(assertImplemented);
+                ctx.LoadSelfAsService<ISerializer<T>>(assertImplemented);
             }
             else
             {

@@ -742,12 +742,8 @@ namespace ProtoBuf.Meta
         private readonly BasicList types = new BasicList();
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override IMessageSerializer<T> GetMessageSerializer<T>()
-            => GetServices<T>() as IMessageSerializer<T>;
-
-        /// <summary>Resolve a service relative to T</summary>
-        protected internal override IScalarSerializer<T> GetScalarSerializer<T>()
-            => GetServices<T>() as IScalarSerializer<T>;
+        protected internal override ISerializer<T> GetSerializer<T>()
+            => GetServices<T>() as ISerializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
         protected internal override ISubTypeSerializer<T> GetSubTypeSerializer<T>()
@@ -1166,15 +1162,34 @@ namespace ProtoBuf.Meta
                 {
                     // this is mostly used to properly understand which types we recognize;
                     // it is not actually used right now
-                    var iType = typeof(IScalarSerializer<>).MakeGenericType(runtimeType);
+                    var iType = typeof(ISerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(iType);
-                    il = CompilerContextScope.Implement(type, iType, nameof(IScalarSerializer<string>.Read));
+                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
                     il.ThrowException(typeof(NotImplementedException));
-                    il = CompilerContextScope.Implement(type, iType, nameof(IScalarSerializer<string>.Write));
+                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
                     il.ThrowException(typeof(NotImplementedException));
+
+                    iType = typeof(IScalarSerializer<>).MakeGenericType(runtimeType);
+                    type.AddInterfaceImplementation(iType);
                     il = CompilerContextScope.Implement(type, iType, "get_" + nameof(IScalarSerializer<string>.DefaultWireType));
                     il.Emit(OpCodes.Ldc_I4_0); // Varint == 0
                     il.Emit(OpCodes.Ret);
+
+                    // implement both IScalarSerializer<Foo> and IScalarSerializer<Foo?>
+                    Type[] nullable = { typeof(Nullable<>).MakeGenericType(runtimeType) };
+                    iType = typeof(ISerializer<>).MakeGenericType(nullable);
+                    type.AddInterfaceImplementation(iType);
+                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
+                    il.ThrowException(typeof(NotImplementedException));
+                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
+                    il.ThrowException(typeof(NotImplementedException));
+
+                    iType = typeof(IScalarSerializer<>).MakeGenericType(nullable);
+                    type.AddInterfaceImplementation(iType);
+                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(IScalarSerializer<string>.DefaultWireType));
+                    il.Emit(OpCodes.Ldc_I4_0); // Varint == 0
+                    il.Emit(OpCodes.Ret);
+
 
                     continue; // *only* write it as a scalar
                 }
@@ -1186,11 +1201,11 @@ namespace ProtoBuf.Meta
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
                 
                 // we always emit the serializer API
-                var serType = typeof(IMessageSerializer<>).MakeGenericType(runtimeType);
+                var serType = typeof(ISerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
 
-                il = CompilerContextScope.Implement(type, serType, nameof(IMessageSerializer<string>.Read));
-                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(IMessageSerializer<string>.Read)))
+                il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Read));
+                using (var ctx = new CompilerContext(scope, il, false,  CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
                     {
@@ -1204,8 +1219,8 @@ namespace ProtoBuf.Meta
                     ctx.Return();
                 }
 
-                il = CompilerContextScope.Implement(type, serType, nameof(IMessageSerializer<string>.Write));
-                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(IMessageSerializer<string>.Write)))
+                il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Write));
+                using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(ISerializer<string>.Write)))
                 {
                     if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
                     else serializer.EmitWrite(ctx, ctx.InputValue);

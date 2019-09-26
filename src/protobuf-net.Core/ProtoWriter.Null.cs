@@ -46,9 +46,9 @@ namespace ProtoBuf
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 
-            protected internal override void WriteMessage<T>(ref State state, T value, IMessageSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+            protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
             {
-                if (serializer == null) serializer = TypeModel.GetMessageSerializer<T>(Model);
+                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
                 AdvanceSubMessage(ref state, len, style);
             }
