@@ -24,6 +24,10 @@ namespace ProtoBuf.Internal
         {
             if (type == null) return null;
             if (type.IsEnum) return type.Name;
+
+            var nullable = Nullable.GetUnderlyingType(type);
+            if (nullable != null) return CSName(nullable) + "?";
+
             if (!type.IsGenericType)
             {
                 return (Type.GetTypeCode(type)) switch
@@ -45,9 +49,6 @@ namespace ProtoBuf.Internal
                     _ => type.Name,
                 };
             }
-
-            var nullable = Nullable.GetUnderlyingType(type);
-            if (nullable != null) return CSName(nullable) + "?";
 
             var withTicks = type.Name;
             var index = withTicks.IndexOf('`');
