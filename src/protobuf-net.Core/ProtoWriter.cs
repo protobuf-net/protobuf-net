@@ -40,18 +40,6 @@ namespace ProtoBuf
         public static void WriteObject(object value, Type type, ProtoWriter writer)
             => writer.DefaultState().WriteObject(value, type);
 
-        /// <summary>
-        /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
-        /// caller is asserting that this relationship is non-recursive; no recursion check will be
-        /// performed.
-        /// </summary>
-        /// <param name="value">The object to write.</param>
-        /// <param name="type">The key that uniquely identifies the type within the model.</param>
-        /// <param name="writer">The destination.</param>
-        [MethodImpl(HotPath)]
-        public static void WriteRecursionSafeObject(object value, Type type, ProtoWriter writer)
-            => writer.DefaultState().WriteRecursionSafeObject(value, type);
-
         private protected readonly NetObjectCache netCache;
 
         private int fieldNumber;

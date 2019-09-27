@@ -115,24 +115,22 @@ namespace ProtoBuf.ServiceModel
                 var state = ProtoWriter.State.Create(ms, model, null);
                 try
                 {
-                    if (isList)
+
+                    if (DynamicStub.TrySerializeRoot(type, model, ref state, graph))
+                    { } // winning!
+                    else if (isList)
                     {
                         model.SerializeRootFallback(ref state, graph);
                     }
                     else
                     {
-
-                        try
-                        {
-                            model.Serialize(ref state, type, graph);
-                            state.Close();
-                        }
-                        catch
-                        {
-                            state.Abandon();
-                            throw;
-                        }
+                        model.Serialize(ObjectScope.LikeRoot, ref state, type, graph);
                     }
+                }
+                catch
+                {
+                    state.Abandon();
+                    throw;
                 }
                 finally
                 {
@@ -140,7 +138,7 @@ namespace ProtoBuf.ServiceModel
                 }
                 Helpers.GetBuffer(ms, out var segment);
                 writer.WriteBase64(segment.Array, segment.Offset, segment.Count);
-                
+
             }
         }
 
@@ -170,21 +168,23 @@ namespace ProtoBuf.ServiceModel
                 if (!isSelfClosed) reader.ReadEndElement();
                 return null;
             }
-            ProtoReader.State state;
-            if (isSelfClosed) // no real content
+            object ReadFrom(ReadOnlyMemory<byte> payload)
             {
-                state = ProtoReader.State.Create(Stream.Null, model, null, ProtoReader.TO_EOF);
+                var state = ProtoReader.State.Create(payload, model, null);
                 try
                 {
-                    if (isList)
+                    object result = null;
+                    if (DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
+                    { } // winning!
+                    else if (isList)
                     {
-                        return state.DeserializeRootFallback(null, type);
+                        result = state.DeserializeRootFallback(null, type);
                     }
                     else
                     {
-
-                        return model.Deserialize(ref state, type, null);
+                        result = model.Deserialize(ObjectScope.LikeRoot, ref state, type, null);
                     }
+                    return result;
                 }
                 finally
                 {
@@ -192,29 +192,16 @@ namespace ProtoBuf.ServiceModel
                 }
             }
 
-            object result = null;
+            if (isSelfClosed) // no real content
+            {
+                return ReadFrom(Array.Empty<byte>());
+            }
+
+
             Debug.Assert(reader.CanReadBinaryContent, "CanReadBinaryContent");
             ReadOnlyMemory<byte> payload = reader.ReadContentAsBase64();
-            state = ProtoReader.State.Create(payload, model, null);
-            try
-            {
-                if (DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
-                { } // winning!
-                else if (isList)
-                {
-                    result = state.DeserializeRootFallback(null, type);
-                }
-                else
-                {
-                    result = model.Deserialize(ref state, type, null);
-                }
-            }
-            finally
-            {
-                state.Dispose();
-            }
             reader.ReadEndElement();
-            return result;
+            return ReadFrom(payload);
         }
     }
 }

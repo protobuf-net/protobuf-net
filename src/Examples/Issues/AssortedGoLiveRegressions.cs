@@ -27,12 +27,51 @@ namespace Examples.Issues
         }
 
         [Fact]
+        public void LegacyListTimeSpan()
+        {
+            var list = new List<TimeSpan>
+        {
+            new TimeSpan(2010, 2, 1),
+            new TimeSpan(9, 3, 10, 30, 32),
+        };
+            var ms = new MemoryStream();
+            Serializer.Serialize(ms, list);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-07-08-B2-A8-F3-06-10-03-0A-08-08-A0-92-BD-F0-05-10-04", hex);
+            ms.Position = 0;
+            var clone = Serializer.Deserialize<List<TimeSpan>>(ms);
+            Assert.Equal(2, clone.Count);
+            Assert.Equal(list[0], clone[0]);
+            Assert.Equal(list[1], clone[1]);
+        }
+
+        [Fact]
+        public void LegacyListDateTime()
+        {
+            var list = new List<DateTime>
+            {
+                new DateTime(2010, 2, 1),
+                new DateTime(2019, 9, 3, 10, 30, 32),
+            };
+            var ms = new MemoryStream();
+            Serializer.Serialize(ms, list);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            ms.Position = 0;
+            Assert.Equal("0A-04-08-E2-E4-01-0A-08-08-90-83-F2-D6-0B-10-03", hex);
+            var clone = Serializer.Deserialize<List<DateTime>>(ms);
+            Assert.Equal(2, clone.Count);
+            Assert.Equal(list[0], clone[0]);
+            Assert.Equal(list[1], clone[1]);
+        }
+
+
+        [Fact]
         public void LegacyTimeSpanBehaviors()
         {
             var model = RuntimeTypeModel.Create();
             model.IncludeDateTimeKind = true;
             Verify(model, TimeSpan.MinValue, "0A-04-08-01-10-0F");
-            //Verify(model, default(TimeSpan), "0A-00", "");
+            Verify(model, default(TimeSpan), "0A-00", "");
             Verify(model, TimeSpan.MaxValue, "0A-04-08-02-10-0F");
 
             Verify(model, new TimeSpan(32, 10, 25, 32, 123), "0A-08-08-B6-C7-C1-F0-14-10-04");
@@ -67,9 +106,7 @@ namespace Examples.Issues
                 Assert.Equal(expected, Hex());
 
                 model.Serialize(ms, (object)value);
-                Assert.Equal(expected, Hex());
-
-
+                Assert.Equal(expected, Hex(reset: false));
 
                 ms.Position = 0;
                 Assert.Equal(value, model.Deserialize<TimeSpan>(ms));
@@ -103,16 +140,6 @@ namespace Examples.Issues
         public void LegacyDateTimeBehaviors()
         {
             var model = RuntimeTypeModel.Create();
-            model.IncludeDateTimeKind = true;
-            Verify(model, DateTime.MinValue, "0A-04-08-01-10-0F");
-            Verify(model, default(DateTime), "0A-04-08-01-10-0F");
-            Verify(model, DateTime.MaxValue, "0A-04-08-02-10-0F");
-
-            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Utc), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
-            //Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
-            //Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04");
-
-            model = RuntimeTypeModel.Create();
             model.IncludeDateTimeKind = false;
             Verify(model, DateTime.MinValue, "0A-04-08-01-10-0F");
             Verify(model, default(DateTime), "0A-04-08-01-10-0F");
@@ -122,6 +149,15 @@ namespace Examples.Issues
             Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-09-08-B6-E7-88-A4-AE-5B-10-04");
             Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-09-08-B6-E7-88-A4-AE-5B-10-04");
 
+            model = RuntimeTypeModel.Create();
+            model.IncludeDateTimeKind = true;
+            Verify(model, DateTime.MinValue, "0A-04-08-01-10-0F");
+            Verify(model, default(DateTime), "0A-04-08-01-10-0F");
+            Verify(model, DateTime.MaxValue, "0A-04-08-02-10-0F");
+
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Utc), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04");
 
             static void Verify(TypeModel model, DateTime value, string expected)
             {

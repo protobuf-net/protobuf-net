@@ -409,24 +409,6 @@ namespace ProtoBuf
             internal ProtoWriter GetWriter() => _writer;
 
             /// <summary>
-            /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
-            /// caller is asserting that this relationship is non-recursive; no recursion check will be
-            /// performed.
-            /// </summary>
-            /// <param name="value">The object to write.</param>
-            /// <param name="type">The type that uniquely identifies the type within the model.</param>
-            public void WriteRecursionSafeObject(object value, Type type)
-            {
-                if (Model == null)
-                {
-                    ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
-                }
-                if (type == null) type = value.GetType();
-
-                DynamicStub.WriteWrappedMessage(type, Model, ref this, value);
-            }
-
-            /// <summary>
             /// The serialization context associated with this instance
             /// </summary>
             public ISerializationContext Context => _writer;
@@ -507,26 +489,9 @@ namespace ProtoBuf
                     CheckClear();
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     long before = GetPosition();
-                    if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(TimeSpan))
-                    {
-                        // to preserve legacy behavior
-                        WriteMessage<T>(1, value, serializer, false);
-                    }
-                    else
-                    {
-                        if (TypeHelper<T>.CanBeNull && value == null) return 0;
-
-                        if (serializer is IScalarSerializer<T> scalar)
-                        {
-                            WriteFieldHeader(1, scalar.DefaultWireType);
-                        }
-                        else
-                        {
-                            if (TypeHelper<T>.IsReferenceType && value != null)
-                                SetRootObject(value);
-                        }
-                        serializer.Write(ref this, value);
-                    }
+                    if (TypeHelper<T>.IsReferenceType && value != null)
+                        SetRootObject(value);
+                    WriteAsObject<T>(value, serializer);
                     CheckClear();
                     long after = GetPosition();
                     return after - before;
@@ -535,6 +500,27 @@ namespace ProtoBuf
                 {
                     Abandon();
                     throw;
+                }
+            }
+
+            internal void WriteAsObject<T>(T value, ISerializer<T> serializer)
+            {
+                if (serializer is IWrappedSerializer<T>)
+                {
+                    // to preserve legacy behavior of DateTime/TimeSpan etc
+                    WriteMessage<T>(1, value, serializer, false);
+                }
+                else if (TypeHelper<T>.CanBeNull && value == null)
+                {
+                    // nothing to do here
+                }
+                else
+                {
+                    if (serializer is IScalarSerializer<T> scalar)
+                    {
+                        WriteFieldHeader(1, scalar.DefaultWireType);
+                    }
+                    serializer.Write(ref this, value);
                 }
             }
 
@@ -600,7 +586,7 @@ namespace ProtoBuf
                 
                 if (model.CanSerialize(type) || model.IsKnownType(ref type)) // this second part is for the "ref" checks
                 {
-                    DynamicStub.WriteWrappedMessage(type, model, ref this, value);
+                    DynamicStub.TrySerialize(ObjectScope.LikeRoot, type, model, ref this, value);
                 }
                 else
                 {
@@ -658,7 +644,7 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    model.Serialize(ref this, type, value);
+                    model.Serialize(ObjectScope.LikeRoot, ref this, type, value);
                 }
                 EndSubItem(token, style);
 #pragma warning restore CS0618

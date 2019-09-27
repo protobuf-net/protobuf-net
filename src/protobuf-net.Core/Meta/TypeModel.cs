@@ -106,29 +106,13 @@ namespace ProtoBuf.Meta
         {
             type ??= value.GetType();
 
-            if (DynamicStub.CanSerialize(type, this, out var isScalar, out var wireType))
+            var scope = DynamicStub.CanSerialize(type, this, out var wireType);
+            if (scope != ObjectScope.Invalid)
             {
+                NormalizeAuxScope(ref scope, isInsideList);
                 state.WriteFieldHeader(tag, wireType);
-                if (isScalar)
-                {
-                    // no header
-                    Serialize(ref state, type, value);
-                    return true;
-                }
-
-                switch (wireType)
-                {
-                    case WireType.None:
-                        state.ThrowInvalidSerializationOperation();
-                        return false;
-                    case WireType.StartGroup:
-                    case WireType.String:
-                        DynamicStub.WriteWrappedMessage(type, this, ref state, value);
-                        return true;
-                    default:
-                        Serialize(ref state, type, value);
-                        return true;
-                }
+                Serialize(scope, ref state, type, value);
+                return true;
             }
 
             // now attempt to handle sequences (including arrays and lists)
@@ -146,6 +130,17 @@ namespace ProtoBuf.Meta
                 return true;
             }
             return false;
+        }
+
+        static void NormalizeAuxScope(ref ObjectScope scope, bool isInsideList)
+        {
+            switch (scope)
+            {
+                case ObjectScope.Message: // get the serializer to handle the start/end markers for us
+                case ObjectScope.LikeRoot when isInsideList:
+                    scope = ObjectScope.WrappedMessage;
+                    break;
+            }
         }
 
         /// <summary>
@@ -405,7 +400,7 @@ namespace ProtoBuf.Meta
             {
                 if (IsKnownType(ref type) && !type.IsEnum)
                 {
-                    value = Deserialize(ref state, type, value);
+                    value = Deserialize(ObjectScope.LikeRoot, ref state, type, value);
                 }
                 else
                 {
@@ -594,7 +589,7 @@ namespace ProtoBuf.Meta
                 switch (style)
                 {
                     case PrefixStyle.None:
-                        Serialize(ref state, type, value);
+                        Serialize(ObjectScope.LikeRoot, ref state, type, value);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
@@ -1071,7 +1066,7 @@ namespace ProtoBuf.Meta
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             Type itemType;
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            WireType wiretype = GetWireType(this, typecode, format, ref type, out bool isKnown);
+            WireType wiretype = GetWireType(this, typecode, format, ref type, out _);
 
             bool found = false;
             if (wiretype == WireType.None)
@@ -1096,8 +1091,8 @@ namespace ProtoBuf.Meta
                 ThrowUnexpectedType(type);
             }
 
+            var scope = DynamicStub.CanSerialize(type, this, out _);
             // to treat correctly, should read all values
-
             while (true)
             {
                 // for convenience (re complex exit conditions), additional exit test here:
@@ -1121,21 +1116,10 @@ namespace ProtoBuf.Meta
                 found = true;
                 state.Hint(wiretype); // handle signed data etc
 
-                if (isKnown) // don't want to treat string/byte[]/etc as though they are sub-messages
-                {
-                    switch (wiretype)
-                    {
-                        case WireType.String:
-                        case WireType.StartGroup:
-                            SubItemToken token = state.StartSubItem();
-                            value = Deserialize(ref state, type, value);
-                            state.EndSubItem(token);
-                            continue;
-                    }
-                }
-                // this calls back into DynamicStub.TryDeserializeRaw (with success assertion),
+                // this calls back into DynamicStub.TryDeserialize (with success assertion),
                 // so will handle primitives etc
-                value = Deserialize(ref state, type, value);
+                NormalizeAuxScope(ref scope, insideList);
+                value = Deserialize(scope, ref state, type, value);
             }
             if (!found && !asListItem && autoCreate)
             {
@@ -1382,11 +1366,11 @@ namespace ProtoBuf.Meta
         /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="state">Write state</param>
-        internal void Serialize(ref ProtoWriter.State state, Type type, object value)
+        internal void Serialize(ObjectScope scope, ref ProtoWriter.State state, Type type, object value)
         {
-            if (!DynamicStub.TrySerializeRaw(type, this, ref state, value))
+            if (!DynamicStub.TrySerialize(scope, type, this, ref state, value))
             {
-                ThrowHelper.ThrowNotSupportedException($"{nameof(Serialize)} is not supported for {type} by {this}");
+                ThrowHelper.ThrowNotSupportedException($"{nameof(Serialize)} is not supported for {TypeHelper.CSName(type)} by {this}");
             }
         }
 
@@ -1399,11 +1383,11 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        internal object Deserialize(ref ProtoReader.State state, Type type, object value)
+        internal object Deserialize(ObjectScope scope, ref ProtoReader.State state, Type type, object value)
         {
-            if (!DynamicStub.TryDeserializeRaw(type, this, ref state, ref value))
+            if (!DynamicStub.TryDeserialize(scope, type, this, ref state, ref value))
             {
-                ThrowHelper.ThrowNotSupportedException($"{nameof(Deserialize)} is not supported for {type} by {this}");
+                ThrowHelper.ThrowNotSupportedException($"{nameof(Deserialize)} is not supported for {TypeHelper.CSName(type)} by {this}");
             }
             return value;
         }
@@ -1633,19 +1617,34 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool CanSerializeBasicType(Type type) => CanSerialize(type, true, false, true);
 
+
         private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-            if (DynamicStub.CanSerialize(type, this, out var isScalar, out _))
-                return isScalar ? allowBasic : allowContract;
 
-            Type tmp = Nullable.GetUnderlyingType(type);
-            if (tmp != null)
+            static bool CheckIfNullableT(ref Type type)
             {
-                type = tmp;
-                if (DynamicStub.CanSerialize(type, this, out isScalar, out _))
-                    return isScalar ? allowBasic : allowContract;
+                Type tmp = Nullable.GetUnderlyingType(type);
+                if (tmp != null)
+                {
+                    type = tmp;
+                    return true;
+                }
+                return false;
             }
+
+            do
+            {
+                switch (DynamicStub.CanSerialize(type, this, out _))
+                {
+                    case ObjectScope.Scalar:
+                        return allowBasic;
+                    case ObjectScope.WrappedMessage:
+                    case ObjectScope.Message:
+                    case ObjectScope.LikeRoot:
+                        return allowContract;
+                }
+            } while (CheckIfNullableT(ref type));
 
             // is it a list?
             if (allowLists)

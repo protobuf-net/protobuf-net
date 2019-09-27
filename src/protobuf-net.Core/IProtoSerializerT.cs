@@ -28,9 +28,14 @@ namespace ProtoBuf
     }
 
     /// <summary>
-    /// Abstract API capable of serializing/deserializing scalar values (scalars are things like enums; the values are never merged)
+    /// Indicates that the serializer processes scalar values (scalars are things like enums; the values are never merged)
     /// </summary>
     public interface IScalarSerializer<T> : ISerializer<T> { }
+
+    /// <summary>
+    /// Indicates that the serializer processes messages, but that at the root they should be hidden behind an extra layer of indirection
+    /// </summary>
+    internal interface IWrappedSerializer<T> : ISerializer<T> { }
 
 
     /// <summary>

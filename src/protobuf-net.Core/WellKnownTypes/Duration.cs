@@ -48,7 +48,7 @@ namespace ProtoBuf.WellKnownTypes
         public static implicit operator Duration(TimeSpan value) => new Duration(value);
     }
 
-    partial class WellKnownSerializer : ISerializer<Duration>, ISerializer<TimeSpan>
+    partial class WellKnownSerializer : ISerializer<Duration>, ISerializer<TimeSpan>, IWrappedSerializer<TimeSpan>
     {
         WireType ISerializer<Duration>.DefaultWireType => WireType.String;
         WireType ISerializer<TimeSpan>.DefaultWireType => WireType.String;

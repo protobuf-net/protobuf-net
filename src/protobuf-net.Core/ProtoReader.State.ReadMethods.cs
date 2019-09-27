@@ -312,9 +312,9 @@ namespace ProtoBuf
                 if (model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
 
                 SubItemToken token = StartSubItem();
-                if (model.IsKnownType(ref type))
+                if (model.IsKnownType(ref type) && DynamicStub.TryDeserialize(ObjectScope.LikeRoot, type, model, ref this, ref value))
                 {
-                    value = DynamicStub.ReadMessage(type, model, ref this, value);
+                    // done
                 }
                 else if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
                 {
@@ -759,28 +759,31 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public T DeserializeRoot<T>(T value = default, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
-                if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(TimeSpan))
+                value = ReadAsObject<T>(value, serializer ?? TypeModel.GetSerializer<T>(Model));
+                CheckFullyConsumed();
+                return value;
+            }
+
+            internal T ReadAsObject<T>(T value, ISerializer<T> serializer)
+            {
+                if (serializer is IWrappedSerializer<T>)
                 {
-                    // to preserve legacy behavior
-                    value = ReadFieldOne(ref this, value, serializer);
+                    // to preserve legacy behavior of DateTime/TimeSpan etc
+                    return ReadFieldOne(ref this, value, serializer);
                 }
                 else
                 {
                     if (serializer is IScalarSerializer<T>)
                     {
-                        value = ReadFieldOne(ref this, value, serializer);
+                        return ReadFieldOne(ref this, value, serializer);
                     }
                     else
                     {
                         if (TypeHelper<T>.IsReferenceType && value != null)
                             SetRootObject(value);
-                        value = serializer.Read(ref this, value);
+                        return serializer.Read(ref this, value);
                     }
                 }
-                CheckFullyConsumed();
-                return value;
-
                 static T ReadFieldOne(ref State state, T value, ISerializer<T> serializer)
                 {
                     int field;

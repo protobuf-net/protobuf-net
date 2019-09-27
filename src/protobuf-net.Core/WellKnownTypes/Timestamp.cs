@@ -53,7 +53,7 @@ namespace ProtoBuf.WellKnownTypes
         private static readonly DateTime TimestampEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
     }
 
-    partial class WellKnownSerializer : ISerializer<Timestamp>, ISerializer<DateTime>
+    partial class WellKnownSerializer : ISerializer<Timestamp>, ISerializer<DateTime>, IWrappedSerializer<DateTime>
     {
         WireType ISerializer<Timestamp>.DefaultWireType => WireType.String;
         WireType ISerializer<DateTime>.DefaultWireType => WireType.String;
