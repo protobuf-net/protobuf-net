@@ -311,14 +311,14 @@ namespace ProtoBuf
                 var model = Model;
                 if (model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
 
+                if (model.IsKnownType(ref type) && DynamicStub.TryDeserialize(ObjectScope.WrappedMessage, type, model, ref this, ref value))
+                    return value;
+
+                
                 SubItemToken token = StartSubItem();
-                if (model.IsKnownType(ref type) && DynamicStub.TryDeserialize(ObjectScope.LikeRoot, type, model, ref this, ref value))
+                if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
                 {
-                    // done
-                }
-                else if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
-                {
-                    // ok
+                    // handled it the easy way
                 }
                 else
                 {

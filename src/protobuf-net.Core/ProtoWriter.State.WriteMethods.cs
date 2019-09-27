@@ -584,9 +584,10 @@ namespace ProtoBuf
                 if (type == null) type = value.GetType();
 
                 
-                if (model.CanSerialize(type) || model.IsKnownType(ref type)) // this second part is for the "ref" checks
+                if ((model.CanSerialize(type) || model.IsKnownType(ref type)) // this second part is for the "ref" checks
+                    && DynamicStub.TrySerialize(ObjectScope.WrappedMessage, type, model, ref this, value))
                 {
-                    DynamicStub.TrySerialize(ObjectScope.LikeRoot, type, model, ref this, value);
+                    // done!
                 }
                 else
                 {
@@ -678,7 +679,7 @@ namespace ProtoBuf
             [Obsolete(PreferWriteMessage, false)]
             internal SubItemToken StartSubItem(object instance, PrefixStyle style)
             {
-                _writer.PreSubItem(instance);
+                _writer.PreSubItem(ref this, instance);
                 switch (WireType)
                 {
                     case WireType.StartGroup:
@@ -780,7 +781,7 @@ namespace ProtoBuf
             internal void ThrowInvalidSerializationOperation()
             {
                 if (_writer == null) ThrowHelper.ThrowProtoException("No underlying writer");
-                ThrowHelper.ThrowProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}");
+                ThrowHelper.ThrowProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}, depth {Depth}");
             }
 
             /// <summary>

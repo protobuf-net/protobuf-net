@@ -106,11 +106,13 @@ namespace ProtoBuf.Meta
         {
             type ??= value.GetType();
 
-            var scope = DynamicStub.CanSerialize(type, this, out var wireType);
+            WireType wireType = GetWireType(this, Helpers.GetTypeCode(type), format, ref type, out _);
+            var scope = DynamicStub.CanSerialize(type, this, out _); // ignore the default wire type; format gets a vote
             if (scope != ObjectScope.Invalid)
             {
                 NormalizeAuxScope(ref scope, isInsideList);
                 state.WriteFieldHeader(tag, wireType);
+
                 Serialize(scope, ref state, type, value);
                 return true;
             }
@@ -1366,6 +1368,7 @@ namespace ProtoBuf.Meta
         /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="state">Write state</param>
+        /// <param name="scope">The style of serialization to adopt</param>
         internal void Serialize(ObjectScope scope, ref ProtoWriter.State state, Type type, object value)
         {
             if (!DynamicStub.TrySerialize(scope, type, this, ref state, value))
@@ -1380,6 +1383,7 @@ namespace ProtoBuf.Meta
         /// <param name="type">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <param name="state">Reader state</param>
+        /// <param name="scope">The style of serialization to adopt</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>

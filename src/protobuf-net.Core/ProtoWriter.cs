@@ -81,8 +81,9 @@ namespace ProtoBuf
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
             => writer.DefaultState().StartSubItem(instance, PrefixStyle.Base128);
 
-        private void PreSubItem(object instance)
+        private void PreSubItem(ref State state, object instance)
         {
+            if (depth < 0) state.ThrowInvalidSerializationOperation();
             if (++depth > RecursionCheckDepth)
             {
                 CheckRecursionStackAndPush(instance);
