@@ -341,7 +341,27 @@ namespace ProtoBuf
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     WriteFieldHeader(fieldNumber, WireType.StartGroup);
-                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.None, recursionCheck);
+                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                }
+            }
+
+            /// <summary>
+            /// Writes a value or sub-item to the writer
+            /// </summary>
+            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
+            {
+                if (!(TypeHelper<T>.CanBeNull && value is null))
+                {
+                    serializer ??= TypeModel.GetSerializer<T>(Model);
+                    WriteFieldHeader(fieldNumber, serializer.DefaultWireType);
+                    if (serializer is IScalarSerializer<T>)
+                    {
+                        serializer.Write(ref this, value);
+                    }
+                    else
+                    {
+                        _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                    }
                 }
             }
 
@@ -485,19 +505,28 @@ namespace ProtoBuf
                 try
                 {
                     CheckClear();
-                    if (TypeHelper<T>.CanBeNull && value == null) return 0;
-                    long before = GetPosition();
                     serializer ??= TypeModel.GetSerializer<T>(Model);
-                    if (serializer is IScalarSerializer<T> scalar)
+                    long before = GetPosition();
+                    if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(TimeSpan))
                     {
-                        WriteFieldHeader(1, scalar.DefaultWireType);
+                        // to preserve legacy behavior
+                        WriteMessage<T>(1, value, serializer, false);
                     }
                     else
                     {
-                        if (TypeHelper<T>.IsReferenceType && value != null)
-                            SetRootObject(value);
+                        if (TypeHelper<T>.CanBeNull && value == null) return 0;
+
+                        if (serializer is IScalarSerializer<T> scalar)
+                        {
+                            WriteFieldHeader(1, scalar.DefaultWireType);
+                        }
+                        else
+                        {
+                            if (TypeHelper<T>.IsReferenceType && value != null)
+                                SetRootObject(value);
+                        }
+                        serializer.Write(ref this, value);
                     }
-                    serializer.Write(ref this, value);
                     CheckClear();
                     long after = GetPosition();
                     return after - before;

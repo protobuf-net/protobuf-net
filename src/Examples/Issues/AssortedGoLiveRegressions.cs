@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xunit;
-using System.IO;
-using ProtoBuf;
-using System.Runtime.Serialization;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class AssortedGoLiveRegressions
     {
         [Fact]
@@ -22,7 +20,167 @@ namespace Examples.Issues
                 Assert.Null(Serializer.Deserialize<string>(ms)); //, "string");
                 Assert.Null(Serializer.Deserialize<DateTime?>(ms)); //, "DateTime?");
                 Assert.Null(Serializer.Deserialize<int?>(ms)); //, "int?");
+
+                Assert.Equal(default(DateTime), Serializer.Deserialize<DateTime>(ms)); //, "DateTime");
+                Assert.Equal(0, Serializer.Deserialize<int>(ms)); //, "int");
             }
+        }
+
+        [Fact]
+        public void LegacyTimeSpanBehaviors()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.IncludeDateTimeKind = true;
+            Verify(model, TimeSpan.MinValue, "0A-04-08-01-10-0F");
+            //Verify(model, default(TimeSpan), "0A-00", "");
+            Verify(model, TimeSpan.MaxValue, "0A-04-08-02-10-0F");
+
+            Verify(model, new TimeSpan(32, 10, 25, 32, 123), "0A-08-08-B6-C7-C1-F0-14-10-04");
+
+            model = RuntimeTypeModel.Create();
+            model.IncludeDateTimeKind = false;
+            Verify(model, TimeSpan.MinValue, "0A-04-08-01-10-0F");
+            Verify(model, default(TimeSpan), "0A-00", "");
+            Verify(model, TimeSpan.MaxValue, "0A-04-08-02-10-0F");
+            Verify(model, new TimeSpan(32, 10, 25, 32, 123), "0A-08-08-B6-C7-C1-F0-14-10-04");
+
+
+            static void Verify(TypeModel model, TimeSpan value, string expected, string expectedHaz = null)
+            {
+                expectedHaz ??= expected;
+                var ms = new MemoryStream();
+                string Hex(bool reset = true)
+                {
+                    var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                    if (reset)
+                    {
+                        ms.Position = 0;
+                        ms.SetLength(0);
+                    }
+                    return hex;
+                }
+
+                model.Serialize<TimeSpan>(ms, value);
+                Assert.Equal(expected, Hex());
+
+                model.Serialize<TimeSpan?>(ms, value);
+                Assert.Equal(expected, Hex());
+
+                model.Serialize(ms, (object)value);
+                Assert.Equal(expected, Hex());
+
+
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize<TimeSpan>(ms));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize<TimeSpan?>(ms));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize(ms, null, typeof(TimeSpan)));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize(ms, null, typeof(TimeSpan?)));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize<HazTime>(ms).Val);
+
+                ms.Position = 0;
+                Assert.Equal(value, ((HazTime)model.Deserialize(ms, null, typeof(HazTime))).Val);
+
+                Hex(); // reset
+                var haz = new HazTime { Val = value };
+                model.Serialize<HazTime>(ms, haz);
+                Assert.Equal(expectedHaz, Hex());
+
+                model.Serialize(ms, (object)haz);
+                Assert.Equal(expectedHaz, Hex());
+            }
+        }
+
+        [Fact]
+        public void LegacyDateTimeBehaviors()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.IncludeDateTimeKind = true;
+            Verify(model, DateTime.MinValue, "0A-04-08-01-10-0F");
+            Verify(model, default(DateTime), "0A-04-08-01-10-0F");
+            Verify(model, DateTime.MaxValue, "0A-04-08-02-10-0F");
+
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Utc), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
+            //Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
+            //Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04");
+
+            model = RuntimeTypeModel.Create();
+            model.IncludeDateTimeKind = false;
+            Verify(model, DateTime.MinValue, "0A-04-08-01-10-0F");
+            Verify(model, default(DateTime), "0A-04-08-01-10-0F");
+            Verify(model, DateTime.MaxValue, "0A-04-08-02-10-0F");
+
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Utc), "0A-09-08-B6-E7-88-A4-AE-5B-10-04");
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-09-08-B6-E7-88-A4-AE-5B-10-04");
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-09-08-B6-E7-88-A4-AE-5B-10-04");
+
+
+            static void Verify(TypeModel model, DateTime value, string expected)
+            {
+                var ms = new MemoryStream();
+                string Hex(bool reset = true)
+                {
+                    var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                    if (reset)
+                    {
+                        ms.Position = 0;
+                        ms.SetLength(0);
+                    }
+                    return hex;
+                }
+
+                model.Serialize<DateTime>(ms, value);
+                Assert.Equal(expected, Hex());
+
+                model.Serialize<DateTime?>(ms, value);
+                Assert.Equal(expected, Hex());
+
+                model.Serialize(ms, (object)value);
+                Assert.Equal(expected, Hex());
+
+                var haz = new HazDate { Val = value };
+                model.Serialize<HazDate>(ms, haz);
+                Assert.Equal(expected, Hex());
+
+                model.Serialize(ms, (object)haz);
+                Assert.Equal(expected, Hex(reset: false));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize<DateTime>(ms));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize<DateTime?>(ms));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize(ms, null, typeof(DateTime)));
+
+                ms.Position = 0;
+                Assert.Equal(value, model.Deserialize(ms, null, typeof(DateTime?)));
+            }
+        }
+
+        [ProtoContract]
+        public class HazDate
+
+        {
+            [ProtoMember(1)]
+            public DateTime Val { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazTime
+
+        {
+            [ProtoMember(1)]
+            public TimeSpan Val { get; set; }
         }
 
         [Fact]

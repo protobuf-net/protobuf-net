@@ -9,7 +9,7 @@ namespace ProtoBuf.WellKnownTypes
     /// January 1, 1970, in the proleptic Gregorian calendar which extends the
     /// Gregorian calendar backwards to year one.
     /// </summary>
-    [ProtoContract(Name = ".google.protobuf.Timestamp ")]
+    [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(WellKnownSerializer))]
     public readonly struct Timestamp
     {
         /// <summary>
@@ -68,19 +68,13 @@ namespace ProtoBuf.WellKnownTypes
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
 
         DateTime ISerializer<DateTime>.Read(ref ProtoReader.State state, DateTime value)
-            => BclHelpers.ReadDateTime(ref state);
+            => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToDateTime();
 
         void ISerializer<DateTime>.Write(ref ProtoWriter.State state, DateTime value)
         {
             var model = state.Model;
-            if (model != null && state.Model.SerializeDateTimeKind())
-            {
-                BclHelpers.WriteDateTimeWithKind(ref state, value);
-            }
-            else
-            {
-                BclHelpers.WriteDateTime(ref state, value);
-            }
+            var includeKind = model != null && model.SerializeDateTimeKind();
+            ((ISerializer<ScaledTicks>)this).Write(ref state, ScaledTicks.Create(value, includeKind));
         }
     }
 }

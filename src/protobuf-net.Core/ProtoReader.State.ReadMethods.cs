@@ -718,9 +718,21 @@ namespace ProtoBuf
             public T ReadMessage<T>(T value = default, ISerializer<T> serializer = null)
             {
                 var tok = StartSubItem();
-                var result = (serializer ?? TypeModel.GetSerializer<T>(_reader._model)).Read(ref this, value);
+                var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
                 EndSubItem(tok);
                 return result;
+            }
+
+            /// <summary>
+            /// Reads a value or sub-item from the input reader
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public T ReadAny<T>(T value = default, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                return serializer is IScalarSerializer<T>
+                    ? serializer.Read(ref this, value)
+                    : ReadMessage<T>(value, serializer);
             }
 
             internal TypeModel Model
@@ -748,27 +760,35 @@ namespace ProtoBuf
             public T DeserializeRoot<T>(T value = default, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                if (serializer is IScalarSerializer<T> scalar)
+                if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(TimeSpan))
                 {
-                    value = ReadFieldOne(ref this, value, scalar);
+                    // to preserve legacy behavior
+                    value = ReadFieldOne(ref this, value, serializer);
                 }
                 else
                 {
-                    if (TypeHelper<T>.IsReferenceType && value != null)
-                        SetRootObject(value);
-                    value = serializer.Read(ref this, value);
+                    if (serializer is IScalarSerializer<T>)
+                    {
+                        value = ReadFieldOne(ref this, value, serializer);
+                    }
+                    else
+                    {
+                        if (TypeHelper<T>.IsReferenceType && value != null)
+                            SetRootObject(value);
+                        value = serializer.Read(ref this, value);
+                    }
                 }
                 CheckFullyConsumed();
                 return value;
 
-                static T ReadFieldOne(ref State state, T value, IScalarSerializer<T> serializer)
+                static T ReadFieldOne(ref State state, T value, ISerializer<T> serializer)
                 {
                     int field;
                     while ((field = state.ReadFieldHeader()) > 0)
                     {
                         if (field == 1)
                         {
-                            value = serializer.Read(ref state, value);
+                            value = state.ReadAny<T>(value, serializer);
                         }
                         else
                         {
@@ -832,7 +852,7 @@ namespace ProtoBuf
                 if (type == null || type == typeof(object))
                     type = value?.GetType() ?? typeof(object);
 
-                bool autoCreate = Model.PrepareDeserialize(value, ref type);
+                bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
                 if (value != null) _reader.SetRootObject(value);
                 object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);
                 CheckFullyConsumed();
@@ -842,14 +862,14 @@ namespace ProtoBuf
             [MethodImpl(HotPath)]
             internal T DeserializeRootImpl<T>(T value = default)
             {
-                if (TypeHelper<T>.UseFallback)
+                var serializer = TypeModel.TryGetSerializer<T>(Model);
+                if (serializer == null)
                 {
-                    Debug.Assert(Model != null, "Model is null");
                     return (T)DeserializeRootFallback(value, typeof(T));
                 }
                 else
                 {
-                    return DeserializeRoot<T>(value);
+                    return DeserializeRoot<T>(value, serializer);
                 }
             }
 

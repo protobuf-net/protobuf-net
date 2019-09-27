@@ -1170,38 +1170,9 @@ namespace ProtoBuf.Meta
                     WriteWireType(il, serializer.DefaultWireType);
                     il.Emit(OpCodes.Ret);
 
-                    iType = typeof(IScalarSerializer<>).MakeGenericType(runtimeType);
-                    type.AddInterfaceImplementation(iType);
-
-
-                    // implement both IScalarSerializer<Foo> and IScalarSerializer<Foo?>
-                    Type[] nullable = { typeof(Nullable<>).MakeGenericType(runtimeType) };
-                    iType = typeof(ISerializer<>).MakeGenericType(nullable);
-                    type.AddInterfaceImplementation(iType);
-                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
-                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, nullable[0], nameof(ISerializer<string>.Read)))
-                    {
-                        serializer.EmitRead(ctx, ctx.InputValue);
-                        ctx.EmitCtor(nullable[0], runtimeType);
-                        ctx.Return();
-                    }
-                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
-                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, nullable[0], nameof(ISerializer<string>.Write)))
-                    {
-                        ctx.LoadAddress(ctx.InputValue, nullable[0]);
-                        ctx.EmitCall(nullable[0].GetMethod(nameof(Nullable<int>.GetValueOrDefault), Type.EmptyTypes));
-                        serializer.EmitWrite(ctx, null);
-                        ctx.Return();
-                    }
-
-                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(ISerializer<string>.DefaultWireType));
-                    WriteWireType(il, serializer.DefaultWireType);
-                    il.Emit(OpCodes.Ret);
-
-                    iType = typeof(IScalarSerializer<>).MakeGenericType(nullable);
-                    type.AddInterfaceImplementation(iType);
-
-                    continue; // *only* write it as a scalar
+                    // tell the library that this is a scalar
+                    type.AddInterfaceImplementation(typeof(IScalarSerializer<>).MakeGenericType(runtimeType));
+                    continue;
                 }
                 if (!IsFullyPublic(runtimeType, out var problem))
                 {

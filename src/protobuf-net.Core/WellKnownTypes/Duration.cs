@@ -10,7 +10,7 @@ namespace ProtoBuf.WellKnownTypes
     /// two Timestamp values is a Duration and it can be added or subtracted
     /// from a Timestamp. 
     /// </summary>
-    [ProtoContract(Name = ".google.protobuf.Duration")]
+    [ProtoContract(Name = ".google.protobuf.Duration", Serializer = typeof(WellKnownSerializer))]
     public readonly struct Duration
     {
         /// <summary>
@@ -53,10 +53,10 @@ namespace ProtoBuf.WellKnownTypes
         WireType ISerializer<Duration>.DefaultWireType => WireType.String;
         WireType ISerializer<TimeSpan>.DefaultWireType => WireType.String;
         TimeSpan ISerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
-            => BclHelpers.ReadTimeSpan(ref state);
+            => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToTimeSpan();
 
         void ISerializer<TimeSpan>.Write(ref ProtoWriter.State state, TimeSpan value)
-            => BclHelpers.WriteTimeSpan(ref state, value);
+            => ((ISerializer<ScaledTicks>)this).Write(ref state, new ScaledTicks(value, DateTimeKind.Unspecified));
 
         Duration ISerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);

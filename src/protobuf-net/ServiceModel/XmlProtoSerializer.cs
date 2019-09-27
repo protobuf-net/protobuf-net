@@ -14,13 +14,15 @@ namespace ProtoBuf.ServiceModel
     public sealed class XmlProtoSerializer : XmlObjectSerializer
     {
         private readonly TypeModel model;
-        private readonly bool isList;
+        private readonly bool isList, autoCreate;
         private readonly Type type;
+
         internal XmlProtoSerializer(TypeModel model, Type type, bool isList)
         {
             this.model = model ?? throw new ArgumentNullException(nameof(model));
             this.isList = isList;
             this.type = type ?? throw new ArgumentOutOfRangeException(nameof(type));
+            this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
         }
         /// <summary>
         /// Attempt to create a new serializer for the given model and type
@@ -49,6 +51,7 @@ namespace ProtoBuf.ServiceModel
             bool known = IsKnownType(model, ref type, out isList);
             if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
             this.model = model;
+            this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
             this.type = type;
         }
 
@@ -195,17 +198,15 @@ namespace ProtoBuf.ServiceModel
             state = ProtoReader.State.Create(payload, model, null);
             try
             {
+                if (DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
+                { } // winning!
+                else if (isList)
                 {
-                    if (DynamicStub.TryDeserializeRoot(type, model, ref state, ref result))
-                    { } // winning!
-                    else if (isList)
-                    {
-                        result = state.DeserializeRootFallback(null, type);
-                    }
-                    else
-                    {
-                        result = model.Deserialize(ref state, type, null);
-                    }
+                    result = state.DeserializeRootFallback(null, type);
+                }
+                else
+                {
+                    result = model.Deserialize(ref state, type, null);
                 }
             }
             finally

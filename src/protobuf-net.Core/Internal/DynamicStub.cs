@@ -1,7 +1,6 @@
 ﻿using ProtoBuf.Meta;
 using System;
 using System.Collections;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal
@@ -15,8 +14,8 @@ namespace ProtoBuf.Internal
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryDeserializeRoot(Type type, TypeModel model, ref ProtoReader.State state, ref object value)
-            => Get(type).TryDeserializeRoot(model, ref state, ref value);
+        internal static bool TryDeserializeRoot(Type type, TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
+            => Get(type).TryDeserializeRoot(model, ref state, ref value, autoCreate);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySerializeRoot(Type type, TypeModel model, ref ProtoWriter.State state, object value)
@@ -58,23 +57,44 @@ namespace ProtoBuf.Internal
             DynamicStub obj = NilStub.Instance;
             if (type != null)
             {
-                if (!TypeHelper.UseFallback(type))
+                Type primary, secondary;
+                if (type.IsValueType)
                 {
-                    obj = TryCreate(typeof(ConcreteStub<>), type);
+                    // if we were given int?, we want to also handle int
+                    // if we were given int, we want to also handle int?
+                    var tmp = Nullable.GetUnderlyingType(type);
+                    if (tmp == null)
+                    {
+                        primary = type;
+                        secondary = typeof(Nullable<>).MakeGenericType(type);
+                    }
+                    else
+                    {
+                        primary = tmp;
+                        secondary = type;
+                    }
                 }
+                else
+                {
+                    primary = type;
+                    secondary = null;
+                }
+
+                obj = TryCreateConcrete(primary);
 
                 lock (s_byType)
                 {
-                    s_byType[type] = obj;
+                    s_byType[primary] = obj;
+                    if (secondary != null) s_byType[secondary] = obj;
                 }
             }
             return obj;
 
-            static DynamicStub TryCreate(Type openGenericType, Type type)
+            static DynamicStub TryCreateConcrete(Type type)
             {
                 try
                 {
-                    return (DynamicStub)Activator.CreateInstance(openGenericType.MakeGenericType(type), nonPublic: true);
+                    return (DynamicStub)Activator.CreateInstance(typeof(ConcreteStub<>).MakeGenericType(type), nonPublic: true);
                 }
                 catch
                 {
@@ -83,7 +103,7 @@ namespace ProtoBuf.Internal
             }
         }
 
-        protected abstract bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value);
+        protected abstract bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate);
         protected abstract bool TryDeserializeRaw(TypeModel model, ref ProtoReader.State state, ref object value);
 
         protected abstract bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value);
@@ -117,7 +137,7 @@ namespace ProtoBuf.Internal
             protected NilStub() { }
             public static readonly NilStub Instance = new NilStub();
 
-            protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
                 => false;
             protected override bool TryDeserializeRaw(TypeModel model, ref ProtoReader.State state, ref object value)
                 => false;
@@ -142,12 +162,17 @@ namespace ProtoBuf.Internal
 
         private sealed class ConcreteStub<T> : DynamicStub
         {
-            protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value)
+            protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(model);
                 if (serializer == null) return false;
-                // note this null-check is non-trivial; for value-type T it promotes the null to a default
+                // note FromObject is non-trivial; for value-type T it promotes the null to a default; we might not want that,
+                // depending on the value of autoCreate
+
+                bool resetToNullIfNotMoved = !autoCreate && value == null;
+                var oldPos = state.GetPosition();
                 value = state.DeserializeRoot<T>(TypeHelper<T>.FromObject(value), serializer);
+                if (resetToNullIfNotMoved && oldPos == state.GetPosition()) value = null;
                 return true;
             }
             protected override bool TryDeserializeRaw(TypeModel model, ref ProtoReader.State state, ref object value)

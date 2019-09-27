@@ -276,7 +276,9 @@ namespace ProtoBuf.Meta
         internal static long SerializeImpl<T>(ref ProtoWriter.State state, T value)
         {
             if (TypeHelper<T>.CanBeNull && value == null) return 0;
-            if (TypeHelper<T>.UseFallback)
+
+            var serializer = TryGetSerializer<T>(state.Model);
+            if (serializer == null)
             {
                 Debug.Assert(state.Model != null, "Model is null");
                 long position = state.GetPosition();
@@ -285,7 +287,7 @@ namespace ProtoBuf.Meta
             }
             else
             {
-                return state.SerializeRoot<T>(value);
+                return state.SerializeRoot<T>(value, serializer);
             }
         }
 
@@ -695,9 +697,9 @@ namespace ProtoBuf.Meta
             return state.DeserializeRootImpl<T>(value);
         }
 
-        internal bool PrepareDeserialize(object value, ref Type type)
+        internal static bool PrepareDeserialize(object value, ref Type type)
         {
-            if (type == null)
+            if (type == null || type == typeof(object))
             {
                 if (value == null)
                 {
@@ -772,11 +774,11 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
-            if (type == null || type == typeof(object)) type = value.GetType();
             var state = ProtoReader.State.Create(source, this, context, length);
             try
             {
-                if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value))
+                bool autoCreate = PrepareDeserialize(value, ref type);
+                if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value, autoCreate))
                 {
                     value = state.DeserializeRootFallback(value, type);
                 }
@@ -801,12 +803,12 @@ namespace ProtoBuf.Meta
         public object Deserialize(ProtoReader source, object value, Type type)
             => source.DefaultState().DeserializeRootFallbackWithModel(value, type, this);
 
-        internal object DeserializeRootAny(ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
+        internal object DeserializeRootAny(ref ProtoReader.State state, Type type, object value, bool autoCreate)
         {
-            if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value))
+            if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value, autoCreate))
             {
                 // this returns true to say we actively found something, but a value is assigned either way (or throws)
-                TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
+                TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, autoCreate, false, null);
             }
             return value;
         }
@@ -1276,7 +1278,7 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
@@ -1290,7 +1292,7 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static IScalarSerializer<T> NoScalarSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No scalar serializer for type {(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No scalar serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
@@ -1434,12 +1436,16 @@ namespace ProtoBuf.Meta
         /// </summary>
         public T DeepClone<T>(T value, SerializationContext context = null)
         {
+#if PLAT_ISREF
+            if (!System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+                return value; // whether it is trivial or complex, we already have a full clone of a value-type
+#endif
             if (TypeHelper<T>.CanBeNull && value == null) return value;
-            if (TypeHelper<T>.UseFallback)
+
+            var serializer = TryGetSerializer<T>(this);
+            if (serializer == null)
             {
-#pragma warning disable CS0618
-                return (T)DeepClone((object)value);
-#pragma warning restore CS0618
+                return (T)DeepCloneFallback(typeof(T), value);
             }
             else if (TypeModel.TryGetSerializer<T>(this) is IScalarSerializer<T>)
             {
@@ -1462,43 +1468,42 @@ namespace ProtoBuf.Meta
         {
             if (value == null) return null;
             Type type = value.GetType();
-            if (DynamicStub.TryDeepClone(type, this, ref value))
-            {
-                return value;
-            }
-            else
-            {
-                // must be some kind of aux scenario, then
-                using MemoryStream ms = new MemoryStream();
-                var writeState = ProtoWriter.State.Create(ms, this, null);
-                try
-                {
-                    if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
-                    writeState.Close();
-                }
-                catch
-                {
-                    writeState.Abandon();
-                    throw;
-                }
-                finally
-                {
-                    writeState.Dispose();
-                }
-                ms.Position = 0;
-                var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
-                try
-                {
-                    value = null; // start from scratch!
-                    TryDeserializeAuxiliaryType(ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
-                }
-                finally
-                {
-                    readState.Dispose();
-                }
+            return DynamicStub.TryDeepClone(type, this, ref value)
+                ? value : DeepCloneFallback(type, value);
+        }
 
-                return value;
+        private object DeepCloneFallback(Type type, object value)
+        {
+            // must be some kind of aux scenario, then
+            using MemoryStream ms = new MemoryStream();
+            var writeState = ProtoWriter.State.Create(ms, this, null);
+            try
+            {
+                if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                writeState.Close();
             }
+            catch
+            {
+                writeState.Abandon();
+                throw;
+            }
+            finally
+            {
+                writeState.Dispose();
+            }
+            ms.Position = 0;
+            var readState = ProtoReader.State.Create(ms, this, null, ProtoReader.TO_EOF);
+            try
+            {
+                value = null; // start from scratch!
+                TryDeserializeAuxiliaryType(ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
+            }
+            finally
+            {
+                readState.Dispose();
+            }
+
+            return value;
         }
 
         /// <summary>

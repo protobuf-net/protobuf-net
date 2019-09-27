@@ -19,7 +19,54 @@ namespace ProtoBuf.WellKnownTypes
             Kind = kind;
         }
 
-        public ScaledTicks(TimeSpan timeSpan, DateTimeKind kind)
+        public static ScaledTicks Create(DateTime value, bool includeKind)
+        {
+            if (value == DateTime.MinValue) return new ScaledTicks(-1, TimeSpanScale.MinMax, DateTimeKind.Unspecified);
+            if (value == DateTime.MaxValue) return new ScaledTicks(1, TimeSpanScale.MinMax, DateTimeKind.Unspecified);
+            var kind = includeKind ? value.Kind : DateTimeKind.Unspecified;
+            return new ScaledTicks(value - BclHelpers.EpochOrigin[(int)kind], kind);
+        }
+
+        public DateTime ToDateTime()
+        {
+            long tickDelta;
+            switch (Scale)
+            {
+                case TimeSpanScale.Days:
+                    tickDelta = Value * TimeSpan.TicksPerDay;
+                    break;
+                case TimeSpanScale.Hours:
+                    tickDelta = Value * TimeSpan.TicksPerHour;
+                    break;
+                case TimeSpanScale.Minutes:
+                    tickDelta = Value * TimeSpan.TicksPerMinute;
+                    break;
+                case TimeSpanScale.Seconds:
+                    tickDelta = Value * TimeSpan.TicksPerSecond;
+                    break;
+                case TimeSpanScale.Milliseconds:
+                    tickDelta = Value * TimeSpan.TicksPerMillisecond;
+                    break;
+                case TimeSpanScale.Ticks:
+                    tickDelta = Value;
+                    break;
+                case TimeSpanScale.MinMax:
+                    switch (Value)
+                    {
+                        case 1: return DateTime.MaxValue;
+                        case -1: return DateTime.MinValue;
+                        default:
+                            ThrowHelper.ThrowProtoException("Unknown min/max value: " + Value.ToString());
+                            return default;
+                    }
+                default:
+                    ThrowHelper.ThrowProtoException("Unknown timescale: " + Scale.ToString());
+                    return default;
+            }
+            return BclHelpers.EpochOrigin[(int)Kind].AddTicks(tickDelta);
+        }
+
+        internal ScaledTicks(TimeSpan timeSpan, DateTimeKind kind)
         {
             TimeSpanScale scale;
             long value = timeSpan.Ticks;
@@ -68,27 +115,28 @@ namespace ProtoBuf.WellKnownTypes
             Scale = scale;
         }
 
-        public long ToTicks()
+
+        public TimeSpan ToTimeSpan()
         {
             switch (Scale)
             {
                 case TimeSpanScale.Days:
-                    return Value * TimeSpan.TicksPerDay;
+                    return TimeSpan.FromDays(Value);
                 case TimeSpanScale.Hours:
-                    return Value * TimeSpan.TicksPerHour;
+                    return TimeSpan.FromHours(Value);
                 case TimeSpanScale.Minutes:
-                    return Value * TimeSpan.TicksPerMinute;
+                    return TimeSpan.FromMinutes(Value);
                 case TimeSpanScale.Seconds:
-                    return Value * TimeSpan.TicksPerSecond;
+                    return TimeSpan.FromSeconds(Value);
                 case TimeSpanScale.Milliseconds:
-                    return Value * TimeSpan.TicksPerMillisecond;
+                    return TimeSpan.FromMilliseconds(Value);
                 case TimeSpanScale.Ticks:
-                    return Value;
+                    return TimeSpan.FromTicks(Value);
                 case TimeSpanScale.MinMax:
-                    switch (Value)
+                    switch(Value)
                     {
-                        case 1: return long.MaxValue;
-                        case -1: return long.MinValue;
+                        case 1: return TimeSpan.MaxValue;
+                        case -1: return TimeSpan.MinValue;
                         default:
                             ThrowHelper.ThrowProtoException("Unknown min/max value: " + Value.ToString());
                             return default;

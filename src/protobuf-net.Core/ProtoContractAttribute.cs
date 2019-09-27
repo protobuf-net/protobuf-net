@@ -161,9 +161,14 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Allows to define a surrogate type used for serialization/deserialization purpose.
+        /// Defines a surrogate type used for serialization/deserialization purpose.
         /// </summary>
         public Type Surrogate { get; set; }
+
+        /// <summary>
+        /// Defines a serializer to use for this type; the serializer must implement ISerializer-T for this type
+        /// </summary>
+        public Type Serializer { get; set; }
 
         /// <summary>
         /// Has a EnumPassthru value been explicitly set?

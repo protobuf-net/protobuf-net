@@ -94,10 +94,24 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadTimeSpan(ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(ref state, out DateTimeKind _);
-            if (ticks == long.MinValue) return TimeSpan.MinValue;
-            if (ticks == long.MaxValue) return TimeSpan.MaxValue;
-            return TimeSpan.FromTicks(ticks);
+            switch (state.WireType)
+            {
+                case WireType.String:
+                case WireType.StartGroup:
+                    var scaled = state.ReadMessage<ScaledTicks>(serializer: WellKnownSerializer.Instance);
+                    return scaled.ToTimeSpan();
+                case WireType.Fixed64:
+                    long ticks = state.ReadInt64();
+                    return ticks switch
+                    {
+                        long.MinValue => TimeSpan.MinValue,
+                        long.MaxValue => TimeSpan.MaxValue,
+                        _ => TimeSpan.FromTicks(ticks),
+                    };
+                default:
+                    ThrowHelper.ThrowProtoException($"Unexpected wire-type: {state.WireType}");
+                    return default;
+            }
         }
 
         /// <summary>
@@ -189,10 +203,24 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static DateTime ReadDateTime(ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(ref state, out DateTimeKind kind);
-            if (ticks == long.MinValue) return DateTime.MinValue;
-            if (ticks == long.MaxValue) return DateTime.MaxValue;
-            return EpochOrigin[(int)kind].AddTicks(ticks);
+            switch (state.WireType)
+            {
+                case WireType.String:
+                case WireType.StartGroup:
+                    var scaled = state.ReadMessage<ScaledTicks>(serializer: WellKnownSerializer.Instance);
+                    return scaled.ToDateTime();
+                case WireType.Fixed64:
+                    long ticks = state.ReadInt64();
+                    return ticks switch
+                    {
+                        long.MinValue => DateTime.MinValue,
+                        long.MaxValue => DateTime.MaxValue,
+                        _ => EpochOrigin[(int)DateTimeKind.Unspecified].AddTicks(ticks),
+                    };
+                default:
+                    ThrowHelper.ThrowProtoException($"Unexpected wire-type: {state.WireType}");
+                    return default;
+            }
         }
 
         /// <summary>
@@ -261,25 +289,6 @@ namespace ProtoBuf
                     break;
             }
             WriteTimeSpanImpl(ref state, delta, includeKind ? value.Kind : DateTimeKind.Unspecified);
-        }
-
-        private static long ReadTimeSpanTicks(ref ProtoReader.State state, out DateTimeKind kind)
-        {
-            switch (state.WireType)
-            {
-                case WireType.String:
-                case WireType.StartGroup:
-                    var scaled = state.ReadMessage<ScaledTicks>(serializer: WellKnownSerializer.Instance);
-                    kind = scaled.Kind;
-                    return scaled.ToTicks();
-                case WireType.Fixed64:
-                    kind = DateTimeKind.Unspecified;
-                    return state.ReadInt64();
-                default:
-                    ThrowHelper.ThrowProtoException($"Unexpected wire-type: {state.WireType}");
-                    kind = default;
-                    return default;
-            }
         }
 
         /// <summary>

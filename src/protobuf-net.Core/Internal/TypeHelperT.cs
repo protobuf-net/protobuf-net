@@ -7,18 +7,6 @@ namespace ProtoBuf.Internal
 {
     internal static class TypeHelper
     {
-        public static bool UseFallback(Type type)
-        {
-            if (type == null) return false;
-            if (type == typeof(object)) return true;
-            var wellKnown = typeof(ISerializer<>).MakeGenericType(type);
-            if (wellKnown.IsInstanceOfType(WellKnownSerializer.Instance)) return false;
-
-            // just lists and arrays, then?
-            if (type.IsArray) return true;
-            if (TypeModel.GetListItemType(type) != null) return true;
-            return false;
-        }
         internal static string CSName(Type type)
         {
             if (type == null) return null;
@@ -68,39 +56,11 @@ namespace ProtoBuf.Internal
     {
         public static bool IsReferenceType = !typeof(T).IsValueType;
 
-        public static readonly bool CanBeNull = IsReferenceType || Nullable.GetUnderlyingType(typeof(T)) != null;
+        public static readonly bool CanBeNull = default(T) == null;
 
         public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx);
 
-        public static readonly bool IsReferenceOrContainsReferences = IsReferenceType || GetContainsReferences();
-
-        // these are things that require special primitive handling that is not implemented in the <T> versions
-        public static readonly bool UseFallback = !(WellKnownSerializer.Instance is ISerializer<T>) && TypeHelper.UseFallback(typeof(T));
-
         // make sure we don't cast null value-types to NREs
         public static T FromObject(object value) => value == null ? default : (T)value;
-
-#if PLAT_ISREF
-        private static bool GetContainsReferences()
-            => System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>();
-#else
-        private static bool GetContainsReferences()
-        {
-            if (typeof(T).IsValueType)
-            {
-                try
-                {
-                    if (Activator.CreateInstance(typeof(DirtyTestForReferences<>).MakeGenericType(typeof(T)), nonPublic: true) is object)
-                        return false;
-                }
-                catch { }
-            }
-            return true;
-        }
-#endif
     }
-
-#if !PLAT_ISREF
-    internal sealed class DirtyTestForReferences<T> where T : unmanaged { }
-#endif
 }
