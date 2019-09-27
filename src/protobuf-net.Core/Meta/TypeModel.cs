@@ -46,16 +46,16 @@ namespace ProtoBuf.Meta
         protected internal Type MapType(Type type, bool demand) => type;
 #pragma warning restore RCS1163 // Unused parameter.
 
-        internal static WireType GetWireType(TypeModel model, ProtoTypeCode code, DataFormat format, ref Type type, out bool isKnownType)
+        internal static WireType GetWireType(TypeModel model, DataFormat format, Type type)
         {
-            isKnownType = false;
-            if (type.IsEnum)
+            if (type.IsEnum) return WireType.Varint;
+
+            if (model != null && model.IsDefined(type))
             {
-                if (model != null)
-                    isKnownType = model.IsKnownType(ref type);
-                return WireType.Varint;
+                return format == DataFormat.Group ? WireType.StartGroup : WireType.String;
             }
-            switch (code)
+            
+            switch (Helpers.GetTypeCode(type))
             {
                 case ProtoTypeCode.Int64:
                 case ProtoTypeCode.UInt64:
@@ -82,16 +82,15 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.Uri:
                     return WireType.String;
             }
-
-            if (model != null && (isKnownType = model.IsKnownType(ref type)))
-            {
-                return WireType.String;
-            }
             return WireType.None;
         }
         /// <summary>        /// Indicates whether a type is known to the model
         /// </summary>
-        internal virtual bool IsKnownType<T>() => GetSerializer<T>() != null;
+        internal virtual bool IsKnownType<T>()
+        {
+            var ser = GetSerializer<T>();
+            return ser != null && !(ser is IScalarSerializer<T>); // don't count scalars in this
+        }
 
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
@@ -106,7 +105,7 @@ namespace ProtoBuf.Meta
         {
             type ??= value.GetType();
 
-            WireType wireType = GetWireType(this, Helpers.GetTypeCode(type), format, ref type, out _);
+            WireType wireType = GetWireType(this, format, type);
             var scope = DynamicStub.CanSerialize(type, this, out _); // ignore the default wire type; format gets a vote
             if (scope != ObjectScope.Invalid)
             {
@@ -400,7 +399,7 @@ namespace ProtoBuf.Meta
             var state = ProtoReader.State.Create(source, this, context, len);
             try
             {
-                if (IsKnownType(ref type) && !type.IsEnum)
+                if (IsDefined(type) && !type.IsEnum)
                 {
                     value = Deserialize(ObjectScope.LikeRoot, ref state, type, value);
                 }
@@ -698,19 +697,17 @@ namespace ProtoBuf.Meta
         {
             if (type == null || type == typeof(object))
             {
-                if (value == null)
-                {
-                    ThrowHelper.ThrowArgumentNullException(nameof(type));
-                }
-                else
-                {
-                    type = value.GetType();
-                }
+                if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+                type = value.GetType();
             }
-
+            
             bool autoCreate = true;
             Type underlyingType = Nullable.GetUnderlyingType(type);
-            if (underlyingType != null)
+            if (underlyingType == null)
+            {
+                type = DynamicStub.GetEffectiveType(type);
+            }
+            else
             {
                 type = underlyingType;
                 autoCreate = false;
@@ -1067,8 +1064,7 @@ namespace ProtoBuf.Meta
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             Type itemType;
-            ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            WireType wiretype = GetWireType(this, typecode, format, ref type, out _);
+            WireType wiretype = GetWireType(this, format, type);
 
             bool found = false;
             if (wiretype == WireType.None)
@@ -1206,42 +1202,9 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
-        /// Applies common proxy scenarios, resolving the actual type to consider
-        /// </summary>
-        protected internal static Type ResolveProxies(Type type)
-        {
-            if (type == null) return null;
-            if (type.IsGenericParameter) return null;
-            // Nullable<T>
-            Type tmp = Nullable.GetUnderlyingType(type);
-            if (tmp != null) return tmp;
-
-            // EF POCO
-            string fullName = type.FullName;
-            if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
-            {
-                return type.BaseType;
-            }
-
-            // NHibernate
-            Type[] interfaces = type.GetInterfaces();
-            foreach (Type t in interfaces)
-            {
-                switch (t.FullName)
-                {
-                    case "NHibernate.Proxy.INHibernateProxy":
-                    case "NHibernate.Proxy.DynamicProxy.IProxy":
-                    case "NHibernate.Intercept.IFieldInterceptorAccessor":
-                        return type.BaseType;
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
         /// Indicates whether the supplied type is explicitly modelled by the model
         /// </summary>
-        public bool IsDefined(Type type) => IsKnownType(ref type);
+        public bool IsDefined(Type type) => type != null && DynamicStub.IsKnownType(type, this);
 
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
@@ -1330,37 +1293,6 @@ namespace ProtoBuf.Meta
            => model?.GetSubTypeSerializer<T>()
             ?? WellKnownSerializer.Instance as ISubTypeSerializer<T>
             ?? NoSubTypeSerializer<T>(model);
-
-        /// <summary>
-        /// Provides the key that represents a given type in the current model.
-        /// The type is also normalized for proxies at the same time.
-        /// </summary>
-        protected internal bool IsKnownType(ref Type type)
-        {
-            if (type == null) return false;
-            if (IsKnownTypeCore(type)) return true;
-
-            return IsKnownTypeViaProxy(ref type);
-        }
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private bool IsKnownTypeViaProxy(ref Type type)
-        {
-            Type normalized = ResolveProxies(type);
-            if (normalized != null && normalized != type)
-            {
-                if (IsKnownTypeCore(normalized))
-                {
-                    type = normalized;
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Indicates whether a type is known to the serializer
-        /// </summary>
-        private bool IsKnownTypeCore(Type type) => DynamicStub.IsKnownType(type, this);
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
@@ -1465,6 +1397,7 @@ namespace ProtoBuf.Meta
             // must be some kind of aux scenario, then
             using MemoryStream ms = new MemoryStream();
             var writeState = ProtoWriter.State.Create(ms, this, null);
+            PrepareDeserialize(value, ref type);
             try
             {
                 if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
@@ -1500,7 +1433,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal static void ThrowUnexpectedSubtype(Type expected, Type actual)
         {
-            if (expected != TypeModel.ResolveProxies(actual))
+            if (!DynamicStub.IsTypeEquivalent(expected, actual))
             {
                 ThrowHelper.ThrowInvalidOperationException("Unexpected sub-type: " + actual.FullName);
             }

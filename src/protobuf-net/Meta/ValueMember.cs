@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.Meta
 {
@@ -551,10 +552,7 @@ namespace ProtoBuf.Meta
         internal static IRuntimeProtoSerializerNode TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,
             bool asReference, bool dynamicType, bool overwriteList, bool allowComplexTypes)
         {
-            {
-                Type tmp = Nullable.GetUnderlyingType(type);
-                if (tmp != null) type = tmp;
-            }
+            type = DynamicStub.GetEffectiveType(type);
             if (type.IsEnum)
             {
                 if (allowComplexTypes && model != null)
@@ -646,7 +644,7 @@ namespace ProtoBuf.Meta
             if (allowComplexTypes && model != null)
             {
                 MetaType meta = null;
-                if (model.IsKnownType(ref type))
+                if (model.IsDefined(type))
                 {
                     meta = model[type];
                     if (dataFormat == DataFormat.Default && meta.IsGroup)
@@ -683,7 +681,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new NetObjectSerializer(type, options);
                 }
-                if (model.IsKnownType(ref type))
+                if (model.IsDefined(type))
                 {
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return SubItemSerializer.Create(type, meta);

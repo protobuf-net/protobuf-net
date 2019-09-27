@@ -55,40 +55,49 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static DynamicStub SlowGet(Type type)
         {
-            DynamicStub obj = NilStub.Instance;
-            if (type != null)
+            
+            if (type == null) return NilStub.Instance;
+            
+            DynamicStub obj = null;
+            Type primary = type, secondary = null;
+            if (type.IsGenericParameter)
             {
-                Type primary, secondary;
-                if (type.IsValueType)
+                obj = NilStub.Instance; // can't do a lot with that!
+            }
+            else if (type.IsValueType)
+            {
+                // if we were given int?, we want to also handle int
+                // if we were given int, we want to also handle int?
+                var tmp = Nullable.GetUnderlyingType(type);
+                if (tmp == null)
                 {
-                    // if we were given int?, we want to also handle int
-                    // if we were given int, we want to also handle int?
-                    var tmp = Nullable.GetUnderlyingType(type);
-                    if (tmp == null)
-                    {
-                        primary = type;
-                        secondary = typeof(Nullable<>).MakeGenericType(type);
-                    }
-                    else
-                    {
-                        primary = tmp;
-                        secondary = type;
-                    }
+                    primary = type;
+                    secondary = typeof(Nullable<>).MakeGenericType(type);
                 }
                 else
                 {
-                    primary = type;
-                    secondary = null;
-                }
-
-                obj = TryCreateConcrete(primary);
-
-                lock (s_byType)
-                {
-                    s_byType[primary] = obj;
-                    if (secondary != null) s_byType[secondary] = obj;
+                    primary = tmp;
+                    secondary = type;
                 }
             }
+            else
+            {
+                Type actual= ResolveProxies(type);
+                if (actual != null && actual != type)
+                {   // we can bypass the proxy, handing out the
+                    // stub to the *real* type
+                    obj = Get(actual);
+                }
+            }
+
+            obj ??= TryCreateConcrete(primary);
+
+            lock (s_byType)
+            {
+                s_byType[primary] = obj;
+                if (secondary != null) s_byType[secondary] = obj;
+            }
+
             return obj;
 
             static DynamicStub TryCreateConcrete(Type type)
@@ -101,6 +110,34 @@ namespace ProtoBuf.Internal
                 {
                     return NilStub.Instance;
                 }
+            }
+
+            // Applies common proxy scenarios, resolving the actual type to consider
+            static Type ResolveProxies(Type type)
+            {
+                if (type == null) return null;
+                if (type.IsGenericParameter) return null;
+
+                // EF POCO
+                string fullName = type.FullName;
+                if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
+                {
+                    return type.BaseType;
+                }
+
+                // NHibernate
+                Type[] interfaces = type.GetInterfaces();
+                foreach (Type t in interfaces)
+                {
+                    switch (t.FullName)
+                    {
+                        case "NHibernate.Proxy.INHibernateProxy":
+                        case "NHibernate.Proxy.DynamicProxy.IProxy":
+                        case "NHibernate.Intercept.IFieldInterceptorAccessor":
+                            return type.BaseType;
+                    }
+                }
+                return null;
             }
         }
 
@@ -141,10 +178,13 @@ namespace ProtoBuf.Internal
                 scalarWireType = default;
                 return ObjectScope.Invalid;
             }
+
+            protected override Type GetEffectiveType() => null;
         }
 
         private sealed class ConcreteStub<T> : DynamicStub
         {
+            protected override Type GetEffectiveType() => typeof(T);
             protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(model);
@@ -241,5 +281,14 @@ namespace ProtoBuf.Internal
                 return true;
             }
         }
+
+        internal static bool IsTypeEquivalent(Type expected, Type actual)
+            => ReferenceEquals(expected, actual) // since SlowGet checks for proxies etc, we can
+            || ReferenceEquals(Get(expected), Get(actual)); // just compare the results
+
+        internal static Type GetEffectiveType(Type type)
+            => type == null ? null : Get(type).GetEffectiveType() ?? type;
+
+        protected abstract Type GetEffectiveType();
     }
 }

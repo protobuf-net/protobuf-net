@@ -186,8 +186,6 @@ namespace ProtoBuf
             /// </summary>
             public void WriteBoolean(bool value) => WriteUInt32(value ? (uint)1 : (uint)0);
 
-            internal bool IsKnownType(ref Type type) => Model != null && Model.IsKnownType(ref type);
-
             /// <summary>
             /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
             /// </summary>
@@ -584,7 +582,7 @@ namespace ProtoBuf
                 if (type == null) type = value.GetType();
 
                 
-                if ((model.CanSerialize(type) || model.IsKnownType(ref type)) // this second part is for the "ref" checks
+                if (model.CanSerialize(type)
                     && DynamicStub.TrySerialize(ObjectScope.WrappedMessage, type, model, ref this, value))
                 {
                     // done!
@@ -636,7 +634,7 @@ namespace ProtoBuf
                 GetWriter().AssertTrackedObjects();
 #pragma warning disable CS0618
                 SubItemToken token = StartSubItem(value, style);
-                if (!Model.IsKnownType(ref type))
+                if (!Model.IsDefined(type))
                 {
                     if (!model.TrySerializeAuxiliaryType(ref this, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
                     {

@@ -39,6 +39,7 @@ namespace Examples.Issues
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(Command<>), false).Add(1, "Foo");
         }
+
         [Fact]
         public void TestCanSerializeBehaviourWithSubTypeAndBaseType()
         {

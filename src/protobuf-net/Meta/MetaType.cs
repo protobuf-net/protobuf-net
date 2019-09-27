@@ -198,7 +198,7 @@ namespace ProtoBuf.Meta
                 {
                     sb.Append('_');
                     Type tmp = arg;
-                    bool isKnown = model.IsKnownType(ref tmp);
+                    bool isKnown = model.IsDefined(tmp);
                     MetaType mt;
                     if (isKnown && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
                     {

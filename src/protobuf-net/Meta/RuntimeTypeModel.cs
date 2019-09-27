@@ -435,6 +435,7 @@ namespace ProtoBuf.Meta
         internal MetaType FindWithoutAdd(Type type)
         {
             // this list is thread-safe for reading
+            type = DynamicStub.GetEffectiveType(type);
             foreach (MetaType metaType in types)
             {
                 if (metaType.Type == type)
@@ -443,9 +444,7 @@ namespace ProtoBuf.Meta
                     return metaType;
                 }
             }
-            // if that failed, check for a proxy
-            Type underlyingType = ResolveProxies(type);
-            return underlyingType == null ? null : FindWithoutAdd(underlyingType);
+            return null;
         }
 
         private static readonly BasicList.MatchPredicate
@@ -513,6 +512,7 @@ namespace ProtoBuf.Meta
 
         internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
         {
+            type = DynamicStub.GetEffectiveType(type);
             int key = types.IndexOf(MetaTypeFinder, type);
             MetaType metaType;
 
@@ -537,14 +537,6 @@ namespace ProtoBuf.Meta
             }
 
             // otherwise: we don't yet know
-
-            // check for proxy types
-            Type underlyingType = ResolveProxies(type);
-            if (underlyingType != null && underlyingType != type)
-            {
-                key = types.IndexOf(MetaTypeFinder, underlyingType);
-                type = underlyingType; // if new added, make it reflect the underlying type
-            }
 
             if (key < 0)
             {
@@ -655,6 +647,7 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (type == typeof(object))
                 throw new ArgumentException("You cannot reconfigure " + type.FullName);
+            type = DynamicStub.GetEffectiveType(type);
             MetaType newType = FindWithoutAdd(type);
             if (newType != null) return newType; // return existing
             int opaqueToken = 0;
@@ -1518,8 +1511,7 @@ namespace ProtoBuf.Meta
 
         internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
         {
-            Type tmp = Nullable.GetUnderlyingType(effectiveType);
-            if (tmp != null) effectiveType = tmp;
+            effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
             if (effectiveType == typeof(byte[])) return "bytes";
 

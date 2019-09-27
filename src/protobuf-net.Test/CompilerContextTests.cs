@@ -12,9 +12,8 @@ namespace ProtoBuf
         [Fact]
         public void ManualCompiler()
         {
-            Type kt = typeof(string);
             var nilModel = TypeModel.NullModel.Instance;
-            Assert.False(nilModel.IsKnownType(ref kt));
+            Assert.False(nilModel.IsDefined(typeof(string)));
             Assert.True(nilModel.CanSerialize(typeof(string)));
             Assert.True(nilModel.CanSerializeBasicType(typeof(string)));
             Assert.False(nilModel.CanSerializeContractType(typeof(string)));
@@ -30,8 +29,7 @@ namespace ProtoBuf
             asm.Save("ManualCompiler.dll");
 
             TypeModel tm = (TypeModel)Activator.CreateInstance(t);
-            kt = typeof(string);
-            Assert.False(tm.IsKnownType(ref kt));
+            Assert.False(tm.IsDefined(typeof(string)));
             Assert.True(tm.CanSerialize(typeof(string)));
             Assert.True(tm.CanSerializeBasicType(typeof(string)));
             Assert.False(tm.CanSerializeContractType(typeof(string)));

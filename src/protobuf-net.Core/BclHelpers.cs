@@ -443,7 +443,9 @@ namespace ProtoBuf
                         { }
                         else
                         {
-                            if (!state.IsKnownType(ref type))
+                            var model = state.Model;
+                            var known = model != null && model.IsDefined(type);
+                            if (!known)
                                 ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                         }
                         break;
@@ -550,7 +552,9 @@ namespace ProtoBuf
                 {
                     if (!(value is string))
                     {
-                        if (!state.IsKnownType(ref type))
+                        var model = state.Model;
+                        var known = model != null && model.IsDefined(type);
+                        if (!known)
                             ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }
                     int typeKey = state.AddObjectKey(type, out bool existing);

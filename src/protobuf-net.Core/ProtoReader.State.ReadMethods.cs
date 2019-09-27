@@ -311,7 +311,7 @@ namespace ProtoBuf
                 var model = Model;
                 if (model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
 
-                if (model.IsKnownType(ref type) && DynamicStub.TryDeserialize(ObjectScope.WrappedMessage, type, model, ref this, ref value))
+                if (DynamicStub.TryDeserialize(ObjectScope.WrappedMessage, type, model, ref this, ref value))
                     return value;
 
                 
@@ -434,8 +434,6 @@ namespace ProtoBuf
                         break;
                 }
             }
-
-            internal bool IsKnownType(ref Type type) => Model != null && Model.IsKnownType(ref type);
 
             internal Type DeserializeType(string typeName) => _reader.DeserializeType(typeName);
 
@@ -852,9 +850,6 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal object DeserializeRootFallback(object value, Type type)
             {
-                if (type == null || type == typeof(object))
-                    type = value?.GetType() ?? typeof(object);
-
                 bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
                 if (value != null) _reader.SetRootObject(value);
                 object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);

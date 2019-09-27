@@ -59,7 +59,7 @@ namespace ProtoBuf.ServiceModel
         {
             if (model != null && type != null)
             {
-                if (model.IsKnownType(ref type))
+                if (model.IsDefined(type))
                 {
                     isList = false;
                     return true;
@@ -67,7 +67,7 @@ namespace ProtoBuf.ServiceModel
                 Type itemType = TypeModel.GetListItemType(type);
                 if (itemType != null)
                 {
-                    if (model.IsKnownType(ref itemType))
+                    if (model.IsDefined(itemType))
                     {
                         isList = true;
                         return true;

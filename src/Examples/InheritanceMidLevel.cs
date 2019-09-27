@@ -204,7 +204,7 @@ namespace Examples
                 //Assert.Equal(orig.ParentProperty, clone.ParentProperty); //, "ParentProperty");
                 //Assert.Equal(0, clone.RootProperty); //, "RootProperty"); // RootProperty is not part of the contract
             });
-            Assert.Equal("No message serializer for type Examples.IMLRoot is available for model (default)", ex.Message);
+            Assert.Equal("Type is not expected, and no contract can be inferred: Examples.IMLRoot", ex.Message);
         }
 
         [Fact]
