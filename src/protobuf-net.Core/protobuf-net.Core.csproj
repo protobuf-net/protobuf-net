@@ -10,7 +10,7 @@
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
   </PropertyGroup>
   
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461' or '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
   </ItemGroup>
