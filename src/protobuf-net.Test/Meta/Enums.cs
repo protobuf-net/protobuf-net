@@ -6,6 +6,7 @@ using Xunit;
 using ProtoBuf.Meta;
 using System.ComponentModel;
 using System.IO;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf.unittest.Meta
 {
@@ -200,6 +201,82 @@ namespace ProtoBuf.unittest.Meta
 
             clone = ChangeType<MappedValuesB>(model.Compile(), orig);
             Assert.Equal(EnumB.X, clone.Value); //, "Compile");
+        }
+
+        [Fact]
+        public void AddInvalidEnum()
+        {
+            var model = RuntimeTypeModel.Create();
+            var mt = model.Add(typeof(EnumWithThings), false);
+            var fields = mt.GetFields();
+            Assert.Empty(fields);
+
+            mt.Add("HazThis");
+            fields = mt.GetFields();
+            var field = Assert.Single(fields);
+            Assert.Equal(1, field.FieldNumber);
+
+            var ex = Assert.Throws<ArgumentException>(() => mt.Add("NotThis"));
+            Assert.Equal("memberName", ex.ParamName);
+        }
+        public enum EnumWithThings
+        {
+            None = 0,
+            HazThis = 42,
+        }
+
+        [Fact]
+        public void CanSerializeUnknownEnum()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            Assert.True(model.CanSerialize(typeof(EnumWithThings)));
+            Assert.Equal(ObjectScope.Scalar, DynamicStub.CanSerialize(typeof(EnumWithThings), null, out var wt));
+            Assert.Equal(ObjectScope.Scalar, DynamicStub.CanSerialize(typeof(EnumWithThings?), null, out wt));
+
+            using var ms = new MemoryStream();
+
+
+            var writeState = ProtoWriter.State.Create(ms, null);
+            try
+            {
+                writeState.WriteFieldHeader(1, WireType.Varint);
+                Assert.True(DynamicStub.TrySerialize(ObjectScope.Scalar, typeof(EnumWithThings), null, ref writeState, EnumWithThings.HazThis));
+                writeState.WriteFieldHeader(2, WireType.Varint);
+                Assert.True(DynamicStub.TrySerialize(ObjectScope.Scalar, typeof(EnumWithThings?), null, ref writeState, EnumWithThings.HazThis));
+                writeState.Close();
+            }
+            catch
+            {
+                writeState.Abandon();
+                throw;
+            }
+            finally
+            {
+                writeState.Dispose();
+            }
+            ms.Position = 0;
+
+            var readState = ProtoReader.State.Create(ms, null);
+            try
+            {
+                object val = null;
+                Assert.Equal(1, readState.ReadFieldHeader());
+                Assert.True(DynamicStub.TryDeserialize(ObjectScope.Scalar, typeof(EnumWithThings), null, ref readState, ref val));
+                Assert.Equal(typeof(EnumWithThings), val.GetType());
+
+                val = null;
+                Assert.Equal(2, readState.ReadFieldHeader());
+                Assert.True(DynamicStub.TryDeserialize(ObjectScope.Scalar, typeof(EnumWithThings?), null, ref readState, ref val));
+                Assert.Equal(typeof(EnumWithThings), val.GetType());
+                val = null;
+
+                Assert.Equal(0, readState.ReadFieldHeader());
+            }
+            finally
+            {
+                readState.Dispose();
+            }
         }
     }
 }
