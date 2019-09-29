@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -343,6 +344,19 @@ namespace ProtoBuf
                 }
             }
 
+            internal void WriteList<T>(int fieldNumber, WireType wireType, IEnumerable<T> values)
+            {
+                var serializer = TypeModel.GetSerializer<T>(Model);
+                if (serializer is IListSerializer<T>) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+
+                if (values == null) return;)
+                foreach(var value in values)
+                {
+                    WriteFieldHeader(fieldNumber, wireType);
+                    serializer.Write(ref this, value);
+                }
+            }
+
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
@@ -351,6 +365,10 @@ namespace ProtoBuf
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
+                    if (serializer is IListSerializer<T>)
+                    
+                    ThrowHelper.ThrowInvalidOperationException($"Repeated elements must be written by calling {nameof(WriteList)}");
+                    
                     WriteFieldHeader(fieldNumber, serializer.DefaultWireType);
                     if (serializer is IScalarSerializer<T>)
                     {

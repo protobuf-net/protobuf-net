@@ -62,7 +62,7 @@ namespace ProtoBuf.Internal
             => throw new OverflowException();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowNotImplementedException(string message)
+        internal static void ThrowNotImplementedException([CallerMemberName] string message = null)
             => throw new NotImplementedException(message);
 
         [MethodImpl(MethodImplOptions.NoInlining)]

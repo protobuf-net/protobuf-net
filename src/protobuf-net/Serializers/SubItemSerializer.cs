@@ -108,7 +108,7 @@ namespace ProtoBuf.Serializers
         {
             get
             {
-                ThrowHelper.ThrowNotImplementedException(nameof(IProtoTypeSerializer.DefaultWireType));
+                ThrowHelper.ThrowNotImplementedException();
                 return default;
             }
         }

@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -172,6 +173,19 @@ namespace ProtoBuf
                         ThrowWireTypeException();
                         return default;
                 }
+            }
+
+            internal TList ReadList<TList, T>(TList value) where TList : ICollection<T>
+            {
+                var field = FieldNumber;
+                var serializer = TypeModel.GetSerializer<T>(Model);
+                if (serializer is IListSerializer<T>) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (value is null) value = CreateInstance<TList>();
+                do
+                {
+                    value.Add(serializer.Read(ref this, default));
+                } while (TryReadFieldHeader(field));
+                return value;
             }
 
 
@@ -728,6 +742,8 @@ namespace ProtoBuf
             public T ReadAny<T>(T value = default, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
+                if (serializer is IListSerializer<T>) ThrowHelper.ThrowInvalidOperationException(
+                    $"Repeated elements must be read by calling {nameof(ReadList)}");
                 return serializer is IScalarSerializer<T>
                     ? serializer.Read(ref this, value)
                     : ReadMessage<T>(value, serializer);

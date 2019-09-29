@@ -66,14 +66,7 @@ namespace ProtoBuf.Internal
             }
             else if (type.IsValueType)
             {
-                if (type.IsEnum)
-                {
-                    obj = TryCreateConcrete(typeof(EnumProxy<,>), type, Enum.GetUnderlyingType(type));
-                }
-                else
-                {
-                    alt = Nullable.GetUnderlyingType(type);
-                }
+                alt = Nullable.GetUnderlyingType(type);
             }
             else
             {
@@ -175,29 +168,8 @@ namespace ProtoBuf.Internal
             protected override Type GetEffectiveType() => null;
         }
 
-        private sealed class EnumProxy<TEnum, TRaw> : ConcreteStub<TRaw>
-            where TEnum : unmanaged
-            where TRaw : unmanaged
+        private sealed class ConcreteStub<T> : DynamicStub
         {
-            public unsafe EnumProxy()
-            {
-                if (sizeof(TEnum) != sizeof(TRaw)) ThrowHelper.ThrowInvalidOperationException();
-            }
-            protected unsafe override object Box(TRaw value)
-                => *(TEnum*)&value;
-            protected unsafe override TRaw Unbox(object value)
-            {
-                if (value == null) return default;
-                var t = (TEnum)value;
-                return *(TRaw*)&t;
-            }
-        }
-
-        private class ConcreteStub<T> : DynamicStub
-        {
-            protected virtual T Unbox(object value) => value == null ? default : (T)value;
-            protected virtual object Box(T value) => value;
-
             protected override Type GetEffectiveType() => typeof(T);
             protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
             {
@@ -208,7 +180,7 @@ namespace ProtoBuf.Internal
 
                 bool resetToNullIfNotMoved = !autoCreate && value == null;
                 var oldPos = state.GetPosition();
-                value = Box(state.DeserializeRoot<T>(Unbox(value), serializer));
+                value = state.DeserializeRoot<T>(TypeHelper<T>.FromObject(value), serializer);
                 if (resetToNullIfNotMoved && oldPos == state.GetPosition()) value = null;
                 return true;
             }
@@ -233,7 +205,7 @@ namespace ProtoBuf.Internal
                     default:
                         return false;
                 }
-                value = Box(typed);
+                value = typed;
                 return true;
             }
 
@@ -264,7 +236,7 @@ namespace ProtoBuf.Internal
                 var serializer = TypeModel.TryGetSerializer<T>(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
-                state.SerializeRoot<T>(Unbox(value), serializer);
+                state.SerializeRoot<T>(TypeHelper<T>.FromObject(value), serializer);
                 return true;
             }
 
@@ -273,7 +245,7 @@ namespace ProtoBuf.Internal
                 var serializer = TypeModel.TryGetSerializer<T>(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
-                T typed = Unbox(value);
+                T typed = TypeHelper<T>.FromObject(value);
                 switch(scope)
                 {
                     case ObjectScope.LikeRoot:
@@ -293,7 +265,7 @@ namespace ProtoBuf.Internal
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
             {
-                value = Box(model.DeepClone<T>(Unbox(value)));
+                value = model.DeepClone<T>(TypeHelper<T>.FromObject(value));
                 return true;
             }
         }

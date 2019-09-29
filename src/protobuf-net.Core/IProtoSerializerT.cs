@@ -37,6 +37,8 @@ namespace ProtoBuf
     /// </summary>
     internal interface IWrappedSerializer<T> : ISerializer<T> { }
 
+    internal interface IListSerializer<T> : ISerializer<T> { }
+
 
     /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy

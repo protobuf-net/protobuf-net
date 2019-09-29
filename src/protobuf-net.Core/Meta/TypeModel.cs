@@ -1076,7 +1076,7 @@ namespace ProtoBuf.Meta
                 }
                 if (itemType != null)
                 {
-                    if (insideList) throw TypeModel.CreateNestedListsNotSupported((parentListOrType as Type) ?? (parentListOrType?.GetType()));
+                    if (insideList) TypeModel.ThrowNestedListsNotSupported((parentListOrType as Type) ?? (parentListOrType?.GetType()));
                     found = TryDeserializeList(ref state, format, tag, type, itemType, ref value);
                     if (!found && autoCreate)
                     {
@@ -1279,19 +1279,17 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> GetSerializer<T>(TypeModel model)
-           => model?.GetSerializer<T>()
-            ?? WellKnownSerializer.Instance as ISerializer<T>
+           => TypeHelper<T>.PrimarySerializer ?? model?.GetSerializer<T>()
             ?? NoSerializer<T>(model);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> TryGetSerializer<T>(TypeModel model)
-           => model?.GetSerializer<T>()
-            ?? WellKnownSerializer.Instance as ISerializer<T>;
+           => TypeHelper<T>.PrimarySerializer ?? model?.GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
            => model?.GetSubTypeSerializer<T>()
-            ?? WellKnownSerializer.Instance as ISubTypeSerializer<T>
+            // ?? TypeHelper<T>.InbuiltSerializer as ISubTypeSerializer<T>
             ?? NoSubTypeSerializer<T>(model);
 
         /// <summary>
@@ -1489,9 +1487,10 @@ namespace ProtoBuf.Meta
             ThrowHelper.ThrowInvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
         }
 
-        internal static Exception CreateNestedListsNotSupported(Type type)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowNestedListsNotSupported(Type type)
         {
-            return new NotSupportedException("Nested or jagged lists and arrays are not supported: " + (type?.FullName ?? "(null)"));
+            throw new NotSupportedException("Nested or jagged lists and arrays are not supported: " + (type?.FullName ?? "(null)"));
         }
 
         /// <summary>
