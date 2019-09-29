@@ -119,7 +119,7 @@ namespace ProtoBuf.Meta
             // now attempt to handle sequences (including arrays and lists)
             if (value is IEnumerable sequence)
             {
-                if (isInsideList) throw CreateNestedListsNotSupported(parentList?.GetType());
+                if (isInsideList) ThrowNestedListsNotSupported(parentList?.GetType());
                 foreach (object item in sequence)
                 {
                     if (item == null) ThrowHelper.ThrowNullReferenceException();

@@ -3,7 +3,7 @@
 namespace ProtoBuf.WellKnownTypes
 {
     internal abstract class EnumSerializer<TEnum, TRaw>
-        : ISerializer<TEnum>, ISerializer<TEnum?>
+        : ISerializer<TEnum>, ISerializer<TEnum?>, IScalarSerializer<TEnum>, IScalarSerializer<TEnum?>
         where TRaw : unmanaged
         where TEnum: unmanaged
     {

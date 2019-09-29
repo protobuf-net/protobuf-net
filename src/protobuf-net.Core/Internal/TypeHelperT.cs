@@ -127,6 +127,7 @@ namespace ProtoBuf.Internal
                 }
                 current = current.BaseType;
             }
+            return null;
         }
 
 
@@ -140,22 +141,28 @@ namespace ProtoBuf.Internal
         public TList Read(ref ProtoReader.State state, TList value)
         {
             int field;
+            ISerializer<T> serializer = null;
             while ((field = state.ReadFieldHeader()) > 0)
             {
                 switch(field)
                 {
                     case TypeModel.ListItemTag:
-                        value = state.ReadList<TList, T>(value);
+                        serializer ??= TypeModel.GetSerializer<T>(state.Model);
+                        value = state.ReadRepeated<TList, T>(value, serializer);
                         break;
                     default:
                         state.SkipField();
                         break;
                 }
             }
+            return value;
         }
 
         public void Write(ref ProtoWriter.State state, TList value)
-            => state.WriteList<T>(TypeModel.ListItemTag, value);
+        {
+            var serializer = TypeModel.GetSerializer<T>(state.Model);
+            state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.DefaultWireType, value, serializer);
+        }
     }
     internal sealed class NullableSerializer<T> : ISerializer<T?> where T : struct
     {

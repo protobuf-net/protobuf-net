@@ -344,12 +344,12 @@ namespace ProtoBuf
                 }
             }
 
-            internal void WriteList<T>(int fieldNumber, WireType wireType, IEnumerable<T> values)
+            internal void WriteRepeated<T>(int fieldNumber, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
-                var serializer = TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.GetSerializer<T>(Model);
                 if (serializer is IListSerializer<T>) TypeModel.ThrowNestedListsNotSupported(typeof(T));
 
-                if (values == null) return;)
+                if (values == null) return;
                 foreach(var value in values)
                 {
                     WriteFieldHeader(fieldNumber, wireType);
@@ -367,7 +367,7 @@ namespace ProtoBuf
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     if (serializer is IListSerializer<T>)
                     
-                    ThrowHelper.ThrowInvalidOperationException($"Repeated elements must be written by calling {nameof(WriteList)}");
+                    ThrowHelper.ThrowInvalidOperationException($"Repeated elements must be written by calling {nameof(WriteRepeated)}");
                     
                     WriteFieldHeader(fieldNumber, serializer.DefaultWireType);
                     if (serializer is IScalarSerializer<T>)

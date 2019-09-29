@@ -175,10 +175,10 @@ namespace ProtoBuf
                 }
             }
 
-            internal TList ReadList<TList, T>(TList value) where TList : ICollection<T>
+            internal TList ReadRepeated<TList, T>(TList value, ISerializer<T> serializer = null) where TList : ICollection<T>
             {
                 var field = FieldNumber;
-                var serializer = TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.GetSerializer<T>(Model);
                 if (serializer is IListSerializer<T>) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 if (value is null) value = CreateInstance<TList>();
                 do
@@ -743,7 +743,7 @@ namespace ProtoBuf
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 if (serializer is IListSerializer<T>) ThrowHelper.ThrowInvalidOperationException(
-                    $"Repeated elements must be read by calling {nameof(ReadList)}");
+                    $"Repeated elements must be read by calling {nameof(ReadRepeated)}");
                 return serializer is IScalarSerializer<T>
                     ? serializer.Read(ref this, value)
                     : ReadMessage<T>(value, serializer);
