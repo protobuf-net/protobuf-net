@@ -6,6 +6,92 @@ using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
+    [Flags]
+    public enum SerializerFeatures
+    {
+        /// <summary>
+        /// Base-128 variable-length encoding
+        /// </summary>
+        WireTypeVarint = WireType.Varint,
+
+        /// <summary>
+        /// Fixed-length 8-byte encoding
+        /// </summary>
+        WireTypeFixed64 = WireType.Fixed64,
+
+        /// <summary>
+        /// Length-variant-prefixed encoding
+        /// </summary>
+        WireTypeString = WireType.String,
+
+        /// <summary>
+        /// Indicates the start of a group
+        /// </summary>
+        WireTypeStartGroup = WireType.StartGroup,
+
+        /// <summary>
+        /// Indicates the end of a group
+        /// </summary>
+        WireTypeEndGroup = WireType.EndGroup,
+
+        /// <summary>
+        /// Fixed-length 4-byte encoding
+        /// </summary>10
+        WireTypeFixed32 = WireType.Fixed32,
+
+        /// <summary>
+        /// Denotes a varint that should be interpreted using
+        /// zig-zag semantics (so -ve numbers aren't a significant overhead)
+        /// </summary>
+        WireTypeSignedVarint = WireTypeVarint | ZigZag,
+
+        /// <summary>
+        /// Indicates whether zig-zag encoding should be used
+        /// </summary>
+        ZigZag = 1 << 3,
+
+        /// <summary>
+        /// Scalars are simple types such as integers, not messages; when written as
+        /// a root message, a field-one wrapper is added
+        /// </summary>
+        Scalar = 1 << 4,
+
+        /// <summary>
+        /// Indicates a type that is formally a message, but which is treated like a
+        /// scalar (i.e. a field-one wrapper) at the root level; see: DateTime/TimeSpan
+        /// </summary>
+        Wrapped = 1 << 5,
+
+        /// <summary>
+        /// Indicates 
+        /// </summary>
+        Repeated = 1 << 6,
+
+        /// <summary>
+        /// Explicitly disables packed encoding; normally, packed encoding is
+        /// used by default when appropriate
+        /// </summary>
+        PackedDisabled = 1 << 7,
+    }
+
+    internal static class SerializerFeaturesExtensions
+    {
+        public static bool IsRepeated(this SerializerFeatures features)
+            => (features & SerializerFeatures.Repeated) != 0;
+
+        public static bool IsScalar(this SerializerFeatures features)
+            => (features & SerializerFeatures.Scalar) != 0;
+
+        public static bool IsWrapped(this SerializerFeatures features)
+            => (features & SerializerFeatures.Wrapped) != 0;
+
+        public static bool IsPackedDisabled(this SerializerFeatures features)
+            => (features & SerializerFeatures.PackedDisabled) != 0;
+
+        public static WireType GetWireType(this SerializerFeatures features)
+            => (WireType)((int)features & 15);
+    }
+
     /// <summary>
     /// Abstract API capable of serializing/deserializing messages or values
     /// </summary>
