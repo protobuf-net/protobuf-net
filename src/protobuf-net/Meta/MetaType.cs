@@ -359,16 +359,18 @@ namespace ProtoBuf.Meta
             return null;
         }
 
-        private WireType GetDefaultWireType()
+        private SerializerFeatures GetFeatures()
         {
-            if (Type.IsEnum) return WireType.Varint;
-            if (IsGroup) return WireType.StartGroup;
+            if (Type.IsEnum) return SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
+            
             if (!Type.IsValueType)
             {
                 var bt = GetRootType(this);
-                if (!ReferenceEquals(bt, this)) return bt.GetDefaultWireType();
+                if (!ReferenceEquals(bt, this)) return bt.GetFeatures();
             }
-            return WireType.String;
+            var features = SerializerFeatures.CategoryMessage;
+            features |= IsGroup ? SerializerFeatures.WireTypeStartGroup : SerializerFeatures.WireTypeString;
+            return features;
         }
 
         private IProtoTypeSerializer BuildSerializer()
@@ -393,7 +395,7 @@ namespace ProtoBuf.Meta
                 ResolveListTypes(Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
-                    constructType, factory, GetInheritanceRoot(), GetDefaultWireType());
+                    constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
             if (surrogate != null)
             {
@@ -407,7 +409,7 @@ namespace ProtoBuf.Meta
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor == null) throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
-                    args: new object[] { model, ctor, mapping, GetDefaultWireType() });
+                    args: new object[] { model, ctor, mapping, GetFeatures() });
             }
 
             fields.Trim();
@@ -457,7 +459,7 @@ namespace ProtoBuf.Meta
                 Array.Reverse(arr);
             }
             return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor,
-                callbacks, constructType, factory, GetInheritanceRoot(), GetDefaultWireType());
+                callbacks, constructType, factory, GetInheritanceRoot(), GetFeatures());
         }
 
         [Flags]
@@ -1540,7 +1542,7 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-            if (!(_serializer is CompiledSerializer))
+            if (!(_serializer is CompiledSerializer && !_serializer.ExpectedType.IsEnum))
             {
                 _serializer = CompiledSerializer.Wrap(Serializer, model);
                 Model.ResetServiceCache(Type);

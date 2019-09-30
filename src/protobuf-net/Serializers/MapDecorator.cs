@@ -72,7 +72,7 @@ namespace ProtoBuf.Serializers
 
         sealed class RuntimePairSerializer : ISerializer<KeyValuePair<TKey, TValue>>
         {
-            WireType ISerializer<KeyValuePair<TKey, TValue>>.DefaultWireType => WireType.String;
+            SerializerFeatures ISerializer<KeyValuePair<TKey, TValue>>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
             private readonly IRuntimeProtoSerializerNode _keyTail, _valueTail;
             public RuntimePairSerializer(IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail)
             {

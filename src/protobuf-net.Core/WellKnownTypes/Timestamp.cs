@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider : ISerializer<Timestamp>
     {
-        WireType ISerializer<Timestamp>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<Timestamp>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);

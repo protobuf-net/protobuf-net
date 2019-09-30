@@ -6,7 +6,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
     {
-        WireType IProtoTypeSerializer.DefaultWireType => wireType;
+        SerializerFeatures IProtoTypeSerializer.Features => wireType.AsFeatures();
         bool IProtoTypeSerializer.IsSubType => Tail is IProtoTypeSerializer pts && pts.IsSubType;
         public bool HasCallbacks(TypeModel.CallbackType callbackType) => Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
 

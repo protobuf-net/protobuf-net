@@ -236,15 +236,22 @@ namespace ProtoBuf
         ISerializer<A>, ISubTypeSerializer<A>, IFactory<A>,
         ISerializer<B>, ISubTypeSerializer<B>, IFactory<B>,
         ISerializer<C>, ISubTypeSerializer<C>, IFactory<C>,
-        ISerializer<D>, IFactory<D>, IScalarSerializer<SomeEnum>
+        ISerializer<D>, IFactory<D>, ISerializerFactory
     {
         public static ModelSerializer Default = new ModelSerializer();
         public ModelSerializer() { }
 
-        WireType ISerializer<A>.DefaultWireType => WireType.String;
-        WireType ISerializer<B>.DefaultWireType => WireType.String;
-        WireType ISerializer<C>.DefaultWireType => WireType.String;
-        WireType ISerializer<D>.DefaultWireType => WireType.String;
+
+        object ISerializerFactory.TryCreate(Type type)
+        {
+            if (type == typeof(SomeEnum)) return type;
+            return null;
+        }
+
+        SerializerFeatures ISerializer<A>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<B>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<C>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<D>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         A IFactory<A>.Create(ISerializationContext context) => new A();
         B IFactory<B>.Create(ISerializationContext context) => new B();
         C IFactory<C>.Create(ISerializationContext context) => new C();
@@ -446,12 +453,6 @@ namespace ProtoBuf
             }
             return value;
         }
-
-        SomeEnum ISerializer<SomeEnum>.Read(ref ProtoReader.State state, SomeEnum value) => throw new NotImplementedException();
-
-        void ISerializer<SomeEnum>.Write(ref ProtoWriter.State state, SomeEnum value) => throw new NotImplementedException();
-
-        WireType ISerializer<SomeEnum>.DefaultWireType => WireType.Varint;
     }
 
 

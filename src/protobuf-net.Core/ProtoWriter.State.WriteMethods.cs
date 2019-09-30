@@ -344,15 +344,15 @@ namespace ProtoBuf
                 }
             }
 
-            internal void WriteRepeated<T>(int fieldNumber, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer = null)
+            internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                if (serializer is IListSerializer<T>) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (serializer.Features.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
 
                 if (values == null) return;
                 foreach(var value in values)
                 {
-                    WriteFieldHeader(fieldNumber, wireType);
+                    WriteFieldHeader(fieldNumber, features.GetWireType());
                     serializer.Write(ref this, value);
                 }
             }
@@ -365,18 +365,21 @@ namespace ProtoBuf
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
-                    if (serializer is IListSerializer<T>)
-                    
-                    ThrowHelper.ThrowInvalidOperationException($"Repeated elements must be written by calling {nameof(WriteRepeated)}");
-                    
-                    WriteFieldHeader(fieldNumber, serializer.DefaultWireType);
-                    if (serializer is IScalarSerializer<T>)
+                    var features = serializer.Features;
+                    if (features.IsRepeated())
                     {
-                        serializer.Write(ref this, value);
+                        ThrowHelper.ThrowInvalidOperationException($"Repeated elements must be written by calling {nameof(WriteRepeated)}");
+                    }
+                    
+                    WriteFieldHeader(fieldNumber, features.GetWireType());
+
+                    if (features.IsMessage())
+                    {
+                        _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
                     }
                     else
                     {
-                        _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                        serializer.Write(ref this, value);
                     }
                 }
             }
@@ -507,7 +510,7 @@ namespace ProtoBuf
                     long before = GetPosition();
                     if (TypeHelper<T>.IsReferenceType && value != null)
                         SetRootObject(value);
-                    WriteAsObject<T>(value, serializer);
+                    WriteAsRoot<T>(value, serializer);
                     CheckClear();
                     long after = GetPosition();
                     return after - before;
@@ -519,22 +522,24 @@ namespace ProtoBuf
                 }
             }
 
-            internal void WriteAsObject<T>(T value, ISerializer<T> serializer)
+            internal void WriteAsRoot<T>(T value, ISerializer<T> serializer)
             {
-                if (serializer is IWrappedSerializer<T>)
+                var features = serializer.Features;
+
+                if (features.IsWrappedAtRoot())
                 {
                     // to preserve legacy behavior of DateTime/TimeSpan etc
                     WriteMessage<T>(1, value, serializer, false);
                 }
                 else if (TypeHelper<T>.CanBeNull && value == null)
                 {
-                    // nothing to do here
+                    // nothing to do
                 }
                 else
                 {
-                    if (serializer is IScalarSerializer<T> scalar)
+                    if (!features.IsMessage()) // scalar
                     {
-                        WriteFieldHeader(1, scalar.DefaultWireType);
+                        WriteFieldHeader(1, features.GetWireType());
                     }
                     serializer.Write(ref this, value);
                 }

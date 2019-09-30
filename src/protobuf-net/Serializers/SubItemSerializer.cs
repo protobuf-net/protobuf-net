@@ -104,7 +104,7 @@ namespace ProtoBuf.Serializers
 
     internal abstract class SubItemSerializer : IProtoTypeSerializer
     {
-        WireType IProtoTypeSerializer.DefaultWireType
+        SerializerFeatures IProtoTypeSerializer.Features
         {
             get
             {

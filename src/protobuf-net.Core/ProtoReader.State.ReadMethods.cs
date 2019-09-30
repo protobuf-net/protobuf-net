@@ -179,7 +179,8 @@ namespace ProtoBuf
             {
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                if (serializer is IListSerializer<T>) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var features = serializer.Features;
+                if (features.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 if (value is null) value = CreateInstance<TList>();
                 do
                 {
@@ -742,11 +743,13 @@ namespace ProtoBuf
             public T ReadAny<T>(T value = default, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                if (serializer is IListSerializer<T>) ThrowHelper.ThrowInvalidOperationException(
+                var features = serializer.Features;
+                if (features.IsRepeated()) ThrowHelper.ThrowInvalidOperationException(
                     $"Repeated elements must be read by calling {nameof(ReadRepeated)}");
-                return serializer is IScalarSerializer<T>
-                    ? serializer.Read(ref this, value)
-                    : ReadMessage<T>(value, serializer);
+
+                return features.IsMessage()
+                    ? ReadMessage<T>(value, serializer)
+                    : serializer.Read(ref this, value);
             }
 
             internal TypeModel Model
@@ -773,31 +776,33 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public T DeserializeRoot<T>(T value = default, ISerializer<T> serializer = null)
             {
-                value = ReadAsObject<T>(value, serializer ?? TypeModel.GetSerializer<T>(Model));
+                value = ReadAsRoot<T>(value, serializer ?? TypeModel.GetSerializer<T>(Model));
                 CheckFullyConsumed();
                 return value;
             }
 
-            internal T ReadAsObject<T>(T value, ISerializer<T> serializer)
+            internal T ReadAsRoot<T>(T value, ISerializer<T> serializer)
             {
-                if (serializer is IWrappedSerializer<T>)
+                var features = serializer.Features;
+                if (features.IsWrappedAtRoot())
                 {
                     // to preserve legacy behavior of DateTime/TimeSpan etc
                     return ReadFieldOne(ref this, value, serializer);
                 }
                 else
                 {
-                    if (serializer is IScalarSerializer<T>)
-                    {
-                        return ReadFieldOne(ref this, value, serializer);
-                    }
-                    else
+                    if (features.IsMessage())
                     {
                         if (TypeHelper<T>.IsReferenceType && value != null)
                             SetRootObject(value);
                         return serializer.Read(ref this, value);
                     }
+                    else
+                    {
+                        return ReadFieldOne(ref this, value, serializer);
+                    }
                 }
+
                 static T ReadFieldOne(ref State state, T value, ISerializer<T> serializer)
                 {
                     int field;

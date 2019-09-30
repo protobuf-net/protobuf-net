@@ -22,6 +22,6 @@ namespace ProtoBuf.Serializers
 
         bool IsSubType { get; }
 
-        WireType DefaultWireType { get; }
+        SerializerFeatures Features { get; }
     }
 }

@@ -55,7 +55,7 @@ namespace ProtoBuf.Compiler
         }
 
         internal FieldInfo DefineAdditionalSerializerInstance<T>(CompilerContext parent, object key,
-            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize, WireType defaultWireType)
+            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize, SerializerFeatures features)
         {
             if (_additionalSerializers == null) _additionalSerializers = new Dictionary<object, FieldInfo>();
             if (_additionalSerializers.ContainsKey(key)) throw new ArgumentException(nameof(key));
@@ -109,8 +109,8 @@ namespace ProtoBuf.Compiler
                     ctx.Return();
                 }
 
-                il = Implement(type, iType, "get_" + nameof(ISerializer<T>.DefaultWireType));
-                il.Emit(OpCodes.Ldc_I4, (int)defaultWireType);
+                il = Implement(type, iType, "get_" + nameof(ISerializer<T>.Features));
+                CompilerContext.LoadValue(il, (int)features);
                 il.Emit(OpCodes.Ret);
 
 

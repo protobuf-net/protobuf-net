@@ -1108,24 +1108,6 @@ namespace ProtoBuf.Meta
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
         {
-            static void WriteWireType(ILGenerator il, WireType wireType)
-            {
-                switch((int)wireType)
-                {
-                    case 0: il.Emit(OpCodes.Ldc_I4_0); break;
-                    case 1: il.Emit(OpCodes.Ldc_I4_1); break;
-                    case 2: il.Emit(OpCodes.Ldc_I4_2); break;
-                    case 3: il.Emit(OpCodes.Ldc_I4_3); break;
-                    case 4: il.Emit(OpCodes.Ldc_I4_4); break;
-                    case 5: il.Emit(OpCodes.Ldc_I4_5); break;
-                    case 6: il.Emit(OpCodes.Ldc_I4_6); break;
-                    case 7: il.Emit(OpCodes.Ldc_I4_7); break;
-                        
-                    default: // only 3 bits are defined
-                        ThrowHelper.ThrowArgumentOutOfRangeException(nameof(wireType));
-                        break;
-                }
-            }
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
@@ -1134,29 +1116,29 @@ namespace ProtoBuf.Meta
                 ILGenerator il;
                 if (runtimeType.IsEnum)
                 {
-                    // this is mostly used to properly understand which types we recognize;
-                    // it is not actually used right now
-                    var iType = typeof(ISerializer<>).MakeGenericType(runtimeType);
-                    type.AddInterfaceImplementation(iType);
-                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
-                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
-                    {
-                        serializer.EmitRead(ctx, ctx.InputValue);
-                        ctx.Return();
-                    }
-                    il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
-                    using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(ISerializer<string>.Write)))
-                    {
-                        serializer.EmitWrite(ctx, ctx.InputValue);
-                        ctx.Return();
-                    }
+                    //// this is mostly used to properly understand which types we recognize;
+                    //// it is not actually used right now
+                    //var iType = typeof(ISerializer<>).MakeGenericType(runtimeType);
+                    //type.AddInterfaceImplementation(iType);
+                    //il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
+                    //using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
+                    //{
+                    //    serializer.EmitRead(ctx, ctx.InputValue);
+                    //    ctx.Return();
+                    //}
+                    //il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
+                    //using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(ISerializer<string>.Write)))
+                    //{
+                    //    serializer.EmitWrite(ctx, ctx.InputValue);
+                    //    ctx.Return();
+                    //}
 
-                    il = CompilerContextScope.Implement(type, iType, "get_" + nameof(ISerializer<string>.DefaultWireType));
-                    WriteWireType(il, serializer.DefaultWireType);
-                    il.Emit(OpCodes.Ret);
+                    //il = CompilerContextScope.Implement(type, iType, "get_" + nameof(ISerializer<string>.DefaultWireType));
+                    //WriteWireType(il, serializer.DefaultWireType);
+                    //il.Emit(OpCodes.Ret);
 
-                    // tell the library that this is a scalar
-                    type.AddInterfaceImplementation(typeof(IScalarSerializer<>).MakeGenericType(runtimeType));
+                    //// tell the library that this is a scalar
+                    //type.AddInterfaceImplementation(typeof(IScalarSerializer<>).MakeGenericType(runtimeType));
                     continue;
                 }
                 if (!IsFullyPublic(runtimeType, out var problem))
@@ -1193,8 +1175,8 @@ namespace ProtoBuf.Meta
                     ctx.Return();
                 }
 
-                il = CompilerContextScope.Implement(type, serType, "get_" + nameof(ISerializer<string>.DefaultWireType));
-                WriteWireType(il, serializer.DefaultWireType);
+                il = CompilerContextScope.Implement(type, serType, "get_" + nameof(ISerializer<string>.Features));
+                CompilerContext.LoadValue(il, (int)serializer.Features);
                 il.Emit(OpCodes.Ret);
 
                 // and we emit the sub-type serializer whenever inheritance is involved

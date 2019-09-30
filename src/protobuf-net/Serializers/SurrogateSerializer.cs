@@ -6,7 +6,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
-        public WireType DefaultWireType => rootTail.DefaultWireType;
+        public SerializerFeatures Features => rootTail.Features;
         bool IProtoTypeSerializer.IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }

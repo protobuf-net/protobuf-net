@@ -4,7 +4,7 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider : ISerializer<decimal>
     {
-        WireType ISerializer<decimal>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<decimal>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar;
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
         decimal ISerializer<decimal>.Read(ref ProtoReader.State state, decimal value)

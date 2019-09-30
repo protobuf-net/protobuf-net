@@ -211,7 +211,7 @@ namespace ProtoBuf.Compiler
 
         internal FieldInfo DefineAdditionalSerializerInstance<T>(object key,
             Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
-            => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize, WireType.String);
+            => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
 
         internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, SignatureType signature,
             TypeModel model, Type inputType, string traceName)
@@ -926,7 +926,16 @@ namespace ProtoBuf.Compiler
                 case 7: il.Emit(OpCodes.Ldc_I4_7); break;
                 case 8: il.Emit(OpCodes.Ldc_I4_8); break;
                 case -1: il.Emit(OpCodes.Ldc_I4_M1); break;
-                default: il.Emit(OpCodes.Ldc_I4, value); break;
+                default:
+                    if (value >= -128 && value <= 127)
+                    {
+                        il.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldc_I4, value);
+                    }
+                    break;
             }
         }
 

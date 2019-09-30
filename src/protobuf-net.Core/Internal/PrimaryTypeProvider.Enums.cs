@@ -5,7 +5,7 @@ namespace ProtoBuf.Internal
     partial class PrimaryTypeProvider
     {
         private abstract class EnumSerializer<TEnum, TRaw>
-            : ISerializer<TEnum>, ISerializer<TEnum?>, IScalarSerializer<TEnum>, IScalarSerializer<TEnum?>
+            : ISerializer<TEnum>, ISerializer<TEnum?>
             where TRaw : unmanaged
             where TEnum : unmanaged
         {
@@ -29,7 +29,7 @@ namespace ProtoBuf.Internal
             [MethodImpl(ProtoReader.HotPath)]
             void ISerializer<TEnum?>.Write(ref ProtoWriter.State state, TEnum? value)
                 => Write(ref state, value.Value);
-            public WireType DefaultWireType => WireType.Varint;
+            public SerializerFeatures Features => SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
         }
         private sealed class EnumSerializerSByte<T> : EnumSerializer<T, sbyte> where T : unmanaged
         {

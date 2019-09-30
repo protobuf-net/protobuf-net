@@ -2,11 +2,11 @@
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<PrimaryTypeProvider.ScaledTicks>, ISerializer<TimeSpan>, IWrappedSerializer<TimeSpan>, ISerializer<DateTime>, IWrappedSerializer<DateTime>
+    partial class PrimaryTypeProvider : ISerializer<PrimaryTypeProvider.ScaledTicks>, ISerializer<TimeSpan>, ISerializer<DateTime>
     {
-        WireType ISerializer<DateTime>.DefaultWireType => WireType.String;
-   
-        WireType ISerializer<TimeSpan>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<DateTime>.Features=> SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar | SerializerFeatures.CategoryMessage;
+
+        SerializerFeatures ISerializer<TimeSpan>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar | SerializerFeatures.CategoryMessage;
         TimeSpan ISerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
             => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToTimeSpan();
 
@@ -42,7 +42,7 @@ namespace ProtoBuf.Internal
             }
         }
 
-        WireType ISerializer<ScaledTicks>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<ScaledTicks>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         ScaledTicks ISerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
         {
             int fieldNumber;

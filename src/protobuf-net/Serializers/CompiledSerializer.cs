@@ -58,17 +58,6 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    internal sealed class EnumCompiledSerializer<T> : SimpleCompiledSerializer<T>, IScalarSerializer<T>, IScalarSerializer<T?>
-        where T : struct
-    {
-        public EnumCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model) : base(head, model) { }
-
-        T? ISerializer<T?>.Read(ref ProtoReader.State state, T? value)
-            => deserializer(ref state, default);
-
-        void ISerializer<T?>.Write(ref ProtoWriter.State state, T? value)
-            => serializer(ref state, value.Value);
-    }
     internal class SimpleCompiledSerializer<T> : CompiledSerializer,
         ISerializer<T>, IFactory<T>
     {
@@ -87,16 +76,15 @@ namespace ProtoBuf.Serializers
                 throw new InvalidOperationException($"Unable to bind serializer: " + ex.Message, ex);
             }
 
-            bool isScalar = this is IScalarSerializer<T>;
             try
             {
-                deserializer = Compiler.CompilerContext.BuildDeserializer<T>(model.Scope, head, model, isScalar);
+                deserializer = Compiler.CompilerContext.BuildDeserializer<T>(model.Scope, head, model, false);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"Unable to bind deserializer: " + ex.Message, ex);
             }
-            factory = isScalar ? ctx => default : Compiler.CompilerContext.BuildFactory<T>(model.Scope, head, model);
+            factory = Compiler.CompilerContext.BuildFactory<T>(model.Scope, head, model);
         }
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
@@ -116,7 +104,7 @@ namespace ProtoBuf.Serializers
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
-        public WireType DefaultWireType => head.DefaultWireType;
+        public SerializerFeatures Features => head.Features;
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
             return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled
@@ -143,11 +131,6 @@ namespace ProtoBuf.Serializers
                     if (head.IsSubType)
                     {
                         ctor = Helpers.GetConstructor(typeof(InheritanceCompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
-                            new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
-                    }
-                    else if (head.ExpectedType.IsEnum)
-                    {
-                        ctor = Helpers.GetConstructor(typeof(EnumCompiledSerializer<>).MakeGenericType(head.BaseType),
                             new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
                     }
                     else

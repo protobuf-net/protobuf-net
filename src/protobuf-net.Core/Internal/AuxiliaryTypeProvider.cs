@@ -27,7 +27,7 @@ namespace ProtoBuf.Internal
         private sealed class ListSerializer<TList, T> : ISerializer<TList>
             where TList : List<T>
         {
-            public WireType DefaultWireType => WireType.None;
+            public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
 
             public TList Read(ref ProtoReader.State state, TList value)
             {
@@ -52,7 +52,7 @@ namespace ProtoBuf.Internal
             public void Write(ref ProtoWriter.State state, TList value)
             {
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
-                state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.DefaultWireType, value, serializer);
+                state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.Features, value, serializer);
             }
         }
     }

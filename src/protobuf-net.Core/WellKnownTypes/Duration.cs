@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider : ISerializer<Duration>
     {
-        WireType ISerializer<Duration>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<Duration>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 
         Duration ISerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);

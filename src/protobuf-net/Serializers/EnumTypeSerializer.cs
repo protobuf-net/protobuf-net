@@ -5,17 +5,12 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class EnumTypeSerializer<T> : EnumMemberSerializer, IScalarSerializer<T>, IScalarSerializer<T?>, IProtoTypeSerializer
+    internal sealed class EnumTypeSerializer<T> : EnumMemberSerializer, IProtoTypeSerializer
         where T : struct
     {
-        T ISerializer<T>.Read(ref ProtoReader.State state, T value) => (T)Read(ref state, null);
-        void ISerializer<T>.Write(ref ProtoWriter.State state, T value) => Write(ref state, value);
-        T? ISerializer<T?>.Read(ref ProtoReader.State state, T? value) => (T?)Read(ref state, null);
-        void ISerializer<T?>.Write(ref ProtoWriter.State state, T? value) => Write(ref state, value);
-
         public EnumTypeSerializer(EnumMemberSerializer.EnumPair[] map) : base(typeof(T), map) { }
 
-        public WireType DefaultWireType => WireType.Varint;
+        public SerializerFeatures Features => SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
 
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType) => false;
 

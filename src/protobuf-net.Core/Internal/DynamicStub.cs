@@ -193,7 +193,7 @@ namespace ProtoBuf.Internal
                 switch(scope)
                 {
                     case ObjectScope.LikeRoot:
-                        typed = state.ReadAsObject<T>(typed, serializer);
+                        typed = state.ReadAsRoot<T>(typed, serializer);
                         break;
                     case ObjectScope.Scalar:
                     case ObjectScope.Message:
@@ -221,14 +221,15 @@ namespace ProtoBuf.Internal
                     defaultWireType = default;
                     return ObjectScope.Invalid;
                 }
-                defaultWireType = ser.DefaultWireType;
-                if (ser is IScalarSerializer<T>)
+                var features = ser.Features;
+                defaultWireType = features.GetWireType();
+                return (features.GetCategory()) switch
                 {
-                    if (ser is IWrappedSerializer<T>) return ObjectScope.Invalid; // can't be both!
-                    return ObjectScope.Scalar;
-                }
-                else if (ser is IWrappedSerializer<T>) return ObjectScope.LikeRoot;
-                return ObjectScope.Message;
+                    SerializerFeatures.CategoryScalar | SerializerFeatures.CategoryMessage => ObjectScope.LikeRoot,
+                    SerializerFeatures.CategoryMessage => ObjectScope.Message,
+                    SerializerFeatures.CategoryScalar => ObjectScope.Scalar,
+                    _ => ObjectScope.Invalid,
+                };
             }
 
             protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)
@@ -249,7 +250,7 @@ namespace ProtoBuf.Internal
                 switch(scope)
                 {
                     case ObjectScope.LikeRoot:
-                        state.WriteAsObject<T>(typed, serializer);
+                        state.WriteAsRoot<T>(typed, serializer);
                         return true;
                     case ObjectScope.Scalar:
                     case ObjectScope.Message:

@@ -30,11 +30,6 @@ namespace ProtoBuf
         WireTypeStartGroup = WireType.StartGroup,
 
         /// <summary>
-        /// Indicates the end of a group
-        /// </summary>
-        WireTypeEndGroup = WireType.EndGroup,
-
-        /// <summary>
         /// Fixed-length 4-byte encoding
         /// </summary>10
         WireTypeFixed32 = WireType.Fixed32,
@@ -75,6 +70,18 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsRepeated(this SerializerFeatures features)
             => (features & SerializerFeatures.CategoryRepeated) != 0;
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsMessage(this SerializerFeatures features)
+            => (features & SerializerFeatures.CategoryMessage) != 0;
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static SerializerFeatures AsFeatures(this WireType wireType)
+            => (SerializerFeatures)wireType;
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsWrappedAtRoot(this SerializerFeatures features)
+            => (features & (SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar)) == (SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar);
 
         [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures GetCategory(this SerializerFeatures features)
@@ -126,23 +133,10 @@ namespace ProtoBuf
         void Write(ref ProtoWriter.State state, T value);
 
         /// <summary>
-        /// Indicates the default wire-type for this type
+        /// Indicates the features (including the default wire-type) for this type/serializer
         /// </summary>
-        WireType DefaultWireType { get; }
+        SerializerFeatures Features { get; }
     }
-
-    /// <summary>
-    /// Indicates that the serializer processes scalar values (scalars are things like enums; the values are never merged)
-    /// </summary>
-    public interface IScalarSerializer<T> : ISerializer<T> { }
-
-    /// <summary>
-    /// Indicates that the serializer processes messages, but that at the root they should be hidden behind an extra layer of indirection
-    /// </summary>
-    internal interface IWrappedSerializer<T> : ISerializer<T> { }
-
-    internal interface IListSerializer<T> : ISerializer<T> { }
-
 
     /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy

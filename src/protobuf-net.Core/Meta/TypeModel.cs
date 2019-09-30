@@ -1233,13 +1233,6 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IScalarSerializer<T> NoScalarSerializer<T>(TypeModel model)
-        {
-            ThrowHelper.ThrowInvalidOperationException($"No scalar serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
-            return default;
-        }
-
         internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null)
         {
             if (factory == null) factory = TypeModel.GetSerializer<T>(context?.Model) as IFactory<T>;
@@ -1363,7 +1356,7 @@ namespace ProtoBuf.Meta
             {
                 return (T)DeepCloneFallback(typeof(T), value);
             }
-            else if (TypeModel.TryGetSerializer<T>(this) is IScalarSerializer<T>)
+            else if ((serializer.Features & SerializerFeatures.CategoryScalar) != 0)
             {
                 // scalars should be immutable; if not: that's on you!
                 return value;

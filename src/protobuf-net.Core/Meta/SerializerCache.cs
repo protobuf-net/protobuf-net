@@ -85,7 +85,7 @@ namespace ProtoBuf.Meta
 
             public NullableWrapper(ISerializer<T> tail) => _tail = tail;
 
-            public WireType DefaultWireType => _tail.DefaultWireType;
+            public SerializerFeatures Features => _tail.Features;
 
             public T? Read(ref ProtoReader.State state, T? value) => _tail.Read(ref state, value.GetValueOrDefault());
 

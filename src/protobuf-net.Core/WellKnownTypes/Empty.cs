@@ -5,7 +5,7 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider : ISerializer<Empty>
     {
-        WireType ISerializer<Empty>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<Empty>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         Empty ISerializer<Empty>.Read(ref ProtoReader.State state, Empty value)
         {
             state.SkipAllFields();

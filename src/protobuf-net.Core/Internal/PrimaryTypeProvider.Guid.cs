@@ -5,7 +5,7 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider : ISerializer<Guid>
     {
-        WireType ISerializer<Guid>.DefaultWireType => WireType.String;
+        SerializerFeatures ISerializer<Guid>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar;
         private static
 #if !DEBUG
             readonly
