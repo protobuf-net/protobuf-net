@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace ProtoBuf.WellKnownTypes
+namespace ProtoBuf.Internal
 {
-    partial class WellKnownSerializer :
+    partial class PrimaryTypeProvider :
         IScalarSerializer<string>,
         IScalarSerializer<int>,
         IScalarSerializer<long>,

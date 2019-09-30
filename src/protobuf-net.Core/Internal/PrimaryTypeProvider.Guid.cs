@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ProtoBuf.WellKnownTypes
+namespace ProtoBuf.Internal
 {
-    partial class WellKnownSerializer : ISerializer<Guid>
+    partial class PrimaryTypeProvider : ISerializer<Guid>
     {
         WireType ISerializer<Guid>.DefaultWireType => WireType.String;
         private static

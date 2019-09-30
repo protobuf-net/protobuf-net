@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace ProtoBuf.WellKnownTypes
+namespace ProtoBuf.Internal
 {
-    partial class WellKnownSerializer : ISerializer<decimal>
+    partial class PrimaryTypeProvider : ISerializer<decimal>
     {
         WireType ISerializer<decimal>.DefaultWireType => WireType.String;
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;

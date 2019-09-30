@@ -1,5 +1,22 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.WellKnownTypes;
+using System;
 
+namespace ProtoBuf.Internal
+{
+    partial class PrimaryTypeProvider : ISerializer<Timestamp>
+    {
+        WireType ISerializer<Timestamp>.DefaultWireType => WireType.String;
+        Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
+        {
+            var duration = new Duration(value.Seconds, value.Nanoseconds);
+            duration = ReadDuration(ref state, duration);
+            return new Timestamp(duration.Seconds, duration.Nanoseconds);
+        }
+        void ISerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
+    }
+}
 namespace ProtoBuf.WellKnownTypes
 {
     /// <summary>
@@ -9,7 +26,7 @@ namespace ProtoBuf.WellKnownTypes
     /// January 1, 1970, in the proleptic Gregorian calendar which extends the
     /// Gregorian calendar backwards to year one.
     /// </summary>
-    [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(WellKnownSerializer))]
+    [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(PrimaryTypeProvider))]
     public readonly struct Timestamp
     {
         /// <summary>
@@ -34,12 +51,12 @@ namespace ProtoBuf.WellKnownTypes
         /// <summary>Converts a DateTime to a Timestamp</summary>
         public Timestamp(DateTime value)
         {
-            Seconds = WellKnownSerializer.ToDurationSeconds(value - TimestampEpoch, out var nanoseconds);
+            Seconds = PrimaryTypeProvider.ToDurationSeconds(value - TimestampEpoch, out var nanoseconds);
             Nanoseconds = nanoseconds;
         }
 
         /// <summary>Converts a Timestamp to a DateTime</summary>
-        public DateTime AsDateTime() => TimestampEpoch.AddTicks(WellKnownSerializer.ToTicks(Seconds, Nanoseconds));
+        public DateTime AsDateTime() => TimestampEpoch.AddTicks(PrimaryTypeProvider.ToTicks(Seconds, Nanoseconds));
 
         /// <summary>Converts a Timestamp to a DateTime</summary>
         public static implicit operator DateTime(Timestamp value) => value.AsDateTime();
@@ -51,30 +68,5 @@ namespace ProtoBuf.WellKnownTypes
         /// The default value for dates that are following google.protobuf.Timestamp semantics
         /// </summary>
         private static readonly DateTime TimestampEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-    }
-
-    partial class WellKnownSerializer : ISerializer<Timestamp>, ISerializer<DateTime>, IWrappedSerializer<DateTime>
-    {
-        WireType ISerializer<Timestamp>.DefaultWireType => WireType.String;
-        WireType ISerializer<DateTime>.DefaultWireType => WireType.String;
-        Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
-        {
-            var duration = new Duration(value.Seconds, value.Nanoseconds);
-            duration = ReadDuration(ref state, duration);
-            return new Timestamp(duration.Seconds, duration.Nanoseconds);
-        }
-
-        void ISerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
-            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
-
-        DateTime ISerializer<DateTime>.Read(ref ProtoReader.State state, DateTime value)
-            => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToDateTime();
-
-        void ISerializer<DateTime>.Write(ref ProtoWriter.State state, DateTime value)
-        {
-            var model = state.Model;
-            var includeKind = model != null && model.SerializeDateTimeKind();
-            ((ISerializer<ScaledTicks>)this).Write(ref state, ScaledTicks.Create(value, includeKind));
-        }
     }
 }

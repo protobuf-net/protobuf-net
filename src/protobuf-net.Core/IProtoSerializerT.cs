@@ -43,53 +43,71 @@ namespace ProtoBuf
         /// Denotes a varint that should be interpreted using
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
-        WireTypeSignedVarint = WireTypeVarint | ZigZag,
+        WireTypeSignedVarint = WireType.SignedVarint,
 
         /// <summary>
-        /// Indicates whether zig-zag encoding should be used
+        /// Indicates that this data should be treated like a list/array
         /// </summary>
-        ZigZag = 1 << 3,
+        CategoryRepeated = 1 << 4,
 
         /// <summary>
         /// Scalars are simple types such as integers, not messages; when written as
         /// a root message, a field-one wrapper is added
         /// </summary>
-        Scalar = 1 << 4,
+        CategoryScalar = 1 << 5,
 
         /// <summary>
-        /// Indicates a type that is formally a message, but which is treated like a
-        /// scalar (i.e. a field-one wrapper) at the root level; see: DateTime/TimeSpan
+        /// Indicates a type that is a message; if a type is both "message" and "scalar",
+        /// then *at the root only* it will be a message wrapped like a scalar; otherwise, it is
+        /// treated as a message; see: DateTime/TimeSpan
         /// </summary>
-        Wrapped = 1 << 5,
-
-        /// <summary>
-        /// Indicates 
-        /// </summary>
-        Repeated = 1 << 6,
+        CategoryMessage = 1 << 6,
 
         /// <summary>
         /// Explicitly disables packed encoding; normally, packed encoding is
         /// used by default when appropriate
         /// </summary>
-        PackedDisabled = 1 << 7,
+        OptionPackedDisabled = 1 << 7,
     }
 
     internal static class SerializerFeaturesExtensions
     {
+        [MethodImpl(ProtoReader.HotPath)]
         public static bool IsRepeated(this SerializerFeatures features)
-            => (features & SerializerFeatures.Repeated) != 0;
+            => (features & SerializerFeatures.CategoryRepeated) != 0;
 
-        public static bool IsScalar(this SerializerFeatures features)
-            => (features & SerializerFeatures.Scalar) != 0;
+        [MethodImpl(ProtoReader.HotPath)]
+        public static SerializerFeatures GetCategory(this SerializerFeatures features)
+        {
+            const SerializerFeatures mask = SerializerFeatures.CategoryMessage
+                | SerializerFeatures.CategoryRepeated
+                | SerializerFeatures.CategoryScalar;
+            return features & mask;
+        }
 
-        public static bool IsWrapped(this SerializerFeatures features)
-            => (features & SerializerFeatures.Wrapped) != 0;
-
+        [MethodImpl(ProtoReader.HotPath)]
         public static bool IsPackedDisabled(this SerializerFeatures features)
-            => (features & SerializerFeatures.PackedDisabled) != 0;
+            => (features & SerializerFeatures.OptionPackedDisabled) != 0;
 
+        [MethodImpl(ProtoReader.HotPath)]
         public static WireType GetWireType(this SerializerFeatures features)
-            => (WireType)((int)features & 15);
+        {
+            const SerializerFeatures mask = (SerializerFeatures)7
+                | SerializerFeatures.CategoryRepeated; // this isn't an accident; this is so
+            // fundamental that if someone is including the category: they've screwed up
+            return (WireType)(int)(features & mask);
+        }
+    }
+
+    /// <summary>
+    /// Allows a provider to offer indirect access to serivces; note that this is a *secondary* API; the
+    /// primary API is for the provider to implement ISerializer-T for the intended T; however, to offer
+    /// indirect access to known serializers, when asked for a type, provider the appropriate ISerializer-T
+    /// for that type. This method can (and often will) return null.
+    /// </summary>
+    internal interface ISerializerFactory
+    {
+        object TryCreate(Type type);
     }
 
     /// <summary>

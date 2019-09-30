@@ -9,14 +9,23 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using static ProtoBuf.Meta.SerializerCache;
 
 namespace ProtoBuf.Meta
 {
     /// <summary>
     /// Provides protobuf serialization support for a number of types
     /// </summary>
-    public abstract class TypeModel
+    public abstract partial class TypeModel
     {
+        /// <summary>
+        /// Gets a cached serializer for a type, as offered by a given provider
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        protected static ISerializer<T> GetSerializer<TProvider, T>()
+            where TProvider : class
+            => SerializerCache<TProvider, T>.InstanceField;
+
         /// <summary>
         /// Should the <c>Kind</c> be included on date/time values?
         /// </summary>
@@ -87,10 +96,8 @@ namespace ProtoBuf.Meta
         /// <summary>        /// Indicates whether a type is known to the model
         /// </summary>
         internal virtual bool IsKnownType<T>()
-        {
-            var ser = GetSerializer<T>();
-            return ser != null && !(ser is IScalarSerializer<T>); // don't count scalars in this
-        }
+            => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
+            && GetSerializer<T>() != null;
 
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
@@ -1212,18 +1219,6 @@ namespace ProtoBuf.Meta
         protected internal virtual ISerializer<T> GetSerializer<T>()
             => this as ISerializer<T>;
 
-        /// <summary>
-        /// Get a factory for creating <typeparamref name="T"/> values
-        /// </summary>
-        protected internal virtual IFactory<T> GetFactory<T>()
-            => this as IFactory<T>;
-
-        /// <summary>
-        /// Get a typed serializer for deserialzing <typeparamref name="T"/> as part of an inheritance model
-        /// </summary>
-        protected internal virtual ISubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
-            => this as ISubTypeSerializer<T>;
-
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
         {
@@ -1247,7 +1242,7 @@ namespace ProtoBuf.Meta
 
         internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null)
         {
-            if (factory == null) factory = context?.Model?.GetFactory<T>();
+            if (factory == null) factory = TypeModel.GetSerializer<T>(context?.Model) as IFactory<T>;
             if (factory != null)
             {
                 var val = factory.Create(context);
@@ -1279,17 +1274,20 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> GetSerializer<T>(TypeModel model)
-           => TypeHelper<T>.PrimarySerializer ?? model?.GetSerializer<T>()
+           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
+            ?? model?.GetSerializer<T>()
+            ?? SerializerCache<AuxiliaryTypeProvider, T>.InstanceField
             ?? NoSerializer<T>(model);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> TryGetSerializer<T>(TypeModel model)
-           => TypeHelper<T>.PrimarySerializer ?? model?.GetSerializer<T>();
+          => SerializerCache<PrimaryTypeProvider, T>.InstanceField
+            ?? model?.GetSerializer<T>()
+            ?? SerializerCache<AuxiliaryTypeProvider, T>.InstanceField;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
-           => model?.GetSubTypeSerializer<T>()
-            // ?? TypeHelper<T>.InbuiltSerializer as ISubTypeSerializer<T>
+           => model?.GetSerializer<T>() as ISubTypeSerializer<T>
             ?? NoSubTypeSerializer<T>(model);
 
         /// <summary>

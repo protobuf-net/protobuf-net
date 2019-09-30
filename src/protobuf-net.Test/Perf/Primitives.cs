@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using ProtoBuf.WellKnownTypes;
 using System;
 using System.IO;
@@ -11,7 +12,7 @@ namespace ProtoBuf.Perf
         [Fact]
         public void DecimalIsOptimized()
         {
-            Assert.True(WellKnownSerializer.DecimalOptimized);
+            Assert.True(PrimaryTypeProvider.DecimalOptimized);
         }
 
         [Theory]
@@ -21,12 +22,12 @@ namespace ProtoBuf.Perf
         public void CheckDecimalLayout(bool optimized)
 #pragma warning restore xUnit1026
         {
-            bool oldVal = WellKnownSerializer.GuidOptimized;
+            bool oldVal = PrimaryTypeProvider.GuidOptimized;
             decimal value = 1.0000000000045000000003000000M;
             try
             {
 #if DEBUG
-                WellKnownSerializer.DecimalOptimized = optimized;
+                PrimaryTypeProvider.DecimalOptimized = optimized;
 #endif
                 using var ms = new MemoryStream();
                 var writeState = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default);
@@ -61,7 +62,7 @@ namespace ProtoBuf.Perf
             finally
             {
 #if DEBUG
-                WellKnownSerializer.DecimalOptimized = oldVal;
+                PrimaryTypeProvider.DecimalOptimized = oldVal;
 #endif
             }
         }
@@ -69,7 +70,7 @@ namespace ProtoBuf.Perf
         [Fact]
         public void GuidIsOptimized()
         {
-            Assert.True(WellKnownSerializer.GuidOptimized);
+            Assert.True(PrimaryTypeProvider.GuidOptimized);
         }
 
         [Theory]
@@ -81,11 +82,11 @@ namespace ProtoBuf.Perf
         {
             Assert.True(Guid.TryParse("12345678-2345-3456-4567-56789a6789ab", out var value));
 
-            bool oldVal = WellKnownSerializer.GuidOptimized;
+            bool oldVal = PrimaryTypeProvider.GuidOptimized;
             try
             {
 #if DEBUG
-                WellKnownSerializer.GuidOptimized = optimized;
+                PrimaryTypeProvider.GuidOptimized = optimized;
 #endif
                 using var ms = new MemoryStream();
                 CheckGuidLayoutImpl(ms, value, "0A-12-09-78-56-34-12-45-23-56-34-11-45-67-56-78-9A-67-89-AB");
@@ -98,7 +99,7 @@ namespace ProtoBuf.Perf
             finally
             {
 #if DEBUG
-                WellKnownSerializer.GuidOptimized = oldVal;
+                PrimaryTypeProvider.GuidOptimized = oldVal;
 #endif
             }
 

@@ -1,62 +1,12 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.WellKnownTypes;
+using System;
 
-namespace ProtoBuf.WellKnownTypes
+namespace ProtoBuf.Internal
 {
-    /// <summary>
-    /// A Duration represents a signed, fixed-length span of time represented
-    /// as a count of seconds and fractions of seconds at nanosecond
-    /// resolution. It is independent of any calendar and concepts like "day"
-    /// or "month". It is related to Timestamp in that the difference between
-    /// two Timestamp values is a Duration and it can be added or subtracted
-    /// from a Timestamp. 
-    /// </summary>
-    [ProtoContract(Name = ".google.protobuf.Duration", Serializer = typeof(WellKnownSerializer))]
-    public readonly struct Duration
-    {
-        /// <summary>
-        /// Signed seconds of the span of time.
-        /// </summary>
-        [ProtoMember(1, Name = "seconds", DataFormat = DataFormat.Default)]
-        public long Seconds { get; }
-
-        /// <summary>
-        /// Signed fractions of a second at nanosecond resolution of the span of time.
-        /// </summary>
-        [ProtoMember(2, Name = "nanos", DataFormat = DataFormat.Default)]
-        public int Nanoseconds { get; }
-
-        /// <summary>Creates a new Duration with the supplied values</summary>
-        public Duration(long seconds, int nanoseconds)
-        {
-            Seconds = seconds;
-            Nanoseconds = nanoseconds;
-        }
-
-        /// <summary>Converts a TimeSpan to a Duration</summary>
-        public Duration(TimeSpan value)
-        {
-            Seconds = WellKnownSerializer.ToDurationSeconds(value, out var nanoseconds);
-            Nanoseconds = nanoseconds;
-        }
-
-        /// <summary>Converts a Duration to a TimeSpan</summary>
-        public TimeSpan AsTimeSpan() => TimeSpan.FromTicks(WellKnownSerializer.ToTicks(Seconds, Nanoseconds));
-
-        /// <summary>Converts a Duration to a TimeSpan</summary>
-        public static implicit operator TimeSpan(Duration value) => value.AsTimeSpan();
-        /// <summary>Converts a TimeSpan to a Duration</summary>
-        public static implicit operator Duration(TimeSpan value) => new Duration(value);
-    }
-
-    partial class WellKnownSerializer : ISerializer<Duration>, ISerializer<TimeSpan>, IWrappedSerializer<TimeSpan>
+    partial class PrimaryTypeProvider : ISerializer<Duration>
     {
         WireType ISerializer<Duration>.DefaultWireType => WireType.String;
-        WireType ISerializer<TimeSpan>.DefaultWireType => WireType.String;
-        TimeSpan ISerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
-            => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToTimeSpan();
-
-        void ISerializer<TimeSpan>.Write(ref ProtoWriter.State state, TimeSpan value)
-            => ((ISerializer<ScaledTicks>)this).Write(ref state, new ScaledTicks(value, DateTimeKind.Unspecified));
 
         Duration ISerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);
@@ -158,5 +108,53 @@ namespace ProtoBuf.WellKnownTypes
                 state.WriteInt32(nanos);
             }
         }
+    }
+}
+namespace ProtoBuf.WellKnownTypes
+{
+    /// <summary>
+    /// A Duration represents a signed, fixed-length span of time represented
+    /// as a count of seconds and fractions of seconds at nanosecond
+    /// resolution. It is independent of any calendar and concepts like "day"
+    /// or "month". It is related to Timestamp in that the difference between
+    /// two Timestamp values is a Duration and it can be added or subtracted
+    /// from a Timestamp. 
+    /// </summary>
+    [ProtoContract(Name = ".google.protobuf.Duration", Serializer = typeof(PrimaryTypeProvider))]
+    public readonly struct Duration
+    {
+        /// <summary>
+        /// Signed seconds of the span of time.
+        /// </summary>
+        [ProtoMember(1, Name = "seconds", DataFormat = DataFormat.Default)]
+        public long Seconds { get; }
+
+        /// <summary>
+        /// Signed fractions of a second at nanosecond resolution of the span of time.
+        /// </summary>
+        [ProtoMember(2, Name = "nanos", DataFormat = DataFormat.Default)]
+        public int Nanoseconds { get; }
+
+        /// <summary>Creates a new Duration with the supplied values</summary>
+        public Duration(long seconds, int nanoseconds)
+        {
+            Seconds = seconds;
+            Nanoseconds = nanoseconds;
+        }
+
+        /// <summary>Converts a TimeSpan to a Duration</summary>
+        public Duration(TimeSpan value)
+        {
+            Seconds = PrimaryTypeProvider.ToDurationSeconds(value, out var nanoseconds);
+            Nanoseconds = nanoseconds;
+        }
+
+        /// <summary>Converts a Duration to a TimeSpan</summary>
+        public TimeSpan AsTimeSpan() => TimeSpan.FromTicks(PrimaryTypeProvider.ToTicks(Seconds, Nanoseconds));
+
+        /// <summary>Converts a Duration to a TimeSpan</summary>
+        public static implicit operator TimeSpan(Duration value) => value.AsTimeSpan();
+        /// <summary>Converts a TimeSpan to a Duration</summary>
+        public static implicit operator Duration(TimeSpan value) => new Duration(value);
     }
 }

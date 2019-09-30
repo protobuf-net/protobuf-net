@@ -740,14 +740,6 @@ namespace ProtoBuf.Meta
         protected internal override ISerializer<T> GetSerializer<T>()
             => GetServices<T>() as ISerializer<T>;
 
-        /// <summary>Resolve a service relative to T</summary>
-        protected internal override ISubTypeSerializer<T> GetSubTypeSerializer<T>()
-            => GetServices<T>() as ISubTypeSerializer<T>;
-
-        /// <summary>Resolve a service relative to T</summary>
-        protected internal override IFactory<T> GetFactory<T>()
-            => GetServices<T>() as IFactory<T>;
-
         /// <summary>Indicates whether a type is known to the model</summary>
         internal override bool IsKnownType<T>() // the point of this override is to avoid loops
                                                 // when trying to *build* a model; we don't actually need the service (which may not exist yet);
