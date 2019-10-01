@@ -27,8 +27,19 @@ namespace ProtoBuf.Meta
         }
     }
 
-    internal static class SerializerCache
+    /// <summary>
+    /// Provides access to cached serializers
+    /// </summary>
+    public static class SerializerCache
     {
+        /// <summary>
+        /// Gets a cached serializer instance for a type, in the context of a given provider
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static ISerializer<T> Get<TProvider, T>()
+            where TProvider : class
+            => SerializerCache<TProvider, T>.InstanceField;
+
         internal static object GetInstance(Type providerType, Type type)
             => typeof(SerializerCache<,>).MakeGenericType(providerType, type)
                     .GetField(nameof(SerializerCache<PrimaryTypeProvider, string>.InstanceField),

@@ -114,11 +114,15 @@ namespace ProtoBuf
     /// <summary>
     /// Allows a provider to offer indirect access to serivces; note that this is a *secondary* API; the
     /// primary API is for the provider to implement ISerializer-T for the intended T; however, to offer
-    /// indirect access to known serializers, when asked for a type, provider the appropriate ISerializer-T
-    /// for that type. This method can (and often will) return null.
+    /// indirect access to known serializers, when asked for a type, provide the appropriate ISerializer-T
+    /// for that type. This method can (and often will) return null. The implementation can also return
+    /// the input type to indicate that an enum is included, or return another provider type to use as a proxy.
     /// </summary>
-    internal interface ISerializerFactory
+    public interface ISerializerFactory
     {
+        /// <summary>
+        /// Attempt to obtain a provider or service for the required type
+        /// </summary>
         object TryCreate(Type type);
     }
 

@@ -1310,6 +1310,12 @@ namespace ProtoBuf.Compiler
             }
         }
 
+
+        internal static void LoadValue(ILGenerator il, Type type)
+        {
+            il.Emit(OpCodes.Ldtoken, type);
+            il.EmitCall(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle)), null);
+        }
         internal void LoadValue(Type type)
         {
             il.Emit(OpCodes.Ldtoken, type);

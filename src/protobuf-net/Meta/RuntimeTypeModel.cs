@@ -11,6 +11,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ProtoBuf.Compiler;
 using ProtoBuf.Internal;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Meta
 {
@@ -874,6 +876,8 @@ namespace ProtoBuf.Meta
         }
 
         internal static ILGenerator Override(TypeBuilder type, string name)
+            => Override(type, name, out _);
+        internal static ILGenerator Override(TypeBuilder type, string name, out Type[] genericArgs)
         {
             MethodInfo baseMethod;
             try
@@ -885,14 +889,22 @@ namespace ProtoBuf.Meta
                 throw new ArgumentException($"Unable to resolve '{name}': {ex.Message}", nameof(name), ex);
             }
 
-            ParameterInfo[] parameters = baseMethod.GetParameters();
-            Type[] paramTypes = new Type[parameters.Length];
+            var parameters = baseMethod.GetParameters();
+            var paramTypes = new Type[parameters.Length];
             for (int i = 0; i < paramTypes.Length; i++)
             {
                 paramTypes[i] = parameters[i].ParameterType;
             }
             MethodBuilder newMethod = type.DefineMethod(baseMethod.Name,
                 (baseMethod.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final, baseMethod.CallingConvention, baseMethod.ReturnType, paramTypes);
+            if (baseMethod.IsGenericMethodDefinition)
+            {
+                genericArgs = baseMethod.GetGenericArguments();
+                string[] names = Array.ConvertAll(genericArgs, x => x.Name);
+                newMethod.DefineGenericParameters(names);
+            }
+            else
+                genericArgs = Type.EmptyTypes;
             for (int i = 0; i < parameters.Length; i++)
             {
                 newMethod.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
@@ -1061,16 +1073,26 @@ namespace ProtoBuf.Meta
             var scope = CompilerContextScope.CreateForModule(module, true, assemblyName);
             WriteAssemblyAttributes(options, assemblyName, asm);
 
-            TypeBuilder type = WriteBasicTypeModel(options, typeName, module);
 
-            WriteSerializers(scope, type);
-
-            WriteConstructorsAndOverrides(type);
+            var serviceType = WriteBasicTypeModel(typeName + "_Services", module, typeof(object), true);
+            WriteSerializers(scope, serviceType);
+            WriteEnumsAndProxies(scope, serviceType);
 
 #if PLAT_NO_EMITDLL
-            Type finalType = type.CreateTypeInfo().AsType();
+            var finalServiceType = serviceType.CreateTypeInfo().AsType();
 #else
-            Type finalType = type.CreateType();
+            var finalServiceType = serviceType.CreateType();
+#endif
+
+            var modelType = WriteBasicTypeModel(typeName, module, typeof(TypeModel),
+                options.Accessibility == Accessibility.Internal);
+
+            WriteConstructorsAndOverrides(modelType, finalServiceType);
+
+#if PLAT_NO_EMITDLL
+            Type finalType = modelType.CreateTypeInfo().AsType();
+#else
+            Type finalType = modelType.CreateType();
 #endif
             if (!string.IsNullOrEmpty(path))
             {
@@ -1092,7 +1114,7 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType, nonPublic: true);
         }
 
-        private void WriteConstructorsAndOverrides(TypeBuilder type)
+        private void WriteConstructorsAndOverrides(TypeBuilder type, Type serviceType)
         {
             var il = Override(type, nameof(TypeModel.GetInternStrings));
             il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
@@ -1102,9 +1124,45 @@ namespace ProtoBuf.Meta
             il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Ret);
 
+            il = Override(type, nameof(TypeModel.GetSerializer), out var genericArgs);
+            var genericT = genericArgs.Single();
+            var method = typeof(SerializerCache).GetMethod(nameof(SerializerCache.Get)).MakeGenericMethod(serviceType, genericT);
+            il.EmitCall(OpCodes.Call, method, null);
+            il.Emit(OpCodes.Ret);
+
             type.DefineDefaultConstructor(MethodAttributes.Public);
         }
 
+        private void WriteEnumsAndProxies(CompilerContextScope scope, TypeBuilder type)
+        {
+            var enums = new List<Type>();
+            for (int index = 0; index < types.Count; index++)
+            {
+                var metaType = (MetaType)types[index];
+                var runtimeType = metaType.Type;
+                if (runtimeType.IsEnum) enums.Add(runtimeType);
+            }
+
+            if (enums.Count == 0) return;
+
+            type.AddInterfaceImplementation(typeof(ISerializerFactory));
+            var il = CompilerContextScope.Implement(type, typeof(ISerializerFactory), nameof(ISerializerFactory.TryCreate));
+            Label returnEnum = il.DefineLabel(), notAnEnum = il.DefineLabel();
+            foreach (var enumType in enums)
+            {
+                CompilerContext.LoadValue(il, enumType);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Beq, returnEnum);
+            }
+            il.Emit(OpCodes.Br_S, notAnEnum);
+            il.MarkLabel(returnEnum);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ret);
+
+            il.MarkLabel(notAnEnum);
+            il.Emit(OpCodes.Ldnull);
+            il.Emit(OpCodes.Ret);
+        }
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
         {
@@ -1219,14 +1277,11 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private TypeBuilder WriteBasicTypeModel(CompilerOptions options, string typeName, ModuleBuilder module)
+        private TypeBuilder WriteBasicTypeModel(string typeName, ModuleBuilder module,
+            Type baseType, bool @internal)
         {
-            Type baseType = typeof(TypeModel);
             TypeAttributes typeAttributes = (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
-            if (options.Accessibility == Accessibility.Internal)
-            {
-                typeAttributes &= ~TypeAttributes.Public;
-            }
+            if (@internal) typeAttributes &= ~TypeAttributes.Public;
 
             return module.DefineType(typeName, typeAttributes, baseType);
         }
