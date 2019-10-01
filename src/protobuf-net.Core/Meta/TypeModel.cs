@@ -1253,7 +1253,7 @@ namespace ProtoBuf.Meta
 
         internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null)
         {
-            if (factory == null) factory = TypeModel.GetSerializer<T>(context?.Model) as IFactory<T>;
+            factory ??= TypeModel.TryGetSerializer<T>(context?.Model) as IFactory<T>;
             if (factory != null)
             {
                 var val = factory.Create(context);
