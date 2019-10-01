@@ -156,8 +156,8 @@ namespace Examples.Issues
             Verify(model, DateTime.MaxValue, "0A-04-08-02-10-0F");
 
             Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Utc), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
-            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-01");
-            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04");
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Local), "0A-0B-08-B6-E7-88-A4-AE-5B-10-04-18-02");
+            Verify(model, new DateTime(2019, 9, 27, 10, 25, 32, 123, DateTimeKind.Unspecified), "0A-09-08-B6-E7-88-A4-AE-5B-10-04");
 
             static void Verify(TypeModel model, DateTime value, string expected)
             {
