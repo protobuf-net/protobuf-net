@@ -108,8 +108,7 @@ namespace ProtoBuf.Meta
 
             if (IsAutoTuple || derivedMeta.IsAutoTuple)
             {
-                ThrowHelper.ThrowInvalidOperationException(
-                $"Tuple-based types cannot be used in inheritance hierarchies: {derivedType.NormalizeName()}");
+                ThrowTupleTypeWithInheritance(derivedType);
             }
             if (surrogate != null) ThrowSubTypeWithSurrogate(Type);
             if (derivedMeta.surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
@@ -120,6 +119,12 @@ namespace ProtoBuf.Meta
             derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
             (_subTypes ?? (_subTypes = new List<SubType>())).Add(subType);
             return this;
+        }
+
+        private static void ThrowTupleTypeWithInheritance(Type type)
+        {
+            ThrowHelper.ThrowInvalidOperationException(
+                $"Tuple-based types cannot be used in inheritance hierarchies: {type.NormalizeName()}");
         }
 
         internal static readonly Type ienumerable = typeof(IEnumerable);
@@ -385,9 +390,12 @@ namespace ProtoBuf.Meta
             return features;
         }
 
+        private bool HasRealInheritance()
+            => (baseType != null && baseType != this) || (_subTypes?.Count ?? 0) > 0;
         private IProtoTypeSerializer BuildSerializer()
         {
             Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
+            bool involvedInInheritance = HasRealInheritance();
             if (itemType != null)
             {
                 if (surrogate != null)
@@ -406,13 +414,18 @@ namespace ProtoBuf.Meta
             }
             if (surrogate != null)
             {
+                if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
                 MetaType mt = model[surrogate], mtBase;
-                while ((mtBase = mt.baseType) != null) { mt = mtBase; }
+                while ((mtBase = mt.baseType) != null) {
+                    if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
+                    mt = mtBase;
+                }
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
                     args: new object[] { surrogate, mt.Serializer });
             }
             if (IsAutoTuple)
             {
+                if (involvedInInheritance) ThrowTupleTypeWithInheritance(Type);
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor == null) throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
