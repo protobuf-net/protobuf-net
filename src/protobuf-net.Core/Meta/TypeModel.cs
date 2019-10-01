@@ -1274,7 +1274,7 @@ namespace ProtoBuf.Meta
         {
             try
             {
-                return Activator.CreateInstance<T>();
+                return (T)Activator.CreateInstance(typeof(T), nonPublic: true);
             }
             catch (MissingMethodException mme)
             {
