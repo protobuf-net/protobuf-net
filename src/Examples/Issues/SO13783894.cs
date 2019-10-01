@@ -40,7 +40,9 @@ namespace Examples.Issues
         public void ConfigureExplicitEnumValuesAtRuntime()
         {
             var model = RuntimeTypeModel.Create();
-            model.Add(typeof(MyEnum), false).Add(1, "Default").Add(10, "Foo");
+            var mt = model.Add(typeof(MyEnum), false);
+            mt.Add(new EnumMember(1, "Default")); // these **do not** change the serialized values
+            mt.Add(new EnumMember(10, "Foo"));
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
             var obj2 = new Test<MyEnum> { Value = MyEnum.Foo };
@@ -57,8 +59,8 @@ namespace Examples.Issues
             var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
 #pragma warning restore CS0618
 
-            Assert.Equal(1, clone1.Value);
-            Assert.Equal(10, clone2.Value);
+            Assert.Equal(2, clone1.Value);
+            Assert.Equal(3, clone2.Value);
         }
         //[ProtoContract]
         enum MyEnum

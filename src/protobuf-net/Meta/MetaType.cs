@@ -924,7 +924,7 @@ namespace ProtoBuf.Meta
                     if (attrib != null) GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
                     if (string.IsNullOrWhiteSpace(name)) name = member.Name;
 
-                    enumMember = new EnumMember(name, value);
+                    enumMember = new EnumMember(value, name);
                 }
                 return null;
             }
@@ -1454,7 +1454,10 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void Add(EnumMember member)
+        /// <summary>
+        /// Add a new defined name/value pair for an enum
+        /// </summary>
+        public void Add(EnumMember member)
         {
             if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should add {nameof(EnumMember)} instances");
             int opaqueToken = 0;

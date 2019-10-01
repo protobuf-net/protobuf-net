@@ -1567,7 +1567,7 @@ namespace ProtoBuf.Meta
         private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-            
+
             static bool CheckIfNullableT(ref Type type)
             {
                 Type tmp = Nullable.GetUnderlyingType(type);

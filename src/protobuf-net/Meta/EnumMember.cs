@@ -20,7 +20,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a new named enum value
         /// </summary>
-        internal EnumMember(string name, object value)
+        public EnumMember(object value, string name)
         {
             Name = name;
             Value = value;
