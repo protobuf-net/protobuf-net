@@ -469,6 +469,7 @@ namespace ProtoBuf
             return TypeModel.SerializeType(model, type);
         }
 
+#if FEAT_DYNAMIC_REF
         /// <summary>
         /// Specifies a known root object to use during reference-tracked serialization
         /// </summary>
@@ -490,6 +491,7 @@ namespace ProtoBuf
         {
             if (!(this is StreamProtoWriter)) ThrowHelper.ThrowTrackedObjects(this);
         }
+#endif
 
         /// <summary>
         /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String

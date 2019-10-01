@@ -411,11 +411,13 @@ namespace ProtoBuf
                 }
             }
 
+#if FEAT_DYNAMIC_REF
             internal object GetKeyedObject(int key) => _reader.GetKeyedObject(key);
 
             internal void SetKeyedObject(int key, object value) => _reader.SetKeyedObject(key, value);
 
             internal void TrapNextObject(int key) => _reader.TrapNextObject(key);
+#endif
 
             /// <summary>
             /// Discards the data for the current field.
@@ -793,8 +795,10 @@ namespace ProtoBuf
                 {
                     if (features.IsMessage())
                     {
+#if FEAT_DYNAMIC_REF
                         if (TypeHelper<T>.IsReferenceType && value != null)
                             SetRootObject(value);
+#endif
                         return serializer.Read(ref this, value);
                     }
                     else
@@ -849,7 +853,9 @@ namespace ProtoBuf
             public T CreateInstance<T>(IFactory<T> factory = null)
             {
                 var obj = TypeModel.CreateInstance<T>(Context, factory);
+#if FEAT_DYNAMIC_REF
                 if (TypeHelper<T>.IsReferenceType) NoteObject(obj);
+#endif
                 return obj;
             }
 
@@ -872,7 +878,9 @@ namespace ProtoBuf
             internal object DeserializeRootFallback(object value, Type type)
             {
                 bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
+#if FEAT_DYNAMIC_REF
                 if (value != null) _reader.SetRootObject(value);
+#endif
                 object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);
                 CheckFullyConsumed();
                 return obj;
@@ -892,12 +900,14 @@ namespace ProtoBuf
                 }
             }
 
+#if FEAT_DYNAMIC_REF
             /// <summary>
             /// Utility method, not intended for public use; this helps maintain the root object is complex scenarios
             /// </summary>
             [MethodImpl(HotPath)]
             [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
             public void NoteObject(object value) => ProtoReader.NoteObject(value, _reader);
+#endif
         }
     }
 }

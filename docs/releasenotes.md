@@ -18,6 +18,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 
 - **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
 - **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
+- **breaking change** - dynamic typing (i.e. storing the `Type` metadata) and reference-tracking (`AsReference`, `AsReferenceDefault`, `DynamicType`) are not implemented/supported; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited
 
 - new state-based reader/writer API (works with streams, buffers, etc)
 - entire new custom serializer API
@@ -26,7 +27,6 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 Some features are currently incomplete; this may restrict usage for some scenarios:
 
 - serialization callbacks on inheritance models are currently only supported at the root type
-- tracked objects and dynamic types are ... glitching
 - "map" (dictionary) is only currently usable with public types
 
 There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably

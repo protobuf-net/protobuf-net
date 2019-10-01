@@ -195,7 +195,9 @@ namespace ProtoBuf.Meta
             {
                 if (!DynamicStub.TrySerializeRoot(type, this, ref state, value))
                 {
+#if FEAT_DYNAMIC_REF
                     state.SetRootObject(value);
+#endif
                     if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
                     {
                         ThrowUnexpectedType(type);

@@ -32,12 +32,6 @@ namespace ProtoBuf
         private long blockEnd64;
         private readonly NetObjectCache netCache = new NetObjectCache();
 
-        // this is how many outstanding objects do not currently have
-        // values for the purposes of reference tracking; we'll default
-        // to just trapping the root object
-        // note: objects are trapped (the ref and key mapped) via NoteObject
-        private uint trapCount; // uint is so we can use beq/bne more efficiently than bgt
-
         /// <summary>
         /// Gets the number of the field being processed.
         /// </summary>
@@ -102,7 +96,9 @@ namespace ProtoBuf
             blockEnd64 = long.MaxValue;
             InternStrings = (model ?? TypeModel.DefaultModel)?.InternStrings ?? false;
             WireType = WireType.None;
+#if FEAT_DYNAMIC_REF
             trapCount = 1;
+#endif
         }
 
         private SerializationContext context;
@@ -662,6 +658,7 @@ namespace ProtoBuf
             return TypeModel.DeserializeType(_model, value);
         }
 
+#if FEAT_DYNAMIC_REF
         internal void SetRootObject(object value)
         {
             netCache.SetKeyedObject(NetObjectCache.Root, value);
@@ -693,17 +690,24 @@ namespace ProtoBuf
             }
         }
 
-        /// <summary>
-        /// Reads a Type from the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
-        /// </summary>
-        public Type ReadType() => DefaultState().ReadType();
-
         internal void TrapNextObject(int newObjectKey)
         {
             if (!(this is StreamProtoReader)) ThrowHelper.ThrowTrackedObjects(this);
             trapCount++;
             netCache.SetKeyedObject(newObjectKey, null); // use null as a temp
         }
+
+        // this is how many outstanding objects do not currently have
+        // values for the purposes of reference tracking; we'll default
+        // to just trapping the root object
+        // note: objects are trapped (the ref and key mapped) via NoteObject
+        private uint trapCount; // uint is so we can use beq/bne more efficiently than bgt
+#endif
+
+        /// <summary>
+        /// Reads a Type from the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
+        /// </summary>
+        public Type ReadType() => DefaultState().ReadType();
 
         /// <summary>
         /// Merge two objects using the details from the current reader; this is used to change the type

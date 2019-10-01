@@ -72,22 +72,6 @@ namespace ProtoBuf.Serializers
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
             => _tail.EmitRead(ctx, entity);
 
-        private static void WriteEnumValue(Compiler.CompilerContext ctx, ProtoTypeCode typeCode, object value)
-        {
-            switch (typeCode)
-            {
-                case ProtoTypeCode.Byte: ctx.LoadValue((int)(byte)value); break;
-                case ProtoTypeCode.SByte: ctx.LoadValue((int)(sbyte)value); break;
-                case ProtoTypeCode.Int16: ctx.LoadValue((int)(short)value); break;
-                case ProtoTypeCode.Int32: ctx.LoadValue((int)(int)value); break;
-                case ProtoTypeCode.Int64: ctx.LoadValue((long)(long)value); break;
-                case ProtoTypeCode.UInt16: ctx.LoadValue((int)(ushort)value); break;
-                case ProtoTypeCode.UInt32: ctx.LoadValue((int)(uint)value); break;
-                case ProtoTypeCode.UInt64: ctx.LoadValue((long)(ulong)value); break;
-                default: throw new InvalidOperationException();
-            }
-        }
-
         bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => _tail is IDirectWriteNode dw && dw.CanEmitDirectWrite(wireType);
 
         void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, CompilerContext ctx, Local valueFrom)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEAT_DYNAMIC_REF
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -259,3 +260,4 @@ namespace Examples
 
     
 }
+#endif

@@ -10,6 +10,7 @@ namespace ProtoBuf
         AllowMultiple = false, Inherited = false)]
     public sealed class ProtoContractAttribute : Attribute
     {
+        internal const string ReferenceDynamicDisabled = "Reference-tracking and dynamic-type are not currently implemented in this build; they may be reinstated later; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited";
         /// <summary>
         /// Gets or sets the defined name of the type.
         /// </summary>
@@ -24,7 +25,7 @@ namespace ProtoBuf
             get { return implicitFirstTag; }
             set
             {
-                if (value < 1) ThrowHelper.ThrowArgumentOutOfRangeException("ImplicitFirstTag");
+                if (value < 1) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(ImplicitFirstTag));
                 implicitFirstTag = value;
             }
         }
@@ -107,11 +108,14 @@ namespace ProtoBuf
         /// </summary>
         public bool AsReferenceDefault
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_AsReferenceDefault); }
-            set
-            {
-                SetFlag(OPTIONS_AsReferenceDefault, value);
-            }
+            set { SetFlag(OPTIONS_AsReferenceDefault, value); }
+#else
+            get => false;
+            [Obsolete(ReferenceDynamicDisabled, true)]
+            set { if (value != AsReferenceDefault) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
         /// <summary>
@@ -141,7 +145,9 @@ namespace ProtoBuf
             OPTIONS_UseProtoMembersOnly = 4,
             OPTIONS_SkipConstructor = 8,
             OPTIONS_IgnoreListHandling = 16,
+#if FEAT_DYNAMIC_REF
             OPTIONS_AsReferenceDefault = 32,
+#endif
             //OPTIONS_EnumPassthru = 64,
             //OPTIONS_EnumPassthruHasValue = 128,
             OPTIONS_IsGroup = 256;

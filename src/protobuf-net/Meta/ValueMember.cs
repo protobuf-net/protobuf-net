@@ -100,6 +100,7 @@ namespace ProtoBuf.Meta
             _defaultValue = defaultValue;
 
             MetaType type = model.FindWithoutAdd(memberType);
+#if FEAT_DYNAMIC_REF
             if (type != null)
             {
                 AsReference = type.AsReferenceDefault;
@@ -108,6 +109,7 @@ namespace ProtoBuf.Meta
             { // we need to scan the hard way; can't risk recursion by fully walking it
                 AsReference = MetaType.GetAsReferenceDefault(memberType);
             }
+#endif
         }
         /// <summary>
         /// Creates a new ValueMember instance
@@ -237,8 +239,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AsReference
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_AsReference); }
             set { SetFlag(OPTIONS_AsReference, value, true); }
+#else
+            get => false;
+            [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+            set { if (value != AsReference) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
         /// <summary>
@@ -246,8 +254,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool DynamicType
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_DynamicType); }
             set { SetFlag(OPTIONS_DynamicType, value, true); }
+#else
+            get => false;
+            [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+            set { if (value != DynamicType) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
         /// <summary>
@@ -435,10 +449,12 @@ namespace ProtoBuf.Meta
                         concreteType = MemberType;
                     }
                     var keySer = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
+#if FEAT_DYNAMIC_REF
                     if (!AsReference)
                     {
                         AsReference = MetaType.GetAsReferenceDefault(valueType);
                     }
+#endif
                     var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
                     var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
                         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
@@ -586,7 +602,12 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
+#if FEAT_DYNAMIC_REF
                         return new NetObjectSerializer(typeof(string), BclHelpers.NetObjectOptions.AsReference);
+#else
+                        ThrowHelper.ThrowNotSupportedException(ProtoContractAttribute.ReferenceDynamicDisabled);
+                        return default;
+#endif
                     }
                     return StringSerializer.Instance;
                 case ProtoTypeCode.Single:
@@ -655,9 +676,11 @@ namespace ProtoBuf.Meta
 
                 if (asReference || dynamicType)
                 {
+#if FEAT_DYNAMIC_REF
                     BclHelpers.NetObjectOptions options = BclHelpers.NetObjectOptions.None;
                     if (asReference) options |= BclHelpers.NetObjectOptions.AsReference;
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;
+
                     if (meta != null)
                     { // exists
                         if (asReference && type.IsValueType)
@@ -680,6 +703,11 @@ namespace ProtoBuf.Meta
                     }
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new NetObjectSerializer(type, options);
+#else
+                    ThrowHelper.ThrowNotSupportedException(ProtoContractAttribute.ReferenceDynamicDisabled);
+                    defaultWireType = default;
+                    return default;
+#endif
                 }
                 if (model.IsDefined(type))
                 {
@@ -716,9 +744,11 @@ namespace ProtoBuf.Meta
            OPTIONS_IsRequired = 4,
            OPTIONS_OverwriteList = 8,
            OPTIONS_SupportNull = 16,
+#if FEAT_DYNAMIC_REF
            OPTIONS_AsReference = 32,
-           OPTIONS_IsMap = 64,
-           OPTIONS_DynamicType = 128;
+           OPTIONS_DynamicType = 128,
+#endif
+           OPTIONS_IsMap = 64;
 
         private byte flags;
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }

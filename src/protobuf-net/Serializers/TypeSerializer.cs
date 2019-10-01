@@ -441,7 +441,9 @@ namespace ProtoBuf.Serializers
             {
                 obj = BclHelpers.GetUninitializedObject(constructType);
             }
+#if FEAT_DYNAMIC_REF
             if (context is ProtoReader reader) ProtoReader.NoteObject(obj, reader);
+#endif
             return obj;
         }
 
@@ -994,6 +996,7 @@ namespace ProtoBuf.Serializers
                 using var loc = new Local(ctx, ExpectedType);
                 ctx.StoreValue(loc);
 
+#if FEAT_DYNAMIC_REF
                 if (callNoteObject)
                 {
                     // track root object creation
@@ -1001,6 +1004,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(loc);
                     ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.NoteObject)));
                 }
+#endif
 
                 //if (baseCtorCallbacks != null)
                 //{

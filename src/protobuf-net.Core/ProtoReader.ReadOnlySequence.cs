@@ -34,7 +34,9 @@ namespace ProtoBuf
             public static State Create(ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
                 => Create(new ReadOnlySequence<byte>(source), model, context);
 
+#if FEAT_DYNAMIC_REF
             internal void SetRootObject(object value) => _reader.SetRootObject(value);
+#endif
         }
 
         private sealed class ReadOnlySequenceProtoReader : ProtoReader

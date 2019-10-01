@@ -2,6 +2,7 @@
 
 namespace ProtoBuf.Serializers
 {
+#if FEAT_DYNAMIC_REF
     internal sealed class NetObjectSerializer : IRuntimeProtoSerializerNode
     {
         private readonly BclHelpers.NetObjectOptions options;
@@ -59,4 +60,5 @@ namespace ProtoBuf.Serializers
 
         }
     }
+#endif
 }

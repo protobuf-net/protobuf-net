@@ -113,6 +113,9 @@ namespace ProtoBuf
         /// <summary>
         /// Enables full object-tracking/full-graph support.
         /// </summary>
+#if !FEAT_DYNAMIC_REF
+        [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+#endif
         public bool AsReference
         {
             get { return (options & MemberSerializationOptions.AsReference) == MemberSerializationOptions.AsReference; }
@@ -125,6 +128,9 @@ namespace ProtoBuf
             }
         }
 
+#if !FEAT_DYNAMIC_REF
+        [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+#endif
         internal bool AsReferenceHasValue
         {
             get { return (options & MemberSerializationOptions.AsReferenceHasValue) == MemberSerializationOptions.AsReferenceHasValue; }
@@ -138,6 +144,9 @@ namespace ProtoBuf
         /// <summary>
         /// Embeds the type information into the stream, allowing usage with types not known in advance.
         /// </summary>
+#if !FEAT_DYNAMIC_REF
+        [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+#endif
         public bool DynamicType
         {
             get { return (options & MemberSerializationOptions.DynamicType) == MemberSerializationOptions.DynamicType; }
@@ -178,10 +187,16 @@ namespace ProtoBuf
         /// <summary>
         /// Enables full object-tracking/full-graph support
         /// </summary>
+#if !FEAT_DYNAMIC_REF
+        [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, false)]
+#endif
         AsReference = 4,
         /// <summary>
         /// Embeds the type information into the stream, allowing usage with types not known in advance
         /// </summary>
+#if !FEAT_DYNAMIC_REF
+        [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, false)]
+#endif
         DynamicType = 8,
         /// <summary>
         /// Indicates whether this field should *replace* existing values (the default is false, meaning *append*).
@@ -191,6 +206,9 @@ namespace ProtoBuf
         /// <summary>
         /// Determines whether the types AsReferenceDefault value is used, or whether this member's AsReference should be used
         /// </summary>
+#if !FEAT_DYNAMIC_REF
+        [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, false)]
+#endif
         AsReferenceHasValue = 32
     }
 

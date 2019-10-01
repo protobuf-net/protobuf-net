@@ -496,7 +496,6 @@ namespace ProtoBuf.Meta
             bool isEnum = Type.IsEnum;
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
 
-            bool enumShouldUseImplicitPassThru = isEnum;
             BasicList partialIgnores = null, partialMembers = null;
             int dataMemberOffset = 0, implicitFirstTag = 1;
             bool inferTagByName = model.InferTagFromNameDefault;
@@ -978,10 +977,12 @@ namespace ProtoBuf.Meta
             if (ignore || (fieldNumber < minAcceptFieldNumber && !forced)) return null;
             ProtoMemberAttribute result = new ProtoMemberAttribute(fieldNumber, forced || inferByTagName)
             {
+#if FEAT_DYNAMIC_REF
                 AsReference = asReference,
                 AsReferenceHasValue = asReferenceHasValue,
-                DataFormat = dataFormat,
                 DynamicType = dynamicType,
+#endif
+                DataFormat = dataFormat,
                 IsPacked = isPacked,
                 OverwriteList = overwriteList,
                 IsRequired = isRequired,
@@ -1072,11 +1073,13 @@ namespace ProtoBuf.Meta
                 vm.IsPacked = normalizedAttribute.IsPacked;
                 vm.IsRequired = normalizedAttribute.IsRequired;
                 vm.OverwriteList = normalizedAttribute.OverwriteList;
+#if FEAT_DYNAMIC_REF
                 if (normalizedAttribute.AsReferenceHasValue)
                 {
                     vm.AsReference = normalizedAttribute.AsReference;
                 }
                 vm.DynamicType = normalizedAttribute.DynamicType;
+#endif
 
                 vm.IsMap = ignoreListHandling ? false : vm.ResolveMapTypes(out var _, out var _, out var _);
                 if (vm.IsMap) // is it even *allowed* to be a map?

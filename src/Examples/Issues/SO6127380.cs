@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if FEAT_DYNAMIC_REF
+using System.Collections.Generic;
 using Xunit;
 using ProtoBuf;
 
@@ -70,3 +71,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

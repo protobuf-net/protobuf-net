@@ -508,8 +508,10 @@ namespace ProtoBuf
                     CheckClear();
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     long before = GetPosition();
+#if FEAT_DYNAMIC_REF
                     if (TypeHelper<T>.IsReferenceType && value != null)
                         SetRootObject(value);
+#endif
                     WriteAsRoot<T>(value, serializer);
                     CheckClear();
                     long after = GetPosition();
@@ -549,7 +551,7 @@ namespace ProtoBuf
             //internal void SerializeRaw<T>(T value, ISerializer<T> serializer)
             //    => (serializer ?? TypeModel.GetSerializer<T>(Model)).Write(ref this, value);
 
-
+#if FEAT_DYNAMIC_REF
             /// <summary>
             /// Specifies a known root object to use during reference-tracked serialization
             /// </summary>
@@ -558,6 +560,7 @@ namespace ProtoBuf
 
             [MethodImpl(HotPath)]
             internal int AddObjectKey(object value, out bool existing) => _writer.AddObjectKey(value, out existing);
+#endif
 
             /// <summary>
             /// Abandon any pending unflushed data
@@ -654,7 +657,7 @@ namespace ProtoBuf
                         ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
                         break;
                 }
-                GetWriter().AssertTrackedObjects();
+
 #pragma warning disable CS0618
                 SubItemToken token = StartSubItem(value, style);
                 if (!Model.IsDefined(type))

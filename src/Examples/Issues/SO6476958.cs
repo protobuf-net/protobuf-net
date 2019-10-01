@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#if FEAT_DYNAMIC_REF
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -89,3 +91,6 @@ namespace Examples.Issues
         }
     }
 }
+
+
+#endif

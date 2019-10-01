@@ -28,5 +28,6 @@ PLAT_ISREF                : does System.Runtime.CompilerServices.RuntimeHelpers.
 PLAT_SPAN_OVERLOADS       : do common methods like string encode have APIs that take spans
 PLAT_INTRINSICS           : make use of CPU intrinsics
 PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
+FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
 -->
 </Project>

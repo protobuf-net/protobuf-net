@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if FEAT_DYNAMIC_REF
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using ProtoBuf;
@@ -155,3 +157,6 @@ message Whole {
         }
     }
 }
+
+
+#endif

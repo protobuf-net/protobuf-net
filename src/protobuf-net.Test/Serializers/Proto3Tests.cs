@@ -325,6 +325,7 @@ message HazMapWithDataFormat {
 ", schema);
         }
 
+#if FEAT_DYNAMIC_REF
         [Fact]
         public void GetDynamicAsRefSchema()
         {
@@ -345,6 +346,7 @@ message HasRefDynamic {
             [ProtoMember(1, AsReference = true, DynamicType = true)]
             public HasRefDynamic Obj { get; set; }
         }
+#endif
 
         [Fact]
         public void TimeSchemaTypes()

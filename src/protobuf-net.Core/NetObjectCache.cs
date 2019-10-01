@@ -49,11 +49,13 @@ namespace ProtoBuf
             _knownLengths[key] = length;
         }
 
-        internal const int Root = 0;
+#if FEAT_DYNAMIC_REF
+
         private List<object> underlyingList;
 
         private List<object> List => underlyingList ?? (underlyingList = new List<object>());
 
+        internal const int Root = 0;
         internal object GetKeyedObject(int key)
         {
             if (key-- == Root)
@@ -214,14 +216,17 @@ namespace ProtoBuf
                 return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
             }
         }
+#endif
 
         internal void Clear()
         {
+#if FEAT_DYNAMIC_REF
             trapStartIndex = 0;
             rootObject = null;
             if (underlyingList != null) underlyingList.Clear();
             if (stringKeys != null) stringKeys.Clear();
             if (objectKeys != null) objectKeys.Clear();
+#endif
             _knownLengths.Clear();
         }
     }

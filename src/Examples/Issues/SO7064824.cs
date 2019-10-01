@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#if FEAT_DYNAMIC_REF
+using System.IO;
 using System;
 using Xunit;
 using ProtoBuf;
@@ -140,3 +141,4 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
 
 }
+#endif

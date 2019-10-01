@@ -361,6 +361,7 @@ namespace ProtoBuf
         public static Guid ReadGuid(ref ProtoReader.State state)
             => state.ReadMessage<Guid>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
 
+#if FEAT_DYNAMIC_REF
         private const int
             FieldExistingObjectKey = 1,
             FieldNewObjectKey = 2,
@@ -581,5 +582,6 @@ namespace ProtoBuf
             state.EndSubItem(token);
 #pragma warning restore CS0618 // net-objects - sorry, but they may not play well on newer transports
         }
+#endif
     }
 }

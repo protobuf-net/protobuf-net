@@ -1,15 +1,14 @@
-﻿using Xunit;
+﻿#if FEAT_DYNAMIC_REF
+
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class Issue331
     {
         [ProtoContract]
@@ -159,3 +158,6 @@ namespace Examples.Issues
         }
     }
 }
+
+
+#endif
