@@ -1567,7 +1567,7 @@ namespace ProtoBuf.Meta
         private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-
+            
             static bool CheckIfNullableT(ref Type type)
             {
                 Type tmp = Nullable.GetUnderlyingType(type);
@@ -1586,7 +1586,7 @@ namespace ProtoBuf.Meta
                     switch (features.GetCategory())
                     {
                         case SerializerFeatures.CategoryRepeated:
-                            return allowLists;
+                            return allowLists && DoCheckLists(type, this, allowBasic, allowContract);
                         case SerializerFeatures.CategoryMessage:
                             return allowContract;
                         case SerializerFeatures.CategoryScalar:
@@ -1596,9 +1596,9 @@ namespace ProtoBuf.Meta
                 }
             } while (CheckIfNullableT(ref type));
 
-            // is it a list?
-            if (allowLists)
+            static bool DoCheckLists(Type type, TypeModel model, bool allowBasic, bool allowContract)
             {
+                // is it a list?
                 Type itemType = null;
                 if (type.IsArray)
                 {   // note we don't need to exclude byte[], as that is handled by GetTypeCode already
@@ -1608,7 +1608,7 @@ namespace ProtoBuf.Meta
                 {
                     itemType = GetListItemType(type);
                 }
-                if (itemType != null) return CanSerialize(itemType, allowBasic, allowContract, false);
+                return itemType != null && model.CanSerialize(itemType, allowBasic, allowContract, false);
             }
             return false;
         }
