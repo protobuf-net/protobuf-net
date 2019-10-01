@@ -1,11 +1,12 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 
 namespace ProtoBuf.Meta
 {
     /// <summary>
     /// Describes a named constant integer, i.e. an enum value
     /// </summary>
-    public readonly struct EnumMember
+    public readonly struct EnumMember : IEquatable<EnumMember>
     {
         /// <summary>
         /// Gets the declared name of this enum member
@@ -58,6 +59,52 @@ namespace ProtoBuf.Meta
                 }
             }
             return default;
+        }
+
+        /// <summary>
+        /// Creates a copy of this definition with a different name
+        /// </summary>
+        public EnumMember WithName(string name) => new EnumMember(Value, name);
+        /// <summary>
+        /// Creates a copy of this definition with a different value
+        /// </summary>
+        public EnumMember WithValue(object value) => new EnumMember(value, Name);
+
+        /// <summary>
+        /// Converts the declared value in accordance with the provided type
+        /// </summary>
+        public EnumMember Normalize(Type type)
+            => WithValue(Normalize(Value, type));
+
+        /// <summary>Compare a member to an enum value</summary>
+        public bool Equals<T>(T value) where T : Enum
+            => Equals(Normalize(Value, typeof(T)), Normalize(value, typeof(T)));
+
+        /// <summary>See object.ToString</summary>
+        public override string ToString() => $"{Name}={Value}";
+
+        /// <summary>See object.GetHashCode</summary>
+        public override int GetHashCode() => (Name?.GetHashCode() ?? 0) ^ (Value?.GetHashCode() ?? 0);
+
+        /// <summary>See object.Equals</summary>
+        public override bool Equals(object obj) => obj is EnumMember em && Equals(em);
+
+        /// <summary>Compare two enum-member definitions</summary>
+        public bool Equals(EnumMember other) => string.Equals(Name, other.Name) && object.Equals(Value, other.Value);
+
+        static object Normalize(object value, Type type)
+            => Convert.ChangeType(value, type.IsEnum ? Enum.GetUnderlyingType(type) : type);
+
+        /// <summary>
+        /// Create an EnumMember instance from an enum value
+        /// </summary>
+        public static EnumMember Create<T>(T value) where T : Enum
+            => new EnumMember(value, value.ToString()).Normalize(typeof(T));
+
+        internal void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(Name))
+                ThrowHelper.ThrowInvalidOperationException("All enum declarations must have valid names");
         }
     }
 }

@@ -151,8 +151,8 @@ namespace ProtoBuf.unittest.Meta
             var mt = model.Add(typeof(EnumWithThings), false);
             var fields = mt.GetFields();
             Assert.Empty(fields);
-
-            mt.AddEnumValue(EnumWithThings.HazThis);
+            var arr = new[] { EnumMember.Create(EnumWithThings.HazThis) };
+            mt.SetEnumValues(arr);
             var defined = mt.GetEnumValues();
             var single = Assert.Single(defined);
             Assert.Equal(nameof(EnumWithThings.HazThis), single.Name);

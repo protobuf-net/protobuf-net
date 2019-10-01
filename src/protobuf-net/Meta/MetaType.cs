@@ -1463,41 +1463,9 @@ namespace ProtoBuf.Meta
             }
         }
 
-        /// <summary>
-        /// Add a new defined name/value pair for an enum
-        /// </summary>
-        public void AddEnumValue<TEnum>(TEnum value)
-            where TEnum : Enum
-            => AddEnumValue<TEnum>(value, value.ToString());
-
-        /// <summary>
-        /// Add a new defined name/value pair for an enum
-        /// </summary>
-        public void AddEnumValue<TEnum>(TEnum value, string name)
-            where TEnum : Enum
-        {
-            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should use {nameof(AddEnumValue)}");
-
-            if (typeof(TEnum) != Type)
-                ThrowHelper.ThrowInvalidOperationException($"The enum should be of type {Type.NormalizeName()}");
-
-            object val = EnumMemberSerializer.EnumToWire(value, Enum.GetUnderlyingType(typeof(TEnum)));
-            int opaqueToken = 0;
-            try
-            {
-                model.TakeLock(ref opaqueToken);
-                ThrowIfFrozen();
-                Enums.Add(new EnumMember(val, name));
-            }
-            finally
-            {
-                model.ReleaseLock(opaqueToken);
-            }
-        }
-
         private void Add(ValueMember member)
         {
-            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should use {nameof(AddEnumValue)} instances, not {nameof(ValueMember)}");
+            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should use {nameof(SetEnumValues)} to customize the enum definitions");
             int opaqueToken = 0;
             try
             {
@@ -1569,6 +1537,34 @@ namespace ProtoBuf.Meta
         {
             if (!HasEnums) return Array.Empty<EnumMember>();
             return Enums.ToArray();
+        }
+
+        /// <summary>
+        /// Add a new defined name/value pair for an enum
+        /// </summary>
+        public void SetEnumValues(EnumMember[] values)
+        {
+            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should use {nameof(SetEnumValues)}");
+
+            if (values == null) ThrowHelper.ThrowArgumentNullException(nameof(values));
+
+            var typedClone = Array.ConvertAll(values, val => val.Normalize(Type));
+
+            foreach (var val in values)
+                val.Validate();
+
+            int opaqueToken = 0;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+                Enums.Clear();
+                Enums.AddRange(typedClone);
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
         }
 
         internal bool IsValidEnum() => IsValidEnum(_enums);

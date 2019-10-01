@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.Serializers
 {
@@ -424,13 +425,26 @@ enum SomeEnum {
 ", schema);
         }
 
+        public Proto3Tests(ITestOutputHelper log)
+            => _log = log;
+        private readonly ITestOutputHelper _log;
+
         [Fact]
         public void TestEnumProto_Proto2_RuntimeRenamed()
         {
             var model = RuntimeTypeModel.Create();
             var mt = model[typeof(HazEnum.SomeEnum)];
-            mt.SetEnumName(nameof(HazEnum.SomeEnum), "zzz");
-            // ^^^ should upsert the name
+            var enums = mt.GetEnumValues();
+            for (int i = 0; i < enums.Length; i++)
+            {
+                ref EnumMember val = ref enums[i];
+                if (val.Equals(HazEnum.SomeEnum.B))
+                {
+                    val = val.WithName("zzz");
+                }
+                _log?.WriteLine(val.ToString());
+            }
+            mt.SetEnumValues(enums);
             var schema = model.GetSchema(typeof(HazEnum), ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
@@ -439,8 +453,8 @@ message HazEnum {
    optional SomeEnum X = 1 [default = B];
 }
 enum SomeEnum {
-   B = 0;
-   zzz = 1;
+   zzz = 0;
+   A = 1;
    C = 2;
 }
 ", schema);
