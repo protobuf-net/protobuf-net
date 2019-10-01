@@ -92,11 +92,19 @@ namespace ProtoBuf.Meta
             }
             if (!IsValidSubType(derivedType))
             {
-                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + Type.Name, nameof(derivedType));
+                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + Type.NormalizeName(), nameof(derivedType));
             }
+
             MetaType derivedMeta = model[derivedType];
             ThrowIfFrozen();
             derivedMeta.ThrowIfFrozen();
+
+            if (IsAutoTuple || derivedMeta.IsAutoTuple)
+            {
+                ThrowHelper.ThrowInvalidOperationException(
+                $"Tuple-based types cannot be used in inheritance hierarchies: {derivedType.NormalizeName()}");
+            }
+
             SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
             ThrowIfFrozen();
 

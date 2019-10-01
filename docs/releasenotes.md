@@ -37,6 +37,7 @@ never should have been allowed; these changes should not impact most people!
 - undeclared inheritance base-types are no longer supported; meaning: if you serialize a `Foo : FooBase` **as a `FooBase`**, but only tell the serializer about `Foo` (never mentioning `FooBase`), it will fail
 - all APIs that take `int key` referring to `Type` are deprecated; user code should not be directly using these APIs, so no impact is expected
 - the `TypeModel` API surface (for implementing custom models) has changed; user code should not be directly using these APIs, so no impact is expected
+- tuple-based types cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
 
 ## v2.4.0
 
