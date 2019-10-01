@@ -47,7 +47,7 @@ namespace ProtoBuf.Meta
                 if (parent is T direct) return direct; // implements both T and T? - that'll work fine
                 if (parent is object) // we have an implementation for T, and we're being asked for T? - wrap it
                 {
-                    var wrapperType = typeof(NullableWrapper<>).MakeGenericType(type);
+                    var wrapperType = typeof(NullableWrapper<>).MakeGenericType(nullableUnderlyingType);
                     return (T)Activator.CreateInstance(wrapperType, args: new object[] { parent });
                 }
             }

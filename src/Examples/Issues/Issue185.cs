@@ -88,19 +88,23 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteWithSubType()
         {
-            var m = RuntimeTypeModel.Create();
-            m.AutoCompile = false;
-            m.Add(typeof(C), false).SetSurrogate(typeof(CS));
-            m.Add(typeof(O), false).SetSurrogate(typeof(OS));
-            m.Add(typeof(I), false).AddSubType(1, typeof(O));
+            var ex =Assert.Throws<InvalidOperationException>( () =>
+                {
+                    var m = RuntimeTypeModel.Create();
+                    m.AutoCompile = false;
+                    m.Add(typeof(C), false).SetSurrogate(typeof(CS));
+                    m.Add(typeof(O), false).SetSurrogate(typeof(OS));
+                    m.Add(typeof(I), false).AddSubType(1, typeof(O));
 
-            var c = new C();
-            c.PopulateRun();
+                    //var c = new C();
+                    //c.PopulateRun();
 
-            Test(m, c, "Runtime");
-            m.CompileInPlace();
-            Test(m, c, "CompileInPlace");
-            Test(m.Compile(), c, "Compile");
+                    //Test(m, c, "Runtime");
+                    //m.CompileInPlace();
+                    //Test(m, c, "CompileInPlace");
+                    //Test(m.Compile(), c, "Compile");
+                });
+            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.C", ex.Message);
         }
     }
 }

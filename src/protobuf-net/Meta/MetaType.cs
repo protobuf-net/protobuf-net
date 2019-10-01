@@ -79,6 +79,13 @@ namespace ProtoBuf.Meta
         {
             return AddSubType(fieldNumber, derivedType, DataFormat.Default);
         }
+
+        private static void ThrowSubTypeWithSurrogate(Type type)
+        {
+            ThrowHelper.ThrowInvalidOperationException(
+                $"Types with surrogates cannot be used in inheritance hierarchies: {type.NormalizeName()}");
+        }
+
         /// <summary>
         /// Adds a known sub-type to the inheritance model
         /// </summary>
@@ -88,11 +95,11 @@ namespace ProtoBuf.Meta
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             if (!(Type.IsClass || Type.IsInterface) || Type.IsSealed)
             {
-                throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
+                throw new InvalidOperationException("Sub-types can only be added to non-sealed classes: " + Type.NormalizeName());
             }
             if (!IsValidSubType(derivedType))
             {
-                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + Type.NormalizeName(), nameof(derivedType));
+                throw new ArgumentException(derivedType.NormalizeName() + " is not a valid sub-type of " + Type.NormalizeName(), nameof(derivedType));
             }
 
             MetaType derivedMeta = model[derivedType];
@@ -104,6 +111,7 @@ namespace ProtoBuf.Meta
                 ThrowHelper.ThrowInvalidOperationException(
                 $"Tuple-based types cannot be used in inheritance hierarchies: {derivedType.NormalizeName()}");
             }
+            if (surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
 
             SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
             ThrowIfFrozen();
@@ -1229,8 +1237,12 @@ namespace ProtoBuf.Meta
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
+
+                if (BaseType != this || (_subTypes?.Count ?? 0) > 0)
+                    ThrowSubTypeWithSurrogate(Type);
             }
             ThrowIfFrozen();
+
             this.surrogate = surrogateType;
             // no point in offering chaining; no options are respected
         }

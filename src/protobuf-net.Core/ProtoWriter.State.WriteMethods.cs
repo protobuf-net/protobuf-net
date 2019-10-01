@@ -374,6 +374,7 @@ namespace ProtoBuf
             {
                 foreach (var value in values)
                 {
+                    if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
                     WriteFieldHeader(fieldNumber, wireType);
                     switch (category)
                     {
@@ -403,6 +404,7 @@ namespace ProtoBuf
             {
                 foreach (var value in values)
                 {
+                    if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
                     WriteFieldHeader(fieldNumber, wireType);
                     switch (category)
                     {
@@ -431,15 +433,17 @@ namespace ProtoBuf
             {
                 for(int i = 0; i < values.Length; i++)
                 {
+                    ref T value = ref values[i];
+                    if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
                     WriteFieldHeader(fieldNumber, wireType);
                     switch (category)
                     {
                         case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         case SerializerFeatures.CategoryMessage:
-                            _writer.WriteMessage<T>(ref this, values[i], serializer, PrefixStyle.Base128, true);
+                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
                             break;
                         case SerializerFeatures.CategoryScalar:
-                            serializer.Write(ref this, values[i]);
+                            serializer.Write(ref this, value);
                             break;
                         default:
                             category.ThrowInvalidCategory();

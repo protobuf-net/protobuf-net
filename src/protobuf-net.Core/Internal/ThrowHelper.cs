@@ -70,6 +70,10 @@ namespace ProtoBuf.Internal
             => throw new NullReferenceException();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowNullReferenceException<T>()
+            => throw new NullReferenceException($"An element of type {typeof(T).NormalizeName()} was null; this might be as contents in a list/array");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowTrackedObjects(object obj)
             => throw new NotSupportedException("tracked objects and featured related to stream rewriting are not supported on " + obj.GetType().Name);
     }
