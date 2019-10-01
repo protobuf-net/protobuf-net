@@ -62,8 +62,15 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AsReferenceDefault
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_AsReferenceDefault); }
             set { SetFlag(OPTIONS_AsReferenceDefault, value, true); }
+#else
+            get => false;
+            [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+            set { if (value != AsReferenceDefault) ThrowHelper.ThrowNotSupportedException(); }
+#endif
+
         }
 
         private List<SubType> _subTypes;
@@ -603,7 +610,9 @@ namespace ProtoBuf.Meta
 
                         if (item.TryGet(nameof(ProtoContractAttribute.SkipConstructor), out tmp)) UseConstructor = !(bool)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IgnoreListHandling), out tmp)) IgnoreListHandling = (bool)tmp;
+#if FEAT_DYNAMIC_REF
                         if (item.TryGet(nameof(ProtoContractAttribute.AsReferenceDefault), out tmp)) AsReferenceDefault = (bool)tmp;
+#endif
                         if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int)tmp > 0) implicitFirstTag = (int)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
 
@@ -1651,7 +1660,9 @@ namespace ProtoBuf.Meta
             OPTIONS_Frozen = 4,
             OPTIONS_PrivateOnApi = 8,
             OPTIONS_SkipConstructor = 16,
+#if FEAT_DYNAMIC_REF
             OPTIONS_AsReferenceDefault = 32,
+#endif
             OPTIONS_AutoTuple = 64,
             OPTIONS_IgnoreListHandling = 128,
             OPTIONS_IsGroup = 256;

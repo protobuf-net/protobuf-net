@@ -38,6 +38,7 @@ namespace ProtoBuf.Issues
         }
 
 
+#if FEAT_DYNAMIC_REF
         [Fact]
         public void TestUncompiled() => Test(false);
 
@@ -64,6 +65,7 @@ namespace ProtoBuf.Issues
             Assert.Equal(item2.Value, newItem2.Value);
             Assert.Equal(item1.Value, newItem2.Child1.Value);
             Assert.Same(newItem2.Child1, newItem2.Child2);
-        }    
+        }
+#endif
     }
 }
