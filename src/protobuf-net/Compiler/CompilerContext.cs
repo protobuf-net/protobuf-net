@@ -10,6 +10,7 @@ using System.Diagnostics;
 using ProtoBuf.Internal;
 using System.Collections;
 using System.Linq;
+using System.Globalization;
 
 namespace ProtoBuf.Compiler
 {
@@ -279,7 +280,7 @@ namespace ProtoBuf.Compiler
                 _ => new Type[] { inputType },
             };
             int uniqueIdentifier = Interlocked.Increment(ref next);
-            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
+            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(CultureInfo.InvariantCulture), returnType ?? typeof(void), paramTypes,
                 associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
             if (inputType != null) InputValue = new Local(null, inputType);
@@ -756,7 +757,7 @@ namespace ProtoBuf.Compiler
             if (attributeType == null) return false;
             foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
             {
-                if (attrib.AssemblyName == Scope.AssemblyName || attrib.AssemblyName.StartsWith(Scope.AssemblyName + ","))
+                if (attrib.AssemblyName == Scope.AssemblyName || attrib.AssemblyName.StartsWith(Scope.AssemblyName + ",", StringComparison.Ordinal))
                 {
                     isTrusted = true;
                     break;
@@ -783,7 +784,7 @@ namespace ProtoBuf.Compiler
             Type type;
             if (!NonPublic)
             {
-                if (member is FieldInfo && (member.Name.StartsWith("<") & member.Name.EndsWith(">k__BackingField")))
+                if (member is FieldInfo && (member.Name.StartsWith("<", StringComparison.Ordinal) & member.Name.EndsWith(">k__BackingField", StringComparison.Ordinal)))
                 {
 #pragma warning disable IDE0057 // sibstring can be simplified
                     var propName = member.Name.Substring(1, member.Name.Length - 17);

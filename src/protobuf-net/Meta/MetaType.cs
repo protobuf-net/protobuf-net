@@ -453,7 +453,7 @@ namespace ProtoBuf.Meta
                 {
                     if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
                     {
-                        throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
+                        ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
                     fieldNumbers[i] = subType.FieldNumber;
                     serializers[i++] = subType.GetSerializer(Type);
@@ -1258,7 +1258,7 @@ namespace ProtoBuf.Meta
                 // note that BuildSerializer checks the **CURRENT TYPE** is OK to be surrogated
                 if (typeof(IEnumerable).IsAssignableFrom(surrogateType))
                 {
-                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
+                    ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
 
                 if ((BaseType != null && BaseType != this) || (_subTypes?.Count ?? 0) > 0)
