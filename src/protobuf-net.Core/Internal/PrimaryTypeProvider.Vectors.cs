@@ -13,13 +13,14 @@ namespace ProtoBuf.Internal
             public T[] Read(ref ProtoReader.State state, T[] value)
             {
                 int field;
-                ISerializer<T> serializer = null;
+                var serializer = TypeModel.GetSerializer<T>(state.Model);
+                if ((serializer.Features & SerializerFeatures.CategoryRepeated) != 0)
+                    TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            serializer ??= TypeModel.GetSerializer<T>(state.Model);
                             value = state.ReadRepeated<T>(value, serializer);
                             break;
                         default:
@@ -45,13 +46,14 @@ namespace ProtoBuf.Internal
             public TList Read(ref ProtoReader.State state, TList value)
             {
                 int field;
-                ISerializer<T> serializer = null;
+                var serializer = TypeModel.GetSerializer<T>(state.Model);
+                if ((serializer.Features & SerializerFeatures.CategoryRepeated) != 0)
+                    TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            serializer ??= TypeModel.GetSerializer<T>(state.Model);
                             value = state.ReadRepeated<TList, T>(value, serializer);
                             break;
                         default:

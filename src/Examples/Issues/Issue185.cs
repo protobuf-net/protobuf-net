@@ -50,7 +50,8 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteWithConstructType()
         {
-            var argEx = Program.ExpectFailure<ArgumentException>(() =>
+            var ex = Program.ExpectFailure<InvalidOperationException>(() =>
+            // var argEx = Program.ExpectFailure<ArgumentException>(() =>
             {
                 var m = RuntimeTypeModel.Create();
                 m.AutoCompile = false;
@@ -66,8 +67,9 @@ namespace Examples.Issues
                 Test(m, c, "CompileInPlace");
                 Test(m.Compile(), c, "Compile");
             });
-            Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
-            Assert.Equal("constructType", argEx.ParamName);
+            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.C", ex.Message);
+            //Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
+            //Assert.Equal("constructType", argEx.ParamName);
         }
 
 #pragma warning disable IDE0060
