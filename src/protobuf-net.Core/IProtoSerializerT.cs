@@ -70,6 +70,18 @@ namespace ProtoBuf
         /// used by default when appropriate
         /// </summary>
         OptionPackedDisabled = 1 << 7,
+
+        /// <summary>
+        /// List-like values should *replace*, rather than append
+        /// </summary>
+        OptionOverwriteList = 1 << 8,
+
+#if FEAT_NULL_LIST_ITEMS
+        /// <summary>
+        /// Nulls in lists should be preserved
+        /// </summary>
+        OptionListsSupportNull = 1 << 9,
+#endif
     }
 
     internal static class SerializerFeaturesExtensions

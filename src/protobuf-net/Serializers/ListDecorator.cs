@@ -466,9 +466,25 @@ namespace ProtoBuf.Serializers
         }
 
         private bool CanUsePackedPrefix() =>
-            ArrayDecorator.CanUsePackedPrefix(packedWireType, Tail.ExpectedType);
+            CanUsePackedPrefix(packedWireType, Tail.ExpectedType);
 
-        public override object Read(ref ProtoReader.State state, object value)
+        internal static bool CanUsePackedPrefix(WireType packedWireType, Type itemType)
+        {
+            // needs to be a suitably simple type *and* be definitely not nullable
+            switch (packedWireType)
+            {
+                case WireType.Fixed32:
+                case WireType.Fixed64:
+                    break;
+                default:
+                    return false; // nope
+            }
+            if (!itemType.IsValueType) return false;
+            return Nullable.GetUnderlyingType(itemType) == null;
+        }
+
+
+public override object Read(ref ProtoReader.State state, object value)
         {
             try
             {

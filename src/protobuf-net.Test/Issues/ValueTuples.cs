@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.unittest;
+using System;
 using System.IO;
 using Xunit;
 
@@ -16,6 +18,15 @@ namespace ProtoBuf.Issues
             Assert.Equal("def", b);
             Assert.True(c.d);
             Assert.Equal("abc,def", string.Join(",", c.e));
+        }
+
+        [Fact]
+        public void CheckLayoutEquivalence_Valid()
+        {
+            var data = GetNamedTupleData();
+            var model = RuntimeTypeModel.Create();
+            model.Add(data.GetType());
+            PEVerify.CompileAndVerify(model);
         }
 
         [Fact]

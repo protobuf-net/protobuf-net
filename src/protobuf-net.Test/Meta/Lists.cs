@@ -1,17 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
-using System.Collections;
-using ProtoBuf.Meta;
-using System.Diagnostics;
-using System.IO;
-using System;
 
 namespace ProtoBuf.unittest.Meta
 {
-    
+
     public class PocoListTests
     {
+        [Fact]
+        public void CanFindReadArray() => Assert.NotNull(ArrayDecorator.s_ReadRepeated);
+
+        [Fact]
+        public void CanFindWriteArray() => Assert.NotNull(ArrayDecorator.s_WriteRepeated);
+
         public class TypeWithLists
         {
             public List<string> ListString { get; set; }

@@ -48,9 +48,10 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
+                    SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
                     if (finalType.IsArray)
                     {
-                        serializer = new ArrayDecorator(tail, i + 1, false, wireType, finalType, false, false);
+                        serializer = ArrayDecorator.Create(itemType, tail, i + 1, listFeatures);
                     }
                     else
                     {

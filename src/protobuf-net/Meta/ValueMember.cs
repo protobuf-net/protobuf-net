@@ -494,9 +494,15 @@ namespace ProtoBuf.Meta
                         Debug.Assert(underlyingItemType == ser.ExpectedType
                             || (ser.ExpectedType == typeof(object) && !underlyingItemType.IsValueType)
                             , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
+                        SerializerFeatures listFeatures = wireType.AsFeatures();
+                        if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
+                        if (OverwriteList) listFeatures |= SerializerFeatures.OptionOverwriteList;
+#if FEAT_NULL_LIST_ITEMS
+                        if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
+#endif
                         if (MemberType.IsArray)
                         {
-                            ser = new ArrayDecorator(ser, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
+                            ser = ArrayDecorator.Create(ItemType, ser, FieldNumber, listFeatures);
                         }
                         else
                         {

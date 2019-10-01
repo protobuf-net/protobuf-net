@@ -344,7 +344,10 @@ namespace ProtoBuf
                 }
             }
 
-            internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
+            /// <summary>
+            /// Writes a sequence of sub-items to the writer
+            /// </summary>
+            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -421,7 +424,11 @@ namespace ProtoBuf
                     }
                 }
             }
-            internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
+
+            /// <summary>
+            /// Writes a sequence of sub-items to the writer
+            /// </summary>
+            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;

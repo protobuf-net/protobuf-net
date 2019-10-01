@@ -21,6 +21,9 @@ namespace ProtoBuf.unittest
             model.CompileInPlace();
             return model;
         }
+        internal static void CompileAndVerify(this RuntimeTypeModel model,
+            [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
+        {}
 #else
         static readonly string exePath;
         static readonly bool unavailable;

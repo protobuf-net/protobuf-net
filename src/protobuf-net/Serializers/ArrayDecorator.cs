@@ -1,299 +1,97 @@
-﻿using ProtoBuf.Internal;
+﻿using ProtoBuf.Compiler;
 using System;
-using System.Collections;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class ArrayDecorator : ProtoDecoratorBase
+    internal static class ArrayDecorator
     {
-        private readonly int fieldNumber;
+        internal static readonly MethodInfo s_ReadRepeated = (
+            from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            where method.Name == nameof(ProtoReader.State.ReadRepeated) && method.IsGenericMethodDefinition
+            let targs = method.GetGenericArguments()
+            where targs.Length == 1
+            let args = method.GetParameters()
+            where args.Length == 3
+            && args[0].ParameterType == typeof(SerializerFeatures)
+            && args[1].ParameterType == targs[0].MakeArrayType()
+            && args[2].ParameterType == typeof(ISerializer<>).MakeGenericType(targs)
+            select method).Single();
 
-        private const byte
-                   OPTIONS_WritePacked = 1,
-                   OPTIONS_OverwriteList = 2,
-                   OPTIONS_SupportNull = 4;
+        internal static readonly MethodInfo s_WriteRepeated = (
+            from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            where method.Name == nameof(ProtoWriter.State.WriteRepeated) && method.IsGenericMethodDefinition
+            let targs = method.GetGenericArguments()
+            where targs.Length == 1
+            let args = method.GetParameters()
+            where args.Length == 4
+            && args[0].ParameterType == typeof(int)
+            && args[1].ParameterType == typeof(SerializerFeatures)
+            && args[2].ParameterType == targs[0].MakeArrayType()
+            && args[3].ParameterType == typeof(ISerializer<>).MakeGenericType(targs)
+            select method).Single();
 
-        private readonly byte options;
-        private readonly WireType packedWireType;
+        public static ProtoDecoratorBase Create(Type type, IRuntimeProtoSerializerNode tail, int fieldNumber, SerializerFeatures features)
+        {
+            return (ProtoDecoratorBase)Activator.CreateInstance(typeof(ArrayDecorator<>).MakeGenericType(type),
+                new object[] { tail, fieldNumber, features });
+        }
+    }
+    internal sealed class ArrayDecorator<T> : ProtoDecoratorBase
+    {
+        private readonly int _fieldNumber;
+        private readonly SerializerFeatures _features;
 
-        public ArrayDecorator(IRuntimeProtoSerializerNode tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
+        public ArrayDecorator(IRuntimeProtoSerializerNode tail, int fieldNumber, SerializerFeatures features)
             : base(tail)
         {
-            Debug.Assert(arrayType != null, "arrayType should be non-null");
-            Debug.Assert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array; " + arrayType.FullName);
-            this.itemType = arrayType.GetElementType();
+#if FEAT_NULL_LIST_ITEMS
             Type underlyingItemType = supportNull ? itemType : (Nullable.GetUnderlyingType(itemType) ?? itemType);
-
             Debug.Assert(underlyingItemType == Tail.ExpectedType
                 || (Tail.ExpectedType == typeof(object) && !underlyingItemType.IsValueType), "invalid tail");
+#else
+            Debug.Assert(typeof(T) == Tail.ExpectedType);
+#endif
+
             Debug.Assert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
-            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-            if (!ListDecorator.CanPack(packedWireType))
-            {
-                if (writePacked) throw new InvalidOperationException("Only simple data-types can use packed encoding");
-                packedWireType = WireType.None;
-            }
-            this.fieldNumber = fieldNumber;
-            this.packedWireType = packedWireType;
-            if (writePacked) options |= OPTIONS_WritePacked;
-            if (overwriteList) options |= OPTIONS_OverwriteList;
-            if (supportNull) options |= OPTIONS_SupportNull;
-            ExpectedType = arrayType;
+            
+            _fieldNumber = fieldNumber;
+            _features = features;
         }
 
-        private readonly Type itemType; // this is, for example, typeof(int[])
-        public override Type ExpectedType { get; }
-        public override bool RequiresOldValue { get { return AppendToCollection; } }
+        public override Type ExpectedType => typeof(T[]);
+        public override bool RequiresOldValue => (_features & SerializerFeatures.OptionOverwriteList) == 0;
         public override bool ReturnsValue { get { return true; } }
-        private bool CanUsePackedPrefix() => CanUsePackedPrefix(packedWireType, itemType);
 
-        internal static bool CanUsePackedPrefix(WireType packedWireType, Type itemType)
+        public override void Write(ref ProtoWriter.State state, object value)
+            => state.WriteRepeated(_fieldNumber, _features, (T[])value);
+
+        public override object Read(ref ProtoReader.State state, object value)
+            => state.ReadRepeated(_features, (T[])value);
+
+        static readonly MethodInfo s_ReadRepeated = ArrayDecorator.s_ReadRepeated.MakeGenericMethod(typeof(T));
+        static readonly MethodInfo s_WriteRepeated = ArrayDecorator.s_WriteRepeated.MakeGenericMethod(typeof(T));
+        protected override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            // needs to be a suitably simple type *and* be definitely not nullable
-            switch (packedWireType)
-            {
-                case WireType.Fixed32:
-                case WireType.Fixed64:
-                    break;
-                default:
-                    return false; // nope
-            }
-            if (!itemType.IsValueType) return false;
-            return Nullable.GetUnderlyingType(itemType) == null;
+            using var loc = ctx.GetLocalWithValue(typeof(T[]), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue((int)_features);
+            ctx.LoadValue(loc);
+            ctx.LoadNullRef();
+            ctx.EmitCall(s_ReadRepeated);
         }
 
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
-            // int i and T[] arr
-            using Compiler.Local arr = ctx.GetLocalWithValue(ExpectedType, valueFrom);
-            using Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, typeof(int));
-            bool writePacked = (options & OPTIONS_WritePacked) != 0;
-            bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
-
-            using Compiler.Local token = (writePacked && !fixedLengthPacked) ? new Compiler.Local(ctx, typeof(SubItemToken)) : null;
-            Type mappedWriter = typeof(ProtoWriter);
-            if (writePacked)
-            {
-                ctx.LoadState();
-                ctx.LoadValue(fieldNumber);
-                ctx.LoadValue((int)WireType.String);
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteFieldHeader)));
-
-                if (fixedLengthPacked)
-                {
-                    // write directly - no need for buffering
-                    ctx.LoadState();
-                    ctx.LoadLength(arr, false);
-                    ctx.LoadValue((int)packedWireType);
-                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WritePackedPrefix)));
-                }
-                else
-                {
-                    ctx.LoadState();
-                    ctx.LoadValue(arr);
-                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.StartSubItem), new Type[] { typeof(object) }));
-                    ctx.StoreValue(token);
-                }
-                ctx.LoadState();
-                ctx.LoadValue(fieldNumber);
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.SetPackedField)));
-            }
-            EmitWriteArrayLoop(ctx, i, arr);
-
-            if (writePacked)
-            {
-                if (fixedLengthPacked)
-                {
-                    ctx.LoadState();
-                    ctx.LoadValue(fieldNumber);
-                    ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.ClearPackedField)));
-                }
-                else
-                {
-                    ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.EndSubItem), token);
-                }
-            }
-        }
-
-        private void EmitWriteArrayLoop(Compiler.CompilerContext ctx, Compiler.Local i, Compiler.Local arr)
-        {
-            // i = 0
-            ctx.LoadValue(0);
-            ctx.StoreValue(i);
-
-            // range test is last (to minimise branches)
-            Compiler.CodeLabel loopTest = ctx.DefineLabel(), processItem = ctx.DefineLabel();
-            ctx.Branch(loopTest, false);
-            ctx.MarkLabel(processItem);
-
-            // {...}
-            ctx.LoadArrayValue(arr, i);
-            if (SupportNull)
-            {
-                Tail.EmitWrite(ctx, null);
-            }
-            else
-            {
-                ctx.WriteNullCheckedTail(itemType, Tail, null);
-            }
-
-            // i++
-            ctx.LoadValue(i);
-            ctx.LoadValue(1);
-            ctx.Add();
-            ctx.StoreValue(i);
-
-            // i < arr.Length
-            ctx.MarkLabel(loopTest);
-            ctx.LoadValue(i);
-            ctx.LoadLength(arr, false);
-            ctx.BranchIfLess(processItem, false);
-        }
-
-        private bool AppendToCollection => (options & OPTIONS_OverwriteList) == 0;
-
-        private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
-
-        public override void Write(ref ProtoWriter.State state, object value)
-        {
-            IList arr = (IList)value;
-            int len = arr.Count;
-            SubItemToken token;
-            bool writePacked = (options & OPTIONS_WritePacked) != 0;
-            bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
-
-            if (writePacked)
-            {
-                state.WriteFieldHeader(fieldNumber, WireType.String);
-
-                if (fixedLengthPacked)
-                {
-                    state.WritePackedPrefix(arr.Count, packedWireType);
-                    token = new SubItemToken(); // default
-                }
-                else
-                {
-                    token = state.StartSubItem(value);
-                }
-                state.SetPackedField(fieldNumber);
-            }
-            else
-            {
-                token = default;
-            }
-            bool checkForNull = !SupportNull;
-            for (int i = 0; i < len; i++)
-            {
-                object obj = arr[i];
-                if (checkForNull && obj == null) { throw new NullReferenceException(); }
-                Tail.Write(ref state, obj);
-            }
-            if (writePacked)
-            {
-                if (fixedLengthPacked)
-                {
-                    state.ClearPackedField(fieldNumber);
-                }
-                else
-                {
-                    state.EndSubItem(token);
-                }
-            }
-        }
-
-        public override object Read(ref ProtoReader.State state, object value)
-        {
-            int field = state.FieldNumber;
-            var list = new BasicList();
-            if (packedWireType != WireType.None && state.WireType == WireType.String)
-            {
-                SubItemToken token = state.StartSubItem();
-                while (state.HasSubValue(packedWireType))
-                {
-                    list.Add(Tail.Read(ref state, null));
-                }
-                state.EndSubItem(token);
-            }
-            else
-            {
-                do
-                {
-                    list.Add(Tail.Read(ref state, null));
-                } while (state.TryReadFieldHeader(field));
-            }
-            int oldLen = AppendToCollection ? (value == null ? 0 : ((Array)value).Length) : 0;
-            Array result = Array.CreateInstance(itemType, oldLen + list.Count);
-            if (oldLen != 0) ((Array)value).CopyTo(result, 0);
-            list.CopyTo(result, oldLen);
-            return result;
-        }
-
-        protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
-        {
-            Type listType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
-            Type expected = ExpectedType;
-            using Compiler.Local oldArr = AppendToCollection ? ctx.GetLocalWithValue(expected, valueFrom) : null;
-            using Compiler.Local newArr = new Compiler.Local(ctx, expected);
-            using Compiler.Local list = new Compiler.Local(ctx, listType);
-            ctx.EmitCtor(listType);
-            ctx.StoreValue(list);
-            ListDecorator.EmitReadList(ctx, list, Tail, listType.GetMethod("Add"), packedWireType, false);
-
-            // leave this "using" here, as it can share the "FieldNumber" local with EmitReadList
-            using (Compiler.Local oldLen = AppendToCollection ? new ProtoBuf.Compiler.Local(ctx, typeof(int)) : null)
-            {
-                Type[] copyToArrayInt32Args = new Type[] { typeof(Array), typeof(int) };
-
-                if (AppendToCollection)
-                {
-                    ctx.LoadLength(oldArr, true);
-                    ctx.CopyValue();
-                    ctx.StoreValue(oldLen);
-
-                    ctx.LoadAddress(list, listType);
-                    ctx.LoadValue(listType.GetProperty("Count"));
-                    ctx.Add();
-                    ctx.CreateArray(itemType, null); // length is on the stack
-                    ctx.StoreValue(newArr);
-
-                    ctx.LoadValue(oldLen);
-                    Compiler.CodeLabel nothingToCopy = ctx.DefineLabel();
-                    ctx.BranchIfFalse(nothingToCopy, true);
-                    ctx.LoadValue(oldArr);
-                    ctx.LoadValue(newArr);
-                    ctx.LoadValue(0); // index in target
-
-                    ctx.EmitCall(expected.GetMethod("CopyTo", copyToArrayInt32Args));
-                    ctx.MarkLabel(nothingToCopy);
-
-                    ctx.LoadValue(list);
-                    ctx.LoadValue(newArr);
-                    ctx.LoadValue(oldLen);
-                }
-                else
-                {
-                    ctx.LoadAddress(list, listType);
-                    ctx.LoadValue(listType.GetProperty("Count"));
-                    ctx.CreateArray(itemType, null);
-                    ctx.StoreValue(newArr);
-
-                    ctx.LoadAddress(list, listType);
-                    ctx.LoadValue(newArr);
-                    ctx.LoadValue(0);
-                }
-
-                copyToArrayInt32Args[0] = expected; // // prefer: CopyTo(T[], int)
-                MethodInfo copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
-                if (copyTo == null)
-                { // fallback: CopyTo(Array, int)
-                    copyToArrayInt32Args[1] = typeof(Array);
-                    copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
-                }
-                ctx.EmitCall(copyTo);
-            }
-            ctx.LoadValue(newArr);
+            using var loc = ctx.GetLocalWithValue(typeof(T[]), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(_fieldNumber);
+            ctx.LoadValue((int)_features);
+            ctx.LoadValue(loc);
+            ctx.LoadNullRef();
+            ctx.EmitCall(s_WriteRepeated);
         }
     }
 }

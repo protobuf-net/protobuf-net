@@ -175,10 +175,13 @@ namespace ProtoBuf
                 }
             }
 
-            internal TList ReadRepeated<TList, T>(TList value, ISerializer<T> serializer = null) where TList : ICollection<T>
+            /// <summary>
+            /// Reads a sequence of values or sub-items from the input reader
+            /// </summary>
+            public TList ReadRepeated<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer = null) where TList : ICollection<T>
             {
                 if (typeof(TList) == typeof(T[]))
-                    return (TList)(object)ReadRepeated((T[])(object)value, serializer);
+                    return (TList)(object)ReadRepeated(features, (T[])(object)value, serializer);
 
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
@@ -209,7 +212,10 @@ namespace ProtoBuf
                 return value;
             }
 
-            internal T[] ReadRepeated<T>(T[] value, ISerializer<T> serializer = null)
+            /// <summary>
+            /// Reads a sequence of values or sub-items from the input reader
+            /// </summary>
+            public T[] ReadRepeated<T>(SerializerFeatures features, T[] value, ISerializer<T> serializer = null)
             {
                 // do the laziest thing possible for now; we can improve it later
                 List<T> list;
