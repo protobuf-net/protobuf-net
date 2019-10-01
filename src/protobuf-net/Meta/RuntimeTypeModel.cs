@@ -1143,7 +1143,7 @@ namespace ProtoBuf.Meta
                 }
                 if (!IsFullyPublic(runtimeType, out var problem))
                 {
-                    ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + TypeHelper.CSName(problem));
+                    ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + problem.NormalizeName());
                 }
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();

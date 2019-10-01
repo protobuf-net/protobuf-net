@@ -86,14 +86,26 @@ namespace Examples
             Foo[] foo = (Foo[])model.DeepClone(arr);
             Assert.Empty(foo);
         }
+
         [Fact]
-        public void DeserializeBusyArray()
+        public void DeserializeBusyArray_Untyped()
         {
             var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
             var model = RuntimeTypeModel.Create();
-            Foo[] foo = (Foo[])model.DeepClone(arr);
+            Foo[] foo = (Foo[])model.DeepClone((object)arr);
             Assert.Equal(3, foo.Length);
         }
+
+        [Fact]
+        public void DeserializeBusyArray_Typed()
+        {
+            var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
+            var model = RuntimeTypeModel.Create();
+            Foo[] foo = (Foo[])model.DeepClone<Foo[]>(arr);
+            Assert.Equal(3, foo.Length);
+        }
+
+
         [Fact]
         public void TestOverwriteVersusAppend()
         {

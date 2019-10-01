@@ -231,10 +231,16 @@ namespace Types
         }
 
         [OnDeserialized]
-        public void OnDesr(StreamingContext c)
+        public void OnDesr(StreamingContext c) => OnDesr();
+
+        [OnSerializing]
+        public void OnSer(StreamingContext c) => OnSer();
+
+        protected virtual void OnDesr()
         {
             Console.WriteLine("OnDeserialized");
         }
+        protected virtual void OnSer() { }
     }
 
     [DataContract]
@@ -265,16 +271,16 @@ namespace Types
             return base.ToString() + " VeryBoaring=" + VeryBoaring.ToString();
         }
 
-        [OnDeserialized]
-        public void OnDesrd(StreamingContext c)
+        protected override void OnDesr()
         {
             Console.WriteLine("OnDeserialized");
+            base.OnDesr();
         }
 
-        [OnSerializing]
-        public void X(StreamingContext c)
+        protected override void OnSer()
         {
             Console.WriteLine("OnSerializing");
+            base.OnSer();
         }
     }
 }

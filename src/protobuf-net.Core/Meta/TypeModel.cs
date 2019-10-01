@@ -110,16 +110,21 @@ namespace ProtoBuf.Meta
         /// </summary>
         internal bool TrySerializeAuxiliaryType(ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
         {
-            type ??= value.GetType();
+            PrepareDeserialize(value, ref type);
 
             WireType wireType = GetWireType(this, format, type);
-            var scope = DynamicStub.CanSerialize(type, this, out _); // ignore the default wire type; format gets a vote
-            if (scope != ObjectScope.Invalid)
+            if (DynamicStub.CanSerialize(type, this, out var features))
             {
-                NormalizeAuxScope(ref scope, isInsideList);
-                state.WriteFieldHeader(tag, wireType);
-
-                Serialize(scope, ref state, type, value);
+                var scope = NormalizeAuxScope(features, isInsideList, type);
+                try
+                {
+                    state.WriteFieldHeader(tag, wireType);
+                    Serialize(scope, ref state, type, value);
+                }
+                catch(Exception ex)
+                {
+                    ThrowHelper.ThrowProtoException(ex.Message + $"; scope: {scope}, features: {features}; type: {type.NormalizeName()}", ex);
+                }
                 return true;
             }
 
@@ -140,14 +145,23 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        static void NormalizeAuxScope(ref ObjectScope scope, bool isInsideList)
+        static ObjectScope NormalizeAuxScope(SerializerFeatures features, bool isInsideList, Type type)
         {
-            switch (scope)
+            switch (features.GetCategory())
             {
-                case ObjectScope.Message: // get the serializer to handle the start/end markers for us
-                case ObjectScope.LikeRoot when isInsideList:
-                    scope = ObjectScope.WrappedMessage;
-                    break;
+                case SerializerFeatures.CategoryRepeated:
+                    if (isInsideList) ThrowNestedListsNotSupported(type);
+                    ThrowHelper.ThrowNotSupportedException("A repeated type was not expected as an aux type: " + type.NormalizeName());
+                    return ObjectScope.NakedMessage;
+                case SerializerFeatures.CategoryMessage:
+                    return ObjectScope.WrappedMessage;
+                case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                    return isInsideList ? ObjectScope.WrappedMessage : ObjectScope.LikeRoot;
+                case SerializerFeatures.CategoryScalar:
+                    return ObjectScope.Scalar;
+                default:
+                    features.ThrowInvalidCategory();
+                    return default;
             }
         }
 
@@ -1098,7 +1112,9 @@ namespace ProtoBuf.Meta
                 ThrowUnexpectedType(type);
             }
 
-            var scope = DynamicStub.CanSerialize(type, this, out _);
+            if (!DynamicStub.CanSerialize(type, this, out var features))
+                ThrowHelper.ThrowInvalidOperationException($"Unable to deserialize aux type: " + type.NormalizeName());
+
             // to treat correctly, should read all values
             while (true)
             {
@@ -1125,7 +1141,7 @@ namespace ProtoBuf.Meta
 
                 // this calls back into DynamicStub.TryDeserialize (with success assertion),
                 // so will handle primitives etc
-                NormalizeAuxScope(ref scope, insideList);
+                var scope = NormalizeAuxScope(features, insideList, type);
                 value = Deserialize(scope, ref state, type, value);
             }
             if (!found && !asListItem && autoCreate)
@@ -1224,14 +1240,14 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISubTypeSerializer<T> NoSubTypeSerializer<T>(TypeModel model) where T : class
         {
-            ThrowHelper.ThrowInvalidOperationException($"No sub-type serializer for type {TypeHelper.CSName(typeof(T))} is available for model {model?.ToString() ?? "(none)"}");
+            ThrowHelper.ThrowInvalidOperationException($"No sub-type serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}");
             return default;
         }
 
@@ -1296,7 +1312,7 @@ namespace ProtoBuf.Meta
         {
             if (!DynamicStub.TrySerialize(scope, type, this, ref state, value))
             {
-                ThrowHelper.ThrowNotSupportedException($"{nameof(Serialize)} is not supported for {TypeHelper.CSName(type)} by {this}");
+                ThrowHelper.ThrowNotSupportedException($"{nameof(Serialize)} is not supported for {type.NormalizeName()} by {this}");
             }
         }
 
@@ -1314,7 +1330,7 @@ namespace ProtoBuf.Meta
         {
             if (!DynamicStub.TryDeserialize(scope, type, this, ref state, ref value))
             {
-                ThrowHelper.ThrowNotSupportedException($"{nameof(Deserialize)} is not supported for {TypeHelper.CSName(type)} by {this}");
+                ThrowHelper.ThrowNotSupportedException($"{nameof(Deserialize)} is not supported for {type.NormalizeName()} by {this}");
             }
             return value;
         }
@@ -1391,7 +1407,8 @@ namespace ProtoBuf.Meta
             PrepareDeserialize(value, ref type);
             try
             {
-                if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                    ThrowUnexpectedType(type);
                 writeState.Close();
             }
             catch
@@ -1564,14 +1581,18 @@ namespace ProtoBuf.Meta
 
             do
             {
-                switch (DynamicStub.CanSerialize(type, this, out _))
+                if (DynamicStub.CanSerialize(type, this, out var features))
                 {
-                    case ObjectScope.Scalar:
-                        return allowBasic;
-                    case ObjectScope.WrappedMessage:
-                    case ObjectScope.Message:
-                    case ObjectScope.LikeRoot:
-                        return allowContract;
+                    switch (features.GetCategory())
+                    {
+                        case SerializerFeatures.CategoryRepeated:
+                            return allowLists;
+                        case SerializerFeatures.CategoryMessage:
+                            return allowContract;
+                        case SerializerFeatures.CategoryScalar:
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                            return allowBasic;
+                    }
                 }
             } while (CheckIfNullableT(ref type));
 

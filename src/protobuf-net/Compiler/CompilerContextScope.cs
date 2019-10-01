@@ -132,7 +132,7 @@ namespace ProtoBuf.Compiler
 
             if (@explicit)
             {
-                implName = TypeHelper.CSName(interfaceType) + "." + implName;
+                implName = interfaceType.NormalizeName() + "." + implName;
                 attribs &= ~MethodAttributes.MemberAccessMask;
                 attribs |= MethodAttributes.Private | MethodAttributes.HideBySig;
             }

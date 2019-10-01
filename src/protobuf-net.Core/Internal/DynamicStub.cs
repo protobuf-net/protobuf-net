@@ -7,8 +7,8 @@ namespace ProtoBuf.Internal
 {
     internal enum ObjectScope
     {
-        Invalid,
-        Message,
+        Invalid, // not used
+        NakedMessage,
         LikeRoot,
         WrappedMessage,
         Scalar,
@@ -46,8 +46,8 @@ namespace ProtoBuf.Internal
         internal static bool IsKnownType(Type type, TypeModel model)
             => Get(type).IsKnownType(model);
 
-        internal static ObjectScope CanSerialize(Type type, TypeModel model, out WireType defaultWireType)
-            => Get(type).CanSerialize(model, out defaultWireType);
+        internal static bool CanSerialize(Type type, TypeModel model, out SerializerFeatures features)
+            => Get(type).CanSerialize(model, out features);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DynamicStub Get(Type type) => (DynamicStub)s_byType[type] ?? SlowGet(type);
@@ -137,7 +137,7 @@ namespace ProtoBuf.Internal
 
         protected abstract bool IsKnownType(TypeModel model);
 
-        protected abstract ObjectScope CanSerialize(TypeModel model, out WireType scalarWireType);
+        protected abstract bool CanSerialize(TypeModel model, out SerializerFeatures features);
 
         private class NilStub : DynamicStub
         {
@@ -159,10 +159,10 @@ namespace ProtoBuf.Internal
             protected override bool IsKnownType(TypeModel model)
                 => false;
 
-            protected override ObjectScope CanSerialize(TypeModel model, out WireType scalarWireType)
+            protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
             {
-                scalarWireType = default;
-                return ObjectScope.Invalid;
+                features = default;
+                return false;
             }
 
             protected override Type GetEffectiveType() => null;
@@ -196,7 +196,7 @@ namespace ProtoBuf.Internal
                         typed = state.ReadAsRoot<T>(typed, serializer);
                         break;
                     case ObjectScope.Scalar:
-                    case ObjectScope.Message:
+                    case ObjectScope.NakedMessage:
                         typed = serializer.Read(ref state, typed);
                         break;
                     case ObjectScope.WrappedMessage:
@@ -213,22 +213,22 @@ namespace ProtoBuf.Internal
             // the model unless we actually need it, as that can cause re-entrancy loops
             protected override bool IsKnownType(TypeModel model) => model != null && model.IsKnownType<T>();
 
-            protected override ObjectScope CanSerialize(TypeModel model, out WireType defaultWireType)
+            protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
             {
                 var ser = IsKnownType(model) ? model.GetSerializer<T>() : TypeModel.TryGetSerializer<T>(null);
                 if (ser == null)
                 {
-                    defaultWireType = default;
-                    return ObjectScope.Invalid;
+                    features = default;
+                    return false;
                 }
-                var features = ser.Features;
-                defaultWireType = features.GetWireType();
+                features = ser.Features;
                 return (features.GetCategory()) switch
                 {
-                    SerializerFeatures.CategoryMessageWrappedAtRoot => ObjectScope.LikeRoot,
-                    SerializerFeatures.CategoryMessage => ObjectScope.Message,
-                    SerializerFeatures.CategoryScalar => ObjectScope.Scalar,
-                    _ => ObjectScope.Invalid,
+                    SerializerFeatures.CategoryRepeated => true,
+                    SerializerFeatures.CategoryMessageWrappedAtRoot => true,
+                    SerializerFeatures.CategoryMessage => true,
+                    SerializerFeatures.CategoryScalar => true,
+                    _ => false,
                 };
             }
 
@@ -253,7 +253,7 @@ namespace ProtoBuf.Internal
                         state.WriteAsRoot<T>(typed, serializer);
                         return true;
                     case ObjectScope.Scalar:
-                    case ObjectScope.Message:
+                    case ObjectScope.NakedMessage:
                         serializer.Write(ref state, typed);
                         return true;
                     case ObjectScope.WrappedMessage:

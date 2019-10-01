@@ -347,15 +347,107 @@ namespace ProtoBuf
             internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                if ((serializer.Features & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var serializerFeatures = serializer.Features;
+                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var wireType = features.GetWireType();
+                var category = serializerFeatures.GetCategory();
 
-                if (values == null) return;
-                foreach(var value in values)
+                if (values == null)
                 {
-                    WriteFieldHeader(fieldNumber, features.GetWireType());
-                    serializer.Write(ref this, value);
+                    // nothing to do
+                }
+                else if (values is T[] arr)
+                {
+                    WriteRepeatedImpl_Array<T>(fieldNumber, category, wireType, arr, serializer);
+                }
+                else if (values is List<T> list)
+                {
+                    WriteRepeatedImpl_List<T>(fieldNumber, category, wireType, list, serializer);
+                }
+                else
+                {
+                    WriteRepeatedImpl_Enumerable<T>(fieldNumber, category, wireType, values, serializer);
                 }
             }
+
+            private void WriteRepeatedImpl_Enumerable<T>(int fieldNumber, SerializerFeatures category, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer)
+            {
+                foreach (var value in values)
+                {
+                    WriteFieldHeader(fieldNumber, wireType);
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        case SerializerFeatures.CategoryMessage:
+                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
+                            break;
+                        case SerializerFeatures.CategoryScalar:
+                            serializer.Write(ref this, value);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            break;
+                    }
+                }
+            }
+
+            internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, List<T> values, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                var serializerFeatures = serializer.Features;
+                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (values != null)
+                    WriteRepeatedImpl_List(fieldNumber, serializerFeatures.GetCategory(), features.GetWireType(), values, serializer);
+            }
+            private void WriteRepeatedImpl_List<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
+            {
+                foreach (var value in values)
+                {
+                    WriteFieldHeader(fieldNumber, wireType);
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        case SerializerFeatures.CategoryMessage:
+                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
+                            break;
+                        case SerializerFeatures.CategoryScalar:
+                            serializer.Write(ref this, value);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            break;
+                    }
+                }
+            }
+            internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                var serializerFeatures = serializer.Features;
+                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (values != null)
+                    WriteRepeatedImpl_Array(fieldNumber, serializerFeatures.GetCategory(), features.GetWireType(), values, serializer);
+            }
+            private void WriteRepeatedImpl_Array<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
+            {
+                for(int i = 0; i < values.Length; i++)
+                {
+                    WriteFieldHeader(fieldNumber, wireType);
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        case SerializerFeatures.CategoryMessage:
+                            _writer.WriteMessage<T>(ref this, values[i], serializer, PrefixStyle.Base128, true);
+                            break;
+                        case SerializerFeatures.CategoryScalar:
+                            serializer.Write(ref this, values[i]);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            break;
+                    }
+                }
+            }
+
 
             /// <summary>
             /// Writes a value or sub-item to the writer

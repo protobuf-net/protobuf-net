@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Internal
 {
@@ -25,6 +26,37 @@ namespace ProtoBuf.Internal
                         openType.MakeGenericType(type), nonPublic: true);
             }
 
+            // check for T[]
+            if (type.IsArray)
+            {
+                var elementType = type.GetElementType();
+                var vectorType = elementType.MakeArrayType();
+
+                if (type == vectorType)
+                {
+                    return Activator.CreateInstance(
+                        typeof(VectorSerializer<>).MakeGenericType(elementType), nonPublic: true);
+                }
+            }
+
+            // check for List<T> (non-subclass)
+            var list = TryGetListProvider(type, type);
+            if (list != null) return list;
+
+            return null;
+        }
+
+        internal static object TryGetListProvider(Type rootType, Type type)
+        {
+            // later we can axpand this Type itemType = TypeModel.GetListItemType(typeof(T));
+            // for now: just handles List<T>
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                var elementType = type.GetGenericArguments()[0];
+                return Activator.CreateInstance(
+                    typeof(ListSerializer<,>).MakeGenericType(rootType, elementType), nonPublic: true);
+            }
             return null;
         }
     }

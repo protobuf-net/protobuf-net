@@ -9,49 +9,50 @@ namespace ProtoBuf.Internal
 {
     internal static class TypeHelper
     {
-        internal static string CSName(Type type)
+        internal static string NormalizeName(this Type type)
         {
-            if (type == null) return null;
-            if (type.IsEnum) return type.Name;
+            return type?.ToString();
+            //if (type == null) return null;
+            //if (type.IsEnum) return type.Name;
 
-            var nullable = Nullable.GetUnderlyingType(type);
-            if (nullable != null) return CSName(nullable) + "?";
+            //var nullable = Nullable.GetUnderlyingType(type);
+            //if (nullable != null) return CSName(nullable) + "?";
 
-            if (!type.IsGenericType)
-            {
-                return (Type.GetTypeCode(type)) switch
-                {
-                    TypeCode.Boolean => "bool",
-                    TypeCode.Char => "char",
-                    TypeCode.SByte => "sbyte",
-                    TypeCode.Byte => "byte",
-                    TypeCode.Int16 => "short",
-                    TypeCode.UInt16 => "ushort",
-                    TypeCode.Int32 => "int",
-                    TypeCode.UInt32 => "uint",
-                    TypeCode.Int64 => "long",
-                    TypeCode.UInt64 => "ulong",
-                    TypeCode.Single => "float",
-                    TypeCode.Double => "double",
-                    TypeCode.Decimal => "decimal",
-                    TypeCode.String => "string",
-                    _ => type.Name,
-                };
-            }
+            //if (!type.IsGenericType)
+            //{
+            //    return (Type.GetTypeCode(type)) switch
+            //    {
+            //        TypeCode.Boolean => "bool",
+            //        TypeCode.Char => "char",
+            //        TypeCode.SByte => "sbyte",
+            //        TypeCode.Byte => "byte",
+            //        TypeCode.Int16 => "short",
+            //        TypeCode.UInt16 => "ushort",
+            //        TypeCode.Int32 => "int",
+            //        TypeCode.UInt32 => "uint",
+            //        TypeCode.Int64 => "long",
+            //        TypeCode.UInt64 => "ulong",
+            //        TypeCode.Single => "float",
+            //        TypeCode.Double => "double",
+            //        TypeCode.Decimal => "decimal",
+            //        TypeCode.String => "string",
+            //        _ => type.Name,
+            //    };
+            //}
 
-            var withTicks = type.Name;
-            var index = withTicks.IndexOf('`');
-            if (index < 0) return type.Name;
+            //var withTicks = type.Name;
+            //var index = withTicks.IndexOf('`');
+            //if (index < 0) return type.Name;
 
-            var sb = new StringBuilder();
-            sb.Append(type.Name.Substring(0, index)).Append('<');
-            var args = type.GetGenericArguments();
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (i != 0) sb.Append(',');
-                sb.Append(CSName(args[i]));
-            }
-            return sb.Append('>').ToString();
+            //var sb = new StringBuilder();
+            //sb.Append(type.Name.Substring(0, index)).Append('<');
+            //var args = type.GetGenericArguments();
+            //for (int i = 0; i < args.Length; i++)
+            //{
+            //    if (i != 0) sb.Append(',');
+            //    sb.Append(CSName(args[i]));
+            //}
+            //return sb.Append('>').ToString();
         }
     }
     internal static class TypeHelper<T>

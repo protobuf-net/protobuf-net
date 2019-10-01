@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
         private readonly IRuntimeProtoSerializerNode _tail;
         public EnumMemberSerializer(Type enumType)
         {
-            if (!enumType.IsEnum) ThrowHelper.ThrowInvalidOperationException("Expected an enum type; got " + TypeHelper.CSName(enumType));
+            if (!enumType.IsEnum) ThrowHelper.ThrowInvalidOperationException("Expected an enum type; got " + enumType.NormalizeName());
             ExpectedType = enumType ?? throw new ArgumentNullException(nameof(enumType));
             _tail = Type.GetTypeCode(Enum.GetUnderlyingType(enumType)) switch
             {
@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
                 TypeCode.UInt64 => UInt64Serializer.Instance,
                 _ => default,
             };
-            if (_tail == null) ThrowHelper.ThrowInvalidOperationException("Unable to resolve underlying enum type for " + TypeHelper.CSName(enumType));
+            if (_tail == null) ThrowHelper.ThrowInvalidOperationException("Unable to resolve underlying enum type for " + enumType.NormalizeName());
 
         }
 

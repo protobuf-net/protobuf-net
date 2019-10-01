@@ -162,7 +162,7 @@ namespace ProtoBuf.Serializers
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
             if (!RuntimeTypeModel.IsFullyPublic(itemType, out var problem))
             {
-                throw new NotSupportedException("Cannot produce a map serializer involving non-public type: " + TypeHelper.CSName(problem));
+                throw new NotSupportedException("Cannot produce a map serializer involving non-public type: " + problem.NormalizeName());
             }
             var pairSerializer = GetPairSerializer(ctx);
             MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(

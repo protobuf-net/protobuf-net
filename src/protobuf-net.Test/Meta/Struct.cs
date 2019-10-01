@@ -58,7 +58,7 @@ namespace ProtoBuf.unittest.Meta
             var obj = model.GetSerializer<Foo>();
             Assert.NotNull(obj);
 
-            Assert.True(obj.Features.GetCategory() == SerializerFeatures.CategoryScalar, "should be a scalar serializer; is " + TypeHelper.CSName(obj.GetType()));
+            Assert.True(obj.Features.GetCategory() == SerializerFeatures.CategoryScalar, "should be a scalar serializer; is " + obj.GetType().NormalizeName());
 
             using var ms = new MemoryStream();
             Assert.False(model.CanSerializeContractType(typeof(Foo)), "should not be a contract type");

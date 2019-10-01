@@ -177,16 +177,78 @@ namespace ProtoBuf
 
             internal TList ReadRepeated<TList, T>(TList value, ISerializer<T> serializer = null) where TList : ICollection<T>
             {
+                if (typeof(TList) == typeof(T[]))
+                    return (TList)(object)ReadRepeated((T[])(object)value, serializer);
+
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                if ((serializer.Features & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var serializerFeatures = serializer.Features;
+                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var category = serializerFeatures.GetCategory();
 
                 if (value is null) value = CreateInstance<TList>();
                 do
                 {
-                    value.Add(serializer.Read(ref this, default));
+                    T element;
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryScalar:
+                            element = serializer.Read(ref this, default);
+                            break;
+                        case SerializerFeatures.CategoryMessage:
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                            element = ReadMessage<T>(default, serializer);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            element = default;
+                            break;
+                    }
+                    value.Add(element);
                 } while (TryReadFieldHeader(field));
                 return value;
+            }
+
+            internal T[] ReadRepeated<T>(T[] value, ISerializer<T> serializer = null)
+            {
+                // do the laziest thing possible for now; we can improve it later
+                List<T> list;
+                if (value != null && value.Length != 0)
+                {
+                    list = new List<T>(value);
+                }
+                else
+                {
+                    list = new List<T>();
+                }
+
+                var field = FieldNumber;
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                var serializerFeatures = serializer.Features;
+                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var category = serializerFeatures.GetCategory();
+
+                do
+                {
+                    T element;
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryScalar:
+                            element = serializer.Read(ref this, default);
+                            break;
+                        case SerializerFeatures.CategoryMessage:
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                            element = ReadMessage<T>(default, serializer);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            element = default;
+                            break;
+                    }
+                    list.Add(element);
+                } while (TryReadFieldHeader(field));
+
+                return list.ToArray();
             }
 
 

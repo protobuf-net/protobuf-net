@@ -172,8 +172,10 @@ namespace ProtoBuf.unittest.Meta
             var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             Assert.True(model.CanSerialize(typeof(EnumWithThings)));
-            Assert.Equal(ObjectScope.Scalar, DynamicStub.CanSerialize(typeof(EnumWithThings), null, out var wt));
-            Assert.Equal(ObjectScope.Scalar, DynamicStub.CanSerialize(typeof(EnumWithThings?), null, out wt));
+            Assert.True(DynamicStub.CanSerialize(typeof(EnumWithThings), null, out var features));
+            Assert.Equal(SerializerFeatures.CategoryScalar, features.GetCategory());
+            Assert.True(DynamicStub.CanSerialize(typeof(EnumWithThings?), null, out features));
+            Assert.Equal(SerializerFeatures.CategoryScalar, features.GetCategory());
 
             using var ms = new MemoryStream();
 

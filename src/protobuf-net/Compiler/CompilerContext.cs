@@ -850,10 +850,10 @@ namespace ProtoBuf.Compiler
                                 case MemberTypes.TypeInfo:
                                 case MemberTypes.NestedType:
                                     throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
-                                        ((Type)member).FullName);
+                                        ((Type)member).NormalizeName());
                                 default:
                                     throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
-                                        member.DeclaringType.FullName + "." + member.Name);
+                                        member.DeclaringType.NormalizeName() + "." + member.Name);
                             }
                     }
                 }
