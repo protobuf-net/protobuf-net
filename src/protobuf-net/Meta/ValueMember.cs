@@ -743,7 +743,9 @@ namespace ProtoBuf.Meta
            OPTIONS_IsPacked = 2,
            OPTIONS_IsRequired = 4,
            OPTIONS_OverwriteList = 8,
+#if FEAT_NULL_LIST_ITEMS
            OPTIONS_SupportNull = 16,
+#endif
 #if FEAT_DYNAMIC_REF
            OPTIONS_AsReference = 32,
            OPTIONS_DynamicType = 128,
@@ -769,9 +771,19 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool SupportNull
         {
+#if FEAT_NULL_LIST_ITEMS
             get { return HasFlag(OPTIONS_SupportNull); }
             set { SetFlag(OPTIONS_SupportNull, value, true); }
+#else
+            get => false;
+            [Obsolete(SupportNullNotImplemented, true)]
+            set { if (value != SupportNull) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
+
+#if !FEAT_NULL_LIST_ITEMS
+        internal const string SupportNullNotImplemented = "Nullable list elements are not currently implemented";
+#endif
 
         internal string GetSchemaTypeName(bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports, out string altName)
         {

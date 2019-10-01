@@ -105,6 +105,7 @@ namespace Examples.Issues
         }
 
 
+#if FEAT_NULL_LIST_ITEMS
         static RuntimeTypeModel GetModelWithSupportForNulls()
         {
             var model = RuntimeTypeModel.Create();
@@ -135,5 +136,6 @@ namespace Examples.Issues
 
             RunTestNull(model.Compile(), "Compile");
         }
+#endif
     }
 }

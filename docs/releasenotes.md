@@ -29,6 +29,7 @@ Some features are currently incomplete; this may restrict usage for some scenari
 - serialization callbacks on inheritance models are currently only supported at the root type
 - "map" (dictionary) is only currently usable with public types
 - tuple-based types and types with surrogates cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
+- null-item retention in lists/arrays is not currently implemented
 
 There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably
 never should have been allowed; these changes should not impact most people!
