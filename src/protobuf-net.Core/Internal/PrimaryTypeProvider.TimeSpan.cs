@@ -4,9 +4,9 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider : ISerializer<PrimaryTypeProvider.ScaledTicks>, ISerializer<TimeSpan>, ISerializer<DateTime>
     {
-        SerializerFeatures ISerializer<DateTime>.Features=> SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<DateTime>.Features=> SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
 
-        SerializerFeatures ISerializer<TimeSpan>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<TimeSpan>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         TimeSpan ISerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
             => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToTimeSpan();
 

@@ -55,11 +55,15 @@ namespace ProtoBuf
         CategoryScalar = 1 << 5,
 
         /// <summary>
-        /// Indicates a type that is a message; if a type is both "message" and "scalar",
-        /// then *at the root only* it will be a message wrapped like a scalar; otherwise, it is
-        /// treated as a message; see: DateTime/TimeSpan
+        /// Indicates a type that is a message
         /// </summary>
         CategoryMessage = 1 << 6,
+
+        /// <summary>
+        /// Indicates a type that is both "message" and "scalar"; *at the root only* it will be a message wrapped like a scalar; otherwise, it is
+        /// treated as a message; see: DateTime/TimeSpan
+        /// </summary>
+        CategoryMessageWrappedAtRoot = CategoryMessage | CategoryScalar,
 
         /// <summary>
         /// Explicitly disables packed encoding; normally, packed encoding is
@@ -71,20 +75,8 @@ namespace ProtoBuf
     internal static class SerializerFeaturesExtensions
     {
         [MethodImpl(ProtoReader.HotPath)]
-        public static bool IsRepeated(this SerializerFeatures features)
-            => (features & SerializerFeatures.CategoryRepeated) != 0;
-
-        [MethodImpl(ProtoReader.HotPath)]
-        public static bool IsMessage(this SerializerFeatures features)
-            => (features & SerializerFeatures.CategoryMessage) != 0;
-
-        [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures AsFeatures(this WireType wireType)
             => (SerializerFeatures)wireType;
-
-        [MethodImpl(ProtoReader.HotPath)]
-        public static bool IsWrappedAtRoot(this SerializerFeatures features)
-            => (features & (SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar)) == (SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar);
 
         [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures GetCategory(this SerializerFeatures features)
@@ -93,6 +85,16 @@ namespace ProtoBuf
                 | SerializerFeatures.CategoryRepeated
                 | SerializerFeatures.CategoryScalar;
             return features & mask;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowInvalidCategory(this SerializerFeatures features)
+        {
+            var category = features.GetCategory();
+            var msg = category == features
+                ? $"The category {category} is not expected in this context"
+                : $"The category {category} is not expected in this context (full features: {features})";
+            ThrowHelper.ThrowInvalidOperationException(msg);
         }
 
         [MethodImpl(ProtoReader.HotPath)]

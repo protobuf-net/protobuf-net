@@ -225,7 +225,7 @@ namespace ProtoBuf.Internal
                 defaultWireType = features.GetWireType();
                 return (features.GetCategory()) switch
                 {
-                    SerializerFeatures.CategoryScalar | SerializerFeatures.CategoryMessage => ObjectScope.LikeRoot,
+                    SerializerFeatures.CategoryMessageWrappedAtRoot => ObjectScope.LikeRoot,
                     SerializerFeatures.CategoryMessage => ObjectScope.Message,
                     SerializerFeatures.CategoryScalar => ObjectScope.Scalar,
                     _ => ObjectScope.Invalid,

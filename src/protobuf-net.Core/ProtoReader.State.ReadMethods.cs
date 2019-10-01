@@ -179,8 +179,8 @@ namespace ProtoBuf
             {
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                var features = serializer.Features;
-                if (features.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if ((serializer.Features & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+
                 if (value is null) value = CreateInstance<TList>();
                 do
                 {
@@ -746,12 +746,22 @@ namespace ProtoBuf
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var features = serializer.Features;
-                if (features.IsRepeated()) ThrowHelper.ThrowInvalidOperationException(
-                    $"Repeated elements must be read by calling {nameof(ReadRepeated)}");
 
-                return features.IsMessage()
-                    ? ReadMessage<T>(value, serializer)
-                    : serializer.Read(ref this, value);
+                switch (features.GetCategory())
+                {
+                    case SerializerFeatures.CategoryRepeated:
+                        ThrowHelper.ThrowInvalidOperationException(
+                    $"Repeated elements must be read by calling {nameof(ReadRepeated)}");
+                        return default;
+                    case SerializerFeatures.CategoryMessage:
+                    case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        return ReadMessage<T>(value, serializer);
+                    case SerializerFeatures.CategoryScalar:
+                        return serializer.Read(ref this, value);
+                    default:
+                        features.ThrowInvalidCategory();
+                        return default;
+                }
             }
 
             internal TypeModel Model
@@ -786,25 +796,27 @@ namespace ProtoBuf
             internal T ReadAsRoot<T>(T value, ISerializer<T> serializer)
             {
                 var features = serializer.Features;
-                if (features.IsWrappedAtRoot())
+                var category = features.GetCategory();
+
+                switch (features.GetCategory())
                 {
-                    // to preserve legacy behavior of DateTime/TimeSpan etc
-                    return ReadFieldOne(ref this, value, serializer);
-                }
-                else
-                {
-                    if (features.IsMessage())
-                    {
+                    case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        // to preserve legacy behavior of DateTime/TimeSpan etc
+                        return ReadFieldOne(ref this, value, serializer);
+                    case SerializerFeatures.CategoryMessage:
 #if FEAT_DYNAMIC_REF
-                        if (TypeHelper<T>.IsReferenceType && value != null)
-                            SetRootObject(value);
+                    if (TypeHelper<T>.IsReferenceType && value != null)
+                        SetRootObject(value);
 #endif
                         return serializer.Read(ref this, value);
-                    }
-                    else
-                    {
+                    case SerializerFeatures.CategoryRepeated:
+                        return serializer.Read(ref this, value);
+                    case SerializerFeatures.CategoryScalar:
                         return ReadFieldOne(ref this, value, serializer);
-                    }
+                    default:
+                        features.ThrowInvalidCategory();
+                        return default;
+
                 }
 
                 static T ReadFieldOne(ref State state, T value, ISerializer<T> serializer)
