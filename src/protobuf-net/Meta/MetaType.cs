@@ -111,7 +111,8 @@ namespace ProtoBuf.Meta
                 ThrowHelper.ThrowInvalidOperationException(
                 $"Tuple-based types cannot be used in inheritance hierarchies: {derivedType.NormalizeName()}");
             }
-            if (surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
+            if (surrogate != null) ThrowSubTypeWithSurrogate(Type);
+            if (derivedMeta.surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
 
             SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
             ThrowIfFrozen();

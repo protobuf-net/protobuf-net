@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ProtoBuf;
-using Xunit;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
+using System;
 using System.IO;
+using Xunit;
 
 namespace Examples.Issues
 {
@@ -44,14 +41,13 @@ namespace Examples.Issues
         [ProtoMember(1)]
         public I Unknown { get; set; }
     }
-    
+
     public class Issue185
     {
         [Fact]
         public void ExecuteWithConstructType()
         {
-            var ex = Program.ExpectFailure<InvalidOperationException>(() =>
-            // var argEx = Program.ExpectFailure<ArgumentException>(() =>
+            var argEx = Program.ExpectFailure<ArgumentException>(() =>
             {
                 var m = RuntimeTypeModel.Create();
                 m.AutoCompile = false;
@@ -67,9 +63,8 @@ namespace Examples.Issues
                 Test(m, c, "CompileInPlace");
                 Test(m.Compile(), c, "Compile");
             });
-            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.C", ex.Message);
-            //Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
-            //Assert.Equal("constructType", argEx.ParamName);
+            Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
+            Assert.Equal("constructType", argEx.ParamName);
         }
 
 #pragma warning disable IDE0060
@@ -90,23 +85,24 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteWithSubType()
         {
-            var ex =Assert.Throws<InvalidOperationException>( () =>
-                {
-                    var m = RuntimeTypeModel.Create();
-                    m.AutoCompile = false;
-                    m.Add(typeof(C), false).SetSurrogate(typeof(CS));
-                    m.Add(typeof(O), false).SetSurrogate(typeof(OS));
-                    m.Add(typeof(I), false).AddSubType(1, typeof(O));
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+            {
+                var m = RuntimeTypeModel.Create();
+                m.AutoCompile = false;
+                m.Add(typeof(C), false).SetSurrogate(typeof(CS));
+                m.Add(typeof(O), false).SetSurrogate(typeof(OS));
+                m.Add(typeof(I), false).AddSubType(1, typeof(O));
 
-                    //var c = new C();
-                    //c.PopulateRun();
+                var c = new C();
+                c.PopulateRun();
 
-                    //Test(m, c, "Runtime");
-                    //m.CompileInPlace();
-                    //Test(m, c, "CompileInPlace");
-                    //Test(m.Compile(), c, "Compile");
-                });
-            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.C", ex.Message);
+                Test(m, c, "Runtime");
+                m.CompileInPlace();
+                Test(m, c, "CompileInPlace");
+                Test(m.Compile(), c, "Compile");
+            });
+            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.O", ex.Message);
+
         }
     }
 }
