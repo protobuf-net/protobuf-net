@@ -1468,15 +1468,15 @@ namespace ProtoBuf.Meta
         /// </summary>
         public void AddEnumValue<TEnum>(TEnum value)
             where TEnum : Enum
-            => AddEnum<TEnum>(value, value.ToString());
+            => AddEnumValue<TEnum>(value, value.ToString());
 
         /// <summary>
         /// Add a new defined name/value pair for an enum
         /// </summary>
-        public void AddEnum<TEnum>(TEnum value, string name)
+        public void AddEnumValue<TEnum>(TEnum value, string name)
             where TEnum : Enum
         {
-            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should use {nameof(AddEnum)}");
+            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should use {nameof(AddEnumValue)}");
 
             if (typeof(TEnum) != Type)
                 ThrowHelper.ThrowInvalidOperationException($"The enum should be of type {Type.NormalizeName()}");
@@ -1497,7 +1497,7 @@ namespace ProtoBuf.Meta
 
         private void Add(ValueMember member)
         {
-            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should use {nameof(AddEnum)} instances, not {nameof(ValueMember)}");
+            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should use {nameof(AddEnumValue)} instances, not {nameof(ValueMember)}");
             int opaqueToken = 0;
             try
             {

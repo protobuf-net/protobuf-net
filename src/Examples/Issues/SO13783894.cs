@@ -41,8 +41,8 @@ namespace Examples.Issues
         {
             var model = RuntimeTypeModel.Create();
             var mt = model.Add(typeof(MyEnum), false);
-            mt.AddEnum((MyEnum)1, "Default"); // these **do not** change the serialized values
-            mt.AddEnum((MyEnum)10, "Foo");
+            mt.AddEnumValue((MyEnum)1, "Default"); // these **do not** change the serialized values
+            mt.AddEnumValue((MyEnum)10, "Foo");
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
             var obj2 = new Test<MyEnum> { Value = MyEnum.Foo };

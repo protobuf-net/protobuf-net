@@ -428,7 +428,9 @@ enum SomeEnum {
         public void TestEnumProto_Proto2_RuntimeRenamed()
         {
             var model = RuntimeTypeModel.Create();
-            model[typeof(HazEnum.SomeEnum)][1].Name = "zzz";
+            var mt = model[typeof(HazEnum.SomeEnum)];
+            mt.SetEnumName(nameof(HazEnum.SomeEnum), "zzz");
+            // ^^^ should upsert the name
             var schema = model.GetSchema(typeof(HazEnum), ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
