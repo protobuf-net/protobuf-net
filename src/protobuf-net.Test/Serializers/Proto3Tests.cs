@@ -88,11 +88,8 @@ enum StrictEnum {
             obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 1 });
             Assert.Equal(StrictEnum.B, obj.Value);
 
-            var ex = Assert.Throws<ProtoException>(() =>
-            {
-                obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 5 });
-            });
-            Assert.Equal("No ProtoBuf.Serializers.Proto3Tests+StrictEnum enum is mapped to the wire-value 5", ex.Message);
+            obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 5 });
+            Assert.Equal((StrictEnum)5, obj.Value);
         }
 
         [ProtoContract]

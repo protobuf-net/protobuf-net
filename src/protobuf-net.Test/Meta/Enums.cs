@@ -145,20 +145,22 @@ namespace ProtoBuf.unittest.Meta
         }
 
         [Fact]
-        public void AddInvalidEnum()
+        public void AddInvalidEnum() // which is now perfectly legal
         {
             var model = RuntimeTypeModel.Create();
             var mt = model.Add(typeof(EnumWithThings), false);
             var fields = mt.GetFields();
             Assert.Empty(fields);
 
-            mt.Add("HazThis");
-            fields = mt.GetFields();
-            var field = Assert.Single(fields);
-            Assert.Equal(1, field.FieldNumber);
+            mt.AddEnumValue(EnumWithThings.HazThis);
+            var defined = mt.GetEnumValues();
+            var single = Assert.Single(defined);
+            Assert.Equal(nameof(EnumWithThings.HazThis), single.Name);
+            Assert.IsType<int>(single.Value);
+            Assert.Equal(42, single.Value);
 
-            var ex = Assert.Throws<ArgumentException>(() => mt.Add("NotThis"));
-            Assert.Equal("memberName", ex.ParamName);
+            fields = mt.GetFields();
+            Assert.Empty(fields);
         }
         public enum EnumWithThings
         {

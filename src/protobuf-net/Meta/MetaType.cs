@@ -729,7 +729,7 @@ namespace ProtoBuf.Meta
 
             foreach (EnumMember enumMember in enumMembers)
             {
-                Add(enumMember);
+                Enums.Add(enumMember);
             }
 
             if (callbacks != null)
@@ -1466,15 +1466,28 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Add a new defined name/value pair for an enum
         /// </summary>
-        public void Add(EnumMember member)
+        public void AddEnumValue<TEnum>(TEnum value)
+            where TEnum : Enum
+            => AddEnum<TEnum>(value, value.ToString());
+
+        /// <summary>
+        /// Add a new defined name/value pair for an enum
+        /// </summary>
+        public void AddEnum<TEnum>(TEnum value, string name)
+            where TEnum : Enum
         {
-            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should add {nameof(EnumMember)} instances");
+            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should use {nameof(AddEnum)}");
+
+            if (typeof(TEnum) != Type)
+                ThrowHelper.ThrowInvalidOperationException($"The enum should be of type {Type.NormalizeName()}");
+
+            object val = EnumMemberSerializer.EnumToWire(value, Enum.GetUnderlyingType(typeof(TEnum)));
             int opaqueToken = 0;
             try
             {
                 model.TakeLock(ref opaqueToken);
                 ThrowIfFrozen();
-                Enums.Add(member);
+                Enums.Add(new EnumMember(val, name));
             }
             finally
             {
@@ -1484,7 +1497,7 @@ namespace ProtoBuf.Meta
 
         private void Add(ValueMember member)
         {
-            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should add {nameof(EnumMember)} instances, not {nameof(ValueMember)}");
+            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should use {nameof(AddEnum)} instances, not {nameof(ValueMember)}");
             int opaqueToken = 0;
             try
             {

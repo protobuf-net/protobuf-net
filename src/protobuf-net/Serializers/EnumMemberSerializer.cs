@@ -34,11 +34,11 @@ namespace ProtoBuf.Serializers
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        private object EnumToWire(object value)
+        internal static object EnumToWire(object value, Type type)
         {
             unchecked
             {
-                return Type.GetTypeCode(ExpectedType) switch
+                return Type.GetTypeCode(type) switch
                 { // unbox as the intended type
                     TypeCode.Byte => (byte)value,
                     TypeCode.SByte => (sbyte)value,
@@ -52,6 +52,7 @@ namespace ProtoBuf.Serializers
                 };
             }
         }
+        private object EnumToWire(object value) => EnumToWire(value, ExpectedType);
 
         public object Read(ref ProtoReader.State state, object value)
             => Enum.ToObject(ExpectedType, _tail.Read(ref state, value));
