@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class DoubleSerializer : IRuntimeProtoSerializerNode
     {
+        private DoubleSerializer() { }
+        internal static readonly DoubleSerializer Instance = new DoubleSerializer();
+
         private static readonly Type expectedType = typeof(double);
 
         public Type ExpectedType => expectedType;

@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class UInt64Serializer : IRuntimeProtoSerializerNode
     {
+        private UInt64Serializer() { }
+        internal static readonly UInt64Serializer Instance = new UInt64Serializer();
+
         static readonly Type expectedType = typeof(ulong);
 
         public Type ExpectedType => expectedType;

@@ -2,10 +2,6 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal static class PrimitiveSerializer<T> where T : class, IRuntimeProtoSerializerNode, new()
-    {
-        public static readonly T Singleton = new T();
-    }
     internal interface IRuntimeProtoSerializerNode
     {
         /// <summary>

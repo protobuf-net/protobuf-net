@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class GuidSerializer : IRuntimeProtoSerializerNode
     {
+        private GuidSerializer() { }
+        internal static readonly GuidSerializer Instance = new GuidSerializer();
+
         private static readonly Type expectedType = typeof(Guid);
 
         public Type ExpectedType { get { return expectedType; } }

@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class DecimalSerializer : IRuntimeProtoSerializerNode
     {
+        private DecimalSerializer() { }
+        internal static readonly DecimalSerializer Instance = new DecimalSerializer();
+
         private static readonly Type expectedType = typeof(decimal);
 
         public Type ExpectedType => expectedType;

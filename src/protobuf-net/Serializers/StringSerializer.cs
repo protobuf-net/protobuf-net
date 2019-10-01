@@ -6,6 +6,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class StringSerializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
+        private StringSerializer() { }
+        internal static readonly StringSerializer Instance = new StringSerializer();
+
         private static readonly Type expectedType = typeof(string);
 
         public Type ExpectedType => expectedType;

@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class Int16Serializer : IRuntimeProtoSerializerNode
     {
+        private Int16Serializer() { }
+        internal static readonly Int16Serializer Instance = new Int16Serializer();
+
         private static readonly Type expectedType = typeof(short);
 
         public Type ExpectedType => expectedType;

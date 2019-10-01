@@ -5,6 +5,8 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class ByteSerializer : IRuntimeProtoSerializerNode
     {
+        private ByteSerializer() { }
+        internal static readonly ByteSerializer Instance = new ByteSerializer();
         public Type ExpectedType { get { return expectedType; } }
 
         private static readonly Type expectedType = typeof(byte);

@@ -82,8 +82,8 @@ namespace ProtoBuf.unittest.Meta
             var head = TypeSerializer.Create(typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IRuntimeProtoSerializerNode[] {
-                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty(nameof(CustomerStruct.Id)), new TagDecorator(1, WireType.Varint, false, PrimitiveSerializer<Int32Serializer>.Singleton)),
-                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField(nameof(CustomerStruct.Name)), new TagDecorator(2, WireType.String, false, PrimitiveSerializer<StringSerializer>.Singleton))
+                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty(nameof(CustomerStruct.Id)), new TagDecorator(1, WireType.Varint, false, Int32Serializer.Instance)),
+                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField(nameof(CustomerStruct.Name)), new TagDecorator(2, WireType.String, false, StringSerializer.Instance))
                 }, null, false, true, null, null, null, null, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
 
@@ -118,8 +118,8 @@ namespace ProtoBuf.unittest.Meta
             var head = TypeSerializer.Create(typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IRuntimeProtoSerializerNode[] {
-                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty(nameof(CustomerStruct.Id)), new TagDecorator(1, WireType.Varint,false,  PrimitiveSerializer<Int32Serializer>.Singleton)),
-                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField(nameof(CustomerStruct.Name)), new TagDecorator(2, WireType.String,false,  PrimitiveSerializer<StringSerializer>.Singleton))
+                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty(nameof(CustomerStruct.Id)), new TagDecorator(1, WireType.Varint,false, Int32Serializer.Instance)),
+                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField(nameof(CustomerStruct.Name)), new TagDecorator(2, WireType.String,false, StringSerializer.Instance))
                 }, null, false, true, null, null, null, null, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
             var ser = CompilerContext.BuildSerializer<CustomerStruct>(model.Scope, head, model);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);

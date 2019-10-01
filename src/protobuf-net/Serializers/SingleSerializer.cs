@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     sealed class SingleSerializer : IRuntimeProtoSerializerNode
     {
+        private SingleSerializer() { }
+        internal static readonly SingleSerializer Instance = new SingleSerializer();
+
         static readonly Type expectedType = typeof(float);
 
         public Type ExpectedType { get { return expectedType; } }

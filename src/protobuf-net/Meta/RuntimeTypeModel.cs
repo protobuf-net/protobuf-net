@@ -1248,8 +1248,8 @@ namespace ProtoBuf.Meta
                     object[] propValues;
                     if (string.IsNullOrEmpty(options.TargetFrameworkDisplayName))
                     {
-                        props = new PropertyInfo[0];
-                        propValues = new object[0];
+                        props = Array.Empty<PropertyInfo>();
+                        propValues = Array.Empty<object>();
                     }
                     else
                     {
@@ -1309,12 +1309,6 @@ namespace ProtoBuf.Meta
         {
             MetaType meta = FindWithoutAdd(type);
             return meta != null && meta.IsPrepared();
-        }
-
-        internal EnumMemberSerializer.EnumPair[] GetEnumMap(Type type)
-        {
-            int index = FindOrAddAuto(type, false, false, false);
-            return index < 0 ? null : ((MetaType)types[index]).GetEnumMap();
         }
 
         private int metadataTimeoutMilliseconds = 5000;
@@ -1484,7 +1478,10 @@ namespace ProtoBuf.Meta
         }
 
         internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
+            => GetSchemaTypeName(effectiveType, dataFormat, asReference, dynamicType, ref imports, out _);
+        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
         {
+            altName = null;
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
             if (effectiveType == typeof(byte[])) return "bytes";
@@ -1497,7 +1494,16 @@ namespace ProtoBuf.Meta
                     imports |= CommonImports.Bcl;
                     return ".bcl.NetObjectProxy";
                 }
-                return this[effectiveType].GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName();
+
+                var mt = this[effectiveType];
+
+                var actual = mt.GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName();
+                if (mt.Type.IsEnum && !mt.IsValidEnum())
+                {
+                    altName = actual;
+                    actual = GetSchemaTypeName(Enum.GetUnderlyingType(mt.Type), dataFormat, asReference, dynamicType, ref imports);
+                }
+                return actual;
             }
             else
             {

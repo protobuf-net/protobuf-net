@@ -37,14 +37,14 @@ namespace ProtoBuf.unittest.Meta
             var model = RuntimeTypeModel.Create();
             if (withPassThru)
             {
-                model.Add(typeof (I8), true).EnumPassthru = true;
-                model.Add(typeof (U8), true).EnumPassthru = true;
-                model.Add(typeof (I16), true).EnumPassthru = true;
-                model.Add(typeof (U16), true).EnumPassthru = true;
-                model.Add(typeof (I32), true).EnumPassthru = true;
-                model.Add(typeof (U32), true).EnumPassthru = true;
-                model.Add(typeof (I64), true).EnumPassthru = true;
-                model.Add(typeof (U64), true).EnumPassthru = true;
+                model.Add(typeof(I8), true);
+                model.Add(typeof(U8), true);
+                model.Add(typeof(I16), true);
+                model.Add(typeof(U16), true);
+                model.Add(typeof(I32), true);
+                model.Add(typeof(U32), true);
+                model.Add(typeof(I64), true);
+                model.Add(typeof(U64), true);
             }
             model.Add(typeof(AllTheEnums), true);
             return model;
@@ -134,48 +134,6 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(original.U64, clone.U64); //, caption);
         }
 
-        [ProtoContract]
-        public class MappedValuesA
-        {
-            [ProtoMember(1)]
-            public EnumA Value { get; set; }
-        }
-        [ProtoContract]
-        public class MappedValuesB
-        {
-            [ProtoMember(1)]
-            public EnumB Value { get; set; }
-        }
-        public enum EnumA : short
-        {
-            [ProtoEnum(Value = 7)] X = 0,
-            [ProtoEnum(Value = 8)] Y = 1,
-            [ProtoEnum(Value = 9)] Z = 2,
-        }
-        public enum EnumB : long
-        {
-            [ProtoEnum(Value = 9)] X = 3,
-            [ProtoEnum(Value = 10)] Y = 4,
-            [ProtoEnum(Value = 11)] Z = 5,
-        }
-        RuntimeTypeModel CreateRemappingModel()
-        {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(EnumA), true);
-            model.Add(typeof(EnumB), true);
-            model.Add(typeof(MappedValuesA), true);
-            model.Add(typeof(MappedValuesB), true);
-            return model;
-        }
-
-        [Fact]
-        public void RemappingCanCompile()
-        {
-            var model = CreateRemappingModel();
-            model.Compile("CreateRemappingModel", "CreateRemappingModel.dll");
-            PEVerify.Verify("CreateRemappingModel.dll");
-        }
-
         TTo ChangeType<TTo>(TypeModel model, object value)
         {
             using var ms = new MemoryStream();
@@ -184,23 +142,6 @@ namespace ProtoBuf.unittest.Meta
             ms.Position = 0;
             return (TTo)model.Deserialize(ms, null, typeof(TTo));
 #pragma warning restore CS0618
-        }
-        [Fact]
-        public void RemapValuesMakeSense()
-        {
-            var model = BuildModel(true);
-
-            var orig = new MappedValuesA {Value = EnumA.Z};
-
-            var clone = ChangeType<MappedValuesB>(model, orig);
-            Assert.Equal(EnumB.X, clone.Value); //, "Runtime");
-
-            model.CompileInPlace();
-            clone = ChangeType<MappedValuesB>(model, orig);
-            Assert.Equal(EnumB.X, clone.Value); //, "CompileInPlace");
-
-            clone = ChangeType<MappedValuesB>(model.Compile(), orig);
-            Assert.Equal(EnumB.X, clone.Value); //, "Compile");
         }
 
         [Fact]

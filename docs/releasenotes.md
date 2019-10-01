@@ -17,6 +17,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 ## v3.0.0-alpha.3
 
 - **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
+- **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
 
 - new state-based reader/writer API (works with streams, buffers, etc)
 - entire new custom serializer API

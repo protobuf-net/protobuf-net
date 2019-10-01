@@ -12,11 +12,11 @@ namespace Examples.Issues
     {
         public enum E
         {
-            [ProtoEnum(Value = 3)]
+            [ProtoEnum]
             V0 = 0,
-            [ProtoEnum(Value = 4)]
+            [ProtoEnum]
             V1 = 1,
-            [ProtoEnum(Value = 5)]
+            [ProtoEnum]
             V2 = 2,
         }
         [ProtoContract]
@@ -96,7 +96,7 @@ namespace Examples.Issues
         {
             var value = new[] {E.V0, E.V1, E.V2};
             Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
-            Assert.True(Program.CheckBytes(value, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
+            Assert.True(Program.CheckBytes(value, model, 0x08, 0x00, 0x08, 0x01, 0x08, 0x02));
             var clone = (E[]) model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
             value.SequenceEqual(clone);

@@ -66,7 +66,7 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_AsReferenceDefault, value, true); }
         }
 
-        private BasicList subTypes;
+        private List<SubType> _subTypes;
         private bool IsValidSubType(Type subType)
         {
             return subType != null && !subType.IsValueType
@@ -101,7 +101,7 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
 
             derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
-            (subTypes ?? (subTypes = new BasicList())).Add(subType);
+            (_subTypes ?? (_subTypes = new List<SubType>())).Add(subType);
             return this;
         }
 
@@ -132,7 +132,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether the current type has defined subtypes
         /// </summary>
-        public bool HasSubtypes => subTypes != null && subTypes.Count != 0;
+        public bool HasSubtypes => _subTypes != null && _subTypes.Count != 0;
 
         /// <summary>
         /// Returns the set of callbacks defined for this type
@@ -289,11 +289,6 @@ namespace ProtoBuf.Meta
 
             Type = type;
             this.model = model;
-
-            if (type.IsEnum)
-            {
-                EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
-            }
         }
 
         /// <summary>
@@ -354,7 +349,7 @@ namespace ProtoBuf.Meta
 
             var root = GetRootType(this);
             if (!ReferenceEquals(root, this)) return root.Type;
-            if (subTypes != null && subTypes.Count != 0) return root.Type;
+            if (_subTypes != null && _subTypes.Count != 0) return root.Type;
             
             return null;
         }
@@ -375,11 +370,6 @@ namespace ProtoBuf.Meta
 
         private IProtoTypeSerializer BuildSerializer()
         {
-            if (Type.IsEnum)
-            {
-                return (IProtoTypeSerializer)Activator.CreateInstance(
-                    typeof(EnumTypeSerializer<>).MakeGenericType(Type), args: new object[] { GetEnumMap() });
-            }
             Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
             if (itemType != null)
             {
@@ -387,7 +377,7 @@ namespace ProtoBuf.Meta
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
                 }
-                if (subTypes != null && subTypes.Count != 0)
+                if (_subTypes != null && _subTypes.Count != 0)
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
@@ -412,15 +402,17 @@ namespace ProtoBuf.Meta
                     args: new object[] { model, ctor, mapping, GetFeatures() });
             }
 
-            fields.Trim();
-            int fieldCount = fields.Count;
-            int subTypeCount = subTypes?.Count ?? 0;
+            if (HasFields) Fields.TrimExcess();
+            if (HasEnums) Enums.TrimExcess();
+
+            int fieldCount = _fields?.Count ?? 0;
+            int subTypeCount = _subTypes?.Count ?? 0;
             int[] fieldNumbers = new int[fieldCount + subTypeCount];
             IRuntimeProtoSerializerNode[] serializers = new IRuntimeProtoSerializerNode[fieldCount + subTypeCount];
             int i = 0;
             if (subTypeCount != 0)
             {
-                foreach (SubType subType in subTypes)
+                foreach (SubType subType in _subTypes)
                 {
                     if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
                     {
@@ -432,7 +424,7 @@ namespace ProtoBuf.Meta
             }
             if (fieldCount != 0)
             {
-                foreach (ValueMember member in fields)
+                foreach (ValueMember member in _fields)
                 {
                     fieldNumbers[i] = member.FieldNumber;
                     serializers[i++] = member.Serializer;
@@ -501,7 +493,7 @@ namespace ProtoBuf.Meta
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
             }
-            bool isEnum = !EnumPassthru && Type.IsEnum;
+            bool isEnum = Type.IsEnum;
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
 
             bool enumShouldUseImplicitPassThru = isEnum;
@@ -562,17 +554,9 @@ namespace ProtoBuf.Meta
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
                 {
                     if (item.TryGet(nameof(ProtoContractAttribute.Name), out tmp)) name = (string)tmp;
-                    if (Type.IsEnum) // note this is subtly different to isEnum; want to do this even if [Flags]
+                    if (Type.IsEnum)
                     {
-                        if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthruHasValue), false, out tmp) && (bool)tmp)
-                        {
-                            if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthru), out tmp))
-                            {
-                                EnumPassthru = (bool)tmp;
-                                enumShouldUseImplicitPassThru = false;
-                                if (EnumPassthru) isEnum = false; // no longer treated as an enum
-                            }
-                        }
+                        // there aren't any interesting things to ask about for enums; they are just pass-thru
                     }
                     else
                     {
@@ -617,11 +601,12 @@ namespace ProtoBuf.Meta
             }
             MethodInfo[] callbacks = null;
 
-            BasicList members = new BasicList();
+            var members = new List<ProtoMemberAttribute>();
+            var enumMembers = new List<EnumMember>();
 
             MemberInfo[] foundList = Type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            bool hasConflictingEnumValue = false;
+
             foreach (MemberInfo member in foundList)
             {
                 if (member.DeclaringType != Type) continue;
@@ -651,7 +636,7 @@ namespace ProtoBuf.Meta
                     effectiveType = property.PropertyType;
                     isPublic = Helpers.GetGetMethod(property, false, false) != null;
                     isField = false;
-                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue, backingField);
+                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, enumMembers, backingField);
                 }
                 else if (member is FieldInfo field)
                 {
@@ -662,7 +647,7 @@ namespace ProtoBuf.Meta
                     { // only care about static things on enums; WinRT has a __value instance field!
                         continue;
                     }
-                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue);
+                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, enumMembers);
                 }
                 else if (member is MethodInfo method)
                 {
@@ -682,19 +667,11 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (isEnum && enumShouldUseImplicitPassThru && !hasConflictingEnumValue)
-            {
-                EnumPassthru = true;
-                // but leave isEnum alone
-            }
-            var arr = new ProtoMemberAttribute[members.Count];
-            members.CopyTo(arr, 0);
-
             if (inferTagByName || implicitMode != ImplicitFields.None)
             {
-                Array.Sort(arr);
+                members.Sort();
                 int nextTag = implicitFirstTag;
-                foreach (ProtoMemberAttribute normalizedAttribute in arr)
+                foreach (ProtoMemberAttribute normalizedAttribute in members)
                 {
                     if (!normalizedAttribute.TagIsPinned) // if ProtoMember etc sets a tag, we'll trust it
                     {
@@ -703,13 +680,18 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            foreach (ProtoMemberAttribute normalizedAttribute in arr)
+            foreach (ProtoMemberAttribute normalizedAttribute in members)
             {
                 ValueMember vm = ApplyDefaultBehaviour(isEnum, normalizedAttribute);
                 if (vm != null)
                 {
                     Add(vm);
                 }
+            }
+
+            foreach (EnumMember enumMember in enumMembers)
+            {
+                Add(enumMember);
             }
 
             if (callbacks != null)
@@ -719,7 +701,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
+        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -735,8 +717,9 @@ namespace ProtoBuf.Meta
             if (effectiveType.IsSubclassOf(typeof(Delegate))) effectiveType = null;
             if (effectiveType != null)
             {
-                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, ref hasConflictingEnumValue, backingMember);
+                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, out var enumMember, backingMember);
                 if (normalizedAttribute != null) members.Add(normalizedAttribute);
+                if (enumMember.HasValue) enumMembers.Add(enumMember);
             }
         }
 
@@ -890,8 +873,9 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
 
-        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
+        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, out EnumMember enumMember, MemberInfo backingMember = null)
         {
+            enumMember = default;
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
             string name = null;
@@ -903,36 +887,18 @@ namespace ProtoBuf.Meta
 
             if (isEnum)
             {
-                attrib = GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute");
-                if (attrib != null)
-                {
-                    ignore = true;
-                }
-                else
+                if (GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute") == null)
                 {
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-                    fieldNumber = Convert.ToInt32(((FieldInfo)member).GetRawConstantValue());
-                    if (attrib != null)
-                    {
-                        GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
 
-                        if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType
-                            , nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
-                        {
-                            if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object tmp))
-                            {
-                                if (fieldNumber != (int)tmp)
-                                {
-                                    hasConflictingEnumValue = true;
-                                }
-                                fieldNumber = (int)tmp;
-                            }
-                        }
-                    }
+                    var value = ((FieldInfo)member).GetRawConstantValue();
+                    if (attrib != null) GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
+                    if (string.IsNullOrWhiteSpace(name)) name = member.Name;
+
+                    enumMember = new EnumMember(name, value);
                 }
-                done = true;
+                return null;
             }
-
             if (!ignore && !done) // always consider ProtoMember 
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
@@ -1296,13 +1262,16 @@ namespace ProtoBuf.Meta
         private int GetNextFieldNumber()
         {
             int maxField = 0;
-            foreach (ValueMember member in fields)
+            if (HasFields)
             {
-                if (member.FieldNumber > maxField) maxField = member.FieldNumber;
+                foreach (ValueMember member in Fields)
+                {
+                    if (member.FieldNumber > maxField) maxField = member.FieldNumber;
+                }
             }
-            if (subTypes != null)
+            if (_subTypes != null)
             {
-                foreach (SubType subType in subTypes)
+                foreach (SubType subType in _subTypes)
                 {
                     if (subType.FieldNumber > maxField) maxField = subType.FieldNumber;
                 }
@@ -1448,14 +1417,31 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void Add(ValueMember member)
+        private void Add(EnumMember member)
         {
+            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should add {nameof(EnumMember)} instances");
             int opaqueToken = 0;
             try
             {
                 model.TakeLock(ref opaqueToken);
                 ThrowIfFrozen();
-                fields.Add(member);
+                Enums.Add(member);
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+        }
+
+        private void Add(ValueMember member)
+        {
+            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should add {nameof(EnumMember)} instances, not {nameof(ValueMember)}");
+            int opaqueToken = 0;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+                Fields.Add(member);
             }
             finally
             {
@@ -1469,9 +1455,12 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                foreach (ValueMember member in fields)
+                if (HasFields)
                 {
-                    if (member.FieldNumber == fieldNumber) return member;
+                    foreach (ValueMember member in Fields)
+                    {
+                        if (member.FieldNumber == fieldNumber) return member;
+                    }
                 }
                 return null;
             }
@@ -1483,25 +1472,53 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                if (member == null) return null;
-                foreach (ValueMember x in fields)
+                if (member == null || !HasFields) return null;
+                foreach (ValueMember x in Fields)
                 {
                     if (x.Member == member || x.BackingMember == member) return x;
                 }
                 return null;
             }
         }
-        private readonly BasicList fields = new BasicList();
+
+        private List<ValueMember> _fields = null;
+        internal bool HasFields => _fields != null && _fields.Count != 0;
+        internal List<ValueMember> Fields => _fields ?? (_fields = new List<ValueMember>());
+
+        private List<EnumMember> _enums = new List<EnumMember>();
+        internal List<EnumMember> Enums => _enums ?? (_enums = new List<EnumMember>());
+        internal bool HasEnums => _enums != null && _enums.Count != 0;
 
         /// <summary>
         /// Returns the ValueMember instances associated with this type
         /// </summary>
         public ValueMember[] GetFields()
         {
-            ValueMember[] arr = new ValueMember[fields.Count];
-            fields.CopyTo(arr, 0);
+            if (!HasFields) return Array.Empty<ValueMember>();
+            var arr = Fields.ToArray();
             Array.Sort(arr, ValueMember.Comparer.Default);
             return arr;
+        }
+
+        /// <summary>
+        /// Returns the EnumMember instances associated with this type
+        /// </summary>
+        public EnumMember[] GetEnumValues()
+        {
+            if (!HasEnums) return Array.Empty<EnumMember>();
+            return Enums.ToArray();
+        }
+
+        internal bool IsValidEnum() => IsValidEnum(_enums);
+
+        internal static bool IsValidEnum(IList<EnumMember> values)
+        {
+            if (values == null || values.Count == 0) return false;
+            foreach(var val in values)
+            {
+                if (!val.TryGetInt32().HasValue) return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -1509,9 +1526,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public SubType[] GetSubtypes()
         {
-            if (subTypes == null || subTypes.Count == 0) return new SubType[0];
-            SubType[] arr = new SubType[subTypes.Count];
-            subTypes.CopyTo(arr, 0);
+            if (_subTypes == null || _subTypes.Count == 0) return Array.Empty<SubType>();
+            var arr = _subTypes.ToArray();
             Array.Sort(arr, SubType.Comparer.Default);
             return arr;
         }
@@ -1551,25 +1567,14 @@ namespace ProtoBuf.Meta
 
         internal bool IsDefined(int fieldNumber)
         {
-            foreach (ValueMember field in fields)
+            if (HasFields)
             {
-                if (field.FieldNumber == fieldNumber) return true;
+                foreach (ValueMember field in Fields)
+                {
+                    if (field.FieldNumber == fieldNumber) return true;
+                }
             }
             return false;
-        }
-
-        internal EnumMemberSerializer.EnumPair[] GetEnumMap()
-        {
-            if (HasFlag(OPTIONS_EnumPassThru)) return null;
-            EnumMemberSerializer.EnumPair[] result = new EnumMemberSerializer.EnumPair[fields.Count];
-            for (int i = 0; i < result.Length; i++)
-            {
-                ValueMember member = (ValueMember)fields[i];
-                int wireValue = member.FieldNumber;
-                object value = member.GetRawEnumValue();
-                result[i] = new EnumMemberSerializer.EnumPair(wireValue, value, member.MemberType);
-            }
-            return result;
         }
 
         /// <summary>
@@ -1578,8 +1583,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool EnumPassthru
         {
-            get { return HasFlag(OPTIONS_EnumPassThru); }
-            set { SetFlag(OPTIONS_EnumPassThru, value, true); }
+            [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, false)]
+            get => Type.IsEnum;
+            [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, true)]
+            set { if (value != EnumPassthru) ThrowHelper.ThrowNotSupportedException(); }
         }
 
         /// <summary>
@@ -1600,7 +1607,7 @@ namespace ProtoBuf.Meta
 
         private const ushort
             OPTIONS_Pending = 1,
-            OPTIONS_EnumPassThru = 2,
+            // OPTIONS_EnumPassThru = 2,
             OPTIONS_Frozen = 4,
             OPTIONS_PrivateOnApi = 8,
             OPTIONS_SkipConstructor = 16,
@@ -1654,8 +1661,6 @@ namespace ProtoBuf.Meta
             return _serializer is CompiledSerializer;
         }
 
-        internal IEnumerable Fields => this.fields;
-
         internal static StringBuilder NewLine(StringBuilder builder, int indent)
         {
             return builder.AppendLine().Append(' ', indent * 3);
@@ -1675,10 +1680,6 @@ namespace ProtoBuf.Meta
         internal void WriteSchema(StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
         {
             if (surrogate != null) return; // nothing to write
-
-            ValueMember[] fieldsArr = new ValueMember[fields.Count];
-            fields.CopyTo(fieldsArr, 0);
-            Array.Sort(fieldsArr, ValueMember.Comparer.Default);
 
             if (IsList)
             {
@@ -1715,69 +1716,73 @@ namespace ProtoBuf.Meta
             }
             else if (Type.IsEnum)
             {
+                var enums = GetEnumValues();
+
+
+                bool allValid = IsValidEnum(enums);
+                if (!allValid) NewLine(builder, indent).Append("/* for context only");
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
-                if (fieldsArr.Length == 0 && EnumPassthru)
+
+                if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
-                    if (Type.IsDefined(typeof(FlagsAttribute), true))
+                    NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
+                }                
+
+                bool needsAlias = false; // check whether we need to allow duplicate names
+                var uniqueFields = new HashSet<int>();
+                foreach (var field in enums)
+                {
+                    var parsed = field.TryGetInt32();
+                    if (parsed.HasValue && !uniqueFields.Add(parsed.Value))
                     {
-                        NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
+                        needsAlias = true;
+                        break;
+                    }
+                }
+
+                if (needsAlias)
+                {   // duplicated value requires allow_alias
+                    NewLine(builder, indent + 1).Append("option allow_alias = true;");
+                }
+
+                bool haveWrittenZero = false;
+                // write zero values **first**
+                foreach (var member in enums)
+                {
+                    var parsed = member.TryGetInt32();
+                    if (parsed.HasValue && parsed.Value == 0)
+                    {
+                        NewLine(builder, indent + 1).Append(member.Name).Append(" = 0;");
+                        haveWrittenZero = true;
+                    }
+                }
+
+                if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
+                {
+                    NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
+                }
+
+                // note array is already sorted, so zero would already be first
+                foreach (var member in enums)
+                {
+                    var parsed = member.TryGetInt32();
+                    if (parsed.HasValue)
+                    {
+                        if (parsed.Value == 0) continue;
+                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(parsed.Value).Append(';');
                     }
                     else
                     {
-                        NewLine(builder, indent + 1).Append("// this enumeration will be passed as a raw value");
-                    }
-                    foreach (FieldInfo field in Type.GetFields())
-                    {
-                        if (field.IsStatic && field.IsLiteral)
-                        {
-                            object enumVal = field.GetRawConstantValue();
-                            NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";");
-                        }
+                        NewLine(builder, indent + 1).Append("// ").Append(member.Name).Append(" = ").Append(member.Value).Append(';').Append(" // note: enums should be valid 32-bit integers");
                     }
                 }
-                else
-                {
-                    Dictionary<int, int> countByField = new Dictionary<int, int>(fieldsArr.Length);
-                    bool needsAlias = false;
-                    foreach (var field in fieldsArr)
-                    {
-                        if (countByField.ContainsKey(field.FieldNumber))
-                        {  // no point actually counting; that's enough to know we have a problem
-                            needsAlias = true;
-                            break;
-                        }
-                        countByField.Add(field.FieldNumber, 1);
-                    }
-                    if (needsAlias)
-                    {   // duplicated value requires allow_alias
-                        NewLine(builder, indent + 1).Append("option allow_alias = true;");
-                    }
 
-                    bool haveWrittenZero = false;
-                    // write zero values **first**
-                    foreach (ValueMember member in fieldsArr)
-                    {
-                        if (member.FieldNumber == 0)
-                        {
-                            NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
-                            haveWrittenZero = true;
-                        }
-                    }
-                    if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
-                    {
-                        NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
-                    }
-                    // note array is already sorted, so zero would already be first
-                    foreach (ValueMember member in fieldsArr)
-                    {
-                        if (member.FieldNumber == 0) continue;
-                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
-                    }
-                }
                 NewLine(builder, indent).Append('}');
+                if (!allValid) NewLine(builder, indent).Append("*/");
             }
             else
             {
+                ValueMember[] fieldsArr = GetFields();
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
@@ -1797,7 +1802,8 @@ namespace ProtoBuf.Meta
                         string ordinality = member.ItemType != null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
                         NewLine(builder, indent + 1).Append(ordinality);
                         if (member.DataFormat == DataFormat.Group) builder.Append("group ");
-                        schemaTypeName = member.GetSchemaTypeName(true, ref imports);
+
+                        schemaTypeName = member.GetSchemaTypeName(true, ref imports, out var altName);
                         builder.Append(schemaTypeName).Append(" ")
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
@@ -1853,16 +1859,18 @@ namespace ProtoBuf.Meta
                                 builder.Append(" // default value could not be applied: ").Append(member.DefaultValue);
                             }
                         }
+
+                        if (!string.IsNullOrWhiteSpace(altName))
+                            builder.Append(" // declared as invalid enum: ").Append(altName);
                     }
                     if (schemaTypeName == ".bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
-                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports));
+                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports, out _));
                     }
                 }
-                if (subTypes != null && subTypes.Count != 0)
+                if (_subTypes != null && _subTypes.Count != 0)
                 {
-                    SubType[] subTypeArr = new SubType[subTypes.Count];
-                    subTypes.CopyTo(subTypeArr, 0);
+                    SubType[] subTypeArr = _subTypes.ToArray();
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
                     string[] fieldNames = new string[subTypeArr.Length];
                     for(int i = 0; i < subTypeArr.Length;i++)

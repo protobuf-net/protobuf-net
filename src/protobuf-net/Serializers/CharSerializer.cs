@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class CharSerializer : UInt16Serializer
     {
+        private CharSerializer() : base() { }
+        internal static new readonly CharSerializer Instance = new CharSerializer();
+
         private static readonly Type expectedType = typeof(char);
 
         public override Type ExpectedType => expectedType;

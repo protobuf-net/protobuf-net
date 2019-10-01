@@ -559,7 +559,7 @@ namespace ProtoBuf.Meta
                 {
                     // need to do this before checking the typecode; an int enum will report Int32 etc
                     defaultWireType = WireType.Varint;
-                    return new EnumMemberSerializer(type, model.GetEnumMap(type));
+                    return new EnumMemberSerializer(type);
                 }
                 else
                 { // enum is fine for adding as a meta-type
@@ -572,68 +572,68 @@ namespace ProtoBuf.Meta
             {
                 case ProtoTypeCode.Int32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<Int32Serializer>.Singleton;
+                    return Int32Serializer.Instance;
                 case ProtoTypeCode.UInt32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<UInt32Serializer>.Singleton;
+                    return UInt32Serializer.Instance;
                 case ProtoTypeCode.Int64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return PrimitiveSerializer<Int64Serializer>.Singleton;
+                    return Int64Serializer.Instance;
                 case ProtoTypeCode.UInt64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return PrimitiveSerializer<UInt64Serializer>.Singleton;
+                    return UInt64Serializer.Instance;
                 case ProtoTypeCode.String:
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
                         return new NetObjectSerializer(typeof(string), BclHelpers.NetObjectOptions.AsReference);
                     }
-                    return PrimitiveSerializer<StringSerializer>.Singleton;
+                    return StringSerializer.Instance;
                 case ProtoTypeCode.Single:
                     defaultWireType = WireType.Fixed32;
-                    return PrimitiveSerializer<SingleSerializer>.Singleton;
+                    return SingleSerializer.Instance;
                 case ProtoTypeCode.Double:
                     defaultWireType = WireType.Fixed64;
-                    return PrimitiveSerializer<DoubleSerializer>.Singleton;
+                    return DoubleSerializer.Instance;
                 case ProtoTypeCode.Boolean:
                     defaultWireType = WireType.Varint;
-                    return PrimitiveSerializer<BooleanSerializer>.Singleton;
+                    return BooleanSerializer.Instance;
                 case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new DateTimeSerializer(dataFormat, model);
                 case ProtoTypeCode.Decimal:
                     defaultWireType = WireType.String;
-                    return PrimitiveSerializer<DecimalSerializer>.Singleton;
+                    return DecimalSerializer.Instance;
                 case ProtoTypeCode.Byte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<ByteSerializer>.Singleton;
+                    return ByteSerializer.Instance;
                 case ProtoTypeCode.SByte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<SByteSerializer>.Singleton;
+                    return SByteSerializer.Instance;
                 case ProtoTypeCode.Char:
                     defaultWireType = WireType.Varint;
-                    return PrimitiveSerializer<CharSerializer>.Singleton;
+                    return CharSerializer.Instance;
                 case ProtoTypeCode.Int16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<Int16Serializer>.Singleton;
+                    return Int16Serializer.Instance;
                 case ProtoTypeCode.UInt16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<UInt16Serializer>.Singleton;
+                    return UInt16Serializer.Instance;
                 case ProtoTypeCode.TimeSpan:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new TimeSpanSerializer(dataFormat);
                 case ProtoTypeCode.Guid:
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return PrimitiveSerializer<GuidSerializer>.Singleton;
+                    return GuidSerializer.Instance;
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
-                    return PrimitiveSerializer<StringSerializer>.Singleton;
+                    return StringSerializer.Instance;
                 case ProtoTypeCode.ByteArray:
                     defaultWireType = WireType.String;
                     return new BlobSerializer(overwriteList);
                 case ProtoTypeCode.Type:
                     defaultWireType = WireType.String;
-                    return PrimitiveSerializer<SystemTypeSerializer>.Singleton;
+                    return SystemTypeSerializer.Instance;
             }
             IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable != null)
@@ -743,10 +743,10 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_SupportNull, value, true); }
         }
 
-        internal string GetSchemaTypeName(bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports)
+        internal string GetSchemaTypeName(bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports, out string altName)
         {
             Type effectiveType = ItemType ?? MemberType;
-            return model.GetSchemaTypeName(effectiveType, DataFormat, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports);
+            return model.GetSchemaTypeName(effectiveType, DataFormat, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports, out altName);
         }
 
         internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>

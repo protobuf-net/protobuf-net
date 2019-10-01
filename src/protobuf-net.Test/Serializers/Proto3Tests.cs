@@ -101,60 +101,10 @@ enum StrictEnum {
             [ProtoMember(1)]
             public StrictEnum Value { get; set; }
         }
-        [ProtoContract(EnumPassthru = false)]
+        [ProtoContract]
         public enum StrictEnum
         {
             A, B, C
-        }
-
-
-        [Fact]
-        public void HazCustomMappedEnum_Schema()
-        {
-            var schema = Serializer.GetProto<HazCustomMappedEnum>();
-            Assert.Equal(@"syntax = ""proto2"";
-package ProtoBuf.Serializers;
-
-message HazCustomMappedEnum {
-   optional MappedEnum Value = 1 [default = A];
-}
-enum MappedEnum {
-   B = 0;
-   A = 1;
-   C = 2;
-}
-", schema);
-        }
-        [Fact]
-        public void HazCustomMappedEnum_WorksForKnownAndUnknownValues()
-        {
-            var obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 0 });
-            Assert.Equal(MappedEnum.B, obj.Value);
-
-            obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 1 });
-            Assert.Equal(MappedEnum.A, obj.Value);
-
-            var ex = Assert.Throws<ProtoException>(() =>
-            {
-                obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 5 });
-            });
-            Assert.Equal("No ProtoBuf.Serializers.Proto3Tests+MappedEnum enum is mapped to the wire-value 5", ex.Message);
-        }
-
-        [ProtoContract]
-        public class HazCustomMappedEnum
-        {
-            [ProtoMember(1)]
-            public MappedEnum Value { get; set; }
-        }
-
-        public enum MappedEnum
-        {
-            [ProtoEnum(Value = 1)]
-            A,
-            [ProtoEnum(Value = 0)]
-            B,
-            C
         }
 
         [Fact]

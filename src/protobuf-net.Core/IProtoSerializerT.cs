@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
+    /// <summary>
+    /// Indicates capabilities and behaviors of a serializer
+    /// </summary>
     [Flags]
     public enum SerializerFeatures
     {

@@ -1,45 +1,31 @@
-﻿using ProtoBuf.Internal;
+﻿using ProtoBuf.Compiler;
+using ProtoBuf.Internal;
 using System;
-using System.Diagnostics;
 
 namespace ProtoBuf.Serializers
 {
-    internal class EnumMemberSerializer : IRuntimeProtoSerializerNode
+    internal class EnumMemberSerializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
-        public readonly struct EnumPair
+
+        private readonly IRuntimeProtoSerializerNode _tail;
+        public EnumMemberSerializer(Type enumType)
         {
-            public readonly object RawValue; // note that this is boxing, but I'll live with it
-            public readonly Enum TypedValue; // note that this is boxing, but I'll live with it
-            public readonly int WireValue;
-            public EnumPair(int wireValue, object raw, Type type)
-            {
-                WireValue = wireValue;
-                RawValue = raw;
-                TypedValue = (Enum)Enum.ToObject(type, raw);
-            }
-        }
-        private readonly EnumPair[] map;
-        public EnumMemberSerializer(Type enumType, EnumPair[] map)
-        {
+            if (!enumType.IsEnum) ThrowHelper.ThrowInvalidOperationException("Expected an enum type; got " + TypeHelper.CSName(enumType));
             ExpectedType = enumType ?? throw new ArgumentNullException(nameof(enumType));
-            this.map = map;
-            if (map != null)
+            _tail = Type.GetTypeCode(Enum.GetUnderlyingType(enumType)) switch
             {
-                for (int i = 1; i < map.Length; i++)
-                {
-                    for (int j = 0; j < i; j++)
-                    {
-                        if (map[i].WireValue == map[j].WireValue && !Equals(map[i].RawValue, map[j].RawValue))
-                        {
-                            throw new ProtoException("Multiple enums with wire-value " + map[i].WireValue.ToString());
-                        }
-                        if (Equals(map[i].RawValue, map[j].RawValue) && map[i].WireValue != map[j].WireValue)
-                        {
-                            throw new ProtoException("Multiple enums with deserialized-value " + map[i].RawValue);
-                        }
-                    }
-                }
-            }
+                TypeCode.SByte => SByteSerializer.Instance,
+                TypeCode.Int16 => Int16Serializer.Instance,
+                TypeCode.Int32 => Int32Serializer.Instance,
+                TypeCode.Int64 => Int64Serializer.Instance,
+                TypeCode.Byte => ByteSerializer.Instance,
+                TypeCode.UInt16 => UInt16Serializer.Instance,
+                TypeCode.UInt32 => UInt32Serializer.Instance,
+                TypeCode.UInt64 => UInt64Serializer.Instance,
+                _ => default,
+            };
+            if (_tail == null) ThrowHelper.ThrowInvalidOperationException("Unable to resolve underlying enum type for " + TypeHelper.CSName(enumType));
+
         }
 
         private ProtoTypeCode GetTypeCode()
@@ -54,8 +40,9 @@ namespace ProtoBuf.Serializers
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        private int EnumToWire(object value)
+        private object EnumToWire(object value)
         {
+            
             unchecked
             {
                 return (GetTypeCode()) switch
@@ -73,166 +60,18 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private object WireToEnum(int value)
-        {
-            unchecked
-            {
-                return (GetTypeCode()) switch
-                { // convert from int then box 
-                    ProtoTypeCode.Byte => Enum.ToObject(ExpectedType, (byte)value),
-                    ProtoTypeCode.SByte => Enum.ToObject(ExpectedType, (sbyte)value),
-                    ProtoTypeCode.Int16 => Enum.ToObject(ExpectedType, (short)value),
-                    ProtoTypeCode.Int32 => Enum.ToObject(ExpectedType, value),
-                    ProtoTypeCode.Int64 => Enum.ToObject(ExpectedType, (long)value),
-                    ProtoTypeCode.UInt16 => Enum.ToObject(ExpectedType, (ushort)value),
-                    ProtoTypeCode.UInt32 => Enum.ToObject(ExpectedType, (uint)value),
-                    ProtoTypeCode.UInt64 => Enum.ToObject(ExpectedType, (ulong)value),
-                    _ => throw new InvalidOperationException(),
-                };
-            }
-        }
-
         public object Read(ref ProtoReader.State state, object value)
-        {
-            Debug.Assert(value == null); // since replaces
-            int wireValue = state.ReadInt32();
-            if (map == null)
-            {
-                return WireToEnum(wireValue);
-            }
-            for (int i = 0; i < map.Length; i++)
-            {
-                if (map[i].WireValue == wireValue)
-                {
-                    return map[i].TypedValue;
-                }
-            }
-            state.ThrowEnumException(ExpectedType, wireValue);
-            return null; // to make compiler happy
-        }
+            => Enum.ToObject(ExpectedType, _tail.Read(ref state, value));
 
         public void Write(ref ProtoWriter.State state, object value)
-        {
-            if (map == null)
-            {
-                state.WriteInt32(EnumToWire(value));
-            }
-            else
-            {
-                for (int i = 0; i < map.Length; i++)
-                {
-                    if (object.Equals(map[i].TypedValue, value))
-                    {
-                        state.WriteInt32(map[i].WireValue);
-                        return;
-                    }
-                }
-                state.ThrowEnumException(value);
-            }
-        }
+            => _tail.Write(ref state, EnumToWire(value));
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            ProtoTypeCode typeCode = GetTypeCode();
-            using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
-            if (map == null)
-            {
-                ctx.LoadState();
-                ctx.LoadValue(loc);
-                ctx.ConvertToInt32(typeCode, false);
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.WriteInt32)));
-            }
-            else
-            {
-                Compiler.CodeLabel @continue = ctx.DefineLabel();
-                for (int i = 0; i < map.Length; i++)
-                {
-                    Compiler.CodeLabel tryNextValue = ctx.DefineLabel(), processThisValue = ctx.DefineLabel();
-                    ctx.LoadValue(loc);
-                    WriteEnumValue(ctx, typeCode, map[i].RawValue);
-                    ctx.BranchIfEqual(processThisValue, true);
-                    ctx.Branch(tryNextValue, true);
-                    ctx.MarkLabel(processThisValue);
-                    ctx.LoadValue(map[i].WireValue);
-                    ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), null);
-                    ctx.Branch(@continue, false);
-                    ctx.MarkLabel(tryNextValue);
-                }
-                ctx.LoadState();
-                ctx.LoadValue(loc);
-                ctx.CastToObject(ExpectedType);
-                ctx.EmitCall(typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.ThrowEnumException)));
-                ctx.MarkLabel(@continue);
-            }
-        }
+            => _tail.EmitWrite(ctx, valueFrom);
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
-        {
-            ProtoTypeCode typeCode = GetTypeCode();
-            if (map == null)
-            {
-                ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), typeof(int));
-                ctx.ConvertFromInt32(typeCode, false);
-            }
-            else
-            {
-                int[] wireValues = new int[map.Length];
-                object[] values = new object[map.Length];
-                for (int i = 0; i < map.Length; i++)
-                {
-                    wireValues[i] = map[i].WireValue;
-                    values[i] = map[i].RawValue;
-                }
-                using Compiler.Local result = new Compiler.Local(ctx, ExpectedType);
-                using Compiler.Local wireValue = new Compiler.Local(ctx, typeof(int));
-                ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), typeof(int));
-                ctx.StoreValue(wireValue);
-                Compiler.CodeLabel @continue = ctx.DefineLabel();
-                foreach (var group in BasicList.GetContiguousGroups(wireValues, values))
-                {
-                    Compiler.CodeLabel tryNextGroup = ctx.DefineLabel();
-                    int groupItemCount = group.Items.Count;
-                    if (groupItemCount == 1)
-                    {
-                        // discreet group; use an equality test
-                        ctx.LoadValue(wireValue);
-                        ctx.LoadValue(group.First);
-                        Compiler.CodeLabel processThisValue = ctx.DefineLabel();
-                        ctx.BranchIfEqual(processThisValue, true);
-                        ctx.Branch(tryNextGroup, false);
-                        WriteEnumValue(ctx, typeCode, processThisValue, @continue, group.Items[0], @result);
-                    }
-                    else
-                    {
-                        // implement as a jump-table-based switch
-                        ctx.LoadValue(wireValue);
-                        ctx.LoadValue(group.First);
-                        ctx.Subtract(); // jump-tables are zero-based
-                        Compiler.CodeLabel[] jmp = new Compiler.CodeLabel[groupItemCount];
-                        for (int i = 0; i < groupItemCount; i++)
-                        {
-                            jmp[i] = ctx.DefineLabel();
-                        }
-                        ctx.Switch(jmp);
-                        // write the default...
-                        ctx.Branch(tryNextGroup, false);
-                        for (int i = 0; i < groupItemCount; i++)
-                        {
-                            WriteEnumValue(ctx, typeCode, jmp[i], @continue, group.Items[i], @result);
-                        }
-                    }
-                    ctx.MarkLabel(tryNextGroup);
-                }
-                // throw source.CreateEnumException(ExpectedType, wireValue);
-                ctx.LoadState();
-                ctx.LoadValue(ExpectedType);
-                ctx.LoadValue(wireValue);
-                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ThrowEnumException),
-                    new[] { typeof(Type), typeof(int) }));
-                ctx.MarkLabel(@continue);
-                ctx.LoadValue(result);
-            }
-        }
+            => _tail.EmitRead(ctx, entity);
+
         private static void WriteEnumValue(Compiler.CompilerContext ctx, ProtoTypeCode typeCode, object value)
         {
             switch (typeCode)
@@ -248,12 +87,10 @@ namespace ProtoBuf.Serializers
                 default: throw new InvalidOperationException();
             }
         }
-        private static void WriteEnumValue(Compiler.CompilerContext ctx, ProtoTypeCode typeCode, Compiler.CodeLabel handler, Compiler.CodeLabel @continue, object value, Compiler.Local local)
-        {
-            ctx.MarkLabel(handler);
-            WriteEnumValue(ctx, typeCode, value);
-            ctx.StoreValue(local);
-            ctx.Branch(@continue, false); // "continue"
-        }
+
+        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => _tail is IDirectWriteNode dw && dw.CanEmitDirectWrite(wireType);
+
+        void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, CompilerContext ctx, Local valueFrom)
+            => ((IDirectWriteNode)_tail).EmitDirectWrite(fieldNumber, wireType, ctx, valueFrom);
     }
 }

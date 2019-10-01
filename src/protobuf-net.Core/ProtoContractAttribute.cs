@@ -142,22 +142,19 @@ namespace ProtoBuf
             OPTIONS_SkipConstructor = 8,
             OPTIONS_IgnoreListHandling = 16,
             OPTIONS_AsReferenceDefault = 32,
-            OPTIONS_EnumPassthru = 64,
-            OPTIONS_EnumPassthruHasValue = 128,
+            //OPTIONS_EnumPassthru = 64,
+            //OPTIONS_EnumPassthruHasValue = 128,
             OPTIONS_IsGroup = 256;
 
         /// <summary>
         /// Applies only to enums (not to DTO classes themselves); gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather
         /// than enforcing .proto enum rules. This is useful *in particul* for [Flags] enums.
         /// </summary>
+        [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, true)]
         public bool EnumPassthru
         {
-            get { return HasFlag(OPTIONS_EnumPassthru); }
-            set
-            {
-                SetFlag(OPTIONS_EnumPassthru, value);
-                SetFlag(OPTIONS_EnumPassthruHasValue, true);
-            }
+            get { ThrowHelper.ThrowNotSupportedException(); return default;  }
+            set { ThrowHelper.ThrowNotSupportedException(); }
         }
 
         /// <summary>
@@ -169,13 +166,5 @@ namespace ProtoBuf
         /// Defines a serializer to use for this type; the serializer must implement ISerializer-T for this type
         /// </summary>
         public Type Serializer { get; set; }
-
-        /// <summary>
-        /// Has a EnumPassthru value been explicitly set?
-        /// </summary>
-        internal bool EnumPassthruHasValue
-        { // note that this property is accessed via reflection and should not be removed
-            get { return HasFlag(OPTIONS_EnumPassthruHasValue); }
-        }
     }
 }

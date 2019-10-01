@@ -5,6 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class BooleanSerializer : IRuntimeProtoSerializerNode
     {
+        private BooleanSerializer() { }
+        internal static readonly BooleanSerializer Instance = new BooleanSerializer();
+
         private static readonly Type expectedType = typeof(bool);
 
         public Type ExpectedType => expectedType;
