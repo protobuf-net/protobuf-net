@@ -12,7 +12,7 @@ namespace ProtoBuf.Serializers
         {
             if (!enumType.IsEnum) ThrowHelper.ThrowInvalidOperationException("Expected an enum type; got " + enumType.NormalizeName());
             ExpectedType = enumType ?? throw new ArgumentNullException(nameof(enumType));
-            _tail = Type.GetTypeCode(Enum.GetUnderlyingType(enumType)) switch
+            _tail = Type.GetTypeCode(enumType) switch
             {
                 TypeCode.SByte => SByteSerializer.Instance,
                 TypeCode.Int16 => Int16Serializer.Instance,
@@ -28,12 +28,6 @@ namespace ProtoBuf.Serializers
 
         }
 
-        private ProtoTypeCode GetTypeCode()
-        {
-            Type type = Nullable.GetUnderlyingType(ExpectedType) ?? ExpectedType;
-            return Helpers.GetTypeCode(type);
-        }
-
         public Type ExpectedType { get; }
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
@@ -42,19 +36,18 @@ namespace ProtoBuf.Serializers
 
         private object EnumToWire(object value)
         {
-            
             unchecked
             {
-                return (GetTypeCode()) switch
-                { // unbox then convert to int
-                    ProtoTypeCode.Byte => (int)(byte)value,
-                    ProtoTypeCode.SByte => (int)(sbyte)value,
-                    ProtoTypeCode.Int16 => (int)(short)value,
-                    ProtoTypeCode.Int32 => (int)value,
-                    ProtoTypeCode.Int64 => (int)(long)value,
-                    ProtoTypeCode.UInt16 => (int)(ushort)value,
-                    ProtoTypeCode.UInt32 => (int)(uint)value,
-                    ProtoTypeCode.UInt64 => (int)(ulong)value,
+                return Type.GetTypeCode(ExpectedType) switch
+                { // unbox as the intended type
+                    TypeCode.Byte => (byte)value,
+                    TypeCode.SByte => (sbyte)value,
+                    TypeCode.Int16 => (short)value,
+                    TypeCode.Int32 => (int)value,
+                    TypeCode.Int64 => (long)value,
+                    TypeCode.UInt16 => (ushort)(ushort)value,
+                    TypeCode.UInt32 => (uint)(uint)value,
+                    TypeCode.UInt64 => (ulong)(ulong)value,
                     _ => throw new InvalidOperationException(),
                 };
             }
