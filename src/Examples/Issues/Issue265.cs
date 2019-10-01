@@ -43,7 +43,7 @@ namespace Examples.Issues
         {
             var value = new Foo {Bar = new E[] {E.V0, E.V1, E.V2}};
 
-            Assert.True(Program.CheckBytes(value, model, 0x18, 0x03, 0x18, 0x04, 0x18, 0x05));
+            Assert.True(Program.CheckBytes(value, model, 0x18, 0x00, 0x18, 0x01, 0x18, 0x02));
             var clone = (Foo) model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone.Bar)); //, "clone");
         }
@@ -75,7 +75,7 @@ namespace Examples.Issues
         private static void TestIndividual(TypeModel model)
         {
             var value = E.V1;
-            Assert.True(Program.CheckBytes(value, model, 0x08, 0x04));
+            Assert.True(Program.CheckBytes(value, model, 0x08, 0x01));
             Assert.Equal(value, model.DeepClone(value));
         }
 
