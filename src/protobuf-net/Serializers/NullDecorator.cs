@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEAT_NULL_LIST_ITEMS
+using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -159,3 +160,4 @@ namespace ProtoBuf.Serializers
         }
     }
 }
+#endif

@@ -474,6 +474,7 @@ namespace ProtoBuf.Meta
                     // apply tags
                     if (ItemType != null && SupportNull)
                     {
+#if FEAT_NULL_LIST_ITEMS
                         if (IsPacked)
                         {
                             throw new NotSupportedException("Packed encodings cannot support null values");
@@ -481,6 +482,10 @@ namespace ProtoBuf.Meta
                         ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
                         ser = new NullDecorator(ser);
                         ser = new TagDecorator(FieldNumber, WireType.StartGroup, false, ser);
+#else
+                        ThrowHelper.ThrowNotSupportedException("null items in lists");
+                        ser = default;
+#endif
                     }
                     else
                     {

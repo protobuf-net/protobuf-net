@@ -36,18 +36,15 @@ namespace ProtoBuf.Internal
                 => Write(ref state, value.Value);
             public SerializerFeatures Features => SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
 
-            public unsafe int Measure(ISerializationContext context, WireType wireType, TEnum value)
-            {
-                switch (wireType)
+            public unsafe int Measure(ISerializationContext context, WireType wireType, TEnum value) => wireType switch
                 {
-                    case WireType.Fixed32: return 4;
-                    case WireType.Fixed64: return 8;
-                    case WireType.Varint: return MeasureVarint(*(TRaw*)&value);
-                    case WireType.SignedVarint: return MeasureSignedVarint(*(TRaw*)&value);
-                    default:
-                        return -1;
-                }
-            }
+                    WireType.Fixed32 => 4,
+                    WireType.Fixed64 => 8,
+                    WireType.Varint => MeasureVarint(*(TRaw*)&value),
+                    WireType.SignedVarint => MeasureSignedVarint(*(TRaw*)&value),
+                    _ => -1,
+                };
+
             int IMeasuringSerializer<TEnum?>.Measure(ISerializationContext context, WireType wireType, TEnum? value)
                 => Measure(context, wireType, value.Value);
         }
