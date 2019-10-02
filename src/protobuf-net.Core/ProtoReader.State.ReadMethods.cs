@@ -179,17 +179,16 @@ namespace ProtoBuf
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
             public TList ReadRepeated<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer = null) where TList : ICollection<T>
-            {
+            {   // the TList here is so we know what type to *construct*, and also to help with value-type list-like things
                 if (typeof(TList) == typeof(T[]))
                     return (TList)(object)ReadRepeated(features, (T[])(object)value, serializer);
                 return ReadRepeated_List<TList, T>(features, value, serializer);
                 
             }
 
-            
+            // the TList here is so we know what type to *construct*, and also to help with value-type list-like things
             private TList ReadRepeated_List<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer) where TList : ICollection<T>
             {
-
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -207,7 +206,7 @@ namespace ProtoBuf
                         ThrowInvalidOperationException("Packed data expected a scalar serializer");
 
                     var wireType = features.GetWireType(serializerFeatures);
-                    ReadPackedScalar<T>(value, wireType, serializer);
+                    ReadPackedScalar<TList, T>(value, wireType, serializer);
                 }
                 else
                 {
@@ -234,9 +233,11 @@ namespace ProtoBuf
                 return value;
             }
 
-            private void ReadPackedScalar<T>(ICollection<T> list, WireType wireType, ISerializer<T> serializer)
+            // the TList instead of just ICollection<T> here is to ensure that it works for val-types
+            private void ReadPackedScalar<TList, T>(TList list, WireType wireType, ISerializer<T> serializer)
+                where TList : ICollection<T>
             {
-                var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
+                var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
                 if (bytes == 0) return;
                 switch(wireType)
                 {
@@ -259,7 +260,6 @@ ReadFixedQuantity:
                             _reader.WireType = wireType;
                             list.Add(serializer.Read(ref this, default));
                         }
-
                         break;
                     case WireType.Varint:
                     case WireType.SignedVarint:
