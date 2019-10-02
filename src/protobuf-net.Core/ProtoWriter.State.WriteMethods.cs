@@ -323,6 +323,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
             public void WriteMessage<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
             {
                 if (!(TypeHelper<T>.CanBeNull && value is null))
@@ -352,8 +353,8 @@ namespace ProtoBuf
                 ThrowHelper.ThrowInvalidOperationException("features: " + features);
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
-                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                var wireType = features.GetWireType();
+                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                var wireType = features.GetWireType(serializer.Features);
                 var category = serializerFeatures.GetCategory();
 
                 int count;
@@ -526,7 +527,7 @@ namespace ProtoBuf
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
-                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
 
                 int count;
                 var wireType = features.GetWireType();
@@ -574,7 +575,7 @@ namespace ProtoBuf
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
-                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 int count;
                 var wireType = features.GetWireType();
                 var category = serializerFeatures.GetCategory();
@@ -615,18 +616,71 @@ namespace ProtoBuf
                 }
             }
 
+            /// <summary>
+            /// Writes a map to the output using all default options
+            /// </summary>
+            public void WriteMap<TKey, TValue>(int fieldNumber, IDictionary<TKey, TValue> values)
+            {
+                var keySerializer = TypeModel.GetSerializer<TKey>(Model);
+                var valueSerializer = TypeModel.GetSerializer<TValue>(Model);
+                WriteMap(fieldNumber, default, keySerializer.Features, valueSerializer.Features, values, keySerializer, valueSerializer);
+            }
+
+            /// <summary>
+            /// Writes a map to the output, specifying custom options
+            /// </summary>
+            public void WriteMap<TKey, TValue>(
+                int fieldNumber,
+                SerializerFeatures features,
+                SerializerFeatures keyFeatures,
+                SerializerFeatures valueFeatures,
+                IDictionary<TKey, TValue> values, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
+            {
+                keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
+                valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
+
+                // inherit features as appropriate
+                if (keyFeatures == 0) keyFeatures = keySerializer.Features;
+                else if (keyFeatures.GetCategory() == 0 && !(keySerializer is IRepeatedSerializer<TKey>))
+                    keyFeatures |= keySerializer.Features.GetCategory();
+
+                if (valueFeatures == 0) valueFeatures = valueSerializer.Features;
+                else if (valueFeatures.GetCategory() == 0 && !(valueFeatures is IRepeatedSerializer<TValue>))
+                    valueFeatures |= valueSerializer.Features.GetCategory();
+
+                if (values == null || values.Count == 0)
+                { }
+                else
+                {
+                    var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
+                    var wireType = features.GetWireType(pairSerializer.Features);
+                    foreach (var pair in values)
+                    {
+                        WriteFieldHeader(fieldNumber, wireType);
+                        _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
+                    }
+                }
+            }
 
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
+            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
+            }
+
+            /// <summary>
+            /// Writes a value or sub-item to the writer
+            /// </summary>
+            public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
-                    var features = serializer.Features;
                     
-                    WriteFieldHeader(fieldNumber, features.GetWireType());
+                    WriteFieldHeader(fieldNumber, features.GetWireType(serializer.Features));
 
                     switch (features.GetCategory())
                     {
@@ -635,7 +689,7 @@ namespace ProtoBuf
                             break;
                         case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         case SerializerFeatures.CategoryMessage:
-                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
                             break;
                         case SerializerFeatures.CategoryScalar:
                             serializer.Write(ref this, value);

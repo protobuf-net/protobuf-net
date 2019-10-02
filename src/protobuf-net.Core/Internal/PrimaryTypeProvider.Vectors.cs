@@ -15,8 +15,7 @@ namespace ProtoBuf.Internal
                 int field;
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
                 var features = serializer.Features;
-                if ((features & SerializerFeatures.CategoryRepeated) != 0)
-                    TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (features.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
@@ -35,17 +34,17 @@ namespace ProtoBuf.Internal
             public void Write(ref ProtoWriter.State state, T[] value)
             {
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
-                state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.Features, value, serializer);
+                state.WriteRepeated(TypeModel.ListItemTag, serializer.Features, value, serializer);
             }
             public void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, T[] value)
             {
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
-                state.WriteRepeated<T>(fieldNumber, features, value, serializer);
+                state.WriteRepeated(fieldNumber, features, value, serializer);
             }
         }
 
         private sealed class ListSerializer<TList, T> : IRepeatedSerializer<TList>
-            where TList : List<T>
+            where TList : class, ICollection<T>
         {
             public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
 
@@ -54,14 +53,13 @@ namespace ProtoBuf.Internal
                 int field;
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
                 var features = serializer.Features;
-                if ((features & SerializerFeatures.CategoryRepeated) != 0)
-                    TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (features.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            value = state.ReadRepeated<TList, T>(features, value, serializer);
+                            value = state.ReadRepeated(features, value, serializer);
                             break;
                         default:
                             state.SkipField();
@@ -74,13 +72,47 @@ namespace ProtoBuf.Internal
             public void Write(ref ProtoWriter.State state, TList value)
             {
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
-                state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.Features, value, serializer);
+                state.WriteRepeated(TypeModel.ListItemTag, serializer.Features, value, serializer);
             }
 
             public void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TList value)
+                => state.WriteRepeated(fieldNumber, features, value);
+        }
+
+        private sealed class DictionarySerializer<TDictionary, TKey, TValue>
+            : IRepeatedSerializer<TDictionary>
+            where TDictionary : class, IDictionary<TKey, TValue>
+        {
+            public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
+
+            public TDictionary Read(ref ProtoReader.State state, TDictionary value)
             {
-                var serializer = TypeModel.GetSerializer<T>(state.Model);
-                state.WriteRepeated<T>(fieldNumber, features, value, serializer);
+                int field;
+                var keySerializer = TypeModel.GetSerializer<TKey>(state.Model);
+                var valueSerializer = TypeModel.GetSerializer<TValue>(state.Model);
+                while ((field = state.ReadFieldHeader()) > 0)
+                {
+                    switch (field)
+                    {
+                        case TypeModel.ListItemTag:
+                            value = state.ReadMap(keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
+                            break;
+                        default:
+                            state.SkipField();
+                            break;
+                    }
+                }
+                return value ?? state.CreateInstance<TDictionary>();
+            }
+
+            public void Write(ref ProtoWriter.State state, TDictionary value)
+                => Write(ref state, TypeModel.ListItemTag, default, value);
+
+            public void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TDictionary value)
+            {
+                var keySerializer = TypeModel.GetSerializer<TKey>(state.Model);
+                var valueSerializer = TypeModel.GetSerializer<TValue>(state.Model);
+                state.WriteMap(fieldNumber, features, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
             }
         }
     }

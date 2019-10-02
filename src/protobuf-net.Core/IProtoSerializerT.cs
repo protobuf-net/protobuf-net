@@ -81,6 +81,16 @@ namespace ProtoBuf
         /// </summary>
         OptionOverwriteList = 1 << 8,
 
+        /// <summary>
+        /// Use dictionary Add rather than overwrite; this means that duplicate keys will cause failure
+        /// </summary>
+        OptionMapFailOnDuplicate = 1 << 9,
+
+        /// <summary>
+        /// Disable recursion checking
+        /// </summary>
+        OptionSkipRecursionCheck = 1 << 10,
+
 #if FEAT_NULL_LIST_ITEMS
         /// <summary>
         /// Nulls in lists should be preserved
@@ -95,9 +105,19 @@ namespace ProtoBuf
         public static SerializerFeatures AsFeatures(this WireType wireType)
             => (SerializerFeatures)wireType | SerializerFeatures.WireTypeSpecified;
 
+        const SerializerFeatures CategoryMask = SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar;
+
         [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures GetCategory(this SerializerFeatures features)
-            => features & (SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryRepeated | SerializerFeatures.CategoryScalar);
+            => features & CategoryMask;
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void HintIfNeeded(this SerializerFeatures features, ref ProtoReader.State state)
+        {
+            // special-case this for now; only the one scenario we care about
+            if ((features & WireTypeMask) == SerializerFeatures.WireTypeSignedVarint)
+                state.Hint(WireType.SignedVarint);
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidCategory(this SerializerFeatures features)
@@ -112,6 +132,10 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsPackedDisabled(this SerializerFeatures features)
             => (features & SerializerFeatures.OptionPackedDisabled) != 0;
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsRepeated(this SerializerFeatures features)
+            => (features & CategoryMask) == SerializerFeatures.CategoryRepeated;
 
 
         // core wire-type bits plus the zig-zag marker; first 4 bits
@@ -135,6 +159,10 @@ namespace ProtoBuf
             if ((features & SerializerFeatures.WireTypeSpecified) == 0) ThrowWireTypeNotSpecified();
             return (WireType)(features & WireTypeMask);
         }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool ApplyRecursionCheck(this SerializerFeatures features)
+            => (features & SerializerFeatures.OptionSkipRecursionCheck) == 0;
     }
 
     /// <summary>

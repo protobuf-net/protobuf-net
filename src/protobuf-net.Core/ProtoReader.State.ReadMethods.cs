@@ -178,21 +178,21 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
-            public TList ReadRepeated<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer = null) where TList : ICollection<T>
-            {   // the TList here is so we know what type to *construct*, and also to help with value-type list-like things
+            public TList ReadRepeated<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer = null) where TList : class, ICollection<T>
+            {   // the TList here is so we know what type to *construct*
                 if (typeof(TList) == typeof(T[]))
                     return (TList)(object)ReadRepeated(features, (T[])(object)value, serializer);
                 return ReadRepeated_List<TList, T>(features, value, serializer);
                 
             }
 
-            // the TList here is so we know what type to *construct*, and also to help with value-type list-like things
-            private TList ReadRepeated_List<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer) where TList : ICollection<T>
+            // the TList here is so we know what type to *construct*
+            private TList ReadRepeated_List<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer) where TList : class, ICollection<T>
             {
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
-                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 var category = serializerFeatures.GetCategory();
 
                 if (value is null) value = CreateInstance<TList>();
@@ -206,7 +206,7 @@ namespace ProtoBuf
                         ThrowInvalidOperationException("Packed data expected a scalar serializer");
 
                     var wireType = features.GetWireType(serializerFeatures);
-                    ReadPackedScalar<TList, T>(value, wireType, serializer);
+                    ReadPackedScalar<T>(value, wireType, serializer);
                 }
                 else
                 {
@@ -233,9 +233,7 @@ namespace ProtoBuf
                 return value;
             }
 
-            // the TList instead of just ICollection<T> here is to ensure that it works for val-types
-            private void ReadPackedScalar<TList, T>(TList list, WireType wireType, ISerializer<T> serializer)
-                where TList : ICollection<T>
+            private void ReadPackedScalar<T>(ICollection<T> list, WireType wireType, ISerializer<T> serializer)
             {
                 var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
                 if (bytes == 0) return;
@@ -292,6 +290,45 @@ ReadFixedQuantity:
                 return list.ToArray();
             }
 
+            /// <summary>
+            /// Reads a map from the input, using all default options
+            /// </summary>
+            public TDictionary ReadMap<TDictionary, TKey, TValue>(TDictionary value)
+                where TDictionary : class, IDictionary<TKey, TValue>
+            {
+                var keySerializer = TypeModel.GetSerializer<TKey>(Model);
+                var valueSerializer = TypeModel.GetSerializer<TValue>(Model);
+                return ReadMap(keySerializer.Features, valueSerializer.Features,
+                    value, keySerializer, valueSerializer);
+            }
+
+            /// <summary>
+            /// Reads a map from the input, specifying custom options
+            /// </summary>
+            public TDictionary ReadMap<TDictionary, TKey, TValue>(
+                SerializerFeatures keyFeatures,
+                SerializerFeatures valueFeatures,
+                TDictionary value, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
+                where TDictionary : class, IDictionary<TKey, TValue>
+            {
+                keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
+                valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
+
+                if (value is null) value = CreateInstance<TDictionary>();
+                else if ((keyFeatures & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
+
+                bool useAdd = (keyFeatures & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
+
+                int mapField = FieldNumber;
+                var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
+                do
+                {
+                    var item = ReadMessage(default, pairSerializer);
+                    if (useAdd) value.Add(item.Key, item.Value);
+                    else value[item.Key] = item.Value;
+                } while (TryReadFieldHeader(mapField));
+                return value;
+            }
 
             /// <summary>
             /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -848,8 +885,15 @@ ReadFixedQuantity:
             public T ReadAny<T>(T value = default, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                var features = serializer.Features;
-
+                return ReadAny<T>(serializer.Features, value, serializer);
+            }
+            /// <summary>
+            /// Reads a value or sub-item from the input reader
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public T ReadAny<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
                 switch (features.GetCategory())
                 {
                     case SerializerFeatures.CategoryMessage:
@@ -857,6 +901,7 @@ ReadFixedQuantity:
                         return ReadMessage<T>(value, serializer);
                     case SerializerFeatures.CategoryRepeated:
                     case SerializerFeatures.CategoryScalar:
+                        features.HintIfNeeded(ref this);
                         return serializer.Read(ref this, value);
                     default:
                         features.ThrowInvalidCategory();

@@ -51,11 +51,22 @@ namespace ProtoBuf.Internal
             // later we can axpand this Type itemType = TypeModel.GetListItemType(typeof(T));
             // for now: just handles List<T>
 
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            if (type.IsGenericType)
             {
-                var elementType = type.GetGenericArguments()[0];
-                return Activator.CreateInstance(
-                    typeof(ListSerializer<,>).MakeGenericType(rootType, elementType), nonPublic: true);
+                var def = type.GetGenericTypeDefinition();
+                if (def == typeof(List<>))
+                {
+                    var args = type.GetGenericArguments();
+                    return Activator.CreateInstance(
+                        typeof(ListSerializer<,>).MakeGenericType(rootType, args[0]), nonPublic: true);
+                }
+
+                if (def == typeof(Dictionary<,>))
+                {
+                    var args = type.GetGenericArguments();
+                    return Activator.CreateInstance(
+                        typeof(DictionarySerializer<,,>).MakeGenericType(rootType, args[0], args[1]), nonPublic: true);
+                }
             }
             return null;
         }
