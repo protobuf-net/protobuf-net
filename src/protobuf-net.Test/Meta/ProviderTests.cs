@@ -73,8 +73,7 @@ namespace ProtoBuf.Meta
         }
         class MyProvider : ISerializer<Haz>, ISerializerFactory
         {
-            SerializerFeatures ISerializer<Haz>.Features
-                => throw new NotImplementedException();
+            SerializerFeatures ISerializer<Haz>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
 
             Haz ISerializer<Haz>.Read(ref ProtoReader.State state, Haz value)
                 => throw new NotImplementedException();
@@ -96,8 +95,7 @@ namespace ProtoBuf.Meta
 
         class ProxySerializer : ISerializer<Proxied>
         {
-            SerializerFeatures ISerializer<Proxied>.Features
-                => throw new NotImplementedException();
+            SerializerFeatures ISerializer<Proxied>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
 
             Proxied ISerializer<Proxied>.Read(ref ProtoReader.State state, Proxied value)
                 => throw new NotImplementedException();

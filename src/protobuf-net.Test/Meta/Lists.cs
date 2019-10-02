@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.unittest.Meta
 {
@@ -637,23 +638,23 @@ namespace ProtoBuf.unittest.Meta
             var orig = new PackedData { ArrayInt32 = new int[0], ArraySingle = new float[0], ArrayDouble = new double[0] };
 
             var clone = RoundTrip(model, orig, "Runtime", out int len);
-            Assert.Equal(6, len); //, "Runtime");
-            Assert.Empty(clone.ArrayDouble);
-            Assert.Empty(clone.ArrayInt32);
-            Assert.Empty(clone.ArraySingle);
+            Assert.Equal(0, len); //, "Runtime");
+            Assert.Null(clone.ArrayDouble);
+            Assert.Null(clone.ArrayInt32);
+            Assert.Null(clone.ArraySingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.Equal(6, len); //, "CompileInPlace");
-            Assert.Empty(clone.ArrayDouble);
-            Assert.Empty(clone.ArrayInt32);
-            Assert.Empty(clone.ArraySingle);
+            Assert.Equal(0, len); //, "CompileInPlace");
+            Assert.Null(clone.ArrayDouble);
+            Assert.Null(clone.ArrayInt32);
+            Assert.Null(clone.ArraySingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.Equal(6, len); //, "Compile");
-            Assert.Empty(clone.ArrayDouble);
-            Assert.Empty(clone.ArrayInt32);
-            Assert.Empty(clone.ArraySingle);
+            Assert.Equal(0, len); //, "Compile");
+            Assert.Null(clone.ArrayDouble);
+            Assert.Null(clone.ArrayInt32);
+            Assert.Null(clone.ArraySingle);
         }
         [Fact]
         public void TestNullRoundTrip()
@@ -700,6 +701,11 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(5D, data.ArrayDouble[1]); //, text);
             Assert.Equal(7D, data.ArrayDouble[2]); //, text);
         }
+
+        public PackedArrays(ITestOutputHelper log)
+            => _log = log;
+        private readonly ITestOutputHelper _log;
+
         [Fact]
         public void TestThreeItemsRoundTrip()
         {
@@ -725,12 +731,14 @@ namespace ProtoBuf.unittest.Meta
             Assert.NotNull(clone);
             CheckExpectedListContents(clone, "Compile");
         }
-        static PackedData RoundTrip(TypeModel model, PackedData orig, string scenario, out int length)
+        PackedData RoundTrip(TypeModel model, PackedData orig, string scenario, out int length)
         {
             try
             {
                 using MemoryStream ms = new MemoryStream();
                 model.Serialize(ms, orig);
+                _log?.WriteLine($"r64: {orig.ArrayDouble?.Length}, i32: {orig.ArrayInt32?.Length}, {orig.ArraySingle?.Length}");
+                _log?.WriteLine($"{ms.Length} bytes: {BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length)}");
                 length = (int)ms.Length;
                 ms.Position = 0;
 #pragma warning disable CS0618

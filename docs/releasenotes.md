@@ -40,6 +40,12 @@ never should have been allowed; these changes should not impact most people!
 - all APIs that take `int key` referring to `Type` are deprecated; user code should not be directly using these APIs, so no impact is expected
 - the `TypeModel` API surface (for implementing custom models) has changed; user code should not be directly using these APIs, so no impact is expected
 
+Other changes:
+
+- in line with the Google implementation, the serializer now optimally chooses when to use "packed" encoding, rather than taking the user too literally
+- empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
+- as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
+
 ## v2.4.0
 
 - fix #442 - switched to 2.4.0 due to new versioning implementation breaking the assembly version; oops
