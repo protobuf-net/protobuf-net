@@ -281,8 +281,7 @@ namespace Examples
 
             item.ItemArray = new int[0];
             clone = Serializer.DeepClone(item);
-            Assert.NotNull(clone.ItemArray);
-            Assert.Empty(clone.ItemArray);
+            Assert.Null(clone.ItemArray);
 
             item.ItemArray = new int[1] { 123 };
             clone = Serializer.DeepClone(item);
