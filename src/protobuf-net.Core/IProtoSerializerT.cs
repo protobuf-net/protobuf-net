@@ -176,7 +176,7 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of measuring values without writing them
     /// </summary>
-    public interface IMeasuringSerializer<T> : ISerializer<T>
+    internal interface IMeasuringSerializer<T> : ISerializer<T>
     {
         /// <summary>
         /// Measure the given value, reporting the required length for the payload (not including the field-header)
@@ -187,7 +187,7 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of serializing/deserializing a sequence of messages or values
     /// </summary>
-    public interface IRepeatedSerializer<T> : ISerializer<T>
+    internal interface IRepeatedSerializer<T> : ISerializer<T>
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
