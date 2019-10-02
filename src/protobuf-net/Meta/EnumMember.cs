@@ -19,9 +19,10 @@ namespace ProtoBuf.Meta
         public object Value { get; }
 
         /// <summary>
-        /// Create a new named enum value
+        /// Create a new named enum value; the value can be of the expected
+        /// enum type, or an appropriate boxed enum value
         /// </summary>
-        internal EnumMember(object value, string name)
+        public EnumMember(object value, string name)
         {
             Name = name;
             Value = value;
