@@ -95,7 +95,7 @@ namespace ProtoBuf.Internal
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            value = state.ReadMap(keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
+                            value = state.ReadMap(default, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
                             break;
                         default:
                             state.SkipField();

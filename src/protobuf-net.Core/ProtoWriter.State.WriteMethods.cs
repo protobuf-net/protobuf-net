@@ -638,24 +638,16 @@ namespace ProtoBuf
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                if (keySerializer.Features.IsRepeated() || valueSerializer.Features.IsRepeated())
-                    TypeModel.ThrowNestedListsNotSupported(typeof(IDictionary<TKey, TValue>));
-
-                // inherit features as appropriate
-                if (keyFeatures == 0) keyFeatures = keySerializer.Features;
-                else if (keyFeatures.GetCategory() == 0)
-                    keyFeatures |= keySerializer.Features.GetCategory();
-
-                if (valueFeatures == 0) valueFeatures = valueSerializer.Features;
-                else if (valueFeatures.GetCategory() == 0)
-                    valueFeatures |= valueSerializer.Features.GetCategory();
+                keyFeatures = keyFeatures.InheritFrom(keySerializer.Features);
+                valueFeatures = valueFeatures.InheritFrom(valueSerializer.Features);
 
                 if (values == null || values.Count == 0)
                 { }
                 else
                 {
                     var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
-                    var wireType = features.GetWireType(pairSerializer.Features);
+                    features = features.InheritFrom(pairSerializer.Features);
+                    var wireType = features.GetWireType();
                     foreach (var pair in values)
                     {
                         WriteFieldHeader(fieldNumber, wireType);

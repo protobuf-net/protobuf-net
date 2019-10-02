@@ -112,6 +112,18 @@ namespace ProtoBuf
             => features & CategoryMask;
 
         [MethodImpl(ProtoReader.HotPath)]
+        public static SerializerFeatures InheritFrom(this SerializerFeatures features, SerializerFeatures overrides)
+        {
+            if ((features & CategoryMask) == 0)
+                features |= overrides & CategoryMask;
+
+            if ((features & SerializerFeatures.WireTypeSpecified) == 0)
+                features |= overrides & (WireTypeMask | SerializerFeatures.WireTypeSpecified);
+
+            return features;
+        }
+
+        [MethodImpl(ProtoReader.HotPath)]
         public static void HintIfNeeded(this SerializerFeatures features, ref ProtoReader.State state)
         {
             // special-case this for now; only the one scenario we care about

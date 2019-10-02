@@ -463,7 +463,7 @@ namespace Examples
                     switch(field)
                     {
                         case 4:
-                            data = reader.ReadMap<Dictionary<int, string>, int, string>(keyFeatures, default, data);
+                            data = reader.ReadMap<Dictionary<int, string>, int, string>(default, keyFeatures, default, data);
                             break;
                         default:
                             reader.SkipField();

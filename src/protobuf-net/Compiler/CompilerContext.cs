@@ -207,13 +207,7 @@ namespace ProtoBuf.Compiler
 
         internal void ThrowException(Type exceptionType) => il.ThrowException(exceptionType);
 
-        internal bool TryGetAdditionalSerializerInstance(object key, out FieldInfo field)
-            => Scope.TryGetAdditionalSerializerInstance(key, out field);
-
-        internal FieldInfo DefineAdditionalSerializerInstance<T>(object key,
-            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
-            => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
-
+        
         internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, SignatureType signature,
             TypeModel model, Type inputType, string traceName)
         {

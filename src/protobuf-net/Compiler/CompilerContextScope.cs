@@ -33,7 +33,6 @@ namespace ProtoBuf.Compiler
 
         public bool IsFullEmit { get; }
 
-        private Dictionary<object, FieldInfo> _additionalSerializers;
         private ModuleBuilder _module;
 
         private ModuleBuilder GetModule()
@@ -46,80 +45,6 @@ namespace ProtoBuf.Compiler
             internal static readonly ModuleBuilder Shared
                 = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(nameof(SharedModule)), AssemblyBuilderAccess.Run)
                     .DefineDynamicModule(nameof(SharedModule));
-        }
-
-        internal bool TryGetAdditionalSerializerInstance(object key, out FieldInfo field)
-        {
-            field = null;
-            return _additionalSerializers != null && _additionalSerializers.TryGetValue(key, out field);
-        }
-
-        internal FieldInfo DefineAdditionalSerializerInstance<T>(CompilerContext parent, object key,
-            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize, SerializerFeatures features)
-        {
-            if (_additionalSerializers == null) _additionalSerializers = new Dictionary<object, FieldInfo>();
-            if (_additionalSerializers.ContainsKey(key)) throw new ArgumentException(nameof(key));
-
-            const string InstanceFieldName = "Instance";
-            var module = GetModule();
-            lock (module)
-            {
-                TypeBuilder type;
-                var newTypeName = typeof(T).Name + "_" + Uniquify();
-                try
-                {
-                    type = module.DefineType(newTypeName,
-                        TypeAttributes.NotPublic | TypeAttributes.Class | TypeAttributes.Sealed);
-                }
-                catch(Exception ex)
-                {
-                    throw new InvalidOperationException($"Unable to define type: {newTypeName}", ex);
-                }
-
-                var ctor = type.DefineDefaultConstructor(MethodAttributes.Private);
-                var instance = type.DefineField(InstanceFieldName, type, FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly);
-                var il = type.DefineTypeInitializer().GetILGenerator();
-                il.Emit(OpCodes.Newobj, ctor);
-                il.Emit(OpCodes.Stsfld, instance);
-                il.Emit(OpCodes.Ret);
-
-                var iType = typeof(ISerializer<T>);
-                type.AddInterfaceImplementation(iType);
-                il = Implement(type, iType, nameof(ISerializer<T>.Write));
-                if (serialize == null)
-                {
-                    il.ThrowException(typeof(NotImplementedException));
-                }
-                else
-                {
-                    using var ctx = new CompilerContext(parent, il, false, CompilerContext.SignatureType.WriterScope_Input, typeof(T), typeof(T).Name + ".Serialize");
-                    serialize(key, ctx);
-                    ctx.Return();
-                }
-
-                il = Implement(type, iType, nameof(ISerializer<T>.Read));
-                if (deserialize == null)
-                {
-                    il.ThrowException(typeof(NotImplementedException));
-                }
-                else
-                {
-                    using var ctx = new CompilerContext(parent, il, false, CompilerContext.SignatureType.ReaderScope_Input, typeof(T), typeof(T).Name + ".Deserialize");
-                    deserialize(key, ctx);
-                    ctx.Return();
-                }
-
-                il = Implement(type, iType, "get_" + nameof(ISerializer<T>.Features));
-                CompilerContext.LoadValue(il, (int)features);
-                il.Emit(OpCodes.Ret);
-
-
-                Type finalType = type.CreateTypeInfo();
-                var result = finalType.GetField(InstanceFieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                // _inProcess ? : instance;
-                _additionalSerializers.Add(key, result);
-                return result;
-            }
         }
 
         internal static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name, bool @explicit = true)

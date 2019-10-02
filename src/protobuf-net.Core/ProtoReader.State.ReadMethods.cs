@@ -186,12 +186,12 @@ namespace ProtoBuf
                 if (value is null) value = CreateInstance<TList>();
                 else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
 
-                ReadRepeatedCore<T>(features, value, serializer);
+                ReadRepeatedCore<T>(features.GetWireType(), value, serializer);
                 return value;
                 
             }
 
-            private void ReadRepeatedCore<T>(SerializerFeatures features, ICollection<T> value, ISerializer<T> serializer)
+            private void ReadRepeatedCore<T>(WireType wireType, ICollection<T> value, ISerializer<T> serializer)
             {
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
@@ -206,7 +206,6 @@ namespace ProtoBuf
                     if (category != SerializerFeatures.CategoryScalar) 
                         ThrowInvalidOperationException("Packed data expected a scalar serializer");
 
-                    var wireType = features.GetWireType(serializerFeatures);
                     ReadPackedScalar<T>(value, wireType, serializer);
                 }
                 else
@@ -217,7 +216,7 @@ namespace ProtoBuf
                         switch (category)
                         {
                             case SerializerFeatures.CategoryScalar:
-                                features.HintIfNeeded(ref this);
+                                Hint(wireType);
                                 element = serializer.Read(ref this, default);
                                 break;
                             case SerializerFeatures.CategoryMessage:
@@ -283,7 +282,7 @@ ReadFixedQuantity:
             {
                 // do the laziest thing possible for now; we can improve it later
                 var newValues = new List<T>();
-                ReadRepeatedCore(features, newValues, serializer);
+                ReadRepeatedCore(features.GetWireType(), newValues, serializer);
 
                 if (value == null || value.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
                 {
@@ -313,7 +312,7 @@ ReadFixedQuantity:
             {
                 var keySerializer = TypeModel.GetSerializer<TKey>(Model);
                 var valueSerializer = TypeModel.GetSerializer<TValue>(Model);
-                return ReadMap(keySerializer.Features, valueSerializer.Features,
+                return ReadMap(default, keySerializer.Features, valueSerializer.Features,
                     value, keySerializer, valueSerializer);
             }
 
@@ -321,6 +320,7 @@ ReadFixedQuantity:
             /// Reads a map from the input, specifying custom options
             /// </summary>
             public TDictionary ReadMap<TDictionary, TKey, TValue>(
+                SerializerFeatures features,
                 SerializerFeatures keyFeatures,
                 SerializerFeatures valueFeatures,
                 TDictionary value, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
@@ -329,13 +329,17 @@ ReadFixedQuantity:
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                if (value is null) value = CreateInstance<TDictionary>();
-                else if ((keyFeatures & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
-
-                bool useAdd = (keyFeatures & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
+                keyFeatures = keyFeatures.InheritFrom(keySerializer.Features);
+                valueFeatures = valueFeatures.InheritFrom(valueSerializer.Features);
 
                 int mapField = FieldNumber;
                 var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
+                features = features.InheritFrom(pairSerializer.Features);
+
+                bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
+                if (value is null) value = CreateInstance<TDictionary>();
+                else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
+
                 do
                 {
                     var item = ReadMessage(default, pairSerializer);
