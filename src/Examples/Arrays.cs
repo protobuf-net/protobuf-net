@@ -14,7 +14,7 @@ namespace Examples
         public int Key { get; set; }
 
         [ProtoMember(2)]
-        public Node[] Nodes { get; set; }        
+        public Node[] Nodes { get; set; }
     }
 
     [ProtoContract]
@@ -105,6 +105,14 @@ namespace Examples
             Assert.Equal(3, foo.Length);
         }
 
+        [Fact]
+        public void PEVerifyWithAndWithoutOverwrite()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(WithAndWithoutOverwrite));
+            model.Compile("PEVerifyWithAndWithoutOverwrite", "PEVerifyWithAndWithoutOverwrite.dll");
+            PEVerify.AssertValid("PEVerifyWithAndWithoutOverwrite.dll");
+        }
 
         [Fact]
         public void TestOverwriteVersusAppend()

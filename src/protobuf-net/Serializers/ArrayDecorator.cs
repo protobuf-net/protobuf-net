@@ -69,16 +69,20 @@ namespace ProtoBuf.Serializers
             => state.WriteRepeated(_fieldNumber, _features, (T[])value);
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadRepeated(_features, (T[])value);
+            => state.ReadRepeated(_features, RequiresOldValue ? (T[])value : null);
 
         static readonly MethodInfo s_ReadRepeated = ArrayDecorator.s_ReadRepeated.MakeGenericMethod(typeof(T));
         static readonly MethodInfo s_WriteRepeated = ArrayDecorator.s_WriteRepeated.MakeGenericMethod(typeof(T));
+
         protected override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            using var loc = ctx.GetLocalWithValue(typeof(T[]), valueFrom);
+            using var loc = RequiresOldValue ? ctx.GetLocalWithValue(typeof(T[]), valueFrom) : default;
             ctx.LoadState();
             ctx.LoadValue((int)_features);
-            ctx.LoadValue(loc);
+            if (loc == null)
+                ctx.LoadNullRef();
+            else
+                ctx.LoadValue(loc);
             ctx.LoadNullRef();
             ctx.EmitCall(s_ReadRepeated);
         }
