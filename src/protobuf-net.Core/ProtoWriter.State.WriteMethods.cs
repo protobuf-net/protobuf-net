@@ -638,13 +638,16 @@ namespace ProtoBuf
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
+                if (keySerializer.Features.IsRepeated() || valueSerializer.Features.IsRepeated())
+                    TypeModel.ThrowNestedListsNotSupported(typeof(IDictionary<TKey, TValue>));
+
                 // inherit features as appropriate
                 if (keyFeatures == 0) keyFeatures = keySerializer.Features;
-                else if (keyFeatures.GetCategory() == 0 && !(keySerializer is IRepeatedSerializer<TKey>))
+                else if (keyFeatures.GetCategory() == 0)
                     keyFeatures |= keySerializer.Features.GetCategory();
 
                 if (valueFeatures == 0) valueFeatures = valueSerializer.Features;
-                else if (valueFeatures.GetCategory() == 0 && !(valueFeatures is IRepeatedSerializer<TValue>))
+                else if (valueFeatures.GetCategory() == 0)
                     valueFeatures |= valueSerializer.Features.GetCategory();
 
                 if (values == null || values.Count == 0)

@@ -54,18 +54,19 @@ namespace ProtoBuf.Internal
             if (type.IsGenericType)
             {
                 var def = type.GetGenericTypeDefinition();
-                if (def == typeof(List<>))
-                {
-                    var args = type.GetGenericArguments();
-                    return Activator.CreateInstance(
-                        typeof(ListSerializer<,>).MakeGenericType(rootType, args[0]), nonPublic: true);
-                }
 
                 if (def == typeof(Dictionary<,>))
                 {
                     var args = type.GetGenericArguments();
                     return Activator.CreateInstance(
                         typeof(DictionarySerializer<,,>).MakeGenericType(rootType, args[0], args[1]), nonPublic: true);
+                }
+
+                if (def == typeof(List<>))
+                {
+                    var args = type.GetGenericArguments();
+                    return Activator.CreateInstance(
+                        typeof(ListSerializer<,>).MakeGenericType(rootType, args[0]), nonPublic: true);
                 }
             }
             return null;
