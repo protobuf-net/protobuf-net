@@ -350,7 +350,6 @@ namespace ProtoBuf
             /// </summary>
             public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
             {
-                ThrowHelper.ThrowInvalidOperationException("features: " + features);
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
