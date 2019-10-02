@@ -182,21 +182,22 @@ namespace ProtoBuf
             {   // the TList here is so we know what type to *construct*
                 if (typeof(TList) == typeof(T[]))
                     return (TList)(object)ReadRepeated(features, (T[])(object)value, serializer);
-                return ReadRepeated_List<TList, T>(features, value, serializer);
+
+                if (value is null) value = CreateInstance<TList>();
+                else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
+
+                ReadRepeatedCore<T>(features, value, serializer);
+                return value;
                 
             }
 
-            // the TList here is so we know what type to *construct*
-            private TList ReadRepeated_List<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer) where TList : class, ICollection<T>
+            private void ReadRepeatedCore<T>(SerializerFeatures features, ICollection<T> value, ISerializer<T> serializer)
             {
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 var category = serializerFeatures.GetCategory();
-
-                if (value is null) value = CreateInstance<TList>();
-                else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
 
                 if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
@@ -216,6 +217,7 @@ namespace ProtoBuf
                         switch (category)
                         {
                             case SerializerFeatures.CategoryScalar:
+                                features.HintIfNeeded(ref this);
                                 element = serializer.Read(ref this, default);
                                 break;
                             case SerializerFeatures.CategoryMessage:
@@ -230,7 +232,6 @@ namespace ProtoBuf
                         value.Add(element);
                     } while (TryReadFieldHeader(field));
                 }
-                return value;
             }
 
             private void ReadPackedScalar<T>(ICollection<T> list, WireType wireType, ISerializer<T> serializer)
@@ -281,13 +282,27 @@ ReadFixedQuantity:
             public T[] ReadRepeated<T>(SerializerFeatures features, T[] value, ISerializer<T> serializer = null)
             {
                 // do the laziest thing possible for now; we can improve it later
-                List<T> list = null;
-                if (value != null && value.Length != 0 && (features & SerializerFeatures.OptionOverwriteList) == 0)
+                var newValues = new List<T>();
+                ReadRepeatedCore(features, newValues, serializer);
+
+                if (value == null || value.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
                 {
-                    list = new List<T>(value);
+                    // nothing to prepend, or we don't *want* to prepend it
+                    return newValues.ToArray();
                 }
-                list = ReadRepeated_List<List<T>, T>(features, list, serializer);
-                return list.ToArray();
+                else if (newValues.Count == 0)
+                {
+                    // nothing to append; just return the input
+                    return value ?? Array.Empty<T>();
+                }
+                else
+                {
+                    // we have non-trivial data in both
+                    var offset = value.Length;
+                    Array.Resize(ref value, value.Length + newValues.Count);
+                    newValues.CopyTo(value, offset);
+                    return value;
+                }
             }
 
             /// <summary>

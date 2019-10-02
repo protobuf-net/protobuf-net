@@ -115,7 +115,7 @@ namespace ProtoBuf
         public static void HintIfNeeded(this SerializerFeatures features, ref ProtoReader.State state)
         {
             // special-case this for now; only the one scenario we care about
-            if ((features & WireTypeMask) == SerializerFeatures.WireTypeSignedVarint)
+            if ((features & WireTypeMask) == (SerializerFeatures)WireType.SignedVarint)
                 state.Hint(WireType.SignedVarint);
         }
 
