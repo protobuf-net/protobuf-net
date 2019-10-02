@@ -269,8 +269,6 @@ namespace Examples
             Assert.NotNull(clone.ItemArray);
             Assert.Single(clone.ItemArray);
             Assert.Equal(123, clone.ItemArray[0]);
-
-            
         }
 
 
@@ -536,13 +534,22 @@ namespace Examples
         [Fact]
         public void TestPackedArrayString()
         {
-            Program.ExpectFailure<InvalidOperationException>(() =>
+            using (var ms = new MemoryStream())
             {
-                Serializer.DeepClone(new ArrayOfString());
-            }, "Only simple data-types can use packed encoding");
+                var obj = new ArrayOfPackedString { Items = new[] { "abc", "def", "ghi" } };
+                Serializer.Serialize(ms, obj);
+                ms.Position = 0;
+
+                // silently ignores us, and just writes them as non-packed
+                var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Assert.Equal("0A-03-61-62-63-0A-03-64-65-66-0A-03-67-68-69", hex);
+
+                var clone = Serializer.Deserialize<ArrayOfPackedString>(ms);
+                Assert.True(clone.Items.SequenceEqual(new[] { "abc", "def", "ghi" }));
+            }
         }
         [ProtoContract]
-        class ArrayOfString
+        class ArrayOfPackedString
         {
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
             public string[] Items { get; set; }

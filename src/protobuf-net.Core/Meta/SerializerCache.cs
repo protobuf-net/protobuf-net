@@ -17,8 +17,8 @@ namespace ProtoBuf.Meta
          where TProvider : class
     {
         internal static readonly ISerializer<T> InstanceField
-            = (SerializerCache<TProvider>.InstanceField as ISerializer<T>)
-            ?? SerializerCache.TryGetSecondary<ISerializer<T>>(SerializerCache<TProvider>.InstanceField, typeof(TProvider), typeof(T));
+            = SerializerCache.Verify((SerializerCache<TProvider>.InstanceField as ISerializer<T>)
+            ?? SerializerCache.TryGetSecondary<ISerializer<T>>(SerializerCache<TProvider>.InstanceField, typeof(TProvider), typeof(T)));
 
         public static ISerializer<T> Instance
         {
@@ -32,6 +32,97 @@ namespace ProtoBuf.Meta
     /// </summary>
     public static class SerializerCache
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void ThrowInvalidSerializer<T>(ISerializer<T> serializer, string message, Exception innerException = null)
+        {
+            var tName = typeof(T).NormalizeName();
+            var sName = serializer.GetType().NormalizeName();
+            var fName = serializer.Features.ToString();
+            try
+            {
+                ThrowHelper.ThrowInvalidOperationException(
+                    $"The serializer {sName} for type {tName} has invalid features: {message} ({fName})", innerException);
+            }
+            catch(InvalidOperationException ex)
+            {
+                ex.Data.Add("type", tName);
+                ex.Data.Add("serializer", sName);
+                ex.Data.Add("features", fName);
+                throw;
+            }
+        }
+
+        // check a few things that should be true for valid serializers
+        internal static ISerializer<T> Verify<T>(ISerializer<T> serializer)
+        {
+            if (serializer == null) return null;
+
+            try
+            {
+                var features = serializer.Features;
+                if (serializer is IRepeatedSerializer<T>)
+                {
+                    const SerializerFeatures PermittedRepeatedFeatures = SerializerFeatures.CategoryRepeated;
+                    if ((features & ~PermittedRepeatedFeatures) != 0) ThrowInvalidSerializer(serializer, $"repeated serializers may only specify {PermittedRepeatedFeatures}");
+                    return serializer;
+                }
+
+                var wireType = features.GetWireType(); // this also asserts that a wire-type is set
+                switch (wireType)
+                {
+                    case WireType.Varint:
+                    case WireType.Fixed32:
+                    case WireType.Fixed64:
+                    case WireType.SignedVarint:
+                    case WireType.String:
+                    case WireType.StartGroup:
+                        break;
+                    default:
+                        ThrowInvalidSerializer(serializer, $"invalid wire-type {wireType}");
+                        break;
+                }
+
+                switch (features.GetCategory())
+                {
+                    case SerializerFeatures.CategoryMessage:
+                    case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        if (TypeHelper<T>.CanBePacked) ThrowInvalidSerializer(serializer, "message serializer specified for a type that can be 'packed'");
+                        break;
+                    case SerializerFeatures.CategoryScalar:
+                        
+                        if (TypeHelper<T>.CanBePacked)
+                        {
+                            switch (wireType)
+                            {
+                                case WireType.Varint:
+                                case WireType.Fixed32:
+                                case WireType.Fixed64:
+                                case WireType.SignedVarint:
+                                    break;
+                                default:
+                                    ThrowInvalidSerializer(serializer, "invalid wire-type for a type that can be 'packed'");
+                                    break;
+                            }
+                        }
+                        break;
+                    default:
+                        features.ThrowInvalidCategory();
+                        break;
+                }
+
+                // some features should only be specified by the caller
+                const SerializerFeatures InvalidFeatures = SerializerFeatures.OptionOverwriteList | SerializerFeatures.OptionPackedDisabled;
+                if ((features & InvalidFeatures) != 0) ThrowInvalidSerializer(serializer, $"serializers should not specify {InvalidFeatures}");
+
+                return serializer;
+            }
+            catch(InvalidOperationException ex) when (!ex.Data.Contains("serializer"))
+            {
+                ThrowInvalidSerializer(serializer, ex.Message, ex);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Gets a cached serializer instance for a type, in the context of a given provider
         /// </summary>

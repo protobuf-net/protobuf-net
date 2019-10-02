@@ -182,6 +182,13 @@ namespace ProtoBuf
             {
                 if (typeof(TList) == typeof(T[]))
                     return (TList)(object)ReadRepeated(features, (T[])(object)value, serializer);
+                return ReadRepeated_List<TList, T>(features, value, serializer);
+                
+            }
+
+            
+            private TList ReadRepeated_List<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer) where TList : ICollection<T>
+            {
 
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
@@ -190,26 +197,84 @@ namespace ProtoBuf
                 var category = serializerFeatures.GetCategory();
 
                 if (value is null) value = CreateInstance<TList>();
-                do
+                else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
+
+                if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
-                    T element;
-                    switch (category)
+                    // the wire type should never by "string" for a type that *can* be
+                    // packed, so this *is* packed
+                    if (category != SerializerFeatures.CategoryScalar) 
+                        ThrowInvalidOperationException("Packed data expected a scalar serializer");
+
+                    var wireType = features.GetWireType(serializerFeatures);
+                    ReadPackedScalar<T>(value, wireType, serializer);
+                }
+                else
+                {
+                    do
                     {
-                        case SerializerFeatures.CategoryScalar:
-                            element = serializer.Read(ref this, default);
-                            break;
-                        case SerializerFeatures.CategoryMessage:
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                            element = ReadMessage<T>(default, serializer);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            element = default;
-                            break;
-                    }
-                    value.Add(element);
-                } while (TryReadFieldHeader(field));
+                        T element;
+                        switch (category)
+                        {
+                            case SerializerFeatures.CategoryScalar:
+                                element = serializer.Read(ref this, default);
+                                break;
+                            case SerializerFeatures.CategoryMessage:
+                            case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                                element = ReadMessage<T>(default, serializer);
+                                break;
+                            default:
+                                category.ThrowInvalidCategory();
+                                element = default;
+                                break;
+                        }
+                        value.Add(element);
+                    } while (TryReadFieldHeader(field));
+                }
                 return value;
+            }
+
+            private void ReadPackedScalar<T>(ICollection<T> list, WireType wireType, ISerializer<T> serializer)
+            {
+                var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
+                if (bytes == 0) return;
+                switch(wireType)
+                {
+                    case WireType.Fixed32:
+                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
+                        var count = bytes / 4;
+                        goto ReadFixedQuantity;
+                    case WireType.Fixed64:
+                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
+                        count = bytes / 8;
+ReadFixedQuantity:
+                        // boost the List<T> capacity if we can, as long as it is within reason (i.e. don't let
+                        // a small message lie and claim to have a huge payload)
+
+                        const int MAX_GROW = 8192; // if they are much bigge than this, then the doubling API will help, anyhows
+                        if (list is List<T> l) l.Capacity = Math.Max(l.Capacity, l.Count + Math.Min(count, MAX_GROW));
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            _reader.WireType = wireType;
+                            list.Add(serializer.Read(ref this, default));
+                        }
+
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        long end = GetPosition() + bytes;
+                        do
+                        {
+                            _reader.WireType = wireType;
+                            list.Add(serializer.Read(ref this, default));
+                        } while (GetPosition() < end);
+                        if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        break;
+                }
             }
 
             /// <summary>
@@ -218,42 +283,12 @@ namespace ProtoBuf
             public T[] ReadRepeated<T>(SerializerFeatures features, T[] value, ISerializer<T> serializer = null)
             {
                 // do the laziest thing possible for now; we can improve it later
-                List<T> list;
-                if (value != null && value.Length != 0)
+                List<T> list = null;
+                if (value != null && value.Length != 0 && (features & SerializerFeatures.OptionOverwriteList) == 0)
                 {
                     list = new List<T>(value);
                 }
-                else
-                {
-                    list = new List<T>();
-                }
-
-                var field = FieldNumber;
-                serializer ??= TypeModel.GetSerializer<T>(Model);
-                var serializerFeatures = serializer.Features;
-                if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                var category = serializerFeatures.GetCategory();
-
-                do
-                {
-                    T element;
-                    switch (category)
-                    {
-                        case SerializerFeatures.CategoryScalar:
-                            element = serializer.Read(ref this, default);
-                            break;
-                        case SerializerFeatures.CategoryMessage:
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                            element = ReadMessage<T>(default, serializer);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            element = default;
-                            break;
-                    }
-                    list.Add(element);
-                } while (TryReadFieldHeader(field));
-
+                list = ReadRepeated_List<List<T>, T>(features, list, serializer);
                 return list.ToArray();
             }
 
@@ -817,13 +852,10 @@ namespace ProtoBuf
 
                 switch (features.GetCategory())
                 {
-                    case SerializerFeatures.CategoryRepeated:
-                        ThrowHelper.ThrowInvalidOperationException(
-                    $"Repeated elements must be read by calling {nameof(ReadRepeated)}");
-                        return default;
                     case SerializerFeatures.CategoryMessage:
                     case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         return ReadMessage<T>(value, serializer);
+                    case SerializerFeatures.CategoryRepeated:
                     case SerializerFeatures.CategoryScalar:
                         return serializer.Read(ref this, value);
                     default:

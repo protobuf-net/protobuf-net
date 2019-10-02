@@ -1,9 +1,6 @@
 ﻿using ProtoBuf.Meta;
-using ProtoBuf.WellKnownTypes;
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace ProtoBuf.Internal
 {
@@ -54,12 +51,36 @@ namespace ProtoBuf.Internal
             //}
             //return sb.Append('>').ToString();
         }
+
+        internal static bool CanBePacked(Type type)
+        {
+            if (type.IsEnum) return true;
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Double:
+                case TypeCode.Single:
+                case TypeCode.SByte:
+                case TypeCode.Int16:
+                case TypeCode.Int32:
+                case TypeCode.Int64:
+                case TypeCode.Byte:
+                case TypeCode.UInt16:
+                case TypeCode.UInt32:
+                case TypeCode.UInt64:
+                case TypeCode.Boolean:
+                case TypeCode.Char:
+                    return true;
+            }
+            return false;
+        }
     }
     internal static class TypeHelper<T>
     {
-        public static bool IsReferenceType = !typeof(T).IsValueType;
+        public static readonly bool IsReferenceType = !typeof(T).IsValueType;
 
         public static readonly bool CanBeNull = default(T) == null;
+
+        public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
         public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx);
 

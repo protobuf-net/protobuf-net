@@ -37,13 +37,21 @@ namespace ProtoBuf.Internal
         internal static void ThrowInvalidOperationException_InvalidOperation_EnumFailedVersion()
             => throw new InvalidOperationException("Collection was modified; enumeration operation may not execute.");
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowInvalidOperationException()
-            => throw new InvalidOperationException();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowInvalidOperationException(string message)
-            => throw new InvalidOperationException(message);
+        internal static void ThrowInvalidOperationException(string message = null, Exception innerException = null)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                if (innerException == null) throw new InvalidOperationException();
+                throw new InvalidOperationException(innerException.Message, innerException);
+            }
+            else
+            {
+                if (innerException == null) throw new InvalidOperationException(message);
+                throw new InvalidOperationException(message, innerException);
+            }
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException()

@@ -15,38 +15,43 @@ namespace ProtoBuf
         /// <summary>
         /// Base-128 variable-length encoding
         /// </summary>
-        WireTypeVarint = WireType.Varint,
+        WireTypeVarint = WireType.Varint | WireTypeSpecified,
 
         /// <summary>
         /// Fixed-length 8-byte encoding
         /// </summary>
-        WireTypeFixed64 = WireType.Fixed64,
+        WireTypeFixed64 = WireType.Fixed64 | WireTypeSpecified,
 
         /// <summary>
         /// Length-variant-prefixed encoding
         /// </summary>
-        WireTypeString = WireType.String,
+        WireTypeString = WireType.String | WireTypeSpecified,
 
         /// <summary>
         /// Indicates the start of a group
         /// </summary>
-        WireTypeStartGroup = WireType.StartGroup,
+        WireTypeStartGroup = WireType.StartGroup | WireTypeSpecified,
 
         /// <summary>
         /// Fixed-length 4-byte encoding
         /// </summary>10
-        WireTypeFixed32 = WireType.Fixed32,
+        WireTypeFixed32 = WireType.Fixed32 | WireTypeSpecified,
 
         /// <summary>
         /// Denotes a varint that should be interpreted using
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
-        WireTypeSignedVarint = WireType.SignedVarint,
+        WireTypeSignedVarint = WireType.SignedVarint | WireTypeSpecified,
+
+        /// <summary>
+        /// Indicates that the wire-type has been explicitly specified
+        /// </summary>
+        WireTypeSpecified = 1 << 4,
 
         /// <summary>
         /// Indicates that this data should be treated like a list/array
         /// </summary>
-        CategoryRepeated = 1 << 4,
+        CategoryRepeated = 0,
 
         /// <summary>
         /// Scalars are simple types such as integers, not messages; when written as
@@ -88,16 +93,11 @@ namespace ProtoBuf
     {
         [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures AsFeatures(this WireType wireType)
-            => (SerializerFeatures)wireType;
+            => (SerializerFeatures)wireType | SerializerFeatures.WireTypeSpecified;
 
         [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures GetCategory(this SerializerFeatures features)
-        {
-            const SerializerFeatures mask = SerializerFeatures.CategoryMessage
-                | SerializerFeatures.CategoryRepeated
-                | SerializerFeatures.CategoryScalar;
-            return features & mask;
-        }
+            => features & (SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryRepeated | SerializerFeatures.CategoryScalar);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidCategory(this SerializerFeatures features)
@@ -113,13 +113,27 @@ namespace ProtoBuf
         public static bool IsPackedDisabled(this SerializerFeatures features)
             => (features & SerializerFeatures.OptionPackedDisabled) != 0;
 
+
+        // core wire-type bits plus the zig-zag marker; first 4 bits
+        private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;
+
+
+        [MethodImpl(ProtoReader.HotPath)] // used to pick the best wire-type when processing packed repeated data
+        public static WireType GetWireType(this SerializerFeatures features, SerializerFeatures fallback)
+        {
+            return (features & SerializerFeatures.WireTypeSpecified) != 0
+                ? (WireType)(features & WireTypeMask) : fallback.GetWireType();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void ThrowWireTypeNotSpecified() => ThrowHelper.ThrowInvalidOperationException(
+            "The serializer features provided do not include a wire-type");
+
         [MethodImpl(ProtoReader.HotPath)]
         public static WireType GetWireType(this SerializerFeatures features)
         {
-            const SerializerFeatures mask = (SerializerFeatures)7
-                | SerializerFeatures.CategoryRepeated; // this isn't an accident; this is so
-            // fundamental that if someone is including the category: they've screwed up
-            return (WireType)(int)(features & mask);
+            if ((features & SerializerFeatures.WireTypeSpecified) == 0) ThrowWireTypeNotSpecified();
+            return (WireType)(features & WireTypeMask);
         }
     }
 
@@ -157,6 +171,28 @@ namespace ProtoBuf
         /// Indicates the features (including the default wire-type) for this type/serializer
         /// </summary>
         SerializerFeatures Features { get; }
+    }
+
+    /// <summary>
+    /// Abstract API capable of measuring values without writing them
+    /// </summary>
+    public interface IMeasuringSerializer<T> : ISerializer<T>
+    {
+        /// <summary>
+        /// Measure the given value, reporting the required length for the payload (not including the field-header)
+        /// </summary>
+        int Measure(ISerializationContext context, WireType wireType, T value);
+    }
+
+    /// <summary>
+    /// Abstract API capable of serializing/deserializing a sequence of messages or values
+    /// </summary>
+    public interface IRepeatedSerializer<T> : ISerializer<T>
+    {
+        /// <summary>
+        /// Serialize an instance to the supplied writer
+        /// </summary>
+        void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, T value);
     }
 
     /// <summary>

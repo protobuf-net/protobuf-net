@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal
 {
     partial class PrimaryTypeProvider
     {
-        private sealed class VectorSerializer<T> : ISerializer<T[]>
+        private sealed class VectorSerializer<T> : IRepeatedSerializer<T[]>
         {
             public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
 
@@ -37,9 +37,14 @@ namespace ProtoBuf.Internal
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
                 state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.Features, value, serializer);
             }
+            public void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, T[] value)
+            {
+                var serializer = TypeModel.GetSerializer<T>(state.Model);
+                state.WriteRepeated<T>(fieldNumber, features, value, serializer);
+            }
         }
 
-        private sealed class ListSerializer<TList, T> : ISerializer<TList>
+        private sealed class ListSerializer<TList, T> : IRepeatedSerializer<TList>
             where TList : List<T>
         {
             public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
@@ -70,6 +75,12 @@ namespace ProtoBuf.Internal
             {
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
                 state.WriteRepeated<T>(TypeModel.ListItemTag, serializer.Features, value, serializer);
+            }
+
+            public void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TList value)
+            {
+                var serializer = TypeModel.GetSerializer<T>(state.Model);
+                state.WriteRepeated<T>(fieldNumber, features, value, serializer);
             }
         }
     }

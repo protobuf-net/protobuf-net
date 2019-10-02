@@ -2,6 +2,7 @@ using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System.Buffers;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
@@ -135,35 +136,43 @@ namespace ProtoBuf
 
             private protected override void ImplWriteString(ref State state, string value, int expectedBytes) { }
 
-            private protected override int ImplWriteVarint32(ref State state, uint value)
-            {
+            [MethodImpl(ProtoReader.HotPath)]
+            private protected override int ImplWriteVarint32(ref State state, uint value) => MeasureUInt32(value);
+
+            [MethodImpl(ProtoReader.HotPath)]
+            private protected override int ImplWriteVarint64(ref State state, ulong value) => MeasureUInt64(value);
+
+            private protected override bool TryFlush(ref State state) => true;
+        }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static int MeasureUInt32(uint value)
+        {
 #if PLAT_INTRINSICS
                 return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
-                int count = 1;
-                while ((value >>= 7) != 0)
-                {
-                    count++;
-                }
-                return count;
-#endif
-            }
-
-            private protected override int ImplWriteVarint64(ref State state, ulong value)
+            int count = 1;
+            while ((value >>= 7) != 0)
             {
+                count++;
+            }
+            return count;
+#endif
+        }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static int MeasureUInt64(ulong value)
+        {
 #if PLAT_INTRINSICS
                 return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
-                int count = 1;
-                while ((value >>= 7) != 0)
-                {
-                    count++;
-                }
-                return count;
-#endif
+            int count = 1;
+            while ((value >>= 7) != 0)
+            {
+                count++;
             }
-
-            private protected override bool TryFlush(ref State state) => true;
+            return count;
+#endif
         }
     }
 }

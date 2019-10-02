@@ -460,7 +460,7 @@ namespace ProtoBuf
         {
             byte[] buffer = new byte[length];
             DirectReadBytes(source, buffer, 0, length);
-            return Encoding.UTF8.GetString(buffer, 0, length);
+            return ProtoWriter.UTF8.GetString(buffer, 0, length);
         }
 
         /// <summary>

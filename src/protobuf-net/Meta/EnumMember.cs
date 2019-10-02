@@ -78,7 +78,7 @@ namespace ProtoBuf.Meta
             => WithValue(Normalize(Value, type));
 
         /// <summary>Compare a member to an enum value</summary>
-        public bool Equals<T>(T value) where T : Enum
+        public bool Equals<T>(T value) where T : unmanaged
             => Equals(Normalize(Value, typeof(T)), Normalize(value, typeof(T)));
 
         /// <summary>See object.ToString</summary>
@@ -99,7 +99,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create an EnumMember instance from an enum value
         /// </summary>
-        public static EnumMember Create<T>(T value) where T : Enum
+        public static EnumMember Create<T>(T value) where T : unmanaged
             => new EnumMember(value, value.ToString()).Normalize(typeof(T));
 
         internal void Validate()

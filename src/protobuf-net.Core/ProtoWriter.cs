@@ -309,14 +309,19 @@ namespace ProtoBuf
             internal set => model = value;
         }
 
-        private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
+        /// <summary>
+        /// The encoding used by the writer
+        /// </summary>
+        internal protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
 
-        private static uint Zig(int value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static uint Zig(int value)
         {
             return (uint)((value << 1) ^ (value >> 31));
         }
 
-        private static ulong Zig(long value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static ulong Zig(long value)
         {
             return (ulong)((value << 1) ^ (value >> 63));
         }

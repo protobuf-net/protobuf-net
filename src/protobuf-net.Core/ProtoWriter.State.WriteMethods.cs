@@ -347,33 +347,160 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sequence of sub-items to the writer
             /// </summary>
-            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
+            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
             {
+                ThrowHelper.ThrowInvalidOperationException("features: " + features);
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 var wireType = features.GetWireType();
                 var category = serializerFeatures.GetCategory();
 
-                if (values == null)
+                int count;
+                if (values == null || (count = values.Count) == 0)
                 {
                     // nothing to do
                 }
-                else if (values is T[] arr)
+                else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
                 {
-                    WriteRepeatedImpl_Array<T>(fieldNumber, category, wireType, arr, serializer);
-                }
-                else if (values is List<T> list)
-                {
-                    WriteRepeatedImpl_List<T>(fieldNumber, category, wireType, list, serializer);
+                    if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
+                    WritePackedScalar<T>(fieldNumber, wireType, values, count, measurer);
                 }
                 else
                 {
-                    WriteRepeatedImpl_Enumerable<T>(fieldNumber, category, wireType, values, serializer);
+                    if (values is T[] arr)
+                    {   // exploit special JIT-based array handling
+                        WriteRepeatedImpl<T>(fieldNumber, category, wireType, arr, serializer);
+                    }
+                    else if (values is List<T> list)
+                    {   // exploit the custom List<T> iterator
+                        WriteRepeatedImpl<T>(fieldNumber, category, wireType, list, serializer);
+                    }
+                    else
+                    {   // just roll with it; it'll do
+                        WriteRepeatedImpl<T>(fieldNumber, category, wireType, values, serializer);
+                    }
                 }
             }
 
-            private void WriteRepeatedImpl_Enumerable<T>(int fieldNumber, SerializerFeatures category, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer)
+            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, ICollection<T> values, int count, IMeasuringSerializer<T> serializer)
+            {
+                long expectedLength;
+                switch (wireType)
+                {
+                    case WireType.Fixed32:
+                        expectedLength = count * 4;
+                        break;
+                    case WireType.Fixed64:
+                        expectedLength = count * 8;
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        expectedLength = 0;
+                        var context = Context;
+                        foreach (var value in values)
+                        {
+                            expectedLength += serializer.Measure(context, wireType, value);
+                        }
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        expectedLength = default;
+                        break;
+                }
+
+                WriteFieldHeader(fieldNumber, WireType.String);
+                _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
+                long before = GetPosition();
+                foreach(var value in values)
+                {
+                    _writer.WireType = wireType; // tell the serializer what we want to do
+                    serializer.Write(ref this, value);
+                }
+                long actualLength = GetPosition() - before;
+                if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
+                    $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
+            }
+
+            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, List<T> values, int count, IMeasuringSerializer<T> serializer)
+            {
+                long expectedLength;
+                switch (wireType)
+                {
+                    case WireType.Fixed32:
+                        expectedLength = count * 4;
+                        break;
+                    case WireType.Fixed64:
+                        expectedLength = count * 8;
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        expectedLength = 0;
+                        var context = Context;
+                        foreach (var value in values)
+                        {
+                            expectedLength += serializer.Measure(context, wireType, value);
+                        }
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        expectedLength = default;
+                        break;
+                }
+
+                WriteFieldHeader(fieldNumber, WireType.String);
+                _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
+                long before = GetPosition();
+                foreach (var value in values)
+                {
+                    _writer.WireType = wireType; // tell the serializer what we want to do
+                    serializer.Write(ref this, value);
+                }
+                long actualLength = GetPosition() - before;
+                if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
+                    $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
+            }
+
+            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, T[] values, int count, IMeasuringSerializer<T> serializer)
+            {
+                long expectedLength;
+                switch (wireType)
+                {
+                    case WireType.Fixed32:
+                        expectedLength = count * 4;
+                        break;
+                    case WireType.Fixed64:
+                        expectedLength = count * 8;
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        expectedLength = 0;
+                        var context = Context;
+                        for (int i = 0; i < values.Length; i++)
+                        {
+                            expectedLength += serializer.Measure(context, wireType, values[i]);
+                        }
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        expectedLength = default;
+                        break;
+                }
+
+                WriteFieldHeader(fieldNumber, WireType.String);
+                _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
+                long before = GetPosition();
+                for (int i = 0; i < values.Length; i++)
+                {
+                    _writer.WireType = wireType; // tell the serializer what we want to do
+                    serializer.Write(ref this, values[i]);
+                }
+                long actualLength = GetPosition() - before;
+                if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
+                    $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
+            }
+
+            private void WriteRepeatedImpl<T>(int fieldNumber, SerializerFeatures category, WireType wireType, ICollection<T> values, ISerializer<T> serializer)
             {
                 foreach (var value in values)
                 {
@@ -400,10 +527,25 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                if (values != null)
-                    WriteRepeatedImpl_List(fieldNumber, serializerFeatures.GetCategory(), features.GetWireType(), values, serializer);
+
+                int count;
+                var wireType = features.GetWireType();
+                var category = serializerFeatures.GetCategory();
+                if (values == null || (count = values.Count) == 0)
+                {
+                    // nothing to do
+                }
+                else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
+                {
+                    if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
+                    WritePackedScalar<T>(fieldNumber, wireType, values, count, measurer);
+                }
+                else
+                {
+                    WriteRepeatedImpl(fieldNumber, category, wireType, values, serializer);
+                }
             }
-            private void WriteRepeatedImpl_List<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
+            private void WriteRepeatedImpl<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
             {
                 foreach (var value in values)
                 {
@@ -433,10 +575,24 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if ((serializerFeatures & SerializerFeatures.CategoryRepeated) != 0) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                if (values != null)
-                    WriteRepeatedImpl_Array(fieldNumber, serializerFeatures.GetCategory(), features.GetWireType(), values, serializer);
+                int count;
+                var wireType = features.GetWireType();
+                var category = serializerFeatures.GetCategory();
+                if (values == null || (count = values.Length) == 0)
+                {
+                    // nothing to do
+                }
+                else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
+                {
+                    if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
+                    WritePackedScalar<T>(fieldNumber, wireType, values, count, measurer);
+                }
+                else
+                {
+                    WriteRepeatedImpl(fieldNumber, category, wireType, values, serializer);
+                }
             }
-            private void WriteRepeatedImpl_Array<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
+            private void WriteRepeatedImpl<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
             {
                 for(int i = 0; i < values.Length; i++)
                 {
@@ -475,7 +631,7 @@ namespace ProtoBuf
                     switch (features.GetCategory())
                     {
                         case SerializerFeatures.CategoryRepeated:
-                            ThrowHelper.ThrowInvalidOperationException($"Repeated elements must be written by calling {nameof(WriteRepeated)}");
+                            ((IRepeatedSerializer<T>)serializer).Write(ref this, fieldNumber, features, value);
                             break;
                         case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         case SerializerFeatures.CategoryMessage:
