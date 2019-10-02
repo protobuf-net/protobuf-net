@@ -1173,12 +1173,17 @@ namespace ProtoBuf.Meta
             
         }
         private static TypeModel s_defaultModel;
+
+        internal static void ResetDefaultModel()
+            => Volatile.Write(ref s_defaultModel, null);
+
         internal static TypeModel DefaultModel => s_defaultModel ?? SetDefaultModel(null);
 
         internal sealed class NullModel : TypeModel
         {
             private NullModel() { }
             public static NullModel Instance = new NullModel();
+            protected internal override ISerializer<T> GetSerializer<T>() => null;
         }
 
         /// <summary>

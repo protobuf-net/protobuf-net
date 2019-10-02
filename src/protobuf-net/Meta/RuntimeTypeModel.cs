@@ -139,16 +139,26 @@ namespace ProtoBuf.Meta
             return GetOption(OPTIONS_IncludeDateTimeKind);
         }
 
-        private sealed class Singleton
+        private static class DeferredModelLoader
         {
-            private Singleton() { }
-            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true, "(default)");
+            internal static readonly RuntimeTypeModel Instance = new RuntimeTypeModel(true, "(default)");
         }
+
+
 
         /// <summary>
         /// The default model, used to support ProtoBuf.Serializer
         /// </summary>
-        public static RuntimeTypeModel Default => Singleton.Value;
+        public static RuntimeTypeModel Default
+            => (DefaultModel as RuntimeTypeModel) ?? LoadDeferredModel();
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static RuntimeTypeModel LoadDeferredModel()
+        {
+            var model = DeferredModelLoader.Instance;
+            SetDefaultModel(model);
+            return model;
+        }
 
         /// <summary>
         /// Returns a sequence of the Type instances that can be
@@ -403,7 +413,6 @@ namespace ProtoBuf.Meta
             }
             catch { } // this is all kinds of brittle on things like UWP
 #endif
-            if (isDefault) TypeModel.SetDefaultModel(this);
             if (!string.IsNullOrWhiteSpace(name)) _name = name;
         }
 
@@ -1074,7 +1083,7 @@ namespace ProtoBuf.Meta
             WriteAssemblyAttributes(options, assemblyName, asm);
 
 
-            var serviceType = WriteBasicTypeModel(typeName + "_Services", module, typeof(object), true);
+            var serviceType = WriteBasicTypeModel("<Services>"+ typeName, module, typeof(object), true);
             WriteSerializers(scope, serviceType);
             WriteEnumsAndProxies(scope, serviceType);
 

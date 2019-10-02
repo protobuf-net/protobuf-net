@@ -7,7 +7,20 @@ using ProtoBuf.unittest.Serializers;
 namespace ProtoBuf.unittest.Meta
 {
 
-    
+    public class DefaultModel
+    {
+        [Fact]
+        public void DefaultModelAvailable()
+        {
+            TypeModel.ResetDefaultModel();
+            var model = TypeModel.DefaultModel;
+            Assert.IsType<TypeModel.NullModel>(model);
+
+            _ = RuntimeTypeModel.Default;
+            model = TypeModel.DefaultModel;
+            Assert.IsType<RuntimeTypeModel>(model);
+        }
+    }
     public class Basic
     {
         public class Customer
