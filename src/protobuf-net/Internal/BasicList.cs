@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace ProtoBuf.Internal
 {
-    internal class BasicList : IEnumerable
+    internal sealed class BasicList : IEnumerable
     {
         /* Requirements:
          *   - Fast access by index
@@ -21,12 +21,7 @@ namespace ProtoBuf.Internal
          */
         private static readonly Node nil = new Node(null, 0);
 
-        public void CopyTo(Array array, int offset)
-        {
-            head.CopyTo(array, offset);
-        }
-
-        protected Node head = nil;
+        private Node head = nil;
 
         public int Add(object value)
         {
@@ -39,8 +34,6 @@ namespace ProtoBuf.Internal
         //{
         //    return head.TryGet(index);
         //}
-
-        public void Trim() { head = head.Trim(); }
 
         public int Count => head.Length;
 
@@ -66,13 +59,13 @@ namespace ProtoBuf.Internal
             }
         }
 
-        internal sealed class Node
+        internal readonly struct Node
         {
             public object this[int index]
             {
                 get
                 {
-                    if (index >= 0 && index < length)
+                    if (index >= 0 && index < Length)
                     {
                         return data[index];
                     }
@@ -80,7 +73,7 @@ namespace ProtoBuf.Internal
                 }
                 set
                 {
-                    if (index >= 0 && index < length)
+                    if (index >= 0 && index < Length)
                     {
                         data[index] = value;
                     }
@@ -96,8 +89,7 @@ namespace ProtoBuf.Internal
             //}
             private readonly object[] data;
 
-            private int length;
-            public int Length => length;
+            public int Length { get; }
 
             internal Node(object[] data, int length)
             {
@@ -105,56 +97,33 @@ namespace ProtoBuf.Internal
                     (data != null && length > 0 && length <= data.Length));
                 this.data = data;
 
-                this.length = length;
-            }
-
-            public void RemoveLastWithMutate()
-            {
-                if (length == 0) throw new InvalidOperationException();
-                length -= 1;
+                this.Length = length;
             }
 
             public Node Append(object value)
             {
                 object[] newData;
-                int newLength = length + 1;
+                int newLength = Length + 1;
                 if (data == null)
                 {
                     newData = new object[10];
                 }
-                else if (length == data.Length)
+                else if (Length == data.Length)
                 {
                     newData = new object[data.Length * 2];
-                    Array.Copy(data, newData, length);
+                    Array.Copy(data, newData, Length);
                 }
                 else
                 {
                     newData = data;
                 }
-                newData[length] = value;
+                newData[Length] = value;
                 return new Node(newData, newLength);
-            }
-
-            public Node Trim()
-            {
-                if (length == 0 || length == data.Length) return this;
-                object[] newData = new object[length];
-                Array.Copy(data, newData, length);
-                return new Node(newData, length);
-            }
-
-            internal int IndexOfString(string value)
-            {
-                for (int i = 0; i < length; i++)
-                {
-                    if ((string)value == (string)data[i]) return i;
-                }
-                return -1;
             }
 
             internal int IndexOfReference(object instance)
             {
-                for (int i = 0; i < length; i++)
+                for (int i = 0; i < Length; i++)
                 {
                     if ((object)instance == (object)data[i]) return i;
                 } // ^^^ (object) above should be preserved, even if this was typed; needs
@@ -164,44 +133,17 @@ namespace ProtoBuf.Internal
 
             internal int IndexOf(MatchPredicate predicate, object ctx)
             {
-                for (int i = 0; i < length; i++)
+                for (int i = 0; i < Length; i++)
                 {
                     if (predicate(data[i], ctx)) return i;
                 }
                 return -1;
-            }
-
-            internal void CopyTo(Array array, int offset)
-            {
-                if (length > 0)
-                {
-                    Array.Copy(data, 0, array, offset, length);
-                }
-            }
-
-            internal void Clear()
-            {
-                if (data != null)
-                {
-                    Array.Clear(data, 0, data.Length);
-                }
-                length = 0;
             }
         }
 
         internal int IndexOf(MatchPredicate predicate, object ctx)
         {
             return head.IndexOf(predicate, ctx);
-        }
-
-        internal int IndexOfString(string value)
-        {
-            return head.IndexOfString(value);
-        }
-
-        internal int IndexOfReference(object instance)
-        {
-            return head.IndexOfReference(instance);
         }
 
         internal delegate bool MatchPredicate(object value, object ctx);

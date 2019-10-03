@@ -734,21 +734,21 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private BasicList knownTrustedAssemblies, knownUntrustedAssemblies;
+        private List<Assembly> knownTrustedAssemblies, knownUntrustedAssemblies;
 
         private bool InternalsVisible(Assembly assembly)
         {
             if (string.IsNullOrEmpty(Scope.AssemblyName)) return false;
             if (knownTrustedAssemblies != null)
             {
-                if (knownTrustedAssemblies.IndexOfReference(assembly) >= 0)
+                if (knownTrustedAssemblies.IndexOf(assembly) >= 0)
                 {
                     return true;
                 }
             }
             if (knownUntrustedAssemblies != null)
             {
-                if (knownUntrustedAssemblies.IndexOfReference(assembly) >= 0)
+                if (knownUntrustedAssemblies.IndexOf(assembly) >= 0)
                 {
                     return false;
                 }
@@ -767,11 +767,11 @@ namespace ProtoBuf.Compiler
 
             if (isTrusted)
             {
-                (knownTrustedAssemblies ?? (knownTrustedAssemblies = new BasicList())).Add(assembly);
+                (knownTrustedAssemblies ?? (knownTrustedAssemblies = new List<Assembly>())).Add(assembly);
             }
             else
             {
-                (knownUntrustedAssemblies ?? (knownUntrustedAssemblies = new BasicList())).Add(assembly);
+                (knownUntrustedAssemblies ?? (knownUntrustedAssemblies = new List<Assembly>())).Add(assembly);
             }
             return isTrusted;
         }

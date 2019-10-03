@@ -468,7 +468,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            BasicList baseCtorCallbacks = null;
+            List<MethodInfo> baseCtorCallbacks = null;
             MetaType tmp = BaseType;
 
             while (tmp != null)
@@ -476,7 +476,7 @@ namespace ProtoBuf.Meta
                 MethodInfo method = tmp.HasCallbacks ? tmp.Callbacks.BeforeDeserialize : null;
                 if (method != null)
                 {
-                    (baseCtorCallbacks ?? (baseCtorCallbacks = new BasicList())).Add(method);
+                    (baseCtorCallbacks ?? (baseCtorCallbacks = new List<MethodInfo>())).Add(method);
                 }
                 tmp = tmp.BaseType;
             }
@@ -533,7 +533,8 @@ namespace ProtoBuf.Meta
             bool isEnum = Type.IsEnum;
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
 
-            BasicList partialIgnores = null, partialMembers = null;
+            List<string> partialIgnores = null;
+            List<AttributeMap> partialMembers = null;
             int dataMemberOffset = 0, implicitFirstTag = 1;
             bool inferTagByName = model.InferTagFromNameDefault;
             ImplicitFields implicitMode = ImplicitFields.None;
@@ -579,12 +580,12 @@ namespace ProtoBuf.Meta
                 {
                     if (item.TryGet(nameof(ProtoPartialIgnoreAttribute.MemberName), out tmp) && tmp != null)
                     {
-                        (partialIgnores ?? (partialIgnores = new BasicList())).Add((string)tmp);
+                        (partialIgnores ?? (partialIgnores = new List<string>())).Add((string)tmp);
                     }
                 }
                 if (!isEnum && fullAttributeTypeName == "ProtoBuf.ProtoPartialMemberAttribute")
                 {
-                    (partialMembers ?? (partialMembers = new BasicList())).Add(item);
+                    (partialMembers ?? (partialMembers = new List<AttributeMap>())).Add(item);
                 }
 
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
@@ -739,7 +740,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
+        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, List<AttributeMap>partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -817,7 +818,7 @@ namespace ProtoBuf.Meta
             if (ctors.Length == 0 || (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)) return null;
 
             MemberInfo[] fieldsPropsUnfiltered = Helpers.GetInstanceFieldsAndProperties(type, true);
-            BasicList memberList = new BasicList();
+            var memberList = new List<MemberInfo>();
             // for most types we'll enforce that you need readonly, because that is what protobuf-net
             // always did historically; but: if you smell so much like a Tuple that it is *in your name*,
             // we'll let you past that
@@ -911,7 +912,7 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
 
-        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, out EnumMember enumMember, MemberInfo backingMember = null)
+        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, List<AttributeMap> partialMembers, int dataMemberOffset, bool inferByTagName, out EnumMember enumMember, MemberInfo backingMember = null)
         {
             enumMember = default;
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix

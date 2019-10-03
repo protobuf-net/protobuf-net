@@ -174,7 +174,7 @@ namespace ProtoBuf.Meta
         /// <param name="syntax">The .proto syntax to use</param>
         public override string GetSchema(Type type, ProtoSyntax syntax)
         {
-            BasicList requiredTypes = new BasicList();
+            var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;
             if (type == null)
@@ -214,7 +214,7 @@ namespace ProtoBuf.Meta
 
             if (!isInbuiltType)
             {
-                IEnumerable typesForNamespace = primaryType == null ? types : requiredTypes;
+                IEnumerable<MetaType> typesForNamespace = primaryType == null ? types.Cast<MetaType>() : requiredTypes;
                 foreach (MetaType meta in typesForNamespace)
                 {
                     if (meta.IsList) continue;
@@ -305,7 +305,7 @@ namespace ProtoBuf.Meta
             Duration = 4,
             Protogen = 8
         }
-        private void CascadeDependents(BasicList list, MetaType metaType)
+        private void CascadeDependents(List<MetaType> list, MetaType metaType)
         {
             MetaType tmp;
             if (metaType.IsList)
@@ -379,7 +379,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void TryGetCoreSerializer(BasicList list, Type itemType)
+        private void TryGetCoreSerializer(List<MetaType> list, Type itemType)
         {
             var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out _, false, false, false, false);
             if (coreSerializer != null)
@@ -458,19 +458,11 @@ namespace ProtoBuf.Meta
             return null;
         }
 
-        private static readonly BasicList.MatchPredicate
-            MetaTypeFinder = new BasicList.MatchPredicate(MetaTypeFinderImpl),
-            BasicTypeFinder = new BasicList.MatchPredicate(BasicTypeFinderImpl);
+        private static readonly BasicList.MatchPredicate BasicTypeFinder = (value, ctx)
+            => ((BasicType)value).Type == (Type)ctx;
 
-        private static bool MetaTypeFinderImpl(object value, object ctx)
-        {
-            return ((MetaType)value).Type == (Type)ctx;
-        }
-
-        private static bool BasicTypeFinderImpl(object value, object ctx)
-        {
-            return ((BasicType)value).Type == (Type)ctx;
-        }
+        private static readonly BasicList.MatchPredicate MetaTypeFinder = (value, ctx)
+            => ((MetaType)value).Type == (Type)ctx;
 
         private void WaitOnLock()
         {
@@ -485,7 +477,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private readonly BasicList basicTypes = new BasicList();
+        private readonly BasicList types = new BasicList(), basicTypes = new BasicList();
 
         private sealed class BasicType
         {
@@ -499,6 +491,7 @@ namespace ProtoBuf.Meta
                 Serializer = serializer;
             }
         }
+
         internal IRuntimeProtoSerializerNode TryGetBasicTypeSerializer(Type type)
         {
             int idx = basicTypes.IndexOf(BasicTypeFinder, type);
@@ -552,7 +545,6 @@ namespace ProtoBuf.Meta
             if (key < 0)
             {
                 int opaqueToken = 0;
-                Type origType = type;
                 bool weAdded = false;
                 try
                 {
@@ -744,8 +736,6 @@ namespace ProtoBuf.Meta
             if (GetOption(OPTIONS_IsDefaultModel)) throw new InvalidOperationException("The default model cannot be frozen");
             SetOption(OPTIONS_Frozen, true);
         }
-
-        private readonly BasicList types = new BasicList();
 
         /// <summary>Resolve a service relative to T</summary>
         protected internal override ISerializer<T> GetSerializer<T>()
@@ -1340,11 +1330,12 @@ namespace ProtoBuf.Meta
 
             if (internalsVisibleToAttribType != null)
             {
-                BasicList internalAssemblies = new BasicList(), consideredAssemblies = new BasicList();
+                List<string> internalAssemblies = new List<string>();
+                List<Assembly> consideredAssemblies = new List<Assembly>();
                 foreach (MetaType metaType in types)
                 {
                     Assembly assembly = metaType.Type.Assembly;
-                    if (consideredAssemblies.IndexOfReference(assembly) >= 0) continue;
+                    if (consideredAssemblies.IndexOf(assembly) >= 0) continue;
                     consideredAssemblies.Add(assembly);
 
                     AttributeMap[] assemblyAttribsMap = AttributeMap.Create(assembly);
@@ -1356,7 +1347,7 @@ namespace ProtoBuf.Meta
                         string privelegedAssemblyName = privelegedAssemblyObj as string;
                         if (privelegedAssemblyName == assemblyName || string.IsNullOrEmpty(privelegedAssemblyName)) continue; // ignore
 
-                        if (internalAssemblies.IndexOfString(privelegedAssemblyName) >= 0) continue; // seen it before
+                        if (internalAssemblies.IndexOf(privelegedAssemblyName) >= 0) continue; // seen it before
                         internalAssemblies.Add(privelegedAssemblyName);
 
                         CustomAttributeBuilder builder = new CustomAttributeBuilder(
