@@ -3,8 +3,6 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -451,13 +449,13 @@ namespace ProtoBuf
             /// </summary>
             public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
             {
-                var newValues = new List<T>();
+                using var newValues = new ReadBuffer<T>();
                 ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
 
                 // nothing to prepend, or we don't *want* to prepend it
                 if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionOverwriteList) != 0)
                     values = ImmutableArray<T>.Empty;
-
+                
                 if (newValues.Count != 0) // new data
                     values = values.AddRange(newValues);
 
@@ -475,10 +473,9 @@ namespace ProtoBuf
             /// </summary>
             public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
             {
-                // do the laziest thing possible for now; we can improve it later
                 // T[] origRef = values;
 
-                var newValues = new List<T>();
+                using var newValues = new ReadBuffer<T>();
                 ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
 
                 if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
