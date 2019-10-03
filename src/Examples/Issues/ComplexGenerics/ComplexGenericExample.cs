@@ -34,6 +34,11 @@ namespace Examples.Issues.ComplexGenerics
             ms.Position = 0;
             var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
             Assert.Equal("B2-01-05-0A-03-61-62-63", hex);
+            // B2-01 = field 22, type String
+            // 05 = length 5
+            // 0A = field 1, type String
+            // 03 = length 3
+            // 61-62-63 = abc
             Assert.False(true);
             // CAUSING STACKOVERFLOW; investigate why
 
