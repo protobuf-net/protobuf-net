@@ -174,7 +174,8 @@ namespace ProtoBuf.Compiler
             if (!_model.IsKnownType<T>()) return false;
 
             var mt = _model[typeof(T)];
-            if (mt == null || mt.Serializer is object) return false;
+            if (mt == null) return false;
+            // TODO : return false if a custom serializer is provided
 
             return true;
         }

@@ -39,14 +39,14 @@ namespace Examples.Issues.ComplexGenerics
             // 0A = field 1, type String
             // 03 = length 3
             // 61-62-63 = abc
-            Assert.False(true);
+            
             // CAUSING STACKOVERFLOW; investigate why
 
-            //Query clone = Serializer.Deserialize<Query>(ms);
-            //Assert.NotNull(clone);
-            //Assert.NotSame(clone, query);
-            //Assert.IsType(query.GetType(), clone);
-            //Assert.Equal(((X)query).Result, ((X)clone).Result);
+            Query clone = Serializer.Deserialize<Query>(ms);
+            Assert.NotNull(clone);
+            Assert.NotSame(clone, query);
+            Assert.IsType(query.GetType(), clone);
+            Assert.Equal(((X)query).Result, ((X)clone).Result);
         }
         [Fact]
         public void TestY()
