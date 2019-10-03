@@ -405,23 +405,23 @@ namespace ProtoBuf.unittest.Meta
             var orig = new PackedData { ListInt32 = new List<int>(), ListSingle = new List<float>(), ListDouble = new List<double>()};
 
             var clone = RoundTrip(model, orig, "Runtime", out int len);
-            Assert.Equal(6, len); //, "Runtime");
-            Assert.Empty(clone.ListDouble);
-            Assert.Empty(clone.ListInt32);
-            Assert.Empty(clone.ListSingle);
+            Assert.Equal(0, len); //, "Runtime");
+            Assert.Null(clone.ListDouble);
+            Assert.Null(clone.ListInt32);
+            Assert.Null(clone.ListSingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.Equal(6, len); //, "CompileInPlace");
-            Assert.Empty(clone.ListDouble);
-            Assert.Empty(clone.ListInt32);
-            Assert.Empty(clone.ListSingle);
+            Assert.Equal(0, len); //, "CompileInPlace");
+            Assert.Null(clone.ListDouble);
+            Assert.Null(clone.ListInt32);
+            Assert.Null(clone.ListSingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.Equal(6, len); //, "Compile");
-            Assert.Empty(clone.ListDouble);
-            Assert.Empty(clone.ListInt32);
-            Assert.Empty(clone.ListSingle);
+            Assert.Equal(0, len); //, "Compile");
+            Assert.Null(clone.ListDouble);
+            Assert.Null(clone.ListInt32);
+            Assert.Null(clone.ListSingle);
         }
 
 #pragma warning disable IDE0060
