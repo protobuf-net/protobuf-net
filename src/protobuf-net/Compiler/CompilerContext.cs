@@ -149,7 +149,7 @@ namespace ProtoBuf.Compiler
 
                 return (Func<ISerializationContext, T>)ctx.method.CreateDelegate(typeof(Func<ISerializationContext, T>));
             }
-            return ObjectFactory.Create<T>();
+            return null;
         }
 
         static readonly MethodInfo s_CreateInstance = typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.CreateInstance),

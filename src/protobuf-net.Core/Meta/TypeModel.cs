@@ -1256,7 +1256,7 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null) where T : class
+        internal static T CreateInstance<T>(ISerializationContext context, IFactory<T> factory) where T : class
         {
             factory ??= TypeModel.TryGetSerializer<T>(context?.Model) as IFactory<T>;
             if (factory != null)

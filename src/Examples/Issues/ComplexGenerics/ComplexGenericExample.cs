@@ -1,5 +1,4 @@
-﻿#if !COREFX
-namespace Examples.Issues.ComplexGenerics
+﻿namespace Examples.Issues.ComplexGenerics
 {
 /* Written in response to a question about how to handle multiple "packet" subclasses;
  * may as well keep it as a test...
@@ -12,6 +11,7 @@ namespace Examples.Issues.ComplexGenerics
     using System.ComponentModel;
     using System.IO;
     using ProtoBuf.Meta;
+    using Xunit.Abstractions;
 
     public class ComplexGenericTest
     {
@@ -23,6 +23,7 @@ namespace Examples.Issues.ComplexGenerics
             model.Compile("ComplexGenericTest", "ComplexGenericTest.dll");
             PEVerify.AssertValid("ComplexGenericTest.dll");
         }
+
         [Fact]
         public void TestX()
         {
@@ -39,9 +40,9 @@ namespace Examples.Issues.ComplexGenerics
             // 0A = field 1, type String
             // 03 = length 3
             // 61-62-63 = abc
-            
-            // CAUSING STACKOVERFLOW; investigate why
 
+            // CAUSING STACKOVERFLOW; investigate why
+            RuntimeTypeModel.Default.CompileInPlace();
             Query clone = Serializer.Deserialize<Query>(ms);
             Assert.NotNull(clone);
             Assert.NotSame(clone, query);
@@ -180,4 +181,3 @@ namespace Examples.Issues.ComplexGenerics
     {
     }
 }
-#endif

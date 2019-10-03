@@ -135,18 +135,10 @@ namespace ProtoBuf.Internal
             }
             return null;
         }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        internal static Func<ISerializationContext, T> Create<T>()
-        {
-            if (typeof(T).IsValueType) return ctx => default;
-            return (Func<ISerializationContext, T>)typeof(ObjectFactory<>).MakeGenericType(
-                typeof(T)).GetField(nameof(ObjectFactory<string>.Factory)).GetValue(null);
-        }
     }
     internal static class ObjectFactory<T> where T : class
     {
-        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx);
+        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
 
         private static readonly object _singletonOrConstructType;
         private static readonly Func<T> _specialFactory = ObjectFactory.TryCreate<T>(out _singletonOrConstructType);

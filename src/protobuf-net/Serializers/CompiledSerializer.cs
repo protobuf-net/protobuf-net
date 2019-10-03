@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
             => state.ReadBaseType<TBase, T>(value);
 
         T IFactory<T>.Create(ISerializationContext context)
-            => factory(context);
+            => factory?.Invoke(context);
 
         public override object Read(ref ProtoReader.State state, object value)
             => state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
             => serializer(ref state, TypeHelper<T>.FromObject(value));
 
         T IFactory<T>.Create(ISerializationContext context)
-            => factory(context);
+            => factory == null ? default : factory.Invoke(context);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
