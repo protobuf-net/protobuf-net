@@ -96,7 +96,7 @@ namespace Examples.Issues
         {
             var value = new[] {E.V0, E.V1, E.V2};
             Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
-            Assert.True(Program.CheckBytes(value, model, 0x08, 0x00, 0x08, 0x01, 0x08, 0x02));
+            Program.CheckBytes(value, model, "0A-03-00-01-02");
             var clone = (E[]) model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
             value.SequenceEqual(clone);
