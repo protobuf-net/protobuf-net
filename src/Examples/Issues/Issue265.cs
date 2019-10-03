@@ -54,7 +54,7 @@ namespace Examples.Issues
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             var orig = new int[] {3, 4, 5};
-            Assert.True(Program.CheckBytes(orig, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
+            Program.CheckBytes(orig, model, "0A-03-03-04-05");
             var clone = (int[])model.DeepClone(orig);
             Assert.Equal("3,4,5", string.Join(",", clone)); //, "clone");
         }
