@@ -1,9 +1,8 @@
 ﻿using ProtoBuf.Compiler;
-using ProtoBuf.Internal;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {

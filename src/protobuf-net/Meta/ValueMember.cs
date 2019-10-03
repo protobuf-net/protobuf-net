@@ -402,6 +402,16 @@ namespace ProtoBuf.Meta
             return false;
         }
 
+        private bool IgnoreList(Type type)
+        {
+            if (type != null && model != null)
+            {
+                int index = model.FindOrAddAuto(type, false, true, false);
+                if (index >= 0 && model[type].IgnoreListHandling) return true;
+            }
+            return false;
+        }
+
         private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
@@ -410,7 +420,8 @@ namespace ProtoBuf.Meta
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 var member = backingMember ?? Member;
                 IRuntimeProtoSerializerNode ser;
-                if (ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType))
+                
+                if (ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType) && !IgnoreList(dictionaryType))
                 {
                     var concreteType = DefaultType;
                     if (concreteType == null && MemberType.IsClass)
