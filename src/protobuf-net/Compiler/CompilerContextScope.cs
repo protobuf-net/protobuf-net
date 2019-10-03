@@ -35,7 +35,7 @@ namespace ProtoBuf.Compiler
         public bool IsFullEmit { get; }
 
         private ModuleBuilder _module;
-        private RuntimeTypeModel _model;
+        private readonly RuntimeTypeModel _model;
 
         private ModuleBuilder GetModule()
             => _module ?? (_module = GetSharedModule());

@@ -456,7 +456,8 @@ namespace ProtoBuf.Meta
                     WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     SerializerFeatures features = rootWireType.AsFeatures();
                     if (OverwriteList) features |= SerializerFeatures.OptionOverwriteList;
-                    ser = MapDecorator.Create(concreteType, keyType, valueType, FieldNumber, features, keyWireType.AsFeatures(), valueWireType.AsFeatures(), PropertyDecorator.CanWrite(member));
+                    ser = MapDecorator.Create(concreteType, keyType, valueType, FieldNumber, features,
+                        keyWireType.AsFeatures(), valueWireType.AsFeatures());
                 }
                 else
                 {
@@ -497,7 +498,7 @@ namespace ProtoBuf.Meta
                         }
                         else
                         {
-                            ser = ListDecorator.Create(DefaultType ?? MemberType, ItemType, FieldNumber, listFeatures, PropertyDecorator.CanWrite(member));
+                            ser = ListDecorator.Create(DefaultType ?? MemberType, ItemType, FieldNumber, listFeatures);
                         }
                     }
                     else

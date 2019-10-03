@@ -9,17 +9,16 @@ namespace ProtoBuf.Serializers
 {
     internal static class ListDecorator
     {
-        public static IRuntimeProtoSerializerNode Create(Type constructType, Type type, int fieldNumber, SerializerFeatures features, bool returnsValue)
+        public static IRuntimeProtoSerializerNode Create(Type constructType, Type type, int fieldNumber, SerializerFeatures features)
         {
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(typeof(ListDecorator<,>).MakeGenericType(constructType, type),
-                new object[] { fieldNumber, features, returnsValue });
+                new object[] { fieldNumber, features });
         }
 
-        // look for: public void ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
+        // look for: public ICollection<T> ReadRepeated<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
         internal static readonly MethodInfo s_ReadRepeated = (
             from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
             where method.Name == nameof(ProtoReader.State.ReadRepeated) && method.IsGenericMethodDefinition
-            && method.ReturnType == typeof(void)
             let targs = method.GetGenericArguments()
             where targs.Length == 1
             let args = method.GetParameters()
@@ -27,6 +26,7 @@ namespace ProtoBuf.Serializers
             && args[0].ParameterType == typeof(SerializerFeatures)
             && args[1].ParameterType == typeof(ICollection<>).MakeGenericType(targs)
             && args[2].ParameterType == typeof(ISerializer<>).MakeGenericType(targs)
+            && method.ReturnType == args[1].ParameterType
             select method).SingleOrDefault();
 
         // look for: public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer
@@ -53,46 +53,39 @@ namespace ProtoBuf.Serializers
         private readonly int _fieldNumber;
         private readonly SerializerFeatures _features;
 
-        public ListDecorator(int fieldNumber, SerializerFeatures features, bool returnsValue)
+        public ListDecorator(int fieldNumber, SerializerFeatures features)
         {
             _fieldNumber = fieldNumber;
             _features = features;
-            ReturnsValue = returnsValue;
         }
 
         public Type ExpectedType => typeof(ICollection<T>);
         public bool RequiresOldValue => true;
-        public bool ReturnsValue { get; }
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public object Read(ref ProtoReader.State state, object value)
         {
             var typed = (ICollection<T>)value;
-            if (ReturnsValue && typed == null) typed = state.CreateInstance<TConstruct>();
-            state.ReadRepeated(_features, typed);
-            return ReturnsValue ? typed : null;
-
+            typed ??= state.CreateInstance<TConstruct>();
+            return state.ReadRepeated(_features, typed);
         }
 
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
             using var loc = ctx.GetLocalWithValue(typeof(ICollection<T>), valueFrom);
-            if (ReturnsValue)
-            {
-                var notNull = ctx.DefineLabel();
-                ctx.LoadValue(loc);
-                ctx.BranchIfTrue(notNull, true);
-                ctx.CreateInstance<TConstruct>();
-                ctx.StoreValue(loc);
-                ctx.MarkLabel(notNull);
-            }
+
+            var notNull = ctx.DefineLabel();
+            ctx.LoadValue(loc);
+            ctx.BranchIfTrue(notNull, true);
+            ctx.CreateInstance<TConstruct>();
+            ctx.StoreValue(loc);
+            ctx.MarkLabel(notNull);
 
             ctx.LoadState();
             ctx.LoadValue((int)_features);
             ctx.LoadValue(loc);
             ctx.LoadSelfAsService<ISerializer<T>, T>();
             ctx.EmitCall(s_ReadRepeated);
-
-            if (ReturnsValue) ctx.LoadValue(loc);
         }
 
         public void Write(ref ProtoWriter.State state, object value)

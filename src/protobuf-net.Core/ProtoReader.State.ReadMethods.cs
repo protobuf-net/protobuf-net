@@ -178,15 +178,14 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader, using all default options
             /// </summary>
-            public void ReadRepeated<T>(ICollection<T> values)
+            public ICollection<T> ReadRepeated<T>(ICollection<T> values)
                 => ReadRepeated(default, values, default);
 
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
-            public void ReadRepeated<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
+            public ICollection<T> ReadRepeated<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
             {
-                if (values is null) ThrowHelper.ThrowArgumentException(nameof(values));
                 if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
 
                 var field = FieldNumber;
@@ -197,6 +196,7 @@ namespace ProtoBuf
                 var category = serializerFeatures.GetCategory();
                 var wireType = features.GetWireType();
 
+                values ??= new List<T>();
                 if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
                     // the wire type should never by "string" for a type that *can* be
@@ -229,6 +229,7 @@ namespace ProtoBuf
                         values.Add(element);
                     } while (TryReadFieldHeader(field));
                 }
+                return values;
             }
 
             private void ReadPackedScalar<T>(ICollection<T> list, WireType wireType, ISerializer<T> serializer)
@@ -311,13 +312,13 @@ ReadFixedQuantity:
             /// <summary>
             /// Reads a map from the input, using all default options
             /// </summary>
-            public void ReadMap<TKey, TValue>(IDictionary<TKey, TValue> values)
+            public IDictionary<TKey, TValue> ReadMap<TKey, TValue>(IDictionary<TKey, TValue> values)
                 => ReadMap(default, default, default, values, default, default);
 
             /// <summary>
             /// Reads a map from the input, specifying custom options
             /// </summary>
-            public void ReadMap<TKey, TValue>(
+            public IDictionary<TKey, TValue> ReadMap<TKey, TValue>(
                 SerializerFeatures features,
                 SerializerFeatures keyFeatures,
                 SerializerFeatures valueFeatures,
@@ -325,7 +326,6 @@ ReadFixedQuantity:
                 ISerializer<TKey> keySerializer = null,
                 ISerializer<TValue> valueSerializer = null)
             {
-                if (values is null) ThrowHelper.ThrowArgumentNullException(nameof(values));
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
@@ -339,12 +339,14 @@ ReadFixedQuantity:
                 bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
                 if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
 
+                values ??= new Dictionary<TKey, TValue>();
                 do
                 {
                     var item = ReadMessage(default, pairSerializer);
                     if (useAdd) values.Add(item.Key, item.Value);
                     else values[item.Key] = item.Value;
                 } while (TryReadFieldHeader(mapField));
+                return values;
             }
 
             /// <summary>

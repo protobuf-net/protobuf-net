@@ -54,7 +54,7 @@ namespace ProtoBuf.Serializers
                     }
                     else
                     {
-                        serializer = ListDecorator.Create(finalType, itemType, i + 1, listFeatures, true);
+                        serializer = ListDecorator.Create(finalType, itemType, i + 1, listFeatures);
                     }
                 }
                 tails[i] = serializer;

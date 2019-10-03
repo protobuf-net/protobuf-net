@@ -146,17 +146,5 @@ namespace ProtoBuf.Serializers
                 if (Tail.ReturnsValue) { ctx.DiscardValue(); }
             }
         }
-
-        internal static bool CanWrite(MemberInfo member)
-        {
-            if (member == null) return false;
-
-            if (member is PropertyInfo prop)
-            {
-                return prop.CanWrite || GetShadowSetter(prop) != null;
-            }
-
-            return member is FieldInfo; // fields are always writeable; anything else: JUST SAY NO!
-        }
     }
 }

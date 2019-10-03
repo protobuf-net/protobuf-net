@@ -59,7 +59,7 @@ namespace ProtoBuf.Internal
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            state.ReadRepeated(features, value, serializer);
+                            value = (TList)state.ReadRepeated(features, value, serializer);
                             break;
                         default:
                             state.SkipField();
@@ -96,7 +96,7 @@ namespace ProtoBuf.Internal
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            state.ReadMap(default, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
+                            value = (TDictionary)state.ReadMap(default, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
                             break;
                         default:
                             state.SkipField();

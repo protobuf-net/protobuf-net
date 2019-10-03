@@ -11,19 +11,18 @@ namespace ProtoBuf.Serializers
     {
         public static IRuntimeProtoSerializerNode Create(Type constructType, Type keyType, Type valueType,
             int fieldNumber, SerializerFeatures features,
-            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, bool returnValue)
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
         {
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(
                 typeof(MapDecorator<,,>).MakeGenericType(constructType, keyType, valueType),
-                new object[] { fieldNumber, features, keyFeatures, valueFeatures, returnValue });
+                new object[] { fieldNumber, features, keyFeatures, valueFeatures });
         }
 
-        // look for:  public void ReadMap<TKey, TValue>(SerializerFeatures, SerializerFeatures, SerializerFeatures,
+        // look for:  public IDictionary<TKey, TValue> ReadMap<TKey, TValue>(SerializerFeatures, SerializerFeatures, SerializerFeatures,
         // IDictionary<TKey, TValue>, ISerializer<TKey>, ISerializer<TValue>)
         internal static readonly MethodInfo s_ReadMap = (
             from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
             where method.Name == nameof(ProtoReader.State.ReadMap) && method.IsGenericMethodDefinition
-            && method.ReturnType == typeof(void)
             let targs = method.GetGenericArguments()
             where targs.Length == 2
             let args = method.GetParameters()
@@ -34,6 +33,7 @@ namespace ProtoBuf.Serializers
             && args[3].ParameterType == typeof(IDictionary<,>).MakeGenericType(targs)
             && args[4].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[0])
             && args[5].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[1])
+            && method.ReturnType == args[3].ParameterType
             select method).SingleOrDefault();
 
         // look for: public void WriteMap<TKey, TValue>(int, SerializerFeatures, SerializerFeatures, SerializerFeatures,
@@ -63,29 +63,27 @@ namespace ProtoBuf.Serializers
 
         internal MapDecorator(
             int fieldNumber, SerializerFeatures features,
-            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, bool returnValue)
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
         {
             _features = features;
             _keyFeatures = keyFeatures;
             _valueFeatures = valueFeatures;
             _fieldNumber = fieldNumber;
-            ReturnsValue = returnValue;
         }
         private readonly int _fieldNumber;
         private readonly SerializerFeatures _features, _keyFeatures, _valueFeatures;
 
         public Type ExpectedType => typeof(IDictionary<TKey, TValue>);
 
-        public bool ReturnsValue { get; }
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public bool RequiresOldValue => true;
 
         public object Read(ref ProtoReader.State state, object value)
         {
             var typed = (IDictionary<TKey, TValue>)value;
-            if (ReturnsValue && typed == null) typed = state.CreateInstance<TConstruct>();
-            state.ReadMap(_features, _keyFeatures, _valueFeatures, typed);
-            return ReturnsValue ? typed : null;
+            typed ??= state.CreateInstance<TConstruct>();
+            return state.ReadMap(_features, _keyFeatures, _valueFeatures, typed);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
@@ -107,15 +105,13 @@ namespace ProtoBuf.Serializers
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
             using var loc = ctx.GetLocalWithValue(typeof(IDictionary<TKey, TValue>), valueFrom);
-            if (ReturnsValue)
-            {
-                var notNull = ctx.DefineLabel();
-                ctx.LoadValue(loc);
-                ctx.BranchIfTrue(notNull, true);
-                ctx.CreateInstance<TConstruct>();
-                ctx.StoreValue(loc);
-                ctx.MarkLabel(notNull);
-            }
+
+            var notNull = ctx.DefineLabel();
+            ctx.LoadValue(loc);
+            ctx.BranchIfTrue(notNull, true);
+            ctx.CreateInstance<TConstruct>();
+            ctx.StoreValue(loc);
+            ctx.MarkLabel(notNull);
 
             ctx.LoadState();
             ctx.LoadValue((int)_features);
@@ -125,8 +121,6 @@ namespace ProtoBuf.Serializers
             ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
             ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
             ctx.EmitCall(s_ReadMap);
-
-            if (ReturnsValue) ctx.LoadValue(loc);
         }
     }
 }
