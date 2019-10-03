@@ -5,12 +5,22 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using ProtoBuf.Meta;
+using ProtoBuf.unittest;
 using Xunit;
 
 namespace ProtoBuf.Issues
 {
     public class Immutables
     {
+
+        [Fact]
+        public void ImmutableArrayValidIL()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(ImmutableArrayTestClass));
+            model.CompileAndVerify(deleteOnSuccess: false);
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]

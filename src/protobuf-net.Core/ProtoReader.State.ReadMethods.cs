@@ -455,7 +455,7 @@ namespace ProtoBuf
                 ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
 
                 // nothing to prepend, or we don't *want* to prepend it
-                if (values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
+                if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionOverwriteList) != 0)
                     values = ImmutableArray<T>.Empty;
 
                 if (newValues.Count != 0) // new data

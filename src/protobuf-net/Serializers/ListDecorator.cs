@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Compiler;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 
@@ -10,6 +11,11 @@ namespace ProtoBuf.Serializers
     {
         public static IRuntimeProtoSerializerNode Create(Type constructType, Type type, int fieldNumber, SerializerFeatures features)
         {
+            if (constructType.IsGenericType && constructType.GetGenericTypeDefinition() == typeof(ImmutableArray<>))
+            {
+                return (IRuntimeProtoSerializerNode)Activator.CreateInstance(typeof(ImmutableArrayDecorator<>).MakeGenericType(type),
+                    new object[] { fieldNumber, features });
+            }
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(typeof(ListDecorator<,>).MakeGenericType(constructType, type),
                 new object[] { fieldNumber, features });
         }
@@ -42,6 +48,21 @@ namespace ProtoBuf.Serializers
             && args[2].ParameterType == typeof(IEnumerable<>).MakeGenericType(targs)
             && args[3].ParameterType == typeof(ISerializer<>).MakeGenericType(targs)
             select method).SingleOrDefault();
+
+        // look for: public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
+        internal static readonly MethodInfo s_ReadImmutableRepeated = (
+            from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            where method.Name == nameof(ProtoReader.State.ReadRepeated) && method.IsGenericMethodDefinition
+            let targs = method.GetGenericArguments()
+            where targs.Length == 1
+            let args = method.GetParameters()
+            where args.Length == 3
+            && args[0].ParameterType == typeof(SerializerFeatures)
+            && args[1].ParameterType == typeof(ImmutableArray<>).MakeGenericType(targs)
+            && args[2].ParameterType == typeof(ISerializer<>).MakeGenericType(targs)
+            && method.ReturnType == args[1].ParameterType
+            select method).SingleOrDefault();
+
     }
     internal sealed class ListDecorator<TConstruct, T> : IRuntimeProtoSerializerNode
         where TConstruct : class, IEnumerable<T>
@@ -96,6 +117,56 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(_fieldNumber);
             ctx.LoadValue((int)_features);
             ctx.LoadValue(loc);
+            ctx.LoadSelfAsService<ISerializer<T>, T>();
+            ctx.EmitCall(s_WriteRepeated);
+        }
+    }
+
+    internal sealed class ImmutableArrayDecorator<T> : IRuntimeProtoSerializerNode
+    {
+        static readonly MethodInfo s_ReadRepeated = ListDecorator.s_ReadImmutableRepeated.MakeGenericMethod(typeof(T));
+        static readonly MethodInfo s_WriteRepeated = ListDecorator.s_WriteRepeated.MakeGenericMethod(typeof(T)); // boxes
+
+        private readonly int _fieldNumber;
+        private readonly SerializerFeatures _features;
+
+        public ImmutableArrayDecorator(int fieldNumber, SerializerFeatures features)
+        {
+            _fieldNumber = fieldNumber;
+            _features = features;
+        }
+
+        public Type ExpectedType => typeof(ImmutableArray<T>);
+        public bool RequiresOldValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
+
+        public object Read(ref ProtoReader.State state, object value)
+        {
+            var typed = value == null ? ImmutableArray<T>.Empty : (ImmutableArray<T>)value;
+            return state.ReadRepeated(_features, typed);
+        }
+
+        public void EmitRead(CompilerContext ctx, Local valueFrom)
+        {
+            using var loc = ctx.GetLocalWithValue(typeof(ImmutableArray<T>), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue((int)_features);
+            ctx.LoadValue(loc);
+            ctx.LoadSelfAsService<ISerializer<T>, T>();
+            ctx.EmitCall(s_ReadRepeated);
+        }
+
+        public void Write(ref ProtoWriter.State state, object value)
+            => state.WriteRepeated(_fieldNumber, _features, (ImmutableArray<T>)value);
+
+        public void EmitWrite(CompilerContext ctx, Local valueFrom)
+        {
+            using var loc = ctx.GetLocalWithValue(typeof(ImmutableArray<T>), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue(_fieldNumber);
+            ctx.LoadValue((int)_features);
+            ctx.LoadValue(loc);
+            ctx.CastToObject(loc.Type);
             ctx.LoadSelfAsService<ISerializer<T>, T>();
             ctx.EmitCall(s_WriteRepeated);
         }
