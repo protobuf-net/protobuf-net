@@ -1119,11 +1119,14 @@ namespace ProtoBuf
             public T ReadMessage<T>(T value = default)
                 => ReadMessage<T>(default, value, null);
 
+#pragma warning disable IDE0060 // unused (yet!) features arg
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
             public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+
+#pragma warning restore IDE0060
             {
                 // var origRef = TypeHelper<T>.IsReferenceType ? (object)value : null;
                 var tok = StartSubItem();
