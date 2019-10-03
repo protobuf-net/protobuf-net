@@ -62,7 +62,8 @@ namespace ProtoBuf.Serializers
             {
                 if (Tail.ReturnsValue)
                 {
-                    using Compiler.Local newVal = new Compiler.Local(ctx, Tail.ExpectedType);
+                    var localType = PropertyDecorator.ChooseReadLocalType(field.FieldType, Tail.ExpectedType);
+                    using Compiler.Local newVal = new Compiler.Local(ctx, localType);
                     ctx.StoreValue(newVal);
                     if (field.FieldType.IsValueType)
                     {
@@ -80,8 +81,8 @@ namespace ProtoBuf.Serializers
                         ctx.LoadValue(newVal);
 
                         // cast if needed (this is mostly for ReadMap/ReadRepeated)
-                        if (!field.FieldType.IsValueType && !Tail.ExpectedType.IsValueType
-                            && !field.FieldType.IsAssignableFrom(Tail.ExpectedType))
+                        if (!field.FieldType.IsValueType && !localType.IsValueType
+                            && !field.FieldType.IsAssignableFrom(localType))
                         {
                             ctx.Cast(field.FieldType);
                         }

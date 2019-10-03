@@ -80,7 +80,21 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(property);
             ctx.WriteNullCheckedTail(property.PropertyType, Tail, null);
         }
+        
+        internal static Type ChooseReadLocalType(Type memberType, Type tailType)
+        {
+            if (memberType == tailType) return memberType;
+            if (memberType.IsClass && tailType.IsClass) return tailType;
 
+            if (memberType.IsValueType && tailType.IsValueType
+                && tailType == Nullable.GetUnderlyingType(memberType))
+            {
+                // it will have been wrapped on the way out by ReadNullCheckedTail
+                return memberType;
+            }
+
+            return tailType;
+        }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             SanityCheck(property, Tail, out bool writeValue, ctx.NonPublic, ctx.AllowInternal(property));
@@ -100,12 +114,13 @@ namespace ProtoBuf.Serializers
 
             if (writeValue)
             {
-                using Compiler.Local newVal = new Compiler.Local(ctx, Tail.ExpectedType);
+                var localType = ChooseReadLocalType(property.PropertyType, Tail.ExpectedType);
+                using Compiler.Local newVal = new Compiler.Local(ctx, localType);
                 ctx.StoreValue(newVal); // stack is empty
 
                 Compiler.CodeLabel allDone = new Compiler.CodeLabel(); // <=== default structs
 
-                if (!Tail.ExpectedType.IsValueType)
+                if (!localType.IsValueType)
                 { // if the tail returns a null, intepret that as *no assign*
                     allDone = ctx.DefineLabel();
                     ctx.LoadValue(newVal); // stack is: new-value
@@ -117,8 +132,8 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(newVal); // parent-obj|new-value
 
                 // cast if needed (this is mostly for ReadMap/ReadRepeated)
-                if (!property.PropertyType.IsValueType && !Tail.ExpectedType.IsValueType
-                    && !property.PropertyType.IsAssignableFrom(Tail.ExpectedType))
+                if (!property.PropertyType.IsValueType && !localType.IsValueType
+                    && !property.PropertyType.IsAssignableFrom(localType))
                 {
                     ctx.Cast(property.PropertyType);
                 }
