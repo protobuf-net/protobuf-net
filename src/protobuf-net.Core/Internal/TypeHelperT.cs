@@ -97,6 +97,11 @@ namespace ProtoBuf.Internal
                             singletonOrConstructType = typeof(List<>).MakeGenericType(requstedType.GetGenericArguments());
                             return null;
                         }
+                        if (generic == typeof(IDictionary<,>))
+                        {
+                            singletonOrConstructType = typeof(Dictionary<,>).MakeGenericType(requstedType.GetGenericArguments());
+                            return null;
+                        }
 
                         if (generic == typeof(IImmutableDictionary<,>)) parentType = typeof(ImmutableDictionary<,>);
                         else if (generic == typeof(IReadOnlyDictionary<,>)) parentType = typeof(ImmutableDictionary<,>);

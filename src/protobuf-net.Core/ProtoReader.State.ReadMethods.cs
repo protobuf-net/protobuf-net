@@ -195,7 +195,7 @@ namespace ProtoBuf
                 var category = serializerFeatures.GetCategory();
                 var wireType = features.GetWireType();
 
-                var origRef = values;
+                // var origRef = values;
                 values ??= new List<T>();
 
                 bool packed = false;
@@ -237,8 +237,9 @@ namespace ProtoBuf
                 {
                     ThrowNoAdd(values);
                 }
-                return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                    ? null : values;
+                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                //    ? null : values;
+                return values;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -442,6 +443,30 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader, using all default options
             /// </summary>
+            public ImmutableArray<T> ReadRepeated<T>(ImmutableArray<T> values)
+                => ReadRepeated(default, values, default);
+
+            /// <summary>
+            /// Reads a sequence of values or sub-items from the input reader
+            /// </summary>
+            public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
+            {
+                var newValues = new List<T>();
+                ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
+
+                // nothing to prepend, or we don't *want* to prepend it
+                if (values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
+                    values = ImmutableArray<T>.Empty;
+
+                if (newValues.Count != 0) // new data
+                    values = values.AddRange(newValues);
+
+                return values;
+            }
+
+            /// <summary>
+            /// Reads a sequence of values or sub-items from the input reader, using all default options
+            /// </summary>
             public T[] ReadRepeated<T>(T[] values)
                 => ReadRepeated(default, values, default);
 
@@ -451,7 +476,7 @@ namespace ProtoBuf
             public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
             {
                 // do the laziest thing possible for now; we can improve it later
-                T[] origRef = values;
+                // T[] origRef = values;
 
                 var newValues = new List<T>();
                 ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
@@ -475,8 +500,9 @@ namespace ProtoBuf
                     newValues.CopyTo(values, offset);
                 }
 
-                return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                    ? null : values;
+                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                //    ? null : values;
+                return values;
             }
 
             /// <summary>
@@ -507,7 +533,7 @@ namespace ProtoBuf
 
                 bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
 
-                var origRef = values;
+                // var origRef = values;
                 values ??= new Dictionary<TKey, TValue>();
 
                 if (values is IImmutableDictionary<TKey, TValue> immutable)
@@ -525,10 +551,11 @@ namespace ProtoBuf
                 else
                 {   // it could be something like a List<KeyValuePair<int, string>> ?
                     // note that in this case, SerializerFeatures.OptionMapFailOnDuplicate will have no effect
-                    values = ReadRepeated(features & ~SerializerFeatures.OptionReturnNothingWhenUnchanged, values, pairSerializer);
+                    values = ReadRepeated(features /* & ~SerializerFeatures.OptionReturnNothingWhenUnchanged*/, values, pairSerializer);
                 }
-                return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                    ? null : values;
+                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                //    ? null : values;
+                return values;
             }
 
             private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(int field, bool useAdd, IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
@@ -1101,16 +1128,16 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
             {
-                var origRef = TypeHelper<T>.IsReferenceType ? (object)value : null;
+                // var origRef = TypeHelper<T>.IsReferenceType ? (object)value : null;
                 var tok = StartSubItem();
                 var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
                 EndSubItem(tok);
 
-                if (TypeHelper<T>.IsReferenceType && (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0
-                    && (object)result == origRef)
-                {
-                    return default;
-                }
+                //if (TypeHelper<T>.IsReferenceType && (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0
+                //    && (object)result == origRef)
+                //{
+                //    return default;
+                //}
 
                 return result;
             }

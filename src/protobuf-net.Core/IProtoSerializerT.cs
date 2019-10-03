@@ -91,10 +91,12 @@ namespace ProtoBuf
         /// </summary>
         OptionSkipRecursionCheck = 1 << 10,
 
-        /// <summary>
-        /// If a method would return the same reference as was passed in, return null/nothing instead
-        /// </summary>
-        OptionReturnNothingWhenUnchanged = 1 << 11,
+        // this isn't quite ready; the problem is that the property assignment / null-check logic
+        // gets hella messy
+        ///// <summary>
+        ///// If a method would return the same reference as was passed in, return null/nothing instead
+        ///// </summary>
+        //OptionReturnNothingWhenUnchanged = 1 << 11,
 
 #if FEAT_NULL_LIST_ITEMS
         /// <summary>
