@@ -47,6 +47,12 @@ namespace ProtoBuf
             {
                 try {
                     var formatterServiceType = typeof(string).GetTypeInfo().Assembly.GetType("System.Runtime.Serialization.FormatterServices");
+                    if (formatterServiceType == null)
+                    {
+                        // fallback for .Net Core 3.0
+                        var formatterAssembly = Assembly.Load(new AssemblyName("System.Runtime.Serialization.Formatters"));
+                        formatterServiceType = formatterAssembly.GetType("System.Runtime.Serialization.FormatterServices");
+                    }
                     MethodInfo method = formatterServiceType?.GetMethod("GetUninitializedObject", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
                     if (method != null)
                     {
