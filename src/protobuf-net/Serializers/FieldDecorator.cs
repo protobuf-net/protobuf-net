@@ -62,12 +62,13 @@ namespace ProtoBuf.Serializers
             {
                 if (Tail.ReturnsValue)
                 {
-                    using Compiler.Local newVal = new Compiler.Local(ctx, field.FieldType);
+                    using Compiler.Local newVal = new Compiler.Local(ctx, Tail.ExpectedType);
                     ctx.StoreValue(newVal);
                     if (field.FieldType.IsValueType)
                     {
                         ctx.LoadAddress(loc, ExpectedType);
                         ctx.LoadValue(newVal);
+                        if (field.FieldType != ExpectedType) ctx.CastFromObject(field.FieldType);
                         ctx.StoreValue(field);
                     }
                     else
@@ -78,8 +79,8 @@ namespace ProtoBuf.Serializers
 
                         ctx.LoadAddress(loc, ExpectedType);
                         ctx.LoadValue(newVal);
+                        if (field.FieldType != ExpectedType) ctx.Cast(field.FieldType);
                         ctx.StoreValue(field);
-
                         ctx.MarkLabel(allDone);
                     }
                 }

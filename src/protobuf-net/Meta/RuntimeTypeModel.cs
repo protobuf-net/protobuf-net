@@ -1079,7 +1079,7 @@ namespace ProtoBuf.Meta
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
                                         : asm.DefineDynamicModule(moduleName);
 #endif
-            var scope = CompilerContextScope.CreateForModule(module, true, assemblyName);
+            var scope = CompilerContextScope.CreateForModule(this, module, true, assemblyName);
             WriteAssemblyAttributes(options, assemblyName, asm);
 
 

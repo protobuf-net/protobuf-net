@@ -100,19 +100,33 @@ namespace ProtoBuf.Serializers
 
             if (writeValue)
             {
-                using Compiler.Local newVal = new Compiler.Local(ctx, property.PropertyType);
+                using Compiler.Local newVal = new Compiler.Local(ctx, Tail.ExpectedType);
                 ctx.StoreValue(newVal); // stack is empty
 
                 Compiler.CodeLabel allDone = new Compiler.CodeLabel(); // <=== default structs
-                if (!propertyType.IsValueType)
+
+                if (!Tail.ExpectedType.IsValueType)
                 { // if the tail returns a null, intepret that as *no assign*
                     allDone = ctx.DefineLabel();
                     ctx.LoadValue(newVal); // stack is: new-value
                     ctx.BranchIfFalse(@allDone, true); // stack is empty
                 }
+
                 // assign the value
                 ctx.LoadAddress(loc, ExpectedType); // parent-addr
                 ctx.LoadValue(newVal); // parent-obj|new-value
+                if (property.PropertyType != ExpectedType)
+                {
+                    if (property.PropertyType.IsValueType && !Tail.ExpectedType.IsValueType)
+                    {
+                        ctx.CastFromObject(property.PropertyType);
+                    }
+                    else
+                    {
+                        ctx.Cast(property.PropertyType);
+                    }
+                }
+
                 if (shadowSetter == null)
                 {
                     ctx.StoreValue(property); // empty
@@ -135,7 +149,7 @@ namespace ProtoBuf.Serializers
 
         internal static bool CanWrite(MemberInfo member)
         {
-            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (member == null) return false;
 
             if (member is PropertyInfo prop)
             {

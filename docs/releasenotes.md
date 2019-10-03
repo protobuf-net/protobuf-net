@@ -19,6 +19,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 - **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
 - **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
 - **breaking change** - dynamic typing (i.e. storing the `Type` metadata) and reference-tracking (`AsReference`, `AsReferenceDefault`, `DynamicType`) are not implemented/supported; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited
+- **breaking change** - non-generic list-like APIs are no longer supported; `ICollection<T>` and `IDictionary<TKey, TValue>` are the minimum; custom enumerators (outside of the inbuilt ones) will not be used
 
 - new state-based reader/writer API (works with streams, buffers, etc)
 - entire new custom serializer API
@@ -30,6 +31,7 @@ Some features are currently incomplete; this may restrict usage for some scenari
 - "map" (dictionary) is only currently usable with public types
 - tuple-based types and types with surrogates cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
 - null-item retention in lists/arrays is not currently implemented
+- immutable collection support has not yet been reimplemented; it will be
 
 There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably
 never should have been allowed; these changes should not impact most people!

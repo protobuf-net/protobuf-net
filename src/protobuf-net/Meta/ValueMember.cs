@@ -357,10 +357,6 @@ namespace ProtoBuf.Meta
             try
             {
                 var info = MemberType;
-                if (ImmutableCollectionDecorator.IdentifyImmutable(MemberType, out _, out _, out _, out _, out _, out _))
-                {
-                    return false;
-                }
                 if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
                     var typeArgs = MemberType.GetGenericArguments();
@@ -456,44 +452,34 @@ namespace ProtoBuf.Meta
                     }
 #endif
                     var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
-                    var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
-                        BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-                    if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
-                    ser = (IRuntimeProtoSerializerNode)ctors[0].Invoke(new object[] {concreteType, keySer, valueSer, FieldNumber,
-                        DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
+
+                    WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
+                    SerializerFeatures features = rootWireType.AsFeatures();
+                    if (OverwriteList) features |= SerializerFeatures.OptionOverwriteList;
+                    ser = MapDecorator.Create(concreteType, keyType, valueType, FieldNumber, features, keyWireType.AsFeatures(), valueWireType.AsFeatures(), PropertyDecorator.CanWrite(member));
                 }
                 else
                 {
                     Type finalType = ItemType ?? MemberType;
+
                     ser = TryGetCoreSerializer(model, dataFormat, finalType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
                     if (ser == null)
                     {
                         throw new InvalidOperationException("No serializer defined for type: " + finalType.ToString());
                     }
 
-                    // apply tags
-                    if (ItemType != null && SupportNull)
-                    {
-#if FEAT_NULL_LIST_ITEMS
-                        if (IsPacked)
-                        {
-                            throw new NotSupportedException("Packed encodings cannot support null values");
-                        }
-                        ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
-                        ser = new NullDecorator(ser);
-                        ser = new TagDecorator(FieldNumber, WireType.StartGroup, false, ser);
-#else
-                        ThrowHelper.ThrowNotSupportedException("null items in lists");
-                        ser = default;
-#endif
-                    }
-                    else
-                    {
-                        ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
-                    }
-                    // apply lists if appropriate
+                    // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
                     if (ItemType != null)
                     {
+                        if (SupportNull)
+                        {
+#if FEAT_NULL_LIST_ITEMS
+                            something new here; old code not even remotely compatible
+#else
+                            ThrowHelper.ThrowNotSupportedException("null items in lists");
+#endif
+                        }
+
                         Type underlyingItemType = SupportNull ? ItemType : Nullable.GetUnderlyingType(ItemType) ?? ItemType;
 
                         Debug.Assert(underlyingItemType == ser.ExpectedType
@@ -507,17 +493,22 @@ namespace ProtoBuf.Meta
 #endif
                         if (MemberType.IsArray)
                         {
-                            ser = ArrayDecorator.Create(ItemType, ser, FieldNumber, listFeatures);
+                            ser = ArrayDecorator.Create(ItemType, FieldNumber, listFeatures);
                         }
                         else
                         {
-                            ser = ListDecorator.Create(MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
+                            ser = ListDecorator.Create(DefaultType ?? MemberType, ItemType, FieldNumber, listFeatures, PropertyDecorator.CanWrite(member));
                         }
                     }
-                    else if (_defaultValue != null && !IsRequired && getSpecified == null)
-                    {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
-                        // as does "IsRequired"
-                        ser = new DefaultValueDecorator(_defaultValue, ser);
+                    else
+                    {
+                        ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
+
+                        if (_defaultValue != null && !IsRequired && getSpecified == null)
+                        {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
+                            // as does "IsRequired"
+                            ser = new DefaultValueDecorator(_defaultValue, ser);
+                        }
                     }
                     if (MemberType == typeof(Uri))
                     {

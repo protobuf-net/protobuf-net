@@ -155,6 +155,16 @@ namespace ProtoBuf.Compiler
             }
         }
 
+        static readonly MethodInfo s_CreateInstance = typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.CreateInstance),
+            BindingFlags.Public | BindingFlags.Instance);
+        internal void CreateInstance<T>()
+        {
+            // call state.CreateInstance<T>(null)
+            LoadState();
+            LoadNullRef();
+            EmitCall(s_CreateInstance.MakeGenericMethod(typeof(T)));
+        }
+
         internal void Return()
         {
             Emit(OpCodes.Ret);
@@ -285,22 +295,22 @@ namespace ProtoBuf.Compiler
 
         public bool IsService => Scope.IsFullEmit && !IsStatic;
 
-        public void LoadSelfAsService<T>(bool assertImplemented = false) where T : class
+        public void LoadSelfAsService<TService, T>() where TService : class
         {
-            if (IsStatic)
+            if (IsStatic || TypeModel.TryGetSerializer<T>(null) is object) // don't claim inbuilts
             {
                 LoadNullRef();
             }
             else
             {
                 Emit(OpCodes.Ldarg_0); // push ourselves
-                if (assertImplemented && Scope.IsFullEmit)
+                if (Scope.IsFullEmit && Scope.Defines<T>())
                 { } // yay, we should be fine here
                 else
                 {
                     // otherwise, we'll use isinst to find
                     // out at runtime, else loading null
-                    TryCast(typeof(T));
+                    TryCast(typeof(TService));
                 }
             }
         }

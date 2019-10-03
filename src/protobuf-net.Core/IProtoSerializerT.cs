@@ -112,15 +112,13 @@ namespace ProtoBuf
             => features & CategoryMask;
 
         [MethodImpl(ProtoReader.HotPath)]
-        public static SerializerFeatures InheritFrom(this SerializerFeatures features, SerializerFeatures overrides)
+        public static void InheritFrom(ref this SerializerFeatures features, SerializerFeatures overrides)
         {
             if ((features & CategoryMask) == 0)
                 features |= overrides & CategoryMask;
 
             if ((features & SerializerFeatures.WireTypeSpecified) == 0)
                 features |= overrides & (WireTypeMask | SerializerFeatures.WireTypeSpecified);
-
-            return features;
         }
 
         [MethodImpl(ProtoReader.HotPath)]
@@ -152,14 +150,6 @@ namespace ProtoBuf
 
         // core wire-type bits plus the zig-zag marker; first 4 bits
         private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;
-
-
-        [MethodImpl(ProtoReader.HotPath)] // used to pick the best wire-type when processing packed repeated data
-        public static WireType GetWireType(this SerializerFeatures features, SerializerFeatures fallback)
-        {
-            return (features & SerializerFeatures.WireTypeSpecified) != 0
-                ? (WireType)(features & WireTypeMask) : fallback.GetWireType();
-        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void ThrowWireTypeNotSpecified() => ThrowHelper.ThrowInvalidOperationException(

@@ -53,20 +53,20 @@ namespace ProtoBuf.Internal
                 int field;
                 var serializer = TypeModel.GetSerializer<T>(state.Model);
                 var features = serializer.Features;
-                if (features.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                if (value is null) value = state.CreateInstance<TList>();
                 while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            value = state.ReadRepeated(features, value, serializer);
+                            state.ReadRepeated(features, value, serializer);
                             break;
                         default:
                             state.SkipField();
                             break;
                     }
                 }
-                return value ?? state.CreateInstance<TList>();
+                return value;
             }
 
             public void Write(ref ProtoWriter.State state, TList value)
@@ -90,30 +90,27 @@ namespace ProtoBuf.Internal
                 int field;
                 var keySerializer = TypeModel.GetSerializer<TKey>(state.Model);
                 var valueSerializer = TypeModel.GetSerializer<TValue>(state.Model);
+                if (value is null) value = state.CreateInstance<TDictionary>();
                 while ((field = state.ReadFieldHeader()) > 0)
                 {
                     switch (field)
                     {
                         case TypeModel.ListItemTag:
-                            value = state.ReadMap(default, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
+                            state.ReadMap(default, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
                             break;
                         default:
                             state.SkipField();
                             break;
                     }
                 }
-                return value ?? state.CreateInstance<TDictionary>();
+                return value;
             }
 
             public void Write(ref ProtoWriter.State state, TDictionary value)
-                => Write(ref state, TypeModel.ListItemTag, default, value);
+                => state.WriteMap(TypeModel.ListItemTag, value);
 
             public void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TDictionary value)
-            {
-                var keySerializer = TypeModel.GetSerializer<TKey>(state.Model);
-                var valueSerializer = TypeModel.GetSerializer<TValue>(state.Model);
-                state.WriteMap(fieldNumber, features, keySerializer.Features, valueSerializer.Features, value, keySerializer, valueSerializer);
-            }
+                => state.WriteMap(TypeModel.ListItemTag, features, default, default, value, default, default);
         }
     }
 }

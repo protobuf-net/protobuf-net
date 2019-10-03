@@ -41,21 +41,20 @@ namespace ProtoBuf.Serializers
                     throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
                 }
 
-                tail = new TagDecorator(i + 1, wireType, false, tail);
                 if (itemType == null)
                 {
-                    serializer = tail;
+                    serializer = new TagDecorator(i + 1, wireType, false, tail);
                 }
                 else
                 {
                     SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
                     if (finalType.IsArray)
                     {
-                        serializer = ArrayDecorator.Create(itemType, tail, i + 1, listFeatures);
+                        serializer = ArrayDecorator.Create(itemType, i + 1, listFeatures);
                     }
                     else
                     {
-                        serializer = ListDecorator.Create(finalType, defaultType, tail, i + 1, false, wireType, true, false, false);
+                        serializer = ListDecorator.Create(finalType, itemType, i + 1, listFeatures, true);
                     }
                 }
                 tails[i] = serializer;

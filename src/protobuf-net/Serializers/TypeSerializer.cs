@@ -56,7 +56,7 @@ namespace ProtoBuf.Serializers
             if (context.IsService)
             {
                 using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>();
                 context.LoadState();
 
                 // sub-state
@@ -72,7 +72,7 @@ namespace ProtoBuf.Serializers
             {
                 context.LoadState();
                 context.LoadValue(valueFrom);
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>();
                 context.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(typeof(TBase), typeof(T)));
             }
@@ -85,7 +85,7 @@ namespace ProtoBuf.Serializers
             using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
             if (context.IsService)
             {
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>();
                 context.LoadState();
                 context.LoadValue(tmp);
                 context.EmitCall(typeof(ISubTypeSerializer<TBase>)
@@ -95,7 +95,7 @@ namespace ProtoBuf.Serializers
             {
                 context.LoadState();
                 context.LoadValue(tmp);
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>>(assertImplemented: true);
+                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>();
                 context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.State.WriteBaseType), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(typeof(TBase)));
             }

@@ -17,22 +17,24 @@ namespace ProtoBuf.unittest.Meta
         public void CanFindReadArray() => Assert.NotNull(ArrayDecorator.s_ReadRepeated);
 
         [Fact]
-        public void CanFindWriteArray() => Assert.NotNull(ArrayDecorator.s_WriteRepeated);
+        public void CanFindReadCollection() => Assert.NotNull(ListDecorator.s_ReadRepeated);
+
+        [Fact]
+        public void CanFindWriteCollection() => Assert.NotNull(ListDecorator.s_WriteRepeated);
+
+        [Fact]
+        public void CanFindReadMap() => Assert.NotNull(MapDecorator.s_ReadMap);
+
+        [Fact]
+        public void CanFindWriteMap() => Assert.NotNull(MapDecorator.s_WriteMap);
 
         public class TypeWithLists
         {
             public List<string> ListString { get; set; }
             public IList<string> IListStringTyped { get; set; }
 
-            public ArrayList ArrayListString { get; set; }
-            public IList IListStringUntyped { get; set; }
-
             public List<int> ListInt32 { get; set; }
             public IList<int> IListInt32Typed { get; set; }
-
-            public ArrayList ArrayListInt32 { get; set; }
-            public IList IListInt32Untyped { get; set; }
-
         }
 
         
@@ -47,10 +49,6 @@ namespace ProtoBuf.unittest.Meta
             meta.Add(3, "IListStringTyped");
             meta.Add(4, "IListInt32Typed");
 
-            meta.Add(5, "ArrayListString", typeof(string), null);
-            meta.Add(6, "ArrayListInt32", typeof(int), null);
-            meta.Add(7, "IListStringUntyped", typeof(string), null);
-            meta.Add(8, "IListInt32Untyped", typeof(int), null);
 
             model.CompileInPlace();
 
@@ -168,68 +166,6 @@ namespace ProtoBuf.unittest.Meta
 
 
         [Fact]
-        public void RoundTripArrayList_String()
-        {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(TypeWithLists), false).Add(3, "ArrayListString", typeof(string), null);
-            TypeWithLists obj = new TypeWithLists
-            {
-                ArrayListString = new ArrayList
-                {
-                    "abc",
-                    "def"
-                }
-            };
-
-            TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.ArrayListString);
-            Assert.True(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
-
-            model.CompileInPlace();
-            clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.ArrayListString);
-            Assert.True(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
-
-            clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.ArrayListString);
-            Assert.True(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
-        }
-
-        [Fact]
-        public void RoundTripIList_String()
-        {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(TypeWithLists), false).Add(4, "IListStringUntyped", typeof(string), null);
-            TypeWithLists obj = new TypeWithLists
-            {
-                IListStringUntyped = new ArrayList
-                {
-                    "abc",
-                    "def"
-                }
-            };
-
-            TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.IListStringUntyped);
-            Assert.True(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
-
-            model.CompileInPlace();
-            clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.IListStringUntyped);
-            Assert.True(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
-
-            clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.IListStringUntyped);
-            Assert.True(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
-        }
-
-        [Fact]
         public void RoundTripTypedList_Int32()
         {
             var model = RuntimeTypeModel.Create();
@@ -291,69 +227,6 @@ namespace ProtoBuf.unittest.Meta
             Assert.True(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
         }
 
-
-        [Fact]
-        public void RoundTripArrayList_Int32()
-        {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(TypeWithLists), false).Add(3, "ArrayListInt32", typeof(int), null);
-            TypeWithLists obj = new TypeWithLists
-            {
-                ArrayListInt32 = new ArrayList
-                {
-                    123,
-                    456
-                }
-            };
-
-            TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.ArrayListInt32);
-            Assert.True(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
-
-            model.CompileInPlace();
-            clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.ArrayListInt32);
-            Assert.True(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
-
-            clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.ArrayListInt32);
-            Assert.True(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
-        }
-
-        [Fact]
-        public void RoundTripIList_Int32()
-        {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(TypeWithLists), false).Add(4, "IListInt32Untyped", typeof(int), null);
-            TypeWithLists obj = new TypeWithLists
-            {
-                IListInt32Untyped = new ArrayList
-                {
-                    123,
-                    456
-                }
-            };
-
-            TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.IListInt32Untyped);
-            Assert.True(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
-
-            model.CompileInPlace();
-            clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.IListInt32Untyped);
-            Assert.True(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
-
-            clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.NotNull(clone.IListInt32Untyped);
-            Assert.True(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
-        }
-
         public class NastyType
         {
             
@@ -368,19 +241,24 @@ namespace ProtoBuf.unittest.Meta
             public List<int>[] ArrayOfList{ get; set; }
 
             public List<int> BasicList { get; set; }
+            public List<int> BasicListField;
 
             public int[] BasicArray{ get; set; }
+            public int[] BasicArrayField;
 
             public byte[] Blob { get; set; }
+            public byte[] BlobField;
 
             public List<byte[]> Blobs{ get; set; }
+
+            public List<byte[]> BlobsField;
         }
         [Fact]
         public void JaggedListShouldThrow()
         {
             try {
                 var model = RuntimeTypeModel.Create();
-                model.Add(typeof(NastyType), true).Add(1, "JaggedList");
+                model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.JaggedList));
                 model.CompileInPlace();
                 Assert.Equal(42, 0); // fail
             } catch(NotSupportedException) {  }
@@ -390,7 +268,7 @@ namespace ProtoBuf.unittest.Meta
         {
             try {
                 var model = RuntimeTypeModel.Create();
-                model.Add(typeof(NastyType), true).Add(1, "ListOfArray");
+                model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.ListOfArray));
                 model.CompileInPlace();
                 Assert.Equal(42, 0); // fail
             }
@@ -401,7 +279,7 @@ namespace ProtoBuf.unittest.Meta
         {
             try {
                 var model = RuntimeTypeModel.Create();
-                model.Add(typeof(NastyType), true).Add(1, "MultiDimArray");
+                model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.MultiDimArray));
                 model.CompileInPlace();
                 Assert.Equal(42, 0); // fail
             }
@@ -412,7 +290,7 @@ namespace ProtoBuf.unittest.Meta
         {
             try {
                 var model = RuntimeTypeModel.Create();
-                model.Add(typeof(NastyType), true).Add(1, "JaggedArray");
+                model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.JaggedArray));
                 model.CompileInPlace();
                 Assert.Equal(42, 0); // fail
             }
@@ -423,7 +301,7 @@ namespace ProtoBuf.unittest.Meta
         {
             try {
                 var model = RuntimeTypeModel.Create();
-                model.Add(typeof(NastyType), true).Add(1, "ArrayOfList");
+                model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.ArrayOfList));
                 model.CompileInPlace();
                     Assert.Equal(42, 0); // fail
             }
@@ -433,28 +311,28 @@ namespace ProtoBuf.unittest.Meta
         public void BasicListIsFine()
         {
             var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "BasicList");
+            model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.BasicList));
             model.CompileInPlace();
         }
         [Fact]
         public void BasicArrayIsFine()
         {
             var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "BasicArray");
+            model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.BasicArray));
             model.CompileInPlace();
         }
         [Fact]
         public void BlobIsFine()
         {
             var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "Blob");
+            model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.Blob));
             model.CompileInPlace();
         }
         [Fact]
         public void BlobsAreFine()
         {
             var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "Blobs");
+            model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.Blobs));
             model.CompileInPlace();
         }
         [Fact]
@@ -462,10 +340,15 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(NastyType), true)
-                //.Add(1, "Blobs")
-                //.Add(2, "Blob")
-                .Add(3, "BasicArray")
-                //.Add(4, "BasicList")
+                .Add(1, nameof(NastyType.Blobs))
+                .Add(2, nameof(NastyType.Blob))
+                .Add(3, nameof(NastyType.BasicArray))
+                .Add(4, nameof(NastyType.BasicList))
+
+                .Add(5, nameof(NastyType.BlobsField))
+                .Add(6, nameof(NastyType.BlobField))
+                .Add(7, nameof(NastyType.BasicArrayField))
+                .Add(8, nameof(NastyType.BasicListField))
                 ;
             model.CompileInPlace();
 

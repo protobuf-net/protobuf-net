@@ -16,14 +16,15 @@ namespace ProtoBuf.Compiler
     {
         internal static CompilerContextScope CreateInProcess()
         {
-            return new CompilerContextScope(null, false, null);
+            return new CompilerContextScope(null, null, false, null);
         }
 
-        internal static CompilerContextScope CreateForModule(ModuleBuilder module, bool isFullEmit, string assemblyName)
-            => new CompilerContextScope(module, isFullEmit, assemblyName);
+        internal static CompilerContextScope CreateForModule(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName)
+            => new CompilerContextScope(model, module, isFullEmit, assemblyName);
 
-        private CompilerContextScope(ModuleBuilder module, bool isFullEmit, string assemblyName)
+        private CompilerContextScope(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName)
         {
+            _model = model;
             _module = module;
             IsFullEmit = isFullEmit;
             AssemblyName = assemblyName;
@@ -34,6 +35,7 @@ namespace ProtoBuf.Compiler
         public bool IsFullEmit { get; }
 
         private ModuleBuilder _module;
+        private RuntimeTypeModel _model;
 
         private ModuleBuilder GetModule()
             => _module ?? (_module = GetSharedModule());
@@ -164,6 +166,17 @@ namespace ProtoBuf.Compiler
                 return result;
             }
 
+        }
+
+        internal bool Defines<T>()
+        {
+            if (_model == null || typeof(T).IsEnum) return false;
+            if (!_model.IsKnownType<T>()) return false;
+
+            var mt = _model[typeof(T)];
+            if (mt == null || mt.Serializer is object) return false;
+
+            return true;
         }
     }
 }

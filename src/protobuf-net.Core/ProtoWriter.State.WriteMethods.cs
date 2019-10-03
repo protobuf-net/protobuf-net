@@ -346,6 +346,12 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Writes a sequence of sub-items to the writer, with all default options
+            /// </summary>
+            public void WriteRepeated<T>(int fieldNumber, ICollection<T> values)
+                => WriteRepeated<T>(fieldNumber, default, values, default);
+
+            /// <summary>
             /// Writes a sequence of sub-items to the writer
             /// </summary>
             public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
@@ -353,8 +359,11 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                var wireType = features.GetWireType(serializer.Features);
                 var category = serializerFeatures.GetCategory();
+
+                features.InheritFrom(serializerFeatures);
+                var wireType = features.GetWireType();
+                
 
                 int count;
                 if (values == null || (count = values.Count) == 0)
@@ -364,21 +373,32 @@ namespace ProtoBuf
                 else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
                 {
                     if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
-                    WritePackedScalar<T>(fieldNumber, wireType, values, count, measurer);
+                    if (values is T[] arr)
+                    {   // exploit special JIT-based array handling
+                        WritePackedScalar(fieldNumber, wireType, arr, count, measurer);
+                    }
+                    else if (values is List<T> list)
+                    {   // exploit the custom List<T> iterator
+                        WritePackedScalar(fieldNumber, wireType, list, count, measurer);
+                    }
+                    else
+                    {   // just roll with it; it'll do
+                        WritePackedScalar(fieldNumber, wireType, values, count, measurer);
+                    }
                 }
                 else
                 {
                     if (values is T[] arr)
                     {   // exploit special JIT-based array handling
-                        WriteRepeatedImpl<T>(fieldNumber, category, wireType, arr, serializer);
+                        WriteRepeatedCore(fieldNumber, category, wireType, arr, serializer);
                     }
                     else if (values is List<T> list)
                     {   // exploit the custom List<T> iterator
-                        WriteRepeatedImpl<T>(fieldNumber, category, wireType, list, serializer);
+                        WriteRepeatedCore(fieldNumber, category, wireType, list, serializer);
                     }
                     else
                     {   // just roll with it; it'll do
-                        WriteRepeatedImpl<T>(fieldNumber, category, wireType, values, serializer);
+                        WriteRepeatedCore(fieldNumber, category, wireType, values, serializer);
                     }
                 }
             }
@@ -500,7 +520,7 @@ namespace ProtoBuf
                     $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
             }
 
-            private void WriteRepeatedImpl<T>(int fieldNumber, SerializerFeatures category, WireType wireType, ICollection<T> values, ISerializer<T> serializer)
+            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, ICollection<T> values, ISerializer<T> serializer)
             {
                 foreach (var value in values)
                 {
@@ -522,30 +542,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, List<T> values, ISerializer<T> serializer = null)
-            {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
-                var serializerFeatures = serializer.Features;
-                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-
-                int count;
-                var wireType = features.GetWireType();
-                var category = serializerFeatures.GetCategory();
-                if (values == null || (count = values.Count) == 0)
-                {
-                    // nothing to do
-                }
-                else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
-                {
-                    if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
-                    WritePackedScalar<T>(fieldNumber, wireType, values, count, measurer);
-                }
-                else
-                {
-                    WriteRepeatedImpl(fieldNumber, category, wireType, values, serializer);
-                }
-            }
-            private void WriteRepeatedImpl<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
+            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
             {
                 foreach (var value in values)
                 {
@@ -567,32 +564,7 @@ namespace ProtoBuf
                 }
             }
 
-            /// <summary>
-            /// Writes a sequence of sub-items to the writer
-            /// </summary>
-            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
-            {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
-                var serializerFeatures = serializer.Features;
-                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                int count;
-                var wireType = features.GetWireType();
-                var category = serializerFeatures.GetCategory();
-                if (values == null || (count = values.Length) == 0)
-                {
-                    // nothing to do
-                }
-                else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
-                {
-                    if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
-                    WritePackedScalar<T>(fieldNumber, wireType, values, count, measurer);
-                }
-                else
-                {
-                    WriteRepeatedImpl(fieldNumber, category, wireType, values, serializer);
-                }
-            }
-            private void WriteRepeatedImpl<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
+            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
             {
                 for(int i = 0; i < values.Length; i++)
                 {
@@ -619,11 +591,7 @@ namespace ProtoBuf
             /// Writes a map to the output using all default options
             /// </summary>
             public void WriteMap<TKey, TValue>(int fieldNumber, IDictionary<TKey, TValue> values)
-            {
-                var keySerializer = TypeModel.GetSerializer<TKey>(Model);
-                var valueSerializer = TypeModel.GetSerializer<TValue>(Model);
-                WriteMap(fieldNumber, default, keySerializer.Features, valueSerializer.Features, values, keySerializer, valueSerializer);
-            }
+                => WriteMap(fieldNumber, default, default, default, values, default, default);
 
             /// <summary>
             /// Writes a map to the output, specifying custom options
@@ -638,21 +606,46 @@ namespace ProtoBuf
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                keyFeatures = keyFeatures.InheritFrom(keySerializer.Features);
-                valueFeatures = valueFeatures.InheritFrom(valueSerializer.Features);
+                keyFeatures.InheritFrom(keySerializer.Features);
+                valueFeatures.InheritFrom(valueSerializer.Features);
 
                 if (values == null || values.Count == 0)
                 { }
                 else
                 {
                     var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
-                    features = features.InheritFrom(pairSerializer.Features);
+                    features.InheritFrom(pairSerializer.Features);
                     var wireType = features.GetWireType();
-                    foreach (var pair in values)
-                    {
-                        WriteFieldHeader(fieldNumber, wireType);
-                        _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
+
+                    if (values is Dictionary<TKey, TValue> dict)
+                    {   // exploit custom iterator
+                        WriteMapCore(fieldNumber, wireType, dict, pairSerializer);
                     }
+                    else
+                    {
+                        WriteMapCore(fieldNumber, wireType, values, pairSerializer);
+                    }
+
+                }
+            }
+
+            void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, IDictionary<TKey, TValue> values,
+                KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            {
+                foreach (var pair in values)
+                {
+                    WriteFieldHeader(fieldNumber, wireType);
+                    _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
+                }
+            }
+
+            void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, Dictionary<TKey, TValue> values,
+                KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            {
+                foreach (var pair in values)
+                {
+                    WriteFieldHeader(fieldNumber, wireType);
+                    _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
                 }
             }
 
@@ -673,8 +666,8 @@ namespace ProtoBuf
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
-                    
-                    WriteFieldHeader(fieldNumber, features.GetWireType(serializer.Features));
+                    features.InheritFrom(serializer.Features);
+                    WriteFieldHeader(fieldNumber, features.GetWireType());
 
                     switch (features.GetCategory())
                     {

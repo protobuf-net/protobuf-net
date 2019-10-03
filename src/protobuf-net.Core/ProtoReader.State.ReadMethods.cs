@@ -176,28 +176,26 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Reads a sequence of values or sub-items from the input reader, using all default options
+            /// </summary>
+            public void ReadRepeated<T>(ICollection<T> values)
+                => ReadRepeated(default, values, default);
+
+            /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
-            public TList ReadRepeated<TList, T>(SerializerFeatures features, TList value, ISerializer<T> serializer = null) where TList : class, ICollection<T>
-            {   // the TList here is so we know what type to *construct*
-                if (typeof(TList) == typeof(T[]))
-                    return (TList)(object)ReadRepeated(features, (T[])(object)value, serializer);
-
-                if (value is null) value = CreateInstance<TList>();
-                else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
-
-                ReadRepeatedCore<T>(features.GetWireType(), value, serializer);
-                return value;
-                
-            }
-
-            private void ReadRepeatedCore<T>(WireType wireType, ICollection<T> value, ISerializer<T> serializer)
+            public void ReadRepeated<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
             {
+                if (values is null) ThrowHelper.ThrowArgumentException(nameof(values));
+                if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
+
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+                features.InheritFrom(serializerFeatures);
                 var category = serializerFeatures.GetCategory();
+                var wireType = features.GetWireType();
 
                 if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
@@ -206,7 +204,7 @@ namespace ProtoBuf
                     if (category != SerializerFeatures.CategoryScalar) 
                         ThrowInvalidOperationException("Packed data expected a scalar serializer");
 
-                    ReadPackedScalar<T>(value, wireType, serializer);
+                    ReadPackedScalar(values, wireType, serializer);
                 }
                 else
                 {
@@ -228,7 +226,7 @@ namespace ProtoBuf
                                 element = default;
                                 break;
                         }
-                        value.Add(element);
+                        values.Add(element);
                     } while (TryReadFieldHeader(field));
                 }
             }
@@ -276,15 +274,21 @@ ReadFixedQuantity:
             }
 
             /// <summary>
+            /// Reads a sequence of values or sub-items from the input reader, using all default options
+            /// </summary>
+            public T[] ReadRepeated<T>(T[] values)
+                => ReadRepeated(default, values, default);
+
+            /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
-            public T[] ReadRepeated<T>(SerializerFeatures features, T[] value, ISerializer<T> serializer = null)
+            public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
             {
                 // do the laziest thing possible for now; we can improve it later
                 var newValues = new List<T>();
-                ReadRepeatedCore(features.GetWireType(), newValues, serializer);
+                ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
 
-                if (value == null || value.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
+                if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
                 {
                     // nothing to prepend, or we don't *want* to prepend it
                     return newValues.ToArray();
@@ -292,61 +296,55 @@ ReadFixedQuantity:
                 else if (newValues.Count == 0)
                 {
                     // nothing to append; just return the input
-                    return value ?? Array.Empty<T>();
+                    return values ?? Array.Empty<T>();
                 }
                 else
                 {
                     // we have non-trivial data in both
-                    var offset = value.Length;
-                    Array.Resize(ref value, value.Length + newValues.Count);
-                    newValues.CopyTo(value, offset);
-                    return value;
+                    var offset = values.Length;
+                    Array.Resize(ref values, values.Length + newValues.Count);
+                    newValues.CopyTo(values, offset);
+                    return values;
                 }
             }
 
             /// <summary>
             /// Reads a map from the input, using all default options
             /// </summary>
-            public TDictionary ReadMap<TDictionary, TKey, TValue>(TDictionary value)
-                where TDictionary : class, IDictionary<TKey, TValue>
-            {
-                var keySerializer = TypeModel.GetSerializer<TKey>(Model);
-                var valueSerializer = TypeModel.GetSerializer<TValue>(Model);
-                return ReadMap(default, keySerializer.Features, valueSerializer.Features,
-                    value, keySerializer, valueSerializer);
-            }
+            public void ReadMap<TKey, TValue>(IDictionary<TKey, TValue> values)
+                => ReadMap(default, default, default, values, default, default);
 
             /// <summary>
             /// Reads a map from the input, specifying custom options
             /// </summary>
-            public TDictionary ReadMap<TDictionary, TKey, TValue>(
+            public void ReadMap<TKey, TValue>(
                 SerializerFeatures features,
                 SerializerFeatures keyFeatures,
                 SerializerFeatures valueFeatures,
-                TDictionary value, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
-                where TDictionary : class, IDictionary<TKey, TValue>
+                IDictionary<TKey, TValue> values,
+                ISerializer<TKey> keySerializer = null,
+                ISerializer<TValue> valueSerializer = null)
             {
+                if (values is null) ThrowHelper.ThrowArgumentNullException(nameof(values));
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                keyFeatures = keyFeatures.InheritFrom(keySerializer.Features);
-                valueFeatures = valueFeatures.InheritFrom(valueSerializer.Features);
+                keyFeatures.InheritFrom(keySerializer.Features);
+                valueFeatures.InheritFrom(valueSerializer.Features);
 
                 int mapField = FieldNumber;
                 var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
-                features = features.InheritFrom(pairSerializer.Features);
+                features.InheritFrom(pairSerializer.Features);
 
                 bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
-                if (value is null) value = CreateInstance<TDictionary>();
-                else if ((features & SerializerFeatures.OptionOverwriteList) != 0) value.Clear();
+                if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
 
                 do
                 {
                     var item = ReadMessage(default, pairSerializer);
-                    if (useAdd) value.Add(item.Key, item.Value);
-                    else value[item.Key] = item.Value;
+                    if (useAdd) values.Add(item.Key, item.Value);
+                    else values[item.Key] = item.Value;
                 } while (TryReadFieldHeader(mapField));
-                return value;
             }
 
             /// <summary>

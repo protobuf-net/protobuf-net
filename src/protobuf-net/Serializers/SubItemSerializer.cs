@@ -34,7 +34,7 @@ namespace ProtoBuf.Serializers
             using var tmp = ctx.GetLocalWithValue(typeof(TChild), valueFrom);
             ctx.LoadState();
             ctx.LoadValue(tmp);
-            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>();
             ctx.EmitCall(s_WriteSubType[2].MakeGenericMethod(typeof(TChild)));
         }
 
@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadState();
             ctx.LoadValue(fieldNumber);
             ctx.LoadValue(tmp);
-            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>();
             ctx.EmitCall(s_WriteSubType[3].MakeGenericMethod(typeof(TChild)));
         }
 
@@ -63,7 +63,7 @@ namespace ProtoBuf.Serializers
             var type = typeof(SubTypeState<TParent>);
             ctx.LoadAddress(valueFrom, type);
             ctx.LoadState();
-            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>>(assertImplemented: true);
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>();
             ctx.EmitCall(type.GetMethod(nameof(SubTypeState<TParent>.ReadSubType)).MakeGenericMethod(typeof(TChild)));
         }
     }
@@ -164,7 +164,7 @@ namespace ProtoBuf.Serializers
         }
 
         public static void EmitWriteMessage<T>(int? fieldNumber, WireType wireType, CompilerContext ctx, Local value = null,
-            FieldInfo serializer = null, bool applyRecursionCheck = true, bool assertImplemented = true)
+            FieldInfo serializer = null, bool applyRecursionCheck = true)
         {
             using var tmp = ctx.GetLocalWithValue(typeof(T), value);
             ctx.LoadState();
@@ -172,7 +172,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(tmp);
             if (serializer == null)
             {
-                ctx.LoadSelfAsService<ISerializer<T>>(assertImplemented);
+                ctx.LoadSelfAsService<ISerializer<T>, T>();
             }
             else
             {
