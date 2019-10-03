@@ -207,7 +207,15 @@ namespace ProtoBuf
                     packed = true;
                 }
 
-                if (values is IImmutableList<T> iList)
+                if (values is ICollection<T> collection && !collection.IsReadOnly)
+                {
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        collection.Clear();
+
+                    if (packed) ReadPackedScalar(collection, wireType, serializer);
+                    else ReadRepeatedCore(field, collection, category, wireType, serializer);
+                }
+                else if (values is IImmutableList<T> iList)
                 {   // TODO: look at the builder API; this works for today, though
                     if ((features & SerializerFeatures.OptionOverwriteList) != 0)
                         iList = iList.Clear();
@@ -223,14 +231,6 @@ namespace ProtoBuf
                     values = packed ? ReadPackedScalar(iSet, wireType, serializer)
                         : ReadRepeatedCore(field, iSet, category, wireType, serializer);
                 }
-                else if (values is ICollection<T> collection)
-                {
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        collection.Clear();
-
-                    if (packed) ReadPackedScalar(collection, wireType, serializer);
-                    else ReadRepeatedCore(field, collection, category, wireType, serializer);
-                }
                 else
                 {
                     ThrowNoAdd(values);
@@ -243,7 +243,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             static void ThrowNoAdd(object values)
             {
-                ThrowHelper.ThrowNotSupportedException("No suitable collection Add API located for " + values.GetType().NormalizeName());
+                ThrowHelper.ThrowNotSupportedException("No suitable collection Add API located (or the list is read-only) for " + values.GetType().NormalizeName());
             }
 
             private void ReadRepeatedCore<T>(int field, ICollection<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
