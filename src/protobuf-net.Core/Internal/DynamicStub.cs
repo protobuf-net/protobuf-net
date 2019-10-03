@@ -200,7 +200,7 @@ namespace ProtoBuf.Internal
                         typed = serializer.Read(ref state, typed);
                         break;
                     case ObjectScope.WrappedMessage:
-                        typed = state.ReadMessage<T>(typed, serializer);
+                        typed = state.ReadMessage<T>(default, typed, serializer);
                         break;
                     default:
                         return false;

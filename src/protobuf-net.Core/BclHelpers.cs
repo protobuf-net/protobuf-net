@@ -100,7 +100,7 @@ namespace ProtoBuf
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    var scaled = state.ReadMessage<ScaledTicks>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+                    var scaled = state.ReadMessage<ScaledTicks>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
                     return scaled.ToTimeSpan();
                 case WireType.Fixed64:
                     long ticks = state.ReadInt64();
@@ -131,7 +131,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static TimeSpan ReadDuration(ref ProtoReader.State state)
-            => state.ReadMessage<Duration>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.ReadMessage<Duration>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
@@ -169,7 +169,7 @@ namespace ProtoBuf
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            return state.ReadMessage<Timestamp>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+            return state.ReadMessage<Timestamp>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
         }
 
         /// <summary>
@@ -209,7 +209,7 @@ namespace ProtoBuf
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    var scaled = state.ReadMessage<ScaledTicks>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+                    var scaled = state.ReadMessage<ScaledTicks>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
                     return scaled.ToDateTime();
                 case WireType.Fixed64:
                     long ticks = state.ReadInt64();
@@ -307,7 +307,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static decimal ReadDecimal(ref ProtoReader.State state)
-            => state.ReadMessage<decimal>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.ReadMessage<decimal>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
@@ -359,7 +359,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuid(ref ProtoReader.State state)
-            => state.ReadMessage<Guid>(serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.ReadMessage<Guid>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
 
 #if FEAT_DYNAMIC_REF
         private const int

@@ -348,13 +348,13 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sequence of sub-items to the writer, with all default options
             /// </summary>
-            public void WriteRepeated<T>(int fieldNumber, ICollection<T> values)
+            public void WriteRepeated<T>(int fieldNumber, IEnumerable<T> values)
                 => WriteRepeated<T>(fieldNumber, default, values, default);
 
             /// <summary>
             /// Writes a sequence of sub-items to the writer
             /// </summary>
-            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
+            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -363,14 +363,17 @@ namespace ProtoBuf
 
                 features.InheritFrom(serializerFeatures);
                 var wireType = features.GetWireType();
-                
 
-                int count;
-                if (values == null || (count = values.Count) == 0)
+                if (values == null) return; // nothing to do
+
+                int count = -1;
+                if (values is ICollection<T> collection)
                 {
-                    // nothing to do
+                    count = collection.Count;
+                    if (count == 0) return;
                 }
-                else if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count != 1 && serializer is IMeasuringSerializer<T> measurer)
+
+                if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count > 1 && serializer is IMeasuringSerializer<T> measurer)
                 {
                     if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
                     if (values is T[] arr)
@@ -403,7 +406,7 @@ namespace ProtoBuf
                 }
             }
 
-            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, ICollection<T> values, int count, IMeasuringSerializer<T> serializer)
+            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, IEnumerable<T> values, int count, IMeasuringSerializer<T> serializer)
             {
                 long expectedLength;
                 switch (wireType)
@@ -520,7 +523,7 @@ namespace ProtoBuf
                     $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
             }
 
-            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, ICollection<T> values, ISerializer<T> serializer)
+            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer)
             {
                 foreach (var value in values)
                 {
@@ -590,7 +593,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a map to the output using all default options
             /// </summary>
-            public void WriteMap<TKey, TValue>(int fieldNumber, IDictionary<TKey, TValue> values)
+            public void WriteMap<TKey, TValue>(int fieldNumber, IEnumerable<KeyValuePair<TKey, TValue>> values)
                 => WriteMap(fieldNumber, default, default, default, values, default, default);
 
             /// <summary>
@@ -601,7 +604,7 @@ namespace ProtoBuf
                 SerializerFeatures features,
                 SerializerFeatures keyFeatures,
                 SerializerFeatures valueFeatures,
-                IDictionary<TKey, TValue> values, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
+                IEnumerable<KeyValuePair<TKey, TValue>> values, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
             {
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
@@ -609,7 +612,7 @@ namespace ProtoBuf
                 keyFeatures.InheritFrom(keySerializer.Features);
                 valueFeatures.InheritFrom(valueSerializer.Features);
 
-                if (values == null || values.Count == 0)
+                if (values == null)
                 { }
                 else
                 {
@@ -629,7 +632,7 @@ namespace ProtoBuf
                 }
             }
 
-            void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, IDictionary<TKey, TValue> values,
+            void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, IEnumerable<KeyValuePair<TKey, TValue>> values,
                 KeyValuePairSerializer<TKey, TValue> pairSerializer)
             {
                 foreach (var pair in values)

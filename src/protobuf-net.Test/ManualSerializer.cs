@@ -441,7 +441,7 @@ namespace ProtoBuf
                         value.Name = state.ReadString();
                         break;
                     case 3:
-                        value.Nested = state.ReadMessage<D>(value.Nested, this);
+                        value.Nested = state.ReadMessage<D>(default, value.Nested, this);
                         break;
                     case 4:
                         value.EnumValue = (SomeEnum)state.ReadInt32();

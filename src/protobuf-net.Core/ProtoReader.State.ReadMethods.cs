@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -178,16 +179,14 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader, using all default options
             /// </summary>
-            public ICollection<T> ReadRepeated<T>(ICollection<T> values)
+            public IEnumerable<T> ReadRepeated<T>(IEnumerable<T> values)
                 => ReadRepeated(default, values, default);
 
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
-            public ICollection<T> ReadRepeated<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer = null)
+            public IEnumerable<T> ReadRepeated<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
-                if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
-
                 var field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -196,39 +195,129 @@ namespace ProtoBuf
                 var category = serializerFeatures.GetCategory();
                 var wireType = features.GetWireType();
 
+                var origRef = values;
                 values ??= new List<T>();
+
+                bool packed = false;
                 if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
                     // the wire type should never by "string" for a type that *can* be
                     // packed, so this *is* packed
-                    if (category != SerializerFeatures.CategoryScalar) 
+                    if (category != SerializerFeatures.CategoryScalar)
                         ThrowInvalidOperationException("Packed data expected a scalar serializer");
 
-                    ReadPackedScalar(values, wireType, serializer);
+                    packed = true;
+                }
+
+                if (values is IImmutableList<T> iList)
+                {   // TODO: look at the builder API; this works for today, though
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        iList = iList.Clear();
+
+                    values = packed ? ReadPackedScalar(iList, wireType, serializer)
+                        : ReadRepeatedCore(field, iList, category, wireType, serializer);
+                }
+                else if (values is IImmutableSet<T> iSet)
+                {   // TODO: look at the builder API; this works for today, though
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        iSet = iSet.Clear();
+
+                    values = packed ? ReadPackedScalar(iSet, wireType, serializer)
+                        : ReadRepeatedCore(field, iSet, category, wireType, serializer);
+                }
+                else if (values is ICollection<T> collection)
+                {
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        collection.Clear();
+
+                    if (packed) ReadPackedScalar(collection, wireType, serializer);
+                    else ReadRepeatedCore(field, collection, category, wireType, serializer);
                 }
                 else
                 {
-                    do
-                    {
-                        T element;
-                        switch (category)
-                        {
-                            case SerializerFeatures.CategoryScalar:
-                                Hint(wireType);
-                                element = serializer.Read(ref this, default);
-                                break;
-                            case SerializerFeatures.CategoryMessage:
-                            case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                                element = ReadMessage<T>(default, serializer);
-                                break;
-                            default:
-                                category.ThrowInvalidCategory();
-                                element = default;
-                                break;
-                        }
-                        values.Add(element);
-                    } while (TryReadFieldHeader(field));
+                    ThrowNoAdd(values);
                 }
+                return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                    ? null : values;
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void ThrowNoAdd(object values)
+            {
+                ThrowHelper.ThrowNotSupportedException("No suitable collection Add API located for " + values.GetType().NormalizeName());
+            }
+
+            private void ReadRepeatedCore<T>(int field, ICollection<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+            {
+                do
+                {
+                    T element;
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryScalar:
+                            Hint(wireType);
+                            element = serializer.Read(ref this, default);
+                            break;
+                        case SerializerFeatures.CategoryMessage:
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                            element = ReadMessage<T>(default, default, serializer);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            element = default;
+                            break;
+                    }
+                    values.Add(element);
+                } while (TryReadFieldHeader(field));
+            }
+
+            private IImmutableList<T> ReadRepeatedCore<T>(int field, IImmutableList<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+            {
+                do
+                {
+                    T element;
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryScalar:
+                            Hint(wireType);
+                            element = serializer.Read(ref this, default);
+                            break;
+                        case SerializerFeatures.CategoryMessage:
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                            element = ReadMessage<T>(default, default, serializer);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            element = default;
+                            break;
+                    }
+                    values = values.Add(element);
+                } while (TryReadFieldHeader(field));
+                return values;
+            }
+
+            private IImmutableSet<T> ReadRepeatedCore<T>(int field, IImmutableSet<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+            {
+                do
+                {
+                    T element;
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryScalar:
+                            Hint(wireType);
+                            element = serializer.Read(ref this, default);
+                            break;
+                        case SerializerFeatures.CategoryMessage:
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                            element = ReadMessage<T>(default, default, serializer);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            element = default;
+                            break;
+                    }
+                    values = values.Add(element);
+                } while (TryReadFieldHeader(field));
                 return values;
             }
 
@@ -236,7 +325,7 @@ namespace ProtoBuf
             {
                 var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
                 if (bytes == 0) return;
-                switch(wireType)
+                switch (wireType)
                 {
                     case WireType.Fixed32:
                         if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
@@ -245,7 +334,7 @@ namespace ProtoBuf
                     case WireType.Fixed64:
                         if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
                         count = bytes / 8;
-ReadFixedQuantity:
+                        ReadFixedQuantity:
                         // boost the List<T> capacity if we can, as long as it is within reason (i.e. don't let
                         // a small message lie and claim to have a huge payload)
 
@@ -274,6 +363,82 @@ ReadFixedQuantity:
                 }
             }
 
+            private IImmutableList<T> ReadPackedScalar<T>(IImmutableList<T> list, WireType wireType, ISerializer<T> serializer)
+            {
+                var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
+                if (bytes == 0) return list;
+                switch (wireType)
+                {
+                    case WireType.Fixed32:
+                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
+                        var count = bytes / 4;
+                        goto ReadFixedQuantity;
+                    case WireType.Fixed64:
+                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
+                        count = bytes / 8;
+                        ReadFixedQuantity:
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            _reader.WireType = wireType;
+                            list = list.Add(serializer.Read(ref this, default));
+                        }
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        long end = GetPosition() + bytes;
+                        do
+                        {
+                            _reader.WireType = wireType;
+                            list = list.Add(serializer.Read(ref this, default));
+                        } while (GetPosition() < end);
+                        if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        break;
+                }
+                return list;
+            }
+
+            private IImmutableSet<T> ReadPackedScalar<T>(IImmutableSet<T> list, WireType wireType, ISerializer<T> serializer)
+            {
+                var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
+                if (bytes == 0) return list;
+                switch (wireType)
+                {
+                    case WireType.Fixed32:
+                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
+                        var count = bytes / 4;
+                        goto ReadFixedQuantity;
+                    case WireType.Fixed64:
+                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
+                        count = bytes / 8;
+                        ReadFixedQuantity:
+
+                        for (int i = 0; i < count; i++)
+                        {
+                            _reader.WireType = wireType;
+                            list = list.Add(serializer.Read(ref this, default));
+                        }
+                        break;
+                    case WireType.Varint:
+                    case WireType.SignedVarint:
+                        long end = GetPosition() + bytes;
+                        do
+                        {
+                            _reader.WireType = wireType;
+                            list = list.Add(serializer.Read(ref this, default));
+                        } while (GetPosition() < end);
+                        if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
+                        break;
+                    default:
+                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        break;
+                }
+                return list;
+            }
+
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader, using all default options
             /// </summary>
@@ -286,18 +451,21 @@ ReadFixedQuantity:
             public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
             {
                 // do the laziest thing possible for now; we can improve it later
+                T[] origRef = values;
+
                 var newValues = new List<T>();
                 ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
 
                 if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
                 {
                     // nothing to prepend, or we don't *want* to prepend it
-                    return newValues.ToArray();
+                    values = newValues.ToArray();
                 }
                 else if (newValues.Count == 0)
                 {
-                    // nothing to append; just return the input
-                    return values ?? Array.Empty<T>();
+                    // nothing new to append; just return the input
+                    
+                    values ??= Array.Empty<T>();
                 }
                 else
                 {
@@ -305,24 +473,26 @@ ReadFixedQuantity:
                     var offset = values.Length;
                     Array.Resize(ref values, values.Length + newValues.Count);
                     newValues.CopyTo(values, offset);
-                    return values;
                 }
+
+                return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                    ? null : values;
             }
 
             /// <summary>
             /// Reads a map from the input, using all default options
             /// </summary>
-            public IDictionary<TKey, TValue> ReadMap<TKey, TValue>(IDictionary<TKey, TValue> values)
+            public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
                 => ReadMap(default, default, default, values, default, default);
 
             /// <summary>
             /// Reads a map from the input, specifying custom options
             /// </summary>
-            public IDictionary<TKey, TValue> ReadMap<TKey, TValue>(
+            public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(
                 SerializerFeatures features,
                 SerializerFeatures keyFeatures,
                 SerializerFeatures valueFeatures,
-                IDictionary<TKey, TValue> values,
+                IEnumerable<KeyValuePair<TKey, TValue>> values,
                 ISerializer<TKey> keySerializer = null,
                 ISerializer<TValue> valueSerializer = null)
             {
@@ -332,21 +502,54 @@ ReadFixedQuantity:
                 keyFeatures.InheritFrom(keySerializer.Features);
                 valueFeatures.InheritFrom(valueSerializer.Features);
 
-                int mapField = FieldNumber;
                 var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
                 features.InheritFrom(pairSerializer.Features);
 
                 bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
-                if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
 
+                var origRef = values;
                 values ??= new Dictionary<TKey, TValue>();
+
+                if (values is IImmutableDictionary<TKey, TValue> immutable)
+                {
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        immutable = immutable.Clear();
+                    values = ReadMapCore(FieldNumber, useAdd, immutable, pairSerializer);
+                }
+                else if (values is IDictionary<TKey, TValue> dict)
+                {
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        dict.Clear();
+                    ReadMapCore(FieldNumber, useAdd, dict, pairSerializer);
+                }
+                else
+                {   // it could be something like a List<KeyValuePair<int, string>> ?
+                    // note that in this case, SerializerFeatures.OptionMapFailOnDuplicate will have no effect
+                    values = ReadRepeated(features & ~SerializerFeatures.OptionReturnNothingWhenUnchanged, values, pairSerializer);
+                }
+                return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                    ? null : values;
+            }
+
+            private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(int field, bool useAdd, IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            {
                 do
                 {
-                    var item = ReadMessage(default, pairSerializer);
+                    var item = ReadMessage(default, default, pairSerializer);
+                    if (useAdd) values = values.Add(item.Key, item.Value);
+                    else values = values.SetItem(item.Key, item.Value);
+                } while (TryReadFieldHeader(field));
+                return values;
+            }
+
+            private void ReadMapCore<TKey, TValue>(int field, bool useAdd, IDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            {
+                do
+                {
+                    var item = ReadMessage(default, default, pairSerializer);
                     if (useAdd) values.Add(item.Key, item.Value);
                     else values[item.Key] = item.Value;
-                } while (TryReadFieldHeader(mapField));
-                return values;
+                } while (TryReadFieldHeader(field));
             }
 
             /// <summary>
@@ -477,7 +680,7 @@ ReadFixedQuantity:
             /// parsing the message in accordance with the model associated with the reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public object ReadObject(object value, Type type) => ReadTypedObject(value, type);
+            internal object ReadObject(object value, Type type) => ReadTypedObject(value, type);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal object ReadTypedObject(object value, Type type)
@@ -488,7 +691,7 @@ ReadFixedQuantity:
                 if (DynamicStub.TryDeserialize(ObjectScope.WrappedMessage, type, model, ref this, ref value))
                     return value;
 
-                
+
                 SubItemToken token = StartSubItem();
                 if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
                 {
@@ -888,12 +1091,27 @@ ReadFixedQuantity:
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
+            [MethodImpl(HotPath)]
+            public T ReadMessage<T>(T value = default)
+                => ReadMessage<T>(default, value, null);
+
+            /// <summary>
+            /// Reads a sub-item from the input reader
+            /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T ReadMessage<T>(T value = default, ISerializer<T> serializer = null)
+            public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
             {
+                var origRef = TypeHelper<T>.IsReferenceType ? (object)value : null;
                 var tok = StartSubItem();
                 var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(ref this, value);
                 EndSubItem(tok);
+
+                if (TypeHelper<T>.IsReferenceType && (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0
+                    && (object)result == origRef)
+                {
+                    return default;
+                }
+
                 return result;
             }
 
@@ -901,11 +1119,9 @@ ReadFixedQuantity:
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<T>(T value = default, ISerializer<T> serializer = null)
-            {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
-                return ReadAny<T>(serializer.Features, value, serializer);
-            }
+            public T ReadAny<T>(T value = default)
+                => ReadAny<T>(default, value, null);
+
             /// <summary>
             /// Reads a value or sub-item from the input reader
             /// </summary>
@@ -913,11 +1129,13 @@ ReadFixedQuantity:
             public T ReadAny<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
-                switch (features.GetCategory())
+                var serializerFeatures = serializer.Features;
+                features.InheritFrom(serializerFeatures);
+                switch (serializerFeatures.GetCategory())
                 {
                     case SerializerFeatures.CategoryMessage:
                     case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                        return ReadMessage<T>(value, serializer);
+                        return ReadMessage<T>(features, value, serializer);
                     case SerializerFeatures.CategoryRepeated:
                     case SerializerFeatures.CategoryScalar:
                         features.HintIfNeeded(ref this);
@@ -990,7 +1208,7 @@ ReadFixedQuantity:
                     {
                         if (field == 1)
                         {
-                            value = state.ReadAny<T>(value, serializer);
+                            value = state.ReadAny<T>(default, value, serializer);
                         }
                         else
                         {
@@ -1026,7 +1244,7 @@ ReadFixedQuantity:
             /// Create an instance of the provided type, respecting any custom factory rules
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T CreateInstance<T>(IFactory<T> factory = null)
+            public T CreateInstance<T>(IFactory<T> factory = null) where T : class
             {
                 var obj = TypeModel.CreateInstance<T>(Context, factory);
 #if FEAT_DYNAMIC_REF

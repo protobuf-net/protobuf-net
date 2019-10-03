@@ -143,7 +143,7 @@ namespace ProtoBuf.Tests
                             value.Level = state.ReadInt32();
                             break;
                         case 2:
-                            value.Inner = state.ReadMessage<A>(value.Inner, this);
+                            value.Inner = state.ReadMessage<A>(default, value.Inner, this);
                             break;
                         default:
                             state.SkipField();

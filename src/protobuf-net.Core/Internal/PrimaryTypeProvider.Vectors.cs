@@ -81,7 +81,7 @@ namespace ProtoBuf.Internal
 
         private sealed class DictionarySerializer<TDictionary, TKey, TValue>
             : IRepeatedSerializer<TDictionary>
-            where TDictionary : class, IDictionary<TKey, TValue>
+            where TDictionary : class, IEnumerable<KeyValuePair<TKey, TValue>>
         {
             public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
 

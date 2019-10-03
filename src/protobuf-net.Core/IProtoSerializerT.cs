@@ -91,11 +91,16 @@ namespace ProtoBuf
         /// </summary>
         OptionSkipRecursionCheck = 1 << 10,
 
+        /// <summary>
+        /// If a method would return the same reference as was passed in, return null/nothing instead
+        /// </summary>
+        OptionReturnNothingWhenUnchanged = 1 << 11,
+
 #if FEAT_NULL_LIST_ITEMS
         /// <summary>
         /// Nulls in lists should be preserved
         /// </summary>
-        OptionListsSupportNull = 1 << 9,
+        OptionListsSupportNull = 1 << 12,
 #endif
     }
 
@@ -257,7 +262,7 @@ namespace ProtoBuf
         /// </summary>
         public static SubTypeState<T> Create<TValue>(ISerializationContext context, TValue value)
             where TValue : class, T
-            => new SubTypeState<T>(context, TypeHelper<TValue>.Factory, value, null);
+            => new SubTypeState<T>(context, ObjectFactory<TValue>.Factory, value, null);
 
         private SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
             object value, Action<T, ISerializationContext> onBeforeDeserialize)
@@ -300,7 +305,7 @@ namespace ProtoBuf
             // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
             // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
             // what they asked for)
-            var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
+            var typed = ((_ctor as Func<ISerializationContext, T>) ?? ObjectFactory<T>.Factory)(_context);
 
             if (_value != null) typed = Merge(_context, _value, typed);
             _onBeforeDeserialize?.Invoke(typed, _context);

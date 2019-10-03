@@ -18,8 +18,8 @@ namespace ProtoBuf.Serializers
                 new object[] { fieldNumber, features, keyFeatures, valueFeatures });
         }
 
-        // look for:  public IDictionary<TKey, TValue> ReadMap<TKey, TValue>(SerializerFeatures, SerializerFeatures, SerializerFeatures,
-        // IDictionary<TKey, TValue>, ISerializer<TKey>, ISerializer<TValue>)
+        // look for:  public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(SerializerFeatures, SerializerFeatures, SerializerFeatures,
+        // IEnumerable<KeyValuePair<TKey, TValue>>, ISerializer<TKey>, ISerializer<TValue>)
         internal static readonly MethodInfo s_ReadMap = (
             from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
             where method.Name == nameof(ProtoReader.State.ReadMap) && method.IsGenericMethodDefinition
@@ -30,14 +30,14 @@ namespace ProtoBuf.Serializers
             && args[0].ParameterType == typeof(SerializerFeatures)
             && args[1].ParameterType == typeof(SerializerFeatures)
             && args[2].ParameterType == typeof(SerializerFeatures)
-            && args[3].ParameterType == typeof(IDictionary<,>).MakeGenericType(targs)
+            // && args[3].ParameterType == typeof(IEnumerable<KeyValuePair<,>>).MakeGenericType(targs)
             && args[4].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[0])
             && args[5].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[1])
             && method.ReturnType == args[3].ParameterType
             select method).SingleOrDefault();
 
         // look for: public void WriteMap<TKey, TValue>(int, SerializerFeatures, SerializerFeatures, SerializerFeatures,
-        // IDictionary<TKey, TValue>, ISerializer<TKey>, ISerializer<TValue>)
+        // IEnumerable<KeyValuePair<TKey, TValue>>, ISerializer<TKey>, ISerializer<TValue>)
         internal static readonly MethodInfo s_WriteMap = (
             from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
             where method.Name == nameof(ProtoWriter.State.WriteMap) && method.IsGenericMethodDefinition
@@ -50,13 +50,13 @@ namespace ProtoBuf.Serializers
             && args[1].ParameterType == typeof(SerializerFeatures)
             && args[2].ParameterType == typeof(SerializerFeatures)
             && args[3].ParameterType == typeof(SerializerFeatures)
-            && args[4].ParameterType == typeof(IDictionary<,>).MakeGenericType(targs)
+            // && args[4].ParameterType == typeof(IEnumerable<KeyValuePair<,>>).MakeGenericType(targs)
             && args[5].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[0])
             && args[6].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[1])
             select method).SingleOrDefault();
     }
     internal class MapDecorator<TConstruct, TKey, TValue> : IRuntimeProtoSerializerNode
-        where TConstruct : class, IDictionary<TKey, TValue>
+        where TConstruct : class, IEnumerable<KeyValuePair<TKey, TValue>>
     {
         static readonly MethodInfo s_ReadMap = MapDecorator.s_ReadMap.MakeGenericMethod(typeof(TKey), typeof(TValue));
         static readonly MethodInfo s_WriteMap = MapDecorator.s_WriteMap.MakeGenericMethod(typeof(TKey), typeof(TValue));
@@ -73,7 +73,7 @@ namespace ProtoBuf.Serializers
         private readonly int _fieldNumber;
         private readonly SerializerFeatures _features, _keyFeatures, _valueFeatures;
 
-        public Type ExpectedType => typeof(IDictionary<TKey, TValue>);
+        public Type ExpectedType => typeof(IEnumerable<KeyValuePair<TKey, TValue>>);
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
@@ -81,17 +81,17 @@ namespace ProtoBuf.Serializers
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            var typed = (IDictionary<TKey, TValue>)value;
+            var typed = (IEnumerable<KeyValuePair<TKey, TValue>>)value;
             typed ??= state.CreateInstance<TConstruct>();
             return state.ReadMap(_features, _keyFeatures, _valueFeatures, typed);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
-            => state.WriteMap(_fieldNumber, _features, _keyFeatures, _valueFeatures, (IDictionary<TKey, TValue>)value);
+            => state.WriteMap(_fieldNumber, _features, _keyFeatures, _valueFeatures, (IEnumerable<KeyValuePair<TKey, TValue>>)value);
 
         public void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
-            using var loc = ctx.GetLocalWithValue(typeof(IDictionary<TKey, TValue>), valueFrom);
+            using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
             ctx.LoadState();
             ctx.LoadValue(_fieldNumber);
             ctx.LoadValue((int)_features);
@@ -104,7 +104,7 @@ namespace ProtoBuf.Serializers
         }
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            using var loc = ctx.GetLocalWithValue(typeof(IDictionary<TKey, TValue>), valueFrom);
+            using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
 
             var notNull = ctx.DefineLabel();
             ctx.LoadValue(loc);

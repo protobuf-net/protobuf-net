@@ -1256,7 +1256,7 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null)
+        internal static T CreateInstance<T>(ISerializationContext context = null, IFactory<T> factory = null) where T : class
         {
             factory ??= TypeModel.TryGetSerializer<T>(context?.Model) as IFactory<T>;
             if (factory != null)
@@ -1272,20 +1272,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            return WrappedCreateInstance<T>();
-        }
-
-        internal static T WrappedCreateInstance<T>()
-        {
-            try
-            {
-                return (T)Activator.CreateInstance(typeof(T), nonPublic: true);
-            }
-            catch (MissingMethodException mme)
-            {
-                ThrowCannotCreateInstance(typeof(T), mme);
-                return default;
-            }
+            return ObjectFactory<T>.Create();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

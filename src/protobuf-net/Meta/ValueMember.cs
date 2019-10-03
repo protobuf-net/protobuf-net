@@ -353,76 +353,55 @@ namespace ProtoBuf.Meta
 
         internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
         {
-            dictionaryType = keyType = valueType = null;
-            try
+            static bool IsEnumerableKVP(Type type, out Type key, out Type value)
             {
-                var info = MemberType;
-                if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                if (type.IsInterface && type.IsGenericType
+                    && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    var typeArgs = MemberType.GetGenericArguments();
-                    if (IsValidMapKeyType(typeArgs[0]))
+                    var kvp = type.GetGenericArguments()[0];
+                    if (kvp.IsGenericType && kvp.GetGenericTypeDefinition()
+                        == typeof(KeyValuePair<,>))
                     {
-                        keyType = typeArgs[0];
-                        valueType = typeArgs[1];
-                        dictionaryType = MemberType;
-                    }
-                    return false;
-                }
-                foreach (var iType in MemberType.GetInterfaces())
-                {
-                    info = iType;
-
-                    if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                    {
-                        if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + MemberType.FullName);
-                        var typeArgs = iType.GetGenericArguments();
-
-                        if (IsValidMapKeyType(typeArgs[0]))
-                        {
-                            keyType = typeArgs[0];
-                            valueType = typeArgs[1];
-                            dictionaryType = MemberType;
-                        }
+                        var targs = kvp.GetGenericArguments();
+                        key = targs[0];
+                        value = targs[1];
+                        return true;
                     }
                 }
-                if (dictionaryType == null) return false;
-
-                // (note we checked the key type already)
-                // not a map if value is repeated
-                Type itemType = null, defaultType = null;
-                model.ResolveListTypes(valueType, ref itemType, ref defaultType);
-                if (itemType != null) return false;
-
-                return dictionaryType != null;
-            }
-            catch
-            {
-                // if it isn't a good fit; don't use "map"
+                key = null;
+                value = null;
                 return false;
             }
-        }
 
-        private static bool IsValidMapKeyType(Type type)
-        {
-            if (type == null || type.IsEnum) return false;
-            switch (Helpers.GetTypeCode(type))
+            keyType = valueType = null;
+            dictionaryType = MemberType;
+            try
             {
-                case ProtoTypeCode.Boolean:
-                case ProtoTypeCode.Byte:
-                case ProtoTypeCode.Char:
-                case ProtoTypeCode.Int16:
-                case ProtoTypeCode.Int32:
-                case ProtoTypeCode.Int64:
-                case ProtoTypeCode.String:
-
-                case ProtoTypeCode.SByte:
-                case ProtoTypeCode.UInt16:
-                case ProtoTypeCode.UInt32:
-                case ProtoTypeCode.UInt64:
+                
+                if (IsEnumerableKVP(MemberType, out var k, out var v))
+                {
+                    keyType = k;
+                    valueType = v;
                     return true;
+                }
+
+                int matches = 0;
+                foreach (var iType in MemberType.GetInterfaces())
+                {
+                    if (IsEnumerableKVP(iType, out k, out v))
+                    {
+                        keyType = k;
+                        valueType = v;
+                        if (matches++ != 0) break;
+                    }
+                }
+                return matches == 1;
             }
+            catch { }
+            // if it isn't a good fit; don't use "map"
             return false;
         }
+
         private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
@@ -431,14 +410,8 @@ namespace ProtoBuf.Meta
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 var member = backingMember ?? Member;
                 IRuntimeProtoSerializerNode ser;
-                if (IsMap)
+                if (ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType))
                 {
-                    ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType);
-
-                    if (dictionaryType == null)
-                    {
-                        throw new InvalidOperationException("Unable to resolve map type for type: " + MemberType.ToString());
-                    }
                     var concreteType = DefaultType;
                     if (concreteType == null && MemberType.IsClass)
                     {
@@ -454,9 +427,10 @@ namespace ProtoBuf.Meta
                     var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
 
                     WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    SerializerFeatures features = rootWireType.AsFeatures();
+                    SerializerFeatures features = rootWireType.AsFeatures() | SerializerFeatures.OptionReturnNothingWhenUnchanged;
+                    if (!IsMap) features |= SerializerFeatures.OptionMapFailOnDuplicate;
                     if (OverwriteList) features |= SerializerFeatures.OptionOverwriteList;
-                    ser = MapDecorator.Create(concreteType, keyType, valueType, FieldNumber, features,
+                    ser = MapDecorator.Create(concreteType ?? dictionaryType, keyType, valueType, FieldNumber, features,
                         keyWireType.AsFeatures(), valueWireType.AsFeatures());
                 }
                 else
@@ -486,7 +460,7 @@ namespace ProtoBuf.Meta
                         Debug.Assert(underlyingItemType == ser.ExpectedType
                             || (ser.ExpectedType == typeof(object) && !underlyingItemType.IsValueType)
                             , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
-                        SerializerFeatures listFeatures = wireType.AsFeatures();
+                        SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
                         if (OverwriteList) listFeatures |= SerializerFeatures.OptionOverwriteList;
 #if FEAT_NULL_LIST_ITEMS

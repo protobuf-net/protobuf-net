@@ -75,10 +75,10 @@ namespace ProtoBuf.Serializers
 
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteMessage<T>(TypeHelper<T>.FromObject(value));
+            => state.WriteMessage<T>(default, TypeHelper<T>.FromObject(value));
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadMessage<T>(TypeHelper<T>.FromObject(value), null);
+            => state.ReadMessage<T>(default, TypeHelper<T>.FromObject(value), null);
 
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
             => SubItemSerializer.EmitWriteMessage<T>(null, WireType.String, ctx, valueFrom);
@@ -189,8 +189,9 @@ namespace ProtoBuf.Serializers
 
         public static void EmitReadMessage<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null)
         {
-            // state.ReadMessage<T>(value, serializer);
+            // state.ReadMessage<T>(default, value, serializer);
             ctx.LoadState();
+            ctx.LoadValue(0);
             if (value == null)
             {
                 if (TypeHelper<T>.IsReferenceType)
@@ -210,7 +211,7 @@ namespace ProtoBuf.Serializers
             }
             if (serializer == null)
             {
-                ctx.LoadNullRef();
+                ctx.LoadSelfAsService<ISerializer<T>, T>();
             }
             else
             {
@@ -235,7 +236,7 @@ namespace ProtoBuf.Serializers
             (from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
              where method.Name == nameof(ProtoReader.State.ReadMessage)
                 && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 1
-                && method.GetParameters().Length == 2
+                && method.GetParameters().Length == 3
              select method).Single();
 
         protected ISerializerProxy Proxy { get; private set; }

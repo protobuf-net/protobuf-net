@@ -149,10 +149,7 @@ namespace ProtoBuf.Compiler
 
                 return (Func<ISerializationContext, T>)ctx.method.CreateDelegate(typeof(Func<ISerializationContext, T>));
             }
-            else
-            {
-                return ctx => TypeModel.WrappedCreateInstance<T>();
-            }
+            return ObjectFactory.Create<T>();
         }
 
         static readonly MethodInfo s_CreateInstance = typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.CreateInstance),
