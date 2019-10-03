@@ -68,7 +68,6 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadAddress(loc, ExpectedType);
                         ctx.LoadValue(newVal);
-                        if (field.FieldType != ExpectedType) ctx.CastFromObject(field.FieldType);
                         ctx.StoreValue(field);
                     }
                     else
@@ -79,7 +78,14 @@ namespace ProtoBuf.Serializers
 
                         ctx.LoadAddress(loc, ExpectedType);
                         ctx.LoadValue(newVal);
-                        if (field.FieldType != ExpectedType) ctx.Cast(field.FieldType);
+
+                        // cast if needed (this is mostly for ReadMap/ReadRepeated)
+                        if (!field.FieldType.IsValueType && !Tail.ExpectedType.IsValueType
+                            && !field.FieldType.IsAssignableFrom(Tail.ExpectedType))
+                        {
+                            ctx.Cast(field.FieldType);
+                        }
+
                         ctx.StoreValue(field);
                         ctx.MarkLabel(allDone);
                     }

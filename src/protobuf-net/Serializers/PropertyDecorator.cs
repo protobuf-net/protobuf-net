@@ -115,16 +115,12 @@ namespace ProtoBuf.Serializers
                 // assign the value
                 ctx.LoadAddress(loc, ExpectedType); // parent-addr
                 ctx.LoadValue(newVal); // parent-obj|new-value
-                if (property.PropertyType != ExpectedType)
+
+                // cast if needed (this is mostly for ReadMap/ReadRepeated)
+                if (!property.PropertyType.IsValueType && !Tail.ExpectedType.IsValueType
+                    && !property.PropertyType.IsAssignableFrom(Tail.ExpectedType))
                 {
-                    if (property.PropertyType.IsValueType && !Tail.ExpectedType.IsValueType)
-                    {
-                        ctx.CastFromObject(property.PropertyType);
-                    }
-                    else
-                    {
-                        ctx.Cast(property.PropertyType);
-                    }
+                    ctx.Cast(property.PropertyType);
                 }
 
                 if (shadowSetter == null)

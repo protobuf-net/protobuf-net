@@ -61,7 +61,7 @@ namespace ProtoBuf.Serializers
         static readonly MethodInfo s_ReadMap = MapDecorator.s_ReadMap.MakeGenericMethod(typeof(TKey), typeof(TValue));
         static readonly MethodInfo s_WriteMap = MapDecorator.s_WriteMap.MakeGenericMethod(typeof(TKey), typeof(TValue));
 
-        internal MapDecorator(
+        public MapDecorator(
             int fieldNumber, SerializerFeatures features,
             SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
         {
