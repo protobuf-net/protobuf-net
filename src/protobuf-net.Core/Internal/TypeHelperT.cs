@@ -92,7 +92,8 @@ namespace ProtoBuf.Internal
                 return false;
             }
 
-            if (type == null || type == typeof(string) || type == typeof(byte[]) || type == typeof(object))
+            if (type == null
+                || type == typeof(string) || type == typeof(byte[]) || type == typeof(object))
             {
                 t = null; // don't need that kind of confusion
                 return false;
@@ -104,12 +105,13 @@ namespace ProtoBuf.Internal
                 return type == t.MakeArrayType(); // rules out multi-dimensional etc
             }
 
+            bool haveMatch = false;
+            t = null;
             try
             {
                 if (IsEnumerableT(type, out t))
                     return true;
 
-                bool haveMatch = false;
                 foreach (var iType in type.GetInterfaces())
                 {
                     if (IsEnumerableT(iType, out var tmp))
@@ -126,9 +128,15 @@ namespace ProtoBuf.Internal
                         }
                     }
                 }
-                return haveMatch;
             }
             catch { }
+
+            if (haveMatch)
+            {
+                if (type.IsValueType)
+                    ThrowHelper.ThrowNotSupportedException("Value-type collection types are not currently supported");
+                return true;
+            }
             // if it isn't a good fit; don't use "map"
             t = null;
             return false;

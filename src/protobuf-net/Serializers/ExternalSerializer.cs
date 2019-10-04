@@ -19,7 +19,10 @@ namespace ProtoBuf.Serializers
         object Service { get; }
     }
 
-    internal sealed class ExternalSerializer<TProvider, T> : IRuntimeProtoSerializerNode, IExternalSerializer, ICompiledSerializer // just to prevent it constantly being checked for compilation
+    internal sealed class ExternalSerializer<TProvider, T>
+        : IRuntimeProtoSerializerNode, IExternalSerializer,
+        ICompiledSerializer, // just to prevent it constantly being checked for compilation
+        IProtoTypeSerializer // needed to make some internal bits happy
         where TProvider : class
     {
         object IExternalSerializer.Service => Serializer;
@@ -39,10 +42,42 @@ namespace ProtoBuf.Serializers
         object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
             => Serializer.Read(ref state, TypeHelper<T>.FromObject(value));
 
+        SerializerFeatures IProtoTypeSerializer.Features => Serializer.Features;
+
+
+        Type IProtoTypeSerializer.BaseType => ExpectedType;
+
+        bool IProtoTypeSerializer.CanCreateInstance() => Serializer is IFactory<T>;
+
+        object IProtoTypeSerializer.CreateInstance(ISerializationContext context)
+        {
+            var factory = Serializer as IFactory<T>;
+            return factory == null ? null : (object)factory.Create(context);
+        }
+        void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
+        { }
+
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
+        bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType) => false;
+
+        bool IProtoTypeSerializer.HasInheritance => false;
+        bool IProtoTypeSerializer.IsSubType => false;
+
+        void IProtoTypeSerializer.EmitCreateInstance(CompilerContext ctx, bool callNoteObject)
+            => ThrowHelper.ThrowNotSupportedException();
+        void IProtoTypeSerializer.EmitCallback(CompilerContext ctx, Local valueFrom, TypeModel.CallbackType callbackType)
+            => ThrowHelper.ThrowNotSupportedException();
+
+        void IProtoTypeSerializer.EmitReadRoot(CompilerContext ctx, Local entity)
+            => ThrowHelper.ThrowNotSupportedException();
+        void IProtoTypeSerializer.EmitWriteRoot(CompilerContext ctx, Local entity)
+            => ThrowHelper.ThrowNotSupportedException();
+
         void IRuntimeProtoSerializerNode.EmitWrite(CompilerContext ctx, Local valueFrom)
             => ThrowHelper.ThrowNotSupportedException();
 
         void IRuntimeProtoSerializerNode.EmitRead(CompilerContext ctx, Local entity)
             => ThrowHelper.ThrowNotSupportedException();
+
     }
 }
