@@ -64,8 +64,8 @@ namespace ProtoBuf.ServiceModel
                     isList = false;
                     return true;
                 }
-                Type itemType = TypeModel.GetListItemType(type);
-                if (itemType != null)
+
+                if (TypeHelper.ResolveUniqueEnumerableT(type, out var itemType))
                 {
                     if (model.IsDefined(itemType))
                     {

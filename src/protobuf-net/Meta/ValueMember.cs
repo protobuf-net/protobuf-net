@@ -351,63 +351,21 @@ namespace ProtoBuf.Meta
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
-        internal static bool ResolveMapTypes(Type type, out Type dictionaryType, out Type pairType)
-        {
-            static bool IsEnumerableKVP(Type type, out Type pairType)
-            {
-                if (type.IsInterface && type.IsGenericType
-                    && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                {
-                    var kvp = type.GetGenericArguments()[0];
-                    if (kvp.IsGenericType && kvp.GetGenericTypeDefinition()
-                        == typeof(KeyValuePair<,>))
-                    {
-                        pairType = kvp;
-                        return true;
-                    }
-                }
-                pairType = null;
-                return false;
-            }
-
-            dictionaryType = type;
-            pairType = null;
-            try
-            {
-
-                if (IsEnumerableKVP(type, out pairType))
-                    return true;
-
-                int matches = 0;
-
-                foreach (var iType in type.GetInterfaces())
-                {
-                    if (IsEnumerableKVP(iType, out var tmp))
-                    {
-                        if (matches++ != 0) break;
-                        pairType = tmp;
-                    }
-                }
-                return matches == 1;
-            }
-            catch { }
-            // if it isn't a good fit; don't use "map"
-            return false;
-        }
         internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
         {
-            if(ResolveMapTypes(MemberType, out dictionaryType, out var pairType))
+            dictionaryType = MemberType;
+            if (TypeHelper.ResolveUniqueEnumerableT(dictionaryType, out var pairType))
             {
-                var targs = pairType.GetGenericArguments();
-                keyType = targs[0];
-                valueType = targs[1];
-                return true;
+                if (pairType.IsGenericType && pairType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                {
+                    var targs = pairType.GetGenericArguments();
+                    keyType = targs[0];
+                    valueType = targs[1];
+                    return true;
+                }
             }
-            else
-            {
-                keyType = valueType = default;
-                return false;
-            }
+            keyType = valueType = default;
+            return false;
         }
 
         private bool IgnoreList(Type type)

@@ -830,138 +830,12 @@ namespace ProtoBuf.Meta
             return value;
         }
 
-        private static readonly System.Type ilist = typeof(IList);
-        internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
-        {
-            Type listTypeInfo = listType;
-            isList = ilist.IsAssignableFrom(listTypeInfo);
-            Type[] types = { itemType };
-            MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, nameof(IList.Add), types);
-
-            if (add == null)
-            {   // fallback: look for ICollection<T>'s Add(typedObject) method
-                bool forceList = listTypeInfo.IsInterface
-                    && typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(types)
-                    .IsAssignableFrom(listTypeInfo);
-
-                Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
-                if (forceList || constuctedListType.IsAssignableFrom(listTypeInfo))
-                {
-                    add = Helpers.GetInstanceMethod(constuctedListType, "Add", types);
-                }
-            }
-
-            if (add == null)
-            {
-                foreach (Type interfaceType in listTypeInfo.GetInterfaces())
-                {
-                    if (interfaceType.Name == "IProducerConsumerCollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
-                    {
-                        add = Helpers.GetInstanceMethod(interfaceType, "TryAdd", types);
-                        if (add != null) break;
-                    }
-                }
-            }
-
-            if (add == null)
-            {   // fallback: look for a public list.Add(object) method
-                types[0] = typeof(object);
-                add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
-            }
-            if (add == null && isList)
-            {   // fallback: look for IList's Add(object) method
-                add = Helpers.GetInstanceMethod(ilist, "Add", types);
-            }
-            return add;
-        }
-        internal static Type GetListItemType(Type listType)
-        {
-            Debug.Assert(listType != null);
-
-            if (listType == typeof(string) || listType.IsArray
-                || !typeof(IEnumerable).IsAssignableFrom(listType)) { return null; }
-
-            var candidates = new List<Type>();
-            foreach (MethodInfo method in listType.GetMethods())
-            {
-                if (method.IsStatic || method.Name != "Add") continue;
-                ParameterInfo[] parameters = method.GetParameters();
-                Type paramType;
-                if (parameters.Length == 1 && !candidates.Contains(paramType = parameters[0].ParameterType))
-                {
-                    candidates.Add(paramType);
-                }
-            }
-
-            string name = listType.Name;
-            bool isQueueStack = name != null && (name.IndexOf("Queue") >= 0 || name.IndexOf("Stack") >= 0);
-
-            if (!isQueueStack)
-            {
-                TestEnumerableListPatterns(candidates, listType);
-                foreach (Type iType in listType.GetInterfaces())
-                {
-                    TestEnumerableListPatterns(candidates, iType);
-                }
-            }
-
-            // more convenient GetProperty overload not supported on all platforms
-            foreach (PropertyInfo indexer in listType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (indexer.Name != "Item" || candidates.Contains(indexer.PropertyType)) continue;
-                ParameterInfo[] args = indexer.GetIndexParameters();
-                if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
-                candidates.Add(indexer.PropertyType);
-            }
-
-            switch (candidates.Count)
-            {
-                case 0:
-                    return null;
-                case 1:
-                    if ((Type)candidates[0] == listType) return null; // recursive
-                    return (Type)candidates[0];
-                case 2:
-                    if ((Type)candidates[0] != listType && CheckDictionaryAccessors((Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
-                    if ((Type)candidates[1] != listType && CheckDictionaryAccessors((Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
-                    break;
-            }
-
-            return null;
-        }
-
-        private static void TestEnumerableListPatterns(List<Type> candidates, Type iType)
-        {
-            if (iType.IsGenericType)
-            {
-                Type typeDef = iType.GetGenericTypeDefinition();
-                if (typeDef == typeof(System.Collections.Generic.IEnumerable<>)
-                    || typeDef == typeof(System.Collections.Generic.ICollection<>)
-                    || typeDef.FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
-                {
-                    Type[] iTypeArgs = iType.GetGenericArguments();
-                    if (!candidates.Contains(iTypeArgs[0]))
-                    {
-                        candidates.Add(iTypeArgs[0]);
-                    }
-                }
-            }
-        }
-
-        private static bool CheckDictionaryAccessors(Type pair, Type value)
-        {
-            return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
-                && pair.GetGenericArguments()[1] == value;
-        }
-
         private bool TryDeserializeList(ref ProtoReader.State state, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
-            MethodInfo addMethod = TypeModel.ResolveListAdd(listType, itemType, out bool isList);
-            if (addMethod == null) ThrowHelper.ThrowNotSupportedException("Unknown list variant: " + listType.FullName);
             bool found = false;
             object nextItem = null;
             IList list = value as IList;
-            object[] args = isList ? null : new object[1];
+
             var arraySurrogate = listType.IsArray ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), nonPublic: true) : null;
 
             while (TryDeserializeAuxiliaryType(ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
@@ -976,14 +850,9 @@ namespace ProtoBuf.Meta
                 {
                     list.Add(nextItem);
                 }
-                else if (arraySurrogate != null)
-                {
-                    arraySurrogate.Add(nextItem);
-                }
                 else
                 {
-                    args[0] = nextItem;
-                    addMethod.Invoke(value, args);
+                    arraySurrogate.Add(nextItem);
                 }
                 nextItem = null;
             }
@@ -1092,7 +961,9 @@ namespace ProtoBuf.Meta
             bool found = false;
             if (wiretype == WireType.None)
             {
-                itemType = GetListItemType(type);
+                if (!TypeHelper.ResolveUniqueEnumerableT(type, out itemType))
+                    itemType = null;
+
                 if (itemType == null && type.IsArray && type.GetArrayRank() == 1 && type != typeof(byte[]))
                 {
                     itemType = type.GetElementType();
@@ -1591,16 +1462,8 @@ namespace ProtoBuf.Meta
             static bool DoCheckLists(Type type, TypeModel model, bool allowBasic, bool allowContract)
             {
                 // is it a list?
-                Type itemType = null;
-                if (type.IsArray)
-                {   // note we don't need to exclude byte[], as that is handled by GetTypeCode already
-                    if (type.GetArrayRank() == 1) itemType = type.GetElementType();
-                }
-                else
-                {
-                    itemType = GetListItemType(type);
-                }
-                return itemType != null && model.CanSerialize(itemType, allowBasic, allowContract, false);
+                return TypeHelper.ResolveUniqueEnumerableT(type, out var itemType)
+                    && model.CanSerialize(itemType, allowBasic, allowContract, false);
             }
             return false;
         }

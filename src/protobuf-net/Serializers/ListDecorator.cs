@@ -64,7 +64,7 @@ namespace ProtoBuf.Serializers
             select method).SingleOrDefault();
 
     }
-    internal sealed class ListDecorator<TConstruct, T> : IRuntimeProtoSerializerNode
+    internal sealed class ListDecorator<TConstruct, T> : IRuntimeProtoSerializerNode, ICompiledSerializer
         where TConstruct : class, IEnumerable<T>
     {
         static readonly MethodInfo s_ReadRepeated = ListDecorator.s_ReadRepeated.MakeGenericMethod(typeof(T));
@@ -122,7 +122,7 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    internal sealed class ImmutableArrayDecorator<T> : IRuntimeProtoSerializerNode
+    internal sealed class ImmutableArrayDecorator<T> : IRuntimeProtoSerializerNode, ICompiledSerializer
     {
         static readonly MethodInfo s_ReadRepeated = ListDecorator.s_ReadImmutableRepeated.MakeGenericMethod(typeof(T));
         static readonly MethodInfo s_WriteRepeated = ListDecorator.s_WriteRepeated.MakeGenericMethod(typeof(T)); // boxes

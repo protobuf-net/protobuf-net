@@ -39,10 +39,7 @@
             // 05 = length 5
             // 0A = field 1, type String
             // 03 = length 3
-            // 61-62-63 = abc
-
-            // CAUSING STACKOVERFLOW; investigate why
-            RuntimeTypeModel.Default.CompileInPlace();
+            // 61-62-63 = abc            
             Query clone = Serializer.Deserialize<Query>(ms);
             Assert.NotNull(clone);
             Assert.NotSame(clone, query);

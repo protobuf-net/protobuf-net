@@ -102,7 +102,9 @@ namespace ProtoBuf.Serializers
         T IFactory<T>.Create(ISerializationContext context)
             => factory == null ? default : factory.Invoke(context);
     }
-    internal abstract class CompiledSerializer : IProtoTypeSerializer
+
+    interface ICompiledSerializer { Type ExpectedType { get; } } // just means "nothing more to do here" in terms of auto-compile
+    internal abstract class CompiledSerializer : IProtoTypeSerializer, ICompiledSerializer
     {
         public SerializerFeatures Features => head.Features;
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
@@ -121,9 +123,9 @@ namespace ProtoBuf.Serializers
             head.Callback(value, callbackType, context); // these routes only used when bits of the model not compiled
         }
 
-        public static CompiledSerializer Wrap(IProtoTypeSerializer head, RuntimeTypeModel model)
+        public static ICompiledSerializer Wrap(IProtoTypeSerializer head, RuntimeTypeModel model)
         {
-            if (!(head is CompiledSerializer result))
+            if (!(head is ICompiledSerializer result))
             {
                 ConstructorInfo ctor;
                 try
@@ -140,7 +142,7 @@ namespace ProtoBuf.Serializers
                     }
                 } catch(Exception ex)
                 {
-                    throw new InvalidOperationException($"Unable to wrap {head.BaseType}/{head.ExpectedType}", ex);
+                    throw new InvalidOperationException($"Unable to wrap {head.BaseType.NormalizeName()}/{head.ExpectedType.NormalizeName()}", ex);
                 }
                 try
                 {
@@ -148,7 +150,7 @@ namespace ProtoBuf.Serializers
                 }
                 catch (System.Reflection.TargetInvocationException tie)
                 {
-                    throw new InvalidOperationException($"Unable to wrap {head.BaseType.Name}/{head.ExpectedType.Name}: {tie.InnerException.Message}", tie.InnerException);
+                    throw new InvalidOperationException($"Unable to wrap {head.BaseType.NormalizeName()}/{head.ExpectedType.NormalizeName()}: {tie.InnerException.Message} ({head.GetType().NormalizeName()})", tie.InnerException);
                 }
                 Debug.Assert(result.ExpectedType == head.ExpectedType);
             }

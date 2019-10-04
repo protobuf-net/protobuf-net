@@ -54,7 +54,7 @@ namespace ProtoBuf.Serializers
             && args[6].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[1])
             select method).SingleOrDefault();
     }
-    internal class MapDecorator<TConstruct, TKey, TValue> : IRuntimeProtoSerializerNode
+    internal class MapDecorator<TConstruct, TKey, TValue> : IRuntimeProtoSerializerNode, ICompiledSerializer
         where TConstruct : class, IEnumerable<KeyValuePair<TKey, TValue>>
     {
         static readonly MethodInfo s_ReadMap = MapDecorator.s_ReadMap.MakeGenericMethod(typeof(TKey), typeof(TValue));

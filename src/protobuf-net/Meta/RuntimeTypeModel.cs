@@ -660,11 +660,6 @@ namespace ProtoBuf.Meta
             if (newType != null) return newType; // return existing
             int opaqueToken = 0;
 
-            if (type.IsInterface && MetaType.ienumerable.IsAssignableFrom(type)
-                    && GetListItemType(type) == null)
-            {
-                throw new ArgumentException("IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
-            }
             try
             {
                 newType = RecogniseCommonTypes(type);
@@ -1484,7 +1479,8 @@ namespace ProtoBuf.Meta
             }
 
             // handle lists 
-            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
+            if (itemType == null && TypeHelper.ResolveUniqueEnumerableT(type, out var tmp))
+                itemType = tmp;
 
             // check for nested data (not allowed)
             VerifyNotNested(type, itemType);

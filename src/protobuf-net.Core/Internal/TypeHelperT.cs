@@ -77,6 +77,62 @@ namespace ProtoBuf.Internal
             }
             return false;
         }
+
+        internal static bool ResolveUniqueEnumerableT(Type type, out Type t)
+        {
+            static bool IsEnumerableT(Type type, out Type t)
+            {
+                if (type.IsInterface && type.IsGenericType
+                    && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    t = type.GetGenericArguments()[0];
+                    return true;
+                }
+                t = null;
+                return false;
+            }
+
+            if (type == null || type == typeof(string) || type == typeof(byte[]) || type == typeof(object))
+            {
+                t = null; // don't need that kind of confusion
+                return false;
+            }
+
+            if (type.IsArray)
+            {
+                t = type.GetElementType();
+                return type == t.MakeArrayType(); // rules out multi-dimensional etc
+            }
+
+            try
+            {
+                if (IsEnumerableT(type, out t))
+                    return true;
+
+                bool haveMatch = false;
+                foreach (var iType in type.GetInterfaces())
+                {
+                    if (IsEnumerableT(iType, out var tmp))
+                    {
+                        if (haveMatch && tmp != t)
+                        {
+                            haveMatch = false;
+                            break;
+                        }
+                        else
+                        {
+                            haveMatch = true;
+                            t = tmp;
+                        }
+                    }
+                }
+                return haveMatch;
+            }
+            catch { }
+            // if it isn't a good fit; don't use "map"
+            t = null;
+            return false;
+        }
     }
     internal static class ObjectFactory
     {

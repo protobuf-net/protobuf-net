@@ -134,8 +134,6 @@ namespace ProtoBuf.Meta
                 $"Tuple-based types cannot be used in inheritance hierarchies: {type.NormalizeName()}");
         }
 
-        internal static readonly Type ienumerable = typeof(IEnumerable);
-
         private void SetBaseType(MetaType baseType)
         {
             if (baseType == null) throw new ArgumentNullException(nameof(baseType));
@@ -367,11 +365,7 @@ namespace ProtoBuf.Meta
         {
             if (!IgnoreListHandling)
             {
-                itemType = TypeModel.GetListItemType(Type);
-                if (itemType is object)
-                    return true;
-
-                if (ValueMember.ResolveMapTypes(Type, out _, out itemType))
+                if (TypeHelper.ResolveUniqueEnumerableT(Type, out itemType))
                     return true;
             }
             itemType = null;
@@ -461,7 +455,7 @@ namespace ProtoBuf.Meta
             {
                 foreach (SubType subType in _subTypes)
                 {
-                    if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
+                    if (!subType.DerivedType.IgnoreListHandling && TypeHelper.ResolveUniqueEnumerableT(subType.DerivedType.Type, out _))
                     {
                         ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
@@ -1414,14 +1408,16 @@ namespace ProtoBuf.Meta
         internal static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType)
         {
             if (type == null) return;
+
             // handle arrays
             if (type.IsArray)
             {
-                if (type.GetArrayRank() != 1)
+                itemType = type.GetElementType();
+                if (type != itemType.MakeArrayType())
                 {
                     throw new NotSupportedException("Multi-dimensional arrays are not supported");
                 }
-                itemType = type.GetElementType();
+                
                 if (itemType == typeof(byte))
                 {
                     defaultType = itemType = null;
@@ -1431,8 +1427,11 @@ namespace ProtoBuf.Meta
                     defaultType = type;
                 }
             }
-            // handle lists
-            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
+
+            if (itemType == null && TypeHelper.ResolveUniqueEnumerableT(type, out var t))
+            {
+                itemType = t;
+            }
 
             // check for nested data (not allowed)
             if (itemType != null)
@@ -1625,11 +1624,17 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-            if (!(_serializer is CompiledSerializer && !_serializer.ExpectedType.IsEnum))
+            var original = Serializer; // might lazily create
+            if (original is ICompiledSerializer || original.ExpectedType.IsEnum || IsList(out _))
+                return; // nothing to do
+            
+            var wrapped = CompiledSerializer.Wrap(original, model);
+            if (!ReferenceEquals(original, wrapped))
             {
-                _serializer = CompiledSerializer.Wrap(Serializer, model);
+                _serializer = (IProtoTypeSerializer) wrapped;
                 Model.ResetServiceCache(Type);
             }
+            
         }
 
         internal bool IsDefined(int fieldNumber)

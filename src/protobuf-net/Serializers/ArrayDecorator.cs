@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
             && args[2].ParameterType == typeof(ISerializer<>).MakeGenericType(targs)
             select method).SingleOrDefault();
     }
-    internal sealed class ArrayDecorator<T> : IRuntimeProtoSerializerNode
+    internal sealed class ArrayDecorator<T> : IRuntimeProtoSerializerNode, ICompiledSerializer
     {
         static readonly MethodInfo s_ReadRepeated = ArrayDecorator.s_ReadRepeated.MakeGenericMethod(typeof(T));
         static readonly MethodInfo s_WriteRepeated = ListDecorator.s_WriteRepeated.MakeGenericMethod(typeof(T));
