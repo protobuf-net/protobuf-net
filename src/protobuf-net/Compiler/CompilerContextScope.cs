@@ -168,15 +168,14 @@ namespace ProtoBuf.Compiler
 
         }
 
-        internal bool Defines<T>()
+        internal bool ImplementsServiceFor<T>()
         {
             if (_model == null || typeof(T).IsEnum) return false;
             if (!_model.IsKnownType<T>()) return false;
 
             var mt = _model[typeof(T)];
-            if (mt == null) return false;
-            // TODO : return false if a custom serializer is provided
-
+            if (mt is null) return false;
+            if (mt.SerializerType is object) return false;
             return true;
         }
     }

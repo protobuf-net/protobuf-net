@@ -18,12 +18,13 @@ namespace ProtoBuf.unittest
 #pragma warning restore IDE0060 
         {
             // dummy to avoid lots of test hackery for dll compilation tests
-            model.CompileInPlace();
-            return model;
+            return model.Compile();
         }
-        internal static void CompileAndVerify(this RuntimeTypeModel model,
+        internal static TypeModel CompileAndVerify(this RuntimeTypeModel model,
             [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
-        {}
+        {
+            return model.Compile();
+        }
 #else
         static readonly string exePath;
         static readonly bool unavailable;
@@ -37,13 +38,14 @@ namespace ProtoBuf.unittest
             }
         }
 
-        internal static void CompileAndVerify(this RuntimeTypeModel model,
+        internal static TypeModel CompileAndVerify(this RuntimeTypeModel model,
             [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
         {
             var path = Path.ChangeExtension(name, "dll");
             if (File.Exists(path)) File.Delete(path);
-            model.Compile(name, path);
+            var compiled = model.Compile(name, path);
             Verify(path, exitCode, deleteOnSuccess);
+            return compiled;
         }
 #endif
         public static void Verify(string path, int exitCode = 0, bool deleteOnSuccess = true)

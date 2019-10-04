@@ -69,7 +69,7 @@ namespace ProtoBuf
                 case WireType.String:
                 case WireType.StartGroup:
                     var scaled = new ScaledTicks(timeSpan, kind);
-                    state.WriteMessage<ScaledTicks>(scaled, SerializerCache<PrimaryTypeProvider>.InstanceField);
+                    state.WriteMessage<ScaledTicks>(SerializerFeatures.OptionSkipRecursionCheck, scaled, SerializerCache<PrimaryTypeProvider>.InstanceField);
                     break;
                 case WireType.Fixed64:
                     state.WriteInt64(timeSpan.Ticks);
@@ -148,7 +148,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDuration(ref ProtoWriter.State state, TimeSpan value)
-            => state.WriteMessage<Duration>(value, SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.WriteMessage<Duration>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
@@ -187,7 +187,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimestamp(ref ProtoWriter.State state, DateTime value)
-            => state.WriteMessage<Timestamp>(value, SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.WriteMessage<Timestamp>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream
@@ -325,7 +325,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDecimal(ref ProtoWriter.State state, decimal value)
-            => state.WriteMessage<decimal>(value, SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.WriteMessage<decimal>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
@@ -342,7 +342,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteGuid(ref ProtoWriter.State state, Guid value)
-            => state.WriteMessage<Guid>(value, SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.WriteMessage<Guid>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream

@@ -422,7 +422,7 @@ namespace ProtoBuf
             TypeModel.ThrowUnexpectedSubtype<D>(value);
             if (value.DVal != 0) state.WriteInt32Varint(1, value.DVal);
             if (value.Name != null) state.WriteString(2, value.Name);
-            state.WriteMessage(3, value.Nested, this);
+            state.WriteMessage<D>(3, default, value.Nested, this);
             if (value.EnumValue != 0) state.WriteInt32Varint(4, (int)value.EnumValue);
         }
 

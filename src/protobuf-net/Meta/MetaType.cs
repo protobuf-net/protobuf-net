@@ -363,13 +363,19 @@ namespace ProtoBuf.Meta
                 return _serializer;
             }
         }
-        internal bool IsList
+        internal bool IsList(out Type itemType)
         {
-            get
+            if (!IgnoreListHandling)
             {
-                Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
-                return itemType != null;
+                itemType = TypeModel.GetListItemType(Type);
+                if (itemType is object)
+                    return true;
+
+                if (ValueMember.ResolveMapTypes(Type, out _, out itemType))
+                    return true;
             }
+            itemType = null;
+            return false;
         }
 
         internal Type GetInheritanceRoot()
@@ -401,9 +407,11 @@ namespace ProtoBuf.Meta
             => (baseType != null && baseType != this) || (_subTypes?.Count ?? 0) > 0;
         private IProtoTypeSerializer BuildSerializer()
         {
-            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
-            bool involvedInInheritance = HasRealInheritance();
-            if (itemType != null)
+            if (SerializerType != null)
+            {
+                return ExternalSerializer.Create(Type, SerializerType);
+            }
+            if (IsList(out var itemType))
             {
                 if (surrogate != null)
                 {
@@ -419,6 +427,8 @@ namespace ProtoBuf.Meta
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
+
+            bool involvedInInheritance = HasRealInheritance();
             if (surrogate != null)
             {
                 if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
@@ -617,10 +627,8 @@ namespace ProtoBuf.Meta
                         if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int)tmp > 0) implicitFirstTag = (int)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
 
-                        if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp))
-                        {
-                            SetSurrogate((Type)tmp);
-                        }
+                        if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp)) SetSurrogate((Type)tmp);
+                        if (item.TryGet(nameof(ProtoContractAttribute.Serializer), out tmp)) SerializerType = (Type)tmp;
                     }
                 }
 
@@ -1691,6 +1699,26 @@ namespace ProtoBuf.Meta
                 flags = (ushort)(flags & ~flag);
         }
 
+        private Type _serializerType;
+
+        /// <summary>
+        /// Specify a custom serializer for this type
+        /// </summary>
+        public Type SerializerType
+        {
+            get => _serializerType;
+            set
+            {
+                if (value != _serializerType)
+                {
+                    if (!value.IsClass)
+                        ThrowHelper.ThrowArgumentException("Custom serializer providers must be classes", nameof(SerializerType));
+                    ThrowIfFrozen();
+                    _serializerType = value;
+                }
+            }
+        }
+
         internal static MetaType GetRootType(MetaType source)
         {
             while (source._serializer != null)
@@ -1742,9 +1770,9 @@ namespace ProtoBuf.Meta
         {
             if (surrogate != null) return; // nothing to write
 
-            if (IsList)
+            if (IsList(out var itemType))
             {
-                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(Type), DataFormat.Default, false, false, ref imports);
+                string itemTypeName = model.GetSchemaTypeName(itemType, DataFormat.Default, false, false, ref imports);
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
                 NewLine(builder, indent).Append('}');

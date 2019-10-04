@@ -97,12 +97,12 @@ namespace ProtoBuf.Tests
 
                 state.WriteFieldHeader(3, WireType.StartGroup);
                 Assert.Equal(21, state.GetPosition());
-                state.WriteMessage<Foo>(null, Foo.Serializer);
+                state.WriteMessage<Foo>(default, null, Foo.Serializer);
                 Assert.Equal(22, state.GetPosition());
 
                 state.WriteFieldHeader(4, WireType.String);
                 Assert.Equal(23, state.GetPosition());
-                state.WriteMessage<Foo>(null, Foo.Serializer);
+                state.WriteMessage<Foo>(default, null, Foo.Serializer);
                 Assert.Equal(24, state.GetPosition());
 
                 state.Close();
@@ -167,7 +167,7 @@ namespace ProtoBuf.Tests
                 {
                     Log?.WriteLine($"Writing field 2...; pos: {state.GetPosition()}");
                     state.WriteFieldHeader(2, WireType.String);
-                    state.WriteMessage<A>(obj, this);
+                    state.WriteMessage<A>(default, obj, this);
                     Log?.WriteLine($"Wrote field 2...; pos: {state.GetPosition()}");
                 }
 #pragma warning restore CS0618

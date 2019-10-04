@@ -75,7 +75,7 @@ namespace ProtoBuf.Serializers
 
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteMessage<T>(default, TypeHelper<T>.FromObject(value));
+            => state.WriteMessage<T>((int)(default), TypeHelper<T>.FromObject(value));
 
         public override object Read(ref ProtoReader.State state, object value)
             => state.ReadMessage<T>(default, TypeHelper<T>.FromObject(value), null);
@@ -169,6 +169,7 @@ namespace ProtoBuf.Serializers
             using var tmp = ctx.GetLocalWithValue(typeof(T), value);
             ctx.LoadState();
             if (fieldNumber.HasValue) ctx.LoadValue(fieldNumber.Value);
+            ctx.LoadValue((int)(applyRecursionCheck ? default : SerializerFeatures.OptionSkipRecursionCheck));
             ctx.LoadValue(tmp);
             if (serializer == null)
             {
@@ -178,7 +179,6 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }
-            ctx.LoadValue(applyRecursionCheck);
             var methodFamily = wireType switch
             {
                 WireType.StartGroup => s_WriteGroup,
@@ -191,7 +191,7 @@ namespace ProtoBuf.Serializers
         {
             // state.ReadMessage<T>(default, value, serializer);
             ctx.LoadState();
-            ctx.LoadValue(0);
+            ctx.LoadValue(0); // features
             if (value == null)
             {
                 if (TypeHelper<T>.IsReferenceType)

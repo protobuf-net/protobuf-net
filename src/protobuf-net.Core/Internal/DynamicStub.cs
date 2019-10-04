@@ -257,7 +257,7 @@ namespace ProtoBuf.Internal
                         serializer.Write(ref state, typed);
                         return true;
                     case ObjectScope.WrappedMessage:
-                        state.WriteMessage(typed, serializer);
+                        state.WriteMessage<T>(default, typed, serializer);
                         return true;
                     default:
                         return false;

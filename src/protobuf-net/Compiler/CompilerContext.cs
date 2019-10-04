@@ -301,7 +301,7 @@ namespace ProtoBuf.Compiler
             else
             {
                 Emit(OpCodes.Ldarg_0); // push ourselves
-                if (Scope.IsFullEmit && Scope.Defines<T>())
+                if (Scope.IsFullEmit && Scope.ImplementsServiceFor<T>())
                 { } // yay, we should be fine here
                 else
                 {

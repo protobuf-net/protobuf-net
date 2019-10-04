@@ -217,7 +217,7 @@ namespace ProtoBuf.Meta
                 IEnumerable<MetaType> typesForNamespace = primaryType == null ? types.Cast<MetaType>() : requiredTypes;
                 foreach (MetaType meta in typesForNamespace)
                 {
-                    if (meta.IsList) continue;
+                    if (meta.IsList(out _)) continue;
                     string tmp = meta.Type.Namespace;
                     if (!string.IsNullOrEmpty(tmp))
                     {
@@ -273,7 +273,7 @@ namespace ProtoBuf.Meta
                 for (int i = 0; i < metaTypesArr.Length; i++)
                 {
                     MetaType tmp = metaTypesArr[i];
-                    if (tmp.IsList && tmp != primaryType) continue;
+                    if (tmp != primaryType && tmp.IsList(out _)) continue;
                     tmp.WriteSchema(bodyBuilder, 0, ref imports, syntax);
                 }
             }
@@ -308,9 +308,8 @@ namespace ProtoBuf.Meta
         private void CascadeDependents(List<MetaType> list, MetaType metaType)
         {
             MetaType tmp;
-            if (metaType.IsList)
+            if (metaType.IsList(out var itemType))
             {
-                Type itemType = TypeModel.GetListItemType(metaType.Type);
                 TryGetCoreSerializer(list, itemType);
             }
             else
@@ -345,7 +344,7 @@ namespace ProtoBuf.Meta
                 {
                     if (genericArgument.IsArray)
                     {
-                        RetrieveArrayListTypes(genericArgument, out var itemType, out var _);
+                        RetrieveArrayListTypes(genericArgument, out itemType, out var _);
                         VerifyNotNested(genericArgument, itemType);
                         if (itemType != null)
                         {
@@ -628,6 +627,12 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// Like the non-generic Add(Type); for convenience
+        /// </summary>
+        public MetaType Add<T>(bool applyDefaultBehaviour = true)
+            => Add(typeof(T), applyDefaultBehaviour);
+
+        /// <summary>
         /// Adds support for an additional type in this model, optionally
         /// applying inbuilt patterns. If the type is already known to the
         /// model, the existing type is returned **without** applying
@@ -770,7 +775,11 @@ namespace ProtoBuf.Meta
             if (typeIndex >= 0)
             {
                 var mt = (MetaType)types[typeIndex];
-                var service = mt.Serializer;
+                object service = mt.Serializer;
+                if (service is IExternalSerializer external)
+                {
+                    service = external.Service;
+                }
                 lock (_serviceCache)
                 {
                     _serviceCache[type] = service;
@@ -1135,30 +1144,58 @@ namespace ProtoBuf.Meta
         private void WriteEnumsAndProxies(CompilerContextScope scope, TypeBuilder type)
         {
             var enums = new List<Type>();
+            var proxies = new Dictionary<Type, List<Type>>(); // multiple types can share a proxy
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
                 var runtimeType = metaType.Type;
                 if (runtimeType.IsEnum) enums.Add(runtimeType);
+                else if (metaType.SerializerType != null)
+                {
+                    if (!proxies.TryGetValue(metaType.SerializerType, out var list))
+                        proxies.Add(metaType.SerializerType, list = new List<Type>());
+                    list.Add(runtimeType);
+                }
             }
 
-            if (enums.Count == 0) return;
+            if (enums.Count == 0 && proxies.Count == 0) return; // no need to implement the factory API
 
             type.AddInterfaceImplementation(typeof(ISerializerFactory));
             var il = CompilerContextScope.Implement(type, typeof(ISerializerFactory), nameof(ISerializerFactory.TryCreate));
-            Label returnEnum = il.DefineLabel(), notAnEnum = il.DefineLabel();
+            Label isMatch = il.DefineLabel(), nextTest = il.DefineLabel();
             foreach (var enumType in enums)
             {
                 CompilerContext.LoadValue(il, enumType);
                 il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Beq, returnEnum);
+                il.Emit(OpCodes.Beq, isMatch);
             }
-            il.Emit(OpCodes.Br_S, notAnEnum);
-            il.MarkLabel(returnEnum);
+            il.Emit(OpCodes.Br_S, nextTest);
+            il.MarkLabel(isMatch);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ret);
 
-            il.MarkLabel(notAnEnum);
+            il.MarkLabel(nextTest);
+
+            foreach (var group in proxies)
+            {
+                nextTest = il.DefineLabel();
+                isMatch = il.DefineLabel();
+
+                foreach (var victim in group.Value)
+                {
+                    CompilerContext.LoadValue(il, victim);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Beq, isMatch);
+                }
+                il.Emit(OpCodes.Br_S, nextTest);
+                il.MarkLabel(isMatch);
+                CompilerContext.LoadValue(il, group.Key);
+                il.Emit(OpCodes.Ret);
+
+                il.MarkLabel(nextTest);
+            }
+
+
             il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ret);
         }
@@ -1171,31 +1208,8 @@ namespace ProtoBuf.Meta
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
                 ILGenerator il;
-                if (runtimeType.IsEnum)
-                {
-                    //// this is mostly used to properly understand which types we recognize;
-                    //// it is not actually used right now
-                    //var iType = typeof(ISerializer<>).MakeGenericType(runtimeType);
-                    //type.AddInterfaceImplementation(iType);
-                    //il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Read));
-                    //using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
-                    //{
-                    //    serializer.EmitRead(ctx, ctx.InputValue);
-                    //    ctx.Return();
-                    //}
-                    //il = CompilerContextScope.Implement(type, iType, nameof(ISerializer<string>.Write));
-                    //using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.WriterScope_Input, this, runtimeType, nameof(ISerializer<string>.Write)))
-                    //{
-                    //    serializer.EmitWrite(ctx, ctx.InputValue);
-                    //    ctx.Return();
-                    //}
-
-                    //il = CompilerContextScope.Implement(type, iType, "get_" + nameof(ISerializer<string>.DefaultWireType));
-                    //WriteWireType(il, serializer.DefaultWireType);
-                    //il.Emit(OpCodes.Ret);
-
-                    //// tell the library that this is a scalar
-                    //type.AddInterfaceImplementation(typeof(IScalarSerializer<>).MakeGenericType(runtimeType));
+                if (runtimeType.IsEnum || metaType.SerializerType is object || metaType.IsList(out _))
+                {   // we don't implement these
                     continue;
                 }
                 if (!IsFullyPublic(runtimeType, out var problem))

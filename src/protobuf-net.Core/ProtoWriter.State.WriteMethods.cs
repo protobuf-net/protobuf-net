@@ -317,31 +317,32 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteMessage<T>(T value, ISerializer<T> serializer = null, bool recursionCheck = true)
-                => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+            [MethodImpl(ProtoReader.HotPath)]
+            public void WriteMessage<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+                => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
+            public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
-                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
                 }
             }
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteGroup<T>(int fieldNumber, T value, ISerializer<T> serializer = null, bool recursionCheck = true)
+            public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && value is null))
                 {
                     WriteFieldHeader(fieldNumber, WireType.StartGroup);
-                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, recursionCheck);
+                    _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
                 }
             }
 
@@ -839,7 +840,7 @@ namespace ProtoBuf
                 if (category == SerializerFeatures.CategoryMessageWrappedAtRoot)
                 {
                     // to preserve legacy behavior of DateTime/TimeSpan etc
-                    WriteMessage<T>(1, value, serializer, false);
+                    WriteMessage<T>(1, default, value, serializer);
                 }
                 else if (TypeHelper<T>.CanBeNull && value == null)
                 {
