@@ -610,8 +610,13 @@ namespace ProtoBuf
                 keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
                 valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                keyFeatures.InheritFrom(keySerializer.Features);
-                valueFeatures.InheritFrom(valueSerializer.Features);
+                var tmp = keySerializer.Features;
+                if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+                keyFeatures.InheritFrom(tmp);
+
+                tmp = valueSerializer.Features;
+                if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+                valueFeatures.InheritFrom(tmp);
 
                 if (values == null)
                 { }
@@ -671,18 +676,20 @@ namespace ProtoBuf
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     features.InheritFrom(serializer.Features);
-                    WriteFieldHeader(fieldNumber, features.GetWireType());
 
                     switch (features.GetCategory())
                     {
                         case SerializerFeatures.CategoryRepeated:
+                            // note we leave the field header to the interior in this case
                             ((IRepeatedSerializer<T>)serializer).Write(ref this, fieldNumber, features, value);
                             break;
                         case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         case SerializerFeatures.CategoryMessage:
+                            WriteFieldHeader(fieldNumber, features.GetWireType());
                             _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
                             break;
                         case SerializerFeatures.CategoryScalar:
+                            WriteFieldHeader(fieldNumber, features.GetWireType());
                             serializer.Write(ref this, value);
                             break;
                         default:

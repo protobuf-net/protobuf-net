@@ -958,13 +958,12 @@ namespace ProtoBuf.Meta
         internal bool TryDeserializeAuxiliaryType(ref ProtoReader.State state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-            Type itemType;
             WireType wiretype = GetWireType(this, format, type);
 
             bool found = false;
             if (wiretype == WireType.None)
             {
-                if (!TypeHelper.ResolveUniqueEnumerableT(type, out itemType))
+                if (!TypeHelper.ResolveUniqueEnumerableT(type, out Type itemType))
                     itemType = null;
 
                 if (itemType == null && type.IsArray && type.GetArrayRank() == 1 && type != typeof(byte[]))
