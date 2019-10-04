@@ -43,8 +43,8 @@ namespace ProtoBuf.Internal
             }
         }
 
-        private sealed class ListSerializer<TList, T> : IRepeatedSerializer<TList>
-            where TList : class, ICollection<T>
+        private sealed class EnumerableSerializer<TList, T> : IRepeatedSerializer<TList>
+            where TList : class, IEnumerable<T>
         {
             public SerializerFeatures Features => SerializerFeatures.CategoryRepeated;
 

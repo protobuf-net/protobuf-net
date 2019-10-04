@@ -1150,14 +1150,14 @@ namespace ProtoBuf.Meta
         internal static ISerializer<T> GetSerializer<T>(TypeModel model)
            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>()
-            ?? SerializerCache<AuxiliaryTypeProvider, T>.InstanceField
+            ?? SerializerCache<TertiaryTypeProvider, T>.InstanceField
             ?? NoSerializer<T>(model);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> TryGetSerializer<T>(TypeModel model)
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>()
-            ?? SerializerCache<AuxiliaryTypeProvider, T>.InstanceField;
+            ?? SerializerCache<TertiaryTypeProvider, T>.InstanceField;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class

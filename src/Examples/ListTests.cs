@@ -16,12 +16,20 @@ namespace Examples
         public string Foo { get; set; }
     }
 
-    class CustomEnumerable : IEnumerable<int>
+    class CustomEnumerable : IEnumerable<int>, ICollection<int>
     {
         private readonly List<int> items = new List<int>();
         IEnumerator<int> IEnumerable<int>.GetEnumerator() { return items.GetEnumerator(); }
         IEnumerator IEnumerable.GetEnumerator() { return items.GetEnumerator(); }
         public void Add(int value) { items.Add(value); }
+
+        // need ICollection<int> for Add to work
+        bool ICollection<int>.IsReadOnly => false;
+        void ICollection<int>.Clear() => items.Clear();
+        int ICollection<int>.Count => items.Count;
+        bool ICollection<int>.Contains(int item) => items.Contains(item);
+        bool ICollection<int>.Remove(int item) => items.Remove(item);
+        void ICollection<int>.CopyTo(int[] array, int arrayIndex) => items.CopyTo(array, arrayIndex);
     }
     [ProtoContract]
     class EntityWithPackedInts
@@ -241,8 +249,7 @@ namespace Examples
            
             item.ListNoDefault = new List<int>();
             clone = Serializer.DeepClone(item);
-            Assert.NotNull(clone.ListNoDefault);
-            Assert.Empty(clone.ListNoDefault);
+            Assert.Null(clone.ListNoDefault);
            
             item.ListNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
@@ -318,8 +325,7 @@ namespace Examples
 
             item.Custom = new CustomEnumerable();
             clone = Serializer.DeepClone(item);
-            Assert.NotNull(clone.Custom);
-            Assert.Empty(clone.Custom);
+            Assert.Null(clone.Custom);
 
             item.Custom.Add(123);
             clone = Serializer.DeepClone(item);

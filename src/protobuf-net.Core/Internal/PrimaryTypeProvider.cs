@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ProtoBuf.Internal
 {
@@ -26,6 +27,11 @@ namespace ProtoBuf.Internal
                         openType.MakeGenericType(type), nonPublic: true);
             }
 
+            // some kinds of "repeated" data is trustworthy as primary serializers;
+            // i.e. vectors, and things that are **exactly** List<T> / Dictionary<TKey, TValue>
+            // (we can't detect all subclasses etc, because a type might do that but
+            // disable list-handling; as such, they would be tertiary)
+
             // check for T[]
             if (type.IsArray)
             {
@@ -39,35 +45,34 @@ namespace ProtoBuf.Internal
                 }
             }
 
-            // check for List<T> (non-subclass)
-            var list = TryGetListProvider(type, type);
-            if (list != null) return list;
+            // check for List<T> and Dictionary<TKey, TValue> (non-subclass)
+            if (type.IsGenericType)
+            {
+                var def = type.GetGenericTypeDefinition();
+                if (def == typeof(Dictionary<,>) || def == typeof(List<>))
+                {
+                    return TryGetRepeatedProvider(type);
+                }
+            }
 
             return null;
         }
 
-        internal static object TryGetListProvider(Type rootType, Type type)
+        internal static object TryGetRepeatedProvider(Type type)
         {
-            // later we can axpand this Type itemType = TypeModel.GetListItemType(typeof(T));
-            // for now: just handles List<T>
+            if (type.IsValueType || type.IsArray) return null;
 
-            if (type.IsGenericType)
+            if (TypeHelper.ResolveUniqueEnumerableT(type, out var t))
             {
-                var def = type.GetGenericTypeDefinition();
-
-                if (def == typeof(Dictionary<,>))
+                if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
-                    var args = type.GetGenericArguments();
+                    var targs = t.GetGenericArguments();
                     return Activator.CreateInstance(
-                        typeof(DictionarySerializer<,,>).MakeGenericType(rootType, args[0], args[1]), nonPublic: true);
+                        typeof(DictionarySerializer<,,>).MakeGenericType(type, targs[0], targs[1]), nonPublic: true);
                 }
 
-                if (def == typeof(List<>))
-                {
-                    var args = type.GetGenericArguments();
-                    return Activator.CreateInstance(
-                        typeof(ListSerializer<,>).MakeGenericType(rootType, args[0]), nonPublic: true);
-                }
+                return Activator.CreateInstance(
+                        typeof(EnumerableSerializer<,>).MakeGenericType(type, t), nonPublic: true);
             }
             return null;
         }
