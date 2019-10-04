@@ -250,10 +250,9 @@ namespace ProtoBuf
                 }
                 else if (values is IProducerConsumerCollection<T> concurrent)
                 {
-                    if (clear && concurrent.Count != 0)
-                        ThrowHelper.ThrowInvalidOperationException($"It was not possible to clear the collection: {concurrent}");
+                    if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
                     foreach (var item in buffer.Span)
-                        concurrent.TryAdd(item);
+                        if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
                 }
                 else
                 {
@@ -263,9 +262,20 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
+            static void ThrowNoClear(object values)
+            {
+                ThrowHelper.ThrowNotSupportedException($"It was not possible to clear the collection: {values}");
+            }
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static void ThrowAddFailed(object values)
+            {
+                ThrowHelper.ThrowNotSupportedException($"The attempt to add to the collection failed: {values}");
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
             static void ThrowNoAdd(object values)
             {
-                ThrowHelper.ThrowNotSupportedException("No suitable collection Add API located (or the list is read-only) for " + values.GetType().NormalizeName());
+                ThrowHelper.ThrowNotSupportedException($"No suitable collection Add API located (or the list is read-only) for {values}");
             }
 
             private void ReadRepeatedCore<T>(int field, ICollection<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)

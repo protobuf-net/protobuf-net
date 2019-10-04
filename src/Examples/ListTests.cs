@@ -2,6 +2,7 @@
 using ProtoBuf;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -582,7 +583,7 @@ namespace Examples
             CheckLists(list, clone);
         }
 
-        class Test3Enumerable : IEnumerable<Test3>
+        class Test3Enumerable : IEnumerable<Test3>, IProducerConsumerCollection<Test3>
         {
             private readonly List<Test3> items = new List<Test3>();
 
@@ -597,6 +598,36 @@ namespace Examples
             }
 
             public void Add(Test3 item) { items.Add(item); }
+
+            // for the Add API
+            int ICollection.Count => items.Count;
+
+            bool IProducerConsumerCollection<Test3>.TryAdd(Test3 value)
+            {
+                items.Add(value);
+                return true;
+            }
+
+            bool IProducerConsumerCollection<Test3>.TryTake(out Test3 item)
+            {
+                if (items.Count == 0)
+                {
+                    item = default;
+                    return false;
+                }
+                item = items[items.Count - 1];
+                items.RemoveAt(items.Count - 1);
+                return true;
+            }
+
+            object ICollection.SyncRoot => ((ICollection)items).SyncRoot;
+            bool ICollection.IsSynchronized => ((ICollection)items).IsSynchronized;
+
+            void ICollection.CopyTo(Array array, int index) => ((ICollection)items).CopyTo(array, index);
+
+            Test3[] IProducerConsumerCollection<Test3>.ToArray() => items.ToArray();
+            void IProducerConsumerCollection<Test3>.CopyTo(Test3[] array, int index) => items.CopyTo(array, index);
+
         }
 
         [Fact]
