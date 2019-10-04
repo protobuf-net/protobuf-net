@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -352,6 +353,22 @@ namespace ProtoBuf
             public void WriteRepeated<T>(int fieldNumber, IEnumerable<T> values)
                 => WriteRepeated<T>(fieldNumber, default, values, default);
 
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private static int TryGetCheapCount<T>(IEnumerable<T> values)
+            {
+                try
+                {
+                    if (values is ICollection<T> collection) return collection.Count;
+                    if (values is IReadOnlyCollection<T> roc) return roc.Count;
+                    if (values is ICollection untyped) return untyped.Count;
+                    // note that we do *not* want to call Enumerable.Count<T>(values)
+                    // the entire point here is "if we can get it cheaply, do so"
+                }
+                catch { } // sometimes, it just isn't supported, etc
+                return -1;
+            }
+
             /// <summary>
             /// Writes a sequence of sub-items to the writer
             /// </summary>
@@ -367,12 +384,8 @@ namespace ProtoBuf
 
                 if (values == null) return; // nothing to do
 
-                int count = -1;
-                if (values is ICollection<T> collection)
-                {
-                    count = collection.Count;
-                    if (count == 0) return;
-                }
+                int count = TryGetCheapCount<T>(values);
+                if (count == 0) return;
 
                 if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count > 1 && serializer is IMeasuringSerializer<T> measurer)
                 {
