@@ -133,13 +133,24 @@ namespace ProtoBuf.Internal
 
             if (haveMatch)
             {
-                if (type.IsValueType)
-                    ThrowHelper.ThrowNotSupportedException("Value-type collection types are not currently supported");
+                if (type.IsValueType) CheckValidValueTypeCollections(type, t);
                 return true;
             }
             // if it isn't a good fit; don't use "map"
             t = null;
             return false;
+        }
+
+#pragma warning disable IDE0060 // Remove unused parameter
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void CheckValidValueTypeCollections(Type type, Type t)
+#pragma warning restore IDE0060 // Remove unused parameter
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ImmutableArray<>))
+            {
+                return; //fine, we handle that
+            }
+            ThrowHelper.ThrowNotSupportedException("Value-type collection types are not currently supported");
         }
     }
     internal static class ObjectFactory
