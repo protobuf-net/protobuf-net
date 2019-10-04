@@ -698,38 +698,50 @@ namespace Examples
         [Fact]
         public void TestPackedListDateTime()
         {
-            Program.ExpectFailure<InvalidOperationException>(() =>
-            {
-                Serializer.DeepClone(new ListOfDateTime());
-            }, "Only simple data-types can use packed encoding");
+            // it will just quietly ignore us
+            var obj = new ListOfDateTime { Items = { new DateTime(2000, 1, 1) } };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, obj);
+            ms.Position = 0;
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-04-08-9A-AB-01", hex); // == 10957 days expressed as zig-zag
+            var clone = Serializer.Deserialize<ListOfDateTime>(ms);
+            Assert.NotSame(obj, clone);
+            var single = Assert.Single(clone.Items);
+            Assert.Equal(new DateTime(2000, 1, 1), single);
+
         }
         [ProtoContract]
         class ListOfDateTime
         {
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
-            public List<DateTime> Items { get; set; }
+            public List<DateTime> Items { get; } = new List<DateTime>();
         }
         [Fact]
         public void TestPackedCustomOfSubMessage()
         {
-            Program.ExpectFailure<InvalidOperationException>(() => { 
-            Serializer.DeepClone(new CustomOfSubMessage());
-                }, "Only simple data-types can use packed encoding");
+            // it will just quietly ignore us
+            var obj = new CustomOfSubMessage { Items = { new CustomItem { }, new CustomItem { }, new CustomItem { } } };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, obj);
+            ms.Position = 0;
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-00-0A-00-0A-00", hex);
+            var clone = Serializer.Deserialize<CustomOfSubMessage>(ms);
+            Assert.NotSame(obj, clone);
+            Assert.Equal(3, clone.Items.Count);
         }
 
         [ProtoContract]
         class CustomOfSubMessage
         {
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
-            public CustomCollection Items { get; set; }
+            public CustomCollection Items { get; } = new CustomCollection();
         }
         [ProtoContract]
         class CustomItem { }
-        class CustomCollection : IEnumerable<CustomItem>
+        class CustomCollection : List<CustomItem>
         {
-            public void Add(CustomItem item) { throw new NotImplementedException(); }
-            public IEnumerator<CustomItem> GetEnumerator() { throw new NotImplementedException(); }
-            IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
         }
 
         class Test3Comparer : IEqualityComparer<Test3>
