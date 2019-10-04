@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -242,7 +243,7 @@ namespace ProtoBuf
                     values = iList;
                 }
                 else if (values is IImmutableSet<T> iSet)
-                {   
+                {
                     if (clear) iSet = iSet.Clear();
                     foreach(var item in buffer.Span)
                         iSet = iSet.Add(item);
@@ -253,6 +254,13 @@ namespace ProtoBuf
                     if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
                     foreach (var item in buffer.Span)
                         if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
+                }
+                else if (values is IList untyped && !untyped.IsReadOnly)
+                {
+                    // really scraping the barrel now
+                    if (clear) untyped.Clear();
+                    foreach (var item in buffer.Span)
+                        untyped.Add(item);
                 }
                 else
                 {
