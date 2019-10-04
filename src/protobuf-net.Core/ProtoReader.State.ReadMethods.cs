@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -215,28 +216,49 @@ namespace ProtoBuf
                     if (packed) ReadPackedScalar(collection, wireType, serializer);
                     else ReadRepeatedCore(field, collection, category, wireType, serializer);
                 }
-                else if (values is IImmutableList<T> iList)
-                {   // TODO: look at the builder API; this works for today, though
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        iList = iList.Clear();
+                else
+                {
+                    values = ReadRepeatedExotics<T>((features & SerializerFeatures.OptionOverwriteList) != 0,
+                        packed, field, wireType, category, values, serializer);
+                }
 
-                    values = packed ? ReadPackedScalar(iList, wireType, serializer)
-                        : ReadRepeatedCore(field, iList, category, wireType, serializer);
+                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                //    ? null : values;
+                return values;
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private IEnumerable<T> ReadRepeatedExotics<T>(bool clear, bool packed, int field,
+                WireType wireType, SerializerFeatures category, IEnumerable<T> values, ISerializer<T> serializer)
+            {
+                using var buffer = new ReadBuffer<T>(); // read into a buffer, just like we would with arrays
+                if (packed) ReadPackedScalar(buffer, wireType, serializer);
+                else ReadRepeatedCore(field, buffer, category, wireType, serializer);
+
+                if (values is IImmutableList<T> iList)
+                {
+                    if (clear) iList = iList.Clear();
+                    iList = iList.AddRange(buffer);
+                    values = iList;
                 }
                 else if (values is IImmutableSet<T> iSet)
-                {   // TODO: look at the builder API; this works for today, though
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        iSet = iSet.Clear();
-
-                    values = packed ? ReadPackedScalar(iSet, wireType, serializer)
-                        : ReadRepeatedCore(field, iSet, category, wireType, serializer);
+                {   
+                    if (clear) iSet = iSet.Clear();
+                    foreach(var item in buffer.Span)
+                        iSet = iSet.Add(item);
+                    values = iSet;
+                }
+                else if (values is IProducerConsumerCollection<T> concurrent)
+                {
+                    if (clear && concurrent.Count != 0)
+                        ThrowHelper.ThrowInvalidOperationException($"It was not possible to clear the collection: {concurrent}");
+                    foreach (var item in buffer.Span)
+                        concurrent.TryAdd(item);
                 }
                 else
                 {
                     ThrowNoAdd(values);
                 }
-                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                //    ? null : values;
                 return values;
             }
 
@@ -360,82 +382,6 @@ namespace ProtoBuf
                         ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
                         break;
                 }
-            }
-
-            private IImmutableList<T> ReadPackedScalar<T>(IImmutableList<T> list, WireType wireType, ISerializer<T> serializer)
-            {
-                var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
-                if (bytes == 0) return list;
-                switch (wireType)
-                {
-                    case WireType.Fixed32:
-                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
-                        var count = bytes / 4;
-                        goto ReadFixedQuantity;
-                    case WireType.Fixed64:
-                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
-                        count = bytes / 8;
-                        ReadFixedQuantity:
-
-                        for (int i = 0; i < count; i++)
-                        {
-                            _reader.WireType = wireType;
-                            list = list.Add(serializer.Read(ref this, default));
-                        }
-                        break;
-                    case WireType.Varint:
-                    case WireType.SignedVarint:
-                        long end = GetPosition() + bytes;
-                        do
-                        {
-                            _reader.WireType = wireType;
-                            list = list.Add(serializer.Read(ref this, default));
-                        } while (GetPosition() < end);
-                        if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
-                        break;
-                    default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
-                        break;
-                }
-                return list;
-            }
-
-            private IImmutableSet<T> ReadPackedScalar<T>(IImmutableSet<T> list, WireType wireType, ISerializer<T> serializer)
-            {
-                var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
-                if (bytes == 0) return list;
-                switch (wireType)
-                {
-                    case WireType.Fixed32:
-                        if ((bytes % 4) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 4");
-                        var count = bytes / 4;
-                        goto ReadFixedQuantity;
-                    case WireType.Fixed64:
-                        if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
-                        count = bytes / 8;
-                        ReadFixedQuantity:
-
-                        for (int i = 0; i < count; i++)
-                        {
-                            _reader.WireType = wireType;
-                            list = list.Add(serializer.Read(ref this, default));
-                        }
-                        break;
-                    case WireType.Varint:
-                    case WireType.SignedVarint:
-                        long end = GetPosition() + bytes;
-                        do
-                        {
-                            _reader.WireType = wireType;
-                            list = list.Add(serializer.Read(ref this, default));
-                        } while (GetPosition() < end);
-                        if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
-                        break;
-                    default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
-                        break;
-                }
-                return list;
             }
 
             /// <summary>

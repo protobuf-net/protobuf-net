@@ -67,6 +67,8 @@ namespace ProtoBuf.Internal
         public T[] GetBuffer() => _arr;
         public int Count => _count;
 
+        public ReadOnlySpan<T> Span => new ReadOnlySpan<T>(_arr, 0, _count);
+
         public void Dispose() => Recyle(ref _arr);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
