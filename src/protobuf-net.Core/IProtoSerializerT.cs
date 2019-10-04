@@ -104,6 +104,9 @@ namespace ProtoBuf
         /// </summary>
         OptionListsSupportNull = 1 << 12,
 #endif
+
+
+        // RESERVED: 1 << 30, see FromAux
     }
 
     internal static class SerializerFeaturesExtensions

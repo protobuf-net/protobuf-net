@@ -116,16 +116,8 @@ namespace ProtoBuf.ServiceModel
                 try
                 {
 
-                    if (DynamicStub.TrySerializeRoot(type, model, ref state, graph))
-                    { } // winning!
-                    else if (isList)
-                    {
-                        model.SerializeRootFallback(ref state, graph);
-                    }
-                    else
-                    {
-                        model.Serialize(ObjectScope.LikeRoot, ref state, type, graph);
-                    }
+                    if (!DynamicStub.TrySerializeRoot(type, model, ref state, graph))
+                        TypeModel.ThrowUnexpectedType(type);
                 }
                 catch
                 {
@@ -174,16 +166,8 @@ namespace ProtoBuf.ServiceModel
                 try
                 {
                     object result = null;
-                    if (DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
-                    { } // winning!
-                    else if (isList)
-                    {
-                        result = state.DeserializeRootFallback(null, type);
-                    }
-                    else
-                    {
-                        result = model.Deserialize(ObjectScope.LikeRoot, ref state, type, null);
-                    }
+                    if (!DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
+                        TypeModel.ThrowUnexpectedType(type);
                     return result;
                 }
                 finally

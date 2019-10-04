@@ -911,6 +911,7 @@ namespace ProtoBuf
                 _writer.AdvanceAndReset(prefixLength);
             }
 
+#if FEAT_DYNAMIC_REF
             /// <summary>
             /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type).
             /// </summary>
@@ -948,6 +949,7 @@ namespace ProtoBuf
                 }
 
             }
+#endif
 
             internal void WriteObject(object value, Type type, PrefixStyle style, int fieldNumber)
             {
@@ -978,16 +980,9 @@ namespace ProtoBuf
 
 #pragma warning disable CS0618
                 SubItemToken token = StartSubItem(value, style);
-                if (!Model.IsDefined(type))
+                if (!DynamicStub.TrySerializeAny(TypeModel.ListItemTag, SerializerFeatures.CategoryMessageWrappedAtRoot, type, Model, ref this, value))
                 {
-                    if (!model.TrySerializeAuxiliaryType(ref this, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
-                    {
-                        TypeModel.ThrowUnexpectedType(value.GetType());
-                    }
-                }
-                else
-                {
-                    model.Serialize(ObjectScope.LikeRoot, ref this, type, value);
+                    TypeModel.ThrowUnexpectedType(value.GetType());
                 }
                 EndSubItem(token, style);
 #pragma warning restore CS0618

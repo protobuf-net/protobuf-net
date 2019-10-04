@@ -30,6 +30,7 @@ namespace ProtoBuf
             Dispose();
         }
 
+#if FEAT_DYNAMIC_REF
         /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type).
         /// </summary>
@@ -39,6 +40,7 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public static void WriteObject(object value, Type type, ProtoWriter writer)
             => writer.DefaultState().WriteObject(value, type);
+#endif
 
         private protected readonly NetObjectCache netCache;
 
@@ -296,7 +298,7 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         internal void CheckClear(ref State state)
         {
-            if (depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {depth}, type: {GetType().Name})");
+            if (depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.GetPosition()})");
             _needFlush = false; // because we ^^^ *JUST DID*
         }
 

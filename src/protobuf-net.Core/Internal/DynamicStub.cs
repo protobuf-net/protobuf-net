@@ -35,8 +35,8 @@ namespace ProtoBuf.Internal
             => Get(type).TryDeserialize(scope, model, ref state, ref value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TrySerialize(ObjectScope scope, Type type, TypeModel model, ref ProtoWriter.State state, object value)
-            => Get(type).TrySerialize(scope, model, ref state, value);
+        internal static bool TrySerializeAny(int fieldNumber, SerializerFeatures features, Type type, TypeModel model, ref ProtoWriter.State state, object value)
+            => Get(type).TrySerializeAny(fieldNumber, features, model, ref state, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeepClone(Type type, TypeModel model, ref object value)
@@ -131,7 +131,7 @@ namespace ProtoBuf.Internal
         protected abstract bool TryDeserialize(ObjectScope scope, TypeModel model, ref ProtoReader.State state, ref object value);
 
         protected abstract bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value);
-        protected abstract bool TrySerialize(ObjectScope scope, TypeModel model, ref ProtoWriter.State state, object value);
+        protected abstract bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value);
 
         protected abstract bool TryDeepClone(TypeModel model, ref object value);
 
@@ -150,7 +150,7 @@ namespace ProtoBuf.Internal
                 => false;
             protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)
                 => false;
-            protected override bool TrySerialize(ObjectScope scope, TypeModel model, ref ProtoWriter.State state, object value)
+            protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value)
                 => false;
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
@@ -241,26 +241,30 @@ namespace ProtoBuf.Internal
                 return true;
             }
 
-            protected override bool TrySerialize(ObjectScope scope, TypeModel model, ref ProtoWriter.State state, object value)
+            protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(model);
                 if (serializer == null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
                 T typed = TypeHelper<T>.FromObject(value);
-                switch(scope)
+                CheckAnyAuxFlow(features, serializer);
+                if ((features & SerializerFeatures.CategoryMessageWrappedAtRoot) == SerializerFeatures.CategoryMessageWrappedAtRoot)
                 {
-                    case ObjectScope.LikeRoot:
-                        state.WriteAsRoot<T>(typed, serializer);
-                        return true;
-                    case ObjectScope.Scalar:
-                    case ObjectScope.NakedMessage:
-                        serializer.Write(ref state, typed);
-                        return true;
-                    case ObjectScope.WrappedMessage:
-                        state.WriteMessage<T>(default, typed, serializer);
-                        return true;
-                    default:
-                        return false;
+                    if (fieldNumber != TypeModel.ListItemTag) ThrowHelper.ThrowInvalidOperationException($"Special root-like wrapping is limited to field {TypeModel.ListItemTag}");
+                    state.WriteAsRoot<T>(typed, serializer);
+                }
+                else
+                {
+                    state.WriteAny<T>(fieldNumber, features, typed, serializer);
+                }
+                return true;
+            }
+
+            static void CheckAnyAuxFlow(SerializerFeatures features, ISerializer<T> serializer)
+            {
+                if ((features & TypeModel.FromAux) != 0 && serializer.Features.GetCategory() == SerializerFeatures.CategoryMessageWrappedAtRoot)
+                {
+                    ThrowHelper.ThrowNotImplementedException($"Tell Marc: ambiguous category in an any/aux flow for {typeof(T).NormalizeName()}");
                 }
             }
 

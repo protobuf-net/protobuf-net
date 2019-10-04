@@ -99,6 +99,8 @@ namespace ProtoBuf.Meta
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
             && GetSerializer<T>() != null;
 
+        internal const SerializerFeatures FromAux = (SerializerFeatures)(1 << 30);
+
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
         /// The value is written as a complete field, including field-header and (for sub-objects) a
@@ -118,8 +120,8 @@ namespace ProtoBuf.Meta
                 var scope = NormalizeAuxScope(features, isInsideList, type);
                 try
                 {
-                    state.WriteFieldHeader(tag, wireType);
-                    Serialize(scope, ref state, type, value);
+                    if (!DynamicStub.TrySerializeAny(tag, wireType.AsFeatures() | FromAux, type, this, ref state, value))
+                        ThrowUnexpectedType(type);
                 }
                 catch(Exception ex)
                 {
@@ -613,7 +615,8 @@ namespace ProtoBuf.Meta
                 switch (style)
                 {
                     case PrefixStyle.None:
-                        Serialize(ObjectScope.LikeRoot, ref state, type, value);
+                        if (!DynamicStub.TrySerializeRoot(type, this, ref state, value))
+                            ThrowUnexpectedType(type);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
@@ -1163,21 +1166,6 @@ namespace ProtoBuf.Meta
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
            => model?.GetSerializer<T>() as ISubTypeSerializer<T>
             ?? NoSubTypeSerializer<T>(model);
-
-        /// <summary>
-        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
-        /// </summary>
-        /// <param name="type">Represents the type (including inheritance) to consider.</param>
-        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
-        /// <param name="state">Write state</param>
-        /// <param name="scope">The style of serialization to adopt</param>
-        internal void Serialize(ObjectScope scope, ref ProtoWriter.State state, Type type, object value)
-        {
-            if (!DynamicStub.TrySerialize(scope, type, this, ref state, value))
-            {
-                ThrowHelper.ThrowNotSupportedException($"{nameof(Serialize)} is not supported for {type.NormalizeName()} by {this}");
-            }
-        }
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).

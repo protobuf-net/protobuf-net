@@ -185,10 +185,8 @@ namespace ProtoBuf.unittest.Meta
             var writeState = ProtoWriter.State.Create(ms, null);
             try
             {
-                writeState.WriteFieldHeader(1, WireType.Varint);
-                Assert.True(DynamicStub.TrySerialize(ObjectScope.Scalar, typeof(EnumWithThings), null, ref writeState, EnumWithThings.HazThis));
-                writeState.WriteFieldHeader(2, WireType.Varint);
-                Assert.True(DynamicStub.TrySerialize(ObjectScope.Scalar, typeof(EnumWithThings?), null, ref writeState, EnumWithThings.HazThis));
+                Assert.True(DynamicStub.TrySerializeAny(1, WireType.Varint.AsFeatures(), typeof(EnumWithThings), null, ref writeState, EnumWithThings.HazThis));
+                Assert.True(DynamicStub.TrySerializeAny(2, WireType.Varint.AsFeatures(), typeof(EnumWithThings?), null, ref writeState, EnumWithThings.HazThis));
                 writeState.Close();
             }
             catch
