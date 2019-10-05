@@ -272,6 +272,17 @@ namespace ProtoBuf
                         foreach (var item in buffer.Span)
                             queue.Enqueue(item);
                         return queue;
+                    case IImmutableStack<T> iStack:
+                        if (clear) iStack = iStack.Clear();
+                        span = buffer.Span;
+                        for (int i = span.Length - 1; i >= 0; --i)
+                            iStack = iStack.Push(span[i]);
+                        return iStack;
+                    case IImmutableQueue<T> iQueue:
+                        if (clear) iQueue = iQueue.Clear();
+                        foreach (var item in buffer.Span)
+                            iQueue = iQueue.Enqueue(item);
+                        return iQueue;
                     case IList untyped when !untyped.IsFixedSize: // really scraping the barrel now
                         if (clear) untyped.Clear();
                         foreach (var item in buffer.Span)
