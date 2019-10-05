@@ -237,6 +237,8 @@ namespace ProtoBuf
             {
                 if (values is ImmutableArray<T> immArr) return ReadRepeated(features, immArr, serializer);
 
+                // exotics are fun; rather than lots of repetition, let's buffer the data locally *first*,
+                // then worry about what to do with it afterwards
                 using var buffer = FillBuffer<T>(features, serializer);
                 bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
 
@@ -256,7 +258,7 @@ namespace ProtoBuf
                 else if (values is IProducerConsumerCollection<T> concurrent)
                 {
                     if (values is ConcurrentStack<T> cstack)
-                    {    // special-case; need to invert
+                    {   // need to reverse
                         if (clear) cstack.Clear();
                         var segment = buffer.Segment;
                         Array.Reverse(segment.Array, segment.Offset, segment.Count);
@@ -270,7 +272,7 @@ namespace ProtoBuf
                     }
                 }
                 else if (values is Stack<T> stack)
-                {
+                {   // need to reverse
                     if (clear) stack.Clear();
                     var span = buffer.Span;
                     for (int i = span.Length - 1; i >= 0; --i)
@@ -283,14 +285,13 @@ namespace ProtoBuf
                         queue.Enqueue(item);
                 }
                 else if (values is IList untyped && !untyped.IsFixedSize)
-                {
-                    // really scraping the barrel now
+                {   // really scraping the barrel now
                     if (clear) untyped.Clear();
                     foreach (var item in buffer.Span)
                         untyped.Add(item);
                 }
                 else
-                {
+                {   // seriously, I **tried really hard**
                     ThrowNoAdd(values);
                 }
                 return values;
