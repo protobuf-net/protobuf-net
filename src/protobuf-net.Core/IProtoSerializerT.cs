@@ -77,14 +77,14 @@ namespace ProtoBuf
         OptionPackedDisabled = 1 << 7,
 
         /// <summary>
-        /// List-like values should *replace*, rather than append
+        /// List-like values should clear any existing contents before adding new
         /// </summary>
-        OptionOverwriteList = 1 << 8,
+        OptionClearCollection = 1 << 8,
 
         /// <summary>
-        /// Use dictionary Add rather than overwrite; this means that duplicate keys will cause failure
+        /// Maps should use dictionary Add rather than overwrite; this means that duplicate keys will cause failure
         /// </summary>
-        OptionMapFailOnDuplicate = 1 << 9,
+        OptionFailOnDuplicateKey = 1 << 9,
 
         /// <summary>
         /// Disable recursion checking

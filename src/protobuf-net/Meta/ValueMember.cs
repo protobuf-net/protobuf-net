@@ -405,8 +405,8 @@ namespace ProtoBuf.Meta
 
                     WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
-                    if (!IsMap) features |= SerializerFeatures.OptionMapFailOnDuplicate;
-                    if (OverwriteList) features |= SerializerFeatures.OptionOverwriteList;
+                    if (!IsMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
+                    if (OverwriteList) features |= SerializerFeatures.OptionClearCollection;
                     ser = MapDecorator.Create(concreteType ?? dictionaryType, keyType, valueType, FieldNumber, features,
                         keyWireType.AsFeatures(), valueWireType.AsFeatures());
                 }
@@ -439,7 +439,7 @@ namespace ProtoBuf.Meta
                             , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
-                        if (OverwriteList) listFeatures |= SerializerFeatures.OptionOverwriteList;
+                        if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
 #if FEAT_NULL_LIST_ITEMS
                         if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
 #endif

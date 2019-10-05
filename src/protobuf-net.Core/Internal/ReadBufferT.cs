@@ -79,7 +79,11 @@ namespace ProtoBuf.Internal
         public ArraySegment<T> Segment => new ArraySegment<T>(_arr, 0, _count);
         public Span<T> Span => new Span<T>(_arr, 0, _count);
 
-        public void Dispose() => Recyle(ref _arr);
+        public void Dispose()
+        {
+            _count = 0;
+            Recyle(ref _arr);
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void Grow()

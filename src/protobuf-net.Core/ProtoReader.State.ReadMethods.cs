@@ -190,7 +190,7 @@ namespace ProtoBuf
             {
                 return values switch
                 {
-                    null => ReadCollection<T>(features & ~SerializerFeatures.OptionOverwriteList, new List<T>(), serializer),
+                    null => ReadCollection<T>(features & ~SerializerFeatures.OptionClearCollection, new List<T>(), serializer),
                     T[] arr => ReadRepeated(features, arr, serializer),
                     ICollection<T> collection when !collection.IsReadOnly => ReadCollection<T>(features, collection, serializer),
                     _ => ReadRepeatedExotics<T>(features, values, serializer),
@@ -200,24 +200,23 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             private ICollection<T> ReadCollection<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer)
             {
-                if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
+                if ((features & SerializerFeatures.OptionClearCollection) != 0) values.Clear();
 
-                PrepareToReadRepeated(features, ref serializer, out var field, out var category, out var wireType, out var packed);
+                PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
+                var wireType = features.GetWireType();
                 if (packed) ReadPackedScalar<ICollection<T>, T>(ref values, wireType, serializer);
-                else ReadRepeatedCore<ICollection<T>, T>(field, ref values, category, wireType, serializer);
+                else ReadRepeatedCore<ICollection<T>, T>(ref values, category, wireType, serializer);
                 return values;
             }
 
             [MethodImpl(ProtoReader.HotPath)]
-            private void PrepareToReadRepeated<T>(SerializerFeatures features, ref ISerializer<T> serializer, out int field, out SerializerFeatures category, out WireType wireType, out bool packed)
+            private void PrepareToReadRepeated<T>(ref SerializerFeatures features, ref ISerializer<T> serializer, out SerializerFeatures category, out bool packed)
             {
-                field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 features.InheritFrom(serializerFeatures);
                 category = serializerFeatures.GetCategory();
-                wireType = features.GetWireType();
                 packed = false;
                 if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
@@ -237,8 +236,7 @@ namespace ProtoBuf
                 // then worry about what to do with it afterwards
                 using var buffer = FillBuffer<T>(features, serializer);
 
-
-                bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
+                bool clear = (features & SerializerFeatures.OptionClearCollection) != 0;
 
                 switch (values)
                 {
@@ -312,9 +310,10 @@ namespace ProtoBuf
             }
 
             [MethodImpl(ProtoReader.HotPath)]
-            private void ReadRepeatedCore<TList, T>(int field, ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+            private void ReadRepeatedCore<TList, T>(ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
                 where TList : ICollection<T>
             {
+                int field = FieldNumber;
                 do
                 {
                     T element;
@@ -389,12 +388,13 @@ namespace ProtoBuf
 
             private ReadBuffer<T> FillBuffer<T>(SerializerFeatures features, ISerializer<T> serializer)
             {
-                PrepareToReadRepeated(features, ref serializer, out var field, out var category, out var wireType, out var packed);
+                PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
                 var buffer = ReadBuffer<T>.Create();
                 try
                 {
+                    var wireType = features.GetWireType();
                     if (packed) ReadPackedScalar<ReadBuffer<T>, T>(ref buffer, wireType, serializer);
-                    else ReadRepeatedCore<ReadBuffer<T>, T>(field, ref buffer, category, wireType, serializer);
+                    else ReadRepeatedCore<ReadBuffer<T>, T>(ref buffer, category, wireType, serializer);
                     return buffer;
                 }
                 catch
@@ -412,7 +412,7 @@ namespace ProtoBuf
                 using var newValues = FillBuffer<T>(features, serializer);
 
                 // nothing to prepend, or we don't *want* to prepend it
-                if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionOverwriteList) != 0)
+                if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionClearCollection) != 0)
                     values = ImmutableArray<T>.Empty;
 
                 if (!newValues.IsEmpty) // new data
@@ -436,7 +436,7 @@ namespace ProtoBuf
 
                 using var newValues = FillBuffer<T>(features, serializer);
 
-                if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
+                if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionClearCollection) != 0)
                 {
                     // nothing to prepend, or we don't *want* to prepend it
                     values = newValues.ToArray();
@@ -493,7 +493,7 @@ namespace ProtoBuf
 
                 return values switch
                 {
-                    null => ReadMapCore(features & ~SerializerFeatures.OptionOverwriteList, new Dictionary<TKey, TValue>(), pairSerializer),
+                    null => ReadMapCore(features & ~SerializerFeatures.OptionClearCollection, new Dictionary<TKey, TValue>(), pairSerializer),
                     IDictionary<TKey, TValue> mutable when !mutable.IsReadOnly => ReadMapCore(features, mutable, pairSerializer),
                     IImmutableDictionary<TKey, TValue> immutable => ReadMapCore(features, immutable, pairSerializer),
                     _ => ReadRepeated(features, values, pairSerializer),
@@ -503,25 +503,34 @@ namespace ProtoBuf
             private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features,
                 IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
             {
-                if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                if ((features & SerializerFeatures.OptionClearCollection) != 0)
                     values = values.Clear();
 
                 // buffer the data (like we would with an array *anyway*), so we can
                 // minimize the number of mutable operations
-                using var buffer = FillBuffer<KeyValuePair<TKey, TValue>>(features, pairSerializer);
-                if (buffer.IsEmpty) return values;
+                var buffer = ReadBuffer<KeyValuePair<TKey, TValue>>.Create();
+                try
+                {
+                    ReadRepeatedCore(ref buffer, pairSerializer.Features.GetCategory(),
+                        features.GetWireType(), pairSerializer); // note: can't be "packed"
+                    if (buffer.IsEmpty) return values;
 
-                return (features & SerializerFeatures.OptionMapFailOnDuplicate) == 0
-                    ? values.SetItems(buffer) : values.AddRange(buffer);
+                    return (features & SerializerFeatures.OptionFailOnDuplicateKey) == 0
+                        ? values.SetItems(buffer) : values.AddRange(buffer);
+                }
+                finally
+                {
+                    buffer.Dispose();
+                }
             }
 
             private IDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features, IDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
             {
-                if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                if ((features & SerializerFeatures.OptionClearCollection) != 0)
                     values.Clear();
 
                 int field = FieldNumber;
-                bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
+                bool useAdd = (features & SerializerFeatures.OptionFailOnDuplicateKey) != 0;
                 do
                 {
                     var item = ReadMessage(default, default, pairSerializer);

@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
         }
 
         public Type ExpectedType => typeof(T[]);
-        public bool RequiresOldValue => (_features & SerializerFeatures.OptionOverwriteList) == 0;
+        public bool RequiresOldValue => (_features & SerializerFeatures.OptionClearCollection) == 0;
         public bool ReturnsValue { get { return true; } }
 
         public void Write(ref ProtoWriter.State state, object value)

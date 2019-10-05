@@ -111,7 +111,7 @@ namespace ProtoBuf.Meta
                 }
 
                 // some features should only be specified by the caller
-                const SerializerFeatures InvalidFeatures = SerializerFeatures.OptionOverwriteList | SerializerFeatures.OptionPackedDisabled;
+                const SerializerFeatures InvalidFeatures = SerializerFeatures.OptionClearCollection | SerializerFeatures.OptionPackedDisabled;
                 if ((features & InvalidFeatures) != 0) ThrowInvalidSerializer(serializer, $"serializers should not specify {InvalidFeatures}");
 
                 return serializer;
