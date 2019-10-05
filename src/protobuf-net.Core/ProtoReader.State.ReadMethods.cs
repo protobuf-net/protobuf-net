@@ -236,7 +236,7 @@ namespace ProtoBuf
                 // exotics are fun; rather than lots of repetition, let's buffer the data locally *first*,
                 // then worry about what to do with it afterwards
                 using var buffer = FillBuffer<T>(features, serializer);
-                if (buffer.Count == 0) return values;
+
 
                 bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
 
@@ -244,10 +244,10 @@ namespace ProtoBuf
                 {
                     case IImmutableList<T> iList:
                         if (clear) iList = iList.Clear();
-                        return iList.AddRange(buffer);
+                        return buffer.IsEmpty ? iList : iList.AddRange(buffer);
                     case IImmutableSet<T> iSet:
                         if (clear) iSet = iSet.Clear();
-                        return iSet.Union(buffer);
+                        return buffer.IsEmpty ? iSet : iSet.Union(buffer);
                     case ConcurrentStack<T> cstack: // need to reverse
                         // note this is a special-case of IProducerConsumerCollection<T>,
                         // so needs to come first
@@ -415,7 +415,7 @@ namespace ProtoBuf
                 if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionOverwriteList) != 0)
                     values = ImmutableArray<T>.Empty;
 
-                if (newValues.Count != 0) // new data
+                if (!newValues.IsEmpty) // new data
                     values = values.AddRange(newValues);
 
                 return values;
@@ -441,7 +441,7 @@ namespace ProtoBuf
                     // nothing to prepend, or we don't *want* to prepend it
                     values = newValues.ToArray();
                 }
-                else if (newValues.Count == 0)
+                else if (newValues.IsEmpty)
                 {
                     // nothing new to append; just return the input
 
@@ -509,7 +509,7 @@ namespace ProtoBuf
                 // buffer the data (like we would with an array *anyway*), so we can
                 // minimize the number of mutable operations
                 using var buffer = FillBuffer<KeyValuePair<TKey, TValue>>(features, pairSerializer);
-                if (buffer.Count == 0) return values;
+                if (buffer.IsEmpty) return values;
 
                 return (features & SerializerFeatures.OptionMapFailOnDuplicate) == 0
                     ? values.SetItems(buffer) : values.AddRange(buffer);

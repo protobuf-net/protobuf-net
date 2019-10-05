@@ -79,7 +79,7 @@ message EnumWrapper {
         public void TestEnumerableStandard()
         {
             EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
-            EnumParentStandardWrapper clone = Serializer.DeepClone(obj);
+            _ = Serializer.DeepClone(obj); // EnumParentStandardWrapper clone  =
 
             // old: the source object should have been read twice
             // old: once to get the length-prefix, and once for the data

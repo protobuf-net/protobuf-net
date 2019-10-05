@@ -9,12 +9,15 @@ namespace ProtoBuf.Internal
 {
 
     // kinda like List<T>, but with some array-pool love
-    internal struct ReadBuffer<T> : IDisposable, ICollection<T>
+    internal struct ReadBuffer<T> : IDisposable, ICollection<T>, IReadOnlyCollection<T>, ICollection
     {
         public void Clear() => _count = 0;
         bool ICollection<T>.IsReadOnly => false;
         public void CopyTo(T[] array, int arrayIndex = 0)
             => Array.Copy(_arr, 0, array, arrayIndex, _count);
+
+        void ICollection.CopyTo(Array array, int index)
+            => Array.Copy(_arr, 0, array, index, _count);
 
         public T[] ToArray()
         {
@@ -43,6 +46,9 @@ namespace ProtoBuf.Internal
         private T[] _arr;
         private int _count;
 
+        bool ICollection.IsSynchronized => false;
+        object ICollection.SyncRoot => _arr;
+
         private ReadBuffer(int minimumLength)
         {
             _arr = ArrayPool<T>.Shared.Rent(minimumLength);
@@ -65,6 +71,8 @@ namespace ProtoBuf.Internal
                 array = null;
             }
         }
+
+        public bool IsEmpty => _count == 0;
 
         public int Count => _count;
 
