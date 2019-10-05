@@ -4,13 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace ProtoBuf.Internal
 {
 
     // kinda like List<T>, but with some array-pool love
-    internal sealed class ReadBuffer<T> : IDisposable, ICollection<T>
+    internal struct ReadBuffer<T> : IDisposable, ICollection<T>
     {
         public void Clear() => _count = 0;
         bool ICollection<T>.IsReadOnly => false;
@@ -44,11 +43,14 @@ namespace ProtoBuf.Internal
         private T[] _arr;
         private int _count;
 
-        public ReadBuffer(int minimumLength = 16)
+        private ReadBuffer(int minimumLength)
         {
             _arr = ArrayPool<T>.Shared.Rent(minimumLength);
             _count = 0;
         }
+        [MethodImpl(ProtoReader.HotPath)]
+        public static ReadBuffer<T> Create(int minimumLength = 16)
+            => new ReadBuffer<T>(minimumLength);
 
         private static void Recyle(ref T[] array)
         {

@@ -187,18 +187,40 @@ namespace ProtoBuf
             /// </summary>
             public IEnumerable<T> ReadRepeated<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
-                var field = FieldNumber;
+                if (values is T[] arr) return ReadRepeated(features, arr, serializer);
+
+                // var origRef = values;
+                values ??= new List<T>();
+                
+                if (values is ICollection<T> collection && !collection.IsReadOnly)
+                {
+                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                        collection.Clear();
+
+                    PrepareToReadRepeated(features, ref serializer, out var field, out var category, out var wireType, out var packed);
+                    if (packed) ReadPackedScalar<ICollection<T>, T>(ref collection, wireType, serializer);
+                    else ReadRepeatedCore<ICollection<T>, T>(field, ref collection, category, wireType, serializer);
+                }
+                else
+                {
+                    values = ReadRepeatedExotics<T>(features, values, serializer);
+                }
+
+                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
+                //    ? null : values;
+                return values;
+            }
+
+            private void PrepareToReadRepeated<T>(SerializerFeatures features, ref ISerializer<T> serializer, out int field, out SerializerFeatures category, out WireType wireType, out bool packed)
+            {
+                field = FieldNumber;
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
                 features.InheritFrom(serializerFeatures);
-                var category = serializerFeatures.GetCategory();
-                var wireType = features.GetWireType();
-
-                // var origRef = values;
-                values ??= new List<T>();
-
-                bool packed = false;
+                category = serializerFeatures.GetCategory();
+                wireType = features.GetWireType();
+                packed = false;
                 if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
                 {
                     // the wire type should never by "string" for a type that *can* be
@@ -208,33 +230,15 @@ namespace ProtoBuf
 
                     packed = true;
                 }
-
-                if (values is ICollection<T> collection && !collection.IsReadOnly)
-                {
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        collection.Clear();
-
-                    if (packed) ReadPackedScalar(collection, wireType, serializer);
-                    else ReadRepeatedCore(field, collection, category, wireType, serializer);
-                }
-                else
-                {
-                    values = ReadRepeatedExotics<T>((features & SerializerFeatures.OptionOverwriteList) != 0,
-                        packed, field, wireType, category, values, serializer);
-                }
-
-                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                //    ? null : values;
-                return values;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            private IEnumerable<T> ReadRepeatedExotics<T>(bool clear, bool packed, int field,
-                WireType wireType, SerializerFeatures category, IEnumerable<T> values, ISerializer<T> serializer)
+            private IEnumerable<T> ReadRepeatedExotics<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer)
             {
-                using var buffer = new ReadBuffer<T>(); // read into a buffer, just like we would with arrays
-                if (packed) ReadPackedScalar(buffer, wireType, serializer);
-                else ReadRepeatedCore(field, buffer, category, wireType, serializer);
+                if (values is ImmutableArray<T> immArr) return ReadRepeated(features, immArr, serializer);
+
+                using var buffer = FillBuffer<T>(features, serializer);
+                bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
 
                 if (values is IImmutableList<T> iList)
                 {
@@ -245,7 +249,7 @@ namespace ProtoBuf
                 else if (values is IImmutableSet<T> iSet)
                 {
                     if (clear) iSet = iSet.Clear();
-                    foreach(var item in buffer.Span)
+                    foreach (var item in buffer.Span)
                         iSet = iSet.Add(item);
                     values = iSet;
                 }
@@ -309,7 +313,8 @@ namespace ProtoBuf
                 ThrowHelper.ThrowNotSupportedException($"No suitable collection Add API located (or the list is read-only) for {values}");
             }
 
-            private void ReadRepeatedCore<T>(int field, ICollection<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+            private void ReadRepeatedCore<TList, T>(int field, ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+                where TList : ICollection<T>
             {
                 do
                 {
@@ -333,57 +338,8 @@ namespace ProtoBuf
                 } while (TryReadFieldHeader(field));
             }
 
-            private IImmutableList<T> ReadRepeatedCore<T>(int field, IImmutableList<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
-            {
-                do
-                {
-                    T element;
-                    switch (category)
-                    {
-                        case SerializerFeatures.CategoryScalar:
-                            Hint(wireType);
-                            element = serializer.Read(ref this, default);
-                            break;
-                        case SerializerFeatures.CategoryMessage:
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                            element = ReadMessage<T>(default, default, serializer);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            element = default;
-                            break;
-                    }
-                    values = values.Add(element);
-                } while (TryReadFieldHeader(field));
-                return values;
-            }
-
-            private IImmutableSet<T> ReadRepeatedCore<T>(int field, IImmutableSet<T> values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
-            {
-                do
-                {
-                    T element;
-                    switch (category)
-                    {
-                        case SerializerFeatures.CategoryScalar:
-                            Hint(wireType);
-                            element = serializer.Read(ref this, default);
-                            break;
-                        case SerializerFeatures.CategoryMessage:
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                            element = ReadMessage<T>(default, default, serializer);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            element = default;
-                            break;
-                    }
-                    values = values.Add(element);
-                } while (TryReadFieldHeader(field));
-                return values;
-            }
-
-            private void ReadPackedScalar<T>(ICollection<T> list, WireType wireType, ISerializer<T> serializer)
+            private void ReadPackedScalar<TList, T>(ref TList list, WireType wireType, ISerializer<T> serializer)
+                where TList : ICollection<T>
             {
                 var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
                 if (bytes == 0) return;
@@ -431,18 +387,34 @@ namespace ProtoBuf
             public ImmutableArray<T> ReadRepeated<T>(ImmutableArray<T> values)
                 => ReadRepeated(default, values, default);
 
+            private ReadBuffer<T> FillBuffer<T>(SerializerFeatures features, ISerializer<T> serializer)
+            {
+                PrepareToReadRepeated(features, ref serializer, out var field, out var category, out var wireType, out var packed);
+                var buffer = ReadBuffer<T>.Create();
+                try
+                {
+                    if (packed) ReadPackedScalar<ReadBuffer<T>, T>(ref buffer, wireType, serializer);
+                    else ReadRepeatedCore<ReadBuffer<T>, T>(field, ref buffer, category, wireType, serializer);
+                    return buffer;
+                }
+                catch
+                {
+                    try { buffer.Dispose(); } catch { }
+                    throw;
+                }
+            }
+
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
             public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
             {
-                using var newValues = new ReadBuffer<T>();
-                ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
+                using var newValues = FillBuffer<T>(features, serializer);
 
                 // nothing to prepend, or we don't *want* to prepend it
                 if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionOverwriteList) != 0)
                     values = ImmutableArray<T>.Empty;
-                
+
                 if (newValues.Count != 0) // new data
                     values = values.AddRange(newValues);
 
@@ -462,8 +434,7 @@ namespace ProtoBuf
             {
                 // T[] origRef = values;
 
-                using var newValues = new ReadBuffer<T>();
-                ReadRepeated(features & ~SerializerFeatures.OptionOverwriteList, newValues, serializer);
+                using var newValues = FillBuffer<T>(features, serializer);
 
                 if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionOverwriteList) != 0)
                 {
@@ -473,7 +444,7 @@ namespace ProtoBuf
                 else if (newValues.Count == 0)
                 {
                     // nothing new to append; just return the input
-                    
+
                     values ??= Array.Empty<T>();
                 }
                 else
