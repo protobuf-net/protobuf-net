@@ -188,17 +188,13 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             public IEnumerable<T> ReadRepeated<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
-                switch (values)
+                return values switch
                 {
-                    case null:
-                        return ReadCollection<T>(features & ~SerializerFeatures.OptionOverwriteList, new List<T>(), serializer);
-                    case T[] arr:
-                        return ReadRepeated(features, arr, serializer);
-                    case ICollection<T> collection when !collection.IsReadOnly:
-                        return ReadCollection<T>(features, collection, serializer);
-                    default:
-                        return ReadRepeatedExotics<T>(features, values, serializer);
-                }
+                    null => ReadCollection<T>(features & ~SerializerFeatures.OptionOverwriteList, new List<T>(), serializer),
+                    T[] arr => ReadRepeated(features, arr, serializer),
+                    ICollection<T> collection when !collection.IsReadOnly => ReadCollection<T>(features, collection, serializer),
+                    _ => ReadRepeatedExotics<T>(features, values, serializer),
+                };
             }
 
             [MethodImpl(ProtoReader.HotPath)]
@@ -248,15 +244,12 @@ namespace ProtoBuf
                 {
                     case IImmutableList<T> iList:
                         if (clear) iList = iList.Clear();
-                        iList = iList.AddRange(buffer);
-                        values = iList;
-                        break;
+                        return iList.AddRange(buffer);
                     case IImmutableSet<T> iSet:
                         if (clear) iSet = iSet.Clear();
                         foreach (var item in buffer.Span)
                             iSet = iSet.Add(item);
-                        values = iSet;
-                        break;
+                        return iSet;
                     case ConcurrentStack<T> cstack: // need to reverse
                         // note this is a special-case of IProducerConsumerCollection<T>,
                         // so needs to come first
@@ -264,33 +257,32 @@ namespace ProtoBuf
                         var segment = buffer.Segment;
                         Array.Reverse(segment.Array, segment.Offset, segment.Count);
                         cstack.PushRange(segment.Array, segment.Offset, segment.Count);
-                        break;
+                        return cstack;
                     case IProducerConsumerCollection<T> concurrent:
                         if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
                         foreach (var item in buffer.Span)
                             if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
-                        break;
+                        return concurrent;
                     case Stack<T> stack: // need to reverse
                         if (clear) stack.Clear();
                         var span = buffer.Span;
                         for (int i = span.Length - 1; i >= 0; --i)
                             stack.Push(span[i]);
-                        break;
+                        return stack;
                     case Queue<T> queue:
                         if (clear) queue.Clear();
                         foreach (var item in buffer.Span)
                             queue.Enqueue(item);
-                        break;
+                        return queue;
                     case IList untyped when !untyped.IsFixedSize: // really scraping the barrel now
                         if (clear) untyped.Clear();
                         foreach (var item in buffer.Span)
                             untyped.Add(item);
-                        break;
+                        return values;
                     default: // seriously, I **tried really hard**
                         ThrowNoAdd(values);
-                        break;
+                        return default;
                 }
-                return values;
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
