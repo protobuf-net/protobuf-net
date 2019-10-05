@@ -214,6 +214,40 @@ message HazAliasedEnum {
             Assert.Equal("def", val);
         }
 
+        [ProtoContract]
+        public class HazMapString
+        {
+            [ProtoMember(3), ProtoMap]
+            public IDictionary<string, string> Lookup { get; } = new Dictionary<string, string>();
+        }
+
+        [Fact]
+        public void MapEmptyStringsRoundtrip()
+        {
+            var original = new HazMapString
+            {
+                Lookup =
+                {
+                    {"","" },
+                }
+            };
+            var clone = Serializer.DeepClone(original);
+            Assert.NotSame(original, clone);
+            var item = Assert.Single(clone.Lookup);
+            Assert.Equal("", item.Key);
+            Assert.Equal("", item.Value);
+        }
+
+        [Fact]
+        public void MapOmittedStringsDeserialize()
+        {   // v2 didn't serialize them
+            using var ms = new MemoryStream(new byte[] {0x1A, 0x00 }); // field 3, length prefix, zero bytes
+            var clone = Serializer.Deserialize<HazMapString>(ms);
+            var item = Assert.Single(clone.Lookup);
+            Assert.Equal("", item.Key);
+            Assert.Equal("", item.Value);
+        }
+
         [Fact]
         public void RoundTripBasic()
         {
@@ -249,9 +283,7 @@ message HazAliasedEnum {
                 ms.SetLength(0);
                 Serializer.Serialize(ms, data);
                 var actualHex = BitConverter.ToString(ms.ToArray());
-
                 Assert.Equal(expectedHex, actualHex);
-
             }
 
             Assert.True(RuntimeTypeModel.Default[typeof(HazMap)][3].IsMap);
@@ -293,7 +325,7 @@ message HazAliasedEnum {
             model.DeepClone(obj);
 
             var list = new List<int> { 1, 2, 3 };
-            var list2 = (List<int>) model.DeepClone(list);
+            var list2 = (List<int>)model.DeepClone(list);
             Assert.Equal("1,2,3", string.Join(",", list2));
         }
 

@@ -242,6 +242,8 @@ namespace ProtoBuf.Internal
 
         public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
+        public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
+
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]
         public static T FromObject(object value) => value == null ? default : (T)value;

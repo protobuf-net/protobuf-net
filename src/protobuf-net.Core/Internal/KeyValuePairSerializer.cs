@@ -5,6 +5,11 @@ namespace ProtoBuf.Internal
 {
     internal sealed class KeyValuePairSerializer<TKey, TValue> : ISerializer<KeyValuePair<TKey, TValue>>
     {
+        // this is used to prevent problems deserializing maps that omit the bytes for an empty string key/value
+        internal static readonly KeyValuePair<TKey, TValue> Default = new KeyValuePair<TKey, TValue>(
+            TypeHelper<TKey>.Default, TypeHelper<TValue>.Default
+        );
+
         public SerializerFeatures Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 
         private KeyValuePairSerializer(

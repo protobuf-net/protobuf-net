@@ -205,7 +205,7 @@ namespace ProtoBuf
                 PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
                 var wireType = features.GetWireType();
                 if (packed) ReadPackedScalar<ICollection<T>, T>(ref values, wireType, serializer);
-                else ReadRepeatedCore<ICollection<T>, T>(ref values, category, wireType, serializer);
+                else ReadRepeatedCore<ICollection<T>, T>(ref values, category, wireType, serializer, TypeHelper<T>.Default);
                 return values;
             }
 
@@ -310,7 +310,8 @@ namespace ProtoBuf
             }
 
             [MethodImpl(ProtoReader.HotPath)]
-            private void ReadRepeatedCore<TList, T>(ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
+            private void ReadRepeatedCore<TList, T>(ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer,
+                T initialValue)
                 where TList : ICollection<T>
             {
                 int field = FieldNumber;
@@ -321,11 +322,11 @@ namespace ProtoBuf
                     {
                         case SerializerFeatures.CategoryScalar:
                             Hint(wireType);
-                            element = serializer.Read(ref this, default);
+                            element = serializer.Read(ref this, initialValue);
                             break;
                         case SerializerFeatures.CategoryMessage:
                         case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                            element = ReadMessage<T>(default, default, serializer);
+                            element = ReadMessage<T>(default, initialValue, serializer);
                             break;
                         default:
                             category.ThrowInvalidCategory();
@@ -394,7 +395,7 @@ namespace ProtoBuf
                 {
                     var wireType = features.GetWireType();
                     if (packed) ReadPackedScalar<ReadBuffer<T>, T>(ref buffer, wireType, serializer);
-                    else ReadRepeatedCore<ReadBuffer<T>, T>(ref buffer, category, wireType, serializer);
+                    else ReadRepeatedCore<ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, TypeHelper<T>.Default);
                     return buffer;
                 }
                 catch
@@ -512,7 +513,7 @@ namespace ProtoBuf
                 try
                 {
                     ReadRepeatedCore(ref buffer, pairSerializer.Features.GetCategory(),
-                        features.GetWireType(), pairSerializer); // note: can't be "packed"
+                        features.GetWireType(), pairSerializer, KeyValuePairSerializer<TKey, TValue>.Default); // note: can't be "packed"
                     if (buffer.IsEmpty) return values;
 
                     return (features & SerializerFeatures.OptionFailOnDuplicateKey) == 0
@@ -533,7 +534,7 @@ namespace ProtoBuf
                 bool useAdd = (features & SerializerFeatures.OptionFailOnDuplicateKey) != 0;
                 do
                 {
-                    var item = ReadMessage(default, default, pairSerializer);
+                    var item = ReadMessage(default, KeyValuePairSerializer<TKey, TValue>.Default, pairSerializer);
                     if (useAdd) values.Add(item.Key, item.Value);
                     else values[item.Key] = item.Value;
                 } while (TryReadFieldHeader(field));
