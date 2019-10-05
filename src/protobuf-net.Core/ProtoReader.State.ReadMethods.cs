@@ -233,11 +233,11 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             private IEnumerable<T> ReadRepeatedExotics<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer)
             {
-                if (values is ImmutableArray<T> immArr) return ReadRepeated(features, immArr, serializer);
-
                 // exotics are fun; rather than lots of repetition, let's buffer the data locally *first*,
                 // then worry about what to do with it afterwards
                 using var buffer = FillBuffer<T>(features, serializer);
+                if (buffer.Count == 0) return values;
+
                 bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
 
                 switch (values)
@@ -247,9 +247,7 @@ namespace ProtoBuf
                         return iList.AddRange(buffer);
                     case IImmutableSet<T> iSet:
                         if (clear) iSet = iSet.Clear();
-                        foreach (var item in buffer.Span)
-                            iSet = iSet.Add(item);
-                        return iSet;
+                        return iSet.Union(buffer);
                     case ConcurrentStack<T> cstack: // need to reverse
                         // note this is a special-case of IProducerConsumerCollection<T>,
                         // so needs to come first
@@ -482,52 +480,45 @@ namespace ProtoBuf
                 var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
                 features.InheritFrom(pairSerializer.Features);
 
+                return values switch
+                {
+                    null => ReadMapCore(features & ~SerializerFeatures.OptionOverwriteList, new Dictionary<TKey, TValue>(), pairSerializer),
+                    IDictionary<TKey, TValue> mutable when !mutable.IsReadOnly => ReadMapCore(features, mutable, pairSerializer),
+                    IImmutableDictionary<TKey, TValue> immutable => ReadMapCore(features, immutable, pairSerializer),
+                    _ => ReadRepeated(features, values, pairSerializer),
+                };
+            }
+
+            private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features,
+                IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            {
+                if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                    values = values.Clear();
+
+                // buffer the data (like we would with an array *anyway*), so we can
+                // minimize the number of mutable operations
+                using var buffer = FillBuffer<KeyValuePair<TKey, TValue>>(features, pairSerializer);
+                if (buffer.Count == 0) return values;
+
+                return (features & SerializerFeatures.OptionMapFailOnDuplicate) == 0
+                    ? values.SetItems(buffer) : values.AddRange(buffer);
+            }
+
+            private IDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features, IDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            {
+                if ((features & SerializerFeatures.OptionOverwriteList) != 0)
+                    values.Clear();
+
+                int field = FieldNumber;
                 bool useAdd = (features & SerializerFeatures.OptionMapFailOnDuplicate) != 0;
-
-                // var origRef = values;
-                values ??= new Dictionary<TKey, TValue>();
-
-                if (values is IImmutableDictionary<TKey, TValue> immutable)
-                {
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        immutable = immutable.Clear();
-                    values = ReadMapCore(FieldNumber, useAdd, immutable, pairSerializer);
-                }
-                else if (values is IDictionary<TKey, TValue> dict)
-                {
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        dict.Clear();
-                    ReadMapCore(FieldNumber, useAdd, dict, pairSerializer);
-                }
-                else
-                {   // it could be something like a List<KeyValuePair<int, string>> ?
-                    // note that in this case, SerializerFeatures.OptionMapFailOnDuplicate will have no effect
-                    values = ReadRepeated(features /* & ~SerializerFeatures.OptionReturnNothingWhenUnchanged*/, values, pairSerializer);
-                }
-                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                //    ? null : values;
-                return values;
-            }
-
-            private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(int field, bool useAdd, IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
-            {
-                do
-                {
-                    var item = ReadMessage(default, default, pairSerializer);
-                    if (useAdd) values = values.Add(item.Key, item.Value);
-                    else values = values.SetItem(item.Key, item.Value);
-                } while (TryReadFieldHeader(field));
-                return values;
-            }
-
-            private void ReadMapCore<TKey, TValue>(int field, bool useAdd, IDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
-            {
                 do
                 {
                     var item = ReadMessage(default, default, pairSerializer);
                     if (useAdd) values.Add(item.Key, item.Value);
                     else values[item.Key] = item.Value;
                 } while (TryReadFieldHeader(field));
+
+                return values;
             }
 
             /// <summary>
