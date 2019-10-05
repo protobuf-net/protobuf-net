@@ -272,7 +272,7 @@ namespace ProtoBuf
                         foreach (var item in buffer.Span)
                             queue.Enqueue(item);
                         return queue;
-                    case IImmutableStack<T> iStack:
+                    case IImmutableStack<T> iStack: // need to reverse
                         if (clear) iStack = iStack.Clear();
                         span = buffer.Span;
                         for (int i = span.Length - 1; i >= 0; --i)
