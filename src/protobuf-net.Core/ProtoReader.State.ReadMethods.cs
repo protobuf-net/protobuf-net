@@ -240,7 +240,7 @@ namespace ProtoBuf
                 using var buffer = FillBuffer<T>(features, serializer);
                 bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
 
-                switch( values)
+                switch (values)
                 {
                     case IImmutableList<T> iList:
                         if (clear) iList = iList.Clear();
