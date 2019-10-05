@@ -185,32 +185,34 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a sequence of values or sub-items from the input reader
             /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
             public IEnumerable<T> ReadRepeated<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
             {
-                if (values is T[] arr) return ReadRepeated(features, arr, serializer);
-
-                // var origRef = values;
-                values ??= new List<T>();
-                
-                if (values is ICollection<T> collection && !collection.IsReadOnly)
+                switch (values)
                 {
-                    if ((features & SerializerFeatures.OptionOverwriteList) != 0)
-                        collection.Clear();
-
-                    PrepareToReadRepeated(features, ref serializer, out var field, out var category, out var wireType, out var packed);
-                    if (packed) ReadPackedScalar<ICollection<T>, T>(ref collection, wireType, serializer);
-                    else ReadRepeatedCore<ICollection<T>, T>(field, ref collection, category, wireType, serializer);
+                    case null:
+                        return ReadCollection<T>(features & ~SerializerFeatures.OptionOverwriteList, new List<T>(), serializer);
+                    case T[] arr:
+                        return ReadRepeated(features, arr, serializer);
+                    case ICollection<T> collection when !collection.IsReadOnly:
+                        return ReadCollection<T>(features, collection, serializer);
+                    default:
+                        return ReadRepeatedExotics<T>(features, values, serializer);
                 }
-                else
-                {
-                    values = ReadRepeatedExotics<T>(features, values, serializer);
-                }
+            }
 
-                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                //    ? null : values;
+            [MethodImpl(ProtoReader.HotPath)]
+            private ICollection<T> ReadCollection<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer)
+            {
+                if ((features & SerializerFeatures.OptionOverwriteList) != 0) values.Clear();
+
+                PrepareToReadRepeated(features, ref serializer, out var field, out var category, out var wireType, out var packed);
+                if (packed) ReadPackedScalar<ICollection<T>, T>(ref values, wireType, serializer);
+                else ReadRepeatedCore<ICollection<T>, T>(field, ref values, category, wireType, serializer);
                 return values;
             }
 
+            [MethodImpl(ProtoReader.HotPath)]
             private void PrepareToReadRepeated<T>(SerializerFeatures features, ref ISerializer<T> serializer, out int field, out SerializerFeatures category, out WireType wireType, out bool packed)
             {
                 field = FieldNumber;
@@ -242,57 +244,51 @@ namespace ProtoBuf
                 using var buffer = FillBuffer<T>(features, serializer);
                 bool clear = (features & SerializerFeatures.OptionOverwriteList) != 0;
 
-                if (values is IImmutableList<T> iList)
+                switch( values)
                 {
-                    if (clear) iList = iList.Clear();
-                    iList = iList.AddRange(buffer);
-                    values = iList;
-                }
-                else if (values is IImmutableSet<T> iSet)
-                {
-                    if (clear) iSet = iSet.Clear();
-                    foreach (var item in buffer.Span)
-                        iSet = iSet.Add(item);
-                    values = iSet;
-                }
-                else if (values is IProducerConsumerCollection<T> concurrent)
-                {
-                    if (values is ConcurrentStack<T> cstack)
-                    {   // need to reverse
+                    case IImmutableList<T> iList:
+                        if (clear) iList = iList.Clear();
+                        iList = iList.AddRange(buffer);
+                        values = iList;
+                        break;
+                    case IImmutableSet<T> iSet:
+                        if (clear) iSet = iSet.Clear();
+                        foreach (var item in buffer.Span)
+                            iSet = iSet.Add(item);
+                        values = iSet;
+                        break;
+                    case ConcurrentStack<T> cstack: // need to reverse
+                        // note this is a special-case of IProducerConsumerCollection<T>,
+                        // so needs to come first
                         if (clear) cstack.Clear();
                         var segment = buffer.Segment;
                         Array.Reverse(segment.Array, segment.Offset, segment.Count);
                         cstack.PushRange(segment.Array, segment.Offset, segment.Count);
-                    }
-                    else
-                    {
+                        break;
+                    case IProducerConsumerCollection<T> concurrent:
                         if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
                         foreach (var item in buffer.Span)
                             if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
-                    }
-                }
-                else if (values is Stack<T> stack)
-                {   // need to reverse
-                    if (clear) stack.Clear();
-                    var span = buffer.Span;
-                    for (int i = span.Length - 1; i >= 0; --i)
-                        stack.Push(span[i]);
-                }
-                else if (!TypeHelper<T>.IsReferenceType && values is Queue<T> queue)
-                {   // only worth doing this if it will save a box
-                    if (clear) queue.Clear();
-                    foreach (var item in buffer.Span)
-                        queue.Enqueue(item);
-                }
-                else if (values is IList untyped && !untyped.IsFixedSize)
-                {   // really scraping the barrel now
-                    if (clear) untyped.Clear();
-                    foreach (var item in buffer.Span)
-                        untyped.Add(item);
-                }
-                else
-                {   // seriously, I **tried really hard**
-                    ThrowNoAdd(values);
+                        break;
+                    case Stack<T> stack: // need to reverse
+                        if (clear) stack.Clear();
+                        var span = buffer.Span;
+                        for (int i = span.Length - 1; i >= 0; --i)
+                            stack.Push(span[i]);
+                        break;
+                    case Queue<T> queue:
+                        if (clear) queue.Clear();
+                        foreach (var item in buffer.Span)
+                            queue.Enqueue(item);
+                        break;
+                    case IList untyped when !untyped.IsFixedSize: // really scraping the barrel now
+                        if (clear) untyped.Clear();
+                        foreach (var item in buffer.Span)
+                            untyped.Add(item);
+                        break;
+                    default: // seriously, I **tried really hard**
+                        ThrowNoAdd(values);
+                        break;
                 }
                 return values;
             }
@@ -314,6 +310,7 @@ namespace ProtoBuf
                 ThrowHelper.ThrowNotSupportedException($"No suitable collection Add API located (or the list is read-only) for {values}");
             }
 
+            [MethodImpl(ProtoReader.HotPath)]
             private void ReadRepeatedCore<TList, T>(int field, ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer)
                 where TList : ICollection<T>
             {
@@ -339,6 +336,7 @@ namespace ProtoBuf
                 } while (TryReadFieldHeader(field));
             }
 
+            [MethodImpl(ProtoReader.HotPath)]
             private void ReadPackedScalar<TList, T>(ref TList list, WireType wireType, ISerializer<T> serializer)
                 where TList : ICollection<T>
             {
