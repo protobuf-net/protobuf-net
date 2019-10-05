@@ -251,11 +251,34 @@ namespace ProtoBuf
                 }
                 else if (values is IProducerConsumerCollection<T> concurrent)
                 {
-                    if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
-                    foreach (var item in buffer.Span)
-                        if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
+                    if (values is ConcurrentStack<T> cstack)
+                    {    // special-case; need to invert
+                        if (clear) cstack.Clear();
+                        var segment = buffer.Segment;
+                        Array.Reverse(segment.Array, segment.Offset, segment.Count);
+                        cstack.PushRange(segment.Array, segment.Offset, segment.Count);
+                    }
+                    else
+                    {
+                        if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
+                        foreach (var item in buffer.Span)
+                            if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
+                    }
                 }
-                else if (values is IList untyped && !untyped.IsReadOnly)
+                else if (values is Stack<T> stack)
+                {
+                    if (clear) stack.Clear();
+                    var span = buffer.Span;
+                    for (int i = span.Length - 1; i >= 0; --i)
+                        stack.Push(span[i]);
+                }
+                else if (!TypeHelper<T>.IsReferenceType && values is Queue<T> queue)
+                {   // only worth doing this if it will save a box
+                    if (clear) queue.Clear();
+                    foreach (var item in buffer.Span)
+                        queue.Enqueue(item);
+                }
+                else if (values is IList untyped && !untyped.IsFixedSize)
                 {
                     // really scraping the barrel now
                     if (clear) untyped.Clear();

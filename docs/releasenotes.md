@@ -47,6 +47,7 @@ Other changes:
 - in line with the Google implementation, the serializer now optimally chooses when to use "packed" encoding, rather than taking the user too literally
 - empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
 - as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
+- common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
 
 ## v2.4.0
 
