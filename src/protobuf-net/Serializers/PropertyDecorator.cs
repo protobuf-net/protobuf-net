@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -15,8 +16,9 @@ namespace ProtoBuf.Serializers
 
         public PropertyDecorator(Type forType, PropertyInfo property, IRuntimeProtoSerializerNode tail) : base(tail)
         {
-            Debug.Assert(forType != null);
-            Debug.Assert(property != null);
+            if (tail == null) ThrowHelper.ThrowArgumentNullException(nameof(tail));
+            if (property == null) ThrowHelper.ThrowArgumentNullException(nameof(property));
+            if (forType == null) ThrowHelper.ThrowArgumentNullException(nameof(forType));
             ExpectedType = forType;
             this.property = property;
             SanityCheck(property, tail, out readOptionsWriteValue, true, true);

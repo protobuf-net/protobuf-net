@@ -351,10 +351,9 @@ namespace ProtoBuf.Meta
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
-        internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
+        internal bool ResolveMapTypes(out Type keyType, out Type valueType)
         {
-            dictionaryType = MemberType;
-            if (TypeHelper.ResolveUniqueEnumerableT(dictionaryType, out var pairType))
+            if (TypeHelper.ResolveUniqueEnumerableT(MemberType, out var pairType))
             {
                 if (pairType.IsGenericType && pairType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
                 {
@@ -386,14 +385,22 @@ namespace ProtoBuf.Meta
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 var member = backingMember ?? Member;
                 IRuntimeProtoSerializerNode ser;
-                
-                if (ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType) && !IgnoreList(dictionaryType))
+
+                MemberInfo repeatedProvider = null;
+                bool isMap = false;
+                if (!IgnoreList(MemberType))
                 {
-                    var concreteType = DefaultType;
-                    if (concreteType == null && MemberType.IsClass)
-                    {
-                        concreteType = MemberType;
-                    }
+                    if (TypeHelper.ResolveUniqueEnumerableT(MemberType, out _))
+                        repeatedProvider = RepeatedSerializer.GetProvider(MemberType, out isMap);
+                }
+
+                if (repeatedProvider != null && isMap && ResolveMapTypes(out var keyType, out var valueType))
+                {
+                    //var concreteType = DefaultType;
+                    //if (concreteType == null && MemberType.IsClass)
+                    //{
+                    //    concreteType = MemberType;
+                    //}
                     var keySer = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
 #if FEAT_DYNAMIC_REF
                     if (!AsReference)
@@ -407,8 +414,10 @@ namespace ProtoBuf.Meta
                     SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                     if (!IsMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
                     if (OverwriteList) features |= SerializerFeatures.OptionClearCollection;
-                    ser = MapDecorator.Create(concreteType ?? dictionaryType, keyType, valueType, FieldNumber, features,
-                        keyWireType.AsFeatures(), valueWireType.AsFeatures());
+                    
+                    
+                    ser = MapDecorator.Create(MemberType, keyType, valueType, FieldNumber, features,
+                        keyWireType.AsFeatures(), valueWireType.AsFeatures(), repeatedProvider);
                 }
                 else
                 {
@@ -443,14 +452,14 @@ namespace ProtoBuf.Meta
 #if FEAT_NULL_LIST_ITEMS
                         if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
 #endif
-                        if (MemberType.IsArray)
-                        {
-                            ser = ArrayDecorator.Create(ItemType, FieldNumber, listFeatures);
-                        }
-                        else
-                        {
-                            ser = ListDecorator.Create(DefaultType ?? MemberType, ItemType, FieldNumber, listFeatures);
-                        }
+                        //if (MemberType.IsArray)
+                        //{
+                        //    ser = ArrayDecorator.Create(ItemType, FieldNumber, listFeatures);
+                        //}
+                        //else
+                        //{
+                            ser = RepeatedDecorator.Create(DefaultType ?? MemberType, ItemType, FieldNumber, listFeatures, repeatedProvider);
+                        //}
                     }
                     else
                     {

@@ -1123,7 +1123,7 @@ namespace ProtoBuf.Meta
                 vm.DynamicType = normalizedAttribute.DynamicType;
 #endif
 
-                vm.IsMap = ignoreListHandling ? false : vm.ResolveMapTypes(out var _, out var _, out var _);
+                vm.IsMap = ignoreListHandling ? false : vm.ResolveMapTypes(out var _, out var _);
                 if (vm.IsMap) // is it even *allowed* to be a map?
                 {
                     if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
@@ -1884,7 +1884,7 @@ namespace ProtoBuf.Meta
                     bool hasOption = false;
                     if (member.IsMap)
                     {
-                        member.ResolveMapTypes(out var _, out var keyType, out var valueType);
+                        member.ResolveMapTypes(out var keyType, out var valueType);
 
                         var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref imports);
                         schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);

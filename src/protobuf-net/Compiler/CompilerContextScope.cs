@@ -176,6 +176,7 @@ namespace ProtoBuf.Compiler
             var mt = _model[typeof(T)];
             if (mt is null) return false;
             if (mt.SerializerType is object) return false;
+            if (mt.IsList(out _)) return false;
             return true;
         }
     }

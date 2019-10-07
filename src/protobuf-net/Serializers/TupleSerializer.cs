@@ -48,14 +48,15 @@ namespace ProtoBuf.Serializers
                 else
                 {
                     SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
-                    if (finalType.IsArray)
-                    {
-                        serializer = ArrayDecorator.Create(itemType, i + 1, listFeatures);
-                    }
-                    else
-                    {
-                        serializer = ListDecorator.Create(finalType, itemType, i + 1, listFeatures);
-                    }
+                    //if (finalType.IsArray)
+                    //{
+                    //    serializer = ArrayDecorator.Create(itemType, i + 1, listFeatures);
+                    //}
+                    //else
+                    //{
+                        var provider = RepeatedSerializer.GetProvider(finalType, out _);
+                        serializer = RepeatedDecorator.Create(finalType, itemType, i + 1, listFeatures, provider);
+                    //}
                 }
                 tails[i] = serializer;
             }

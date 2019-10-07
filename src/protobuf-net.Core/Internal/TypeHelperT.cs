@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal
@@ -131,106 +129,11 @@ namespace ProtoBuf.Internal
             }
             catch { }
 
-            if (haveMatch)
-            {
-                if (type.IsValueType) CheckValidValueTypeCollections(type, t);
-                return true;
-            }
+            if (haveMatch) return true;
+
             // if it isn't a good fit; don't use "map"
             t = null;
             return false;
-        }
-
-#pragma warning disable IDE0060 // Remove unused parameter
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void CheckValidValueTypeCollections(Type type, Type t)
-#pragma warning restore IDE0060 // Remove unused parameter
-        {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ImmutableArray<>))
-            {
-                return; //fine, we handle that
-            }
-            ThrowHelper.ThrowNotSupportedException("Value-type collection types are not currently supported");
-        }
-    }
-    internal static class ObjectFactory
-    {
-        internal static Func<T> TryCreate<T>(out object singletonOrConstructType) where T : class
-        {
-            singletonOrConstructType = null;
-            try
-            {
-                Type requstedType = typeof(T);
-                if (requstedType.IsGenericType)
-                {
-                    if (requstedType.IsInterface)
-                    {
-                        var generic = requstedType.GetGenericTypeDefinition();
-                        Type parentType = null;
-                        if (generic == typeof(IList<>) || generic == typeof(ICollection<T>))
-                        {
-                            singletonOrConstructType = typeof(List<>).MakeGenericType(requstedType.GetGenericArguments());
-                            return null;
-                        }
-                        if (generic == typeof(IDictionary<,>))
-                        {
-                            singletonOrConstructType = typeof(Dictionary<,>).MakeGenericType(requstedType.GetGenericArguments());
-                            return null;
-                        }
-
-                        if (generic == typeof(IImmutableDictionary<,>)) parentType = typeof(ImmutableDictionary<,>);
-                        else if (generic == typeof(IReadOnlyDictionary<,>)) parentType = typeof(ImmutableDictionary<,>);
-                        else if (generic == typeof(IReadOnlyList<>)) parentType = typeof(ImmutableList<>);
-                        else if (generic == typeof(IReadOnlyCollection<>)) parentType = typeof(ImmutableList<>);
-                        else if (generic == typeof(IImmutableList<>)) parentType = typeof(ImmutableList<>);
-                        else if (generic == typeof(IImmutableQueue<>)) parentType = typeof(ImmutableQueue<>);
-                        else if (generic == typeof(IImmutableSet<>)) parentType = typeof(ImmutableHashSet<>);
-                        else if (generic == typeof(IImmutableStack<>)) parentType = typeof(ImmutableStack<>);
-
-                        if (parentType != null) // move from the interface to something more concrete
-                        {
-                            requstedType = parentType.MakeGenericType(requstedType.GetGenericArguments());
-                        }
-                    }
-
-                    if (requstedType.IsClass && requstedType.Name.StartsWith("Immutable"))
-                    {   // look for a {type}.Empty
-                        var field = requstedType.GetField(nameof(ImmutableList<string>.Empty), BindingFlags.Public | BindingFlags.Static);
-                        if (field != null && field.IsInitOnly)
-                        {
-                            singletonOrConstructType = field.GetValue(null) as T;
-                            return null;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
-            return null;
-        }
-    }
-    internal static class ObjectFactory<T> where T : class
-    {
-        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
-
-        private static readonly object _singletonOrConstructType;
-        private static readonly Func<T> _specialFactory = ObjectFactory.TryCreate<T>(out _singletonOrConstructType);
-
-        public static T Create()
-        {
-            try
-            {
-                return _singletonOrConstructType as T
-                    ?? _specialFactory?.Invoke()
-                    ?? (T)Activator.CreateInstance(_singletonOrConstructType as Type ?? typeof(T), nonPublic: true);
-            }
-            catch (MissingMethodException mme)
-            {
-                TypeModel.ThrowCannotCreateInstance(typeof(T), mme);
-                return default;
-            }
         }
     }
 
@@ -247,5 +150,7 @@ namespace ProtoBuf.Internal
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]
         public static T FromObject(object value) => value == null ? default : (T)value;
+
+        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
     }
 }

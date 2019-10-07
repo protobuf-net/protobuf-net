@@ -177,37 +177,38 @@ namespace ProtoBuf
                 }
             }
 
-            /// <summary>
-            /// Reads a sequence of values or sub-items from the input reader, using all default options
-            /// </summary>
-            public IEnumerable<T> ReadRepeated<T>(IEnumerable<T> values)
-                => ReadRepeated(default, values, default);
 
-            /// <summary>
-            /// Reads a sequence of values or sub-items from the input reader
-            /// </summary>
-            [MethodImpl(ProtoReader.HotPath)]
-            public IEnumerable<T> ReadRepeated<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
-            {
-                return values switch
-                {
-                    null => ReadCollection<T>(features & ~SerializerFeatures.OptionClearCollection, new List<T>(), serializer),
-                    ICollection<T> collection when !collection.IsReadOnly => ReadCollection<T>(features, collection, serializer),
-                    _ => ReadRepeatedExotics<T>(features, values, serializer, TypeHelper<T>.Default),
-                };
-            }
+            ///// <summary>
+            ///// Reads a sequence of values or sub-items from the input reader, using all default options
+            ///// </summary>
+            //public IEnumerable<T> ReadRepeated<T>(IEnumerable<T> values)
+            //    => ReadRepeated(default, values, default);
 
-            [MethodImpl(ProtoReader.HotPath)]
-            private ICollection<T> ReadCollection<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer)
-            {
-                if ((features & SerializerFeatures.OptionClearCollection) != 0) values.Clear();
+            ///// <summary>
+            ///// Reads a sequence of values or sub-items from the input reader
+            ///// </summary>
+            //[MethodImpl(ProtoReader.HotPath)]
+            //public IEnumerable<T> ReadRepeated<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
+            //{
+            //    return values switch
+            //    {
+            //        null => ReadCollection<T>(features & ~SerializerFeatures.OptionClearCollection, new List<T>(), serializer),
+            //        ICollection<T> collection when !collection.IsReadOnly => ReadCollection<T>(features, collection, serializer),
+            //        _ => ReadRepeatedExotics<T>(features, values, serializer, TypeHelper<T>.Default),
+            //    };
+            //}
 
-                PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
-                var wireType = features.GetWireType();
-                if (packed) ReadPackedScalar<ICollection<T>, T>(ref values, wireType, serializer);
-                else ReadRepeatedCore<ICollection<T>, T>(ref values, category, wireType, serializer, TypeHelper<T>.Default);
-                return values;
-            }
+            //[MethodImpl(ProtoReader.HotPath)]
+            //private ICollection<T> ReadCollection<T>(SerializerFeatures features, ICollection<T> values, ISerializer<T> serializer)
+            //{
+            //    if ((features & SerializerFeatures.OptionClearCollection) != 0) values.Clear();
+
+            //    PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
+            //    var wireType = features.GetWireType();
+            //    if (packed) ReadPackedScalar<ICollection<T>, T>(ref values, wireType, serializer);
+            //    else ReadRepeatedCore<ICollection<T>, T>(ref values, category, wireType, serializer, TypeHelper<T>.Default);
+            //    return values;
+            //}
 
             [MethodImpl(ProtoReader.HotPath)]
             private void PrepareToReadRepeated<T>(ref SerializerFeatures features, ref ISerializer<T> serializer, out SerializerFeatures category, out bool packed)
@@ -229,95 +230,95 @@ namespace ProtoBuf
                 }
             }
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            private IEnumerable<T> ReadRepeatedExotics<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer, T initialValue)
-            {
-                // exotics are fun; rather than lots of repetition, let's buffer the data locally *first*,
-                // then worry about what to do with it afterwards
-                using var buffer = FillBuffer<T>(features, serializer, initialValue);
-                bool clear = (features & SerializerFeatures.OptionClearCollection) != 0;
+            //[MethodImpl(MethodImplOptions.NoInlining)]
+            //private IEnumerable<T> ReadRepeatedExotics<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer, T initialValue)
+            //{
+            //    // exotics are fun; rather than lots of repetition, let's buffer the data locally *first*,
+            //    // then worry about what to do with it afterwards
+            //    using var buffer = FillBuffer<T>(features, serializer, initialValue);
+            //    bool clear = (features & SerializerFeatures.OptionClearCollection) != 0;
 
-                switch (values)
-                {
-                    case List<T> list:
-                        if (clear) list.Clear();
-                        list.AddRange(buffer);
-                        return list;
-                    case ICollection<T> collection when !collection.IsReadOnly:
-                        if (clear) collection.Clear();
-                        foreach(var item in buffer)
-                            collection.Add(item);
-                        return collection;
-                    case T[] arr:
-                        return clear ? buffer.ToArray() : buffer.ToArray(arr);
-                    case IImmutableList<T> iList:
-                        if (clear) iList = iList.Clear();
-                        return buffer.IsEmpty ? iList : iList.AddRange(buffer);
-                    case IImmutableSet<T> iSet:
-                        if (clear) iSet = iSet.Clear();
-                        return buffer.IsEmpty ? iSet : iSet.Union(buffer);
-                    case ConcurrentStack<T> cstack: // need to reverse
-                        // note this is a special-case of IProducerConsumerCollection<T>,
-                        // so needs to come first
-                        if (clear) cstack.Clear();
-                        var segment = buffer.Segment;
-                        Array.Reverse(segment.Array, segment.Offset, segment.Count);
-                        cstack.PushRange(segment.Array, segment.Offset, segment.Count);
-                        return cstack;
-                    case IProducerConsumerCollection<T> concurrent:
-                        if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
-                        foreach (var item in buffer.Span)
-                            if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
-                        return concurrent;
-                    case Stack<T> stack: // need to reverse
-                        if (clear) stack.Clear();
-                        var span = buffer.Span;
-                        for (int i = span.Length - 1; i >= 0; --i)
-                            stack.Push(span[i]);
-                        return stack;
-                    case Queue<T> queue:
-                        if (clear) queue.Clear();
-                        foreach (var item in buffer.Span)
-                            queue.Enqueue(item);
-                        return queue;
-                    case IImmutableStack<T> iStack: // need to reverse
-                        if (clear) iStack = iStack.Clear();
-                        span = buffer.Span;
-                        for (int i = span.Length - 1; i >= 0; --i)
-                            iStack = iStack.Push(span[i]);
-                        return iStack;
-                    case IImmutableQueue<T> iQueue:
-                        if (clear) iQueue = iQueue.Clear();
-                        foreach (var item in buffer.Span)
-                            iQueue = iQueue.Enqueue(item);
-                        return iQueue;
-                    case IList untyped when !untyped.IsFixedSize: // really scraping the barrel now
-                        if (clear) untyped.Clear();
-                        foreach (var item in buffer.Span)
-                            untyped.Add(item);
-                        return values;
-                    default: // seriously, I **tried really hard**
-                        ThrowNoAdd(values);
-                        return default;
-                }
-            }
+            //    switch (values)
+            //    {
+            //        case List<T> list:
+            //            if (clear) list.Clear();
+            //            list.AddRange(buffer);
+            //            return list;
+            //        case ICollection<T> collection when !collection.IsReadOnly:
+            //            if (clear) collection.Clear();
+            //            foreach(var item in buffer)
+            //                collection.Add(item);
+            //            return collection;
+            //        case T[] arr:
+            //            return clear ? buffer.ToArray() : buffer.ToArray(arr);
+            //        case IImmutableList<T> iList:
+            //            if (clear) iList = iList.Clear();
+            //            return buffer.IsEmpty ? iList : iList.AddRange(buffer);
+            //        case IImmutableSet<T> iSet:
+            //            if (clear) iSet = iSet.Clear();
+            //            return buffer.IsEmpty ? iSet : iSet.Union(buffer);
+            //        case ConcurrentStack<T> cstack: // need to reverse
+            //            // note this is a special-case of IProducerConsumerCollection<T>,
+            //            // so needs to come first
+            //            if (clear) cstack.Clear();
+            //            var segment = buffer.Segment;
+            //            Array.Reverse(segment.Array, segment.Offset, segment.Count);
+            //            cstack.PushRange(segment.Array, segment.Offset, segment.Count);
+            //            return cstack;
+            //        case IProducerConsumerCollection<T> concurrent:
+            //            if (clear && concurrent.Count != 0) ThrowNoClear(concurrent);
+            //            foreach (var item in buffer.Span)
+            //                if (!concurrent.TryAdd(item)) ThrowAddFailed(concurrent);
+            //            return concurrent;
+            //        case Stack<T> stack: // need to reverse
+            //            if (clear) stack.Clear();
+            //            var span = buffer.Span;
+            //            for (int i = span.Length - 1; i >= 0; --i)
+            //                stack.Push(span[i]);
+            //            return stack;
+            //        case Queue<T> queue:
+            //            if (clear) queue.Clear();
+            //            foreach (var item in buffer.Span)
+            //                queue.Enqueue(item);
+            //            return queue;
+            //        case IImmutableStack<T> iStack: // need to reverse
+            //            if (clear) iStack = iStack.Clear();
+            //            span = buffer.Span;
+            //            for (int i = span.Length - 1; i >= 0; --i)
+            //                iStack = iStack.Push(span[i]);
+            //            return iStack;
+            //        case IImmutableQueue<T> iQueue:
+            //            if (clear) iQueue = iQueue.Clear();
+            //            foreach (var item in buffer.Span)
+            //                iQueue = iQueue.Enqueue(item);
+            //            return iQueue;
+            //        case IList untyped when !untyped.IsFixedSize: // really scraping the barrel now
+            //            if (clear) untyped.Clear();
+            //            foreach (var item in buffer.Span)
+            //                untyped.Add(item);
+            //            return values;
+            //        default: // seriously, I **tried really hard**
+            //            ThrowNoAdd(values);
+            //            return default;
+            //    }
+            //}
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static void ThrowNoClear(object values)
-            {
-                ThrowHelper.ThrowNotSupportedException($"It was not possible to clear the collection: {values}");
-            }
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static void ThrowAddFailed(object values)
-            {
-                ThrowHelper.ThrowNotSupportedException($"The attempt to add to the collection failed: {values}");
-            }
+            //[MethodImpl(MethodImplOptions.NoInlining)]
+            //static void ThrowNoClear(object values)
+            //{
+            //    ThrowHelper.ThrowNotSupportedException($"It was not possible to clear the collection: {values}");
+            //}
+            //[MethodImpl(MethodImplOptions.NoInlining)]
+            //static void ThrowAddFailed(object values)
+            //{
+            //    ThrowHelper.ThrowNotSupportedException($"The attempt to add to the collection failed: {values}");
+            //}
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            static void ThrowNoAdd(object values)
-            {
-                ThrowHelper.ThrowNotSupportedException($"No suitable collection Add API located (or the list is read-only) for {values}");
-            }
+            //[MethodImpl(MethodImplOptions.NoInlining)]
+            //static void ThrowNoAdd(object values)
+            //{
+            //    ThrowHelper.ThrowNotSupportedException($"No suitable collection Add API located (or the list is read-only) for {values}");
+            
 
             [MethodImpl(ProtoReader.HotPath)]
             private void ReadRepeatedCore<TList, T>(ref TList values, SerializerFeatures category, WireType wireType, ISerializer<T> serializer,
@@ -391,13 +392,13 @@ namespace ProtoBuf
                 }
             }
 
-            /// <summary>
-            /// Reads a sequence of values or sub-items from the input reader, using all default options
-            /// </summary>
-            public ImmutableArray<T> ReadRepeated<T>(ImmutableArray<T> values)
-                => ReadRepeated(default, values, default);
+            ///// <summary>
+            ///// Reads a sequence of values or sub-items from the input reader, using all default options
+            ///// </summary>
+            //public ImmutableArray<T> ReadRepeated<T>(ImmutableArray<T> values)
+            //    => ReadRepeated(default, values, default);
 
-            private ReadBuffer<T> FillBuffer<T>(SerializerFeatures features, ISerializer<T> serializer, T initialValue)
+            internal ReadBuffer<T> FillBuffer<T>(SerializerFeatures features, ISerializer<T> serializer, T initialValue)
             {
                 PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
                 var buffer = ReadBuffer<T>.Create();
@@ -415,118 +416,118 @@ namespace ProtoBuf
                 }
             }
 
-            /// <summary>
-            /// Reads a sequence of values or sub-items from the input reader
-            /// </summary>
-            public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
-            {
-                using var newValues = FillBuffer<T>(features, serializer, TypeHelper<T>.Default);
+            ///// <summary>
+            ///// Reads a sequence of values or sub-items from the input reader
+            ///// </summary>
+            //public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
+            //{
+            //    using var newValues = FillBuffer<T>(features, serializer, TypeHelper<T>.Default);
 
-                // nothing to prepend, or we don't *want* to prepend it
-                if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionClearCollection) != 0)
-                    values = ImmutableArray<T>.Empty;
+            //    // nothing to prepend, or we don't *want* to prepend it
+            //    if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionClearCollection) != 0)
+            //        values = ImmutableArray<T>.Empty;
 
-                if (!newValues.IsEmpty) // new data
-                    values = values.AddRange(newValues);
+            //    if (!newValues.IsEmpty) // new data
+            //        values = values.AddRange(newValues);
 
-                return values;
-            }
+            //    return values;
+            //}
 
-            /// <summary>
-            /// Reads a sequence of values or sub-items from the input reader, using all default options
-            /// </summary>
-            public T[] ReadRepeated<T>(T[] values)
-                => ReadRepeated(default, values, default);
+            ///// <summary>
+            ///// Reads a sequence of values or sub-items from the input reader, using all default options
+            ///// </summary>
+            //public T[] ReadRepeated<T>(T[] values)
+            //    => ReadRepeated(default, values, default);
 
-            /// <summary>
-            /// Reads a sequence of values or sub-items from the input reader
-            /// </summary>
-            public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
-            {
-                using var newValues = FillBuffer<T>(features, serializer, TypeHelper<T>.Default);
-                return (features & SerializerFeatures.OptionClearCollection) != 0 ? newValues.ToArray() : newValues.ToArray(values);
-            }
+            ///// <summary>
+            ///// Reads a sequence of values or sub-items from the input reader
+            ///// </summary>
+            //public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
+            //{
+            //    using var newValues = FillBuffer<T>(features, serializer, TypeHelper<T>.Default);
+            //    return (features & SerializerFeatures.OptionClearCollection) != 0 ? newValues.ToArray() : newValues.ToArray(values);
+            //}
 
-            /// <summary>
-            /// Reads a map from the input, using all default options
-            /// </summary>
-            public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
-                => ReadMap(default, default, default, values, default, default);
+            ///// <summary>
+            ///// Reads a map from the input, using all default options
+            ///// </summary>
+            //public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> values)
+            //    => ReadMap(default, default, default, values, default, default);
 
-            /// <summary>
-            /// Reads a map from the input, specifying custom options
-            /// </summary>
-            public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(
-                SerializerFeatures features,
-                SerializerFeatures keyFeatures,
-                SerializerFeatures valueFeatures,
-                IEnumerable<KeyValuePair<TKey, TValue>> values,
-                ISerializer<TKey> keySerializer = null,
-                ISerializer<TValue> valueSerializer = null)
-            {
-                keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
-                valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
+            ///// <summary>
+            ///// Reads a map from the input, specifying custom options
+            ///// </summary>
+            //public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(
+            //    SerializerFeatures features,
+            //    SerializerFeatures keyFeatures,
+            //    SerializerFeatures valueFeatures,
+            //    IEnumerable<KeyValuePair<TKey, TValue>> values,
+            //    ISerializer<TKey> keySerializer = null,
+            //    ISerializer<TValue> valueSerializer = null)
+            //{
+            //    keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
+            //    valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                var tmp = keySerializer.Features;
-                if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
-                keyFeatures.InheritFrom(tmp);
+            //    var tmp = keySerializer.Features;
+            //    if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+            //    keyFeatures.InheritFrom(tmp);
 
-                tmp = valueSerializer.Features;
-                if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
-                valueFeatures.InheritFrom(tmp);
+            //    tmp = valueSerializer.Features;
+            //    if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+            //    valueFeatures.InheritFrom(tmp);
 
-                var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
-                features.InheritFrom(pairSerializer.Features);
+            //    var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
+            //    features.InheritFrom(pairSerializer.Features);
 
-                return values switch
-                {
-                    null => ReadMapCore(features & ~SerializerFeatures.OptionClearCollection, new Dictionary<TKey, TValue>(), pairSerializer),
-                    IDictionary<TKey, TValue> mutable when !mutable.IsReadOnly => ReadMapCore(features, mutable, pairSerializer),
-                    IImmutableDictionary<TKey, TValue> immutable => ReadMapCore(features, immutable, pairSerializer),
-                    _ => ReadRepeated(features, values, pairSerializer),
-                };
-            }
+            //    return values switch
+            //    {
+            //        null => ReadMapCore(features & ~SerializerFeatures.OptionClearCollection, new Dictionary<TKey, TValue>(), pairSerializer),
+            //        IDictionary<TKey, TValue> mutable when !mutable.IsReadOnly => ReadMapCore(features, mutable, pairSerializer),
+            //        IImmutableDictionary<TKey, TValue> immutable => ReadMapCore(features, immutable, pairSerializer),
+            //        _ => ReadRepeated(features, values, pairSerializer),
+            //    };
+            //}
 
-            private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features,
-                IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
-            {
-                if ((features & SerializerFeatures.OptionClearCollection) != 0)
-                    values = values.Clear();
+            //private IImmutableDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features,
+            //    IImmutableDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            //{
+            //    if ((features & SerializerFeatures.OptionClearCollection) != 0)
+            //        values = values.Clear();
 
-                // buffer the data (like we would with an array *anyway*), so we can
-                // minimize the number of mutable operations
-                var buffer = ReadBuffer<KeyValuePair<TKey, TValue>>.Create();
-                try
-                {
-                    ReadRepeatedCore(ref buffer, pairSerializer.Features.GetCategory(),
-                        features.GetWireType(), pairSerializer, KeyValuePairSerializer<TKey, TValue>.Default); // note: can't be "packed"
-                    if (buffer.IsEmpty) return values;
+            //    // buffer the data (like we would with an array *anyway*), so we can
+            //    // minimize the number of mutable operations
+            //    var buffer = ReadBuffer<KeyValuePair<TKey, TValue>>.Create();
+            //    try
+            //    {
+            //        ReadRepeatedCore(ref buffer, pairSerializer.Features.GetCategory(),
+            //            features.GetWireType(), pairSerializer, KeyValuePairSerializer<TKey, TValue>.Default); // note: can't be "packed"
+            //        if (buffer.IsEmpty) return values;
 
-                    return (features & SerializerFeatures.OptionFailOnDuplicateKey) == 0
-                        ? values.SetItems(buffer) : values.AddRange(buffer);
-                }
-                finally
-                {
-                    buffer.Dispose();
-                }
-            }
+            //        return (features & SerializerFeatures.OptionFailOnDuplicateKey) == 0
+            //            ? values.SetItems(buffer) : values.AddRange(buffer);
+            //    }
+            //    finally
+            //    {
+            //        buffer.Dispose();
+            //    }
+            //}
 
-            private IDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features, IDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
-            {
-                if ((features & SerializerFeatures.OptionClearCollection) != 0)
-                    values.Clear();
+            //private IDictionary<TKey, TValue> ReadMapCore<TKey, TValue>(SerializerFeatures features, IDictionary<TKey, TValue> values, KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            //{
+            //    if ((features & SerializerFeatures.OptionClearCollection) != 0)
+            //        values.Clear();
 
-                int field = FieldNumber;
-                bool useAdd = (features & SerializerFeatures.OptionFailOnDuplicateKey) != 0;
-                do
-                {
-                    var item = ReadMessage(default, KeyValuePairSerializer<TKey, TValue>.Default, pairSerializer);
-                    if (useAdd) values.Add(item.Key, item.Value);
-                    else values[item.Key] = item.Value;
-                } while (TryReadFieldHeader(field));
+            //    int field = FieldNumber;
+            //    bool useAdd = (features & SerializerFeatures.OptionFailOnDuplicateKey) != 0;
+            //    do
+            //    {
+            //        var item = ReadMessage(default, KeyValuePairSerializer<TKey, TValue>.Default, pairSerializer);
+            //        if (useAdd) values.Add(item.Key, item.Value);
+            //        else values[item.Key] = item.Value;
+            //    } while (TryReadFieldHeader(field));
 
-                return values;
-            }
+            //    return values;
+            //}
 
             /// <summary>
             /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -1116,6 +1117,7 @@ namespace ProtoBuf
                     case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         return ReadMessage<T>(features, value, serializer);
                     case SerializerFeatures.CategoryRepeated:
+                        return ((IRepeatedSerializer<T>)serializer).ReadRepeated(ref this, features, value);
                     case SerializerFeatures.CategoryScalar:
                         features.HintIfNeeded(ref this);
                         return serializer.Read(ref this, value);
@@ -1171,7 +1173,7 @@ namespace ProtoBuf
 #endif
                         return serializer.Read(ref this, value);
                     case SerializerFeatures.CategoryRepeated:
-                        return serializer.Read(ref this, value);
+                        return ((IRepeatedSerializer<T>)serializer).ReadRepeated(ref this, features, value);
                     case SerializerFeatures.CategoryScalar:
                         return ReadFieldOne(ref this, value, serializer);
                     default:
@@ -1223,9 +1225,9 @@ namespace ProtoBuf
             /// Create an instance of the provided type, respecting any custom factory rules
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T CreateInstance<T>(IFactory<T> factory = null) where T : class
+            public T CreateInstance<T>(ISerializer<T> serializer = null) where T : class
             {
-                var obj = TypeModel.CreateInstance<T>(Context, factory);
+                var obj = TypeModel.CreateInstance<T>(Context, serializer);
 #if FEAT_DYNAMIC_REF
                 if (TypeHelper<T>.IsReferenceType) NoteObject(obj);
 #endif

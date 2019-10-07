@@ -717,6 +717,8 @@ namespace ProtoBuf.Compiler
             TraceCompile(OpCodes.Initobj + ": " + type);
         }
 
+        internal ILGenerator IL => il;
+
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
             Debug.Assert(type != null);

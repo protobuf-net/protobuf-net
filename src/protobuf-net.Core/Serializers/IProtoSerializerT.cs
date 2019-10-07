@@ -177,20 +177,20 @@ namespace ProtoBuf.Serializers
             => (features & SerializerFeatures.OptionSkipRecursionCheck) == 0;
     }
 
-    /// <summary>
-    /// Allows a provider to offer indirect access to serivces; note that this is a *secondary* API; the
-    /// primary API is for the provider to implement ISerializer-T for the intended T; however, to offer
-    /// indirect access to known serializers, when asked for a type, provide the appropriate ISerializer-T
-    /// for that type. This method can (and often will) return null. The implementation can also return
-    /// the input type to indicate that an enum is included, or return another provider type to use as a proxy.
-    /// </summary>
-    internal interface ILegacySerializerFactory
-    {
-        /// <summary>
-        /// Attempt to obtain a provider or service for the required type
-        /// </summary>
-        object TryCreate(Type type);
-    }
+    ///// <summary>
+    ///// Allows a provider to offer indirect access to serivces; note that this is a *secondary* API; the
+    ///// primary API is for the provider to implement ISerializer-T for the intended T; however, to offer
+    ///// indirect access to known serializers, when asked for a type, provide the appropriate ISerializer-T
+    ///// for that type. This method can (and often will) return null. The implementation can also return
+    ///// the input type to indicate that an enum is included, or return another provider type to use as a proxy.
+    ///// </summary>
+    //internal interface ILegacySerializerFactory
+    //{
+    //    /// <summary>
+    //    /// Attempt to obtain a provider or service for the required type
+    //    /// </summary>
+    //    object TryCreate(Type type);
+    //}
 
     /// <summary>
     /// Abstract API capable of serializing/deserializing messages or values
@@ -238,12 +238,17 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing a sequence of messages or values
     /// </summary>
-    internal interface IRepeatedSerializer<T> : ISerializer<T>
+    public interface IRepeatedSerializer<T> : ISerializer<T>
     {
         /// <summary>
-        /// Serialize an instance to the supplied writer
+        /// Serialize a sequence of values to the supplied writer
         /// </summary>
-        void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, T value);
+        void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, T values);
+
+        /// <summary>
+        /// Deserializes a sequence of values from the supplied reader
+        /// </summary>
+        T ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, T values);
     }
 
     /// <summary>
@@ -278,7 +283,7 @@ namespace ProtoBuf.Serializers
         /// </summary>
         public static SubTypeState<T> Create<TValue>(ISerializationContext context, TValue value)
             where TValue : class, T
-            => new SubTypeState<T>(context, ObjectFactory<TValue>.Factory, value, null);
+            => new SubTypeState<T>(context, TypeHelper<T>.Factory, value, null);
 
         private SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
             object value, Action<T, ISerializationContext> onBeforeDeserialize)
@@ -321,7 +326,7 @@ namespace ProtoBuf.Serializers
             // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
             // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
             // what they asked for)
-            var typed = ((_ctor as Func<ISerializationContext, T>) ?? ObjectFactory<T>.Factory)(_context);
+            var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
 
             if (_value != null) typed = Merge(_context, _value, typed);
             _onBeforeDeserialize?.Invoke(typed, _context);

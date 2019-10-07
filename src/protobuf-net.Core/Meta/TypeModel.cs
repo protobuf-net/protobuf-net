@@ -838,7 +838,7 @@ namespace ProtoBuf.Meta
             object nextItem = null;
             IList list = value as IList;
 
-            var arraySurrogate = listType.IsArray ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), nonPublic: true) : null;
+            var arraySurrogate = list == null ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), nonPublic: true) : null;
 
             while (TryDeserializeAuxiliaryType(ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
             {
@@ -1128,13 +1128,13 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        internal static T SimpleCreateInstance<T>(ISerializationContext context, ISerializer<T> serializer)
+        internal static T CreateInstance<T>(ISerializationContext context, ISerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsReferenceType)
             {
                 serializer ??= TypeModel.TryGetSerializer<T>(context?.Model);
                 if (serializer is IFactory<T> factory) return factory.Create(context);
-                return (T)Activator.CreateInstance(typeof(T), nonPublic: true);
+                return ActivatorCreate<T>();
             }
             else
             {
@@ -1142,37 +1142,39 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal static T CreateInstance<T>(ISerializationContext context, IFactory<T> factory) where T : class
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static T ActivatorCreate<T>()
         {
-            factory ??= TypeModel.TryGetSerializer<T>(context?.Model) as IFactory<T>;
-            if (factory != null)
+            try
             {
-                var val = factory.Create(context);
-                if (TypeHelper<T>.CanBeNull)
-                {
-                    if (val != null) return val;
-                }
-                else
-                {
-                    return val;
-                }
+                return (T)Activator.CreateInstance(typeof(T), nonPublic: true);
             }
-
-            return ObjectFactory<T>.Create();
+            catch (MissingMethodException mme)
+            {
+                TypeModel.ThrowCannotCreateInstance(typeof(T), mme);
+                return default;
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> GetSerializer<T>(TypeModel model)
            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>()
-            ?? SerializerCache<TertiaryTypeProvider, T>.InstanceField
             ?? NoSerializer<T>(model);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static IRepeatedSerializer<T> GetRepeatedSerializer<T>(TypeModel model)
+        {
+            if (model?.GetSerializer<T>() is IRepeatedSerializer<T> serializer) return serializer;
+            NoSerializer<T>(model);
+            return default;
+        }
+
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> TryGetSerializer<T>(TypeModel model)
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
-            ?? model?.GetSerializer<T>()
-            ?? SerializerCache<TertiaryTypeProvider, T>.InstanceField;
+            ?? model?.GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class

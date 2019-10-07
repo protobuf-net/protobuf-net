@@ -4,16 +4,11 @@ using System.Collections.Generic;
 
 namespace ProtoBuf.Internal
 {
-    internal sealed class KeyValuePairSerializer<TKey, TValue> : ISerializer<KeyValuePair<TKey, TValue>>
+    internal struct KeyValuePairSerializer<TKey, TValue> : ISerializer<KeyValuePair<TKey, TValue>>
     {
-        // this is used to prevent problems deserializing maps that omit the bytes for an empty string key/value
-        internal static KeyValuePair<TKey, TValue> Default => new KeyValuePair<TKey, TValue>(
-            TypeHelper<TKey>.Default, TypeHelper<TValue>.Default
-        );
-
         public SerializerFeatures Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 
-        private KeyValuePairSerializer(
+        internal KeyValuePairSerializer(
             ISerializer<TKey> keySerializer, SerializerFeatures keyFeatures,
             ISerializer<TValue> valueSerializer, SerializerFeatures valueFeatures)
         {
@@ -26,41 +21,6 @@ namespace ProtoBuf.Internal
         private readonly ISerializer<TKey> _keySerializer;
         private readonly ISerializer<TValue> _valueSerializer;
         private readonly SerializerFeatures _keyFeatures, _valueFeatures;
-
-        private static readonly KeyValuePairSerializer<TKey, TValue> s_default = CreateDefault();
-
-        private static KeyValuePairSerializer<TKey, TValue> CreateDefault()
-        {
-            try
-            {
-                var keySerializer = TypeModel.TryGetSerializer<TKey>(null);
-                var valueSerializer = TypeModel.TryGetSerializer<TValue>(null);
-                if (keySerializer != null && valueSerializer != null)
-                {
-                    return new KeyValuePairSerializer<TKey, TValue>(keySerializer, keySerializer.Features,
-                        valueSerializer, valueSerializer.Features);
-                }
-            }
-            catch {}
-            return null;
-        }
-
-        public static KeyValuePairSerializer<TKey, TValue> Create(
-            TypeModel model,
-            ISerializer<TKey> keySerializer, SerializerFeatures keyFeatures,
-            ISerializer<TValue> valueSerializer, SerializerFeatures valueFeatures)
-        {
-            keySerializer ??= TypeModel.GetSerializer<TKey>(model);
-            valueSerializer ??= TypeModel.GetSerializer<TValue>(model);
-
-            var shared = s_default;
-            if (shared != null && keySerializer == shared._keySerializer && valueSerializer == shared._valueSerializer
-                && keyFeatures == shared._keyFeatures && valueFeatures == shared._valueFeatures)
-            {
-                return shared;
-            }
-            return new KeyValuePairSerializer<TKey, TValue>(keySerializer, keyFeatures, valueSerializer, valueFeatures);
-        }
 
         public KeyValuePair<TKey, TValue> Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
         {
@@ -84,9 +44,9 @@ namespace ProtoBuf.Internal
                 }
             }
             if (TypeHelper<TKey>.IsReferenceType && !haveKey && key is null)
-                key = TypeModel.SimpleCreateInstance<TKey>(state.Context, _keySerializer);
+                key = TypeModel.CreateInstance<TKey>(state.Context, _keySerializer);
             if (TypeHelper<TValue>.IsReferenceType && !haveValue && value is null)
-                value = TypeModel.SimpleCreateInstance<TValue>(state.Context, _valueSerializer);
+                value = TypeModel.CreateInstance<TValue>(state.Context, _valueSerializer);
 
             return new KeyValuePair<TKey, TValue>(key, value);
         }

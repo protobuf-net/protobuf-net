@@ -334,7 +334,7 @@ namespace ProtoBuf.Meta
                         Type type = member.ItemType;
                         if (member.IsMap)
                         {
-                            member.ResolveMapTypes(out _, out _, out type); // don't need key-type
+                            member.ResolveMapTypes(out _, out type); // don't need key-type
                         }
                         if (type == null) type = member.MemberType;
                         TryGetCoreSerializer(list, type);
@@ -1079,7 +1079,7 @@ namespace ProtoBuf.Meta
 
             var serviceType = WriteBasicTypeModel("<Services>"+ typeName, module, typeof(object), true);
             WriteSerializers(scope, serviceType);
-            WriteEnumsAndProxies(scope, serviceType);
+            WriteEnumsAndProxies(serviceType);
 
 #if PLAT_NO_EMITDLL
             var finalServiceType = serviceType.CreateTypeInfo().AsType();
@@ -1136,7 +1136,7 @@ namespace ProtoBuf.Meta
             type.DefineDefaultConstructor(MethodAttributes.Public);
         }
 
-        private void WriteEnumsAndProxies(CompilerContextScope scope, TypeBuilder type)
+        private void WriteEnumsAndProxies(TypeBuilder type)
         {
             for (int index = 0; index < types.Count; index++)
             {
@@ -1154,16 +1154,8 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider)
+        internal static MemberInfo GetUnderlyingProvider(MemberInfo provider, Type forType)
         {
-            ILGenerator il = null;
-            ILGenerator Implement()
-            {
-                var iType = typeof(ISerializerProxy<>).MakeGenericType(proxying);
-                building.AddInterfaceImplementation(iType);
-                return il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
-            }
-
             switch (provider)
             {   // properties are really a special-case of methods, via the getter
                 case PropertyInfo property:
@@ -1172,22 +1164,40 @@ namespace ProtoBuf.Meta
                 // types are really a short-hand for the singleton API
                 case Type type when type.IsClass && !type.IsAbstract && type.GetConstructor(Type.EmptyTypes) != null:
                     provider = typeof(SerializerCache).GetMethod(nameof(SerializerCache.Get), BindingFlags.Public | BindingFlags.Static)
-                        .MakeGenericMethod(type, proxying);
+                        .MakeGenericMethod(type, forType);
                     break;
             }
+            return provider;
+        }
 
-            // so all we *actually* need to implement is fields and methods
+        internal static void EmitProvider(MemberInfo provider, ILGenerator il)
+        {
+            // after GetUnderlyingProvider, all we *actually* need to implement is fields and methods
             switch (provider)
             {
                 case FieldInfo field when field.IsStatic:
-                    Implement().Emit(OpCodes.Ldsfld, field);
+                    il.Emit(OpCodes.Ldsfld, field);
                     break;
                 case MethodInfo method when method.IsStatic:
-                    Implement().EmitCall(OpCodes.Call, method, null);
+                    il.EmitCall(OpCodes.Call, method, null);
+                    break;
+                default:
+                    ThrowHelper.ThrowInvalidOperationException($"Invalid provider: {provider}");
                     break;
             }
+        }
 
-            il?.Emit(OpCodes.Ret);
+        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider)
+        {
+            provider = GetUnderlyingProvider(provider, proxying);
+            if (provider != null)
+            {
+                var iType = typeof(ISerializerProxy<>).MakeGenericType(proxying);
+                building.AddInterfaceImplementation(iType);
+                var il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
+                EmitProvider(provider, il);
+                il.Emit(OpCodes.Ret);
+            }
         }
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)

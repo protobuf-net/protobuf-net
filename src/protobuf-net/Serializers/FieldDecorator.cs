@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -14,8 +15,9 @@ namespace ProtoBuf.Serializers
         public override bool ReturnsValue => false;
         public FieldDecorator(Type forType, FieldInfo field, IRuntimeProtoSerializerNode tail) : base(tail)
         {
-            Debug.Assert(forType != null);
-            Debug.Assert(field != null);
+            if (tail == null) ThrowHelper.ThrowArgumentNullException(nameof(tail));
+            if (field == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
+            if (forType == null) ThrowHelper.ThrowArgumentNullException(nameof(forType));
             ExpectedType = forType;
             this.field = field;
         }

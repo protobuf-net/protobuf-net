@@ -6,7 +6,10 @@ namespace ProtoBuf.Serializers
     {
         public abstract Type ExpectedType { get; }
         protected readonly IRuntimeProtoSerializerNode Tail;
-        protected ProtoDecoratorBase(IRuntimeProtoSerializerNode tail) { this.Tail = tail; }
+        protected ProtoDecoratorBase(IRuntimeProtoSerializerNode tail)
+        {
+            this.Tail = tail;
+        }
         public abstract bool ReturnsValue { get; }
         public abstract bool RequiresOldValue { get; }
         public abstract void Write(ref ProtoWriter.State state, object value);

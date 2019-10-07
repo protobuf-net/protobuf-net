@@ -276,12 +276,12 @@ namespace ProtoBuf
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;
-        protected private void AdvanceAndReset(int count)
+        internal void AdvanceAndReset(int count)
         {
             _position64 += count;
             WireType = WireType.None;
         }
-        protected private void AdvanceAndReset(long count)
+        internal void AdvanceAndReset(long count)
         {
             _position64 += count;
             WireType = WireType.None;
@@ -337,7 +337,7 @@ namespace ProtoBuf
 
         protected private abstract void ImplWriteString(ref State state, string value, int expectedBytes);
         protected private abstract int ImplWriteVarint32(ref State state, uint value);
-        protected private abstract int ImplWriteVarint64(ref State state, ulong value);
+        internal abstract int ImplWriteVarint64(ref State state, ulong value);
         protected private abstract void ImplWriteFixed32(ref State state, uint value);
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
         protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);

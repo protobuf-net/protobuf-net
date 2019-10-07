@@ -348,329 +348,329 @@ namespace ProtoBuf
                 }
             }
 
-            /// <summary>
-            /// Writes a sequence of sub-items to the writer, with all default options
-            /// </summary>
-            public void WriteRepeated<T>(int fieldNumber, IEnumerable<T> values)
-                => WriteRepeated<T>(fieldNumber, default, values, default);
+            ///// <summary>
+            ///// Writes a sequence of sub-items to the writer, with all default options
+            ///// </summary>
+            //public void WriteRepeated<T>(int fieldNumber, IEnumerable<T> values)
+            //    => WriteRepeated<T>(fieldNumber, default, values, default);
 
 
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            private static int TryGetCheapCount<T>(IEnumerable<T> values)
-            {
-                try
-                {
-                    if (values is ICollection<T> collection) return collection.Count;
-                    if (values is IReadOnlyCollection<T> roc) return roc.Count;
-                    if (values is ICollection untyped) return untyped.Count;
-                    // note that we do *not* want to call Enumerable.Count<T>(values)
-                    // the entire point here is "if we can get it cheaply, do so"
-                }
-                catch { } // sometimes, it just isn't supported, etc
-                return -1;
-            }
+            //[MethodImpl(MethodImplOptions.NoInlining)]
+            //private static int TryGetCheapCount<T>(IEnumerable<T> values)
+            //{
+            //    try
+            //    {
+            //        if (values is ICollection<T> collection) return collection.Count;
+            //        if (values is IReadOnlyCollection<T> roc) return roc.Count;
+            //        if (values is ICollection untyped) return untyped.Count;
+            //        // note that we do *not* want to call Enumerable.Count<T>(values)
+            //        // the entire point here is "if we can get it cheaply, do so"
+            //    }
+            //    catch { } // sometimes, it just isn't supported, etc
+            //    return -1;
+            //}
 
-            /// <summary>
-            /// Writes a sequence of sub-items to the writer
-            /// </summary>
-            public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
-            {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
-                var serializerFeatures = serializer.Features;
-                if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
-                var category = serializerFeatures.GetCategory();
+            ///// <summary>
+            ///// Writes a sequence of sub-items to the writer
+            ///// </summary>
+            //public void WriteRepeated<T>(int fieldNumber, SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer = null)
+            //{
+            //    serializer ??= TypeModel.GetSerializer<T>(Model);
+            //    var serializerFeatures = serializer.Features;
+            //    if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(T));
+            //    var category = serializerFeatures.GetCategory();
 
-                features.InheritFrom(serializerFeatures);
-                var wireType = features.GetWireType();
+            //    features.InheritFrom(serializerFeatures);
+            //    var wireType = features.GetWireType();
 
-                if (values == null) return; // nothing to do
+            //    if (values == null) return; // nothing to do
 
-                int count = TryGetCheapCount<T>(values);
-                if (count == 0) return;
+            //    int count = TryGetCheapCount<T>(values);
+            //    if (count == 0) return;
 
-                if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count > 1 && serializer is IMeasuringSerializer<T> measurer)
-                {
-                    if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
-                    if (values is T[] arr)
-                    {   // exploit special JIT-based array handling
-                        WritePackedScalar(fieldNumber, wireType, arr, count, measurer);
-                    }
-                    else if (values is List<T> list)
-                    {   // exploit the custom List<T> iterator
-                        WritePackedScalar(fieldNumber, wireType, list, count, measurer);
-                    }
-                    else
-                    {   // just roll with it; it'll do
-                        WritePackedScalar(fieldNumber, wireType, values, count, measurer);
-                    }
-                }
-                else
-                {
-                    if (values is T[] arr)
-                    {   // exploit special JIT-based array handling
-                        WriteRepeatedCore(fieldNumber, category, wireType, arr, serializer);
-                    }
-                    else if (values is List<T> list)
-                    {   // exploit the custom List<T> iterator
-                        WriteRepeatedCore(fieldNumber, category, wireType, list, serializer);
-                    }
-                    else
-                    {   // just roll with it; it'll do
-                        WriteRepeatedCore(fieldNumber, category, wireType, values, serializer);
-                    }
-                }
-            }
+            //    if (TypeHelper<T>.CanBePacked && !features.IsPackedDisabled() && count > 1 && serializer is IMeasuringSerializer<T> measurer)
+            //    {
+            //        if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
+            //        if (values is T[] arr)
+            //        {   // exploit special JIT-based array handling
+            //            WritePackedScalar(fieldNumber, wireType, arr, count, measurer);
+            //        }
+            //        else if (values is List<T> list)
+            //        {   // exploit the custom List<T> iterator
+            //            WritePackedScalar(fieldNumber, wireType, list, count, measurer);
+            //        }
+            //        else
+            //        {   // just roll with it; it'll do
+            //            WritePackedScalar(fieldNumber, wireType, values, count, measurer);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (values is T[] arr)
+            //        {   // exploit special JIT-based array handling
+            //            WriteRepeatedCore(fieldNumber, category, wireType, arr, serializer);
+            //        }
+            //        else if (values is List<T> list)
+            //        {   // exploit the custom List<T> iterator
+            //            WriteRepeatedCore(fieldNumber, category, wireType, list, serializer);
+            //        }
+            //        else
+            //        {   // just roll with it; it'll do
+            //            WriteRepeatedCore(fieldNumber, category, wireType, values, serializer);
+            //        }
+            //    }
+            //}
 
-            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, IEnumerable<T> values, int count, IMeasuringSerializer<T> serializer)
-            {
-                long expectedLength;
-                switch (wireType)
-                {
-                    case WireType.Fixed32:
-                        expectedLength = count * 4;
-                        break;
-                    case WireType.Fixed64:
-                        expectedLength = count * 8;
-                        break;
-                    case WireType.Varint:
-                    case WireType.SignedVarint:
-                        expectedLength = 0;
-                        var context = Context;
-                        foreach (var value in values)
-                        {
-                            expectedLength += serializer.Measure(context, wireType, value);
-                        }
-                        break;
-                    default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
-                        expectedLength = default;
-                        break;
-                }
+            //private void WritePackedScalar<T>(int fieldNumber, WireType wireType, IEnumerable<T> values, int count, IMeasuringSerializer<T> serializer)
+            //{
+            //    long expectedLength;
+            //    switch (wireType)
+            //    {
+            //        case WireType.Fixed32:
+            //            expectedLength = count * 4;
+            //            break;
+            //        case WireType.Fixed64:
+            //            expectedLength = count * 8;
+            //            break;
+            //        case WireType.Varint:
+            //        case WireType.SignedVarint:
+            //            expectedLength = 0;
+            //            var context = Context;
+            //            foreach (var value in values)
+            //            {
+            //                expectedLength += serializer.Measure(context, wireType, value);
+            //            }
+            //            break;
+            //        default:
+            //            ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+            //            expectedLength = default;
+            //            break;
+            //    }
 
-                WriteFieldHeader(fieldNumber, WireType.String);
-                _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
-                long before = GetPosition();
-                foreach(var value in values)
-                {
-                    _writer.WireType = wireType; // tell the serializer what we want to do
-                    serializer.Write(ref this, value);
-                }
-                long actualLength = GetPosition() - before;
-                if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
-                    $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
-            }
+            //    WriteFieldHeader(fieldNumber, WireType.String);
+            //    _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
+            //    long before = GetPosition();
+            //    foreach(var value in values)
+            //    {
+            //        _writer.WireType = wireType; // tell the serializer what we want to do
+            //        serializer.Write(ref this, value);
+            //    }
+            //    long actualLength = GetPosition() - before;
+            //    if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
+            //        $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
+            //}
 
-            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, List<T> values, int count, IMeasuringSerializer<T> serializer)
-            {
-                long expectedLength;
-                switch (wireType)
-                {
-                    case WireType.Fixed32:
-                        expectedLength = count * 4;
-                        break;
-                    case WireType.Fixed64:
-                        expectedLength = count * 8;
-                        break;
-                    case WireType.Varint:
-                    case WireType.SignedVarint:
-                        expectedLength = 0;
-                        var context = Context;
-                        foreach (var value in values)
-                        {
-                            expectedLength += serializer.Measure(context, wireType, value);
-                        }
-                        break;
-                    default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
-                        expectedLength = default;
-                        break;
-                }
+            //private void WritePackedScalar<T>(int fieldNumber, WireType wireType, List<T> values, int count, IMeasuringSerializer<T> serializer)
+            //{
+            //    long expectedLength;
+            //    switch (wireType)
+            //    {
+            //        case WireType.Fixed32:
+            //            expectedLength = count * 4;
+            //            break;
+            //        case WireType.Fixed64:
+            //            expectedLength = count * 8;
+            //            break;
+            //        case WireType.Varint:
+            //        case WireType.SignedVarint:
+            //            expectedLength = 0;
+            //            var context = Context;
+            //            foreach (var value in values)
+            //            {
+            //                expectedLength += serializer.Measure(context, wireType, value);
+            //            }
+            //            break;
+            //        default:
+            //            ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+            //            expectedLength = default;
+            //            break;
+            //    }
 
-                WriteFieldHeader(fieldNumber, WireType.String);
-                _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
-                long before = GetPosition();
-                foreach (var value in values)
-                {
-                    _writer.WireType = wireType; // tell the serializer what we want to do
-                    serializer.Write(ref this, value);
-                }
-                long actualLength = GetPosition() - before;
-                if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
-                    $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
-            }
+            //    WriteFieldHeader(fieldNumber, WireType.String);
+            //    _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
+            //    long before = GetPosition();
+            //    foreach (var value in values)
+            //    {
+            //        _writer.WireType = wireType; // tell the serializer what we want to do
+            //        serializer.Write(ref this, value);
+            //    }
+            //    long actualLength = GetPosition() - before;
+            //    if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
+            //        $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
+            //}
 
-            private void WritePackedScalar<T>(int fieldNumber, WireType wireType, T[] values, int count, IMeasuringSerializer<T> serializer)
-            {
-                long expectedLength;
-                switch (wireType)
-                {
-                    case WireType.Fixed32:
-                        expectedLength = count * 4;
-                        break;
-                    case WireType.Fixed64:
-                        expectedLength = count * 8;
-                        break;
-                    case WireType.Varint:
-                    case WireType.SignedVarint:
-                        expectedLength = 0;
-                        var context = Context;
-                        for (int i = 0; i < values.Length; i++)
-                        {
-                            expectedLength += serializer.Measure(context, wireType, values[i]);
-                        }
-                        break;
-                    default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
-                        expectedLength = default;
-                        break;
-                }
+            //private void WritePackedScalar<T>(int fieldNumber, WireType wireType, T[] values, int count, IMeasuringSerializer<T> serializer)
+            //{
+            //    long expectedLength;
+            //    switch (wireType)
+            //    {
+            //        case WireType.Fixed32:
+            //            expectedLength = count * 4;
+            //            break;
+            //        case WireType.Fixed64:
+            //            expectedLength = count * 8;
+            //            break;
+            //        case WireType.Varint:
+            //        case WireType.SignedVarint:
+            //            expectedLength = 0;
+            //            var context = Context;
+            //            for (int i = 0; i < values.Length; i++)
+            //            {
+            //                expectedLength += serializer.Measure(context, wireType, values[i]);
+            //            }
+            //            break;
+            //        default:
+            //            ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+            //            expectedLength = default;
+            //            break;
+            //    }
 
-                WriteFieldHeader(fieldNumber, WireType.String);
-                _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
-                long before = GetPosition();
-                for (int i = 0; i < values.Length; i++)
-                {
-                    _writer.WireType = wireType; // tell the serializer what we want to do
-                    serializer.Write(ref this, values[i]);
-                }
-                long actualLength = GetPosition() - before;
-                if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
-                    $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
-            }
+            //    WriteFieldHeader(fieldNumber, WireType.String);
+            //    _writer.AdvanceAndReset(_writer.ImplWriteVarint64(ref this, (ulong)expectedLength));
+            //    long before = GetPosition();
+            //    for (int i = 0; i < values.Length; i++)
+            //    {
+            //        _writer.WireType = wireType; // tell the serializer what we want to do
+            //        serializer.Write(ref this, values[i]);
+            //    }
+            //    long actualLength = GetPosition() - before;
+            //    if (actualLength != expectedLength) ThrowHelper.ThrowInvalidOperationException(
+            //        $"packed encoding length miscalculation for {typeof(T).NormalizeName()}, {wireType}; expected {expectedLength}, got {actualLength}");
+            //}
 
-            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer)
-            {
-                foreach (var value in values)
-                {
-                    if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
-                    WriteFieldHeader(fieldNumber, wireType);
-                    switch (category)
-                    {
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                        case SerializerFeatures.CategoryMessage:
-                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
-                            break;
-                        case SerializerFeatures.CategoryScalar:
-                            serializer.Write(ref this, value);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            break;
-                    }
-                }
-            }
+            //private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, IEnumerable<T> values, ISerializer<T> serializer)
+            //{
+            //    foreach (var value in values)
+            //    {
+            //        if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
+            //        WriteFieldHeader(fieldNumber, wireType);
+            //        switch (category)
+            //        {
+            //            case SerializerFeatures.CategoryMessageWrappedAtRoot:
+            //            case SerializerFeatures.CategoryMessage:
+            //                _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
+            //                break;
+            //            case SerializerFeatures.CategoryScalar:
+            //                serializer.Write(ref this, value);
+            //                break;
+            //            default:
+            //                category.ThrowInvalidCategory();
+            //                break;
+            //        }
+            //    }
+            //}
 
-            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
-            {
-                foreach (var value in values)
-                {
-                    if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
-                    WriteFieldHeader(fieldNumber, wireType);
-                    switch (category)
-                    {
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                        case SerializerFeatures.CategoryMessage:
-                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
-                            break;
-                        case SerializerFeatures.CategoryScalar:
-                            serializer.Write(ref this, value);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            break;
-                    }
-                }
-            }
+            //private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, List<T> values, ISerializer<T> serializer)
+            //{
+            //    foreach (var value in values)
+            //    {
+            //        if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
+            //        WriteFieldHeader(fieldNumber, wireType);
+            //        switch (category)
+            //        {
+            //            case SerializerFeatures.CategoryMessageWrappedAtRoot:
+            //            case SerializerFeatures.CategoryMessage:
+            //                _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
+            //                break;
+            //            case SerializerFeatures.CategoryScalar:
+            //                serializer.Write(ref this, value);
+            //                break;
+            //            default:
+            //                category.ThrowInvalidCategory();
+            //                break;
+            //        }
+            //    }
+            //}
 
-            private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
-            {
-                for(int i = 0; i < values.Length; i++)
-                {
-                    ref T value = ref values[i];
-                    if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
-                    WriteFieldHeader(fieldNumber, wireType);
-                    switch (category)
-                    {
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                        case SerializerFeatures.CategoryMessage:
-                            _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
-                            break;
-                        case SerializerFeatures.CategoryScalar:
-                            serializer.Write(ref this, value);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            break;
-                    }
-                }
-            }
+            //private void WriteRepeatedCore<T>(int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
+            //{
+            //    for(int i = 0; i < values.Length; i++)
+            //    {
+            //        ref T value = ref values[i];
+            //        if (TypeHelper<T>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<T>();
+            //        WriteFieldHeader(fieldNumber, wireType);
+            //        switch (category)
+            //        {
+            //            case SerializerFeatures.CategoryMessageWrappedAtRoot:
+            //            case SerializerFeatures.CategoryMessage:
+            //                _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, true);
+            //                break;
+            //            case SerializerFeatures.CategoryScalar:
+            //                serializer.Write(ref this, value);
+            //                break;
+            //            default:
+            //                category.ThrowInvalidCategory();
+            //                break;
+            //        }
+            //    }
+            //}
 
-            /// <summary>
-            /// Writes a map to the output using all default options
-            /// </summary>
-            public void WriteMap<TKey, TValue>(int fieldNumber, IEnumerable<KeyValuePair<TKey, TValue>> values)
-                => WriteMap(fieldNumber, default, default, default, values, default, default);
+            ///// <summary>
+            ///// Writes a map to the output using all default options
+            ///// </summary>
+            //public void WriteMap<TKey, TValue>(int fieldNumber, IEnumerable<KeyValuePair<TKey, TValue>> values)
+            //    => WriteMap(fieldNumber, default, default, default, values, default, default);
 
-            /// <summary>
-            /// Writes a map to the output, specifying custom options
-            /// </summary>
-            public void WriteMap<TKey, TValue>(
-                int fieldNumber,
-                SerializerFeatures features,
-                SerializerFeatures keyFeatures,
-                SerializerFeatures valueFeatures,
-                IEnumerable<KeyValuePair<TKey, TValue>> values, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
-            {
-                keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
-                valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
+            ///// <summary>
+            ///// Writes a map to the output, specifying custom options
+            ///// </summary>
+            //public void WriteMap<TKey, TValue>(
+            //    int fieldNumber,
+            //    SerializerFeatures features,
+            //    SerializerFeatures keyFeatures,
+            //    SerializerFeatures valueFeatures,
+            //    IEnumerable<KeyValuePair<TKey, TValue>> values, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
+            //{
+            //    keySerializer ??= TypeModel.GetSerializer<TKey>(Model);
+            //    valueSerializer ??= TypeModel.GetSerializer<TValue>(Model);
 
-                var tmp = keySerializer.Features;
-                if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
-                keyFeatures.InheritFrom(tmp);
+            //    var tmp = keySerializer.Features;
+            //    if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+            //    keyFeatures.InheritFrom(tmp);
 
-                tmp = valueSerializer.Features;
-                if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
-                valueFeatures.InheritFrom(tmp);
+            //    tmp = valueSerializer.Features;
+            //    if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+            //    valueFeatures.InheritFrom(tmp);
 
-                if (values == null)
-                { }
-                else
-                {
-                    var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
-                    features.InheritFrom(pairSerializer.Features);
-                    var wireType = features.GetWireType();
+            //    if (values == null)
+            //    { }
+            //    else
+            //    {
+            //        var pairSerializer = KeyValuePairSerializer<TKey, TValue>.Create(Model, keySerializer, keyFeatures, valueSerializer, valueFeatures);
+            //        features.InheritFrom(pairSerializer.Features);
+            //        var wireType = features.GetWireType();
 
-                    if (values is Dictionary<TKey, TValue> dict)
-                    {   // exploit custom iterator
-                        WriteMapCore(fieldNumber, wireType, dict, pairSerializer);
-                    }
-                    else
-                    {
-                        WriteMapCore(fieldNumber, wireType, values, pairSerializer);
-                    }
+            //        if (values is Dictionary<TKey, TValue> dict)
+            //        {   // exploit custom iterator
+            //            WriteMapCore(fieldNumber, wireType, dict, pairSerializer);
+            //        }
+            //        else
+            //        {
+            //            WriteMapCore(fieldNumber, wireType, values, pairSerializer);
+            //        }
 
-                }
-            }
+            //    }
+            //}
 
-            void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, IEnumerable<KeyValuePair<TKey, TValue>> values,
-                KeyValuePairSerializer<TKey, TValue> pairSerializer)
-            {
-                foreach (var pair in values)
-                {
-                    WriteFieldHeader(fieldNumber, wireType);
-                    _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
-                }
-            }
+            //void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, IEnumerable<KeyValuePair<TKey, TValue>> values,
+            //    KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            //{
+            //    foreach (var pair in values)
+            //    {
+            //        WriteFieldHeader(fieldNumber, wireType);
+            //        _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
+            //    }
+            //}
 
-            void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, Dictionary<TKey, TValue> values,
-                KeyValuePairSerializer<TKey, TValue> pairSerializer)
-            {
-                foreach (var pair in values)
-                {
-                    WriteFieldHeader(fieldNumber, wireType);
-                    _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
-                }
-            }
+            //void WriteMapCore<TKey, TValue>(int fieldNumber, WireType wireType, Dictionary<TKey, TValue> values,
+            //    KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            //{
+            //    foreach (var pair in values)
+            //    {
+            //        WriteFieldHeader(fieldNumber, wireType);
+            //        _writer.WriteMessage(ref this, pair, pairSerializer, PrefixStyle.Base128, false);
+            //    }
+            //}
 
             /// <summary>
             /// Writes a value or sub-item to the writer
@@ -695,7 +695,7 @@ namespace ProtoBuf
                     {
                         case SerializerFeatures.CategoryRepeated:
                             // note we leave the field header to the interior in this case
-                            ((IRepeatedSerializer<T>)serializer).Write(ref this, fieldNumber, features, value);
+                            ((IRepeatedSerializer<T>)serializer).WriteRepeated(ref this, fieldNumber, features, value);
                             break;
                         case SerializerFeatures.CategoryMessageWrappedAtRoot:
                         case SerializerFeatures.CategoryMessage:
@@ -741,7 +741,7 @@ namespace ProtoBuf
             internal WireType WireType
             {
                 get => _writer.WireType;
-                private set => _writer.WireType = value;
+                set => _writer.WireType = value;
             }
 
             internal int Depth => _writer.Depth;
@@ -876,8 +876,10 @@ namespace ProtoBuf
                             serializer.Write(ref this, value);
                             break;
                         case SerializerFeatures.CategoryMessage:
-                        case SerializerFeatures.CategoryRepeated:
                             serializer.Write(ref this, value);
+                            break;
+                        case SerializerFeatures.CategoryRepeated:
+                            ((IRepeatedSerializer<T>)serializer).WriteRepeated(ref this, 1, features, value);
                             break;
                         default:
                             features.ThrowInvalidCategory();
@@ -913,7 +915,7 @@ namespace ProtoBuf
             /// Used for packed encoding; writes the length prefix using fixed sizes rather than using
             /// buffering. Only valid for fixed-32 and fixed-64 encoding.
             /// </summary>
-            public void WritePackedPrefix(int elementCount, WireType wireType)
+            internal void WritePackedPrefix(int elementCount, WireType wireType)
             {
                 if (WireType != WireType.String) ThrowHelper.ThrowInvalidOperationException("Invalid wire-type: " + WireType);
                 if (elementCount < 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(elementCount));

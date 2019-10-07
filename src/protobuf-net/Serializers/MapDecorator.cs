@@ -1,7 +1,8 @@
 ﻿using ProtoBuf.Compiler;
+using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -10,60 +11,23 @@ namespace ProtoBuf.Serializers
     {
         public static IRuntimeProtoSerializerNode Create(Type constructType, Type keyType, Type valueType,
             int fieldNumber, SerializerFeatures features,
-            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, MemberInfo provider)
         {
+            if (provider == null) ThrowHelper.ThrowArgumentNullException(nameof(provider));
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(
                 typeof(MapDecorator<,,>).MakeGenericType(constructType, keyType, valueType),
-                new object[] { fieldNumber, features, keyFeatures, valueFeatures });
+                new object[] { fieldNumber, features, keyFeatures, valueFeatures, provider });
         }
-
-        // look for:  public IEnumerable<KeyValuePair<TKey, TValue>> ReadMap<TKey, TValue>(SerializerFeatures, SerializerFeatures, SerializerFeatures,
-        // IEnumerable<KeyValuePair<TKey, TValue>>, ISerializer<TKey>, ISerializer<TValue>)
-        internal static readonly MethodInfo s_ReadMap = (
-            from method in typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            where method.Name == nameof(ProtoReader.State.ReadMap) && method.IsGenericMethodDefinition
-            let targs = method.GetGenericArguments()
-            where targs.Length == 2
-            let args = method.GetParameters()
-            where args.Length == 6
-            && args[0].ParameterType == typeof(SerializerFeatures)
-            && args[1].ParameterType == typeof(SerializerFeatures)
-            && args[2].ParameterType == typeof(SerializerFeatures)
-            // && args[3].ParameterType == typeof(IEnumerable<KeyValuePair<,>>).MakeGenericType(targs)
-            && args[4].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[0])
-            && args[5].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[1])
-            && method.ReturnType == args[3].ParameterType
-            select method).SingleOrDefault();
-
-        // look for: public void WriteMap<TKey, TValue>(int, SerializerFeatures, SerializerFeatures, SerializerFeatures,
-        // IEnumerable<KeyValuePair<TKey, TValue>>, ISerializer<TKey>, ISerializer<TValue>)
-        internal static readonly MethodInfo s_WriteMap = (
-            from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            where method.Name == nameof(ProtoWriter.State.WriteMap) && method.IsGenericMethodDefinition
-            && method.ReturnType == typeof(void)
-            let targs = method.GetGenericArguments()
-            where targs.Length == 2
-            let args = method.GetParameters()
-            where args.Length == 7
-            && args[0].ParameterType == typeof(int)
-            && args[1].ParameterType == typeof(SerializerFeatures)
-            && args[2].ParameterType == typeof(SerializerFeatures)
-            && args[3].ParameterType == typeof(SerializerFeatures)
-            // && args[4].ParameterType == typeof(IEnumerable<KeyValuePair<,>>).MakeGenericType(targs)
-            && args[5].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[0])
-            && args[6].ParameterType == typeof(ISerializer<>).MakeGenericType(targs[1])
-            select method).SingleOrDefault();
     }
-    internal class MapDecorator<TConstruct, TKey, TValue> : IRuntimeProtoSerializerNode, ICompiledSerializer
-        where TConstruct : class, IEnumerable<KeyValuePair<TKey, TValue>>
+    internal class MapDecorator<TCollection, TKey, TValue> : IRuntimeProtoSerializerNode, ICompiledSerializer
+        where TCollection : class, IEnumerable<KeyValuePair<TKey, TValue>>
     {
-        static readonly MethodInfo s_ReadMap = MapDecorator.s_ReadMap.MakeGenericMethod(typeof(TKey), typeof(TValue));
-        static readonly MethodInfo s_WriteMap = MapDecorator.s_WriteMap.MakeGenericMethod(typeof(TKey), typeof(TValue));
-
         public MapDecorator(
             int fieldNumber, SerializerFeatures features,
-            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, MemberInfo provider)
         {
+            _provider = provider;
+            _serializer = (MapSerializer<TCollection, TKey, TValue>)RepeatedDecorator.GetSerializer<TCollection>(provider);
             _features = features;
             _keyFeatures = keyFeatures;
             _valueFeatures = valueFeatures;
@@ -72,54 +36,51 @@ namespace ProtoBuf.Serializers
         private readonly int _fieldNumber;
         private readonly SerializerFeatures _features, _keyFeatures, _valueFeatures;
 
-        public Type ExpectedType => typeof(IEnumerable<KeyValuePair<TKey, TValue>>);
+        private readonly MemberInfo _provider;
+        private readonly MapSerializer<TCollection, TKey, TValue> _serializer;
+
+        public Type ExpectedType => typeof(TCollection);
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public bool RequiresOldValue => true;
 
         public object Read(ref ProtoReader.State state, object value)
-        {
-            var typed = (IEnumerable<KeyValuePair<TKey, TValue>>)value;
-            typed ??= state.CreateInstance<TConstruct>();
-            return state.ReadMap(_features, _keyFeatures, _valueFeatures, typed);
-        }
+            => _serializer.ReadMap(ref state, _features, (TCollection)value, _keyFeatures, _valueFeatures);
 
         public void Write(ref ProtoWriter.State state, object value)
-            => state.WriteMap(_fieldNumber, _features, _keyFeatures, _valueFeatures, (IEnumerable<KeyValuePair<TKey, TValue>>)value);
+            => _serializer.WriteMap(ref state, _fieldNumber, _features, (TCollection)value, _keyFeatures, _valueFeatures);
 
         public void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
+            var method = typeof(MapSerializer<TCollection, TKey, TValue>).GetMethod(nameof(MapSerializer<TCollection, TKey, TValue>.WriteMap));
+
             using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
+            RuntimeTypeModel.EmitProvider(_provider, ctx.IL);
             ctx.LoadState();
             ctx.LoadValue(_fieldNumber);
             ctx.LoadValue((int)_features);
+            ctx.LoadValue(loc);
             ctx.LoadValue((int)_keyFeatures);
             ctx.LoadValue((int)_valueFeatures);
-            ctx.LoadValue(loc);
             ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
             ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
-            ctx.EmitCall(s_WriteMap);
+            ctx.EmitCall(method);
         }
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
+            var method = typeof(MapSerializer<TCollection, TKey, TValue>).GetMethod(nameof(MapSerializer<TCollection, TKey, TValue>.ReadMap));
+
             using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
-
-            var notNull = ctx.DefineLabel();
-            ctx.LoadValue(loc);
-            ctx.BranchIfTrue(notNull, true);
-            ctx.CreateInstance<TConstruct>();
-            ctx.StoreValue(loc);
-            ctx.MarkLabel(notNull);
-
+            RuntimeTypeModel.EmitProvider(_provider, ctx.IL);
             ctx.LoadState();
             ctx.LoadValue((int)_features);
+            ctx.LoadValue(loc);
             ctx.LoadValue((int)_keyFeatures);
             ctx.LoadValue((int)_valueFeatures);
-            ctx.LoadValue(loc);
             ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
             ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
-            ctx.EmitCall(s_ReadMap);
+            ctx.EmitCall(method);
         }
     }
 }

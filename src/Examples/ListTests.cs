@@ -444,7 +444,8 @@ namespace Examples
             var writer = ProtoWriter.State.Create(ms, null);
             try
             {
-                writer.WriteMap(4, default, keyFeatures, default, data);
+                throw new NotImplementedException("map");
+                // writer.WriteMap(4, default, keyFeatures, default, data);
                 writer.Close();
             }
             catch
@@ -472,8 +473,9 @@ namespace Examples
                     {
                         case 4:
                             if (data == null) data = new Dictionary<int, string>();
-                            reader.ReadMap(default, keyFeatures, default, data);
-                            break;
+                            throw new NotImplementedException("map");
+                            // reader.ReadMap(default, keyFeatures, default, data);
+                            //break;
                         default:
                             reader.SkipField();
                             break;
