@@ -1129,6 +1129,20 @@ namespace ProtoBuf.Meta
             return default;
         }
 
+        internal static T SimpleCreateInstance<T>(ISerializationContext context, ISerializer<T> serializer)
+        {
+            if (TypeHelper<T>.IsReferenceType)
+            {
+                serializer ??= TypeModel.TryGetSerializer<T>(context?.Model);
+                if (serializer is IFactory<T> factory) return factory.Create(context);
+                return (T)Activator.CreateInstance(typeof(T), nonPublic: true);
+            }
+            else
+            {
+                return default;
+            }
+        }
+
         internal static T CreateInstance<T>(ISerializationContext context, IFactory<T> factory) where T : class
         {
             factory ??= TypeModel.TryGetSerializer<T>(context?.Model) as IFactory<T>;

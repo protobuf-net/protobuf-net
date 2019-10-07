@@ -191,9 +191,8 @@ namespace ProtoBuf
                 return values switch
                 {
                     null => ReadCollection<T>(features & ~SerializerFeatures.OptionClearCollection, new List<T>(), serializer),
-                    T[] arr => ReadRepeated(features, arr, serializer),
                     ICollection<T> collection when !collection.IsReadOnly => ReadCollection<T>(features, collection, serializer),
-                    _ => ReadRepeatedExotics<T>(features, values, serializer),
+                    _ => ReadRepeatedExotics<T>(features, values, serializer, TypeHelper<T>.Default),
                 };
             }
 
@@ -230,16 +229,26 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            private IEnumerable<T> ReadRepeatedExotics<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer)
+            private IEnumerable<T> ReadRepeatedExotics<T>(SerializerFeatures features, IEnumerable<T> values, ISerializer<T> serializer, T initialValue)
             {
                 // exotics are fun; rather than lots of repetition, let's buffer the data locally *first*,
                 // then worry about what to do with it afterwards
-                using var buffer = FillBuffer<T>(features, serializer);
-
+                using var buffer = FillBuffer<T>(features, serializer, initialValue);
                 bool clear = (features & SerializerFeatures.OptionClearCollection) != 0;
 
                 switch (values)
                 {
+                    case List<T> list:
+                        if (clear) list.Clear();
+                        list.AddRange(buffer);
+                        return list;
+                    case ICollection<T> collection when !collection.IsReadOnly:
+                        if (clear) collection.Clear();
+                        foreach(var item in buffer)
+                            collection.Add(item);
+                        return collection;
+                    case T[] arr:
+                        return clear ? buffer.ToArray() : buffer.ToArray(arr);
                     case IImmutableList<T> iList:
                         if (clear) iList = iList.Clear();
                         return buffer.IsEmpty ? iList : iList.AddRange(buffer);
@@ -387,7 +396,7 @@ namespace ProtoBuf
             public ImmutableArray<T> ReadRepeated<T>(ImmutableArray<T> values)
                 => ReadRepeated(default, values, default);
 
-            private ReadBuffer<T> FillBuffer<T>(SerializerFeatures features, ISerializer<T> serializer)
+            private ReadBuffer<T> FillBuffer<T>(SerializerFeatures features, ISerializer<T> serializer, T initialValue)
             {
                 PrepareToReadRepeated(ref features, ref serializer, out var category, out var packed);
                 var buffer = ReadBuffer<T>.Create();
@@ -395,7 +404,7 @@ namespace ProtoBuf
                 {
                     var wireType = features.GetWireType();
                     if (packed) ReadPackedScalar<ReadBuffer<T>, T>(ref buffer, wireType, serializer);
-                    else ReadRepeatedCore<ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, TypeHelper<T>.Default);
+                    else ReadRepeatedCore<ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, initialValue);
                     return buffer;
                 }
                 catch
@@ -410,7 +419,7 @@ namespace ProtoBuf
             /// </summary>
             public ImmutableArray<T> ReadRepeated<T>(SerializerFeatures features, ImmutableArray<T> values, ISerializer<T> serializer = null)
             {
-                using var newValues = FillBuffer<T>(features, serializer);
+                using var newValues = FillBuffer<T>(features, serializer, TypeHelper<T>.Default);
 
                 // nothing to prepend, or we don't *want* to prepend it
                 if (values.IsDefaultOrEmpty || (features & SerializerFeatures.OptionClearCollection) != 0)
@@ -433,32 +442,8 @@ namespace ProtoBuf
             /// </summary>
             public T[] ReadRepeated<T>(SerializerFeatures features, T[] values, ISerializer<T> serializer = null)
             {
-                // T[] origRef = values;
-
-                using var newValues = FillBuffer<T>(features, serializer);
-
-                if (values == null || values.Length == 0 || (features & SerializerFeatures.OptionClearCollection) != 0)
-                {
-                    // nothing to prepend, or we don't *want* to prepend it
-                    values = newValues.ToArray();
-                }
-                else if (newValues.IsEmpty)
-                {
-                    // nothing new to append; just return the input
-
-                    values ??= Array.Empty<T>();
-                }
-                else
-                {
-                    // we have non-trivial data in both
-                    var offset = values.Length;
-                    Array.Resize(ref values, values.Length + newValues.Count);
-                    newValues.CopyTo(values, offset);
-                }
-
-                //return (features & SerializerFeatures.OptionReturnNothingWhenUnchanged) != 0 && values == origRef
-                //    ? null : values;
-                return values;
+                using var newValues = FillBuffer<T>(features, serializer, TypeHelper<T>.Default);
+                return (features & SerializerFeatures.OptionClearCollection) != 0 ? newValues.ToArray() : newValues.ToArray(values);
             }
 
             /// <summary>

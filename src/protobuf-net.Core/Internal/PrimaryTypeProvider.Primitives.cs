@@ -18,7 +18,9 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<sbyte>,
         IMeasuringSerializer<short>,
         IMeasuringSerializer<Uri>,
-        IMeasuringSerializer<char>
+        IMeasuringSerializer<char>,
+        IFactory<string>,
+        IFactory<byte[]>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -201,5 +203,9 @@ namespace ProtoBuf.Internal
             WireType.Varint => ProtoWriter.MeasureUInt32(value),
             _ => -1,
         };
+
+        string IFactory<string>.Create(ISerializationContext context) => "";
+
+        byte[] IFactory<byte[]>.Create(ISerializationContext context) => Array.Empty<byte>();
     }
 }

@@ -66,6 +66,7 @@ namespace ProtoBuf.Internal
             TKey key = pair.Key;
             TValue value = pair.Value;
             int field;
+            bool haveKey = false, haveValue = false;
             while ((field = state.ReadFieldHeader()) > 0)
             {
                 switch (field)
@@ -81,6 +82,11 @@ namespace ProtoBuf.Internal
                         break;
                 }
             }
+            if (TypeHelper<TKey>.IsReferenceType && !haveKey && key is null)
+                key = TypeModel.SimpleCreateInstance<TKey>(state.Context, _keySerializer);
+            if (TypeHelper<TValue>.IsReferenceType && !haveValue && value is null)
+                value = TypeModel.SimpleCreateInstance<TValue>(state.Context, _valueSerializer);
+
             return new KeyValuePair<TKey, TValue>(key, value);
         }
 

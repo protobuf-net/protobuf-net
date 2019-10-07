@@ -27,6 +27,23 @@ namespace ProtoBuf.Internal
             return arr;
         }
 
+        public T[] ToArray(T[] prepend)
+        {
+            // nothing to prepend?
+            int oldLen = prepend == null ? 0 : prepend.Length;
+            if (oldLen == 0) return ToArray();
+
+            // nothing to append?
+            if (_count == 0) return prepend ?? Array.Empty<T>();
+
+            var arr = new T[oldLen + _count];
+            Array.Copy(prepend, 0, arr, 0, oldLen);
+            Array.Copy(_arr, 0, arr, oldLen, _count);
+            return arr;
+        }
+        
+
+
         bool ICollection<T>.Contains(T item)
             => Array.IndexOf(_arr, item, 0, _count) >= 0;
         bool ICollection<T>.Remove(T item)
