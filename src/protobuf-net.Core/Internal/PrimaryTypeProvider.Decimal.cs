@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using ProtoBuf.Serializers;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {

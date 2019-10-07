@@ -1138,61 +1138,56 @@ namespace ProtoBuf.Meta
 
         private void WriteEnumsAndProxies(CompilerContextScope scope, TypeBuilder type)
         {
-            var enums = new List<Type>();
-            var proxies = new Dictionary<Type, List<Type>>(); // multiple types can share a proxy
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
                 var runtimeType = metaType.Type;
-                if (runtimeType.IsEnum) enums.Add(runtimeType);
+                if (runtimeType.IsEnum)
+                {
+                    var member = EnumSerializer.GetProvider(runtimeType);
+                    AddProxy(type, runtimeType, member);
+                }
                 else if (metaType.SerializerType != null)
                 {
-                    if (!proxies.TryGetValue(metaType.SerializerType, out var list))
-                        proxies.Add(metaType.SerializerType, list = new List<Type>());
-                    list.Add(runtimeType);
+                    AddProxy(type, runtimeType, metaType.SerializerType);
                 }
             }
+        }
 
-            if (enums.Count == 0 && proxies.Count == 0) return; // no need to implement the factory API
-
-            type.AddInterfaceImplementation(typeof(ISerializerFactory));
-            var il = CompilerContextScope.Implement(type, typeof(ISerializerFactory), nameof(ISerializerFactory.TryCreate));
-            Label isMatch = il.DefineLabel(), nextTest = il.DefineLabel();
-            foreach (var enumType in enums)
+        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider)
+        {
+            ILGenerator il = null;
+            ILGenerator Implement()
             {
-                CompilerContext.LoadValue(il, enumType);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Beq, isMatch);
-            }
-            il.Emit(OpCodes.Br_S, nextTest);
-            il.MarkLabel(isMatch);
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ret);
-
-            il.MarkLabel(nextTest);
-
-            foreach (var group in proxies)
-            {
-                nextTest = il.DefineLabel();
-                isMatch = il.DefineLabel();
-
-                foreach (var victim in group.Value)
-                {
-                    CompilerContext.LoadValue(il, victim);
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Beq, isMatch);
-                }
-                il.Emit(OpCodes.Br_S, nextTest);
-                il.MarkLabel(isMatch);
-                CompilerContext.LoadValue(il, group.Key);
-                il.Emit(OpCodes.Ret);
-
-                il.MarkLabel(nextTest);
+                var iType = typeof(ISerializerProxy<>).MakeGenericType(proxying);
+                building.AddInterfaceImplementation(iType);
+                return il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
             }
 
+            switch (provider)
+            {   // properties are really a special-case of methods, via the getter
+                case PropertyInfo property:
+                    provider = property.GetGetMethod(true);
+                    break;
+                // types are really a short-hand for the singleton API
+                case Type type when type.IsClass && !type.IsAbstract && type.GetConstructor(Type.EmptyTypes) != null:
+                    provider = typeof(SerializerCache).GetMethod(nameof(SerializerCache.Get), BindingFlags.Public | BindingFlags.Static)
+                        .MakeGenericMethod(type, proxying);
+                    break;
+            }
 
-            il.Emit(OpCodes.Ldnull);
-            il.Emit(OpCodes.Ret);
+            // so all we *actually* need to implement is fields and methods
+            switch (provider)
+            {
+                case FieldInfo field when field.IsStatic:
+                    Implement().Emit(OpCodes.Ldsfld, field);
+                    break;
+                case MethodInfo method when method.IsStatic:
+                    Implement().EmitCall(OpCodes.Call, method, null);
+                    break;
+            }
+
+            il?.Emit(OpCodes.Ret);
         }
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Serializers;
+using System;
 using System.Text;
 
 namespace ProtoBuf.Internal

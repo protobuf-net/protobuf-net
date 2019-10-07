@@ -1,12 +1,13 @@
-﻿using System;
+﻿using ProtoBuf.Serializers;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace ProtoBuf.Internal
 {
-    internal sealed partial class PrimaryTypeProvider : ISerializerFactory
+    internal sealed partial class PrimaryTypeProvider : ILegacySerializerFactory
     {
-        object ISerializerFactory.TryCreate(Type type)
+        object ILegacySerializerFactory.TryCreate(Type type)
         {
             if (type.IsValueType)
             {

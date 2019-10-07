@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ProtoBuf.Serializers;
+using System;
 
 namespace ProtoBuf.Internal
 {
-    sealed class TertiaryTypeProvider : ISerializerFactory
+    sealed class TertiaryTypeProvider : ILegacySerializerFactory
     {
         public object TryCreate(Type type)
         {

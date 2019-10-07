@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using ProtoBuf.unittest;
 using System;
 using System.Buffers;
@@ -236,17 +237,12 @@ namespace ProtoBuf
         ISerializer<A>, ISubTypeSerializer<A>, IFactory<A>,
         ISerializer<B>, ISubTypeSerializer<B>, IFactory<B>,
         ISerializer<C>, ISubTypeSerializer<C>, IFactory<C>,
-        ISerializer<D>, IFactory<D>, ISerializerFactory
+        ISerializer<D>, IFactory<D>, ISerializerProxy<SomeEnum>
     {
         public static ModelSerializer Default = new ModelSerializer();
         public ModelSerializer() { }
 
-
-        object ISerializerFactory.TryCreate(Type type)
-        {
-            if (type == typeof(SomeEnum)) return type;
-            return null;
-        }
+        ISerializer<SomeEnum> ISerializerProxy<SomeEnum>.Serializer => EnumSerializer.CreateInt32<SomeEnum>();
 
         SerializerFeatures ISerializer<A>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         SerializerFeatures ISerializer<B>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;

@@ -1,5 +1,5 @@
 ﻿using ProtoBuf.Internal;
-using ProtoBuf.WellKnownTypes;
+using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
 using System.Collections;
@@ -9,7 +9,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using static ProtoBuf.Meta.SerializerCache;
 
 namespace ProtoBuf.Meta
 {

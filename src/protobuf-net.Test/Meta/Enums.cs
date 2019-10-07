@@ -7,6 +7,7 @@ using ProtoBuf.Meta;
 using System.ComponentModel;
 using System.IO;
 using ProtoBuf.Internal;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf.unittest.Meta
 {

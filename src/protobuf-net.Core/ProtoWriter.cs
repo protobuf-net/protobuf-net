@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf
 {

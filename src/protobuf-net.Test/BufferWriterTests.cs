@@ -2,6 +2,7 @@
 
 using Pipelines.Sockets.Unofficial.Buffers;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
 using System.IO;

@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 

@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
 using System;
 using System.Runtime.CompilerServices;

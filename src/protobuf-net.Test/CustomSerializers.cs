@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using ProtoBuf.unittest;
 using System;
 using Xunit;
@@ -77,15 +78,12 @@ namespace ProtoBuf
             internal CustomSerializerOperations ViaCustomSerializer { get; set; }
         }
 
-        public class CustomSerializer : ISerializer<HazCustomSerializer>, ISerializerFactory
+        public class CustomSerializer : ISerializer<HazCustomSerializer>, ISerializerProxy<HazIndirectCustomSerializer>
         {
             SerializerFeatures ISerializer<HazCustomSerializer>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
 
-            object ISerializerFactory.TryCreate(Type type)
-            {
-                if (type == typeof(HazIndirectCustomSerializer)) return typeof(IndirectSerializer);
-                return null;
-            }
+            ISerializer<HazIndirectCustomSerializer> ISerializerProxy<HazIndirectCustomSerializer>.Serializer
+                => SerializerCache.Get<IndirectSerializer, HazIndirectCustomSerializer>();
 
             void ISerializer<HazCustomSerializer>.Write(ref ProtoWriter.State state, HazCustomSerializer value)
             {

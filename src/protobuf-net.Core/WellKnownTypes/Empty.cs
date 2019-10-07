@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Internal;
+using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
 
 namespace ProtoBuf.Internal

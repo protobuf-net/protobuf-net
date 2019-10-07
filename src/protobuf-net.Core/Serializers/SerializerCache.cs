@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace ProtoBuf.Meta
+namespace ProtoBuf.Serializers
 {
     internal static class SerializerCache<TProvider>
              where TProvider : class
@@ -13,12 +13,20 @@ namespace ProtoBuf.Meta
             => SerializerCache<TProvider, T>.InstanceField;
     }
 
+    //internal static class SerializerSingleton<TSerializer, T>
+    //    where TSerializer : class, ISerializer<T>, new()
+    //{
+    //    public static readonly TSerializer InstanceField = new TSerializer();
+    //}
+
     internal static class SerializerCache<TProvider, T>
          where TProvider : class
     {
         internal static readonly ISerializer<T> InstanceField
-            = SerializerCache.Verify((SerializerCache<TProvider>.InstanceField as ISerializer<T>)
-            ?? SerializerCache.TryGetSecondary<ISerializer<T>>(SerializerCache<TProvider>.InstanceField, typeof(TProvider), typeof(T)));
+            = SerializerCache.Verify(
+                SerializerCache<TProvider>.InstanceField as ISerializer<T>
+                ?? (SerializerCache<TProvider>.InstanceField as ISerializerProxy<T>)?.Serializer
+                ?? SerializerCache.TryGetSecondary<ISerializer<T>>(SerializerCache<TProvider>.InstanceField, typeof(TProvider), typeof(T)));
 
         public static ISerializer<T> Instance
         {
@@ -32,6 +40,14 @@ namespace ProtoBuf.Meta
     /// </summary>
     public static class SerializerCache
     {
+        ///// <summary>
+        ///// Provides access to a singleton instance of a given serializer
+        ///// </summary>
+        //[MethodImpl(ProtoReader.HotPath)]
+        //public static TSerializer GetSingleton<TSerializer, T>()
+        //    where TSerializer : class, ISerializer<T>, new()
+        //    => SerializerSingleton<TSerializer, T>.InstanceField;
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         static void ThrowInvalidSerializer<T>(ISerializer<T> serializer, string message, Exception innerException = null)
         {
@@ -154,7 +170,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (provider is ISerializerFactory factory)
+            if (provider is ILegacySerializerFactory factory)
             {
                 object obj = factory.TryCreate(type);
                 if (obj is T typed) return typed; // service returned

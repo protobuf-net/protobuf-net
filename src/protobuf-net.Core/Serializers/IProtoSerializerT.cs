@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace ProtoBuf
+namespace ProtoBuf.Serializers
 {
     /// <summary>
     /// Indicates capabilities and behaviors of a serializer
@@ -184,7 +184,7 @@ namespace ProtoBuf
     /// for that type. This method can (and often will) return null. The implementation can also return
     /// the input type to indicate that an enum is included, or return another provider type to use as a proxy.
     /// </summary>
-    public interface ISerializerFactory
+    internal interface ILegacySerializerFactory
     {
         /// <summary>
         /// Attempt to obtain a provider or service for the required type
@@ -211,6 +211,17 @@ namespace ProtoBuf
         /// Indicates the features (including the default wire-type) for this type/serializer
         /// </summary>
         SerializerFeatures Features { get; }
+    }
+
+    /// <summary>
+    /// Provides indirect access to a serializer for a given type
+    /// </summary>
+    public interface ISerializerProxy<T>
+    {
+        /// <summary>
+        /// Gets the actual serializer for the type
+        /// </summary>
+        public ISerializer<T> Serializer { get; }
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 ﻿using Examples.Ppt;
 using ProtoBuf;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;

@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Internal;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,20 +72,16 @@ namespace ProtoBuf.Meta
             protected internal override ISerializer<T> GetSerializer<T>()
                 => GetSerializer<MyProvider, T>();
         }
-        class MyProvider : ISerializer<Haz>, ISerializerFactory
+        class MyProvider : ISerializer<Haz>, ISerializerProxy<A>, ISerializerProxy<Proxied>
         {
             SerializerFeatures ISerializer<Haz>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
 
+            ISerializer<Proxied> ISerializerProxy<Proxied>.Serializer => SerializerCache.Get<ProxySerializer, Proxied>();
+
+            ISerializer<A> ISerializerProxy<A>.Serializer => EnumSerializer.CreateInt32<A>();
+
             Haz ISerializer<Haz>.Read(ref ProtoReader.State state, Haz value)
                 => throw new NotImplementedException();
-
-            object ISerializerFactory.TryCreate(Type type)
-            {
-                if (type == typeof(A)) return type;
-                if (type == typeof(Proxied)) return typeof(ProxySerializer);
-
-                return null;
-            }
 
             void ISerializer<Haz>.Write(ref ProtoWriter.State state, Haz value)
                 => throw new NotImplementedException();
