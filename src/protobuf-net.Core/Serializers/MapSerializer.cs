@@ -6,13 +6,13 @@ using System.Collections.Immutable;
 
 namespace ProtoBuf.Serializers
 {
-    /// <summary>
-    /// Provides utility methods for creating serializers for repeated data
-    /// </summary>
-    public static class MapSerializer
-    {
+    ///// <summary>
+    ///// Provides utility methods for creating serializers for repeated data
+    ///// </summary>
+    //public static class MapSerializer
+    //{
 
-    }
+    //}
 
     /// <summary>
     /// Base class for dictionary-like collection serializers
