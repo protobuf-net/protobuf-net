@@ -22,17 +22,11 @@ namespace ProtoBuf.Meta
             Assert.True(model.IsDefined(typeof(Proxied)));
 
             var serType = TypeModel.TryGetSerializer<A>(model)?.GetType();
-            Assert.NotNull(serType);
-            Assert.True(serType.IsGenericType);
-            Assert.Equal("ProtoBuf.Internal.PrimaryTypeProvider+EnumSerializerInt32`1", serType.GetGenericTypeDefinition().FullName);
+            Assert.Equal(typeof(EnumSerializerInt32<A>), serType);
             Assert.Equal(typeof(A), serType.GetGenericArguments().Single());
 
-            // even though B isn't defined, it should work; enums need to work as pass-thru even if unknown
             serType = TypeModel.TryGetSerializer<B>(model)?.GetType();
-            Assert.NotNull(serType);
-            Assert.True(serType.IsGenericType);
-            Assert.Equal("ProtoBuf.Internal.PrimaryTypeProvider+EnumSerializerInt32`1", serType.GetGenericTypeDefinition().FullName);
-            Assert.Equal(typeof(B), serType.GetGenericArguments().Single());
+            Assert.Null(serType);
 
             Assert.IsType<MyProvider>(TypeModel.TryGetSerializer<Haz>(model));
             Assert.Null(TypeModel.TryGetSerializer<HazNot>(model));
@@ -40,9 +34,7 @@ namespace ProtoBuf.Meta
 
             // now let's look just via the model
             serType = model.GetSerializer<A>()?.GetType();
-            Assert.NotNull(serType);
-            Assert.True(serType.IsGenericType);
-            Assert.Equal("ProtoBuf.Internal.PrimaryTypeProvider+EnumSerializerInt32`1", serType.GetGenericTypeDefinition().FullName);
+            Assert.Equal(typeof(EnumSerializerInt32<A>), serType);
             Assert.Equal(typeof(A), serType.GetGenericArguments().Single());
 
             // B *should not* work when accessed directly
@@ -72,13 +64,14 @@ namespace ProtoBuf.Meta
             protected internal override ISerializer<T> GetSerializer<T>()
                 => GetSerializer<MyProvider, T>();
         }
-        class MyProvider : ISerializer<Haz>, ISerializerProxy<A>, ISerializerProxy<Proxied>
+        class MyProvider : ISerializer<Haz>, ISerializerProxy<A>, ISerializerProxy<A?>, ISerializerProxy<Proxied>
         {
             SerializerFeatures ISerializer<Haz>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
 
             ISerializer<Proxied> ISerializerProxy<Proxied>.Serializer => SerializerCache.Get<ProxySerializer, Proxied>();
 
             ISerializer<A> ISerializerProxy<A>.Serializer => EnumSerializer.CreateInt32<A>();
+            ISerializer<A?> ISerializerProxy<A?>.Serializer => EnumSerializer.CreateInt32<A>();
 
             Haz ISerializer<Haz>.Read(ref ProtoReader.State state, Haz value)
                 => throw new NotImplementedException();

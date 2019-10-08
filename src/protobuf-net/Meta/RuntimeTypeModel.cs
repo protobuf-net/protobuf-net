@@ -1204,15 +1204,15 @@ namespace ProtoBuf.Meta
                 if (runtimeType.IsEnum)
                 {
                     var member = EnumSerializers.GetProvider(runtimeType);
-                    AddProxy(type, runtimeType, member);
+                    AddProxy(type, runtimeType, member, true);
                 }
                 else if (metaType.SerializerType != null)
                 {
-                    AddProxy(type, runtimeType, metaType.SerializerType);
+                    AddProxy(type, runtimeType, metaType.SerializerType, false);
                 }
                 else if ((repeated = TryGetRepeatedProvider(runtimeType)) != null)
                 {
-                    AddProxy(type, runtimeType, repeated.Provider);
+                    AddProxy(type, runtimeType, repeated.Provider, false);
                 }
             }
         }
@@ -1269,7 +1269,7 @@ namespace ProtoBuf.Meta
             return repeated;
         }
 
-        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider)
+        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider, bool includeNullable)
         {
             provider = GetUnderlyingProvider(provider, proxying);
             if (provider != null)
@@ -1279,6 +1279,15 @@ namespace ProtoBuf.Meta
                 var il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
                 EmitProvider(provider, il);
                 il.Emit(OpCodes.Ret);
+
+                if (includeNullable)
+                {
+                    iType = typeof(ISerializerProxy<>).MakeGenericType(typeof(Nullable<>).MakeGenericType(proxying));
+                    building.AddInterfaceImplementation(iType);
+                    il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
+                    EmitProvider(provider, il);
+                    il.Emit(OpCodes.Ret);
+                }
             }
         }
 
