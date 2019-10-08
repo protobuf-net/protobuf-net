@@ -87,6 +87,6 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNestedDataNotSupported(Type declaringType)
-            => throw new NotSupportedException($"Repeated keys/values (lists, dictionaries, etc - as keys/values) are not currently supported - see {declaringType.NormalizeName()}");
+            => throw new NotSupportedException($"Nested or jagged lists, arrays and maps are not supported: {declaringType.NormalizeName()}");
     }
 }

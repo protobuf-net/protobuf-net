@@ -22,7 +22,20 @@ namespace ProtoBuf.Internal
 
         IMeasuringSerializer<Uri>,
         IFactory<string>,
-        IFactory<byte[]>
+        IFactory<byte[]>,
+
+        ISerializer<int?>,
+        ISerializer<long?>,
+        ISerializer<bool?>,
+        ISerializer<float?>,
+        ISerializer<double?>,
+        ISerializer<byte?>,
+        ISerializer<ushort?>,
+        ISerializer<uint?>,
+        ISerializer<ulong?>,
+        ISerializer<sbyte?>,
+        ISerializer<short?>,
+        ISerializer<char?>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -209,5 +222,53 @@ namespace ProtoBuf.Internal
         string IFactory<string>.Create(ISerializationContext context) => "";
 
         byte[] IFactory<byte[]>.Create(ISerializationContext context) => Array.Empty<byte>();
+
+        SerializerFeatures ISerializer<int?>.Features => ((ISerializer<int>)this).Features;
+        void ISerializer<int?>.Write(ref ProtoWriter.State state, int? value) => ((ISerializer<int>)this).Write(ref state, value.Value);
+        int? ISerializer<int?>.Read(ref ProtoReader.State state, int? value) => ((ISerializer<int>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<short?>.Features => ((ISerializer<short>)this).Features;
+        void ISerializer<short?>.Write(ref ProtoWriter.State state, short? value) => ((ISerializer<short>)this).Write(ref state, value.Value);
+        short? ISerializer<short?>.Read(ref ProtoReader.State state, short? value) => ((ISerializer<short>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<long?>.Features => ((ISerializer<long>)this).Features;
+        void ISerializer<long?>.Write(ref ProtoWriter.State state, long? value) => ((ISerializer<long>)this).Write(ref state, value.Value);
+        long? ISerializer<long?>.Read(ref ProtoReader.State state, long? value) => ((ISerializer<long>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<sbyte?>.Features => ((ISerializer<sbyte>)this).Features;
+        void ISerializer<sbyte?>.Write(ref ProtoWriter.State state, sbyte? value) => ((ISerializer<sbyte>)this).Write(ref state, value.Value);
+        sbyte? ISerializer<sbyte?>.Read(ref ProtoReader.State state, sbyte? value) => ((ISerializer<sbyte>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<uint?>.Features => ((ISerializer<uint>)this).Features;
+        void ISerializer<uint?>.Write(ref ProtoWriter.State state, uint? value) => ((ISerializer<uint>)this).Write(ref state, value.Value);
+        uint? ISerializer<uint?>.Read(ref ProtoReader.State state, uint? value) => ((ISerializer<uint>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<ushort?>.Features => ((ISerializer<ushort>)this).Features;
+        void ISerializer<ushort?>.Write(ref ProtoWriter.State state, ushort? value) => ((ISerializer<ushort>)this).Write(ref state, value.Value);
+        ushort? ISerializer<ushort?>.Read(ref ProtoReader.State state, ushort? value) => ((ISerializer<ushort>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<ulong?>.Features => ((ISerializer<ulong>)this).Features;
+        void ISerializer<ulong?>.Write(ref ProtoWriter.State state, ulong? value) => ((ISerializer<ulong>)this).Write(ref state, value.Value);
+        ulong? ISerializer<ulong?>.Read(ref ProtoReader.State state, ulong? value) => ((ISerializer<ulong>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<byte?>.Features => ((ISerializer<byte>)this).Features;
+        void ISerializer<byte?>.Write(ref ProtoWriter.State state, byte? value) => ((ISerializer<byte>)this).Write(ref state, value.Value);
+        byte? ISerializer<byte?>.Read(ref ProtoReader.State state, byte? value) => ((ISerializer<byte>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<char?>.Features => ((ISerializer<char>)this).Features;
+        void ISerializer<char?>.Write(ref ProtoWriter.State state, char? value) => ((ISerializer<char>)this).Write(ref state, value.Value);
+        char? ISerializer<char?>.Read(ref ProtoReader.State state, char? value) => ((ISerializer<char>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<bool?>.Features => ((ISerializer<bool>)this).Features;
+        void ISerializer<bool?>.Write(ref ProtoWriter.State state, bool? value) => ((ISerializer<bool>)this).Write(ref state, value.Value);
+        bool? ISerializer<bool?>.Read(ref ProtoReader.State state, bool? value) => ((ISerializer<bool>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<float?>.Features => ((ISerializer<float>)this).Features;
+        void ISerializer<float?>.Write(ref ProtoWriter.State state, float? value) => ((ISerializer<float>)this).Write(ref state, value.Value);
+        float? ISerializer<float?>.Read(ref ProtoReader.State state, float? value) => ((ISerializer<float>)this).Read(ref state, value.GetValueOrDefault());
+
+        SerializerFeatures ISerializer<double?>.Features => ((ISerializer<double>)this).Features;
+        void ISerializer<double?>.Write(ref ProtoWriter.State state, double? value) => ((ISerializer<double>)this).Write(ref state, value.Value);
+        double? ISerializer<double?>.Read(ref ProtoReader.State state, double? value) => ((ISerializer<double>)this).Read(ref state, value.GetValueOrDefault());
     }
 }
