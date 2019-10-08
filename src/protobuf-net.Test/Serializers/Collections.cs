@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
@@ -24,8 +25,8 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(ImmutableDictionary<int, string>), typeof(ImmutableDictionarySerializer<int, string>))]
         [InlineData(typeof(ImmutableSortedDictionary<int, string>), typeof(ImmutableSortedDictionarySerializer<int, string>))]
         [InlineData(typeof(IImmutableDictionary<int, string>), typeof(ImmutableIDictionarySerializer<int, string>))]
-        [InlineData(typeof(Queue<int>), typeof(QueueSerializer<int>))]
-        [InlineData(typeof(Stack<int>), typeof(StackSerializer<int>))]
+        [InlineData(typeof(Queue<int>), typeof(QueueSerializer<Queue<int>, int>))]
+        [InlineData(typeof(Stack<int>), typeof(StackSerializer<Stack<int>, int>))]
         [InlineData(typeof(CustomGenericCollection<int>), typeof(CollectionSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>,int>))]
         [InlineData(typeof(CustomNonGenericCollection), typeof(CollectionSerializer<CustomNonGenericCollection,CustomNonGenericCollection,bool>))]
         [InlineData(typeof(IReadOnlyCollection<string>), typeof(ReadOnlyCollectionSerializer<IReadOnlyCollection<string>, IReadOnlyCollection<string>, string>))]
@@ -41,6 +42,11 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IImmutableQueue<string>), typeof(ImmutableIQueueSerializer<string>))]
         [InlineData(typeof(ImmutableStack<string>), typeof(ImmutableStackSerializer<string>))]
         [InlineData(typeof(IImmutableStack<string>), typeof(ImmutableIStackSerializer<string>))]
+
+        [InlineData(typeof(ConcurrentBag<string>), typeof(ConcurrentBagSerializer<ConcurrentBag<string>, string>))]
+        [InlineData(typeof(ConcurrentStack<string>), typeof(ConcurrentStackSerializer<ConcurrentStack<string>, string>))]
+        [InlineData(typeof(ConcurrentQueue<string>), typeof(ConcurrentQueueSerializer<ConcurrentQueue<string>, string>))]
+        [InlineData(typeof(IProducerConsumerCollection<string>), typeof(ProducerConsumerSerializer<IProducerConsumerCollection<string>, string>))]
 
         public void TestWhatProviderWeGet(Type type, Type expected)
         {

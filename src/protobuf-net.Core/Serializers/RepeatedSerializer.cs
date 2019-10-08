@@ -56,13 +56,15 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<Queue<T>, T> CreateQueue<T>()
-            => SerializerCache<QueueSerializer<T>>.InstanceField;
+        public static RepeatedSerializer<TCollection, T> CreateQueue<TCollection, T>()
+            where TCollection : Queue<T>
+            => SerializerCache<QueueSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<Stack<T>, T> CreateStack<T>()
-            => SerializerCache<StackSerializer<T>>.InstanceField;
+        public static RepeatedSerializer<TCollection, T> CreateStack<TCollection, T>()
+            where TCollection : Stack<T>
+            => SerializerCache<StackSerializer<TCollection, T>>.InstanceField;
 
 
 
@@ -252,35 +254,36 @@ namespace ProtoBuf.Serializers
         protected abstract TCollection AddRange(TCollection values, in ArraySegment<TItem> newValues, ISerializationContext context);
     }
 
-    sealed class StackSerializer<T> : RepeatedSerializer<Stack<T>, T>
+    sealed class StackSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+        where TCollection : Stack<T>
     {
-        protected override Stack<T> Initialize(Stack<T> values, ISerializationContext context)
-            => values ?? new Stack<T>();
-        protected override Stack<T> Clear(Stack<T> values, ISerializationContext context)
+        protected override TCollection Initialize(TCollection values, ISerializationContext context)
+            => values ?? TypeModel.ActivatorCreate<TCollection>();
+        protected override TCollection Clear(TCollection values, ISerializationContext context)
         {
             values.Clear();
             return values;
         }
-        protected override Stack<T> AddRange(Stack<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
         {
             newValues.ReverseInPlace();
             foreach (var value in newValues.AsSpan())
                 values.Push(value);
             return values;
         }
-        internal override long Measure(Stack<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
             var iter = values.GetEnumerator();
             return Measure(ref iter, serializer, context, wireType);
         }
 
-        internal override void WritePacked(ref ProtoWriter.State state, Stack<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
+        internal override void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<T> serializer, WireType wireType)
         {
             var iter = values.GetEnumerator();
             WritePacked(ref state, ref iter, serializer, wireType);
         }
 
-        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, Stack<T> values, ISerializer<T> serializer)
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer)
         {
             var iter = values.GetEnumerator();
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
@@ -519,33 +522,34 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    sealed class QueueSerializer<T> : RepeatedSerializer<Queue<T>, T>
+    sealed class QueueSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+        where TCollection : Queue<T>
     {
-        protected override Queue<T> Initialize(Queue<T> values, ISerializationContext context)
-            => values ?? new Queue<T>();
-        protected override Queue<T> Clear(Queue<T> values, ISerializationContext context)
+        protected override TCollection Initialize(TCollection values, ISerializationContext context)
+            => values ?? TypeModel.ActivatorCreate<TCollection>();
+        protected override TCollection Clear(TCollection values, ISerializationContext context)
         {
             values.Clear();
             return values;
         }
-        protected override Queue<T> AddRange(Queue<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
         {
             foreach (var value in newValues.AsSpan())
                 values.Enqueue(value);
             return values;
         }
 
-        internal override long Measure(Queue<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
             var iter = values.GetEnumerator();
             return Measure(ref iter, serializer, context, wireType);
         }
-        internal override void WritePacked(ref ProtoWriter.State state, Queue<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
+        internal override void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<T> serializer, WireType wireType)
         {
             var iter = values.GetEnumerator();
             WritePacked(ref state, ref iter, serializer, wireType);
         }
-        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, Queue<T> values, ISerializer<T> serializer)
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer)
         {
             var iter = values.GetEnumerator();
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer);

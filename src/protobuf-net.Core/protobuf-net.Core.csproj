@@ -20,10 +20,10 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_CONCURRENT_CLEAR</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.0'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR</DefineConstants>
   </PropertyGroup>
 
 <!--
@@ -34,6 +34,7 @@ PLAT_INTRINSICS           : make use of CPU intrinsics
 PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
 FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
 FEAT_NULL_LIST_ITEMS      : whether we support retaining nulls in lists
+PLAT_CONCURRENT_CLEAR     : whether the concurrent collections have the necessary Clear method
 
 KNOWN_GAPS                : test project; things we are electing to defer
 -->
