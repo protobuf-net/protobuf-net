@@ -1135,8 +1135,11 @@ namespace ProtoBuf.Meta
             if (TypeHelper<T>.IsReferenceType)
             {
                 serializer ??= TypeModel.TryGetSerializer<T>(context?.Model);
-                if (serializer is IFactory<T> factory) return factory.Create(context);
-                return ActivatorCreate<T>();
+                T obj = default;
+                if (serializer is IFactory<T> factory) obj = factory.Create(context);
+                // note we already know this is a ref-type
+                if (obj is null) obj = ActivatorCreate<T>();
+                return obj;
             }
             else
             {
