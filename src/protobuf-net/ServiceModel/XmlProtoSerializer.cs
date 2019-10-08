@@ -109,7 +109,7 @@ namespace ProtoBuf.ServiceModel
                 {
 
                     if (!DynamicStub.TrySerializeRoot(type, model, ref state, graph))
-                        TypeModel.ThrowUnexpectedType(type);
+                        TypeModel.ThrowUnexpectedType(type, model);
                 }
                 catch
                 {
@@ -159,7 +159,7 @@ namespace ProtoBuf.ServiceModel
                 {
                     object result = null;
                     if (!DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
-                        TypeModel.ThrowUnexpectedType(type);
+                        TypeModel.ThrowUnexpectedType(type, model);
                     return result;
                 }
                 finally

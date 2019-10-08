@@ -432,7 +432,7 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    TypeModel.ThrowUnexpectedType(type);
+                    TypeModel.ThrowUnexpectedType(type, Model);
                 }
                 EndSubItem(token);
                 return value;

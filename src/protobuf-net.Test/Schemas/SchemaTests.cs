@@ -119,6 +119,7 @@ namespace ProtoBuf.Schemas
         [Fact]
         public void EverythingProtoLangver3()
         {
+            _ = RuntimeTypeModel.Default; // initialize the default model
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "everything.proto";
 
@@ -146,7 +147,16 @@ namespace ProtoBuf.Schemas
             try
             {
                 var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
-                Assert.Empty(results.Errors);
+                var count = results.Errors.Count;
+                Assert.Equal(3, count);
+                foreach (CompilerError error in results.Errors)
+                {
+                    Assert.Equal("CS0619", error.ErrorNumber);
+                    var txt = error.ErrorText;
+                    bool expected = txt.StartsWith("'ProtoBuf.ProtoMemberAttribute.AsReference' is obsolete")
+                        || txt.StartsWith("'ProtoBuf.ProtoMemberAttribute.DynamicType' is obsolete");
+                    Assert.True(expected);
+                }
             }
             catch (PlatformNotSupportedException) { }
         }

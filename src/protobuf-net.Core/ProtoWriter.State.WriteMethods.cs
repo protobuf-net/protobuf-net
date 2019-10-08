@@ -679,7 +679,7 @@ namespace ProtoBuf
                 SubItemToken token = StartSubItem(value, style);
                 if (!DynamicStub.TrySerializeAny(TypeModel.ListItemTag, SerializerFeatures.CategoryMessageWrappedAtRoot, type, Model, ref this, value))
                 {
-                    TypeModel.ThrowUnexpectedType(value.GetType());
+                    TypeModel.ThrowUnexpectedType(value.GetType(), Model);
                 }
                 EndSubItem(token, style);
 #pragma warning restore CS0618

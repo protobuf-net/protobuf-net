@@ -591,7 +591,7 @@ namespace ProtoBuf.Meta
                             !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
                         {
-                            if (demand) ThrowUnexpectedType(type);
+                            if (demand) ThrowUnexpectedType(type, this);
                             return key;
                         }
 

@@ -54,10 +54,23 @@ namespace ProtoBuf.Internal
         public void Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> value)
         {
             if (!EqualityComparer<TKey>.Default.Equals(value.Key, default))
-                state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
-
+            {
+                if (typeof(TKey) == typeof(string) && (string)(object)value.Key == "")
+                { } // don't write empty strings; ugly, but it works
+                else
+                {
+                    state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
+                }
+            }
             if (!EqualityComparer<TValue>.Default.Equals(value.Value, default))
-                state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
+            {
+                if (typeof(TValue) == typeof(string) && (string)(object)value.Value == "")
+                { } // don't write empty strings; ugly, but it works
+                else
+                {
+                    state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
+                }
+            }
         }
     }
 }

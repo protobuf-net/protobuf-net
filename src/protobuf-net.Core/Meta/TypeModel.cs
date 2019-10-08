@@ -30,15 +30,15 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal virtual bool SerializeDateTimeKind() => false;
 
-         /// <summary>
-         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-         /// </summary>
-         public bool InternStrings => GetInternStrings();
- 
-         /// <summary>
-         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-         /// </summary>
-         protected internal virtual bool GetInternStrings() => false;
+        /// <summary>
+        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+        /// </summary>
+        public bool InternStrings => GetInternStrings();
+
+        /// <summary>
+        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+        /// </summary>
+        protected internal virtual bool GetInternStrings() => false;
 
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
@@ -58,11 +58,11 @@ namespace ProtoBuf.Meta
         {
             if (type.IsEnum) return WireType.Varint;
 
-            if (model != null && model.IsDefined(type))
+            if (model != null && model.CanSerializeContractType(type))
             {
                 return format == DataFormat.Group ? WireType.StartGroup : WireType.String;
             }
-            
+
             switch (Helpers.GetTypeCode(type))
             {
                 case ProtoTypeCode.Int64:
@@ -120,9 +120,9 @@ namespace ProtoBuf.Meta
                 try
                 {
                     if (!DynamicStub.TrySerializeAny(tag, wireType.AsFeatures() | FromAux, type, this, ref state, value))
-                        ThrowUnexpectedType(type);
+                        ThrowUnexpectedType(type, this);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     ThrowHelper.ThrowProtoException(ex.Message + $"; scope: {scope}, features: {features}; type: {type.NormalizeName()}", ex);
                 }
@@ -138,7 +138,7 @@ namespace ProtoBuf.Meta
                     if (item == null) ThrowHelper.ThrowNullReferenceException();
                     if (!TrySerializeAuxiliaryType(ref state, null, format, tag, item, true, sequence))
                     {
-                        ThrowUnexpectedType(item.GetType());
+                        ThrowUnexpectedType(item.GetType(), this);
                     }
                 }
                 return true;
@@ -215,7 +215,7 @@ namespace ProtoBuf.Meta
 #endif
                     if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
                     {
-                        ThrowUnexpectedType(type);
+                        ThrowUnexpectedType(type, this);
                     }
                     state.Close();
                 }
@@ -431,7 +431,7 @@ namespace ProtoBuf.Meta
                 {
                     if (!(TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null) || len == 0))
                     {
-                        TypeModel.ThrowUnexpectedType(type); // throws
+                        TypeModel.ThrowUnexpectedType(type, this); // throws
                     }
                 }
                 bytesRead += state.GetPosition();
@@ -615,7 +615,7 @@ namespace ProtoBuf.Meta
                 {
                     case PrefixStyle.None:
                         if (!DynamicStub.TrySerializeRoot(type, this, ref state, value))
-                            ThrowUnexpectedType(type);
+                            ThrowUnexpectedType(type, this);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
@@ -725,7 +725,7 @@ namespace ProtoBuf.Meta
                 if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
                 type = value.GetType();
             }
-            
+
             bool autoCreate = true;
             Type underlyingType = Nullable.GetUnderlyingType(type);
             if (underlyingType == null)
@@ -983,7 +983,7 @@ namespace ProtoBuf.Meta
                 }
 
                 // otherwise, not a happy bunny...
-                ThrowUnexpectedType(type);
+                ThrowUnexpectedType(type, this);
             }
 
             if (!DynamicStub.CanSerialize(type, this, out var features))
@@ -1044,7 +1044,7 @@ namespace ProtoBuf.Meta
                 fieldValue = Volatile.Read(ref s_defaultModel);
             }
             return fieldValue;
-            
+
         }
         private static TypeModel s_defaultModel;
 
@@ -1278,7 +1278,7 @@ namespace ProtoBuf.Meta
             try
             {
                 if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
-                    ThrowUnexpectedType(type);
+                    ThrowUnexpectedType(type, this);
                 writeState.Close();
             }
             catch
@@ -1349,7 +1349,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates that the given type was not expected, and cannot be processed.
         /// </summary>
-        protected internal static void ThrowUnexpectedType(Type type)
+        protected internal static void ThrowUnexpectedType(Type type, TypeModel model)
         {
             string fullName = type == null ? "(unknown)" : type.FullName;
 
@@ -1364,7 +1364,15 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            ThrowHelper.ThrowInvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
+            try
+            {
+                ThrowHelper.ThrowInvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
+            }
+            catch (Exception ex) when (model != null)
+            {
+                ex.Data["TypeModel"] = model.ToString();
+                throw;
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
