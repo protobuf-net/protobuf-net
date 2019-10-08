@@ -28,6 +28,10 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(Stack<int>), typeof(StackSerializer<int>))]
         [InlineData(typeof(CustomGenericCollection<int>), typeof(CollectionSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>,int>))]
         [InlineData(typeof(CustomNonGenericCollection), typeof(CollectionSerializer<CustomNonGenericCollection,CustomNonGenericCollection,bool>))]
+        [InlineData(typeof(IReadOnlyCollection<string>), typeof(ReadOnlyCollectionSerializer<IReadOnlyCollection<string>, IReadOnlyCollection<string>, string>))]
+        [InlineData(typeof(CustomNonGenericReadOnlyCollection), typeof(ReadOnlyCollectionSerializer<CustomNonGenericReadOnlyCollection, CustomNonGenericReadOnlyCollection, string>))]
+        [InlineData(typeof(CustomGenericReadOnlyCollection<string>), typeof(ReadOnlyCollectionSerializer<CustomGenericReadOnlyCollection<string>, CustomGenericReadOnlyCollection<string>, string>))]
+
         public void TestWhatProviderWeGet(Type type, Type expected)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
@@ -46,6 +50,19 @@ namespace ProtoBuf.Serializers
 
         public class ListGenericSubclass<T> : List<T> { }
         public class ListNonGenericSubclass : List<int> { }
+
+        public class CustomNonGenericReadOnlyCollection : IReadOnlyCollection<string>
+        {
+            int IReadOnlyCollection<string>.Count => throw new NotImplementedException();
+            IEnumerator<string> IEnumerable<string>.GetEnumerator() => throw new NotImplementedException();
+            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+        }
+        public class CustomGenericReadOnlyCollection<T> : IReadOnlyCollection<T>
+        {
+            int IReadOnlyCollection<T>.Count => throw new NotImplementedException();
+            IEnumerator<T> IEnumerable<T>.GetEnumerator() => throw new NotImplementedException();
+            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+        }
 
         public class CustomGenericCollection<T> : IList<T>
         {

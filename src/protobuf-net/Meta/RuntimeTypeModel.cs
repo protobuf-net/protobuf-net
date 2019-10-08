@@ -806,6 +806,9 @@ namespace ProtoBuf.Meta
             service = GetServicesImpl();
             if (service != null)
             {
+                try {
+                    _ = this[type]; // if possible, make sure that we've registered it, so we export a proxy if needed
+                } catch { }
                 lock (_serviceCache)
                 {
                     _serviceCache[type] = service;

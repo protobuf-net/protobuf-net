@@ -164,8 +164,9 @@ namespace ProtoBuf.Serializers
             Add(typeof(Queue<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateQueue), targs));
             Add(typeof(Stack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateStack), targs));
 
-            // fallback, this should be at the end
+            // fallbacks, these should be at the end
             Add(typeof(ICollection<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateCollection), new[] { root, targs[0] }), false);
+            Add(typeof(IReadOnlyCollection<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateReadOnlyCollection), new[] { root, targs[0] }), false);
         }
 
         public static void Add(Type type, Func<Type, Type, Type[], MemberInfo> implementation, bool exactOnly = true)
