@@ -43,7 +43,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BenchmarkBaseline", "BenchmarkBaseline\BenchmarkBaseline.csproj", "{DF69A70B-7F64-47BE-AD3D-C278861133D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Core", "protobuf-net.Core\protobuf-net.Core.csproj", "{951BBDE9-6A10-4965-AA4F-C155D8CCF0B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Core", "protobuf-net.Core\protobuf-net.Core.csproj", "{951BBDE9-6A10-4965-AA4F-C155D8CCF0B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

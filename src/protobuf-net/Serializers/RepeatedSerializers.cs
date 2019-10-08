@@ -48,8 +48,7 @@ namespace ProtoBuf.Serializers
         {
             ForType = forType;
             Provider = provider;
-            Type itemType;
-            IsMap = CheckIsMap(provider, out itemType);
+            IsMap = CheckIsMap(provider, out Type itemType);
             ItemType = itemType;
         }
         private static bool CheckIsMap(MemberInfo provider, out Type itemType)
@@ -207,6 +206,7 @@ namespace ProtoBuf.Serializers
             if (type.IsArray)
             {
                 // the fun bit here is checking we mean a *vector*
+                if (type == typeof(byte[])) return null; // special-case, "bytes"
                 return s_Array.Resolve(type, type.GetElementType().MakeArrayType());
             }
 

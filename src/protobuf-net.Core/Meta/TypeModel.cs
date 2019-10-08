@@ -962,7 +962,9 @@ namespace ProtoBuf.Meta
             bool found = false;
             if (wiretype == WireType.None)
             {
+#pragma warning disable CS0618 // don't matter; we want to kill the entire aux flow
                 if (!TypeHelper.ResolveUniqueEnumerableT(type, out Type itemType))
+#pragma warning restore CS0618
                     itemType = null;
 
                 if (itemType == null && type.IsArray && type.GetArrayRank() == 1 && type != typeof(byte[]))
@@ -1465,8 +1467,10 @@ namespace ProtoBuf.Meta
             static bool DoCheckLists(Type type, TypeModel model, bool allowBasic, bool allowContract)
             {
                 // is it a list?
+#pragma warning disable CS0618 // this is a legit usage
                 return TypeHelper.ResolveUniqueEnumerableT(type, out var itemType)
                     && model.CanSerialize(itemType, allowBasic, allowContract, false, out _);
+#pragma warning restore CS0618
             }
             category = default;
             return false;

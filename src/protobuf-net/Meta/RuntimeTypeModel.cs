@@ -1260,7 +1260,7 @@ namespace ProtoBuf.Meta
                     return null;
                 }
             }
-            if (repeated == null && type.IsArray)
+            if (repeated == null && type.IsArray && type != typeof(byte[]))
                 ThrowHelper.ThrowNotSupportedException("Multi-dimensional and non-vector arrays are not supported");
             CheckNotNested(repeated);
             return repeated;
