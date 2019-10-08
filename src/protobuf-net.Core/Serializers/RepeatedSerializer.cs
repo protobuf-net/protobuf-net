@@ -3,7 +3,6 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
@@ -11,7 +10,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Provides utility methods for creating serializers for repeated data
     /// </summary>
-    public static class RepeatedSerializer
+    public static partial class RepeatedSerializer
     {
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -65,24 +64,13 @@ namespace ProtoBuf.Serializers
         public static RepeatedSerializer<Stack<T>, T> CreateStack<T>()
             => SerializerCache<StackSerializer<T>>.InstanceField;
 
-        /// <summary>Create a serializer that operates on lists</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableArray<T>, T> CreateImmutableArray<T>()
-            => SerializerCache<ImmutableArraySerializer<T>>.InstanceField;
-
 
 
         /// <summary>Reverses a range of values</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        internal static void Reverse<T>(ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
+        internal static void ReverseInPlace<T>(this in ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
 
-        /// <summary>Obtains a range of values as a span</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        internal static Span<T> AsSpan<T>(ArraySegment<T> values) => new Span<T>(values.Array, values.Offset, values.Count);
-
-        /// <summary>Obtains a range of values as an enumerable sequence</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        internal static IEnumerable<T> AsEnumerable<T>(ArraySegment<T> values) => values;
+        internal static ref T Singleton<T>(this in ArraySegment<T> values) => ref values.Array[values.Offset];
     }
 
 
@@ -226,7 +214,7 @@ namespace ProtoBuf.Serializers
         }
 
         /// <summary>If possible to do so *cheaply*, return the count of the items in the collection</summary>
-        protected virtual int TryGetCount(TCollection value) => value switch
+        protected virtual int TryGetCount(TCollection values) => values switch
         {
             IReadOnlyCollection<TItem> collection => collection.Count,
             null => 0,
@@ -261,7 +249,7 @@ namespace ProtoBuf.Serializers
         protected abstract TCollection Clear(TCollection values, ISerializationContext context);
 
         /// <summary>Add new contents to the collection</summary>
-        protected abstract TCollection AddRange(TCollection values, ArraySegment<TItem> newValues, ISerializationContext context);
+        protected abstract TCollection AddRange(TCollection values, in ArraySegment<TItem> newValues, ISerializationContext context);
     }
 
     sealed class StackSerializer<T> : RepeatedSerializer<Stack<T>, T>
@@ -273,10 +261,10 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override Stack<T> AddRange(Stack<T> values, ArraySegment<T> newValues, ISerializationContext context)
+        protected override Stack<T> AddRange(Stack<T> values, in ArraySegment<T> newValues, ISerializationContext context)
         {
-            RepeatedSerializer.Reverse(newValues);
-            foreach (var value in RepeatedSerializer.AsSpan(newValues))
+            newValues.ReverseInPlace();
+            foreach (var value in newValues.AsSpan())
                 values.Push(value);
             return values;
         }
@@ -316,9 +304,9 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override TList AddRange(TList values, ArraySegment<T> newValues, ISerializationContext context)
+        protected override TList AddRange(TList values, in ArraySegment<T> newValues, ISerializationContext context)
         {
-            values.AddRange(RepeatedSerializer.AsEnumerable(newValues));
+            values.AddRange(newValues);
             return values;
         }
 
@@ -351,15 +339,15 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override TCollection AddRange(TCollection values, ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
         {
             switch (values)
             {
                 case List<T> list:
-                    list.AddRange(RepeatedSerializer.AsEnumerable(newValues));
+                    list.AddRange(newValues);
                     break;
                 default:
-                    foreach (var item in RepeatedSerializer.AsSpan(newValues))
+                    foreach (var item in newValues.AsSpan())
                         values.Add(item);
                     break;
             }
@@ -424,15 +412,15 @@ namespace ProtoBuf.Serializers
             }
             return values;
         }
-        protected override TCollection AddRange(TCollection values, ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
         {
             switch (values)
             {
                 case List<T> list:
-                    list.AddRange(RepeatedSerializer.AsEnumerable(newValues));
+                    list.AddRange(newValues);
                     break;
                 case ICollection<T> collection:
-                    foreach (var item in RepeatedSerializer.AsSpan(newValues))
+                    foreach (var item in newValues.AsSpan())
                         collection.Add(item);
                     break;
                 default:
@@ -487,14 +475,14 @@ namespace ProtoBuf.Serializers
             => values ?? Array.Empty<T>();
         protected override T[] Clear(T[] values, ISerializationContext context)
             => Array.Empty<T>();
-        protected override T[] AddRange(T[] values, ArraySegment<T> newValues, ISerializationContext context)
+        protected override T[] AddRange(T[] values, in ArraySegment<T> newValues, ISerializationContext context)
         {
             var arr = new T[values.Length + newValues.Count];
             Array.Copy(values, 0, arr, 0, values.Length);
             Array.Copy(newValues.Array, newValues.Offset, arr, values.Length, newValues.Count);
             return arr;
         }
-        protected override int TryGetCount(T[] value) => value is null ? 0 : value.Length;
+        protected override int TryGetCount(T[] values) => values is null ? 0 : values.Length;
 
         internal override long Measure(T[] values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -540,9 +528,9 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override Queue<T> AddRange(Queue<T> values, ArraySegment<T> newValues, ISerializationContext context)
+        protected override Queue<T> AddRange(Queue<T> values, in ArraySegment<T> newValues, ISerializationContext context)
         {
-            foreach (var value in RepeatedSerializer.AsSpan(newValues))
+            foreach (var value in newValues.AsSpan())
                 values.Enqueue(value);
             return values;
         }
@@ -561,47 +549,6 @@ namespace ProtoBuf.Serializers
         {
             var iter = values.GetEnumerator();
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
-        }
-    }
-
-    sealed class ImmutableArraySerializer<T> : RepeatedSerializer<ImmutableArray<T>, T>
-    {
-        protected override ImmutableArray<T> Initialize(ImmutableArray<T> values, ISerializationContext context)
-            => values.IsDefault ? ImmutableArray<T>.Empty : values;
-        protected override ImmutableArray<T> Clear(ImmutableArray<T> values, ISerializationContext context)
-            => values.Clear();
-        protected override ImmutableArray<T> AddRange(ImmutableArray<T> values, ArraySegment<T> newValues, ISerializationContext context)
-            => values.AddRange(RepeatedSerializer.AsEnumerable(newValues));
-
-        protected override int TryGetCount(ImmutableArray<T> value) => value.IsEmpty ? 0 : value.Length;
-
-        internal override long Measure(ImmutableArray<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
-        {
-            var iter = new Enumerator(values);
-            return Measure(ref iter, serializer, context, wireType);
-        }
-
-        internal override void WritePacked(ref ProtoWriter.State state, ImmutableArray<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
-        {
-            var iter = new Enumerator(values);
-            WritePacked(ref state, ref iter, serializer, wireType);
-        }
-
-        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, ImmutableArray<T> values, ISerializer<T> serializer)
-        {
-            var iter = new Enumerator(values);
-            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
-        }
-
-        struct Enumerator : IEnumerator<T>
-        {
-            public void Reset() => ThrowHelper.ThrowNotSupportedException();
-            public Enumerator(ImmutableArray<T> array) => _iter = array.GetEnumerator();
-            private ImmutableArray<T>.Enumerator _iter;
-            public T Current => _iter.Current;
-            object IEnumerator.Current => _iter.Current;
-            public bool MoveNext() => _iter.MoveNext();
-            public void Dispose() { }
         }
     }
 }

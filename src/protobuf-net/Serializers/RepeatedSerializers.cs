@@ -1,104 +1,15 @@
-﻿using ProtoBuf.Compiler;
-using ProtoBuf.Internal;
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
 {
-    internal class RepeatedSerializerStub
-    {
-        internal static readonly RepeatedSerializerStub Empty = new RepeatedSerializerStub(null, null);
-        public MemberInfo Provider { get; }
-        public bool IsMap { get; }
-        public bool IsEmpty => Provider == null;
-        public object Serializer => _serializer ?? CreateSerializer();
-        public Type ForType { get; }
-        public Type ItemType { get; }
-        private object _serializer;
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private object CreateSerializer()
-        {
-            var provider = RuntimeTypeModel.GetUnderlyingProvider(Provider, ForType);
-            _serializer = provider switch
-            {
-                FieldInfo field when field.IsStatic => field.GetValue(null),
-                MethodInfo method when method.IsStatic => method.Invoke(null, null),
-                _ => null,
-            };
-            return _serializer;
-        }
 
-        internal void EmitProvider(CompilerContext ctx) => EmitProvider(ctx.IL);
-        private void EmitProvider(ILGenerator il)
-        {
-            var provider = RuntimeTypeModel.GetUnderlyingProvider(Provider, ForType);
-            RuntimeTypeModel.EmitProvider(provider, il);
-        }
-
-        public static RepeatedSerializerStub Create(Type forType, MemberInfo provider)
-            => provider == null ? Empty : new RepeatedSerializerStub(forType, provider);
-
-        private RepeatedSerializerStub(Type forType, MemberInfo provider)
-        {
-            ForType = forType;
-            Provider = provider;
-            IsMap = CheckIsMap(provider, out Type itemType);
-            ItemType = itemType;
-        }
-        private static bool CheckIsMap(MemberInfo provider, out Type itemType)
-        {
-            var type = provider switch
-            {
-                MethodInfo method => method.ReturnType,
-                FieldInfo field => field.FieldType,
-                PropertyInfo prop => prop.PropertyType,
-                Type t => t,
-                _ => null,
-            };
-            while (type != null && type != typeof(object))
-            {
-                if (type.IsGenericType)
-                {
-                    var genDef = type.GetGenericTypeDefinition();
-                    if (genDef == typeof(MapSerializer<,,>))
-                    {
-                        var targs = type.GetGenericArguments();
-                        itemType = typeof(KeyValuePair<,>).MakeGenericType(targs[1], targs[2]);
-                        return true;
-                    }
-                    if (genDef == typeof(RepeatedSerializer<,>))
-                    {
-                        var targs = type.GetGenericArguments();
-                        itemType = targs[1];
-                        return false;
-                    }
-                }
-
-                type = type.BaseType;
-            }
-            itemType = null;
-            return false;
-        }
-
-        internal void ResolveMapTypes(out Type keyType, out Type valueType)
-        {
-            keyType = valueType = null;
-            if (IsMap)
-            {
-                var targs = ItemType.GetGenericArguments();
-                keyType = targs[0];
-                valueType = targs[1];
-            }
-        }
-    }
     // not quite ready to expose this yes
-    internal static class RepeatedSerializers
+    internal static partial class RepeatedSerializers
     {
         private static readonly Hashtable s_providers;
 
@@ -157,6 +68,16 @@ namespace ProtoBuf.Serializers
             Add(typeof(ImmutableDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateImmutableDictionary), targs));
             Add(typeof(ImmutableSortedDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateImmutableSortedDictionary), targs));
             Add(typeof(IImmutableDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateIImmutableDictionary), targs));
+
+            Add(typeof(ImmutableList<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableList), targs));
+            Add(typeof(IImmutableList<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableIList), targs));
+            Add(typeof(ImmutableHashSet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableHashSet), targs));
+            Add(typeof(ImmutableSortedSet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableSortedSet), targs));
+            Add(typeof(IImmutableSet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableISet), targs));
+            Add(typeof(ImmutableQueue<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableQueue), targs));
+            Add(typeof(IImmutableQueue<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableIQueue), targs));
+            Add(typeof(ImmutableStack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableStack), targs));
+            Add(typeof(IImmutableStack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableIStack), targs));
 
             // pretty normal stuff
             Add(typeof(Dictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateDictionary), targs));

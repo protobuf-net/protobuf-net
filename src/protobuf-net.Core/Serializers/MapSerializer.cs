@@ -117,10 +117,10 @@ namespace ProtoBuf.Serializers
         protected abstract TCollection Clear(TCollection values, ISerializationContext context);
 
         /// <summary>Add new contents to the collection</summary>
-        protected abstract TCollection AddRange(TCollection values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
+        protected abstract TCollection AddRange(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
 
         /// <summary>Update the new contents intoto the collection, overwriting existing values</summary>
-        protected abstract TCollection SetValues(TCollection values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
+        protected abstract TCollection SetValues(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
 
         /// <summary>
         /// Deserializes a sequence of values from the supplied reader
@@ -157,16 +157,16 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override Dictionary<TKey, TValue> AddRange(Dictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override Dictionary<TKey, TValue> AddRange(Dictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
-            foreach (var pair in RepeatedSerializer.AsSpan(newValues))
+            foreach (var pair in newValues.AsSpan())
                 values.Add(pair.Key, pair.Value);
             return values;
         }
 
-        protected override Dictionary<TKey, TValue> SetValues(Dictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override Dictionary<TKey, TValue> SetValues(Dictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
-            foreach (var pair in RepeatedSerializer.AsSpan(newValues))
+            foreach (var pair in newValues.AsSpan())
                 values[pair.Key] = pair.Value;
             return values;
         }
@@ -190,16 +190,16 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override TCollection AddRange(TCollection values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
-            foreach (var pair in RepeatedSerializer.AsSpan(newValues))
+            foreach (var pair in newValues.AsSpan())
                 values.Add(pair.Key, pair.Value);
             return values;
         }
 
-        protected override TCollection SetValues(TCollection values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override TCollection SetValues(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
-            foreach (var pair in RepeatedSerializer.AsSpan(newValues))
+            foreach (var pair in newValues.AsSpan())
                 values[pair.Key] = pair.Value;
             return values;
         }
@@ -224,23 +224,23 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableDictionary<TKey, TValue> Initialize(ImmutableDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? ImmutableDictionary<TKey, TValue>.Empty;
-        protected override ImmutableDictionary<TKey, TValue> AddRange(ImmutableDictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableDictionary<TKey, TValue> AddRange(ImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
-                var pair = newValues.Array[newValues.Offset];
+                var pair = newValues.Singleton();
                 return values.Add(pair.Key, pair.Value);
             }
-            return values.AddRange(RepeatedSerializer.AsEnumerable(newValues));
+            return values.AddRange(newValues);
         }
-        protected override ImmutableDictionary<TKey, TValue> SetValues(ImmutableDictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableDictionary<TKey, TValue> SetValues(ImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
-                var pair = newValues.Array[newValues.Offset];
+                var pair = newValues.Singleton();
                 return values.SetItem(pair.Key, pair.Value);
             }
-            return values.SetItems(RepeatedSerializer.AsEnumerable(newValues));
+            return values.SetItems(newValues);
         }
 
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ImmutableDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
@@ -256,23 +256,23 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableSortedDictionary<TKey, TValue> Initialize(ImmutableSortedDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? ImmutableSortedDictionary<TKey, TValue>.Empty;
-        protected override ImmutableSortedDictionary<TKey, TValue> AddRange(ImmutableSortedDictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableSortedDictionary<TKey, TValue> AddRange(ImmutableSortedDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
-                var pair = newValues.Array[newValues.Offset];
+                var pair = newValues.Singleton();
                 return values.Add(pair.Key, pair.Value);
             }
-            return values.AddRange(RepeatedSerializer.AsEnumerable(newValues));
+            return values.AddRange(newValues);
         }
-        protected override ImmutableSortedDictionary<TKey, TValue> SetValues(ImmutableSortedDictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableSortedDictionary<TKey, TValue> SetValues(ImmutableSortedDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
-                var pair = newValues.Array[newValues.Offset];
+                var pair = newValues.Singleton();
                 return values.SetItem(pair.Key, pair.Value);
             }
-            return values.SetItems(RepeatedSerializer.AsEnumerable(newValues));
+            return values.SetItems(newValues);
         }
 
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ImmutableSortedDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
@@ -288,23 +288,23 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override IImmutableDictionary<TKey, TValue> Initialize(IImmutableDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? ImmutableDictionary<TKey, TValue>.Empty;
-        protected override IImmutableDictionary<TKey, TValue> AddRange(IImmutableDictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override IImmutableDictionary<TKey, TValue> AddRange(IImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
-                var pair = newValues.Array[newValues.Offset];
+                var pair = newValues.Singleton();
                 return values.Add(pair.Key, pair.Value);
             }
-            return values.AddRange(RepeatedSerializer.AsEnumerable(newValues));
+            return values.AddRange(newValues);
         }
-        protected override IImmutableDictionary<TKey, TValue> SetValues(IImmutableDictionary<TKey, TValue> values, ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override IImmutableDictionary<TKey, TValue> SetValues(IImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
-                var pair = newValues.Array[newValues.Offset];
+                var pair = newValues.Singleton();
                 return values.SetItem(pair.Key, pair.Value);
             }
-            return values.SetItems(RepeatedSerializer.AsEnumerable(newValues));
+            return values.SetItems(newValues);
         }
 
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, IImmutableDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)

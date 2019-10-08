@@ -32,6 +32,16 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(CustomNonGenericReadOnlyCollection), typeof(ReadOnlyCollectionSerializer<CustomNonGenericReadOnlyCollection, CustomNonGenericReadOnlyCollection, string>))]
         [InlineData(typeof(CustomGenericReadOnlyCollection<string>), typeof(ReadOnlyCollectionSerializer<CustomGenericReadOnlyCollection<string>, CustomGenericReadOnlyCollection<string>, string>))]
 
+        [InlineData(typeof(ImmutableList<string>), typeof(ImmutableListSerializer<string>))]
+        [InlineData(typeof(IImmutableList<string>), typeof(ImmutableIListSerializer<string>))]
+        [InlineData(typeof(ImmutableHashSet<string>), typeof(ImmutableHashSetSerializer<string>))]
+        [InlineData(typeof(ImmutableSortedSet<string>), typeof(ImmutableSortedSetSerializer<string>))]
+        [InlineData(typeof(IImmutableSet<string>), typeof(ImmutableISetSerializer<string>))]
+        [InlineData(typeof(ImmutableQueue<string>), typeof(ImmutableQueueSerializer<string>))]
+        [InlineData(typeof(IImmutableQueue<string>), typeof(ImmutableIQueueSerializer<string>))]
+        [InlineData(typeof(ImmutableStack<string>), typeof(ImmutableStackSerializer<string>))]
+        [InlineData(typeof(IImmutableStack<string>), typeof(ImmutableIStackSerializer<string>))]
+
         public void TestWhatProviderWeGet(Type type, Type expected)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
