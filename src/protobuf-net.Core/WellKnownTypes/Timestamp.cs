@@ -5,9 +5,10 @@ using System;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Timestamp>
+    partial class PrimaryTypeProvider : ISerializer<Timestamp>, ISerializer<Timestamp?>
     {
         SerializerFeatures ISerializer<Timestamp>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<Timestamp?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);
@@ -16,6 +17,11 @@ namespace ProtoBuf.Internal
         }
         void ISerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
+
+        Timestamp? ISerializer<Timestamp?>.Read(ref ProtoReader.State state, Timestamp? value)
+            => ((ISerializer<Timestamp>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<Timestamp?>.Write(ref ProtoWriter.State state, Timestamp? value)
+            => ((ISerializer<Timestamp>)this).Write(ref state, value.Value);
     }
 }
 namespace ProtoBuf.WellKnownTypes

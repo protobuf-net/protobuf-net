@@ -5,9 +5,15 @@ using System;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Duration>
+    partial class PrimaryTypeProvider : ISerializer<Duration>, ISerializer<Duration?>
     {
         SerializerFeatures ISerializer<Duration>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<Duration?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+
+        Duration? ISerializer<Duration?>.Read(ref ProtoReader.State state, Duration? value)
+            => ((ISerializer<Duration>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<Duration?>.Write(ref ProtoWriter.State state, Duration? value)
+            => ((ISerializer<Duration>)this).Write(ref state, value.Value);
 
         Duration ISerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);

@@ -3,10 +3,16 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<decimal>
+    partial class PrimaryTypeProvider : ISerializer<decimal>, ISerializer<decimal?>
     {
         SerializerFeatures ISerializer<decimal>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
+        SerializerFeatures ISerializer<decimal?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
+
+        decimal? ISerializer<decimal?>.Read(ref ProtoReader.State state, decimal? value)
+            => ((ISerializer<decimal>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<decimal?>.Write(ref ProtoWriter.State state, decimal? value)
+            => ((ISerializer<decimal>)this).Write(ref state, value.Value);
 
         decimal ISerializer<decimal>.Read(ref ProtoReader.State state, decimal value)
         {

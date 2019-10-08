@@ -18,8 +18,9 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<ulong>,
         IMeasuringSerializer<sbyte>,
         IMeasuringSerializer<short>,
-        IMeasuringSerializer<Uri>,
         IMeasuringSerializer<char>,
+
+        IMeasuringSerializer<Uri>,
         IFactory<string>,
         IFactory<byte[]>
 
