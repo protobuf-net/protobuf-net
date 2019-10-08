@@ -1414,22 +1414,22 @@ namespace ProtoBuf.Meta
         /// <remarks>Note that primitives always return false, even though the engine
         /// will, if forced, try to serialize such</remarks>
         /// <returns>True if this type is recognised as a serializable entity, else false</returns>
-        public bool CanSerializeContractType(Type type) => CanSerialize(type, false, true, true);
+        public bool CanSerializeContractType(Type type) => CanSerialize(type, false, true, true, out _);
 
         /// <summary>
         /// Returns true if the type supplied is a basic type with inbuilt handling,
         /// a recognised contract type, or a *list* of a basic / contract type. 
         /// </summary>
-        public bool CanSerialize(Type type) => CanSerialize(type, true, true, true);
+        public bool CanSerialize(Type type) => CanSerialize(type, true, true, true, out _);
 
         /// <summary>
         /// Returns true if the type supplied is a basic type with inbuilt handling,
         /// or a *list* of a basic type with inbuilt handling
         /// </summary>
-        public bool CanSerializeBasicType(Type type) => CanSerialize(type, true, false, true);
+        public bool CanSerializeBasicType(Type type) => CanSerialize(type, true, false, true, out _);
 
 
-        private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
+        internal bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists, out SerializerFeatures category)
         {
             if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
 
@@ -1448,7 +1448,8 @@ namespace ProtoBuf.Meta
             {
                 if (DynamicStub.CanSerialize(type, this, out var features))
                 {
-                    switch (features.GetCategory())
+                    category = features.GetCategory();
+                    switch (category)
                     {
                         case SerializerFeatures.CategoryRepeated:
                             return allowLists && DoCheckLists(type, this, allowBasic, allowContract);
@@ -1465,8 +1466,9 @@ namespace ProtoBuf.Meta
             {
                 // is it a list?
                 return TypeHelper.ResolveUniqueEnumerableT(type, out var itemType)
-                    && model.CanSerialize(itemType, allowBasic, allowContract, false);
+                    && model.CanSerialize(itemType, allowBasic, allowContract, false, out _);
             }
+            category = default;
             return false;
         }
 

@@ -3,24 +3,50 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
 {
-    ///// <summary>
-    ///// Provides utility methods for creating serializers for repeated data
-    ///// </summary>
-    //public static class MapSerializer
-    //{
+    /// <summary>
+    /// Provides utility methods for creating serializers for repeated data
+    /// </summary>
+    public static class MapSerializer
+    {
+        /// <summary>Create a map serializer that operates on dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<TKey, TValue>()
+            => SerializerCache<DictionarySerializer<TKey, TValue>>.InstanceField;
 
-    //}
+        /// <summary>Create a map serializer that operates on dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, TKey, TValue>()
+            where TCollection : IDictionary<TKey, TValue>
+            => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
+
+        /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<TKey, TValue>()
+            => SerializerCache<ImmutableDictionarySerializer<TKey, TValue>>.InstanceField;
+
+        /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<TKey, TValue>()
+            => SerializerCache<ImmutableSortedDictionarySerializer<TKey, TValue>>.InstanceField;
+
+        /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<TKey, TValue>()
+            => SerializerCache<ImmutableIDictionarySerializer<TKey, TValue>>.InstanceField;
+    }
 
     /// <summary>
     /// Base class for dictionary-like collection serializers
     /// </summary>
-    public abstract class MapSerializer<TCollection, TKey, TValue> : IRepeatedSerializer<TCollection>
+    public abstract class MapSerializer<TCollection, TKey, TValue> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
 
+        TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
 
         TCollection ISerializer<TCollection>.Read(ref ProtoReader.State state, TCollection value)
         {
@@ -44,11 +70,11 @@ namespace ProtoBuf.Serializers
             valueSerializer ??= TypeModel.GetSerializer<TValue>(model);
 
             var tmp = keySerializer.Features;
-            if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+            if (tmp.IsRepeated()) ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
             keyFeatures.InheritFrom(tmp);
 
             tmp = valueSerializer.Features;
-            if (tmp.IsRepeated()) ThrowHelper.ThrowNestedMapKeysValues();
+            if (tmp.IsRepeated()) ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
             valueFeatures.InheritFrom(tmp);
 
             return new KeyValuePairSerializer<TKey, TValue>(keySerializer, keyFeatures, valueSerializer, valueFeatures);
@@ -63,11 +89,24 @@ namespace ProtoBuf.Serializers
             var pairSerializer = GetSerializer(state.Model, keyFeatures, valueFeatures, keySerializer, valueSerializer);
             features.InheritFrom(pairSerializer.Features);
             var wireType = features.GetWireType();
-            var writer = state.GetWriter();
-            foreach (var pair in RepeatedSerializer.AsEnumerable<TCollection, KeyValuePair<TKey, TValue>>(values))
+
+            Write(ref state, fieldNumber, wireType, values, pairSerializer);
+        }
+
+        internal abstract void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, TCollection values, in KeyValuePairSerializer<TKey, TValue> pairSerializer);
+        [MethodImpl(ProtoReader.HotPath)]
+        internal void Write<TEnumerator>(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ref TEnumerator enumerator, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+            where TEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+        {
+            if (enumerator.MoveNext())
             {
-                state.WriteFieldHeader(fieldNumber, wireType);
-                writer.WriteMessage(ref state, pair, pairSerializer, PrefixStyle.Base128, false);
+                // TODO: avoid boxing on the write API (already done for read)
+                ISerializer<KeyValuePair<TKey, TValue>> boxed = pairSerializer;
+                do
+                {
+                    state.WriteFieldHeader(fieldNumber, wireType);
+                    state.GetWriter().WriteMessage(ref state, enumerator.Current, boxed, PrefixStyle.Base128, false);
+                } while (enumerator.MoveNext());
             }
         }
 
@@ -131,12 +170,19 @@ namespace ProtoBuf.Serializers
                 values[pair.Key] = pair.Value;
             return values;
         }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, Dictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
+        }
     }
     class DictionarySerializer<TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
         where TCollection : IDictionary<TKey, TValue>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
-            => values ?? (typeof(TCollection).IsInterface ? (TCollection)(object)new Dictionary<TKey, TValue>() : TypeModel.CreateInstance<TCollection>(context));
+            // note: don't call TypeModel.CreateInstance: *we are the factory*
+            => values ?? (typeof(TCollection).IsInterface ? (TCollection)(object)new Dictionary<TKey, TValue>() : TypeModel.ActivatorCreate<TCollection>());
 
         protected override TCollection Clear(TCollection values, ISerializationContext context)
         {
@@ -156,6 +202,19 @@ namespace ProtoBuf.Serializers
             foreach (var pair in RepeatedSerializer.AsSpan(newValues))
                 values[pair.Key] = pair.Value;
             return values;
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, TCollection values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            try
+            {
+                Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
+            }
+            finally
+            {
+                iter?.Dispose();
+            }
         }
     }
 
@@ -183,6 +242,12 @@ namespace ProtoBuf.Serializers
             }
             return values.SetItems(RepeatedSerializer.AsEnumerable(newValues));
         }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ImmutableDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
+        }
     }
 
     sealed class ImmutableSortedDictionarySerializer<TKey, TValue> : MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue>
@@ -209,6 +274,12 @@ namespace ProtoBuf.Serializers
             }
             return values.SetItems(RepeatedSerializer.AsEnumerable(newValues));
         }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ImmutableSortedDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
+        }
     }
 
     sealed class ImmutableIDictionarySerializer<TKey, TValue> : MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue>
@@ -234,6 +305,19 @@ namespace ProtoBuf.Serializers
                 return values.SetItem(pair.Key, pair.Value);
             }
             return values.SetItems(RepeatedSerializer.AsEnumerable(newValues));
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, IImmutableDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            try
+            {
+                Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
+            }
+            finally
+            {
+                iter?.Dispose();
+            }
         }
     }
 }

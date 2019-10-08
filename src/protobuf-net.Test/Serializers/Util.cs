@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ProtoBuf.Serializers;
-using System.IO;
-using Xunit;
+﻿using ProtoBuf.Compiler;
+using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Meta;
-using ProtoBuf.Compiler;
+using ProtoBuf.Serializers;
+using System;
+using System.IO;
+using System.Text;
+using Xunit;
 
 namespace ProtoBuf.unittest.Serializers
 {

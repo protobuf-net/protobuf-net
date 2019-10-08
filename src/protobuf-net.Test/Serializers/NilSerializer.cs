@@ -1,10 +1,9 @@
 ﻿#if !NO_INTERNAL_CONTEXT
-using System;
-using System.Collections.Generic;
-using System.Text;
 using ProtoBuf.Compiler;
-using Xunit;
+using ProtoBuf.Internal.Serializers;
 using ProtoBuf.unittest.Serializers;
+using System;
+using Xunit;
 
 namespace ProtoBuf.Serializers
 {

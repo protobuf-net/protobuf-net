@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Xml;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf.ServiceModel
 {
@@ -33,7 +34,7 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            if (IsKnownType(model, ref type, out bool isList))
+            if (IsKnownType(model, type, out bool isList))
             {
                 return new XmlProtoSerializer(model, type, isList);
             }
@@ -48,30 +49,21 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            bool known = IsKnownType(model, ref type, out isList);
+            bool known = IsKnownType(model, type, out isList);
             if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
             this.model = model;
             this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
             this.type = type;
         }
 
-        private static bool IsKnownType(TypeModel model, ref Type type, out bool isList)
+        private static bool IsKnownType(TypeModel model, Type type, out bool isList)
         {
             if (model != null && type != null)
             {
-                if (model.IsDefined(type))
+                if (model.CanSerialize(type, true, true, true, out var category))
                 {
-                    isList = false;
+                    isList = category.IsRepeated();
                     return true;
-                }
-
-                if (TypeHelper.ResolveUniqueEnumerableT(type, out var itemType))
-                {
-                    if (model.IsDefined(itemType))
-                    {
-                        isList = true;
-                        return true;
-                    }
                 }
             }
 

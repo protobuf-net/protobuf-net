@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Meta

@@ -11,6 +11,7 @@ using ProtoBuf.Internal;
 using System.Collections;
 using System.Linq;
 using System.Globalization;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Compiler
 {

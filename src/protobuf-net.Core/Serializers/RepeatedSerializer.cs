@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
@@ -24,17 +23,6 @@ namespace ProtoBuf.Serializers
         public static RepeatedSerializer<TList, T> CreateList<TList, T>()
             where TList : List<T>
             => SerializerCache<ListSerializer<TList, T>>.InstanceField;
-
-        /// <summary>Create a map serializer that operates on dictionaries</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<TKey, TValue>()
-            => SerializerCache<DictionarySerializer<TKey, TValue>>.InstanceField;
-
-        /// <summary>Create a map serializer that operates on dictionaries</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, TKey, TValue>()
-            where TCollection : IDictionary<TKey, TValue>
-            => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -69,125 +57,7 @@ namespace ProtoBuf.Serializers
         public static RepeatedSerializer<ImmutableArray<T>, T> CreateImmutableArray<T>()
             => SerializerCache<ImmutableArraySerializer<T>>.InstanceField;
 
-        /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<TKey, TValue>()
-            => SerializerCache<ImmutableDictionarySerializer<TKey, TValue>>.InstanceField;
 
-        /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<TKey, TValue>()
-            => SerializerCache<ImmutableSortedDictionarySerializer<TKey, TValue>>.InstanceField;
-
-        /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<TKey, TValue>()
-            => SerializerCache<ImmutableIDictionarySerializer<TKey, TValue>>.InstanceField;
-
-        internal static readonly MethodInfo[] s_methods = typeof(RepeatedSerializer).GetMethods(BindingFlags.Static | BindingFlags.Public);
-
-        internal static MemberInfo GetProvider(Type type, out bool isMap)
-        {
-            isMap = false;
-            if (!TypeHelper.ResolveUniqueEnumerableT(type, out var t)) return null;
-
-            if (type.IsArray) return Resolve(nameof(CreateVector), t);
-
-            var provider = GetProvider(type, type, ref isMap);
-            if (provider != null) return provider;
-            if (type.IsClass)
-            {   // try for inheritance, i.e. Foo : List<int>
-                Type current = type;
-                while (current != null && current != typeof(object))
-                {
-                    provider = GetProvider(current, type, ref isMap);
-                    if (provider != null) return provider;
-                    current = current.BaseType;
-                }
-            }
-
-            if (type.IsGenericType)
-            {   // things that don't withstand inheritance
-                var genDef = type.GetGenericTypeDefinition();
-                if (genDef == typeof(ImmutableArray<>))
-                    return Resolve(nameof(CreateImmutableArray), t);
-
-                if (genDef == typeof(ImmutableDictionary<,>))
-                {
-                    isMap = true;
-                    return Resolve(nameof(CreateImmutableDictionary), type.GetGenericArguments());
-                }
-                if (genDef == typeof(ImmutableSortedDictionary<,>))
-                {
-                    isMap = true;
-                    return Resolve(nameof(CreateImmutableSortedDictionary), type.GetGenericArguments());
-                }
-            }
-
-            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                var kArgs = t.GetGenericArguments();
-
-                var iDict = typeof(IDictionary<,>).MakeGenericType(kArgs);
-                if (iDict.IsAssignableFrom(type))
-                {
-                    isMap = true;
-                    return Resolve(nameof(CreateDictionary), type, kArgs[0], kArgs[1]);
-                }
-
-                iDict = typeof(IImmutableDictionary<,>).MakeGenericType(kArgs);
-                if (iDict.IsAssignableFrom(type))
-                {
-                    isMap = true;
-                    return Resolve(nameof(CreateIImmutableDictionary), type, kArgs[0], kArgs[1]);
-                }
-            }
-
-            var iColT = typeof(ICollection<>).MakeGenericType(t);
-            if (iColT.IsAssignableFrom(type)) return Resolve(nameof(CreateCollection), type, t);
-
-            return null;
-        }
-        private static MemberInfo GetProvider(Type root, Type current, ref bool isMap)
-        {
-            if (current.IsGenericType)
-            {
-                var genDef = current.GetGenericTypeDefinition();
-                if (genDef == typeof(List<>))
-                {
-                    var genArgs = current.GetGenericArguments();
-                    return Resolve(nameof(CreateList),
-                        current == root ? new Type[] { genArgs[0] } : new Type[] { root, genArgs[0] });
-                }
-
-                if (genDef == typeof(Dictionary<,>))
-                {
-                    var genArgs = current.GetGenericArguments();
-                    isMap = true;
-                    return Resolve(nameof(CreateDictionary),
-                        current == root ? new Type[] { genArgs[0], genArgs[1] } : new Type[] { root, genArgs[0], genArgs[1] });
-                }
-            }
-            return null;
-        }
-
-
-        static MemberInfo Resolve(string methodName, params Type[] genericArgs)
-        {
-            foreach (var method in s_methods)
-            {
-                if (method.Name == methodName)
-                {
-                    if (!method.IsGenericMethod)
-                    {
-                        return genericArgs.Length == 0 ? method : null;
-                    }
-                    if (method.GetGenericArguments().Length == genericArgs.Length)
-                        return method.MakeGenericMethod(genericArgs);
-                }
-            }
-            return null;
-        }
 
         /// <summary>Reverses a range of values</summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -200,23 +70,16 @@ namespace ProtoBuf.Serializers
         /// <summary>Obtains a range of values as an enumerable sequence</summary>
         [MethodImpl(ProtoReader.HotPath)]
         internal static IEnumerable<T> AsEnumerable<T>(ArraySegment<T> values) => values;
-
-        [MethodImpl(ProtoReader.HotPath)]
-        internal static IEnumerable<TItem> AsEnumerable<TCollection, TItem>(TCollection values)
-        {
-            var sequence = values as IEnumerable<TItem>;
-            if (sequence is null) ThrowHelper.ThrowInvalidOperationException(
-                $"Unusual collection requires custom implementation: {typeof(TCollection).NormalizeName()}");
-            return sequence;
-        }
     }
 
 
     /// <summary>
     /// Base class for simple collection serializers
     /// </summary>
-    public abstract class RepeatedSerializer<TCollection, TItem> : IRepeatedSerializer<TCollection>
+    public abstract class RepeatedSerializer<TCollection, TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
+        TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
+
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
 
         TCollection ISerializer<TCollection>.Read(ref ProtoReader.State state, TCollection value)
@@ -239,6 +102,7 @@ namespace ProtoBuf.Serializers
             serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
+            features.InheritFrom(serializerFeatures);
 
             int count = TryGetCount(values);
             if (count == 0) return;
@@ -256,11 +120,17 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        internal virtual void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<TItem> serializer)
+        internal abstract void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<TItem> serializer);
+
+        // this does *not* dispose the enumerator; if the caller cares: caller does
+        [MethodImpl(ProtoReader.HotPath)]
+        internal void Write<TEnumerator>(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, ref TEnumerator values, ISerializer<TItem> serializer)
+            where TEnumerator : IEnumerator<TItem>
         {
             var writer = state.GetWriter();
-            foreach (var value in RepeatedSerializer.AsEnumerable<TCollection, TItem>(values))
+            while (values.MoveNext())
             {
+                var value = values.Current;
                 if (TypeHelper<TItem>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<TItem>();
                 state.WriteFieldHeader(fieldNumber, wireType);
                 switch (category)
@@ -277,48 +147,37 @@ namespace ProtoBuf.Serializers
                         break;
                 }
             }
+
         }
 
-        internal virtual long Measure(TCollection values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType)
-            => Measure(RepeatedSerializer.AsEnumerable<TCollection, TItem>(values).GetEnumerator(), serializer, context, wireType);
+        internal abstract long Measure(TCollection values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType);
 
-        private protected long Measure<TEnumerator>(TEnumerator values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType)
+        // this does *not* dispose the enumerator; if the caller cares: caller does
+        [MethodImpl(ProtoReader.HotPath)]
+        internal long Measure<TEnumerator>(ref TEnumerator values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType)
             where TEnumerator : IEnumerator<TItem>
         {
-            try
+            long length = 0;
+            while (values.MoveNext())
             {
-                long length = 0;
-                while (values.MoveNext())
-                {
-                    length += serializer.Measure(context, wireType, values.Current);
-                }
-                return length;
+                length += serializer.Measure(context, wireType, values.Current);
             }
-            finally
-            {
-                values.Dispose();
-            }
+            return length;
         }
 
-        internal virtual void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<TItem> serializer, WireType wireType)
-            => WritePacked(ref state, RepeatedSerializer.AsEnumerable<TCollection, TItem>(values).GetEnumerator(), serializer, wireType);
+        internal abstract void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<TItem> serializer, WireType wireType);
 
-        private protected void WritePacked<TEnumerator>(ref ProtoWriter.State state, TEnumerator values, IMeasuringSerializer<TItem> serializer, WireType wireType)
+        // this does *not* dispose the enumerator; if the caller cares: caller does
+        [MethodImpl(ProtoReader.HotPath)]
+        internal void WritePacked<TEnumerator>(ref ProtoWriter.State state, ref TEnumerator values, IMeasuringSerializer<TItem> serializer, WireType wireType)
             where TEnumerator : IEnumerator<TItem>
         {
-            try
+            while (values.MoveNext())
             {
-                while (values.MoveNext())
-                {
-                    var value = values.Current;
-                    if (TypeHelper<TItem>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<TItem>();
-                    state.WireType = wireType; // tell the serializer what we want to do
-                    serializer.Write(ref state, value);
-                }
-            }
-            finally
-            {
-                values.Dispose();
+                var value = values.Current;
+                if (TypeHelper<TItem>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<TItem>();
+                state.WireType = wireType; // tell the serializer what we want to do
+                serializer.Write(ref state, value);
             }
         }
 
@@ -372,10 +231,11 @@ namespace ProtoBuf.Serializers
             serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
+            features.InheritFrom(serializerFeatures);
 
             var ctx = state.Context;
             values = Initialize(values, ctx);
-            using var buffer = state.FillBuffer<TItem>(features, serializer, TypeHelper<TItem>.Default);
+            using var buffer = state.FillBuffer<ISerializer<TItem>, TItem>(features, serializer, TypeHelper<TItem>.Default);
             if ((features & SerializerFeatures.OptionClearCollection) != 0) values = Clear(values, ctx);
             return buffer.IsEmpty ? values : AddRange(values, buffer.Segment, ctx);
         }
@@ -408,10 +268,22 @@ namespace ProtoBuf.Serializers
             return values;
         }
         internal override long Measure(Stack<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
-            => Measure(values.GetEnumerator(), serializer, context, wireType);
+        {
+            var iter = values.GetEnumerator();
+            return Measure(ref iter, serializer, context, wireType);
+        }
 
         internal override void WritePacked(ref ProtoWriter.State state, Stack<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
-            => WritePacked(ref state, values.GetEnumerator(), serializer, wireType);
+        {
+            var iter = values.GetEnumerator();
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, Stack<T> values, ISerializer<T> serializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+        }
     }
 
     sealed class ListSerializer<T> : ListSerializer<List<T>, T>
@@ -423,7 +295,8 @@ namespace ProtoBuf.Serializers
         where TList : List<T>
     {
         protected override TList Initialize(TList values, ISerializationContext context)
-            => values ?? TypeModel.CreateInstance<TList>(context, this);
+            // note: don't call TypeModel.CreateInstance: *we are the factory*
+            => values ?? TypeModel.ActivatorCreate<TList>();
 
         protected override TList Clear(TList values, ISerializationContext context)
         {
@@ -437,10 +310,20 @@ namespace ProtoBuf.Serializers
         }
 
         internal override long Measure(TList values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
-            => Measure(values.GetEnumerator(), serializer, context, wireType);
-
+        {
+            var iter = values.GetEnumerator();
+            return Measure(ref iter, serializer, context, wireType);
+        }
         internal override void WritePacked(ref ProtoWriter.State state, TList values, IMeasuringSerializer<T> serializer, WireType wireType)
-            => WritePacked(ref state, values.GetEnumerator(), serializer, wireType);
+        {
+            var iter = values.GetEnumerator();
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TList values, ISerializer<T> serializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+        }
     }
 
     sealed class CollectionSerializer<TCollection, TCreate, T> : RepeatedSerializer<TCollection, T>
@@ -448,7 +331,8 @@ namespace ProtoBuf.Serializers
         where TCreate : TCollection
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
-            => values ?? (typeof(TCreate).IsInterface ? (TCollection)(object)new List<T>() : TypeModel.CreateInstance<TCreate>(context));
+            // note: don't call TypeModel.CreateInstance: *we are the factory*
+            => values ?? (typeof(TCreate).IsInterface ? (TCollection)(object)new List<T>() : TypeModel.ActivatorCreate<TCreate>());
         protected override TCollection Clear(TCollection values, ISerializationContext context)
         {
             values.Clear();
@@ -468,6 +352,44 @@ namespace ProtoBuf.Serializers
             }
             return values;
         }
+
+        internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            try
+            {
+                return Measure(ref iter, serializer, context, wireType);
+            }
+            finally
+            {
+                iter?.Dispose();
+            }
+        }
+        internal override void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<T> serializer, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            try
+            {
+                WritePacked(ref state, ref iter, serializer, wireType);
+            }
+            finally
+            {
+                iter?.Dispose();
+            }
+        }
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer)
+        {
+            var iter = values.GetEnumerator();
+            try
+            {
+                Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+            }
+            finally
+            {
+                iter?.Dispose();
+            }
+
+        }
     }
 
     sealed class VectorSerializer<T> : RepeatedSerializer<T[], T>
@@ -484,6 +406,40 @@ namespace ProtoBuf.Serializers
             return arr;
         }
         protected override int TryGetCount(T[] value) => value is null ? 0 : value.Length;
+
+        internal override long Measure(T[] values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            var iter = new Enumerator(values);
+            return Measure(ref iter, serializer, context, wireType);
+        }
+
+        internal override void WritePacked(ref ProtoWriter.State state, T[] values, IMeasuringSerializer<T> serializer, WireType wireType)
+        {
+            var iter = new Enumerator(values);
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer)
+        {
+            var iter = new Enumerator(values);
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+        }
+
+        struct Enumerator : IEnumerator<T>
+        {
+            public void Reset() => ThrowHelper.ThrowNotSupportedException();
+            private readonly T[] _array;
+            private int _index;
+            public Enumerator(T[] array)
+            {
+                _array = array;
+                _index = -1;
+            }
+            public T Current => _array[_index];
+            object IEnumerator.Current => _array[_index];
+            public bool MoveNext() => ++_index < _array.Length;
+            public void Dispose() { }
+        }
     }
 
     sealed class QueueSerializer<T> : RepeatedSerializer<Queue<T>, T>
@@ -501,11 +457,22 @@ namespace ProtoBuf.Serializers
                 values.Enqueue(value);
             return values;
         }
-        internal override long Measure(Queue<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
-            => Measure(values.GetEnumerator(), serializer, context, wireType);
 
+        internal override long Measure(Queue<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            return Measure(ref iter, serializer, context, wireType);
+        }
         internal override void WritePacked(ref ProtoWriter.State state, Queue<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
-            => WritePacked(ref state, values.GetEnumerator(), serializer, wireType);
+        {
+            var iter = values.GetEnumerator();
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, Queue<T> values, ISerializer<T> serializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+        }
     }
 
     sealed class ImmutableArraySerializer<T> : RepeatedSerializer<ImmutableArray<T>, T>
@@ -520,10 +487,22 @@ namespace ProtoBuf.Serializers
         protected override int TryGetCount(ImmutableArray<T> value) => value.IsEmpty ? 0 : value.Length;
 
         internal override long Measure(ImmutableArray<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
-            => Measure(new Enumerator(values), serializer, context, wireType);
+        {
+            var iter = new Enumerator(values);
+            return Measure(ref iter, serializer, context, wireType);
+        }
 
         internal override void WritePacked(ref ProtoWriter.State state, ImmutableArray<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
-            => WritePacked(ref state, new Enumerator(values), serializer, wireType);
+        {
+            var iter = new Enumerator(values);
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, ImmutableArray<T> values, ISerializer<T> serializer)
+        {
+            var iter = new Enumerator(values);
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+        }
 
         struct Enumerator : IEnumerator<T>
         {
@@ -534,7 +513,6 @@ namespace ProtoBuf.Serializers
             object IEnumerator.Current => _iter.Current;
             public bool MoveNext() => _iter.MoveNext();
             public void Dispose() { }
-
         }
     }
 }

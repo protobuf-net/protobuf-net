@@ -76,6 +76,7 @@ namespace ProtoBuf.Internal
             return false;
         }
 
+        [Obsolete("Prefer list provider")]
         internal static bool ResolveUniqueEnumerableT(Type type, out Type t)
         {
             static bool IsEnumerableT(Type type, out Type t)
