@@ -84,11 +84,14 @@ namespace Examples.Issues
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
+            model.Add(typeof(E));
             TestArray(model);
             model.Compile("ShouldSerializeArrayOfEnums", "ShouldSerializeArrayOfEnums.dll");
             PEVerify.AssertValid("ShouldSerializeArrayOfEnums.dll");
             model.CompileInPlace();
             TestArray(model);
+
+            // ERROR HERE: it is using the aux/list path?
             TestArray(model.Compile());
         }
 
