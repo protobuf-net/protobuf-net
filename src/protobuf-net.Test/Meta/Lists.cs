@@ -71,7 +71,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType); //, "ParentType");
             Assert.Equal(typeof(string), model[typeof(TypeWithLists)][2].ItemType); //, "ItemType");
             Assert.Equal(typeof(IList<string>), model[typeof(TypeWithLists)][2].MemberType); //, "MemberType");
-            Assert.Equal(typeof(List<string>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
+            Assert.Equal(typeof(IList<string>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType); //, "ParentType");
             Assert.Equal(typeof(int), model[typeof(TypeWithLists)][2].ItemType); //, "ItemType");
             Assert.Equal(typeof(IList<int>), model[typeof(TypeWithLists)][2].MemberType); //, "MemberType");
-            Assert.Equal(typeof(List<int>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
+            Assert.Equal(typeof(IList<int>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
         }
 
         [Fact]

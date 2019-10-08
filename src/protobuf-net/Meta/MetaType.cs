@@ -1369,7 +1369,7 @@ namespace ProtoBuf.Meta
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
             var repeated = model.TryGetRepeatedProvider(miType);
-            if (repeated?.ItemType != itemType) ThrowHelper.ThrowInvalidOperationException("Expected item type of " + repeated?.ItemType.NormalizeName());
+            if (itemType != null && repeated?.ItemType != itemType) ThrowHelper.ThrowInvalidOperationException("Expected item type of " + repeated?.ItemType.NormalizeName());
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
@@ -1378,6 +1378,13 @@ namespace ProtoBuf.Meta
                 if (backingMembers != null && backingMembers.Length == 1 && backingMembers[0] is FieldInfo)
                     backingField = backingMembers[0];
             }
+            if (repeated != null)
+            {
+                if (defaultType != null && defaultType != repeated.ForType)
+                    ThrowHelper.ThrowNotSupportedException("Default types for collections are not currently supported; recommendation: initialize the colleciton in the type");
+                defaultType = repeated.ForType;
+            }
+
             ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, repeated?.ItemType, defaultType, DataFormat.Default, defaultValue);
             if (backingField != null)
                 newField.SetName(mi.Name);
