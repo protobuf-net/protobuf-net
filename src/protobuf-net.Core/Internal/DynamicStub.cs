@@ -216,7 +216,16 @@ namespace ProtoBuf.Internal
 
             protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
             {
-                var ser = TypeModel.TryGetSerializer<T>(model);
+                ISerializer<T> ser;
+                try
+                {
+                    ser = TypeModel.TryGetSerializer<T>(model);
+                }
+                catch // then definitely no!
+                {
+                    features = default;
+                    return false;
+                }
                 if (ser == null)
                 {
                     features = default;
