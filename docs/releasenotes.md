@@ -1,10 +1,6 @@
 # Release Notes
 
-Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
-
-protobuf-net needs to be built with MSBuild, due to some of the target platforms.
-
-The easiest way to do this is via Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) - build `src\protobuf-net.sln`
+Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/master/src)
 
 ## Roadmap
 
