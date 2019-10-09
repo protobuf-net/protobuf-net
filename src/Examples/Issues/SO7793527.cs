@@ -96,17 +96,21 @@ namespace Examples.Issues
 #endif
 
         [Fact]
-        public void ProtobufNet_DoesSupportNakedEnumerables()
+        public void ProtobufNet_DoesNotSupportNakedEnumerables()
         {
-            var ser = RuntimeTypeModel.Create();
-            using var ms = new MemoryStream();
-            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
-            ms.Position = 0;
+            var iex = Assert.Throws<InvalidOperationException>(() =>
+            {
+                var ser = RuntimeTypeModel.Create();
+                using var ms = new MemoryStream();
+                ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+                ms.Position = 0;
 #pragma warning disable CS0618
-            var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
+                var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
 #pragma warning restore CS0618
-            Assert.NotNull(clone.Bars);
-            Assert.Single(clone.Bars);
+                Assert.NotNull(clone.Bars);
+                Assert.Single(clone.Bars);
+            });
+            Assert.Equal("No serializer defined for type: System.Collections.Generic.IEnumerable`1[Examples.Issues.SO7793527+Bar]", iex.Message);
         }
 
         // see https://gist.github.com/gmcelhanon/5391894

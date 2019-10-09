@@ -9,6 +9,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 ## Roadmap
 
 - gRPC: see [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc)
+- 2.4.*: critical maintenance only (no feature work planned)
 - 3.0: new custom serializer API; "pipelines" support; split core and reflection code-bases into separate libs
 - 3.1: support for custom scalars; `Any` support
 - 3.2: protogen support for emitting pre-coded custom serializers
