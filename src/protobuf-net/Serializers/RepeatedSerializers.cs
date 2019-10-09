@@ -139,6 +139,11 @@ namespace ProtoBuf.Serializers
                 return s_Array.Resolve(type, type.GetElementType().MakeArrayType());
             }
 
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ArraySegment<>))
+            {   // will need to think about this, especially for ArraySegment<bytes>
+                ThrowHelper.ThrowNotSupportedException("ArraySegment<T> support is incomplete");
+            }
+
             MemberInfo bestMatch = null;
             int bestMatchPriority = int.MaxValue;
             void Consider(MemberInfo member, int priority)
