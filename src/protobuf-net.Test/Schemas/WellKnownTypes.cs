@@ -4,6 +4,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.Schemas
 {
@@ -105,7 +106,7 @@ namespace ProtoBuf.Schemas
         }
 
         private readonly TypeModel runtime, dynamicMethod, fullyCompiled;
-        public WellKnownTypes()
+        private WellKnownTypes()
         {
             static RuntimeTypeModel Create(bool autoCompile)
             {
@@ -185,13 +186,17 @@ namespace ProtoBuf.Schemas
             if (valueToDeserialize == null)
                 valueToDeserialize = valueToSerialize; // assume they are te same
 
+            Log($"valueToSerialize: {valueToSerialize}, {valueToSerialize.Seconds} / {valueToSerialize.Nanos}");
+            Log($"expected: {expected}");
             var obj = new HasDuration { Value = valueToSerialize };
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(runtime, obj).Value);
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(dynamicMethod, obj).Value);
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(fullyCompiled, obj).Value);
 
             var obj2 = new HasTimeSpan { Value = expected };
+            Log($"obj2.Value: {obj2.Value}");
             var other = ChangeType<HasTimeSpan, HasDuration>(runtime, obj2).Value ?? new Duration();
+            Log($"other: {other}, {other.Seconds} / {other.Nanos}");
             Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
 
@@ -202,6 +207,42 @@ namespace ProtoBuf.Schemas
             other = ChangeType<HasTimeSpan, HasDuration>(fullyCompiled, obj2).Value ?? new Duration();
             Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
+        }
+        private void Log(string message) => _log?.WriteLine(message);
+        private ITestOutputHelper _log;
+        public WellKnownTypes(ITestOutputHelper log) : this() => _log = log;
+
+
+        [Theory]
+        [InlineData(0, 0, 0, "0A-00")] // nothing
+        [InlineData(0.9, 0, 900000000, "0A-06-10-80-D2-93-AD-03")] // field 2 = 900000000
+        [InlineData(1.0, 1, 0, "0A-02-08-01")] // field 1 = 1
+        [InlineData(1.1, 1, 100000000, "0A-07-08-01-10-80-C2-D7-2F")] // field 1 = 1, field 2 = 100000000 
+        [InlineData(-0.9, 0, -900000000, "0A-0B-10-80-AE-EC-D2-FC-FF-FF-FF-FF-01")] // field 2 = -900000000
+        [InlineData(-1.0, -1, 0, "0A-0B-08-FF-FF-FF-FF-FF-FF-FF-FF-FF-01")] // field 1 = -1
+        [InlineData(-1.1, -1, -100000000, "0A-16-08-FF-FF-FF-FF-FF-FF-FF-FF-FF-01-10-80-BE-A8-D0-FF-FF-FF-FF-FF-01")]
+        // ^^ field 1 = -1, field 2 = -100000000
+        public void TestDurationRepresentations(double valueSeconds, long seconds, int nanos, string expectedHex)
+        {
+            // from https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/duration.proto
+
+            // Signed fractions of a second at nanosecond resolution of the span
+            // of time. Durations less than one second are represented with a 0
+            // `seconds` field and a positive or negative `nanos` field. For durations
+            // of one second or more, a non-zero value for the `nanos` field must be
+            // of the same sign as the `seconds` field. Must be from -999,999,999
+            // to +999,999,999 inclusive.
+            // int32 nanos = 2;
+            using var ms = new MemoryStream();
+            Serializer.Serialize<HasTimeSpan>(ms, new HasTimeSpan { Value = TimeSpan.FromSeconds(valueSeconds) });
+            var actualHex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            ms.Position = 0;
+            var dur = Serializer.Deserialize<HasDuration>(ms).Value;
+            Assert.Equal(seconds, dur.Seconds);
+            Assert.Equal(nanos, dur.Nanos);
+
+            Assert.Equal(expectedHex, actualHex);
+
         }
 
         // prove implementation matches official version

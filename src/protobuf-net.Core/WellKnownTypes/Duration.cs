@@ -79,13 +79,15 @@ namespace ProtoBuf.Internal
         }
 
         void ISerializer<Duration>.Write(ref ProtoWriter.State state, Duration value)
-            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, false);
 
-        internal static long ToDurationSeconds(TimeSpan value, out int nanos)
+        internal static long ToDurationSeconds(TimeSpan value, out int nanos, bool isTimestamp)
         {
             nanos = (int)(((value.Ticks % TimeSpan.TicksPerSecond) * 1000000)
                 / TimeSpan.TicksPerMillisecond);
-            return value.Ticks / TimeSpan.TicksPerSecond;
+            var seconds = value.Ticks / TimeSpan.TicksPerSecond;
+            NormalizeSecondsNanoseconds(ref seconds, ref nanos, isTimestamp);
+            return seconds;
         }
 
         internal static long ToTicks(long seconds, int nanos)
@@ -95,15 +97,52 @@ namespace ProtoBuf.Internal
             return ticks;
         }
 
-        private static void WriteSecondsNanos(ref ProtoWriter.State state, long seconds, int nanos)
+        internal static void NormalizeSecondsNanoseconds(ref long seconds, ref int nanos, bool isTimestamp)
         {
-            if (nanos < 0)
-            {   // from Timestamp.proto:
-                // "Negative second values with fractions must still have
-                // non -negative nanos values that count forward in time."
-                seconds--;
-                nanos += 1000000000;
+            const int SECOND_NANOS = 1000000000;
+            // normalize to -999,999,999 to +999,999,999 inclusive
+            seconds += nanos / SECOND_NANOS;
+            nanos %= SECOND_NANOS;
+
+            if (isTimestamp)
+            {
+                if (nanos < 0)
+                {   // from Timestamp.proto:
+                    // "Negative second values with fractions must still have
+                    // non -negative nanos values that count forward in time."
+                    seconds--;
+                    nanos += SECOND_NANOS;
+                }
             }
+            else
+            {
+                // from Duration.Proto
+                // Durations less than one second are represented with a 0
+                // `seconds` field and a positive or negative `nanos` field. For durations
+                // of one second or more, a non-zero value for the `nanos` field must be
+                // of the same sign as the `seconds` field.
+
+                if (nanos < 0) // and we already know < 1s, because of first lines
+                {
+                    // can we save space by encoding it as a positive?
+                    if (seconds >= 0)
+                    {
+                        // for 0 and 1, this has the effect of making the nanos +ve, which
+                        // is probably cheaper; for > 1, it enforces the "same sign" requirement
+                        seconds--;
+                        nanos += SECOND_NANOS;
+                    }
+                }
+                if (nanos > 0 && seconds < 0)
+                {
+                    nanos -= SECOND_NANOS;
+                    seconds++;
+                }
+            }
+        }
+        private static void WriteSecondsNanos(ref ProtoWriter.State state, long seconds, int nanos, bool isTimestamp)
+        {
+            NormalizeSecondsNanoseconds(ref seconds, ref nanos, isTimestamp);
             if (seconds != 0)
             {
                 state.WriteFieldHeader(1, WireType.Varint);
@@ -152,7 +191,7 @@ namespace ProtoBuf.WellKnownTypes
         /// <summary>Converts a TimeSpan to a Duration</summary>
         public Duration(TimeSpan value)
         {
-            Seconds = PrimaryTypeProvider.ToDurationSeconds(value, out var nanoseconds);
+            Seconds = PrimaryTypeProvider.ToDurationSeconds(value, out var nanoseconds, false);
             Nanoseconds = nanoseconds;
         }
 
@@ -163,5 +202,16 @@ namespace ProtoBuf.WellKnownTypes
         public static implicit operator TimeSpan(Duration value) => value.AsTimeSpan();
         /// <summary>Converts a TimeSpan to a Duration</summary>
         public static implicit operator Duration(TimeSpan value) => new Duration(value);
+
+        /// <summary>
+        /// Applies .proto rules to ensure that this value is in the expected ranges
+        /// </summary>
+        public Duration Normalize()
+        {
+            var seconds = Seconds;
+            var nanos = Nanoseconds;
+            PrimaryTypeProvider.NormalizeSecondsNanoseconds(ref seconds, ref nanos, false);
+            return new Duration(seconds, nanos);
+        }
     }
 }

@@ -16,7 +16,7 @@ namespace ProtoBuf.Internal
             return new Timestamp(duration.Seconds, duration.Nanoseconds);
         }
         void ISerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
-            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds);
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, true);
 
         Timestamp? ISerializer<Timestamp?>.Read(ref ProtoReader.State state, Timestamp? value)
             => ((ISerializer<Timestamp>)this).Read(ref state, value.GetValueOrDefault());
@@ -58,8 +58,19 @@ namespace ProtoBuf.WellKnownTypes
         /// <summary>Converts a DateTime to a Timestamp</summary>
         public Timestamp(DateTime value)
         {
-            Seconds = PrimaryTypeProvider.ToDurationSeconds(value - TimestampEpoch, out var nanoseconds);
+            Seconds = PrimaryTypeProvider.ToDurationSeconds(value - TimestampEpoch, out var nanoseconds, true);
             Nanoseconds = nanoseconds;
+        }
+
+        /// <summary>
+        /// Applies .proto rules to ensure that this value is in the expected ranges
+        /// </summary>
+        public Timestamp Normalize()
+        {
+            var seconds = Seconds;
+            var nanos = Nanoseconds;
+            PrimaryTypeProvider.NormalizeSecondsNanoseconds(ref seconds, ref nanos, true);
+            return new Timestamp(seconds, nanos);
         }
 
         /// <summary>Converts a Timestamp to a DateTime</summary>
