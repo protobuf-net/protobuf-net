@@ -236,9 +236,15 @@ namespace ProtoBuf.Meta
                     else if (tmp.IsArray)
                     {
                         sb.Append(GetArrayName(tmp.GetElementType()));
-                    } else
-                    { 
-                        sb.Append(tmp.Name);
+                    }
+                    else
+                    {
+                        // try a speculative add
+                        mt = null;
+                        try { mt = model.Add(tmp); }
+                        catch { }
+                        if (mt != null) sb.Append(mt.GetSchemaTypeName());
+                        else sb.Append(tmp.Name); // give up
                     }
                 }
                 return sb.ToString();

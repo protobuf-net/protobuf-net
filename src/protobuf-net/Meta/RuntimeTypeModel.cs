@@ -1729,11 +1729,6 @@ namespace ProtoBuf.Meta
             => CreateForAssembly(assembly, null);
 
         /// <summary>
-        /// Gets a model that automatically compiles modes on a per-assemby basis
-        /// </summary>
-        public static TypeModel AutoCompileModel => AutoCompileTypeModel.Instance;
-
-        /// <summary>
         /// Create a model that serializes all types from an assembly
         /// </summary>
         public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)

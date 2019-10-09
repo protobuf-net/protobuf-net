@@ -1,14 +1,13 @@
-﻿using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
+﻿using ProtoBuf.Serializers;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace ProtoBuf.Internal
+namespace ProtoBuf.Meta
 {
     /// <summary>
     /// A type model that performs per-assembly auto-compilation
     /// </summary>
-    internal sealed class AutoCompileTypeModel : TypeModel
+    public sealed class AutoCompileTypeModel : TypeModel
     {
         /// <summary>
         /// Gets the instance of this serializer
@@ -18,12 +17,14 @@ namespace ProtoBuf.Internal
         private AutoCompileTypeModel() { }
 
         [MethodImpl(ProtoReader.HotPath)]
-        TypeModel ForAssembly(Type type)
+        private TypeModel ForAssembly(Type type)
             => type == null ? NullModel.Instance : RuntimeTypeModel.CreateForAssembly(type.Assembly, null);
 
+        /// <summary>See TypeModel.GetSchema</summary>
         public override string GetSchema(Type type, ProtoSyntax syntax)
             => ForAssembly(type).GetSchema(type, syntax);
 
+        /// <summary>See TypeModel.GetSerializer</summary>
         protected internal override ISerializer<T> GetSerializer<T>()
             => ForAssembly(typeof(T)).GetSerializer<T>();
 
