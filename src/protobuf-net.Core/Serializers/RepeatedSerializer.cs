@@ -216,13 +216,29 @@ namespace ProtoBuf.Serializers
         }
 
         /// <summary>If possible to do so *cheaply*, return the count of the items in the collection</summary>
-        protected virtual int TryGetCount(TCollection values) => values switch
+        /// <remarks>TryGetCountDefault can be used as a reasonable fallback</remarks>
+        protected abstract int TryGetCount(TCollection values);
+
+        /// <summary>Applies a range of common strategies for cheaply counting collections</summary>
+        /// <remarks>This involves multiple tests and exception handling; if your collection is known to be reliable, you should prefer an exposed .Count or similar</remarks>
+        protected int TryGetCountDefault(TCollection values)
         {
-            IReadOnlyCollection<TItem> roc => roc.Count, // test this first - most common things implement it
-            ICollection<TItem> collection => collection.Count,
-            null => 0,
-            _ => -1,
-        };
+            try
+            {
+                return values switch
+                {
+                    IReadOnlyCollection<TItem> roc => roc.Count, // test this first - most common things implement it
+                    ICollection<TItem> collection => collection.Count,
+                    ICollection untyped => untyped.Count,
+                    null => 0,
+                    _ => -1,
+                };
+            }
+            catch
+            {   // some types pretend to be countable, but they *lie*
+                return -1;
+            }
+        }
 
         TCollection IRepeatedSerializer<TCollection>.ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values)
             => ReadRepeated(ref state, features, values, default);
@@ -268,6 +284,9 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
+
+        protected override int TryGetCount(TCollection values) => values == null ? 0 : values.Count;
+
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             newValues.ReverseInPlace();
@@ -317,6 +336,8 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
+        protected override int TryGetCount(TList values) => values == null ? 0 : values.Count;
+
         internal override long Measure(TList values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
             var iter = values.GetEnumerator();
@@ -346,6 +367,9 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
+
+        protected override int TryGetCount(TCollection values) => TryGetCountDefault(values); // don't trust them much
+
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             switch (values)
@@ -419,6 +443,9 @@ namespace ProtoBuf.Serializers
             }
             return values;
         }
+
+        protected override int TryGetCount(TCollection values) => TryGetCountDefault(values); // don't trust them much
+
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             switch (values)
@@ -536,6 +563,9 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
+
+        protected override int TryGetCount(TCollection values) => values == null ? 0 : values.Count;
+
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             foreach (var value in newValues.AsSpan())

@@ -59,7 +59,7 @@ namespace ProtoBuf.Serializers
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
             => values ?? TypeModel.ActivatorCreate<TCollection>(); // we *are* the factory
 
-        protected override int TryGetCount(TCollection values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(TCollection values) => TryGetCountDefault(values);
 
         internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
