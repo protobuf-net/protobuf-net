@@ -48,6 +48,8 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(ConcurrentQueue<string>), typeof(ConcurrentQueueSerializer<ConcurrentQueue<string>, string>))]
         [InlineData(typeof(IProducerConsumerCollection<string>), typeof(ProducerConsumerSerializer<IProducerConsumerCollection<string>, string>))]
 
+        [InlineData(typeof(CustomEnumerable), typeof(CollectionSerializer<CustomEnumerable, CustomEnumerable, int>))]
+
         public void TestWhatProviderWeGet(Type type, Type expected)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
@@ -62,6 +64,23 @@ namespace ProtoBuf.Serializers
                 Assert.NotNull(ser);
                 Assert.Equal(expected, ser.GetType());
             }
+        }
+
+
+        class CustomEnumerable : IEnumerable<int>, ICollection<int>
+        {
+            private readonly List<int> items = new List<int>();
+            IEnumerator<int> IEnumerable<int>.GetEnumerator() { return items.GetEnumerator(); }
+            IEnumerator IEnumerable.GetEnumerator() { return items.GetEnumerator(); }
+            public void Add(int value) { items.Add(value); }
+
+            // need ICollection<int> for Add to work
+            bool ICollection<int>.IsReadOnly => false;
+            void ICollection<int>.Clear() => items.Clear();
+            int ICollection<int>.Count => items.Count;
+            bool ICollection<int>.Contains(int item) => items.Contains(item);
+            bool ICollection<int>.Remove(int item) => items.Remove(item);
+            void ICollection<int>.CopyTo(int[] array, int arrayIndex) => items.CopyTo(array, arrayIndex);
         }
 
         public class ListGenericSubclass<T> : List<T> { }

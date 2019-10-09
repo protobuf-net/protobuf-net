@@ -218,7 +218,8 @@ namespace ProtoBuf.Serializers
         /// <summary>If possible to do so *cheaply*, return the count of the items in the collection</summary>
         protected virtual int TryGetCount(TCollection values) => values switch
         {
-            IReadOnlyCollection<TItem> collection => collection.Count,
+            IReadOnlyCollection<TItem> roc => roc.Count, // test this first - most common things implement it
+            ICollection<TItem> collection => collection.Count,
             null => 0,
             _ => -1,
         };

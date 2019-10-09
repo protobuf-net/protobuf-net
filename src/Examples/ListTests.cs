@@ -1,5 +1,6 @@
 ﻿using Examples.Ppt;
 using ProtoBuf;
+using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections;
@@ -190,7 +191,8 @@ namespace Examples
                 Custom = new CustomEnumerable { 1, 2, 3, 4, 5, 1000 }
             };
             item.ClearList();
-            Assert.True(Program.CheckBytes(item, 0x22, 07, 01, 02, 03, 04, 05, 0xE8, 07));
+            RuntimeTypeModel.Default.Add<CustomEnumerable>();
+            Program.CheckBytes(item, "22-07-01-02-03-04-05-E8-07");
 
             var clone = Serializer.DeepClone(item);
             Assert.NotSame(item.Custom, clone.Custom);

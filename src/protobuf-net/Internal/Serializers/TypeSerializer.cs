@@ -1,12 +1,11 @@
-﻿using System;
+﻿using ProtoBuf.Compiler;
 using ProtoBuf.Meta;
-using System.Reflection;
-using ProtoBuf.Compiler;
-using System.Linq;
-using System.Collections.Generic;
-using ProtoBuf.Internal;
-using System.Diagnostics;
 using ProtoBuf.Serializers;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 
 namespace ProtoBuf.Internal.Serializers
 {
