@@ -15,7 +15,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## v3.0.0-alpha.3
+## v3.0.0-alpha
 
 - **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
 - **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
