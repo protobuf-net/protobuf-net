@@ -16,7 +16,9 @@ namespace ProtoBuf.Meta
     {
         internal sealed class Comparer : IComparer, IComparer<MetaType>
         {
-            public static readonly Comparer Default = new Comparer();
+            internal Comparer(HashSet<Type> callstack) => _callstack = callstack;
+            private readonly HashSet<Type> _callstack;
+
             public int Compare(object x, object y)
             {
                 return Compare(x as MetaType, y as MetaType);
@@ -27,8 +29,10 @@ namespace ProtoBuf.Meta
                 if (x == null) return -1;
                 if (y == null) return 1;
 
-                var callstack = new HashSet<Type>();
-                return string.Compare(x.GetSchemaTypeName(callstack), y.GetSchemaTypeName(callstack), StringComparison.Ordinal);
+                return string.Compare(
+                    x.GetSchemaTypeName(_callstack),
+                    y.GetSchemaTypeName(_callstack),
+                    StringComparison.Ordinal);
             }
         }
         /// <summary>
@@ -1727,13 +1731,12 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_IsGroup, value, true); }
         }
 
-        internal void WriteSchema(StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
+        internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
         {
             if (surrogate != null) return; // nothing to write
 
             var repeated = model.TryGetRepeatedProvider(Type);
 
-            var callstack = new HashSet<Type>(); // for recursion detection
             if (repeated != null)
             {
                 
@@ -1744,15 +1747,15 @@ namespace ProtoBuf.Meta
                     repeated.ResolveMapTypes(out var key, out var value);
 
                     NewLine(builder, indent + 1).Append("map<")
-                        .Append(model.GetSchemaTypeName(key, DataFormat.Default, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, key, DataFormat.Default, false, false, ref imports))
                         .Append(", ")
-                        .Append(model.GetSchemaTypeName(value, DataFormat.Default, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, value, DataFormat.Default, false, false, ref imports))
                         .Append("> items = 1;");
                 }
                 else
                 {
                     NewLine(builder, indent + 1).Append("repeated ")
-                        .Append(model.GetSchemaTypeName(repeated.ItemType, DataFormat.Default, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, repeated.ItemType, DataFormat.Default, false, false, ref imports))
                         .Append(" items = 1;");
                 }
                 NewLine(builder, indent).Append('}');
@@ -1777,7 +1780,7 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
-                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref imports).Replace('.', '_'))
+                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, false, false, ref imports).Replace('.', '_'))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
                     NewLine(builder, indent).Append('}');
@@ -1862,8 +1865,8 @@ namespace ProtoBuf.Meta
                         repeated = model.TryGetRepeatedProvider(member.MemberType);
                         repeated.ResolveMapTypes(out var keyType, out var valueType);
 
-                        var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref imports);
-                        schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
+                        var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, false, false, ref imports);
+                        schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
                             .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
                     }
@@ -1873,7 +1876,7 @@ namespace ProtoBuf.Meta
                         NewLine(builder, indent + 1).Append(ordinality);
                         if (member.DataFormat == DataFormat.Group) builder.Append("group ");
 
-                        schemaTypeName = member.GetSchemaTypeName(true, ref imports, out var altName);
+                        schemaTypeName = member.GetSchemaTypeName(callstack, true, ref imports, out var altName);
                         builder.Append(schemaTypeName).Append(" ")
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
@@ -1935,7 +1938,7 @@ namespace ProtoBuf.Meta
                     }
                     if (schemaTypeName == ".bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
-                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports, out _));
+                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(callstack, false, ref imports, out _));
                     }
                 }
                 if (_subTypes != null && _subTypes.Count != 0)

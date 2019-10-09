@@ -260,15 +260,16 @@ namespace ProtoBuf.Meta
             var imports = CommonImports.None;
             StringBuilder bodyBuilder = new StringBuilder();
             // sort them by schema-name
+            var callstack = new HashSet<Type>(); // for recursion detection
             MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
             requiredTypes.CopyTo(metaTypesArr, 0);
-            Array.Sort(metaTypesArr, MetaType.Comparer.Default);
+            Array.Sort(metaTypesArr, new MetaType.Comparer(callstack));
 
             // write the messages
             if (isInbuiltType)
             {
                 bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref imports))
+                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, false, false, ref imports))
                     .Append(" value = 1;").AppendLine().Append('}');
             }
             else
@@ -277,7 +278,7 @@ namespace ProtoBuf.Meta
                 {
                     MetaType tmp = metaTypesArr[i];
                     if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
-                    tmp.WriteSchema(bodyBuilder, 0, ref imports, syntax);
+                    tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax);
                 }
             }
             if ((imports & CommonImports.Bcl) != 0)
@@ -1564,9 +1565,9 @@ namespace ProtoBuf.Meta
         public event LockContentedEventHandler LockContended;
 #pragma warning restore RCS1159 // Use EventHandler<T>.
 
-        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
-            => GetSchemaTypeName(effectiveType, dataFormat, asReference, dynamicType, ref imports, out _);
-        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
+            => GetSchemaTypeName(callstack, effectiveType, dataFormat, asReference, dynamicType, ref imports, out _);
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
         {
             altName = null;
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
@@ -1584,11 +1585,11 @@ namespace ProtoBuf.Meta
 
                 var mt = this[effectiveType];
 
-                var actual = mt.GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName();
+                var actual = mt.GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName(callstack);
                 if (mt.Type.IsEnum && !mt.IsValidEnum())
                 {
                     altName = actual;
-                    actual = GetSchemaTypeName(Enum.GetUnderlyingType(mt.Type), dataFormat, asReference, dynamicType, ref imports);
+                    actual = GetSchemaTypeName(callstack, Enum.GetUnderlyingType(mt.Type), dataFormat, asReference, dynamicType, ref imports);
                 }
                 return actual;
             }
