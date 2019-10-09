@@ -146,7 +146,7 @@ require(["vs/editor/editor.main"], function () {
     window.cleanMonacoError = function (block) {
         block.monacoErrors = [];
         monaco.editor.setModelMarkers(block.monacoEditorModel, "owner", []);
-    }
+    };
     window.setMonaco = function (block, value) {
         return block.monacoEditor.setValue(value);
     };
