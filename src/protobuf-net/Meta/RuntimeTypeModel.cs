@@ -175,6 +175,7 @@ namespace ProtoBuf.Meta
         /// <param name="syntax">The .proto syntax to use</param>
         public override string GetSchema(Type type, ProtoSyntax syntax)
         {
+            syntax = Serializer.GlobalOptions.Normalize(syntax);
             var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;

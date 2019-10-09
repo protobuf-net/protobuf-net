@@ -69,10 +69,10 @@ namespace ProtoBuf.Serializers
 
 
         /// <summary>Reverses a range of values</summary>
+        [MethodImpl(ProtoReader.HotPath)] // note: not "in" because ArraySegment<T> isn't "readonly" on all TFMs
+        internal static void ReverseInPlace<T>(this ref ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
         [MethodImpl(ProtoReader.HotPath)]
-        internal static void ReverseInPlace<T>(this in ArraySegment<T> values) => Array.Reverse(values.Array, values.Offset, values.Count);
-
-        internal static ref T Singleton<T>(this in ArraySegment<T> values) => ref values.Array[values.Offset];
+        internal static ref T Singleton<T>(this ref ArraySegment<T> values) => ref values.Array[values.Offset];
     }
 
 
@@ -240,7 +240,9 @@ namespace ProtoBuf.Serializers
             values = Initialize(values, ctx);
             using var buffer = state.FillBuffer<ISerializer<TItem>, TItem>(features, serializer, TypeHelper<TItem>.Default);
             if ((features & SerializerFeatures.OptionClearCollection) != 0) values = Clear(values, ctx);
-            return buffer.IsEmpty ? values : AddRange(values, buffer.Segment, ctx);
+            if (buffer.IsEmpty) return values;
+            var segment = buffer.Segment;
+            return AddRange(values, ref segment, ctx);
         }
 
 
@@ -251,7 +253,8 @@ namespace ProtoBuf.Serializers
         protected abstract TCollection Clear(TCollection values, ISerializationContext context);
 
         /// <summary>Add new contents to the collection</summary>
-        protected abstract TCollection AddRange(TCollection values, in ArraySegment<TItem> newValues, ISerializationContext context);
+        protected abstract TCollection AddRange(TCollection values, ref ArraySegment<TItem> newValues, ISerializationContext context);
+        // note: not "in" because ArraySegment<T> is not "readonly" on all targeted TFMs
     }
 
     sealed class StackSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
@@ -264,7 +267,7 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             newValues.ReverseInPlace();
             foreach (var value in newValues.AsSpan())
@@ -307,7 +310,7 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override TList AddRange(TList values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TList AddRange(TList values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             values.AddRange(newValues);
             return values;
@@ -342,7 +345,7 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             switch (values)
             {
@@ -415,7 +418,7 @@ namespace ProtoBuf.Serializers
             }
             return values;
         }
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             switch (values)
             {
@@ -478,7 +481,7 @@ namespace ProtoBuf.Serializers
             => values ?? Array.Empty<T>();
         protected override T[] Clear(T[] values, ISerializationContext context)
             => Array.Empty<T>();
-        protected override T[] AddRange(T[] values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override T[] AddRange(T[] values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             var arr = new T[values.Length + newValues.Count];
             Array.Copy(values, 0, arr, 0, values.Length);
@@ -532,7 +535,7 @@ namespace ProtoBuf.Serializers
             values.Clear();
             return values;
         }
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             foreach (var value in newValues.AsSpan())
                 values.Enqueue(value);

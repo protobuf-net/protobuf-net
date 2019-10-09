@@ -101,10 +101,12 @@ namespace ProtoBuf.Serializers
         protected abstract TCollection Clear(TCollection values, ISerializationContext context);
 
         /// <summary>Add new contents to the collection</summary>
-        protected abstract TCollection AddRange(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
+        protected abstract TCollection AddRange(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
+        // note: not "in" because ArraySegment<T> is not "readonly" on all targeted TFMs
 
         /// <summary>Update the new contents intoto the collection, overwriting existing values</summary>
-        protected abstract TCollection SetValues(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
+        protected abstract TCollection SetValues(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context);
+        // note: not "in" because ArraySegment<T> is not "readonly" on all targeted TFMs
 
         /// <summary>
         /// Deserializes a sequence of values from the supplied reader
@@ -122,8 +124,9 @@ namespace ProtoBuf.Serializers
             if ((features & SerializerFeatures.OptionClearCollection) != 0) values = Clear(values, ctx);
             if (!buffer.IsEmpty)
             {
+                var segment = buffer.Segment;
                 values = (features & SerializerFeatures.OptionFailOnDuplicateKey) == 0
-                    ? SetValues(values, buffer.Segment, ctx) : AddRange(values, buffer.Segment, ctx);
+                    ? SetValues(values, ref segment, ctx) : AddRange(values, ref segment, ctx);
             }
             return values;
 
@@ -141,14 +144,14 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override Dictionary<TKey, TValue> AddRange(Dictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override Dictionary<TKey, TValue> AddRange(Dictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             foreach (var pair in newValues.AsSpan())
                 values.Add(pair.Key, pair.Value);
             return values;
         }
 
-        protected override Dictionary<TKey, TValue> SetValues(Dictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override Dictionary<TKey, TValue> SetValues(Dictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             foreach (var pair in newValues.AsSpan())
                 values[pair.Key] = pair.Value;
@@ -174,14 +177,14 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override TCollection AddRange(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             foreach (var pair in newValues.AsSpan())
                 values.Add(pair.Key, pair.Value);
             return values;
         }
 
-        protected override TCollection SetValues(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override TCollection SetValues(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             foreach (var pair in newValues.AsSpan())
                 values[pair.Key] = pair.Value;

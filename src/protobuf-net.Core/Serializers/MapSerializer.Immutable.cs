@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableDictionary<TKey, TValue> Initialize(ImmutableDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? ImmutableDictionary<TKey, TValue>.Empty;
-        protected override ImmutableDictionary<TKey, TValue> AddRange(ImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableDictionary<TKey, TValue> AddRange(ImmutableDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
@@ -40,7 +40,7 @@ namespace ProtoBuf.Serializers
             }
             return values.AddRange(newValues);
         }
-        protected override ImmutableDictionary<TKey, TValue> SetValues(ImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableDictionary<TKey, TValue> SetValues(ImmutableDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
@@ -63,7 +63,7 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableSortedDictionary<TKey, TValue> Initialize(ImmutableSortedDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? ImmutableSortedDictionary<TKey, TValue>.Empty;
-        protected override ImmutableSortedDictionary<TKey, TValue> AddRange(ImmutableSortedDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableSortedDictionary<TKey, TValue> AddRange(ImmutableSortedDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
@@ -72,7 +72,7 @@ namespace ProtoBuf.Serializers
             }
             return values.AddRange(newValues);
         }
-        protected override ImmutableSortedDictionary<TKey, TValue> SetValues(ImmutableSortedDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override ImmutableSortedDictionary<TKey, TValue> SetValues(ImmutableSortedDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
@@ -95,7 +95,7 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override IImmutableDictionary<TKey, TValue> Initialize(IImmutableDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? ImmutableDictionary<TKey, TValue>.Empty;
-        protected override IImmutableDictionary<TKey, TValue> AddRange(IImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override IImmutableDictionary<TKey, TValue> AddRange(IImmutableDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {
@@ -104,7 +104,7 @@ namespace ProtoBuf.Serializers
             }
             return values.AddRange(newValues);
         }
-        protected override IImmutableDictionary<TKey, TValue> SetValues(IImmutableDictionary<TKey, TValue> values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override IImmutableDictionary<TKey, TValue> SetValues(IImmutableDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1)
             {

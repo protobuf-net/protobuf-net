@@ -27,14 +27,14 @@ namespace ProtoBuf.Serializers
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
             => values ?? TypeModel.ActivatorCreate<TCollection>(); // we *are* the factory
 
-        protected override TCollection AddRange(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             foreach (var pair in newValues.AsSpan())
                 if (!values.TryAdd(pair.Key, pair.Value)) ThrowHelper.ThrowArgumentException("duplicate key");
             return values;
         }
 
-        protected override TCollection SetValues(TCollection values, in ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        protected override TCollection SetValues(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             foreach (var pair in newValues.AsSpan())
                 values[pair.Key] = pair.Value;

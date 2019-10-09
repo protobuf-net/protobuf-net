@@ -47,7 +47,7 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             foreach(var item in newValues.AsSpan())
             {
@@ -109,7 +109,7 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             foreach (var value in newValues.AsSpan())
                 values.Add(value);
@@ -128,7 +128,7 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             foreach (var value in newValues.AsSpan())
                 values.Enqueue(value);
@@ -145,7 +145,7 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override TCollection AddRange(TCollection values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             newValues.ReverseInPlace();
             values.PushRange(newValues.Array, newValues.Offset, newValues.Count);

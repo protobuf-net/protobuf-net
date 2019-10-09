@@ -24,7 +24,7 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
         /// <returns>The .proto definition as a string</returns>
-        public static string GetProto<T>() => GetProto<T>(ProtoSyntax.Proto2);
+        public static string GetProto<T>() => GetProto<T>(ProtoSyntax.Default);
 
         /// <summary>
         /// Suggest a .proto definition for the given type
@@ -382,6 +382,36 @@ namespace ProtoBuf
                 get { return RuntimeTypeModel.Default.InferTagFromNameDefault; }
                 set { RuntimeTypeModel.Default.InferTagFromNameDefault = value; }
             }
+
+            private static ProtoSyntax _defaultSyntax = ProtoSyntax.Proto3;
+
+            /// <summary>
+            /// Gets or sets the default .proto syntax to be used
+            /// </summary>
+            public static ProtoSyntax DefaultSyntax
+            {
+                get => _defaultSyntax;
+                set
+                {
+                    switch (value)
+                    {
+                        case ProtoSyntax.Proto2:
+                        case ProtoSyntax.Proto3:
+                            _defaultSyntax = value;
+                            break;
+                        default:
+                            ThrowHelper.ThrowArgumentOutOfRangeException(nameof(DefaultSyntax));
+                            break;
+                    }
+                }
+            }
+
+            internal static ProtoSyntax Normalize(ProtoSyntax syntax) => syntax switch
+            {
+                ProtoSyntax.Proto2 => syntax,
+                ProtoSyntax.Proto3 => syntax,
+                _ => DefaultSyntax,
+            };
         }
 
         /// <summary>

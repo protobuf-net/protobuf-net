@@ -217,6 +217,7 @@ namespace ProtoBuf.Meta
             if (!string.IsNullOrEmpty(name)) return name;
 
             string typeName = Type.Name;
+            if (Type.IsArray) return GetArrayName(Type.GetElementType());
             if (Type.IsGenericType)
             {
                 var sb = new StringBuilder(typeName);
@@ -234,12 +235,7 @@ namespace ProtoBuf.Meta
                     }
                     else if (tmp.IsArray)
                     {
-                        // Cannot use Name of array, since that's not a valid protobuf
-                        // name.
-                        sb.Append("Array_");
-                        // No need to check for nesting/array rank here. If that's invalid
-                        // other parts of the schema generator will throw.
-                        sb.Append(tmp.GetElementType().Name);
+                        sb.Append(GetArrayName(tmp.GetElementType()));
                     } else
                     { 
                         sb.Append(tmp.Name);
@@ -249,7 +245,19 @@ namespace ProtoBuf.Meta
             }
 
             return typeName;
+
+            string GetArrayName(Type elementType)
+            {
+                // Cannot use Name of array, since that's not a valid protobuf
+                // name.
+                // No need to check for nesting/array rank here. If that's invalid
+                // other parts of the schema generator will throw.
+                MetaType mt;
+                var name = (model.IsDefined(elementType) && (mt = model[elementType]) != null) ? mt.GetSchemaTypeName() : elementType.Name;
+                return "Array_" + name;
+            }
         }
+
 
         private string name;
 
@@ -308,7 +316,6 @@ namespace ProtoBuf.Meta
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            if (type.IsArray) throw InbuiltType(type);
             IRuntimeProtoSerializerNode coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
@@ -316,6 +323,12 @@ namespace ProtoBuf.Meta
             }
 
             Type = type;
+            if (type.IsArray)
+            {
+                // we'all allow add, to allow proxy generation, but
+                // don't play with it too much!
+                SetFlag(OPTIONS_Frozen, true, false);
+            }
             this.model = model;
         }
 
@@ -1702,12 +1715,19 @@ namespace ProtoBuf.Meta
 
             var repeated = model.TryGetRepeatedProvider(Type);
 
-            if (repeated != null && !repeated.IsMap)
+            if (repeated != null)
             {
-                string itemTypeName = model.GetSchemaTypeName(repeated.ItemType, DataFormat.Default, false, false, ref imports);
-                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
-                NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
-                NewLine(builder, indent).Append('}');
+                if (repeated.IsMap)
+                {
+
+                }
+                else
+                {
+                    string itemTypeName = model.GetSchemaTypeName(repeated.ItemType, DataFormat.Default, false, false, ref imports);
+                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                    NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
+                    NewLine(builder, indent).Append('}');
+                }
             }
             else if (IsAutoTuple)
             { // key-value-pair etc

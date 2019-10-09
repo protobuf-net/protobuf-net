@@ -69,7 +69,7 @@ namespace ProtoBuf.Serializers
             => values.IsDefault ? ImmutableArray<T>.Empty : values;
         protected override ImmutableArray<T> Clear(ImmutableArray<T> values, ISerializationContext context)
             => values.Clear();
-        protected override ImmutableArray<T> AddRange(ImmutableArray<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override ImmutableArray<T> AddRange(ImmutableArray<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(newValues);
 
         protected override int TryGetCount(ImmutableArray<T> values) => values.IsEmpty ? 0 : values.Length;
@@ -108,7 +108,7 @@ namespace ProtoBuf.Serializers
     {
         protected override ImmutableList<T> Initialize(ImmutableList<T> values, ISerializationContext context)
             => values ?? ImmutableList<T>.Empty;
-        protected override ImmutableList<T> AddRange(ImmutableList<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override ImmutableList<T> AddRange(ImmutableList<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(newValues);
         protected override ImmutableList<T> Clear(ImmutableList<T> values, ISerializationContext context)
             => values.Clear();
@@ -134,7 +134,7 @@ namespace ProtoBuf.Serializers
     {
         protected override IImmutableList<T> Initialize(IImmutableList<T> values, ISerializationContext context)
             => values ?? ImmutableList<T>.Empty;
-        protected override IImmutableList<T> AddRange(IImmutableList<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override IImmutableList<T> AddRange(IImmutableList<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(newValues);
         protected override IImmutableList<T> Clear(IImmutableList<T> values, ISerializationContext context)
             => values.Clear();
@@ -182,7 +182,7 @@ namespace ProtoBuf.Serializers
     {
         protected override ImmutableHashSet<T> Initialize(ImmutableHashSet<T> values, ISerializationContext context)
             => values ?? ImmutableHashSet<T>.Empty;
-        protected override ImmutableHashSet<T> AddRange(ImmutableHashSet<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override ImmutableHashSet<T> AddRange(ImmutableHashSet<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.Union(newValues);
         protected override ImmutableHashSet<T> Clear(ImmutableHashSet<T> values, ISerializationContext context)
             => values.Clear();
@@ -208,7 +208,7 @@ namespace ProtoBuf.Serializers
     {
         protected override ImmutableSortedSet<T> Initialize(ImmutableSortedSet<T> values, ISerializationContext context)
             => values ?? ImmutableSortedSet<T>.Empty;
-        protected override ImmutableSortedSet<T> AddRange(ImmutableSortedSet<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override ImmutableSortedSet<T> AddRange(ImmutableSortedSet<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.Union(newValues);
         protected override ImmutableSortedSet<T> Clear(ImmutableSortedSet<T> values, ISerializationContext context)
             => values.Clear();
@@ -234,7 +234,7 @@ namespace ProtoBuf.Serializers
     {
         protected override IImmutableSet<T> Initialize(IImmutableSet<T> values, ISerializationContext context)
             => values ?? ImmutableHashSet<T>.Empty;
-        protected override IImmutableSet<T> AddRange(IImmutableSet<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override IImmutableSet<T> AddRange(IImmutableSet<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.Union(newValues);
         protected override IImmutableSet<T> Clear(IImmutableSet<T> values, ISerializationContext context)
             => values.Clear();
@@ -283,7 +283,7 @@ namespace ProtoBuf.Serializers
     {
         protected override ImmutableStack<T> Initialize(ImmutableStack<T> values, ISerializationContext context)
             => values ?? ImmutableStack<T>.Empty;
-        protected override ImmutableStack<T> AddRange(ImmutableStack<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override ImmutableStack<T> AddRange(ImmutableStack<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1) return values.Push(newValues.Singleton());
             newValues.ReverseInPlace();
@@ -331,7 +331,7 @@ namespace ProtoBuf.Serializers
     {
         protected override IImmutableStack<T> Initialize(IImmutableStack<T> values, ISerializationContext context)
             => values ?? ImmutableStack<T>.Empty;
-        protected override IImmutableStack<T> AddRange(IImmutableStack<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override IImmutableStack<T> AddRange(IImmutableStack<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1) return values.Push(newValues.Singleton());
             newValues.ReverseInPlace();
@@ -386,7 +386,7 @@ namespace ProtoBuf.Serializers
     {
         protected override ImmutableQueue<T> Initialize(ImmutableQueue<T> values, ISerializationContext context)
             => values ?? ImmutableQueue<T>.Empty;
-        protected override ImmutableQueue<T> AddRange(ImmutableQueue<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override ImmutableQueue<T> AddRange(ImmutableQueue<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1) return values.Enqueue(newValues.Singleton());
             foreach (var value in newValues.AsSpan())
@@ -433,7 +433,7 @@ namespace ProtoBuf.Serializers
     {
         protected override IImmutableQueue<T> Initialize(IImmutableQueue<T> values, ISerializationContext context)
             => values ?? ImmutableQueue<T>.Empty;
-        protected override IImmutableQueue<T> AddRange(IImmutableQueue<T> values, in ArraySegment<T> newValues, ISerializationContext context)
+        protected override IImmutableQueue<T> AddRange(IImmutableQueue<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             if (newValues.Count == 1) return values.Enqueue(newValues.Singleton());
             foreach (var value in newValues.AsSpan())
