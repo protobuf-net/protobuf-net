@@ -26,7 +26,9 @@ namespace Examples.Issues
             RuntimeTypeModel ordersModel = RuntimeTypeModel.Create();
             ordersModel.AutoCompile = false;
 
+#pragma warning disable CS0618
             Database database = (Database)ordersModel.Deserialize(new MemoryStream(fileBytes), null, typeof(Database));
+#pragma warning restore CS0618
             List<Order> orders = database.Orders;
 
             DbMetrics("From File", orders);

@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
@@ -9,34 +10,42 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
-        /// <summary>
-        /// Creates a new reader against a multi-segment buffer
-        /// </summary>
-        /// <param name="source">The source buffer</param>
-        /// <param name="state">Reader state</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        public static ProtoReader Create(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
+        partial struct State
         {
-            var reader = ReadOnlySequenceProtoReader.GetRecycled()
-                ?? new ReadOnlySequenceProtoReader();
-            reader.Init(out state, source, model, context);
-            return reader;
-        }
+            /// <summary>
+            /// Creates a new reader against a multi-segment buffer
+            /// </summary>
+            /// <param name="source">The source buffer</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
+            {
+                var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
+                reader.Init(source, model, context);
+                return new State(reader);
+            }
 
-        /// <summary>
-        /// Creates a new reader against a multi-segment buffer
-        /// </summary>
-        /// <param name="source">The source buffer</param>
-        /// <param name="state">Reader state</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        public static ProtoReader Create(out State state, ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
-            => Create(out state, new ReadOnlySequence<byte>(source), model, context);
+            /// <summary>
+            /// Creates a new reader against a multi-segment buffer
+            /// </summary>
+            /// <param name="source">The source buffer</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
+                => Create(new ReadOnlySequence<byte>(source), model, context);
+
+#if FEAT_DYNAMIC_REF
+            internal void SetRootObject(object value) => _reader.SetRootObject(value);
+#endif
+        }
 
         private sealed class ReadOnlySequenceProtoReader : ProtoReader
         {
-            protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoReader.Create");
+            protected internal override State DefaultState()
+            {
+                ThrowHelper.ThrowInvalidOperationException("You must retain and pass the state from ProtoReader.Create");
+                return default;
+            }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static string ToString(ReadOnlySpan<byte> span, int offset, int bytes)
@@ -60,7 +69,32 @@ namespace ProtoBuf
                 }
 #endif
             }
-            internal static int TryParseUInt32Varint(ProtoReader @this, ref State state, int offset, bool trimNegative, out uint value, ReadOnlySpan<byte> span)
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static string ToString(ReadOnlySpan<byte> span)
+            {
+#if PLAT_SPAN_OVERLOADS
+                return UTF8.GetString(span);
+#else
+                unsafe
+                {
+                    fixed (byte* sPtr = &MemoryMarshal.GetReference(span))
+                    {
+                        var bPtr = sPtr;
+                        int bytes = span.Length;
+                        int chars = UTF8.GetCharCount(bPtr, bytes);
+                        string s = new string('\0', chars);
+                        fixed (char* cPtr = s)
+                        {
+                            UTF8.GetChars(bPtr, bytes, cPtr, chars);
+                        }
+                        return s;
+                    }
+                }
+#endif
+            }
+
+            internal static int TryParseUInt32Varint(ref State state, int offset, bool trimNegative, out uint value, ReadOnlySpan<byte> span)
             {
                 if ((uint)offset >= (uint)span.Length)
                 {
@@ -72,22 +106,22 @@ namespace ProtoBuf
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
+                if ((uint)offset >= (uint)span.Length) state.ThrowEoF();
                 uint chunk = span[offset++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
+                if ((uint)offset >= (uint)span.Length) state.ThrowEoF();
                 chunk = span[offset++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
+                if ((uint)offset >= (uint)span.Length) state.ThrowEoF();
                 chunk = span[offset++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
+                if ((uint)offset >= (uint)span.Length) state.ThrowEoF();
                 chunk = span[offset++];
                 value |= chunk << 28; // can only use 4 bits from this chunk
                 if ((chunk & 0xF0) == 0) return 5;
@@ -104,38 +138,23 @@ namespace ProtoBuf
                     return 10;
                 }
 
-                ThrowOverflow(@this, ref state);
+                state.ThrowOverflow();
                 return 0;
             }
 
-            [ThreadStatic]
-            private static ReadOnlySequenceProtoReader s_lastReader;
             private ReadOnlySequence<byte>.Enumerator _source;
-
-            internal static ReadOnlySequenceProtoReader GetRecycled()
-            {
-                var tmp = s_lastReader;
-                s_lastReader = null;
-                return tmp;
-            }
-
-            internal override void Recycle()
-            {
-                Dispose();
-                s_lastReader = this;
-            }
 
             public override void Dispose()
             {
                 base.Dispose();
                 _source = default;
+                Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
-            internal void Init(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)
+            internal void Init(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)
             {
                 base.Init(model, context);
                 _source = source.GetEnumerator();
-                state = default;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -152,7 +171,7 @@ namespace ProtoBuf
                 {
                     if (!_source.MoveNext())
                     {
-                        if (throwIfEOF) ThrowEoF(this, ref state);
+                        if (throwIfEOF) state.ThrowEoF();
                         return 0;
                     }
                     state.Init(_source.Current);
@@ -164,9 +183,9 @@ namespace ProtoBuf
             {
                 return state.RemainingInCurrent >= 10
                     ? State.TryParseUInt64Varint(state.Span, state.OffsetInCurrent, out value)
-                    : ViaStackAlloc(ref state, out value);
-
-                int ViaStackAlloc(ref State s, out ulong val)
+                    : ViaStackAlloc(this, ref state, out value);
+                
+                static int ViaStackAlloc(ReadOnlySequenceProtoReader reader, ref State s, out ulong val)
                 {
                     Span<byte> span = stackalloc byte[10];
                     Span<byte> target = span;
@@ -175,12 +194,12 @@ namespace ProtoBuf
                     if (s.RemainingInCurrent != 0)
                     {
                         int take = Math.Min(s.RemainingInCurrent, target.Length);
-                        Peek(ref s, take).CopyTo(target);
+                        reader.Peek(ref s, take).CopyTo(target);
                         target = target.Slice(available);
                         available += take;
                     }
 
-                    var iterCopy = _source;
+                    var iterCopy = reader._source;
                     while (!target.IsEmpty && iterCopy.MoveNext())
                     {
                         var nextBuffer = iterCopy.Current.Span;
@@ -249,12 +268,18 @@ namespace ProtoBuf
             {
                 // we should probably do the work with a Decoder,
                 // but this works for today
-                using (var mem = MemoryPool<byte>.Shared.Rent(bytes))
+                var arr = BufferPool.GetBuffer(bytes);
+                try
                 {
-                    var span = mem.Memory.Span;
+                    var span = new Span<byte>(arr, 0, bytes);
                     ImplReadBytes(ref state, span, bytes);
-                    return ToString(span, 0, bytes);
+                    return ToString(span);
                 }
+                finally
+                {
+                    BufferPool.ReleaseBufferToPool(ref arr);
+                }
+                
             }
 
             private void ImplReadBytes(ref State state, Span<byte> target, int bytesToRead)
@@ -299,7 +324,7 @@ namespace ProtoBuf
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
                 return state.RemainingInCurrent >= 10
-                    ? TryParseUInt32Varint(this, ref state, state.OffsetInCurrent,
+                    ? TryParseUInt32Varint(ref state, state.OffsetInCurrent,
                         mode == Read32VarintMode.Signed, out value, state.Span)
                     : ViaStackAlloc(ref state, mode, out value);
 
@@ -324,7 +349,7 @@ namespace ProtoBuf
                         available += take;
                     }
                     if (available != 10) span = span.Slice(0, available);
-                    return TryParseUInt32Varint(this, ref s, 0, m == Read32VarintMode.Signed, out val, span);
+                    return TryParseUInt32Varint(ref s, 0, m == Read32VarintMode.Signed, out val, span);
                 }
             }
 

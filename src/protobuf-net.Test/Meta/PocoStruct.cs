@@ -34,12 +34,13 @@ namespace ProtoBuf.unittest.Meta
                     new Employee { Designation = "Grunt", EmployeeName = "Jo"},
                     new Employee { Designation = "Scapegoat", EmployeeName = "Alex"}}
             }, clone;
-            using(var ms = new MemoryStream()) {
-                model.Serialize(ms, comp);
-                ms.Position = 0;
-                Console.WriteLine("Bytes: " + ms.Length);
-                clone = (Company) model.Deserialize(ms, null, typeof(Company));
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, comp);
+            ms.Position = 0;
+            Console.WriteLine("Bytes: " + ms.Length);
+#pragma warning disable CS0618
+            clone = (Company) model.Deserialize(ms, null, typeof(Company));
+#pragma warning restore CS0618
             Assert.Equal(3, clone.Employees.Count);
             Assert.Equal("Boss", clone.Employees[0].Designation);
             Assert.Equal("Alex", clone.Employees[2].EmployeeName);
@@ -80,7 +81,9 @@ namespace ProtoBuf.unittest.Meta
                 model.Serialize(ms, comp);
                 ms.Position = 0;
                 Console.WriteLine("Bytes: " + ms.Length);
+#pragma warning disable CS0618
                 clone = (Company)model.Deserialize(ms, null, typeof(Company));
+#pragma warning restore CS0618
             }
             Assert.Equal(3, clone.Employees.Count);
             Assert.Equal("Boss", clone.Employees[0].Designation);

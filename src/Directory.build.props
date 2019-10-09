@@ -22,7 +22,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <IncludeSymbols>false</IncludeSymbols>
     <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>8.0</LangVersion>
     <CodeAnalysisRuleset>$(MSBuildThisFileDirectory)Shared.ruleset</CodeAnalysisRuleset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='VS'">
@@ -34,9 +34,14 @@
     <PackageReference Include="SourceLink.Create.GitHub" Version="2.8.3" PrivateAssets="All" /> 
     <DotNetCliToolReference Include="dotnet-sourcelink" Version="2.8.3" />
     <DotNetCliToolReference Include="dotnet-sourcelink-git" Version="2.8.3" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.138">
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.0.26">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <!-- oh gawd, I'm just not emotionally prepared for this...
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>-->
   </ItemGroup>
 </Project>

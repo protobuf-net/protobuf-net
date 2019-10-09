@@ -45,9 +45,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BenchmarkBaseline", "Benchm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protogen.site.blazor.client", "protogen.site.blazor.client\protogen.site.blazor.client.csproj", "{2B16DEA2-F51B-451C-A60E-99B3961BFB56}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Core", "protobuf-net.Core\protobuf-net.Core.csproj", "{951BBDE9-6A10-4965-AA4F-C155D8CCF0B3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protogen.site", "protogen.site\protogen.site.csproj", "{D25F8252-1E16-4EC4-9F5B-91DEBD60E1CE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Core", "protobuf-net.Core\protobuf-net.Core.csproj", "{951BBDE9-6A10-4965-AA4F-C155D8CCF0B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,35 +1,80 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Collections.Generic;
-using ProtoBuf.Meta;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
     internal sealed class NetObjectCache
     {
+        private readonly Dictionary<ObjectKey, long> _knownLengths = new Dictionary<ObjectKey, long>();
+
+        private readonly struct ObjectKey : IEquatable<ObjectKey>
+        {
+            private readonly object _obj;
+            private readonly Type _subTypeLevel;
+            [MethodImpl(ProtoReader.HotPath)]
+            public ObjectKey(object obj, Type subTypeLevel)
+            {
+                _obj = obj;
+                _subTypeLevel = subTypeLevel;
+            }
+            public override string ToString() => $"{_subTypeLevel}/{_obj}";
+            [MethodImpl(ProtoReader.HotPath)]
+            public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ _subTypeLevel.GetHashCode();
+            [MethodImpl(ProtoReader.HotPath)]
+            public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
+            [MethodImpl(ProtoReader.HotPath)]
+            public bool Equals(ObjectKey other) => this._obj == other._obj & this._subTypeLevel == other._subTypeLevel;
+        }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public bool TryGetKnownLength(object obj, Type subTypeLevel, out long length)
+        {
+            if (_knownLengths.TryGetValue(new ObjectKey(obj, subTypeLevel), out length))
+            {
+                return true;
+            }
+            else
+            {
+                length = default;
+                return false;
+            }
+        }
+
+        public void SetKnownLength(object obj, Type subTypeLevel, long length)
+        {
+            var key = new ObjectKey(obj, subTypeLevel);
+            _knownLengths[key] = length;
+        }
+
+#if FEAT_DYNAMIC_REF
+
+        private List<object> underlyingList;
+
+        private List<object> List => underlyingList ?? (underlyingList = new List<object>());
+
         internal const int Root = 0;
-        private MutableList underlyingList;
-
-        private MutableList List => underlyingList ?? (underlyingList = new MutableList());
-
         internal object GetKeyedObject(int key)
         {
             if (key-- == Root)
             {
-                if (rootObject == null) throw new ProtoException("No root object assigned");
+                if (rootObject == null) ThrowHelper.ThrowProtoException("No root object assigned");
                 return rootObject;
             }
-            BasicList list = List;
+            var list = List;
 
             if (key < 0 || key >= list.Count)
             {
-                Helpers.DebugWriteLine("Missing key: " + key);
-                throw new ProtoException("Internal error; a missing key occurred");
+                Debug.WriteLine("Missing key: " + key);
+                ThrowHelper.ThrowProtoException("Internal error; a missing key occurred");
             }
 
             object tmp = list[key];
             if (tmp == null)
             {
-                throw new ProtoException("A deferred key does not have a value yet");
+                ThrowHelper.ThrowProtoException("A deferred key does not have a value yet");
             }
             return tmp;
         }
@@ -38,14 +83,18 @@ namespace ProtoBuf
         {
             if (key-- == Root)
             {
-                if (value == null) throw new ArgumentNullException(nameof(value));
-                if (rootObject != null && ((object)rootObject != (object)value)) throw new ProtoException("The root object cannot be reassigned");
+                if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+                if (rootObject != null && ((object)rootObject != (object)value)) ThrowHelper.ThrowProtoException("The root object cannot be reassigned");
                 rootObject = value;
             }
             else
             {
-                MutableList list = List;
-                if (key < list.Count)
+                var list = List;
+                if (key == list.Count)
+                {
+                    list.Add(value);
+                }
+                else if (key < list.Count)
                 {
                     object oldVal = list[key];
                     if (oldVal == null)
@@ -54,12 +103,12 @@ namespace ProtoBuf
                     }
                     else if (!ReferenceEquals(oldVal, value))
                     {
-                        throw new ProtoException("Reference-tracked objects cannot change reference");
+                        ThrowHelper.ThrowProtoException("Reference-tracked objects cannot change reference");
                     } // otherwise was the same; nothing to do
                 }
-                else if (key != list.Add(value))
+                else
                 {
-                    throw new ProtoException("Internal error; a key mismatch occurred");
+                    ThrowHelper.ThrowProtoException("Internal error; a key mismatch occurred");
                 }
             }
         }
@@ -67,7 +116,7 @@ namespace ProtoBuf
         private object rootObject;
         internal int AddObjectKey(object value, out bool existing)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
 
             if ((object)value == (object)rootObject) // (object) here is no-op, but should be
             {                                        // preserved even if this was typed - needs ref-check
@@ -76,7 +125,7 @@ namespace ProtoBuf
             }
 
             string s = value as string;
-            BasicList list = List;
+            var list = List;
             int index;
 
             if (s == null)
@@ -106,8 +155,8 @@ namespace ProtoBuf
 
             if (!(existing = index >= 0))
             {
-                index = list.Add(value);
-
+                index = list.Count;
+                list.Add(value);
                 if (s == null)
                 {
                     objectKeys.Add(value, index);
@@ -152,7 +201,7 @@ namespace ProtoBuf
         private Dictionary<string, int> stringKeys;
 
         private System.Collections.Generic.Dictionary<object, int> objectKeys;
-        private sealed class ReferenceComparer : IEqualityComparer<object>
+        internal sealed class ReferenceComparer : IEqualityComparer<object>
         {
             public readonly static ReferenceComparer Default = new ReferenceComparer();
             private ReferenceComparer() { }
@@ -167,14 +216,18 @@ namespace ProtoBuf
                 return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
             }
         }
+#endif
 
         internal void Clear()
         {
+#if FEAT_DYNAMIC_REF
             trapStartIndex = 0;
             rootObject = null;
             if (underlyingList != null) underlyingList.Clear();
             if (stringKeys != null) stringKeys.Clear();
             if (objectKeys != null) objectKeys.Clear();
+#endif
+            _knownLengths.Clear();
         }
     }
 }

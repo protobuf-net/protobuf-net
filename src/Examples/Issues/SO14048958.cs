@@ -38,17 +38,20 @@ namespace Examples.Issues
             Execute(model, "CompileInPlace");
             Execute(model.Compile(), "Compile");
         }
+
+#pragma warning disable IDE0060
         public void Execute(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             var obj = new Foo { Status = Status.All };
-            using(var ms = new MemoryStream())
-            {
-                model.Serialize(ms, obj);
-                ms.Position = 0;
-                Assert.Equal(3, ms.Length);
-                var clone = (Foo)model.Deserialize(ms, null, typeof(Foo));
-                Assert.Equal(Status.All, clone.Status);
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, obj);
+            ms.Position = 0;
+            Assert.Equal(3, ms.Length);
+#pragma warning disable CS0618
+            var clone = (Foo)model.Deserialize(ms, null, typeof(Foo));
+#pragma warning restore CS0618
+            Assert.Equal(Status.All, clone.Status);
         }
     }
 }

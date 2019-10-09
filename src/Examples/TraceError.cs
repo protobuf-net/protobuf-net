@@ -26,7 +26,7 @@ namespace Examples
             Serializer.Serialize(ms, ed);
             byte[] buffer = ms.GetBuffer();
             Assert.Equal(30, ms.Length);
-            MemoryStream ms2 = new MemoryStream();
+            using MemoryStream ms2 = new MemoryStream();
             ms2.Write(buffer, 0, (int)ms.Length - 5);
             ms2.Position = 0;
 

@@ -35,13 +35,6 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public readonly partial struct DiscriminatedUnion64
     {
-#if !FEAT_SAFE
-		unsafe static DiscriminatedUnion64()
-        {
-            if (sizeof(DateTime) > 8) throw new InvalidOperationException(nameof(DateTime) + " was unexpectedly too big for " + nameof(DiscriminatedUnion64));
-            if (sizeof(TimeSpan) > 8) throw new InvalidOperationException(nameof(TimeSpan) + " was unexpectedly too big for " + nameof(DiscriminatedUnion64));
-        }
-#endif
 		[FieldOffset(0)] private readonly int _discriminator;  // note that we can't pack further because Object needs x8 alignment/padding on x64
 
         /// <summary>The value typed as Int64</summary>
@@ -104,15 +97,6 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public readonly partial struct DiscriminatedUnion128Object
     {
-#if !FEAT_SAFE
-		unsafe static DiscriminatedUnion128Object()
-        {
-            if (sizeof(DateTime) > 16) throw new InvalidOperationException(nameof(DateTime) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
-            if (sizeof(TimeSpan) > 16) throw new InvalidOperationException(nameof(TimeSpan) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
-            if (sizeof(Guid) > 16) throw new InvalidOperationException(nameof(Guid) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
-        }
-#endif
-
 		[FieldOffset(0)] private readonly int _discriminator;  // note that we can't pack further because Object needs x8 alignment/padding on x64
 
         /// <summary>The value typed as Int64</summary>
@@ -183,14 +167,6 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public readonly partial struct DiscriminatedUnion128
     {
-#if !FEAT_SAFE
-        unsafe static DiscriminatedUnion128()
-        {
-            if (sizeof(DateTime) > 16) throw new InvalidOperationException(nameof(DateTime) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
-            if (sizeof(TimeSpan) > 16) throw new InvalidOperationException(nameof(TimeSpan) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
-            if (sizeof(Guid) > 16) throw new InvalidOperationException(nameof(Guid) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
-        }
-#endif
         [FieldOffset(0)] private readonly int _discriminator;  // note that we can't pack further because Object needs x8 alignment/padding on x64
 
         /// <summary>The value typed as Int64</summary>
@@ -257,13 +233,6 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public readonly partial struct DiscriminatedUnion64Object
     {
-#if !FEAT_SAFE
-        unsafe static DiscriminatedUnion64Object()
-        {
-            if (sizeof(DateTime) > 8) throw new InvalidOperationException(nameof(DateTime) + " was unexpectedly too big for " + nameof(DiscriminatedUnion64Object));
-            if (sizeof(TimeSpan) > 8) throw new InvalidOperationException(nameof(TimeSpan) + " was unexpectedly too big for " + nameof(DiscriminatedUnion64Object));
-        }
-#endif
         [FieldOffset(0)] private readonly int _discriminator;  // note that we can't pack further because Object needs x8 alignment/padding on x64
 
         /// <summary>The value typed as Int64</summary>

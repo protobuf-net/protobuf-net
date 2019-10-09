@@ -192,11 +192,28 @@ namespace Examples
 
         [Fact]
         public void TestCloneAsRoot()
-        { // newly supported in v2
+        { // this usage requires a sensible <T>
             IMLRoot root = CreateChild();
             var orig = (IMLChild)root;
-            var clone = (IMLChild)Serializer.DeepClone(root);
 
+            var ex = Assert.Throws<InvalidOperationException>(delegate
+            {
+                var clone = (IMLChild)Serializer.DeepClone(root);
+
+                //Assert.Equal(orig.ChildProperty, clone.ChildProperty); //, "ChildProperty");
+                //Assert.Equal(orig.ParentProperty, clone.ParentProperty); //, "ParentProperty");
+                //Assert.Equal(0, clone.RootProperty); //, "RootProperty"); // RootProperty is not part of the contract
+            });
+            Assert.Equal("Type is not expected, and no contract can be inferred: Examples.IMLRoot", ex.Message);
+        }
+
+        [Fact]
+        public void TestCloneAsRoot_Object()
+        { // newly supported in v2 (and gone again in v3!)
+            IMLRoot root = CreateChild();
+            var orig = (IMLChild)root;
+
+            var clone = (IMLChild)Serializer.DeepClone((object)root);
 
             Assert.Equal(orig.ChildProperty, clone.ChildProperty); //, "ChildProperty");
             Assert.Equal(orig.ParentProperty, clone.ParentProperty); //, "ParentProperty");

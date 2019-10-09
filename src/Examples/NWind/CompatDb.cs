@@ -1,14 +1,17 @@
-﻿#if !COREFX
+﻿
 #pragma warning disable IDE1006, RCS1015, RCS1020, RCS1032, RCS1037, RCS1085, RCS1163
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.Linq.Mapping;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using ProtoBuf;
 using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
+
+#if !COREFX
+using System.Data.Linq.Mapping;
+#endif
 
 namespace ProtoSharp.Core
 {
@@ -57,7 +60,7 @@ namespace DAL
             Orders = new List<OrderCompat>();
         }
 
-        #region ISerializable Members
+#region ISerializable Members
 #if REMOTING
         protected DatabaseCompatRem(SerializationInfo info, StreamingContext context)
             : this()
@@ -69,9 +72,9 @@ namespace DAL
             Serializer.Serialize <DatabaseCompatRem>(info, this);
         }
 #endif
-        #endregion
+#endregion
 
-        #region IXmlSerializable Members
+#region IXmlSerializable Members
 
 #if PLAT_XMLSERIALIZER
         System.Xml.Schema.XmlSchema IXmlSerializable.GetSchema()
@@ -89,7 +92,7 @@ namespace DAL
             Serializer.Serialize(writer, this);            
         }
 #endif
-        #endregion
+#endregion
     }
     
     [DataContract(), Serializable]
@@ -125,9 +128,11 @@ namespace DAL
 
         private List<OrderLineCompat> _Lines = new List<OrderLineCompat>();
 
-        #region Extensibility Method Definitions
+#region Extensibility Method Definitions
         partial void OnLoaded();
+#if !COREFX
         partial void OnValidate(System.Data.Linq.ChangeAction action);
+#endif
         partial void OnCreated();
         partial void OnOrderIDChanging(int value);
         partial void OnOrderIDChanged();
@@ -157,14 +162,15 @@ namespace DAL
         partial void OnShipPostalCodeChanged();
         partial void OnShipCountryChanging(string value);
         partial void OnShipCountryChanged();
-        #endregion
+#endregion
 
         public OrderCompat()
         {
             this.Initialize();
         }
-
+#if !COREFX
         [Column(Storage = "_OrderID", AutoSync = AutoSync.OnInsert, DbType = "Int NOT NULL IDENTITY", IsPrimaryKey = true, IsDbGenerated = true)]
+#endif
         [DataMember(Order = 1), Tag(1)]
         public int OrderID
         {
@@ -185,7 +191,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_CustomerID", DbType = "NChar(5)")]
+#endif
         [DataMember(Order = 2), Tag(2)]
         public string CustomerID
         {
@@ -206,7 +214,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_EmployeeID", DbType = "Int")]
+#endif
         [DataMember(Order = 3), Tag(3)]
         public System.Nullable<int> EmployeeID
         {
@@ -227,7 +237,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_OrderDate", DbType = "DateTime")]
+#endif
         [DataMember(Order = 4), Tag(4), ProtoMember(4, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<System.DateTime> OrderDate
         {
@@ -248,7 +260,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_RequiredDate", DbType = "DateTime")]
+#endif
         [DataMember(Order = 5), Tag(5), ProtoMember(5, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<System.DateTime> RequiredDate
         {
@@ -269,7 +283,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShippedDate", DbType = "DateTime")]
+#endif
         [DataMember(Order = 6), Tag(6), ProtoMember(6, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<System.DateTime> ShippedDate
         {
@@ -290,7 +306,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipVia", DbType = "Int")]
+#endif
         [DataMember(Order = 7), Tag(7)]
         public System.Nullable<int> ShipVia
         {
@@ -311,7 +329,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_Freight", DbType = "Money")]
+#endif
         [DataMember(Order = 8), Tag(8), ProtoMember(8, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<decimal> Freight
         {
@@ -332,7 +352,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipName", DbType = "NVarChar(40)")]
+#endif
         [DataMember(Order = 9), Tag(9)]
         public string ShipName
         {
@@ -353,7 +375,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipAddress", DbType = "NVarChar(60)")]
+#endif
         [DataMember(Order = 10), Tag(10)]
         public string ShipAddress
         {
@@ -374,7 +398,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipCity", DbType = "NVarChar(15)")]
+#endif
         [DataMember(Order = 11), Tag(11)]
         public string ShipCity
         {
@@ -395,7 +421,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipRegion", DbType = "NVarChar(15)")]
+#endif
         [DataMember(Order = 12), Tag(12)]
         public string ShipRegion
         {
@@ -416,7 +444,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipPostalCode", DbType = "NVarChar(10)")]
+#endif
         [DataMember(Order = 13), Tag(13)]
         public string ShipPostalCode
         {
@@ -437,7 +467,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ShipCountry", DbType = "NVarChar(15)")]
+#endif
         [DataMember(Order = 14), Tag(14)]
         public string ShipCountry
         {
@@ -458,7 +490,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Association(Name = "Order_Order_Detail", Storage = "_Lines", OtherKey = "OrderID")]
+#endif
         [DataMember(Order = 15, EmitDefaultValue = false), Tag(15), ProtoMember(15, DataFormat = Database.SubObjectFormat)]
         [XmlArray]
         public List<OrderLineCompat> Lines
@@ -513,7 +547,9 @@ namespace DAL
         }
     }
 
+#if !COREFX
     [Table(Name = "dbo.[Order Details]")]
+#endif
     [DataContract(), Serializable]
     public partial class OrderLineCompat
     {
@@ -527,9 +563,11 @@ namespace DAL
 
         private float _Discount;
 
-        #region Extensibility Method Definitions
+#region Extensibility Method Definitions
         partial void OnLoaded();
+#if !COREFX
         partial void OnValidate(System.Data.Linq.ChangeAction action);
+#endif
         partial void OnCreated();
         partial void OnOrderIDChanging(int value);
         partial void OnOrderIDChanged();
@@ -541,14 +579,16 @@ namespace DAL
         partial void OnQuantityChanged();
         partial void OnDiscountChanging(float value);
         partial void OnDiscountChanged();
-        #endregion
+#endregion
 
         public OrderLineCompat()
         {
             this.Initialize();
         }
 
+#if !COREFX
         [Column(Storage = "_OrderID", DbType = "Int NOT NULL", IsPrimaryKey = true)]
+#endif
         [DataMember(Order = 1), Tag(1)]
         public int OrderID
         {
@@ -562,7 +602,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_ProductID", DbType = "Int NOT NULL", IsPrimaryKey = true)]
+#endif
         [DataMember(Order = 2), Tag(2)]
         public int ProductID
         {
@@ -583,7 +625,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_UnitPrice", DbType = "Money NOT NULL")]
+#endif
         [DataMember(Order = 3), Tag(3), ProtoMember(3, DataFormat = Database.SubObjectFormat)]
         public decimal UnitPrice
         {
@@ -604,7 +648,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_Quantity", DbType = "SmallInt NOT NULL")]
+#endif
         [DataMember(Order = 4), Tag(4)]
         public short Quantity
         {
@@ -625,7 +671,9 @@ namespace DAL
             }
         }
 
+#if !COREFX
         [Column(Storage = "_Discount", DbType = "Real NOT NULL")]
+#endif
         [DataMember(Order = 5), Tag(5)]
         public float Discount
         {
@@ -670,4 +718,3 @@ namespace DAL
         }
     }
 }
-#endif

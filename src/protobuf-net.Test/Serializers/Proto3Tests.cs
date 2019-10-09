@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.Serializers
 {
@@ -16,7 +17,7 @@ namespace ProtoBuf.Serializers
         [Fact]
         public void HazBasicEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazBasicEnum>();
+            var schema = Serializer.GetProto<HazBasicEnum>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -65,7 +66,7 @@ enum RegularEnum {
         [Fact]
         public void HazStrictEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazStrictEnum>();
+            var schema = Serializer.GetProto<HazStrictEnum>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -88,11 +89,8 @@ enum StrictEnum {
             obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 1 });
             Assert.Equal(StrictEnum.B, obj.Value);
 
-            var ex = Assert.Throws<ProtoException>(() =>
-            {
-                obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 5 });
-            });
-            Assert.Equal("No ProtoBuf.Serializers.Proto3Tests+StrictEnum enum is mapped to the wire-value 5", ex.Message);
+            obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 5 });
+            Assert.Equal((StrictEnum)5, obj.Value);
         }
 
         [ProtoContract]
@@ -101,66 +99,16 @@ enum StrictEnum {
             [ProtoMember(1)]
             public StrictEnum Value { get; set; }
         }
-        [ProtoContract(EnumPassthru = false)]
+        [ProtoContract]
         public enum StrictEnum
         {
             A, B, C
         }
 
-
-        [Fact]
-        public void HazCustomMappedEnum_Schema()
-        {
-            var schema = Serializer.GetProto<HazCustomMappedEnum>();
-            Assert.Equal(@"syntax = ""proto2"";
-package ProtoBuf.Serializers;
-
-message HazCustomMappedEnum {
-   optional MappedEnum Value = 1 [default = A];
-}
-enum MappedEnum {
-   B = 0;
-   A = 1;
-   C = 2;
-}
-", schema);
-        }
-        [Fact]
-        public void HazCustomMappedEnum_WorksForKnownAndUnknownValues()
-        {
-            var obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 0 });
-            Assert.Equal(MappedEnum.B, obj.Value);
-
-            obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 1 });
-            Assert.Equal(MappedEnum.A, obj.Value);
-
-            var ex = Assert.Throws<ProtoException>(() =>
-            {
-                obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 5 });
-            });
-            Assert.Equal("No ProtoBuf.Serializers.Proto3Tests+MappedEnum enum is mapped to the wire-value 5", ex.Message);
-        }
-
-        [ProtoContract]
-        public class HazCustomMappedEnum
-        {
-            [ProtoMember(1)]
-            public MappedEnum Value { get; set; }
-        }
-
-        public enum MappedEnum
-        {
-            [ProtoEnum(Value = 1)]
-            A,
-            [ProtoEnum(Value = 0)]
-            B,
-            C
-        }
-
         [Fact]
         public void HazAliasedEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazAliasedEnum>();
+            var schema = Serializer.GetProto<HazAliasedEnum>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -209,6 +157,98 @@ message HazAliasedEnum {
         public void CompileHazImplicitMap() => Compile<HazImplicitMap>();
 
         [Fact]
+        public void TestHazImplicitMap_Runtime()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            TestHazImplicitMap(model);
+        }
+        [Fact]
+        public void TestHazImplicitMap_CompileInPlace()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            model.CompileInPlace();
+            TestHazImplicitMap(model);
+        }
+        [Fact]
+        public void TestHazImplicitMap_Compile()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            TestHazImplicitMap(model.Compile());
+        }
+#if !PLAT_NO_EMITDLL
+        [Fact]
+        public void TestHazImplicitMap_CompileDll ()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            var compiled = model.Compile("TestHazImplicitMap_CompileDll", "TestHazImplicitMap_CompileDll.dll");
+            PEVerify.Verify("TestHazImplicitMap_CompileDll.dll");
+            TestHazImplicitMap(compiled);
+        }
+#endif
+
+        private static void TestHazImplicitMap(TypeModel model)
+        {
+            var obj = new HazImplicitMap
+            {
+                Lookup = {
+                    {123, "abc" },
+                    {456, "def" },
+                }
+            };
+            var clone = (HazImplicitMap)model.DeepClone(obj);
+            Assert.NotNull(clone);
+            Assert.NotSame(obj, clone);
+            Assert.NotSame(obj.Lookup, clone.Lookup);
+            Assert.Equal(2, clone.Lookup.Count);
+            Assert.True(clone.Lookup.TryGetValue(123, out var val));
+            Assert.Equal("abc", val);
+            Assert.True(clone.Lookup.TryGetValue(456, out val));
+            Assert.Equal("def", val);
+        }
+
+        [ProtoContract]
+        public class HazMapString
+        {
+            [ProtoMember(3), ProtoMap]
+            public IDictionary<string, string> Lookup { get; } = new Dictionary<string, string>();
+        }
+
+        [Fact]
+        public void MapEmptyStringsRoundtrip()
+        {
+            var original = new HazMapString
+            {
+                Lookup =
+                {
+                    {"","" },
+                }
+            };
+            var clone = Serializer.DeepClone(original);
+            Assert.NotSame(original, clone);
+            var item = Assert.Single(clone.Lookup);
+            Assert.Equal("", item.Key);
+            Assert.Equal("", item.Value);
+        }
+
+        [Fact]
+        public void MapOmittedStringsDeserialize()
+        {   // v2 didn't serialize them
+            using var ms = new MemoryStream(new byte[] {0x1A, 0x00 }); // field 3, length prefix, zero bytes
+            var clone = Serializer.Deserialize<HazMapString>(ms);
+            var item = Assert.Single(clone.Lookup);
+            Assert.Equal("", item.Key);
+            Assert.Equal("", item.Value);
+        }
+
+        [Fact]
         public void RoundTripBasic()
         {
             var data = new HazMap
@@ -243,9 +283,7 @@ message HazAliasedEnum {
                 ms.SetLength(0);
                 Serializer.Serialize(ms, data);
                 var actualHex = BitConverter.ToString(ms.ToArray());
-
                 Assert.Equal(expectedHex, actualHex);
-
             }
 
             Assert.True(RuntimeTypeModel.Default[typeof(HazMap)][3].IsMap);
@@ -267,7 +305,11 @@ message HazAliasedEnum {
             public Dictionary<int, List<int>> SourceOfProblem { get; set; }
         }
 
+#if KNOWN_GAPS
         [Fact]
+#else
+        [Fact(Skip = "nested dictionaries")]
+#endif
         public void ComplexMapShouldNotBreak_Array()
         {
             var obj = new HasEvilDictionary_Array();
@@ -279,7 +321,11 @@ message HazAliasedEnum {
             Assert.Equal("1,2,3", string.Join(",", arr2));
         }
 
+#if KNOWN_GAPS
         [Fact]
+#else
+        [Fact(Skip = "nested dictionaries")]
+#endif
         public void ComplexMapShouldNotBreak_List()
         {
             var obj = new HasEvilDictionary_List();
@@ -287,14 +333,14 @@ message HazAliasedEnum {
             model.DeepClone(obj);
 
             var list = new List<int> { 1, 2, 3 };
-            var list2 = (List<int>) model.DeepClone(list);
+            var list2 = (List<int>)model.DeepClone(list);
             Assert.Equal("1,2,3", string.Join(",", list2));
         }
 
         [Fact]
         public void GetMapSchema()
         {
-            var schema = Serializer.GetProto<HazMap>();
+            var schema = Serializer.GetProto<HazMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -307,7 +353,7 @@ message HazMap {
         [Fact]
         public void GetMapWithDataFormatSchema()
         {
-            var schema = Serializer.GetProto<HazMapWithDataFormat>();
+            var schema = Serializer.GetProto<HazMapWithDataFormat>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -317,6 +363,7 @@ message HazMapWithDataFormat {
 ", schema);
         }
 
+#if FEAT_DYNAMIC_REF
         [Fact]
         public void GetDynamicAsRefSchema()
         {
@@ -337,11 +384,12 @@ message HasRefDynamic {
             [ProtoMember(1, AsReference = true, DynamicType = true)]
             public HasRefDynamic Obj { get; set; }
         }
+#endif
 
         [Fact]
         public void TimeSchemaTypes()
         {
-            var schema = Serializer.GetProto<HazTime>();
+            var schema = Serializer.GetProto<HazTime>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
@@ -417,11 +465,26 @@ enum SomeEnum {
 ", schema);
         }
 
+        public Proto3Tests(ITestOutputHelper log)
+            => _log = log;
+        private readonly ITestOutputHelper _log;
+
         [Fact]
         public void TestEnumProto_Proto2_RuntimeRenamed()
         {
             var model = RuntimeTypeModel.Create();
-            model[typeof(HazEnum.SomeEnum)][1].Name = "zzz";
+            var mt = model[typeof(HazEnum.SomeEnum)];
+            var enums = mt.GetEnumValues();
+            for (int i = 0; i < enums.Length; i++)
+            {
+                ref EnumMember val = ref enums[i];
+                if (val.Equals(HazEnum.SomeEnum.B))
+                {
+                    val = val.WithName("zzz");
+                }
+                _log?.WriteLine(val.ToString());
+            }
+            mt.SetEnumValues(enums);
             var schema = model.GetSchema(typeof(HazEnum), ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
@@ -430,8 +493,8 @@ message HazEnum {
    optional SomeEnum X = 1 [default = B];
 }
 enum SomeEnum {
-   B = 0;
-   zzz = 1;
+   zzz = 0;
+   A = 1;
    C = 2;
 }
 ", schema);
@@ -533,7 +596,7 @@ enum SomeEnum {
         [Fact]
         public void GetMapSchema_HazImplicitMap()
         {
-            var schema = Serializer.GetProto<HazImplicitMap>();
+            var schema = Serializer.GetProto<HazImplicitMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -553,7 +616,7 @@ message HazImplicitMap {
         [Fact]
         public void GetMapSchema_HazDisabledMap()
         {
-            var schema = Serializer.GetProto<HazDisabledMap>();
+            var schema = Serializer.GetProto<HazDisabledMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -575,7 +638,7 @@ message KeyValuePair_Int32_String {
         [Fact]
         public void GetMapSchema_HazInvalidKeyTypeMap()
         {
-            var schema = Serializer.GetProto<HazInvalidKeyTypeMap>();
+            var schema = Serializer.GetProto<HazInvalidKeyTypeMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 

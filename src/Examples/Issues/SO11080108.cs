@@ -15,18 +15,18 @@ namespace Examples.Issues
             byte[] buffer = { 9, 8, 5, 26, 5, 24, 238, 98, 32, 1 };
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
-            using (var ms = new MemoryStream(buffer))
-            {
+            using var ms = new MemoryStream(buffer);
+            int len = ProtoReader.DirectReadVarintInt32(ms);
+#pragma warning disable CS0618
+            var resp = (Response)model.Deserialize(ms, null, typeof(Response), len);
+#pragma warning restore CS0618
 
-                int len = ProtoReader.DirectReadVarintInt32(ms);
-                var resp = (Response)model.Deserialize(ms, null, typeof(Response), len);
-
-                Assert.Equal(5, resp.Type);
-                Assert.Single(resp.v3dDelta);
-                Assert.Equal(12654, resp.v3dDelta[0].ask);
-                Assert.Equal(1, resp.v3dDelta[0].askSize);
-            }
+            Assert.Equal(5, resp.Type);
+            Assert.Single(resp.v3dDelta);
+            Assert.Equal(12654, resp.v3dDelta[0].ask);
+            Assert.Equal(1, resp.v3dDelta[0].askSize);
         }
+#pragma warning disable IDE1006 // Naming Styles
         [ProtoContract]
         public class V3DDelta
         {
@@ -38,6 +38,7 @@ namespace Examples.Issues
             public int ask { get; set; }
             [ProtoMember(4)]
             public int askSize { get; set; }
+#pragma warning restore IDE1006 // Naming Styles
         }
 
         [ProtoContract]
@@ -57,7 +58,9 @@ namespace Examples.Issues
             [ProtoMember(2)]
             public string Rsp { get; set; }
             [ProtoMember(3)]
+#pragma warning disable IDE1006 // Naming Styles
             public List<V3DDelta> v3dDelta { get; set; }
+#pragma warning restore IDE1006 // Naming Styles
             public Response()
             {
                 v3dDelta = new List<V3DDelta>();

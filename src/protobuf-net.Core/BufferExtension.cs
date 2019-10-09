@@ -8,16 +8,16 @@ namespace ProtoBuf
     /// </summary>
     public sealed class BufferExtension : IExtension, IExtensionResettable
     {
-        private byte[] buffer;
+        private ArraySegment<byte> _buffer;
 
         void IExtensionResettable.Reset()
         {
-            buffer = null;
+            _buffer = default;
         }
 
         int IExtension.GetLength()
         {
-            return buffer == null ? 0 : buffer.Length;
+            return _buffer.Count;
         }
 
         Stream IExtension.BeginAppend()
@@ -29,24 +29,29 @@ namespace ProtoBuf
         {
             using (stream)
             {
-                int len;
-                if (commit && (len = (int)stream.Length) > 0)
+                if (commit && stream is MemoryStream ms && ms.TryGetBuffer(out var segment) && segment.Count != 0)
                 {
-                    MemoryStream ms = (MemoryStream)stream;
-
-                    if (buffer == null)
-                    {   // allocate new buffer
-                        buffer = ms.ToArray();
+                    if (_buffer.Count == 0)
+                    {   // just assign
+                        _buffer = segment;
                     }
                     else
-                    {   // resize and copy the data
-                        // note: Array.Resize not available on CF
-                        int offset = buffer.Length;
-                        byte[] tmp = new byte[offset + len];
-                        Buffer.BlockCopy(buffer, 0, tmp, 0, offset);
-
-                        Buffer.BlockCopy(Helpers.GetBuffer(ms), 0, tmp, offset, len);
-                        buffer = tmp;
+                    {
+                        int oldEnd = _buffer.Offset + _buffer.Count;
+                        int space = _buffer.Array.Length - oldEnd;
+                        if (space >= segment.Count)
+                        {
+                            // we can fit it into the current buffer
+                            Buffer.BlockCopy(segment.Array, segment.Offset, _buffer.Array, oldEnd, segment.Count);
+                            _buffer = new ArraySegment<byte>(_buffer.Array, _buffer.Offset, oldEnd + segment.Count);
+                        }
+                        else
+                        {
+                            byte[] tmp = new byte[_buffer.Count + segment.Count];
+                            Buffer.BlockCopy(_buffer.Array, _buffer.Offset, tmp, 0, _buffer.Count);
+                            Buffer.BlockCopy(segment.Array, segment.Offset, tmp, _buffer.Count, segment.Count);
+                            _buffer = new ArraySegment<byte>(tmp, 0, _buffer.Count + segment.Count);
+                        }
                     }
                 }
             }
@@ -54,7 +59,7 @@ namespace ProtoBuf
 
         Stream IExtension.BeginQuery()
         {
-            return buffer == null ? Stream.Null : new MemoryStream(buffer);
+            return _buffer.Count == 0 ? Stream.Null : new MemoryStream(_buffer.Array, _buffer.Offset, _buffer.Count, false, true);
         }
 
         void IExtension.EndQuery(Stream stream)

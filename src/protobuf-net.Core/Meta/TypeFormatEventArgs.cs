@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 
 namespace ProtoBuf.Meta
 {
@@ -21,7 +22,7 @@ namespace ProtoBuf.Meta
             {
                 if (type != value)
                 {
-                    if (typeFixed) throw new InvalidOperationException("The type is fixed and cannot be changed");
+                    if (typeFixed) ThrowHelper.ThrowInvalidOperationException("The type is fixed and cannot be changed");
                     type = value;
                 }
             }
@@ -37,7 +38,7 @@ namespace ProtoBuf.Meta
             {
                 if (formattedName != value)
                 {
-                    if (!typeFixed) throw new InvalidOperationException("The formatted-name is fixed and cannot be changed");
+                    if (!typeFixed) ThrowHelper.ThrowInvalidOperationException("The formatted-name is fixed and cannot be changed");
                     formattedName = value;
                 }
             }
@@ -45,14 +46,15 @@ namespace ProtoBuf.Meta
 
         internal TypeFormatEventArgs(string formattedName)
         {
-            if (string.IsNullOrEmpty(formattedName)) throw new ArgumentNullException(nameof(formattedName));
+            if (string.IsNullOrEmpty(formattedName)) ThrowHelper.ThrowArgumentNullException(nameof(formattedName));
             this.formattedName = formattedName;
             // typeFixed = false; <== implicit
         }
 
         internal TypeFormatEventArgs(Type type)
         {
-            this.type = type ?? throw new ArgumentNullException(nameof(type));
+            if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            this.type = type;
             typeFixed = true;
         }
     }

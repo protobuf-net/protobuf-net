@@ -24,9 +24,8 @@ namespace Examples
         {
             // zero
             DateTime origin = new DateTime(1970, 1, 1);
-            int len;
 
-            Assert.Equal(origin, TestDateTime(origin, out len));
+            Assert.Equal(origin, TestDateTime(origin, out int len));
             Assert.Equal(2, len); //, "0 len");
             Assert.Equal(origin.AddDays(1), TestDateTime(origin.AddDays(1), out len));
             Assert.Equal(4, len); //, "+1 len");
@@ -37,45 +36,40 @@ namespace Examples
         [Fact]
         public void TestTimeSpanZero()
         {
-            int len;
             TimeSpan ts = TimeSpan.Zero;
-            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(ts, TestTimeSpan(ts, out int len));
             Assert.Equal(0, len); //, "0 len");
         }
 
         [Fact]
         public void TestTimeSpan36Hours()
         {
-            int len;
-            TimeSpan ts = new TimeSpan(36,0,0);
-            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            TimeSpan ts = new TimeSpan(36, 0, 0);
+            Assert.Equal(ts, TestTimeSpan(ts, out int len));
             Assert.Equal(6, len); //, "+36 hour len");
         }
 
         [Fact]
         public void TestTimeSpanMinus3Hours()
         {
-            int len;
-            TimeSpan ts = new TimeSpan(0,-3, 0);
-            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            TimeSpan ts = new TimeSpan(0, -3, 0);
+            Assert.Equal(ts, TestTimeSpan(ts, out int len));
             Assert.Equal(6, len); //, "-3 hour len");
         }
 
         [Fact]
         public void TestTimeSpanMinValue()
         {
-            int len;
             TimeSpan ts = TimeSpan.MinValue;
-            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(ts, TestTimeSpan(ts, out int len));
             Assert.Equal(6, len); //, "min len");
         }
         
         [Fact]
         public void TestTimeSpanMaxValue()
         {
-            int len;
             TimeSpan ts = TimeSpan.MaxValue;
-            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(ts, TestTimeSpan(ts, out int len));
             Assert.Equal(6, len); //, "max len");
         }
         [ProtoContract]

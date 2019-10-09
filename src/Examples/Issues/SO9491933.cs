@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEAT_DYNAMIC_REF
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
@@ -34,8 +35,7 @@ namespace Examples.Issues
             }
             public override bool Equals(object obj)
             {
-                A a = obj as A;
-                if (a == null)
+                if (!(obj is A a))
                     return false;
 
                 return a.Property1 == this.Property1
@@ -53,8 +53,7 @@ namespace Examples.Issues
 
             public override bool Equals(object obj)
             {
-                B b = obj as B;
-                if (b == null)
+                if (!(obj is B b))
                     return false;
 
                 return b.Property6 == this.Property6 && base.Equals(obj);
@@ -98,3 +97,4 @@ namespace Examples.Issues
 
     }
 }
+#endif

@@ -49,8 +49,10 @@ namespace Examples.Issues
                 ms.Position = 0;
                 string hex = Program.GetByteString(ms.ToArray());
                 Debug.WriteLine(hex);
-               
+
+#pragma warning disable CS0618
                 var wrapper = (DontAskWrapper)model.Deserialize(ms, null, typeof(DontAskWrapper));
+#pragma warning restore CS0618
                 copy = wrapper.Message;
              }
             // check the data is all there
@@ -99,7 +101,9 @@ namespace Examples.Issues
                 string hex = Program.GetByteString(ms.ToArray());
                 Debug.WriteLine(hex);
 
+#pragma warning disable CS0618
                 var wrapper = (DontAskWrapper)model.Deserialize(ms, null, typeof(DontAskWrapper));
+#pragma warning restore CS0618
                 copy = wrapper.Message;
             }
             // check the data is all there
@@ -110,7 +114,9 @@ namespace Examples.Issues
             Assert.Equal(orig.NameOfDog, typed.NameOfDog);
         }
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "Long running")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void TestPerf()
         {
             int[] values = new int[100000000];

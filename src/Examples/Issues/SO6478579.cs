@@ -32,7 +32,6 @@ namespace test
         public void SetupTestArray()
         {
             Random r = new Random(123456);
-            List<CoOrd> coordinates = new List<CoOrd>();
             for (int i = 0; i < 1000000; i++)
             {
                 Coords.Add(new CoOrd(r.Next(10000), r.Next(10000), r.Next(10000)));

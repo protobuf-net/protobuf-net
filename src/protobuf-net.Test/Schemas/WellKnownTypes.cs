@@ -4,6 +4,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.Schemas
 {
@@ -87,7 +88,15 @@ namespace ProtoBuf.Schemas
 
             // convert forwards and compare
             var hazDt = new HasDateTime { Value = when };
-            var hazTs = Serializer.ChangeType<HasDateTime, HasTimestamp>(hazDt);
+            HasTimestamp hazTs;
+            using (var ms = new MemoryStream())
+            {
+                model.Serialize(ms, hazDt, null);
+                ms.Position = 0;
+#pragma warning disable CS0618
+                hazTs = (HasTimestamp)model.Deserialize(ms, null, typeof(HasTimestamp));
+#pragma warning restore CS0618
+            }
             Assert.Equal(seconds, hazTs.Value?.Seconds ?? 0);
             Assert.Equal(nanos, hazTs.Value?.Nanos ?? 0);
 
@@ -96,10 +105,10 @@ namespace ProtoBuf.Schemas
             Assert.Equal(when, hazDt.Value);
         }
 
-        private TypeModel runtime, dynamicMethod, fullyCompiled;
-        public WellKnownTypes()
+        private readonly TypeModel runtime, dynamicMethod, fullyCompiled;
+        private WellKnownTypes()
         {
-            RuntimeTypeModel Create(bool autoCompile)
+            static RuntimeTypeModel Create(bool autoCompile)
             {
                 var model = RuntimeTypeModel.Create();
                 model.AutoCompile = autoCompile;
@@ -177,13 +186,17 @@ namespace ProtoBuf.Schemas
             if (valueToDeserialize == null)
                 valueToDeserialize = valueToSerialize; // assume they are te same
 
+            Log($"valueToSerialize: {valueToSerialize}, {valueToSerialize.Seconds} / {valueToSerialize.Nanos}");
+            Log($"expected: {expected}");
             var obj = new HasDuration { Value = valueToSerialize };
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(runtime, obj).Value);
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(dynamicMethod, obj).Value);
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(fullyCompiled, obj).Value);
 
             var obj2 = new HasTimeSpan { Value = expected };
+            Log($"obj2.Value: {obj2.Value}");
             var other = ChangeType<HasTimeSpan, HasDuration>(runtime, obj2).Value ?? new Duration();
+            Log($"other: {other}, {other.Seconds} / {other.Nanos}");
             Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
 
@@ -195,19 +208,52 @@ namespace ProtoBuf.Schemas
             Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
         }
+        private void Log(string message) => _log?.WriteLine(message);
+        private readonly ITestOutputHelper _log;
+        public WellKnownTypes(ITestOutputHelper log) : this() => _log = log;
 
-        [Fact]
-        public void Duration_ExpectedValues() // prove implementation matches official version
+
+        [Theory]
+        [InlineData(0, 0, 0, "0A-00")] // nothing
+        [InlineData(0.9, 0, 900000000, "0A-06-10-80-D2-93-AD-03")] // field 2 = 900000000
+        [InlineData(1.0, 1, 0, "0A-02-08-01")] // field 1 = 1
+        [InlineData(1.1, 1, 100000000, "0A-07-08-01-10-80-C2-D7-2F")] // field 1 = 1, field 2 = 100000000 
+        [InlineData(-0.9, 0, -900000000, "0A-0B-10-80-AE-EC-D2-FC-FF-FF-FF-FF-01")] // field 2 = -900000000
+        [InlineData(-1.0, -1, 0, "0A-0B-08-FF-FF-FF-FF-FF-FF-FF-FF-FF-01")] // field 1 = -1
+        [InlineData(-1.1, -1, -100000000, "0A-16-08-FF-FF-FF-FF-FF-FF-FF-FF-FF-01-10-80-BE-A8-D0-FF-FF-FF-FF-FF-01")]
+        // ^^ field 1 = -1, field 2 = -100000000
+        public void TestDurationRepresentations(double valueSeconds, long seconds, int nanos, string expectedHex)
         {
-            AssertKnownValue(TimeSpan.FromSeconds(1), new Duration { Seconds = 1 });
-            AssertKnownValue(TimeSpan.FromSeconds(-1), new Duration { Seconds = -1 });
-            AssertKnownValue(TimeSpan.FromMilliseconds(1), new Duration { Nanos = 1000000 });
-            AssertKnownValue(TimeSpan.FromMilliseconds(-1), new Duration { Nanos = -1000000 });
-            AssertKnownValue(TimeSpan.FromTicks(1), new Duration { Nanos = 100 });
-            AssertKnownValue(TimeSpan.FromTicks(-1), new Duration { Nanos = -100 });
-            AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 }, new Duration { Nanos = 200 });
-            AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 }, new Duration { Nanos = -200 });
+            // from https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/duration.proto
+
+            // Signed fractions of a second at nanosecond resolution of the span
+            // of time. Durations less than one second are represented with a 0
+            // `seconds` field and a positive or negative `nanos` field. For durations
+            // of one second or more, a non-zero value for the `nanos` field must be
+            // of the same sign as the `seconds` field. Must be from -999,999,999
+            // to +999,999,999 inclusive.
+            // int32 nanos = 2;
+            using var ms = new MemoryStream();
+            Serializer.Serialize<HasTimeSpan>(ms, new HasTimeSpan { Value = TimeSpan.FromSeconds(valueSeconds) });
+            var actualHex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            ms.Position = 0;
+            var dur = Serializer.Deserialize<HasDuration>(ms).Value;
+            Assert.Equal(seconds, dur.Seconds);
+            Assert.Equal(nanos, dur.Nanos);
+
+            Assert.Equal(expectedHex, actualHex);
+
         }
+
+        // prove implementation matches official version
+        [Fact] public void Duration_ExpectedValues_1() => AssertKnownValue(TimeSpan.FromSeconds(1), new Duration { Seconds = 1 });
+        [Fact] public void Duration_ExpectedValues_2() => AssertKnownValue(TimeSpan.FromSeconds(-1), new Duration { Seconds = -1 });
+        [Fact] public void Duration_ExpectedValues_3() => AssertKnownValue(TimeSpan.FromMilliseconds(1), new Duration { Nanos = 1000000 });
+        [Fact] public void Duration_ExpectedValues_4() => AssertKnownValue(TimeSpan.FromMilliseconds(-1), new Duration { Nanos = -1000000 });
+        [Fact] public void Duration_ExpectedValues_5() => AssertKnownValue(TimeSpan.FromTicks(1), new Duration { Nanos = 100 });
+        [Fact] public void Duration_ExpectedValues_6() => AssertKnownValue(TimeSpan.FromTicks(-1), new Duration { Nanos = -100 });
+        [Fact] public void Duration_ExpectedValues_7() => AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 }, new Duration { Nanos = 200 });
+        [Fact] public void Duration_ExpectedValues_8() => AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 }, new Duration { Nanos = -200 });
 
         private void TimeSpan_WellKnownEquiv(TypeModel model, TimeSpan time)
         {
@@ -228,12 +274,12 @@ namespace ProtoBuf.Schemas
         }
         static TTo ChangeType<TFrom, TTo>(TypeModel model, TFrom val)
         {
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, val);
-                ms.Position = 0;
-                return (TTo)model.Deserialize(ms, null, typeof(TTo));
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, val);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            return (TTo)model.Deserialize(ms, null, typeof(TTo));
+#pragma warning restore CS0618
         }
     }
 

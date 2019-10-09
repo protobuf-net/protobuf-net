@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEAT_DYNAMIC_REF
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -238,7 +239,10 @@ namespace Examples
             [ProtoMember(1, DynamicType = true)]
             public object Value { get; set; }
         }
+
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "unsupported scenario")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         // this is failing currently; needs to handle base-type via dynamictype
         public void TestUnknownDerivedType()
         {
@@ -256,3 +260,4 @@ namespace Examples
 
     
 }
+#endif

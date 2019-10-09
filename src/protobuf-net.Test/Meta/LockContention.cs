@@ -18,7 +18,7 @@ namespace ProtoBuf.unittest.Meta
             model.MetadataTimeoutMilliseconds = 400;
             string eek = null;
             model.LockContended += (s, a) => eek = a.OwnerStackTrace;
-            ManualResetEvent workerReady = new ManualResetEvent(false), workerComplete = new ManualResetEvent(false), mainComplete = new ManualResetEvent(false);
+            using ManualResetEvent workerReady = new ManualResetEvent(false), workerComplete = new ManualResetEvent(false), mainComplete = new ManualResetEvent(false);
             ThreadPool.QueueUserWorkItem(delegate
             {
                 int opaqueToken = 0;
@@ -94,21 +94,20 @@ namespace ProtoBuf.unittest.Meta
                     {
                         try
                         {
-                            using (var ms = new MemoryStream(raw))
+                            using var ms = new MemoryStream(raw);
+                            if (Interlocked.Decrement(ref building) == 0)
                             {
-                                if (Interlocked.Decrement(ref building) == 0)
-                                {
-                                    evt.Set();
-                                }
-                                else
-                                {
-                                    evt.WaitOne();
-                                }
-                                ThreadRace.A a =
-                                    (ThreadRace.A)model.Deserialize(ms, null, typeof(ThreadRace.A));
-                                Assert.IsType<ThreadRace.Y9>(a);
+                                evt.Set();
                             }
-
+                            else
+                            {
+                                evt.WaitOne();
+                            }
+#pragma warning disable CS0618
+                            ThreadRace.A a =
+                                (ThreadRace.A)model.Deserialize(ms, null, typeof(ThreadRace.A));
+#pragma warning restore CS0618
+                            Assert.IsType<ThreadRace.Y9>(a);
                         }
                         catch
                         {

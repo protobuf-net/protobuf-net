@@ -3,14 +3,11 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net461;netstandard2.0;netcoreapp2.1;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-
-    <FeatureCompiler>true</FeatureCompiler>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <Configurations>Debug;Release</Configurations>
-    <PlatformSpanOverloads>false</PlatformSpanOverloads>
   </PropertyGroup>
   
   <!-- define configuration per-platform -->
@@ -20,43 +17,28 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
-    <PlatformSpanOverloads>true</PlatformSpanOverloads>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
-    <PlatformSpanOverloads>true</PlatformSpanOverloads>
-  </PropertyGroup>
-  
-  <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModelConfiguration)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformSpanOverloads)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_SPAN_OVERLOADS</DefineConstants>
-  </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
-    <PackageReference Include="System.Memory" Version="4.5.1" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.ServiceModel" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.1" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
-    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.6.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />

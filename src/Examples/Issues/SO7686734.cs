@@ -48,11 +48,13 @@ namespace Examples.Issues
         {
             var bytes = Convert.FromBase64String(value);
             var stream = new MemoryStream(bytes);
+#pragma warning disable CS0618
             return ProtoBuf.Serializer.NonGeneric.Deserialize(targetType, stream);
+#pragma warning restore CS0618
         }
 
         [Fact]
-        public void protobuf_serialization_can_deserialized_guids()
+        public void ProtobufSerializationCanDeserializeGuids()
         {
             RuntimeTypeModel.Default[typeof(GatewayPageEvent)].AddSubType(3, typeof(GatewayPageAddedToSite));
             var originalMessage = new GatewayPageAddedToSite
@@ -64,7 +66,7 @@ namespace Examples.Issues
 
 
         [Fact]
-        public void guids_work_fine()
+        public void GuidsWorkFine()
         {
             var original = Guid.NewGuid();
             var serialized = Serialize(original);

@@ -14,7 +14,7 @@ namespace Examples
         public int Key { get; set; }
 
         [ProtoMember(2)]
-        public Node[] Nodes { get; set; }        
+        public Node[] Nodes { get; set; }
     }
 
     [ProtoContract]
@@ -86,14 +86,34 @@ namespace Examples
             Foo[] foo = (Foo[])model.DeepClone(arr);
             Assert.Empty(foo);
         }
+
         [Fact]
-        public void DeserializeBusyArray()
+        public void DeserializeBusyArray_Untyped()
         {
             var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
             var model = RuntimeTypeModel.Create();
-            Foo[] foo = (Foo[])model.DeepClone(arr);
+            Foo[] foo = (Foo[])model.DeepClone((object)arr);
             Assert.Equal(3, foo.Length);
         }
+
+        [Fact]
+        public void DeserializeBusyArray_Typed()
+        {
+            var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
+            var model = RuntimeTypeModel.Create();
+            Foo[] foo = (Foo[])model.DeepClone<Foo[]>(arr);
+            Assert.Equal(3, foo.Length);
+        }
+
+        [Fact]
+        public void PEVerifyWithAndWithoutOverwrite()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(WithAndWithoutOverwrite));
+            model.Compile("PEVerifyWithAndWithoutOverwrite", "PEVerifyWithAndWithoutOverwrite.dll");
+            PEVerify.AssertValid("PEVerifyWithAndWithoutOverwrite.dll");
+        }
+
         [Fact]
         public void TestOverwriteVersusAppend()
         {
@@ -223,7 +243,9 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "known variation")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void TestEmptyArray()
         {
             Node node = new Node
@@ -298,8 +320,16 @@ namespace Examples
         {
             var foo = new List<string> { "abc", "def", "ghi" };
 
-            var clone = Serializer.DeepClone(foo);
-                
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, foo);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-03-61-62-63-0A-03-64-65-66-0A-03-67-68-69", hex);
+            ms.Position = 0;
+            var clone = (List<string>)Serializer.Deserialize(foo.GetType(), ms);
+            Assert.Equal(3, clone.Count);
+
+            clone = Serializer.DeepClone(foo);
+            Assert.Equal(3, clone.Count);
         }
 
         [ProtoContract]
@@ -340,8 +370,7 @@ namespace Examples
         }
         static void VerifyNodeTree(Node node) {
             Node clone = Serializer.DeepClone(node);
-            string msg;
-            bool eq = AreEqual(node, clone, out msg);
+            bool eq = AreEqual(node, clone, out string msg);
             Assert.True(eq, msg);
         }
 

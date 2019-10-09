@@ -37,13 +37,15 @@ namespace Examples
             Assert.Equal(123, clone.Value.Foo); //, "Compile");
             Assert.Equal("abc", clone.Value.Bar); //, "Compile");
         }
+#pragma warning disable IDE0060
         void CheckBytes(TypeModel model, object obj, string expected, string message)
+#pragma warning restore IDE0060
         {
-            using(var ms = new MemoryStream())
-            {
-                model.Serialize(ms, obj);
-                Assert.Equal(expected, Program.GetByteString(ms.ToArray())); //, message);
-            }
+            using var ms = new MemoryStream();
+#pragma warning disable CS0618
+            model.Serialize(ms, obj);
+#pragma warning restore CS0618
+            Assert.Equal(expected, Program.GetByteString(ms.ToArray())); //, message);
         }
         [Fact]
         public void TestHasTuplesNaked()
@@ -164,8 +166,10 @@ namespace Examples
 
         public struct BasicTuple
         {
+#pragma warning disable IDE0044 // Add readonly modifier
             private int foo;
             private string bar;
+#pragma warning restore IDE0044 // Add readonly modifier
             public BasicTuple(int foo, string bar)
             {
                 this.foo = foo;
@@ -177,8 +181,10 @@ namespace Examples
 
         public class BasicTupleReversedOrder
         {
+#pragma warning disable IDE0044 // Add readonly modifier
             private int foo;
             private string bar;
+#pragma warning restore IDE0044 // Add readonly modifier
             public BasicTupleReversedOrder(string bar, int foo)
             {
                 this.foo = foo;

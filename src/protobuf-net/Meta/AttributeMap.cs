@@ -1,15 +1,13 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Meta
 {
     internal abstract class AttributeMap
     {
-#if DEBUG
         [Obsolete("Please use AttributeType instead")]
         new public Type GetType() => AttributeType;
-#endif
+
         public override string ToString() => AttributeType?.FullName ?? "";
         public abstract bool TryGet(string key, bool publicOnly, out object value);
         public bool TryGet(string key, out object value)
@@ -17,7 +15,7 @@ namespace ProtoBuf.Meta
             return TryGet(key, true, out value);
         }
         public abstract Type AttributeType { get; }
-        public static AttributeMap[] Create(TypeModel model, Type type, bool inherit)
+        public static AttributeMap[] Create(Type type, bool inherit)
         {
 
             object[] all = type.GetCustomAttributes(inherit);
@@ -29,7 +27,7 @@ namespace ProtoBuf.Meta
             return result;
         }
 
-        public static AttributeMap[] Create(TypeModel model, MemberInfo member, bool inherit)
+        public static AttributeMap[] Create(MemberInfo member, bool inherit)
         {
             object[] all = member.GetCustomAttributes(inherit);
             AttributeMap[] result = new AttributeMap[all.Length];
@@ -39,7 +37,7 @@ namespace ProtoBuf.Meta
             }
             return result;
         }
-        public static AttributeMap[] Create(TypeModel model, Assembly assembly)
+        public static AttributeMap[] Create(Assembly assembly)
         {
             object[] all = assembly.GetCustomAttributes(inherit: false);
 
@@ -92,4 +90,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

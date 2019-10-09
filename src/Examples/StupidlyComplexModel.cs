@@ -52,7 +52,7 @@ namespace Examples
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(T), true);
-            if (test != null) test(model, "Time");
+            test?.Invoke(model, "Time");
             model.Compile(); // do discovery etc
             int typeCount = model.GetTypes().Cast<MetaType>().Count();
 

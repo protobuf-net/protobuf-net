@@ -14,7 +14,7 @@ namespace ProtoBuf.Issues
 
             Assert.False(m.IsDefined(type));
 
-            var protoType = m.Add(type, true);
+            _ = m.Add(type, true);
 
             Assert.True(m.IsDefined(type));
         }

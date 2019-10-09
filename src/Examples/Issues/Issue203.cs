@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xunit;
+﻿#if FEAT_DYNAMIC_REF
+
 using ProtoBuf;
+using System;
+using System.Collections.Generic;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class Issue203
     {
         [ProtoContract(SkipConstructor = true)]
@@ -66,3 +66,6 @@ namespace Examples.Issues
         }
     }
 }
+
+
+#endif

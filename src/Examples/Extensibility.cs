@@ -41,7 +41,7 @@ namespace Examples
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if(PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 
@@ -123,7 +123,9 @@ namespace Examples
                     string s = Program.GetByteString(ms.ToArray());
                     Assert.Equal("0A 03 61 62 63 15 9A 59 E4 43 1D 7B 00 00 00", s); //, caption);
                     ms.Position = 0;
+#pragma warning disable CS0618
                     clone = (CanHazData) model.Deserialize(ms, null, typeof(CanHazData));
+#pragma warning restore CS0618
                 }
                 Assert.Equal("abc", clone.A); //, caption);
                 Assert.Equal(456.7F, clone.B); //, caption);
@@ -211,16 +213,15 @@ namespace Examples
             
             T small = Serializer.ChangeType<BiggerObject, T>(obj);
 
-            byte[] raw = GetExtensionBytes(small);
+            _ = GetExtensionBytes(small);
             
-            float val;
-            bool hasValue = Extensible.TryGetValue<float>(small, 3, out val);
+            bool hasValue = Extensible.TryGetValue<float>(small, 3, out var val);
             Assert.True(hasValue); //, "has value");
             Assert.Equal(obj.SomeFloat, val); //, "float value");
 
             hasValue = Extensible.TryGetValue<float>(small, 1000, out val);
             Assert.False(hasValue); //, "no value");
-            Assert.Equal(default(float), val);
+            Assert.Equal(default, val);
         }
 
         static byte[] GetExtensionBytes(IExtensible obj)
@@ -231,11 +232,10 @@ namespace Examples
             Stream s = extn.BeginQuery();
             try
             {
-                using(MemoryStream ms = new MemoryStream()) {
+                using MemoryStream ms = new MemoryStream();
                 int b; // really lazy clone...
                 while ((b = s.ReadByte()) >= 0) { ms.WriteByte((byte)b); }
                 return ms.ToArray();
-                }
             } finally {
                 extn.EndQuery(s);
             }
@@ -315,7 +315,7 @@ namespace Examples
         static void TestReadInvalidTag<T>() where T : IExtTest, IExtensible, new()
         {
             T obj = new T {Bof = "hi"};
-            string hi = Extensible.GetValue<string>(obj, 0);
+            _ = Extensible.GetValue<string>(obj, 0);
         }
         [Fact]
         public void TestReadNullSmaller()
@@ -336,7 +336,7 @@ namespace Examples
 
         static void TestReadNull<T>() where T : IExtTest, IExtensible, new()
         {
-            string hi = Extensible.GetValue<string>(null, 1);
+            _ = Extensible.GetValue<string>(null, 1);
         }
 
         [Fact]

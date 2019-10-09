@@ -96,29 +96,34 @@ namespace LongDataTests
             {
                 Console.WriteLine($"Verifying {file.Length >> 20} MiB...");
                 watch = Stopwatch.StartNew();
-                using (var reader = ProtoReader.Create(out var state, file, null, null))
+                var state = ProtoReader.State.Create(file, null, null);
+                try
                 {
                     int i = -1;
                     try
                     {
-                        Assert.Equal(2, reader.ReadFieldHeader(ref state));
-                        Assert.Equal(WireType.StartGroup, reader.WireType);
-                        var tok = ProtoReader.StartSubItem(reader, ref state);
+                        Assert.Equal(2, state.ReadFieldHeader());
+                        Assert.Equal(WireType.StartGroup, state.WireType);
+                        var tok = state.StartSubItem();
 
                         for (i = 0; i < COUNT; i++)
                         {
-                            Assert.Equal(1, reader.ReadFieldHeader(ref state));
-                            Assert.Equal(WireType.String, reader.WireType);
-                            reader.SkipField(ref state);
+                            Assert.Equal(1, state.ReadFieldHeader());
+                            Assert.Equal(WireType.String, state.WireType);
+                            state.SkipField();
                         }
-                        Assert.False(reader.ReadFieldHeader(ref state) > 0);
-                        ProtoReader.EndSubItem(tok, reader, ref state);
+                        Assert.False(state.ReadFieldHeader() > 0);
+                        state.EndSubItem(tok);
                     }
                     catch
                     {
-                        Console.WriteLine($"field 2, {i} of {COUNT}, @ {reader.GetPosition(ref state)}");
+                        Console.WriteLine($"field 2, {i} of {COUNT}, @ {state.GetPosition()}");
                         throw;
                     }
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 watch.Start();
                 Console.WriteLine($"Verified {file.Length >> 20} MiB in {watch.ElapsedMilliseconds}ms");

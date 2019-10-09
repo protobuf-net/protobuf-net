@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf
@@ -14,7 +15,6 @@ namespace ProtoBuf
     /// </summary>
     internal static class ExtensibleUtil
     {
-#if !NO_RUNTIME
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
@@ -27,19 +27,18 @@ namespace ProtoBuf
                 yield return value;
             }
         }
-#endif
-#pragma warning disable RCS1163
-        // Unused parameter.
+
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
         internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
-            if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag));
+            if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
 #pragma warning disable RCS1227 // Validate arguments correctly.
             IExtension extn = instance.GetExtensionObject(false);
 #pragma warning restore RCS1227 // Validate arguments correctly.
@@ -50,52 +49,67 @@ namespace ProtoBuf
             }
 
             Stream stream = extn.BeginQuery();
-            object value = null;
-            ProtoReader reader = null;
             try
             {
+                object value = null;
                 SerializationContext ctx = new SerializationContext();
-                reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
-                while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
+                var state = ProtoReader.State.Create(stream, model, ctx, ProtoReader.TO_EOF).Solidify();
+                try
                 {
-                    if (!singleton)
+                    while (model.TryDeserializeAuxiliaryType(ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
+                    {
+                        if (!singleton)
+                        {
+                            yield return value;
+
+                            value = null; // fresh item each time
+                        }
+                    }
+                    if (singleton && value != null)
                     {
                         yield return value;
-
-                        value = null; // fresh item each time
                     }
                 }
-                if (singleton && value != null)
+                finally
                 {
-                    yield return value;
+                    state.Dispose();
                 }
             }
             finally
             {
-                reader?.Recycle();
                 extn.EndQuery(stream);
             }
         }
 
         internal static void AppendExtendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+            if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
 
             // TODO
             //model.CheckTagNotInUse(tag);
 
             // obtain the extension object and prepare to write
             IExtension extn = instance.GetExtensionObject(true);
-            if (extn == null) throw new InvalidOperationException("No extension object available; appended data would be lost.");
+            if (extn == null) ThrowHelper.ThrowInvalidOperationException("No extension object available; appended data would be lost.");
             bool commit = false;
             Stream stream = extn.BeginAppend();
             try
             {
-                using (ProtoWriter writer = ProtoWriter.Create(out var state, stream, model, null))
+                var state = ProtoWriter.State.Create(stream, model, null);
+                try
                 {
-                    model.TrySerializeAuxiliaryType(writer, ref state, null, format, tag, value, false, null);
-                    writer.Close(ref state);
+                    model.TrySerializeAuxiliaryType(ref state, null, format, tag, value, false, null);
+                    state.Close();
+                }
+                catch
+                {
+                    state.Abandon();
+                    throw;
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 commit = true;
             }

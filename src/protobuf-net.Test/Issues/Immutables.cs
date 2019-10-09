@@ -5,12 +5,22 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using ProtoBuf.Meta;
+using ProtoBuf.unittest;
 using Xunit;
 
 namespace ProtoBuf.Issues
 {
     public class Immutables
     {
+
+        [Fact]
+        public void ImmutableArrayValidIL()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(ImmutableArrayTestClass));
+            model.CompileAndVerify(deleteOnSuccess: false);
+        }
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -25,7 +35,9 @@ namespace ProtoBuf.Issues
             {
                 model.Serialize(ms, testClass);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 testClassClone = (ImmutableArrayTestClass)model.Deserialize(ms, null, testClass.GetType());
+#pragma warning restore CS0618
             }
 
             Assert.Equal((IEnumerable<string>)testClass.Array, (IEnumerable<string>)testClassClone.Array);
@@ -41,12 +53,12 @@ namespace ProtoBuf.Issues
             model.AutoCompile = autoCompile;
 
             ImmutableListTestClass testClassClone;
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, testClass);
-                ms.Position = 0;
-                testClassClone = (ImmutableListTestClass)model.Deserialize(ms, null, testClass.GetType());
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, testClass);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            testClassClone = (ImmutableListTestClass)model.Deserialize(ms, null, testClass.GetType());
+#pragma warning restore CS0618
 
             Assert.Equal((IEnumerable<string>)testClass.List, (IEnumerable<string>)testClassClone.List);
         }
@@ -65,7 +77,9 @@ namespace ProtoBuf.Issues
             {
                 model.Serialize(ms, testClass);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 testClassClone = (ImmutableHashSetTestClass)model.Deserialize(ms, null, testClass.GetType());
+#pragma warning restore CS0618
             }
 
             Assert.True(testClass.Set.SetEquals(testClassClone.Set));
@@ -85,7 +99,9 @@ namespace ProtoBuf.Issues
             {
                 model.Serialize(ms, testClass);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 testClassClone = (ImmutableSortedSetTestClass)model.Deserialize(ms, null, testClass.GetType());
+#pragma warning restore CS0618
             }
 
             Assert.Equal((IEnumerable<string>)testClass.Set, (IEnumerable<string>)testClassClone.Set);
@@ -109,7 +125,9 @@ namespace ProtoBuf.Issues
             {
                 model.Serialize(ms, testClass);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 testClassClone = (ImmutableDictionaryTestClass)model.Deserialize(ms, null, testClass.GetType());
+#pragma warning restore CS0618
             }
 
             Assert.Equal((IEnumerable<KeyValuePair<string, string>>)testClass.Dictionary.OrderBy(x => x.Key), (IEnumerable<KeyValuePair<string, string>>)testClassClone.Dictionary.OrderBy(x => x.Key));
@@ -127,13 +145,18 @@ namespace ProtoBuf.Issues
             var testClass = new ImmutableSortedDictionaryTestClass(builder.ToImmutable());
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
+            model.Add(typeof(ImmutableSortedDictionaryTestClass));
+
+            model.CompileAndVerify();
 
             ImmutableSortedDictionaryTestClass testClassClone;
             using (var ms = new MemoryStream())
             {
                 model.Serialize(ms, testClass);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 testClassClone = (ImmutableSortedDictionaryTestClass)model.Deserialize(ms, null, testClass.GetType());
+#pragma warning restore CS0618
             }
 
             Assert.Equal((IEnumerable<KeyValuePair<string, string>>)testClass.Dictionary, (IEnumerable<KeyValuePair<string, string>>)testClassClone.Dictionary);

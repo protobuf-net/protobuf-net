@@ -8,6 +8,7 @@ namespace ProtoBuf
 {
     static class CoreFxHacks
     {
+#pragma warning disable IDE0060
         public static byte[] GetBuffer(this MemoryStream ms)
         {
             if (ms.TryGetBuffer(out var segment) && segment.Offset == 0) return segment.Array;
@@ -23,6 +24,7 @@ namespace ProtoBuf
             return x.GetTypeInfo().IsSubclassOf(y);
         }
         public static void Close(this Stream s) { }
+#pragma warning restore IDE0060
     }
 }
 #endif
