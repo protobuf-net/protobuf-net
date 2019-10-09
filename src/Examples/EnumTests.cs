@@ -59,7 +59,7 @@ namespace Examples.DesignIdeas
         public void EnumGeneration()
         {
 
-            string proto = Serializer.GetProto<EnumFoo>();
+            string proto = Serializer.GetProto<EnumFoo>(ProtoSyntax.Proto2);
 
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.DesignIdeas;
@@ -82,7 +82,7 @@ enum blah {
             var model = RuntimeTypeModel.Create();
             model.UseImplicitZeroDefaults = false;
 
-            string proto = model.GetSchema(typeof (NonNullValues));
+            string proto = model.GetSchema(typeof (NonNullValues), ProtoSyntax.Proto2);
 
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.DesignIdeas;
@@ -167,7 +167,7 @@ enum OutOfRangeEnum {
         public void TestNullValues()
         {
 
-            string proto = Serializer.GetProto<NullValues>();
+            string proto = Serializer.GetProto<NullValues>(ProtoSyntax.Proto2);
 
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.DesignIdeas;
