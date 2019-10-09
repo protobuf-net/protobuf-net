@@ -6,13 +6,13 @@ protobuf-net needs to be built with MSBuild, due to some of the target platforms
 
 The easiest way to do this is via Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) - build `src\protobuf-net.sln`
 
-## (not yet started)
+## Roadmap
 
-- gRPC?
-- build-time tooling from code-first
-- `dynamic` API over types known only via descriptors loaded at runtime
-- `Any` support
-
+- gRPC: see [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc)
+- 3.0: new custom serializer API; "pipelines" support; split core and reflection code-bases into separate libs
+- 3.1: support for custom scalars; `Any` support
+- 3.2: protogen support for emitting pre-coded custom serializers
+- future: build-time tooling from code-first (aka "generators")
 
 ## v3.0.0-alpha.3
 
@@ -50,6 +50,11 @@ Other changes:
 - empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
 - as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
 - common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
+
+## 2.4.1
+
+- fixes for .NET Core 3, thanks @szehetner
+- (this build deliberately *does not* update package dependencies, to reduce impact)
 
 ## v2.4.0
 
