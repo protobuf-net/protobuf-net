@@ -6,23 +6,17 @@ protobuf-net needs to be built with MSBuild, due to some of the target platforms
 
 The easiest way to do this is via Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) - build `src\protobuf-net.sln`
 
-## (not yet started)
+## Roadmap
 
-- gRPC?
-- build-time tooling from code-first
-- `dynamic` API over types known only via descriptors loaded at runtime
-- `Any` support
+- gRPC: see [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc)
+- 3.0: new custom serializer API; "pipelines" support; split core and reflection code-bases into separate libs
+- 3.1: support for custom scalars; `Any` support
+- 3.2: protogen support for emitting pre-coded custom serializers
+- future: build-time tooling from code-first (aka "generators")
 
+## 2.4.1
 
-## v3.0.0-alpha.3
-
-- **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
-- if using `ProtoReader` you *should* now move to the `ref State` API too, although the old API will continue to
-  work with `Stream`-based readers; it **will not** work with `ReadOnlySequence<byte>` readers
-- "pipelines" (`ReadOnlySequence<byte>`) support for the **read** API (not write yet)
-- significant performance improvements in all read scenarios
-- new `CreateForAssembly(...)` API (various overloads) for working with precompiled (at runtime) type models (faster than `RuntimeTypeModel`, but less flexible)
-- significant amounts of code tidying; many yaks were shawn
+- fixes for .NET Core 3, thanks @szehetner
 
 ## v2.4.0
 
