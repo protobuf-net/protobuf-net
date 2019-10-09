@@ -219,9 +219,13 @@ namespace ProtoBuf.Meta
         {
             callstack ??= new HashSet<Type>();
             if (!callstack.Add(Type)) return Type.Name; // recursion detected; give up
+
             try
             {
-                if (surrogate != null) return model[surrogate].GetSchemaTypeName(callstack);
+                if (surrogate != null && !callstack.Contains(surrogate))
+                {
+                    return model[surrogate].GetSchemaTypeName(callstack);
+                }
 
                 if (!string.IsNullOrEmpty(name)) return name;
 
@@ -239,7 +243,7 @@ namespace ProtoBuf.Meta
                         Type tmp = arg;
                         bool isKnown = model.IsDefined(tmp);
                         MetaType mt;
-                        if (isKnown && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
+                        if (isKnown && (mt = model[tmp]) != null)
                         {
                             sb.Append(mt.GetSchemaTypeName(callstack));
                         }
