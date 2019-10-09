@@ -255,7 +255,6 @@ namespace ProtoBuf.Meta
                             catch { }
                             if (mt != null) sb.Append(mt.GetSchemaTypeName(callstack));
                             else sb.Append(tmp.Name); // give up
-                            sb.Append(tmp.Name);
                         }
                     }
                     return sb.ToString();
