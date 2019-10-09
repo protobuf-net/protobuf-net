@@ -13,6 +13,42 @@ namespace ProtoBuf.Serializers
         internal static readonly RepeatedSerializerStub Empty = new RepeatedSerializerStub(null, null);
         public MemberInfo Provider { get; }
         public bool IsMap { get; }
+        internal bool IsValidProtobufMap(RuntimeTypeModel model)
+        {
+            if (!IsMap) return false;
+            ResolveMapTypes(out var key, out var value);
+
+            // the key must an any integral or string type (not floating point or bytes)
+            if (!IsValidKey(key)) return false;
+
+            // the value cannot be repeated (neither can key, but we ruled that out above)
+            var repeated = model == null ? RepeatedSerializers.TryGetRepeatedProvider(value) : model.TryGetRepeatedProvider(value);
+            if (repeated != null) return false;
+
+            return true;
+
+            static bool IsValidKey(Type type)
+            {
+                if (type == null) return false;
+                if (type.IsEnum) return true;
+                if (type == typeof(string)) return true;
+                if (!type.IsValueType) return false;
+                if (Nullable.GetUnderlyingType(type) != null) return false;
+                switch (Type.GetTypeCode(type))
+                {
+                    case TypeCode.SByte:
+                    case TypeCode.Int16:
+                    case TypeCode.Int32:
+                    case TypeCode.Int64:
+                    case TypeCode.Byte:
+                    case TypeCode.UInt16:
+                    case TypeCode.UInt32:
+                    case TypeCode.UInt64:
+                        return true;
+                }
+                return false;
+            }
+        }
         public bool IsEmpty => Provider == null;
         public object Serializer => _serializer ?? CreateSerializer();
         public Type ForType { get; }

@@ -316,6 +316,9 @@ namespace ProtoBuf.Meta
                 provider.ResolveMapTypes(out var key, out var value);
                 TryGetCoreSerializer(list, key);
                 TryGetCoreSerializer(list, value);
+
+                if (!provider.IsValidProtobufMap(this)) // add the KVP
+                    TryGetCoreSerializer(list, provider.ItemType);
             }
             else
             {
@@ -353,6 +356,8 @@ namespace ProtoBuf.Meta
                         if (repeated != null)
                         {
                             CascadeRepeated(list, repeated);
+                            if (repeated.IsMap && !member.IsMap) // include the KVP, then
+                                TryGetCoreSerializer(list, repeated.ItemType);
                         }
                         else
                         {
@@ -1724,11 +1729,16 @@ namespace ProtoBuf.Meta
             => CreateForAssembly(assembly, null);
 
         /// <summary>
+        /// Gets a model that automatically compiles modes on a per-assemby basis
+        /// </summary>
+        public static TypeModel AutoCompileModel => AutoCompileTypeModel.Instance;
+
+        /// <summary>
         /// Create a model that serializes all types from an assembly
         /// </summary>
         public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)
         {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
             if (options == null)
             {
                 var obj = (TypeModel)s_assemblyModels[assembly];

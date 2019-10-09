@@ -120,6 +120,10 @@ namespace ProtoBuf.Meta
             FieldNumber = fieldNumber;
             MemberType = memberType ?? throw new ArgumentNullException(nameof(memberType));
             ItemType = itemType;
+            if (defaultType == null && itemType != null)
+            {   // reasonable default
+                defaultType = memberType;
+            }
             DefaultType = defaultType;
 
             this.model = model ?? throw new ArgumentNullException(nameof(model));

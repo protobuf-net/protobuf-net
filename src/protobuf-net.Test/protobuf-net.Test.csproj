@@ -5,7 +5,7 @@
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <WithSpans>true</WithSpans>
-    <NoWarn>$(NoWarn);IDE0060;IDE1006</NoWarn>
+    <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
     <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL</DefineConstants>

@@ -1115,7 +1115,7 @@ namespace ProtoBuf.Meta
                 vm.DynamicType = normalizedAttribute.DynamicType;
 #endif
 
-                vm.IsMap = repeated != null && repeated.IsMap;
+                vm.IsMap = repeated != null && repeated.IsValidProtobufMap(model);
                 if (vm.IsMap) // is it even *allowed* to be a map?
                 {
                     if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
@@ -1717,17 +1717,26 @@ namespace ProtoBuf.Meta
 
             if (repeated != null)
             {
-                if (repeated.IsMap)
-                {
+                
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
 
+                if (repeated.IsValidProtobufMap(model))
+                {
+                    repeated.ResolveMapTypes(out var key, out var value);
+
+                    NewLine(builder, indent + 1).Append("map<")
+                        .Append(model.GetSchemaTypeName(key, DataFormat.Default, false, false, ref imports))
+                        .Append(", ")
+                        .Append(model.GetSchemaTypeName(value, DataFormat.Default, false, false, ref imports))
+                        .Append("> items = 1;");
                 }
                 else
                 {
-                    string itemTypeName = model.GetSchemaTypeName(repeated.ItemType, DataFormat.Default, false, false, ref imports);
-                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
-                    NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
-                    NewLine(builder, indent).Append('}');
+                    NewLine(builder, indent + 1).Append("repeated ")
+                        .Append(model.GetSchemaTypeName(repeated.ItemType, DataFormat.Default, false, false, ref imports))
+                        .Append(" items = 1;");
                 }
+                NewLine(builder, indent).Append('}');
             }
             else if (IsAutoTuple)
             { // key-value-pair etc

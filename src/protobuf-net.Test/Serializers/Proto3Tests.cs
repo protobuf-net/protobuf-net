@@ -17,7 +17,7 @@ namespace ProtoBuf.Serializers
         [Fact]
         public void HazBasicEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazBasicEnum>();
+            var schema = Serializer.GetProto<HazBasicEnum>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -66,7 +66,7 @@ enum RegularEnum {
         [Fact]
         public void HazStrictEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazStrictEnum>();
+            var schema = Serializer.GetProto<HazStrictEnum>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -108,7 +108,7 @@ enum StrictEnum {
         [Fact]
         public void HazAliasedEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazAliasedEnum>();
+            var schema = Serializer.GetProto<HazAliasedEnum>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -340,7 +340,7 @@ message HazAliasedEnum {
         [Fact]
         public void GetMapSchema()
         {
-            var schema = Serializer.GetProto<HazMap>();
+            var schema = Serializer.GetProto<HazMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -353,7 +353,7 @@ message HazMap {
         [Fact]
         public void GetMapWithDataFormatSchema()
         {
-            var schema = Serializer.GetProto<HazMapWithDataFormat>();
+            var schema = Serializer.GetProto<HazMapWithDataFormat>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -389,7 +389,7 @@ message HasRefDynamic {
         [Fact]
         public void TimeSchemaTypes()
         {
-            var schema = Serializer.GetProto<HazTime>();
+            var schema = Serializer.GetProto<HazTime>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
@@ -596,7 +596,7 @@ enum SomeEnum {
         [Fact]
         public void GetMapSchema_HazImplicitMap()
         {
-            var schema = Serializer.GetProto<HazImplicitMap>();
+            var schema = Serializer.GetProto<HazImplicitMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -616,7 +616,7 @@ message HazImplicitMap {
         [Fact]
         public void GetMapSchema_HazDisabledMap()
         {
-            var schema = Serializer.GetProto<HazDisabledMap>();
+            var schema = Serializer.GetProto<HazDisabledMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 
@@ -638,7 +638,7 @@ message KeyValuePair_Int32_String {
         [Fact]
         public void GetMapSchema_HazInvalidKeyTypeMap()
         {
-            var schema = Serializer.GetProto<HazInvalidKeyTypeMap>();
+            var schema = Serializer.GetProto<HazInvalidKeyTypeMap>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
 

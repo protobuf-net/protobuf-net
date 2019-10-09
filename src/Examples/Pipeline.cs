@@ -34,7 +34,7 @@ namespace Examples
         public void TestEnumerableProto()
         {
 
-            string proto = Serializer.GetProto<EnumWrapper>();
+            string proto = Serializer.GetProto<EnumWrapper>(ProtoSyntax.Proto2);
 
             string expected = @"syntax = ""proto2"";
 package Examples;
@@ -99,7 +99,7 @@ message EnumWrapper {
         public void TestEnumerableGroupProto()
         {
 
-            string proto = Serializer.GetProto<EnumParentGroupWrapper>();
+            string proto = Serializer.GetProto<EnumParentGroupWrapper>(ProtoSyntax.Proto2);
 
             string expected = @"syntax = ""proto2"";
 package Examples;
@@ -194,7 +194,7 @@ message EnumWrapper {
         public void TestEnumerableStandardProto()
         {
 
-            string proto = Serializer.GetProto<EnumParentStandardWrapper>();
+            string proto = Serializer.GetProto<EnumParentStandardWrapper>(ProtoSyntax.Proto2);
 
             string expected = @"syntax = ""proto2"";
 package Examples;
