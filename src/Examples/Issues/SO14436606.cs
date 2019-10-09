@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿#if FEAT_DYNAMIC_REF
+
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -278,3 +280,6 @@ namespace Examples.Issues
         }
     }
 }
+
+
+#endif

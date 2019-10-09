@@ -17,7 +17,7 @@ namespace Examples.Issues
             var model = RuntimeTypeModel.Create();
             model.Add(typeof (Foo), true);
 
-            string schema = model.GetSchema(typeof (Foo));
+            string schema = model.GetSchema(typeof (Foo), ProtoSyntax.Proto2);
 
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.Issues;

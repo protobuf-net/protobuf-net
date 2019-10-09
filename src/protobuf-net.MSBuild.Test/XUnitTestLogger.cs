@@ -6,10 +6,10 @@ namespace ProtoBuf.Build
 {
     class XUnitTestLogger : ILogger
     {
-        static bool DumpEnv = false;
-        static bool Verbose = true;
+        readonly static bool DumpEnv = false;
+        readonly static bool Verbose = true;
 
-        ITestOutputHelper o;
+        readonly ITestOutputHelper o;
 
         public XUnitTestLogger(ITestOutputHelper o)
         {

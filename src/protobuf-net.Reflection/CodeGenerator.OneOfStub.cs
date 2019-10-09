@@ -99,17 +99,13 @@ namespace ProtoBuf.Reflection
                     case FieldDescriptorProto.Type.TypeUint64:
                         return "UInt64";
                     case FieldDescriptorProto.Type.TypeMessage:
-                        switch (typeName)
+                        return typeName switch
                         {
-                            case ".google.protobuf.Timestamp":
-                                return "DateTime";
-                            case ".google.protobuf.Duration":
-                                return "TimeSpan";
-                            case ".bcl.Guid":
-                                return "Guid";
-                            default:
-                                return "Object";
-                        }
+                            ".google.protobuf.Timestamp" => "DateTime",
+                            ".google.protobuf.Duration" => "TimeSpan",
+                            ".bcl.Guid" => "Guid",
+                            _ => "Object",
+                        };
                     default:
                         return "Object";
                 }

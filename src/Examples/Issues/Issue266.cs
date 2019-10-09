@@ -38,7 +38,9 @@ namespace Examples.Issues
             {
                 RuntimeTypeModel.Default.Serialize(ms, Foo.B);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 result = (Foo) RuntimeTypeModel.Default.Deserialize(ms, null, typeof (Foo));
+#pragma warning restore CS0618
             }
             Assert.Equal(orig, result);
         }

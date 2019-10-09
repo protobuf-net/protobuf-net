@@ -4,7 +4,6 @@ using ProtoBuf;
 
 namespace Examples.Issues
 {
-    
     public class Issue295
     {
         [ProtoContract(SkipConstructor = true)]
@@ -36,7 +35,7 @@ namespace Examples.Issues
         public void Execute()
         {
             Asset asset = new Plant {Blowers = new Asset(), ChildAssets = {new Plant()}};
-            var clone = Serializer.DeepClone(asset);
+            Assert.IsType<Plant>(Serializer.DeepClone(asset));
         }
     }
 }

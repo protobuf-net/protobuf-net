@@ -28,7 +28,7 @@ namespace FX11
                 Console.WriteLine("\t" + prop.Name + "\t" + Convert.ToString(prop.GetValue(obj, null)));
             }
         }
-        public static RuntimeTypeModel BuildMeta()
+        public static RuntimeTypeModel BuildMeta(int loop = 100000)
         {
             RuntimeTypeModel model;
 #if !FX11
@@ -84,10 +84,9 @@ namespace FX11
 
             DumpObject("Original", props, prod);
 
-            const int loop = 100000;
             Console.WriteLine("Iterations: " + loop);
             Stopwatch watch;
-            MemoryStream reuseDump = new MemoryStream(100 * 1024);
+            using MemoryStream reuseDump = new MemoryStream(100 * 1024);
 #if FX30
             System.Runtime.Serialization.DataContractSerializer dcs = new System.Runtime.Serialization.DataContractSerializer(type);
 
@@ -154,8 +153,7 @@ namespace FX11
             {
                 compiled.Serialize(ms, prod);
 #if COREFX
-                ArraySegment<byte> tmp;
-                if (!ms.TryGetBuffer(out tmp))
+                if (!ms.TryGetBuffer(out var tmp))
                     throw new Exception("oops");
                 byte[] buffer = tmp.Array;
 #else
@@ -182,15 +180,22 @@ namespace FX11
             for (int i = 0; i < loop; i++)
             {
                 reuseDump.Position = 0;
+#pragma warning disable CS0618
                 compiled.Deserialize(reuseDump, null, type);
+#pragma warning restore CS0618
             }
             watch.Stop();
 
-            Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
+            if (loop > 0)
             {
-            reuseDump.Position = 0;
-            Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
-            DumpObject("protobuf-net v2", props, p1);
+                Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
+                {
+                    reuseDump.Position = 0;
+#pragma warning disable CS0618
+                    Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
+#pragma warning restore CS0618
+                    DumpObject("protobuf-net v2", props, p1);
+                }
             }
 
             // 080d 1203(616263) 207b
@@ -222,12 +227,15 @@ namespace FX11
             // 20    08 = 1|000 = field 1, variant
             // 21    cede01 = 1:1011110:1001110 = 28494 (days, signed) = 14247 = 03/01/2009
 
-            Product clone = (Product)compiled.DeepClone(prod);
-            Console.WriteLine(clone.CategoryID);
-            Console.WriteLine(clone.ProductName);
-            Console.WriteLine(clone.CreationDate);
-            Console.WriteLine(clone.ProductID);
-            Console.WriteLine(clone.UnitPrice);
+            if (loop > 0)
+            {
+                Product clone = (Product)compiled.DeepClone(prod);
+                Console.WriteLine(clone.CategoryID);
+                Console.WriteLine(clone.ProductName);
+                Console.WriteLine(clone.CreationDate);
+                Console.WriteLine(clone.ProductID);
+                Console.WriteLine(clone.UnitPrice);
+            }
 
 #endif
                 model = RuntimeTypeModel.Create();
@@ -251,12 +259,12 @@ namespace FX11
             return model;
         }
 
-#pragma warning disable RCS1213
-        private static Product Read(ref ProtoReader.State state, Product product1, ProtoReader reader1)
-#pragma warning restore RCS1213
+#pragma warning disable RCS1213, IDE0051
+        private static Product Read(ref ProtoReader.State state, Product product1)
+#pragma warning restore RCS1213, IDE0051
         {
             int num;
-            while ((num = reader1.ReadFieldHeader(ref state)) > 0)
+            while ((num = state.ReadFieldHeader()) > 0)
             {
                 switch (num)
                 {
@@ -265,21 +273,21 @@ namespace FX11
                         {
                             product1 = new Product();
                         }
-                        product1.ProductID = reader1.ReadInt32(ref state);
+                        product1.ProductID = state.ReadInt32();
                         continue;
                     case 2:
                         if (product1 == null)
                         {
                             product1 = new Product();
                         }
-                        product1.ProductName = reader1.ReadString(ref state);
+                        product1.ProductName = state.ReadString();
                         continue;
                     case 3:
                         if (product1 == null)
                         {
                             product1 = new Product();
                         }
-                        product1.SupplierID = new int?(reader1.ReadInt32(ref state));
+                        product1.SupplierID = new int?(state.ReadInt32());
                         continue;
                 }
             }
@@ -373,7 +381,9 @@ namespace FX11
             byte[] blob;
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, obj);
+#pragma warning restore CS0618
                 blob = ms.ToArray();
             }
             foreach (byte b in blob)
@@ -384,7 +394,9 @@ namespace FX11
 
             using (MemoryStream ms = new MemoryStream(blob))
             {
+#pragma warning disable CS0618
                 object clone = model.Deserialize(ms, null, obj.GetType());
+#pragma warning restore CS0618
                 string oldS = Convert.ToString(obj), newS = Convert.ToString(clone);
                 Console.WriteLine(oldS == newS ? ("match: " + newS) : ("delta" + oldS + " vs " + newS));
             }

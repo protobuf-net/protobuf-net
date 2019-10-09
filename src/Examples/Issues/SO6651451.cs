@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xunit;
-using ProtoBuf.Meta;
-using System.IO;
+﻿#if FEAT_DYNAMIC_REF
 using ProtoBuf;
+using ProtoBuf.Meta;
+using System.Collections.Generic;
+using System.IO;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class SO6651451
     {
         public class SerializeClass
@@ -95,3 +93,4 @@ namespace Examples.Issues
 
     }
 }
+#endif

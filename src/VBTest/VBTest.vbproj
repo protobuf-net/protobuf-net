@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>14</LangVersion>
     <RootNamespace />
+    <NoWarn>IDE1006</NoWarn>
   </PropertyGroup>
   <!--
   9: ===3.5

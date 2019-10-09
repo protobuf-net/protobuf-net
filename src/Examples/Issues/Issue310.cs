@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Xunit;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
@@ -14,7 +15,7 @@ namespace Examples.Issues
         public void Execute()
         {
 #pragma warning disable  0618
-            string proto = Serializer.GetProto<Animal>();
+            string proto = Serializer.GetProto<Animal>(ProtoSyntax.Proto2);
 
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.Issues;

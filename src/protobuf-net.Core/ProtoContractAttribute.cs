@@ -1,3 +1,4 @@
+using ProtoBuf.Internal;
 using System;
 
 namespace ProtoBuf
@@ -9,6 +10,7 @@ namespace ProtoBuf
         AllowMultiple = false, Inherited = false)]
     public sealed class ProtoContractAttribute : Attribute
     {
+        internal const string ReferenceDynamicDisabled = "Reference-tracking and dynamic-type are not currently implemented in this build; they may be reinstated later; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited";
         /// <summary>
         /// Gets or sets the defined name of the type.
         /// </summary>
@@ -23,7 +25,7 @@ namespace ProtoBuf
             get { return implicitFirstTag; }
             set
             {
-                if (value < 1) throw new ArgumentOutOfRangeException("ImplicitFirstTag");
+                if (value < 1) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(ImplicitFirstTag));
                 implicitFirstTag = value;
             }
         }
@@ -106,11 +108,14 @@ namespace ProtoBuf
         /// </summary>
         public bool AsReferenceDefault
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_AsReferenceDefault); }
-            set
-            {
-                SetFlag(OPTIONS_AsReferenceDefault, value);
-            }
+            set { SetFlag(OPTIONS_AsReferenceDefault, value); }
+#else
+            get => false;
+            [Obsolete(ReferenceDynamicDisabled, true)]
+            set { if (value != AsReferenceDefault) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
         /// <summary>
@@ -140,36 +145,32 @@ namespace ProtoBuf
             OPTIONS_UseProtoMembersOnly = 4,
             OPTIONS_SkipConstructor = 8,
             OPTIONS_IgnoreListHandling = 16,
+#if FEAT_DYNAMIC_REF
             OPTIONS_AsReferenceDefault = 32,
-            OPTIONS_EnumPassthru = 64,
-            OPTIONS_EnumPassthruHasValue = 128,
+#endif
+            //OPTIONS_EnumPassthru = 64,
+            //OPTIONS_EnumPassthruHasValue = 128,
             OPTIONS_IsGroup = 256;
 
         /// <summary>
         /// Applies only to enums (not to DTO classes themselves); gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather
         /// than enforcing .proto enum rules. This is useful *in particul* for [Flags] enums.
         /// </summary>
+        [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, true)]
         public bool EnumPassthru
         {
-            get { return HasFlag(OPTIONS_EnumPassthru); }
-            set
-            {
-                SetFlag(OPTIONS_EnumPassthru, value);
-                SetFlag(OPTIONS_EnumPassthruHasValue, true);
-            }
+            get { ThrowHelper.ThrowNotSupportedException(); return default;  }
+            set { ThrowHelper.ThrowNotSupportedException(); }
         }
 
         /// <summary>
-        /// Allows to define a surrogate type used for serialization/deserialization purpose.
+        /// Defines a surrogate type used for serialization/deserialization purpose.
         /// </summary>
         public Type Surrogate { get; set; }
 
         /// <summary>
-        /// Has a EnumPassthru value been explicitly set?
+        /// Defines a serializer to use for this type; the serializer must implement ISerializer-T for this type
         /// </summary>
-        internal bool EnumPassthruHasValue
-        { // note that this property is accessed via reflection and should not be removed
-            get { return HasFlag(OPTIONS_EnumPassthruHasValue); }
-        }
+        public Type Serializer { get; set; }
     }
 }

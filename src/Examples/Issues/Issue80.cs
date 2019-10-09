@@ -41,7 +41,6 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            int len32_1, len32_2, len128_1, len128_2;
 
             //CreateParams a proto message.
             OmsMessage omsMessage = new OmsMessage();
@@ -61,8 +60,8 @@ namespace Examples.Issues
                  omsMessage, ProtoBuf.PrefixStyle.Fixed32);
 
             textStream.Position = 0;
-            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream.GetBuffer(), 0, 5, ProtoBuf.PrefixStyle.Fixed32, out len32_1), "len32 - buffer");
-            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream, ProtoBuf.PrefixStyle.Fixed32, out len32_2), "len32 - stream");
+            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream.GetBuffer(), 0, 5, ProtoBuf.PrefixStyle.Fixed32, out int len32_1), "len32 - buffer");
+            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream, ProtoBuf.PrefixStyle.Fixed32, out int len32_2), "len32 - stream");
 
             textStream = new MemoryStream();
 
@@ -70,8 +69,8 @@ namespace Examples.Issues
  omsMessage, ProtoBuf.PrefixStyle.Base128, 0);
 
             textStream.Position = 0;
-            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream.GetBuffer(), 0, 5, ProtoBuf.PrefixStyle.Base128, out len128_1)); //, "len128 - buffer");
-            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream, ProtoBuf.PrefixStyle.Base128, out len128_2)); //, "len128 - stream");
+            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream.GetBuffer(), 0, 5, ProtoBuf.PrefixStyle.Base128, out int len128_1)); //, "len128 - buffer");
+            Assert.True(ProtoBuf.Serializer.TryReadLengthPrefix(textStream, ProtoBuf.PrefixStyle.Base128, out int len128_2)); //, "len128 - stream");
 
 
             Assert.Equal(len32_1, len32_2); //, "len32 - stream vs buffer");

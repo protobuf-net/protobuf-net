@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEAT_DYNAMIC_REF
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,7 +24,9 @@ namespace Examples
         public DynamicIFormatter() : this(null){}
         public object Deserialize(Stream source)
         {
+#pragma warning disable CS0618
             var shell = (DynamicShell) model.Deserialize(source, null, typeof(DynamicShell), -1, Context);
+#pragma warning restore CS0618
             return shell.Value;
         }
         public void Serialize(Stream destination, object graph)
@@ -50,13 +53,11 @@ namespace Examples
         public void Execute()
         {
             var formatter = new DynamicIFormatter();
-            using(var ms = new MemoryStream())
-            {
-                formatter.Serialize(ms, new Foo { Bar = 12345 });
-                ms.Position = 0;
-                Foo clone = (Foo) formatter.Deserialize(ms);
-                Assert.Equal(12345, clone.Bar);
-            }
+            using var ms = new MemoryStream();
+            formatter.Serialize(ms, new Foo { Bar = 12345 });
+            ms.Position = 0;
+            Foo clone = (Foo)formatter.Deserialize(ms);
+            Assert.Equal(12345, clone.Bar);
         }
         [ProtoContract]
         class Foo
@@ -66,3 +67,5 @@ namespace Examples
         }
     }
 }
+
+#endif

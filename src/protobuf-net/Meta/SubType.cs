@@ -1,6 +1,6 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections.Generic;
+using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Meta
@@ -52,28 +52,26 @@ namespace ProtoBuf.Meta
         /// <param name="format">Specific encoding style to use; in particular, Grouped can be used to avoid buffering, but is not the default.</param>
         public SubType(int fieldNumber, MetaType derivedType, DataFormat format)
         {
-            if (derivedType == null) throw new ArgumentNullException(nameof(derivedType));
             if (fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             this.fieldNumber = fieldNumber;
-            this.derivedType = derivedType;
+            this.derivedType = derivedType ?? throw new ArgumentNullException(nameof(derivedType));
             this.dataFormat = format;
         }
 
         private readonly DataFormat dataFormat;
 
-        private IProtoSerializer serializer;
+        private IRuntimeProtoSerializerNode serializer;
 
-        internal IProtoSerializer Serializer => serializer ?? (serializer = BuildSerializer());
+        internal IRuntimeProtoSerializerNode GetSerializer(Type parentType) => serializer ?? (serializer = BuildSerializer(parentType));
 
-        private IProtoSerializer BuildSerializer()
+        private IRuntimeProtoSerializerNode BuildSerializer(Type parentType)
         {
             // note the caller here is MetaType.BuildSerializer, which already has the sync-lock
             WireType wireType = WireType.String;
             if(dataFormat == DataFormat.Group) wireType = WireType.StartGroup; // only one exception
             
-            IProtoSerializer ser = new SubItemSerializer(derivedType.Type, derivedType.GetKey(false, false), derivedType, false);
+            IRuntimeProtoSerializerNode ser = SubItemSerializer.Create(derivedType.Type, derivedType, parentType);
             return new TagDecorator(fieldNumber, wireType, false, ser);
         }
     }
 }
-#endif

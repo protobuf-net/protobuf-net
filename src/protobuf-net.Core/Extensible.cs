@@ -63,7 +63,6 @@ namespace ProtoBuf
             return extensionObject;
         }
 
-#if !NO_RUNTIME
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -216,7 +215,6 @@ namespace ProtoBuf
         {
             return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, false, false);
         }
-#endif
 
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.

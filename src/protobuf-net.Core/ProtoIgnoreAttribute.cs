@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 
 namespace ProtoBuf
 {
@@ -28,7 +29,7 @@ namespace ProtoBuf
         public ProtoPartialIgnoreAttribute(string memberName)
             : base()
         {
-            if (string.IsNullOrEmpty(memberName)) throw new ArgumentNullException(nameof(memberName));
+            if (string.IsNullOrEmpty(memberName)) ThrowHelper.ThrowArgumentNullException(nameof(memberName));
 
             MemberName = memberName;
         }

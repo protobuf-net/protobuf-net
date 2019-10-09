@@ -72,7 +72,9 @@ namespace Examples.Issues
             A clone;
             using (var file = File.OpenRead(@"big.file"))
             {
+#pragma warning disable CS0618
                 clone = (A) model.Deserialize(file, null, typeof(A));
+#pragma warning restore CS0618
             }
             watch.Stop();
             Console.WriteLine("{0}ms", watch.ElapsedMilliseconds);

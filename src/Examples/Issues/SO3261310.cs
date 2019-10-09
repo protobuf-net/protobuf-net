@@ -25,7 +25,7 @@ namespace Examples.Issues
 
             var clone = Serializer.DeepClone(item);
             Assert.Equal(2, clone.Keys.Count);
-            object o = clone["abc"];
+            _ = clone["abc"];
             Assert.Equal("def", clone["abc"].Value);
             var list = (IList<UrlStatus>)clone["ghi"].Value;
             Assert.Equal(2, list.Count);

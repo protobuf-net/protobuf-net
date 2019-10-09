@@ -1,10 +1,5 @@
 ﻿using ProtoBuf.Meta;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace ProtoBuf.Issues
@@ -43,6 +38,7 @@ namespace ProtoBuf.Issues
         }
 
 
+#if FEAT_DYNAMIC_REF
         [Fact]
         public void TestUncompiled() => Test(false);
 
@@ -63,10 +59,13 @@ namespace ProtoBuf.Issues
             MemoryStream ms = new MemoryStream();
             typeModel.Serialize(ms, item2);
             ms.Seek(0, SeekOrigin.Begin);
+#pragma warning disable CS0618
             var newItem2 = (Item) typeModel.Deserialize(ms, null, typeof(Item));
+#pragma warning restore CS0618
             Assert.Equal(item2.Value, newItem2.Value);
             Assert.Equal(item1.Value, newItem2.Child1.Value);
             Assert.Same(newItem2.Child1, newItem2.Child2);
-        }    
+        }
+#endif
     }
 }

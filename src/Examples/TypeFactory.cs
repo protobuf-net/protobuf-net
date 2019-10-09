@@ -47,7 +47,9 @@ namespace Examples
                 {
                     model.Serialize(ms, orig, ctx);
                     ms.Position = 0;
+#pragma warning disable CS0618
                     clone = (CanHazFactory) model.Deserialize(ms, null, typeof(CanHazFactory), ctx);
+#pragma warning restore CS0618
                 }
 
                 Assert.NotSame(orig, clone);

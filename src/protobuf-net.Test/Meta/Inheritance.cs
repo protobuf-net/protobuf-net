@@ -52,10 +52,10 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = CreateModel();
             Type someBase = typeof(SomeBase), someDerived = typeof(SomeDerived);
-            Assert.Equal(model.GetKey(ref someBase), model.GetKey(ref someDerived)); //, "Runtime");
+            Assert.Equal(model.IsDefined(someBase), model.IsDefined(someDerived)); //, "Runtime");
 
             TypeModel compiled = model.Compile();
-            Assert.Equal(compiled.GetKey(ref someBase), compiled.GetKey(ref someDerived)); //, "Compiled");
+            Assert.Equal(compiled.IsDefined(someBase), compiled.IsDefined(someDerived)); //, "Compiled");
         }
         [Fact]
         public void GetBackTheRightType_SomeBase()

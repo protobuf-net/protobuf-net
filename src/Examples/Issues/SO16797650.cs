@@ -49,9 +49,11 @@ namespace Examples.Issues
             MessageBase echo1;
             using (var ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 Serializer.NonGeneric.Serialize(ms, echo);
                 ms.Position = 0;
                 echo1 = (MessageBase)Serializer.NonGeneric.Deserialize(typeof(MessageBase), ms);
+#pragma warning restore CS0618
             }
             Assert.Same(echo.GetType(), echo1.GetType());
             Assert.Equal(echo.ErrorMessage, echo1.ErrorMessage);

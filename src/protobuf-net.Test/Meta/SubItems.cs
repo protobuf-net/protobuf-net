@@ -43,6 +43,7 @@ namespace ProtoBuf.unittest.Meta
         public void TestCanDeserialierAllFromEmptyStream()
         {
             var model = CreateModel();
+#pragma warning disable CS0618
             Assert.IsType<OuterRef>(model.Deserialize(Stream.Null, null, typeof(OuterRef)));
             Assert.IsType<OuterVal>(model.Deserialize(Stream.Null, null, typeof(OuterVal)));
             Assert.IsType<InnerRef>(model.Deserialize(Stream.Null, null, typeof(InnerRef)));
@@ -60,6 +61,30 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsType<OuterVal>(compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
             Assert.IsType<InnerRef>(compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
             Assert.IsType<InnerVal>(compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
+#pragma warning restore CS0618
+        }
+
+        [Fact]
+        public void TestCanDeserialierAllFromEmptyStream_Generic()
+        {
+            var model = CreateModel();
+            Assert.IsType<OuterRef>(model.Deserialize<OuterRef>(Stream.Null));
+            Assert.IsType<OuterVal>(model.Deserialize<OuterVal>(Stream.Null));
+            Assert.IsType<InnerRef>(model.Deserialize<InnerRef>(Stream.Null));
+            Assert.IsType<InnerVal>(model.Deserialize<InnerVal>(Stream.Null));
+
+            model.CompileInPlace();
+            Assert.IsType<OuterRef>(model.Deserialize<OuterRef>(Stream.Null));
+            Assert.IsType<OuterVal>(model.Deserialize<OuterVal>(Stream.Null));
+            Assert.IsType<InnerRef>(model.Deserialize<InnerRef>(Stream.Null));
+            Assert.IsType<InnerVal>(model.Deserialize<InnerVal>(Stream.Null));
+
+            var compiled = model.Compile("SubItems", "SubItems.dll");
+            PEVerify.Verify("SubItems.dll");
+            Assert.IsType<OuterRef>(compiled.Deserialize<OuterRef>(Stream.Null));
+            Assert.IsType<OuterVal>(compiled.Deserialize<OuterVal>(Stream.Null));
+            Assert.IsType<InnerRef>(compiled.Deserialize<InnerRef>(Stream.Null));
+            Assert.IsType<InnerVal>(compiled.Deserialize<InnerVal>(Stream.Null));
         }
 
 

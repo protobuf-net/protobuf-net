@@ -6,6 +6,10 @@
     public enum ProtoSyntax
     {
         /// <summary>
+        /// Use the global default
+        /// </summary>
+        Default = -1,
+        /// <summary>
         /// https://developers.google.com/protocol-buffers/docs/proto
         /// </summary>
         Proto2 = 0,

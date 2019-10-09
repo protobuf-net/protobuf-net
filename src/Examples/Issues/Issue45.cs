@@ -23,7 +23,7 @@ namespace Examples.Issues
             Type type = assembly.GetType("LateLoaded.Foo");
             Assert.NotNull(type); //, "Resolve type");
 
-            object obj = Activator.CreateInstance(type);
+            object obj = Activator.CreateInstance(type, nonPublic: true);
             const string EXPECTED = "Some value";
             type.GetProperty("BaseProp").SetValue(obj, EXPECTED, null);
 

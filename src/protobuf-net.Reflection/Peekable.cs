@@ -19,7 +19,7 @@ namespace ProtoBuf.Reflection
         public T Previous => _prev;
         public bool Consume()
         {
-            bool haveData = _havePeek || Peek(out T val);
+            bool haveData = _havePeek || Peek(out T _);
             _prev = _peek;
             _havePeek = false;
             return haveData;

@@ -31,8 +31,10 @@ namespace ProtoBuf.unittest.Meta
             model.Add(typeof(ISomeInterface), false).Add("Foo").ConstructType = typeof(SomeClass2);
             model.Add(typeof(SomeClass), false).Add("SomeProperty");
 
-            var orig = new SomeClass();
-            orig.SomeProperty = new SomeClass2();
+            var orig = new SomeClass
+            {
+                SomeProperty = new SomeClass2()
+            };
             orig.SomeProperty.Foo = 123;
             var clone = (SomeClass)model.DeepClone(orig);
             Assert.Equal(123, clone.SomeProperty.Foo);

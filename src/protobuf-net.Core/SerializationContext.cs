@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 
 namespace ProtoBuf
 {
@@ -9,7 +10,7 @@ namespace ProtoBuf
     {
         private bool frozen;
         internal void Freeze() { frozen = true; }
-        private void ThrowIfFrozen() { if (frozen) throw new InvalidOperationException("The serialization-context cannot be changed once it is in use"); }
+        private void ThrowIfFrozen() { if (frozen) ThrowHelper.ThrowInvalidOperationException("The serialization-context cannot be changed once it is in use"); }
         private object context;
         /// <summary>
         /// Gets or sets a user-defined object containing additional information about this serialization/deserialization operation.
@@ -55,12 +56,13 @@ namespace ProtoBuf
         /// </summary>
         public static implicit operator SerializationContext (System.Runtime.Serialization.StreamingContext ctx)
         {
-            SerializationContext result = new SerializationContext();
+            SerializationContext result = new SerializationContext
+            {
+                Context = ctx.Context,
+                State = ctx.State
+            };
 
-            result.Context = ctx.Context;
-            result.State = ctx.State;
-
-			return result;
+            return result;
         }
     }
 

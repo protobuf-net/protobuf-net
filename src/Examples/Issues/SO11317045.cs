@@ -53,7 +53,7 @@ namespace Examples.Issues
                 Enumerable.Range(2000, 3999).Select(v => (byte)v).ToArray(),
             };
 
-            var stream = new MemoryStream();
+            using var stream = new MemoryStream();
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
 #if DEBUG // this is only available in debug builds; if set, an exception is
@@ -81,7 +81,7 @@ namespace Examples.Issues
             NamedProtoInclude.Foo foo = new NamedProtoInclude.Bar();
             var clone = Serializer.DeepClone(foo);
 
-            Assert.IsType<NamedProtoInclude.Bar>(foo);
+            Assert.IsType<NamedProtoInclude.Bar>(clone);
         }
 
     }

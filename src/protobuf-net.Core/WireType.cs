@@ -1,4 +1,7 @@
-﻿namespace ProtoBuf
+﻿using System;
+using System.ComponentModel;
+
+namespace ProtoBuf
 {
     /// <summary>
     /// Indicates the encoding used to represent an individual value in a protobuf stream
@@ -11,9 +14,16 @@
         None = -1,
 
         /// <summary>
-        /// Base-128 variant-length encoding
+        /// Base-128 variable-length encoding
         /// </summary>
-        Variant = 0,
+        [Obsolete("This is an embarrassing typo... sorry; see also: Varint")]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        Variant = Varint, // fun fact: by defining Variant first, ToString prefers Varint!
+
+        /// <summary>
+        /// Base-128 variable-length encoding
+        /// </summary>
+        Varint = 0,
 
         /// <summary>
         /// Fixed-length 8-byte encoding
@@ -42,11 +52,21 @@
 
         /// <summary>
         /// This is not a formal wire-type in the "protocol buffers" spec, but
-        /// denotes a variant integer that should be interpreted using
+        /// denotes a varint that should be interpreted using
+        /// zig-zag semantics (so -ve numbers aren't a significant overhead)
+        /// </summary>
+        [Obsolete("This is an embarrassing typo... sorry; see also: SignedVarint")]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        SignedVariant = SignedVarint, // see fun fact above
+
+        /// <summary>
+        /// This is not a formal wire-type in the "protocol buffers" spec, but
+        /// denotes a varint that should be interpreted using
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
 #pragma warning disable RCS1130 // Bitwise operation on enum without Flags attribute.
-        SignedVariant = Variant | (1 << 3),
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        SignedVarint = Varint | (1 << 3),
 #pragma warning restore RCS1130 // Bitwise operation on enum without Flags attribute.
     }
 }

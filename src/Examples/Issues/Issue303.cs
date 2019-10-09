@@ -39,7 +39,7 @@ message vegetable {
 }
 ",
 
- model.GetSchema(null)
+ model.GetSchema(null, ProtoSyntax.Proto2)
 
 );
         }
@@ -93,7 +93,7 @@ message vegetable {
 }
 ",
 
- model.GetSchema(null)
+ model.GetSchema(null, ProtoSyntax.Proto2)
 
 );
         }
@@ -116,7 +116,7 @@ message cat {
 }
 ",
 
-                model.GetSchema(typeof(Animal))
+                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2)
 
                 );
         }
@@ -139,7 +139,7 @@ message cat {
 }
 ",
 
-                model.GetSchema(typeof(Animal))
+                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2)
 
                 );
         }

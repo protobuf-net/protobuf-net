@@ -1,5 +1,7 @@
-﻿using ProtoBuf.Meta;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace ProtoBuf
@@ -12,43 +14,63 @@ namespace ProtoBuf
         /// <param name="dest">The destination stream</param>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
-        [Obsolete(UseStateAPI, false)]
+        [Obsolete(ProtoReader.PreferStateAPI, false)]
         public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext context = null)
-            => Create(out _, dest, model, context);
+            => StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
 
-        /// <summary>
-        /// Creates a new writer against a stream
-        /// </summary>
-        /// <param name="dest">The destination stream</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="state">Writer state</param>
-        public static ProtoWriter Create(out State state, Stream dest, TypeModel model, SerializationContext context = null)
+        partial struct State
         {
-            state = default;
-            return new StreamProtoWriter(dest, model, context);
+            /// <summary>
+            /// Creates a new writer against a stream
+            /// </summary>
+            /// <param name="dest">The destination stream</param>
+            /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
+            /// <param name="context">Additional context about this serialization operation</param>
+            public static State Create(Stream dest, TypeModel model, SerializationContext context = null)
+            {
+                var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
+                return new State(writer);
+            }
         }
+
         private class StreamProtoWriter : ProtoWriter
         {
-            protected internal override State DefaultState() => default;
+            protected internal override State DefaultState() => new State(this);
 
             private Stream dest;
             private int flushLock;
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
-            internal StreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
-                : base(model, context)
+            private StreamProtoWriter() { }
+            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
             {
-                if (dest == null) throw new ArgumentNullException(nameof(dest));
-                if (!dest.CanWrite) throw new ArgumentException("Cannot write to stream", nameof(dest));
-                //if (model == null) throw new ArgumentNullException("model");
-                this.dest = dest;
-                ioBuffer = BufferPool.GetBuffer();
+                var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
+                obj.Init(model, context, true);
+                if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+                if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
+                //if (model == null) ThrowHelper.ThrowArgumentNullException("model");
+                obj.dest = dest;
+                obj.ioBuffer = BufferPool.GetBuffer();
+                return obj;
             }
+
+            internal override void Init(TypeModel model, SerializationContext context, bool impactCount)
+            {
+                base.Init(model, context, impactCount);
+                ioIndex = 0;
+                flushLock = 0;
+            }
+
             protected private override void Dispose()
             {
                 base.Dispose();
+                Pool<StreamProtoWriter>.Put(this);
+            }
+
+            protected private override void Cleanup()
+            {
+                base.Cleanup();
                 // importantly, this does **not** own the stream, and does not dispose it
                 dest = null;
                 BufferPool.ReleaseBufferToPool(ref ioBuffer);
@@ -56,7 +78,7 @@ namespace ProtoBuf
 
             private static void IncrementedAndReset(int length, StreamProtoWriter writer)
             {
-                Helpers.DebugAssert(length >= 0);
+                Debug.Assert(length >= 0);
                 writer.ioIndex += length;
                 writer.Advance(length);
                 writer.WireType = WireType.None;
@@ -109,7 +131,7 @@ namespace ProtoBuf
                 {
                     // writing data that is bigger than the buffer (and the buffer
                     // isn't currently locked due to a sub-object needing the size backfilled)
-                    Flush(ref state); // commit any existing data from the buffer
+                    state.Flush(); // commit any existing data from the buffer
                                       // now just write directly to the underlying stream
                     dest.Write(data, offset, length);
                     // since we've flushed offset etc is 0, and remains
@@ -131,7 +153,7 @@ namespace ProtoBuf
                 {
                     // writing data that is bigger than the buffer (and the buffer
                     // isn't currently locked due to a sub-object needing the size backfilled)
-                    Flush(ref state); // commit any existing data from the buffer
+                    state.Flush(); // commit any existing data from the buffer
                                       // now just write directly to the underlying stream
                     foreach(var chunk in data)
                     {
@@ -168,7 +190,7 @@ namespace ProtoBuf
                 DemandSpace(expectedBytes, this, ref state);
                 int actualBytes = UTF8.GetBytes(value, 0, value.Length, ioBuffer, ioIndex);
                 ioIndex += actualBytes;
-                Helpers.DebugAssert(expectedBytes == actualBytes);
+                Debug.Assert(expectedBytes == actualBytes);
             }
 
             private static void WriteUInt32ToBuffer(uint value, byte[] buffer, int index)
@@ -192,7 +214,7 @@ namespace ProtoBuf
                 ioIndex += 8;
             }
 
-            private protected override int ImplWriteVarint64(ref State state, ulong value)
+            internal override int ImplWriteVarint64(ref State state, ulong value)
             {
                 DemandSpace(10, this, ref state);
                 int count = 0;
@@ -236,7 +258,7 @@ namespace ProtoBuf
                 if (flushLock == 0)
                 {
                     // flush the buffer and write to the underlying stream instead
-                    Flush(ref state);
+                    state.Flush();
                     while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
                     {
                         dest.Write(buffer, 0, bytesRead);
@@ -279,7 +301,8 @@ namespace ProtoBuf
                         IncrementedAndReset(4, this); // leave 4 space (rigid) for length
                         return token;
                     default:
-                        throw CreateException(this);
+                        state.ThrowInvalidSerializationOperation();
+                        return default;
                 }
             }
 
@@ -334,13 +357,14 @@ namespace ProtoBuf
                         }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(style));
+                        ThrowHelper.ThrowArgumentOutOfRangeException(nameof(style));
+                        break;
                 }
                 // and this object is no longer a blockage - also flush if sensible
                 const int ADVISORY_FLUSH_SIZE = 1024;
                 if (--flushLock == 0 && ioIndex >= ADVISORY_FLUSH_SIZE)
                 {
-                    Flush(ref state);
+                    state.Flush();
                 }
             }
         }

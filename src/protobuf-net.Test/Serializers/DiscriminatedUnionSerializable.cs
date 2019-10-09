@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Xunit;
 
-namespace ProtoBuf.Serializers
+namespace ProtoBuf.unittest.Serializers
 {
     public class DiscriminatedUnionSerializable
     {
@@ -11,13 +11,11 @@ namespace ProtoBuf.Serializers
         public void CanSerializeTypeThatUsesNakedDiscriminatedUnions()
         {
             var bf = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                bf.Serialize(ms, new TypeThatUsesNakedDiscriminatedUnions());
-                ms.Position = 0;
-                var obj = bf.Deserialize(ms);
-                Assert.IsType<TypeThatUsesNakedDiscriminatedUnions>(obj);
-            }
+            using var ms = new MemoryStream();
+            bf.Serialize(ms, new TypeThatUsesNakedDiscriminatedUnions());
+            ms.Position = 0;
+            var obj = bf.Deserialize(ms);
+            Assert.IsType<TypeThatUsesNakedDiscriminatedUnions>(obj);
         }
 
         [Serializable]
