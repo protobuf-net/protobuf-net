@@ -17,6 +17,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 ## 2.4.1
 
 - fixes for .NET Core 3, thanks @szehetner
+- (this build deliberately *does not* update package dependencies, to reduce impact)
 
 ## v2.4.0
 
