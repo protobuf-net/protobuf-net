@@ -146,7 +146,7 @@ message MySurrogate {
             Assert.Equal(@"syntax = ""proto2"";
 package Examples;
 
-message List_MyNonSurrogate {
+message List_MySurrogate {
    repeated MySurrogate items = 1;
 }
 message MySurrogate {
