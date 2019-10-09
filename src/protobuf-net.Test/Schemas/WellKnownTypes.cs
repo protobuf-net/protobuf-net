@@ -209,7 +209,7 @@ namespace ProtoBuf.Schemas
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
         }
         private void Log(string message) => _log?.WriteLine(message);
-        private ITestOutputHelper _log;
+        private readonly ITestOutputHelper _log;
         public WellKnownTypes(ITestOutputHelper log) : this() => _log = log;
 
 

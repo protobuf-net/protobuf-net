@@ -27,7 +27,8 @@ namespace ProtoBuf.Meta
                 if (x == null) return -1;
                 if (y == null) return 1;
 
-                return string.Compare(x.GetSchemaTypeName(), y.GetSchemaTypeName(), StringComparison.Ordinal);
+                var callstack = new HashSet<Type>();
+                return string.Compare(x.GetSchemaTypeName(callstack), y.GetSchemaTypeName(callstack), StringComparison.Ordinal);
             }
         }
         /// <summary>
@@ -210,57 +211,68 @@ namespace ProtoBuf.Meta
             return this;
         }
 
-        internal string GetSchemaTypeName()
+        internal string GetSchemaTypeName(HashSet<Type> callstack)
         {
-            if (surrogate != null) return model[surrogate].GetSchemaTypeName();
-
-            if (!string.IsNullOrEmpty(name)) return name;
-
-            string typeName = Type.Name;
-            if (Type.IsArray) return GetArrayName(Type.GetElementType());
-            if (Type.IsGenericType)
+            callstack ??= new HashSet<Type>();
+            if (!callstack.Add(Type)) return Type.Name; // recursion detected; give up
+            try
             {
-                var sb = new StringBuilder(typeName);
-                int split = typeName.IndexOf('`');
-                if (split >= 0) sb.Length = split;
-                foreach (Type arg in Type.GetGenericArguments())
+                if (surrogate != null) return model[surrogate].GetSchemaTypeName(callstack);
+
+                if (!string.IsNullOrEmpty(name)) return name;
+
+                string typeName = Type.Name;
+
+                if (Type.IsArray) return GetArrayName(Type.GetElementType());
+                if (Type.IsGenericType)
                 {
-                    sb.Append('_');
-                    Type tmp = arg;
-                    bool isKnown = model.IsDefined(tmp);
-                    MetaType mt;
-                    if (isKnown && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
+                    var sb = new StringBuilder(typeName);
+                    int split = typeName.IndexOf('`');
+                    if (split >= 0) sb.Length = split;
+                    foreach (Type arg in Type.GetGenericArguments())
                     {
-                        sb.Append(mt.GetSchemaTypeName());
+                        sb.Append('_');
+                        Type tmp = arg;
+                        bool isKnown = model.IsDefined(tmp);
+                        MetaType mt;
+                        if (isKnown && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
+                        {
+                            sb.Append(mt.GetSchemaTypeName(callstack));
+                        }
+                        else if (tmp.IsArray)
+                        {
+                            sb.Append(GetArrayName(tmp.GetElementType()));
+                        }
+                        else
+                        {
+                            //try a speculative add
+                            mt = null;
+                            try { mt = model.Add(tmp); }
+                            catch { }
+                            if (mt != null) sb.Append(mt.GetSchemaTypeName(callstack));
+                            else sb.Append(tmp.Name); // give up
+                            sb.Append(tmp.Name);
+                        }
                     }
-                    else if (tmp.IsArray)
-                    {
-                        sb.Append(GetArrayName(tmp.GetElementType()));
-                    }
-                    else
-                    {
-                        // try a speculative add
-                        mt = null;
-                        try { mt = model.Add(tmp); }
-                        catch { }
-                        if (mt != null) sb.Append(mt.GetSchemaTypeName());
-                        else sb.Append(tmp.Name); // give up
-                    }
+                    return sb.ToString();
                 }
-                return sb.ToString();
+
+                return typeName;
+
+                string GetArrayName(Type elementType)
+                {
+                    // Cannot use Name of array, since that's not a valid protobuf
+                    // name.
+                    // No need to check for nesting/array rank here. If that's invalid
+                    // other parts of the schema generator will throw.
+                    MetaType mt;
+                    var name = (model.IsDefined(elementType) && (mt = model[elementType]) != null) ? mt.GetSchemaTypeName(callstack) : elementType.Name;
+                    return "Array_" + name;
+                }
             }
-
-            return typeName;
-
-            string GetArrayName(Type elementType)
+            finally
             {
-                // Cannot use Name of array, since that's not a valid protobuf
-                // name.
-                // No need to check for nesting/array rank here. If that's invalid
-                // other parts of the schema generator will throw.
-                MetaType mt;
-                var name = (model.IsDefined(elementType) && (mt = model[elementType]) != null) ? mt.GetSchemaTypeName() : elementType.Name;
-                return "Array_" + name;
+                callstack.Remove(Type);
             }
         }
 
@@ -1721,10 +1733,11 @@ namespace ProtoBuf.Meta
 
             var repeated = model.TryGetRepeatedProvider(Type);
 
+            var callstack = new HashSet<Type>(); // for recursion detection
             if (repeated != null)
             {
                 
-                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
 
                 if (repeated.IsValidProtobufMap(model))
                 {
@@ -1748,7 +1761,7 @@ namespace ProtoBuf.Meta
             { // key-value-pair etc
                 if (ResolveTupleConstructor(Type, out MemberInfo[] mapping) != null)
                 {
-                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                     for (int i = 0; i < mapping.Length; i++)
                     {
                         Type effectiveType;
@@ -1777,7 +1790,7 @@ namespace ProtoBuf.Meta
 
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
-                NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
+                NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
 
                 if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
@@ -1839,7 +1852,7 @@ namespace ProtoBuf.Meta
             else
             {
                 ValueMember[] fieldsArr = GetFields();
-                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
@@ -1931,7 +1944,7 @@ namespace ProtoBuf.Meta
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
                     string[] fieldNames = new string[subTypeArr.Length];
                     for(int i = 0; i < subTypeArr.Length;i++)
-                        fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName();
+                        fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName(callstack);
 
                     string fieldName = "subtype";
                     while (Array.IndexOf(fieldNames, fieldName) >= 0)
