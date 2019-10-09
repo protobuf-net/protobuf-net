@@ -176,6 +176,8 @@ namespace ProtoBuf.Compiler
             var mt = _model[typeof(T)];
             if (mt is null) return false;
             if (mt.SerializerType is object) return false;
+
+            if (_model.TryGetRepeatedProvider(mt.Type) != null) return false;
             return true;
         }
     }

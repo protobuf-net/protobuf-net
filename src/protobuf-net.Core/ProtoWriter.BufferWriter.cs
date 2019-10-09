@@ -172,7 +172,7 @@ namespace ProtoBuf
                 return state.LocalWriteVarint32(value);
             }
 
-            private protected override int ImplWriteVarint64(ref State state, ulong value)
+            internal override int ImplWriteVarint64(ref State state, ulong value)
             {
                 if (state.RemainingInCurrent < 10) GetBuffer(ref state);
                 return state.LocalWriteVarint64(value);

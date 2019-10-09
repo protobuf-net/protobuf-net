@@ -214,7 +214,7 @@ namespace ProtoBuf
                 ioIndex += 8;
             }
 
-            private protected override int ImplWriteVarint64(ref State state, ulong value)
+            internal override int ImplWriteVarint64(ref State state, ulong value)
             {
                 DemandSpace(10, this, ref state);
                 int count = 0;

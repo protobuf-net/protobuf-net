@@ -4,9 +4,10 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Guid>
+    partial class PrimaryTypeProvider : ISerializer<Guid>, ISerializer<Guid?>
     {
         SerializerFeatures ISerializer<Guid>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
+        SerializerFeatures ISerializer<Guid?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         private static
 #if !DEBUG
             readonly
@@ -22,6 +23,11 @@ namespace ProtoBuf.Internal
         }
 
         private const int FieldGuidLow = 1, FieldGuidHigh = 2;
+        Guid? ISerializer<Guid?>.Read(ref ProtoReader.State state, Guid? value)
+            => ((ISerializer<Guid>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<Guid?>.Write(ref ProtoWriter.State state, Guid? value)
+            => ((ISerializer<Guid>)this).Write(ref state, value.Value);
+
         Guid ISerializer<Guid>.Read(ref ProtoReader.State state, Guid value)
         {
             ulong low = 0, high = 0;

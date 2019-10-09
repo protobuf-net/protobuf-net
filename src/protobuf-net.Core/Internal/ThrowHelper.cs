@@ -86,7 +86,7 @@ namespace ProtoBuf.Internal
             => throw new NotSupportedException("tracked objects and featured related to stream rewriting are not supported on " + obj.GetType().Name);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowNestedMapKeysValues()
-            => throw new NotSupportedException("Repeated keys/values (lists, dictionaries, etc - as keys/values) are not currently supported; this worked in v2, so: I'll get to it!");
+        internal static void ThrowNestedDataNotSupported(Type declaringType)
+            => throw new NotSupportedException($"Nested or jagged lists, arrays and maps are not supported: {declaringType.NormalizeName()}");
     }
 }

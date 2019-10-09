@@ -173,11 +173,11 @@ namespace ProtoBuf.unittest.Meta
         public void CanSerializeUnknownEnum()
         {
             var model = RuntimeTypeModel.Create();
-            model.AutoAddMissingTypes = false;
+
             Assert.True(model.CanSerialize(typeof(EnumWithThings)));
-            Assert.True(DynamicStub.CanSerialize(typeof(EnumWithThings), null, out var features));
+            Assert.True(DynamicStub.CanSerialize(typeof(EnumWithThings), model, out var features));
             Assert.Equal(SerializerFeatures.CategoryScalar, features.GetCategory());
-            Assert.True(DynamicStub.CanSerialize(typeof(EnumWithThings?), null, out features));
+            Assert.True(DynamicStub.CanSerialize(typeof(EnumWithThings?), model, out features));
             Assert.Equal(SerializerFeatures.CategoryScalar, features.GetCategory());
 
             using var ms = new MemoryStream();
@@ -186,8 +186,8 @@ namespace ProtoBuf.unittest.Meta
             var writeState = ProtoWriter.State.Create(ms, null);
             try
             {
-                Assert.True(DynamicStub.TrySerializeAny(1, WireType.Varint.AsFeatures(), typeof(EnumWithThings), null, ref writeState, EnumWithThings.HazThis));
-                Assert.True(DynamicStub.TrySerializeAny(2, WireType.Varint.AsFeatures(), typeof(EnumWithThings?), null, ref writeState, EnumWithThings.HazThis));
+                Assert.True(DynamicStub.TrySerializeAny(1, WireType.Varint.AsFeatures(), typeof(EnumWithThings), model, ref writeState, EnumWithThings.HazThis));
+                Assert.True(DynamicStub.TrySerializeAny(2, WireType.Varint.AsFeatures(), typeof(EnumWithThings?), model, ref writeState, EnumWithThings.HazThis));
                 writeState.Close();
             }
             catch
@@ -206,12 +206,12 @@ namespace ProtoBuf.unittest.Meta
             {
                 object val = null;
                 Assert.Equal(1, readState.ReadFieldHeader());
-                Assert.True(DynamicStub.TryDeserialize(ObjectScope.Scalar, typeof(EnumWithThings), null, ref readState, ref val));
+                Assert.True(DynamicStub.TryDeserialize(ObjectScope.Scalar, typeof(EnumWithThings), model, ref readState, ref val));
                 Assert.Equal(typeof(EnumWithThings), val.GetType());
 
                 val = null;
                 Assert.Equal(2, readState.ReadFieldHeader());
-                Assert.True(DynamicStub.TryDeserialize(ObjectScope.Scalar, typeof(EnumWithThings?), null, ref readState, ref val));
+                Assert.True(DynamicStub.TryDeserialize(ObjectScope.Scalar, typeof(EnumWithThings?), model, ref readState, ref val));
                 Assert.Equal(typeof(EnumWithThings), val.GetType());
                 val = null;
 

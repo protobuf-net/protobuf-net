@@ -4,6 +4,7 @@ using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace Examples.Issues
 {
@@ -84,12 +85,55 @@ namespace Examples.Issues
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
+            model.Add(typeof(E));
             TestArray(model);
             model.Compile("ShouldSerializeArrayOfEnums", "ShouldSerializeArrayOfEnums.dll");
             PEVerify.AssertValid("ShouldSerializeArrayOfEnums.dll");
             model.CompileInPlace();
             TestArray(model);
             TestArray(model.Compile());
+
+            var schema = model.GetSchema(typeof(E[]));
+            Assert.Equal(@"syntax = ""proto3"";
+package Examples.Issues;
+
+message Array_E {
+   repeated E items = 1;
+}
+enum E {
+   V0 = 0;
+   V1 = 1;
+   V2 = 2;
+}
+", schema);
+        }
+
+        [Fact]
+        public void ShouldSerializeListOfEnums()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(E));
+            TestList(model);
+            model.Compile("ShouldSerializeListOfEnums", "ShouldSerializeListOfEnums.dll");
+            PEVerify.AssertValid("ShouldSerializeListOfEnums.dll");
+            model.CompileInPlace();
+            TestList(model);
+            TestList(model.Compile());
+
+            var schema = model.GetSchema(typeof(List<E>));
+            Assert.Equal(@"syntax = ""proto3"";
+package Examples.Issues;
+
+enum E {
+   V0 = 0;
+   V1 = 1;
+   V2 = 2;
+}
+message List_E {
+   repeated E items = 1;
+}
+", schema);
         }
 
         private static void TestArray(TypeModel model)
@@ -98,6 +142,15 @@ namespace Examples.Issues
             Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
             Program.CheckBytes(value, model, "0A-03-00-01-02");
             var clone = (E[]) model.DeepClone(value);
+            Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
+            value.SequenceEqual(clone);
+        }
+        private static void TestList(TypeModel model)
+        {
+            var value = new List<E> { E.V0, E.V1, E.V2 };
+            Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
+            Program.CheckBytes(value, model, "0A-03-00-01-02");
+            var clone = (List<E>)model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
             value.SequenceEqual(clone);
         }

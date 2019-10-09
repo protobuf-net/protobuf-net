@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Diagnostics;
 using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Meta
 {
@@ -119,6 +120,10 @@ namespace ProtoBuf.Meta
             FieldNumber = fieldNumber;
             MemberType = memberType ?? throw new ArgumentNullException(nameof(memberType));
             ItemType = itemType;
+            if (defaultType == null && itemType != null)
+            {   // reasonable default
+                defaultType = memberType;
+            }
             DefaultType = defaultType;
 
             this.model = model ?? throw new ArgumentNullException(nameof(model));
@@ -351,33 +356,6 @@ namespace ProtoBuf.Meta
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
-        internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
-        {
-            dictionaryType = MemberType;
-            if (TypeHelper.ResolveUniqueEnumerableT(dictionaryType, out var pairType))
-            {
-                if (pairType.IsGenericType && pairType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-                {
-                    var targs = pairType.GetGenericArguments();
-                    keyType = targs[0];
-                    valueType = targs[1];
-                    return true;
-                }
-            }
-            keyType = valueType = default;
-            return false;
-        }
-
-        private bool IgnoreList(Type type)
-        {
-            if (type != null && model != null)
-            {
-                int index = model.FindOrAddAuto(type, false, true, false);
-                if (index >= 0 && model[type].IgnoreListHandling) return true;
-            }
-            return false;
-        }
-
         private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
@@ -386,42 +364,34 @@ namespace ProtoBuf.Meta
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 var member = backingMember ?? Member;
                 IRuntimeProtoSerializerNode ser;
+
+                var repeated = model.TryGetRepeatedProvider(MemberType);
                 
-                if (ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType) && !IgnoreList(dictionaryType))
+                if (repeated != null)
                 {
-                    var concreteType = DefaultType;
-                    if (concreteType == null && MemberType.IsClass)
+                    if (repeated.IsMap)
                     {
-                        concreteType = MemberType;
-                    }
-                    var keySer = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
 #if FEAT_DYNAMIC_REF
-                    if (!AsReference)
-                    {
-                        AsReference = MetaType.GetAsReferenceDefault(valueType);
-                    }
+                        if (!AsReference)
+                        {
+                            AsReference = MetaType.GetAsReferenceDefault(valueType);
+                        }
 #endif
-                    var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
+                        repeated.ResolveMapTypes(out var keyType, out var valueType);
+                        _ = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
+                        _ = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
 
-                    WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
-                    if (!IsMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
-                    if (OverwriteList) features |= SerializerFeatures.OptionClearCollection;
-                    ser = MapDecorator.Create(concreteType ?? dictionaryType, keyType, valueType, FieldNumber, features,
-                        keyWireType.AsFeatures(), valueWireType.AsFeatures());
-                }
-                else
-                {
-                    Type finalType = ItemType ?? MemberType;
 
-                    ser = TryGetCoreSerializer(model, dataFormat, finalType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-                    if (ser == null)
-                    {
-                        throw new InvalidOperationException("No serializer defined for type: " + finalType.ToString());
+                        WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
+                        SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
+                        if (!IsMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
+                        if (OverwriteList) features |= SerializerFeatures.OptionClearCollection;
+
+                        
+                        ser = MapDecorator.Create(repeated, keyType, valueType, FieldNumber, features,
+                            keyWireType.AsFeatures(), valueWireType.AsFeatures());
                     }
-
-                    // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
-                    if (ItemType != null)
+                    else
                     {
                         if (SupportNull)
                         {
@@ -432,26 +402,39 @@ namespace ProtoBuf.Meta
 #endif
                         }
 
-                        Type underlyingItemType = SupportNull ? ItemType : Nullable.GetUnderlyingType(ItemType) ?? ItemType;
+                        _ = TryGetCoreSerializer(model, dataFormat, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+                        //Type underlyingItemType = SupportNull ? ItemType : Nullable.GetUnderlyingType(ItemType) ?? ItemType;
 
-                        Debug.Assert(underlyingItemType == ser.ExpectedType
-                            || (ser.ExpectedType == typeof(object) && !underlyingItemType.IsValueType)
-                            , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
+                        //Debug.Assert(underlyingItemType == ser.ExpectedType
+                        //    || (ser.ExpectedType == typeof(object) && !underlyingItemType.IsValueType)
+                        //    , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
+
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
                         if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
 #if FEAT_NULL_LIST_ITEMS
                         if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
 #endif
-                        if (MemberType.IsArray)
-                        {
-                            ser = ArrayDecorator.Create(ItemType, FieldNumber, listFeatures);
-                        }
-                        else
-                        {
-                            ser = ListDecorator.Create(DefaultType ?? MemberType, ItemType, FieldNumber, listFeatures);
-                        }
+                        //if (MemberType.IsArray)
+                        //{
+                        //    ser = ArrayDecorator.Create(ItemType, FieldNumber, listFeatures);
+                        //}
+                        //else
+                        //{
+                        ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures);
+                        //}
                     }
+                }
+                else
+                {
+                    ser = TryGetCoreSerializer(model, dataFormat, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+                    if (ser == null)
+                    {
+                        throw new InvalidOperationException("No serializer defined for type: " + MemberType.ToString());
+                    }
+
+                    // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
+                    
                     else
                     {
                         ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);

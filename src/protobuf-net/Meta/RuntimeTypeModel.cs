@@ -13,6 +13,7 @@ using ProtoBuf.Compiler;
 using ProtoBuf.Internal;
 using System.Linq;
 using System.Collections.Generic;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Meta
 {
@@ -174,6 +175,7 @@ namespace ProtoBuf.Meta
         /// <param name="syntax">The .proto syntax to use</param>
         public override string GetSchema(Type type, ProtoSyntax syntax)
         {
+            syntax = Serializer.GlobalOptions.Normalize(syntax);
             var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;
@@ -217,7 +219,8 @@ namespace ProtoBuf.Meta
                 IEnumerable<MetaType> typesForNamespace = primaryType == null ? types.Cast<MetaType>() : requiredTypes;
                 foreach (MetaType meta in typesForNamespace)
                 {
-                    if (meta.IsList(out _)) continue;
+                    if (TryGetRepeatedProvider(meta.Type) != null) continue;
+
                     string tmp = meta.Type.Namespace;
                     if (!string.IsNullOrEmpty(tmp))
                     {
@@ -273,7 +276,7 @@ namespace ProtoBuf.Meta
                 for (int i = 0; i < metaTypesArr.Length; i++)
                 {
                     MetaType tmp = metaTypesArr[i];
-                    if (tmp != primaryType && tmp.IsList(out _)) continue;
+                    if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
                     tmp.WriteSchema(bodyBuilder, 0, ref imports, syntax);
                 }
             }
@@ -305,12 +308,30 @@ namespace ProtoBuf.Meta
             Duration = 4,
             Protogen = 8
         }
+
+        private void CascadeRepeated(List<MetaType> list, RepeatedSerializerStub provider)
+        {
+            if (provider.IsMap)
+            {
+                provider.ResolveMapTypes(out var key, out var value);
+                TryGetCoreSerializer(list, key);
+                TryGetCoreSerializer(list, value);
+
+                if (!provider.IsValidProtobufMap(this)) // add the KVP
+                    TryGetCoreSerializer(list, provider.ItemType);
+            }
+            else
+            {
+                TryGetCoreSerializer(list, provider.ItemType);
+            }
+        }
         private void CascadeDependents(List<MetaType> list, MetaType metaType)
         {
             MetaType tmp;
-            if (metaType.IsList(out var itemType))
+            var repeated = TryGetRepeatedProvider(metaType.Type);
+            if (repeated != null)
             {
-                TryGetCoreSerializer(list, itemType);
+                CascadeRepeated(list, repeated);
             }
             else
             {
@@ -331,25 +352,25 @@ namespace ProtoBuf.Meta
                 {
                     foreach (ValueMember member in metaType.Fields)
                     {
-                        Type type = member.ItemType;
-                        if (member.IsMap)
+                        repeated = TryGetRepeatedProvider(member.MemberType);
+                        if (repeated != null)
                         {
-                            member.ResolveMapTypes(out _, out _, out type); // don't need key-type
+                            CascadeRepeated(list, repeated);
+                            if (repeated.IsMap && !member.IsMap) // include the KVP, then
+                                TryGetCoreSerializer(list, repeated.ItemType);
                         }
-                        if (type == null) type = member.MemberType;
-                        TryGetCoreSerializer(list, type);
+                        else
+                        {
+                            TryGetCoreSerializer(list, member.MemberType);
+                        }
                     }
                 }
                 foreach (var genericArgument in metaType.GetAllGenericArguments())
                 {
-                    if (genericArgument.IsArray)
+                    repeated = TryGetRepeatedProvider(genericArgument);
+                    if (repeated != null)
                     {
-                        RetrieveArrayListTypes(genericArgument, out itemType, out var _);
-                        VerifyNotNested(genericArgument, itemType);
-                        if (itemType != null)
-                        {
-                            TryGetCoreSerializer(list, itemType);
-                        }
+                        CascadeRepeated(list, repeated);
                     }
                     else
                     {
@@ -375,6 +396,21 @@ namespace ProtoBuf.Meta
                     list.Add(tmp);
                     CascadeDependents(list, tmp);
                 }
+            }
+        }
+
+        private void CheckNotNested(RepeatedSerializerStub repeated)
+        {
+            if (repeated == null) { } // fine
+            else if (repeated.IsMap)
+            {
+                repeated.ResolveMapTypes(out var key, out var value);
+                if (key == repeated.ForType || TryGetRepeatedProvider(key) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
+                if (value == repeated.ForType || TryGetRepeatedProvider(value) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
+            }
+            else
+            {
+                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
             }
         }
 
@@ -561,7 +597,7 @@ namespace ProtoBuf.Meta
                             !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
                         {
-                            if (demand) ThrowUnexpectedType(type);
+                            if (demand) ThrowUnexpectedType(type, this);
                             return key;
                         }
 
@@ -766,22 +802,49 @@ namespace ProtoBuf.Meta
 
         private object GetServicesSlow(Type type)
         {
-            int typeIndex = FindOrAddAuto(type, false, true, false);
-            if (typeIndex >= 0)
+            if (type == null) return null; // GIGO
+            object service;
+            lock (_serviceCache)
+            {   // once more, with feeling
+                service = _serviceCache[type];
+                if (service != null) return service;
+            }
+            service = GetServicesImpl();
+            if (service != null)
             {
-                var mt = (MetaType)types[typeIndex];
-                object service = mt.Serializer;
-                if (service is IExternalSerializer external)
-                {
-                    service = external.Service;
-                }
+                try {
+                    _ = this[type]; // if possible, make sure that we've registered it, so we export a proxy if needed
+                } catch { }
                 lock (_serviceCache)
                 {
                     _serviceCache[type] = service;
                 }
-                return service;
             }
-            return null;
+            return service;
+
+            object GetServicesImpl()
+            {
+                if (type.IsEnum) return EnumSerializers.GetSerializer(type);
+
+                // rule out repeated (this has an internal cache etc)
+                var repeated = TryGetRepeatedProvider(type); // this handles ignores, etc
+                if (repeated != null) return repeated.Serializer;
+
+                int typeIndex = FindOrAddAuto(type, false, true, false);
+                if (typeIndex >= 0)
+                {
+                    var mt = (MetaType)types[typeIndex];
+                    var serializer = mt.Serializer;
+                    if (serializer is IExternalSerializer external)
+                    {
+                        return external.Service;
+                    }
+                    return serializer;
+                }
+
+                return null;
+            }
+            
         }
 
         /// <summary>
@@ -822,8 +885,9 @@ namespace ProtoBuf.Meta
             {
                 // the primary purpose of this is to force the creation of the Serializer
                 MetaType mt = (MetaType)types[i];
-                if (mt.Serializer == null)
-                    throw new InvalidOperationException("No serializer available for " + mt.Type.Name);
+                
+                if (GetServicesSlow(mt.Type) == null) // respects enums, repeated, etc
+                    throw new InvalidOperationException("No serializer available for " + mt.Type.NormalizeName());
             }
         }
 
@@ -1079,7 +1143,7 @@ namespace ProtoBuf.Meta
 
             var serviceType = WriteBasicTypeModel("<Services>"+ typeName, module, typeof(object), true);
             WriteSerializers(scope, serviceType);
-            WriteEnumsAndProxies(scope, serviceType);
+            WriteEnumsAndProxies(serviceType);
 
 #if PLAT_NO_EMITDLL
             var finalServiceType = serviceType.CreateTypeInfo().AsType();
@@ -1136,34 +1200,31 @@ namespace ProtoBuf.Meta
             type.DefineDefaultConstructor(MethodAttributes.Public);
         }
 
-        private void WriteEnumsAndProxies(CompilerContextScope scope, TypeBuilder type)
+        private void WriteEnumsAndProxies(TypeBuilder type)
         {
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
                 var runtimeType = metaType.Type;
+                RepeatedSerializerStub repeated;
                 if (runtimeType.IsEnum)
                 {
-                    var member = EnumSerializer.GetProvider(runtimeType);
-                    AddProxy(type, runtimeType, member);
+                    var member = EnumSerializers.GetProvider(runtimeType);
+                    AddProxy(type, runtimeType, member, true);
                 }
                 else if (metaType.SerializerType != null)
                 {
-                    AddProxy(type, runtimeType, metaType.SerializerType);
+                    AddProxy(type, runtimeType, metaType.SerializerType, false);
+                }
+                else if ((repeated = TryGetRepeatedProvider(runtimeType)) != null)
+                {
+                    AddProxy(type, runtimeType, repeated.Provider, false);
                 }
             }
         }
 
-        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider)
+        internal static MemberInfo GetUnderlyingProvider(MemberInfo provider, Type forType)
         {
-            ILGenerator il = null;
-            ILGenerator Implement()
-            {
-                var iType = typeof(ISerializerProxy<>).MakeGenericType(proxying);
-                building.AddInterfaceImplementation(iType);
-                return il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
-            }
-
             switch (provider)
             {   // properties are really a special-case of methods, via the getter
                 case PropertyInfo property:
@@ -1172,22 +1233,68 @@ namespace ProtoBuf.Meta
                 // types are really a short-hand for the singleton API
                 case Type type when type.IsClass && !type.IsAbstract && type.GetConstructor(Type.EmptyTypes) != null:
                     provider = typeof(SerializerCache).GetMethod(nameof(SerializerCache.Get), BindingFlags.Public | BindingFlags.Static)
-                        .MakeGenericMethod(type, proxying);
+                        .MakeGenericMethod(type, forType);
                     break;
             }
+            return provider;
+        }
 
-            // so all we *actually* need to implement is fields and methods
+        internal static void EmitProvider(MemberInfo provider, ILGenerator il)
+        {
+            // after GetUnderlyingProvider, all we *actually* need to implement is fields and methods
             switch (provider)
             {
                 case FieldInfo field when field.IsStatic:
-                    Implement().Emit(OpCodes.Ldsfld, field);
+                    il.Emit(OpCodes.Ldsfld, field);
                     break;
                 case MethodInfo method when method.IsStatic:
-                    Implement().EmitCall(OpCodes.Call, method, null);
+                    il.EmitCall(OpCodes.Call, method, null);
+                    break;
+                default:
+                    ThrowHelper.ThrowInvalidOperationException($"Invalid provider: {provider}");
                     break;
             }
+        }
 
-            il?.Emit(OpCodes.Ret);
+        internal RepeatedSerializerStub TryGetRepeatedProvider(Type type)
+        {
+            if (type == null) return null;
+            var repeated = RepeatedSerializers.TryGetRepeatedProvider(type);
+            // but take it back if it is explicitly excluded
+            if (repeated != null)
+            { // looks like a list, but double check for IgnoreListHandling
+                int idx = this.FindOrAddAuto(type, false, true, false);
+                if (idx >= 0 && ((MetaType)types[idx]).IgnoreListHandling)
+                {
+                    return null;
+                }
+            }
+            if (repeated == null && type.IsArray && type != typeof(byte[]))
+                ThrowHelper.ThrowNotSupportedException("Multi-dimensional and non-vector arrays are not supported");
+            CheckNotNested(repeated);
+            return repeated;
+        }
+
+        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider, bool includeNullable)
+        {
+            provider = GetUnderlyingProvider(provider, proxying);
+            if (provider != null)
+            {
+                var iType = typeof(ISerializerProxy<>).MakeGenericType(proxying);
+                building.AddInterfaceImplementation(iType);
+                var il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
+                EmitProvider(provider, il);
+                il.Emit(OpCodes.Ret);
+
+                if (includeNullable)
+                {
+                    iType = typeof(ISerializerProxy<>).MakeGenericType(typeof(Nullable<>).MakeGenericType(proxying));
+                    building.AddInterfaceImplementation(iType);
+                    il = CompilerContextScope.Implement(building, iType, "get_" + nameof(ISerializerProxy<string>.Serializer));
+                    EmitProvider(provider, il);
+                    il.Emit(OpCodes.Ret);
+                }
+            }
         }
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
@@ -1198,7 +1305,7 @@ namespace ProtoBuf.Meta
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
                 ILGenerator il;
-                if (runtimeType.IsEnum || metaType.SerializerType is object || metaType.IsList(out _))
+                if (runtimeType.IsEnum || metaType.SerializerType is object || TryGetRepeatedProvider(metaType.Type) != null)
                 {   // we don't implement these
                     continue;
                 }
@@ -1457,86 +1564,6 @@ namespace ProtoBuf.Meta
         public event LockContentedEventHandler LockContended;
 #pragma warning restore RCS1159 // Use EventHandler<T>.
 
-        internal void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType)
-        {
-            if (type == null) return;
-            if (Helpers.GetTypeCode(type) != ProtoTypeCode.Unknown) return; // don't try this[type] for inbuilts
-
-            // handle arrays
-            if (type.IsArray)
-            {
-                RetrieveArrayListTypes(type, out itemType, out defaultType);
-            }
-            else
-            {
-                // if not an array, first check it isn't explicitly opted out
-                if (this[type].IgnoreListHandling) return;
-            }
-
-            // handle lists 
-            if (itemType == null && TypeHelper.ResolveUniqueEnumerableT(type, out var tmp))
-                itemType = tmp;
-
-            // check for nested data (not allowed)
-            VerifyNotNested(type, itemType);
-
-            if (itemType != null && defaultType == null)
-            {
-                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Type.EmptyTypes, true) != null)
-                {
-                    defaultType = type;
-                }
-                if (defaultType == null)
-                {
-                    if (type.IsInterface)
-                    {
-                        Type[] genArgs;
-                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-                        {
-                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
-                        }
-                        else
-                        {
-                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
-                        }
-                    }
-                }
-                // verify that the default type is appropriate
-                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
-            }
-        }
-
-        private void VerifyNotNested(Type type, Type itemType)
-        {
-            if (itemType != null)
-            {
-                Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
-                if (nestedItemType != null)
-                {
-                    TypeModel.ThrowNestedListsNotSupported(type);
-                }
-            }
-        }
-
-        private static void RetrieveArrayListTypes(Type type, out Type itemType, out Type defaultType)
-        {
-            if (type.GetArrayRank() != 1)
-            {
-                throw new NotSupportedException("Multi-dimension arrays are supported");
-            }
-            itemType = type.GetElementType();
-            if (itemType == typeof(byte))
-            {
-                defaultType = itemType = null;
-            }
-            else
-            {
-                defaultType = type;
-            }
-        }
-
         internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
             => GetSchemaTypeName(effectiveType, dataFormat, asReference, dynamicType, ref imports, out _);
         internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
@@ -1702,11 +1729,16 @@ namespace ProtoBuf.Meta
             => CreateForAssembly(assembly, null);
 
         /// <summary>
+        /// Gets a model that automatically compiles modes on a per-assemby basis
+        /// </summary>
+        public static TypeModel AutoCompileModel => AutoCompileTypeModel.Instance;
+
+        /// <summary>
         /// Create a model that serializes all types from an assembly
         /// </summary>
         public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)
         {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
             if (options == null)
             {
                 var obj = (TypeModel)s_assemblyModels[assembly];

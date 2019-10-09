@@ -11,6 +11,7 @@ using ProtoBuf.Internal;
 using System.Collections;
 using System.Linq;
 using System.Globalization;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Compiler
 {
@@ -716,6 +717,8 @@ namespace ProtoBuf.Compiler
             il.Emit(OpCodes.Initobj, type);
             TraceCompile(OpCodes.Initobj + ": " + type);
         }
+
+        internal ILGenerator IL => il;
 
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {

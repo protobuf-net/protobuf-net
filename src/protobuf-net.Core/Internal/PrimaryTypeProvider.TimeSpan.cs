@@ -3,11 +3,27 @@ using System;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<PrimaryTypeProvider.ScaledTicks>, ISerializer<TimeSpan>, ISerializer<DateTime>
+    partial class PrimaryTypeProvider :
+        ISerializer<PrimaryTypeProvider.ScaledTicks>,
+        ISerializer<TimeSpan>, ISerializer<TimeSpan?>,
+        ISerializer<DateTime>, ISerializer<DateTime?>
     {
         SerializerFeatures ISerializer<DateTime>.Features=> SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
+        SerializerFeatures ISerializer<DateTime?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
 
         SerializerFeatures ISerializer<TimeSpan>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
+        SerializerFeatures ISerializer<TimeSpan?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
+
+        TimeSpan? ISerializer<TimeSpan?>.Read(ref ProtoReader.State state, TimeSpan? value)
+            => ((ISerializer<TimeSpan>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<TimeSpan?>.Write(ref ProtoWriter.State state, TimeSpan? value)
+            => ((ISerializer<TimeSpan>)this).Write(ref state, value.Value);
+
+        DateTime? ISerializer<DateTime?>.Read(ref ProtoReader.State state, DateTime? value)
+            => ((ISerializer<DateTime>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<DateTime?>.Write(ref ProtoWriter.State state, DateTime? value)
+            => ((ISerializer<DateTime>)this).Write(ref state, value.Value);
+
         TimeSpan ISerializer<TimeSpan>.Read(ref ProtoReader.State state, TimeSpan value)
             => ((ISerializer<ScaledTicks>)this).Read(ref state, default).ToTimeSpan();
 

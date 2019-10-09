@@ -138,6 +138,7 @@ namespace Examples.Dictionary
             var data = new Dictionary<string, int>();
 
             Serializer.Serialize(ms, data);
+            Assert.Equal(0, ms.Length);
             ms.Position = 0;
             var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
 

@@ -7,6 +7,7 @@ using ProtoBuf.Compiler;
 using System;
 using ProtoBuf.Meta;
 using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.unittest.Meta
 {

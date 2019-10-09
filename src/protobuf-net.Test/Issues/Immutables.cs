@@ -145,6 +145,9 @@ namespace ProtoBuf.Issues
             var testClass = new ImmutableSortedDictionaryTestClass(builder.ToImmutable());
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
+            model.Add(typeof(ImmutableSortedDictionaryTestClass));
+
+            model.CompileAndVerify();
 
             ImmutableSortedDictionaryTestClass testClassClone;
             using (var ms = new MemoryStream())

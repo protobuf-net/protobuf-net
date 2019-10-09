@@ -444,7 +444,7 @@ namespace Examples
             var writer = ProtoWriter.State.Create(ms, null);
             try
             {
-                writer.WriteMap(4, default, keyFeatures, default, data);
+                MapSerializer.CreateDictionary<int,string>().WriteMap(ref writer, 4, default, data, keyFeatures, default);
                 writer.Close();
             }
             catch
@@ -471,8 +471,7 @@ namespace Examples
                     switch(field)
                     {
                         case 4:
-                            if (data == null) data = new Dictionary<int, string>();
-                            reader.ReadMap(default, keyFeatures, default, data);
+                            data = MapSerializer.CreateDictionary<int, string>().ReadMap(ref reader, default, data, keyFeatures, default);
                             break;
                         default:
                             reader.SkipField();

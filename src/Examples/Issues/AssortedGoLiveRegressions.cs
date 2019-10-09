@@ -17,7 +17,7 @@ namespace Examples.Issues
             using (var ms = new MemoryStream())
             {
                 Assert.NotNull(Serializer.Deserialize<Foo>(ms)); //, "Foo");
-                Assert.Null(Serializer.Deserialize<string>(ms)); //, "string");
+                Assert.Equal("", Serializer.Deserialize<string>(ms)); //, "string");
                 Assert.Null(Serializer.Deserialize<DateTime?>(ms)); //, "DateTime?");
                 Assert.Null(Serializer.Deserialize<int?>(ms)); //, "int?");
 

@@ -44,7 +44,7 @@ namespace Examples.Issues
             var model = RuntimeTypeModel.Create();
             var member = model[typeof(Foo)][1];
             Assert.Equal(typeof(Bar), member.ItemType);
-            Assert.Equal(typeof(List<Bar>), member.DefaultType);
+            Assert.Equal(typeof(IList<Bar>), member.DefaultType);
         }
         [Fact]
         public void DefaultToListT()
@@ -114,10 +114,10 @@ namespace Examples.Issues
         public class GoalPlanningModel1
         {
             [ProtoMember(1)]
-            public IEnumerable<ProposedGoal> ProposedGoals { get; set; }
+            public ICollection<ProposedGoal> ProposedGoals { get; set; }
 
             [ProtoMember(2)]
-            public IEnumerable<PublishedGoal> PublishedGoals { get; set; }
+            public ICollection<PublishedGoal> PublishedGoals { get; set; }
         }
 
         // In order to get protobuf-net to serialize it, I have to change the IEnumerabe<T> members to IList<T>.
@@ -137,7 +137,7 @@ namespace Examples.Issues
         public class PublishedGoal { [ProtoMember(1)] public int X { get; set; } }
 
         [Fact]
-        public void TestPlanningModelWithEnumerables()
+        public void TestPlanningModelWithCollections()
         {
             var obj = new GoalPlanningModel1
             {
@@ -149,9 +149,9 @@ namespace Examples.Issues
             model.CompileInPlace();
             Verify(obj, model, "CompileInPlace");
             Verify(obj, model.Compile(), "Compile");
-            var dll = model.Compile("TestPlanningModelWithEnumerables", "TestPlanningModelWithEnumerables.dll");
+            var dll = model.Compile("TestPlanningModelWithCollections", "TestPlanningModelWithCollections.dll");
             Verify(obj, dll, "dll");
-            PEVerify.AssertValid("TestPlanningModelWithEnumerables.dll");
+            PEVerify.AssertValid("TestPlanningModelWithCollections.dll");
         }
 
         [Fact]

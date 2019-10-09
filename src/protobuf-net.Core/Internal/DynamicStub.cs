@@ -216,21 +216,23 @@ namespace ProtoBuf.Internal
 
             protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
             {
-                var ser = IsKnownType(model) ? model.GetSerializer<T>() : TypeModel.TryGetSerializer<T>(null);
+                ISerializer<T> ser;
+                try
+                {
+                    ser = TypeModel.TryGetSerializer<T>(model);
+                }
+                catch // then definitely no!
+                {
+                    features = default;
+                    return false;
+                }
                 if (ser == null)
                 {
                     features = default;
                     return false;
                 }
                 features = ser.Features;
-                return (features.GetCategory()) switch
-                {
-                    SerializerFeatures.CategoryRepeated => true,
-                    SerializerFeatures.CategoryMessageWrappedAtRoot => true,
-                    SerializerFeatures.CategoryMessage => true,
-                    SerializerFeatures.CategoryScalar => true,
-                    _ => false,
-                };
+                return true;
             }
 
             protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)

@@ -1,6 +1,5 @@
 ﻿using ProtoBuf.Internal;
 using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
@@ -10,29 +9,6 @@ namespace ProtoBuf.Serializers
     /// </summary>
     public static class EnumSerializer
     {
-        internal static MemberInfo GetProvider(Type type)
-        {
-            if (type == null) return null;
-            type = Nullable.GetUnderlyingType(type) ?? type;
-            if (!type.IsEnum) return null;
-            string name = Type.GetTypeCode(type) switch
-            {
-                TypeCode.SByte => nameof(CreateSByte),
-                TypeCode.Int16 => nameof(CreateInt16),
-                TypeCode.Int32 => nameof(CreateInt32),
-                TypeCode.Int64 => nameof(CreateInt64),
-                TypeCode.Byte => nameof(CreateByte),
-                TypeCode.UInt16 => nameof(CreateUInt16),
-                TypeCode.UInt32 => nameof(CreateUInt32),
-                TypeCode.UInt64 => nameof(CreateUInt64),
-                _ => null,
-            };
-            if (name == null) return null;
-            return typeof(EnumSerializer).GetMethod(name, BindingFlags.Static | BindingFlags.Public)
-                .MakeGenericMethod(type);
-        }
-
-
         /// <summary>
         /// Create an enum serializer for the provided type, which much be a matching enum
         /// </summary>

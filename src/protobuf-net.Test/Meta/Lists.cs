@@ -1,7 +1,5 @@
 ﻿using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,21 +11,6 @@ namespace ProtoBuf.unittest.Meta
 
     public class PocoListTests
     {
-        [Fact]
-        public void CanFindReadArray() => Assert.NotNull(ArrayDecorator.s_ReadRepeated);
-
-        [Fact]
-        public void CanFindReadCollection() => Assert.NotNull(ListDecorator.s_ReadRepeated);
-
-        [Fact]
-        public void CanFindWriteCollection() => Assert.NotNull(ListDecorator.s_WriteRepeated);
-
-        [Fact]
-        public void CanFindReadMap() => Assert.NotNull(MapDecorator.s_ReadMap);
-
-        [Fact]
-        public void CanFindWriteMap() => Assert.NotNull(MapDecorator.s_WriteMap);
-
         public class TypeWithLists
         {
             public List<string> ListString { get; set; }
@@ -88,7 +71,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType); //, "ParentType");
             Assert.Equal(typeof(string), model[typeof(TypeWithLists)][2].ItemType); //, "ItemType");
             Assert.Equal(typeof(IList<string>), model[typeof(TypeWithLists)][2].MemberType); //, "MemberType");
-            Assert.Equal(typeof(List<string>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
+            Assert.Equal(typeof(IList<string>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
         }
 
         [Fact]
@@ -99,7 +82,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType); //, "ParentType");
             Assert.Equal(typeof(int), model[typeof(TypeWithLists)][2].ItemType); //, "ItemType");
             Assert.Equal(typeof(IList<int>), model[typeof(TypeWithLists)][2].MemberType); //, "MemberType");
-            Assert.Equal(typeof(List<int>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
+            Assert.Equal(typeof(IList<int>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
         }
 
         [Fact]

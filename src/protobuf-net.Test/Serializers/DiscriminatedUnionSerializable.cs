@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Xunit;
 
-namespace ProtoBuf.Serializers
+namespace ProtoBuf.unittest.Serializers
 {
     public class DiscriminatedUnionSerializable
     {

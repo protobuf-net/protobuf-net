@@ -141,7 +141,7 @@ namespace ProtoBuf
             private protected override int ImplWriteVarint32(ref State state, uint value) => MeasureUInt32(value);
 
             [MethodImpl(ProtoReader.HotPath)]
-            private protected override int ImplWriteVarint64(ref State state, ulong value) => MeasureUInt64(value);
+            internal override int ImplWriteVarint64(ref State state, ulong value) => MeasureUInt64(value);
 
             private protected override bool TryFlush(ref State state) => true;
         }

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using Xunit;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
@@ -18,7 +19,7 @@ message Foo {
 }
 ",
 
-        Serializer.GetProto<Foo>()
+        Serializer.GetProto<Foo>(ProtoSyntax.Proto2)
 
         );
         }

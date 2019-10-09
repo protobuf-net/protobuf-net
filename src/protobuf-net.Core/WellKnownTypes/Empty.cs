@@ -4,9 +4,10 @@ using ProtoBuf.WellKnownTypes;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Empty>
+    partial class PrimaryTypeProvider : ISerializer<Empty>, ISerializer<Empty?>
     {
         SerializerFeatures ISerializer<Empty>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+        SerializerFeatures ISerializer<Empty?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         Empty ISerializer<Empty>.Read(ref ProtoReader.State state, Empty value)
         {
             state.SkipAllFields();
@@ -14,6 +15,11 @@ namespace ProtoBuf.Internal
         }
 
         void ISerializer<Empty>.Write(ref ProtoWriter.State state, Empty value) { }
+
+        Empty? ISerializer<Empty?>.Read(ref ProtoReader.State state, Empty? value)
+            => ((ISerializer<Empty>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<Empty?>.Write(ref ProtoWriter.State state, Empty? value)
+            => ((ISerializer<Empty>)this).Write(ref state, value.Value);
     }
 }
 

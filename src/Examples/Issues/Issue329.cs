@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
@@ -36,7 +37,7 @@ namespace Examples.Issues
         [Fact]
         public void FlagsEnumGeneration()
         {
-            string proto = Serializer.GetProto<Foo>();
+            string proto = Serializer.GetProto<Foo>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.Issues;
 

@@ -5,6 +5,7 @@ using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Collections.Generic;
 using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Meta
 {
@@ -216,6 +217,7 @@ namespace ProtoBuf.Meta
             if (!string.IsNullOrEmpty(name)) return name;
 
             string typeName = Type.Name;
+            if (Type.IsArray) return GetArrayName(Type.GetElementType());
             if (Type.IsGenericType)
             {
                 var sb = new StringBuilder(typeName);
@@ -233,12 +235,7 @@ namespace ProtoBuf.Meta
                     }
                     else if (tmp.IsArray)
                     {
-                        // Cannot use Name of array, since that's not a valid protobuf
-                        // name.
-                        sb.Append("Array_");
-                        // No need to check for nesting/array rank here. If that's invalid
-                        // other parts of the schema generator will throw.
-                        sb.Append(tmp.GetElementType().Name);
+                        sb.Append(GetArrayName(tmp.GetElementType()));
                     } else
                     { 
                         sb.Append(tmp.Name);
@@ -248,7 +245,19 @@ namespace ProtoBuf.Meta
             }
 
             return typeName;
+
+            string GetArrayName(Type elementType)
+            {
+                // Cannot use Name of array, since that's not a valid protobuf
+                // name.
+                // No need to check for nesting/array rank here. If that's invalid
+                // other parts of the schema generator will throw.
+                MetaType mt;
+                var name = (model.IsDefined(elementType) && (mt = model[elementType]) != null) ? mt.GetSchemaTypeName() : elementType.Name;
+                return "Array_" + name;
+            }
         }
+
 
         private string name;
 
@@ -307,7 +316,6 @@ namespace ProtoBuf.Meta
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            if (type.IsArray) throw InbuiltType(type);
             IRuntimeProtoSerializerNode coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
@@ -315,6 +323,12 @@ namespace ProtoBuf.Meta
             }
 
             Type = type;
+            if (type.IsArray)
+            {
+                // we'all allow add, to allow proxy generation, but
+                // don't play with it too much!
+                SetFlag(OPTIONS_Frozen, true, false);
+            }
             this.model = model;
         }
 
@@ -361,16 +375,6 @@ namespace ProtoBuf.Meta
                 return _serializer;
             }
         }
-        internal bool IsList(out Type itemType)
-        {
-            if (!IgnoreListHandling)
-            {
-                if (TypeHelper.ResolveUniqueEnumerableT(Type, out itemType))
-                    return true;
-            }
-            itemType = null;
-            return false;
-        }
 
         internal Type GetInheritanceRoot()
         {
@@ -405,7 +409,9 @@ namespace ProtoBuf.Meta
             {
                 return ExternalSerializer.Create(Type, SerializerType);
             }
-            if (IsList(out var itemType))
+            var repeated = model.TryGetRepeatedProvider(Type);
+
+            if (repeated != null)
             {
                 if (surrogate != null)
                 {
@@ -415,9 +421,8 @@ namespace ProtoBuf.Meta
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
-                Type defaultType = null;
-                ResolveListTypes(Type, ref itemType, ref defaultType);
-                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
+                
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, repeated.ItemType, null, DataFormat.Default);
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
@@ -455,7 +460,7 @@ namespace ProtoBuf.Meta
             {
                 foreach (SubType subType in _subTypes)
                 {
-                    if (!subType.DerivedType.IgnoreListHandling && TypeHelper.ResolveUniqueEnumerableT(subType.DerivedType.Type, out _))
+                    if (!subType.DerivedType.IgnoreListHandling && model.TryGetRepeatedProvider(subType.DerivedType.Type) != null)
                     {
                         ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
@@ -1043,22 +1048,9 @@ namespace ProtoBuf.Meta
 
             Type effectiveType = Helpers.GetMemberType(member);
 
-            Type itemType = null;
-            Type defaultType = null;
-
             // check for list types
-            ResolveListTypes(effectiveType, ref itemType, ref defaultType);
-            bool ignoreListHandling = false;
-            // but take it back if it is explicitly excluded
-            if (itemType != null)
-            { // looks like a list, but double check for IgnoreListHandling
-                int idx = model.FindOrAddAuto(effectiveType, false, true, false);
-                if (idx >= 0 && (ignoreListHandling = model[effectiveType].IgnoreListHandling))
-                {
-                    itemType = null;
-                    defaultType = null;
-                }
-            }
+            var repeated = model.TryGetRepeatedProvider(effectiveType);
+            
             AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
@@ -1090,7 +1082,7 @@ namespace ProtoBuf.Meta
                 if (attrib.TryGet("Value", out object tmp)) defaultValue = tmp;
             }
             ValueMember vm = (isEnum || normalizedAttribute.Tag > 0)
-                ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, itemType, defaultType, normalizedAttribute.DataFormat, defaultValue)
+                ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, repeated?.ItemType, null, normalizedAttribute.DataFormat, defaultValue)
                     : null;
             if (vm != null)
             {
@@ -1123,7 +1115,7 @@ namespace ProtoBuf.Meta
                 vm.DynamicType = normalizedAttribute.DynamicType;
 #endif
 
-                vm.IsMap = ignoreListHandling ? false : vm.ResolveMapTypes(out var _, out var _, out var _);
+                vm.IsMap = repeated != null && repeated.IsValidProtobufMap(model);
                 if (vm.IsMap) // is it even *allowed* to be a map?
                 {
                     if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
@@ -1389,7 +1381,8 @@ namespace ProtoBuf.Meta
                 default:
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
-            ResolveListTypes(miType, ref itemType, ref defaultType);
+            var repeated = model.TryGetRepeatedProvider(miType);
+            if (itemType != null && repeated?.ItemType != itemType) ThrowHelper.ThrowInvalidOperationException("Expected item type of " + repeated?.ItemType.NormalizeName());
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
@@ -1398,77 +1391,18 @@ namespace ProtoBuf.Meta
                 if (backingMembers != null && backingMembers.Length == 1 && backingMembers[0] is FieldInfo)
                     backingField = backingMembers[0];
             }
-            ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
+            if (repeated != null)
+            {
+                if (defaultType != null && defaultType != repeated.ForType)
+                    ThrowHelper.ThrowNotSupportedException("Default types for collections are not currently supported; recommendation: initialize the colleciton in the type");
+                defaultType = repeated.ForType;
+            }
+
+            ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, repeated?.ItemType, defaultType, DataFormat.Default, defaultValue);
             if (backingField != null)
                 newField.SetName(mi.Name);
             Add(newField);
             return newField;
-        }
-
-        internal static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType)
-        {
-            if (type == null) return;
-
-            // handle arrays
-            if (type.IsArray)
-            {
-                itemType = type.GetElementType();
-                if (type != itemType.MakeArrayType())
-                {
-                    throw new NotSupportedException("Multi-dimensional arrays are not supported");
-                }
-                
-                if (itemType == typeof(byte))
-                {
-                    defaultType = itemType = null;
-                }
-                else
-                {
-                    defaultType = type;
-                }
-            }
-
-            if (itemType == null && TypeHelper.ResolveUniqueEnumerableT(type, out var t))
-            {
-                itemType = t;
-            }
-
-            // check for nested data (not allowed)
-            if (itemType != null)
-            {
-                Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
-                if (nestedItemType != null)
-                {
-                    TypeModel.ThrowNestedListsNotSupported(type);
-                }
-            }
-
-            if (itemType != null && defaultType == null)
-            {
-                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Type.EmptyTypes, true) != null)
-                {
-                    defaultType = type;
-                }
-                if (defaultType == null)
-                {
-                    if (type.IsInterface)
-                    {
-                        Type[] genArgs;
-                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-                        {
-                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
-                        }
-                        else
-                        {
-                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
-                        }
-                    }
-                }
-                // verify that the default type is appropriate
-                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
-            }
         }
 
         private void Add(ValueMember member)
@@ -1625,7 +1559,7 @@ namespace ProtoBuf.Meta
         public void CompileInPlace()
         {
             var original = Serializer; // might lazily create
-            if (original is ICompiledSerializer || original.ExpectedType.IsEnum || IsList(out _))
+            if (original is ICompiledSerializer || original.ExpectedType.IsEnum || model.TryGetRepeatedProvider(Type) != null)
                 return; // nothing to do
             
             var wrapped = CompiledSerializer.Wrap(original, model);
@@ -1668,7 +1602,11 @@ namespace ProtoBuf.Meta
         public bool IgnoreListHandling
         {
             get { return HasFlag(OPTIONS_IgnoreListHandling); }
-            set { SetFlag(OPTIONS_IgnoreListHandling, value, true); }
+            set
+            {
+                SetFlag(OPTIONS_IgnoreListHandling, value, true);
+                model.ResetServiceCache(Type); // changes how collections are handled
+            }
         }
 
         internal bool Pending
@@ -1775,11 +1713,29 @@ namespace ProtoBuf.Meta
         {
             if (surrogate != null) return; // nothing to write
 
-            if (IsList(out var itemType))
+            var repeated = model.TryGetRepeatedProvider(Type);
+
+            if (repeated != null)
             {
-                string itemTypeName = model.GetSchemaTypeName(itemType, DataFormat.Default, false, false, ref imports);
+                
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
-                NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
+
+                if (repeated.IsValidProtobufMap(model))
+                {
+                    repeated.ResolveMapTypes(out var key, out var value);
+
+                    NewLine(builder, indent + 1).Append("map<")
+                        .Append(model.GetSchemaTypeName(key, DataFormat.Default, false, false, ref imports))
+                        .Append(", ")
+                        .Append(model.GetSchemaTypeName(value, DataFormat.Default, false, false, ref imports))
+                        .Append("> items = 1;");
+                }
+                else
+                {
+                    NewLine(builder, indent + 1).Append("repeated ")
+                        .Append(model.GetSchemaTypeName(repeated.ItemType, DataFormat.Default, false, false, ref imports))
+                        .Append(" items = 1;");
+                }
                 NewLine(builder, indent).Append('}');
             }
             else if (IsAutoTuple)
@@ -1884,7 +1840,8 @@ namespace ProtoBuf.Meta
                     bool hasOption = false;
                     if (member.IsMap)
                     {
-                        member.ResolveMapTypes(out var _, out var keyType, out var valueType);
+                        repeated = model.TryGetRepeatedProvider(member.MemberType);
+                        repeated.ResolveMapTypes(out var keyType, out var valueType);
 
                         var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref imports);
                         schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
