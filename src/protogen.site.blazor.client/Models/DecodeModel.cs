@@ -38,10 +38,10 @@ namespace ProtoBuf.Models
             catch { return null; }
         }
         public int Count => data.Count;
-        public ProtoReader GetReader(out ProtoReader.State state)
+        public ProtoReader GetReader()
         {
             var ms = new MemoryStream(data.Array, data.Offset, data.Count, false);
-            return ProtoReader.Create(out state, ms, null, null);
+            return ProtoReader.Create(ms, null, null);
         }
         public bool ContainsValue => data.Array != null;
         public bool CouldBeProto()
@@ -49,14 +49,14 @@ namespace ProtoBuf.Models
             if (!ContainsValue) return false;
             try
             {
-                using (var reader = GetReader(out var state))
+                using (var reader = GetReader())
                 {
                     int field;
-                    while ((field = reader.ReadFieldHeader(ref state)) > 0)
+                    while ((field = reader.ReadFieldHeader()) > 0)
                     {
-                        reader.SkipField(ref state);
+                        reader.SkipField();
                     }
-                    return reader.GetPosition(ref state) == Count; // MemoryStream will let you seek out of bounds!
+                    return reader.Position == Count; // MemoryStream will let you seek out of bounds!
                 }
             }
             catch
