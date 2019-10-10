@@ -12,9 +12,9 @@
     <div class="form-group">
         <InputSelect id="language" @bind-Value="model.DecodeContentType" class="form-control">
             <option>(select)</option>
-            @foreach (var decodeContentType in Enum.GetValues(typeof(DecodeViewModel.DecodeContentTypeEnum)))
+            @foreach (DecodeViewModel.DecodeContentTypeEnum decodeContentType in Enum.GetValues(typeof(DecodeViewModel.DecodeContentTypeEnum)))
             {
-                <option value="@decodeContentType">@decodeContentType</option>
+                <option value="@decodeContentType" selected="@(decodeContentType == model.DecodeContentType)">@decodeContentType</option>
             }
         </InputSelect>
     </div>

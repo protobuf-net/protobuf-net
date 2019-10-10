@@ -22,7 +22,7 @@ namespace ProtoBuf.Models
         [RegularExpression(@"^[a-zA-Z0-9\+/]*={0,3}$")]
         public string Base64 { get; set; }
         public IFileListEntry File { get; set; }
-        public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.Hexa;
+        public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.File;
 
         private async Task<byte[]> GetData()
         {
