@@ -45,9 +45,12 @@ namespace Examples.Issues
         [Fact]
         public void VerifyCompile()
         {
-            var model = GetModel();
-            model.Compile("SO16838287", "SO16838287.dll");
-            PEVerify.AssertValid("SO16838287.dll");
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                var model = GetModel();
+                model.Compile("SO16838287", "SO16838287.dll");
+                PEVerify.AssertValid("SO16838287.dll");
+            });
         }
 
         static void Execute(TypeModel model, int size, int offset, int count, string caption)

@@ -136,7 +136,7 @@ namespace ProtoBuf.Serializers
                 {
                     // check for nesting
                     known = RepeatedSerializerStub.Create(type, rawProvider);
-                    if (TestIfNested(known))
+                    if (TestIfNestedNotSupported(known))
                     {
                         known = NotSupported(s_NestedNotSupported, known.ForType, known.ItemType);
                     }
@@ -164,17 +164,11 @@ namespace ProtoBuf.Serializers
             s_NestedNotSupported = typeof(RepeatedSerializer).GetMethod(nameof(RepeatedSerializer.CreateNestedDataNotSupported)),
             s_GeneralNotSupported = typeof(RepeatedSerializer).GetMethod(nameof(RepeatedSerializer.CreateNotSupported));
 
-        private static bool TestIfNested(RepeatedSerializerStub repeated)
+        private static bool TestIfNestedNotSupported(RepeatedSerializerStub repeated)
         {
             if (repeated?.ItemType == null) return false; // fine
 
-            if (repeated.IsMap)
-            {
-                repeated.ResolveMapTypes(out var key, out var value);
-                if (key == repeated.ForType || TryGetRepeatedProvider(key) != null) return true;
-                if (value == repeated.ForType || TryGetRepeatedProvider(value) != null) return true;
-            }
-            else
+            if (!repeated.IsMap) // we allow nesting on dictionaries, just not on arrays/lists etc
             {
                 if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) return true;
             }

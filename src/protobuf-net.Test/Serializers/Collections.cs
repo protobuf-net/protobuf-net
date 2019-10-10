@@ -49,6 +49,10 @@ namespace ProtoBuf.Serializers
 
         [InlineData(typeof(CustomEnumerable), typeof(CollectionSerializer<CustomEnumerable, CustomEnumerable, int>))]
 
+        [InlineData(typeof(Dictionary<int[], int>), typeof(DictionarySerializer<int[], int>))]
+        [InlineData(typeof(Dictionary<int, int[]>), typeof(DictionarySerializer<int, int[]>))]
+        [InlineData(typeof(Dictionary<int[], int[]>), typeof(DictionarySerializer<int[], int[]>))]
+
         public void TestWhatProviderWeGet(Type type, Type expected)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
@@ -72,9 +76,6 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(List<int[]>))]
         [InlineData(typeof(int[][]))]
         [InlineData(typeof(List<List<int>>))]
-        [InlineData(typeof(Dictionary<int[], int>))]
-        [InlineData(typeof(Dictionary<int, int[]>))]
-        [InlineData(typeof(Dictionary<int[], int[]>))]
         public void NotSupportedScenarios(Type type)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);

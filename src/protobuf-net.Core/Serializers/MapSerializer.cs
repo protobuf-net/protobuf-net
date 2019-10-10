@@ -53,13 +53,8 @@ namespace ProtoBuf.Serializers
             keySerializer ??= TypeModel.GetSerializer<TKey>(model);
             valueSerializer ??= TypeModel.GetSerializer<TValue>(model);
 
-            var tmp = keySerializer.Features;
-            if (tmp.IsRepeated()) ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
-            keyFeatures.InheritFrom(tmp);
-
-            tmp = valueSerializer.Features;
-            if (tmp.IsRepeated()) ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
-            valueFeatures.InheritFrom(tmp);
+            keyFeatures.InheritFrom(keySerializer.Features);
+            valueFeatures.InheritFrom(valueSerializer.Features);
 
             return new KeyValuePairSerializer<TKey, TValue>(keySerializer, keyFeatures, valueSerializer, valueFeatures);
         }
