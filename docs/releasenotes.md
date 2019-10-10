@@ -24,8 +24,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 Some features are currently incomplete; this may restrict usage for some scenarios:
 
-- serialization callbacks on inheritance models are currently only supported at the root type
-- "map" (dictionary) is only currently usable with public types
+- serialization callbacks on inheritance models are currently only supported at the root type; workaround: `virtual` / `override`
 - tuple-based types and types with surrogates cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
 - null-item retention in lists/arrays is not currently implemented
 - dictionaries with "repeated" data (lists, inner-dictionaries, etc) as the `TKey` or `TValue` are not yet reimplemented
