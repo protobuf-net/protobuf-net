@@ -9,14 +9,12 @@ namespace ProtoBuf.Models
 {
     public class DecodeModel
     {
-        public bool Deep { get; }
-        public DecodeModel(byte[] data, bool deep)  
+        public DecodeModel(byte[] data)
         {
-            Deep = deep;
             Data = data;
 
         }
-     
+
         public ProtoReader GetReader()
         {
             var ms = new MemoryStream(Data, 0, Data.Length, false);

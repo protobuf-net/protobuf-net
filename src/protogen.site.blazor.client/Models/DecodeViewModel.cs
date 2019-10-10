@@ -21,7 +21,6 @@ namespace ProtoBuf.Models
         public string Hexadecimal { get; set; }
         [RegularExpression(@"^[a-zA-Z0-9\+/]*={0,3}$")]
         public string Base64 { get; set; }
-        public bool Recursive { get; set; }
         public IFileListEntry File { get; set; }
         public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.Hexa;
 
@@ -57,7 +56,7 @@ namespace ProtoBuf.Models
         public async Task<DecodeModel> GetDecodeModel()
         {
             var data = await GetData();
-            return (new DecodeModel(data, Recursive));
+            return (new DecodeModel(data));
         }
     }
 }
