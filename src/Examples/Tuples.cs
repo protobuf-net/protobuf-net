@@ -56,12 +56,7 @@ namespace Examples
             Assert.True(clone.Item3);
         }
 
-
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestInt_IntArray_Dictionary()
         {
             var data = new Dictionary<int, int[]> { { 1, new[] { 2, 3 } }, { 4, new[] { 5, 6, 7 } } };

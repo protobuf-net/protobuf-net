@@ -96,13 +96,13 @@ namespace ProtoBuf.Serializers
         ///// <summary>
         ///// If a method would return the same reference as was passed in, return null/nothing instead
         ///// </summary>
-        //OptionReturnNothingWhenUnchanged = 1 << 11,
+        //OptionReturnNothingWhenUnchanged = 1 << n,
 
 #if FEAT_NULL_LIST_ITEMS
         /// <summary>
         /// Nulls in lists should be preserved
         /// </summary>
-        OptionListsSupportNull = 1 << 12,
+        OptionListsSupportNull = 1 << m,
 #endif
 
 
@@ -113,7 +113,7 @@ namespace ProtoBuf.Serializers
     {
         [MethodImpl(ProtoReader.HotPath)]
         public static SerializerFeatures AsFeatures(this WireType wireType)
-            => (SerializerFeatures)wireType | SerializerFeatures.WireTypeSpecified;
+            => wireType == WireType.None ? default : (((SerializerFeatures)wireType & WireTypeMask) | SerializerFeatures.WireTypeSpecified);
 
         const SerializerFeatures CategoryMask = SerializerFeatures.CategoryMessage | SerializerFeatures.CategoryScalar;
 

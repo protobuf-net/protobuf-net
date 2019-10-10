@@ -257,6 +257,12 @@ namespace ProtoBuf.Meta
                 headerBuilder.Append("package ").Append(package).Append(';').AppendLine();
             }
 
+            // check for validity
+            foreach (var mt in requiredTypes)
+            {
+                _ = mt.Serializer; // force errors to happen if there's problems
+            }
+
             var imports = CommonImports.None;
             StringBuilder bodyBuilder = new StringBuilder();
             // sort them by schema-name
@@ -397,21 +403,6 @@ namespace ProtoBuf.Meta
                     list.Add(tmp);
                     CascadeDependents(list, tmp);
                 }
-            }
-        }
-
-        private void CheckNotNested(RepeatedSerializerStub repeated)
-        {
-            if (repeated == null) { } // fine
-            else if (repeated.IsMap)
-            {
-                repeated.ResolveMapTypes(out var key, out var value);
-                if (key == repeated.ForType || TryGetRepeatedProvider(key) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
-                if (value == repeated.ForType || TryGetRepeatedProvider(value) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
-            }
-            else
-            {
-                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
             }
         }
 
@@ -1270,9 +1261,6 @@ namespace ProtoBuf.Meta
                     return null;
                 }
             }
-            if (repeated == null && type.IsArray && type != typeof(byte[]))
-                ThrowHelper.ThrowNotSupportedException("Multi-dimensional and non-vector arrays are not supported");
-            CheckNotNested(repeated);
             return repeated;
         }
 

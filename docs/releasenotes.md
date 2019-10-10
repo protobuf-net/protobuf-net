@@ -27,7 +27,6 @@ Some features are currently incomplete; this may restrict usage for some scenari
 - serialization callbacks on inheritance models are currently only supported at the root type; workaround: `virtual` / `override`
 - tuple-based types and types with surrogates cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
 - null-item retention in lists/arrays is not currently implemented
-- dictionaries with "repeated" data (lists, inner-dictionaries, etc) as the `TKey` or `TValue` are not yet reimplemented
 - custom default types for collection initializers are not yet implemented; a simple workaround is to initialize the collection in the type
 
 There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably

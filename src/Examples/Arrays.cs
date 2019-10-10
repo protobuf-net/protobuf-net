@@ -202,7 +202,7 @@ namespace Examples
         {
             Assert.Throws<NotSupportedException>(() =>
             {
-                Serializer.DeepClone(new ArrayArray());
+                Serializer.DeepClone(new ArrayArray { Values = new string[1][] });
             });
         }
         [Fact]

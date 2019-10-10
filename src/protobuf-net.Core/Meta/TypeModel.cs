@@ -1377,9 +1377,7 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNestedListsNotSupported(Type type)
-        {
-            throw new NotSupportedException("Nested or jagged lists and arrays are not supported: " + (type?.FullName ?? "(null)"));
-        }
+            => ThrowHelper.ThrowNestedDataNotSupported(type);
 
         /// <summary>
         /// Indicates that the given type cannot be constructed; it may still be possible to 

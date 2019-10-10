@@ -45,7 +45,7 @@ namespace Examples.Issues
         [Fact]
         public void VerifyCompile()
         {
-            Program.ExpectFailure<NotSupportedException>(() =>
+            Assert.Throws<NotSupportedException>(() =>
             {
                 var model = GetModel();
                 model.Compile("SO16838287", "SO16838287.dll");

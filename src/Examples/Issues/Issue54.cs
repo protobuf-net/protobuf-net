@@ -15,12 +15,7 @@ namespace Examples.Issues
             public Dictionary<float, List<int>> Lists { get; set; }
         }
 
-
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedLists()
         {
             Test54 obj = new Test54

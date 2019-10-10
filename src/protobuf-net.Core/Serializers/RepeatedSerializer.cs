@@ -12,6 +12,24 @@ namespace ProtoBuf.Serializers
     /// </summary>
     public static partial class RepeatedSerializer
     {
+        /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
+        public static RepeatedSerializer<TCollection, T> CreateNestedDataNotSupported<TCollection, T>()
+        {
+            ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
+            return default;
+        }
+
+        /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
+        public static RepeatedSerializer<TCollection, T> CreateNotSupported<TCollection, T>()
+        {
+            ThrowHelper.ThrowNotSupportedException($"Repeated data of type {typeof(TCollection)} is not supported");
+            return default;
+        }
+
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static RepeatedSerializer<List<T>, T> CreateList<T>()
@@ -312,7 +330,7 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
         }
     }
-
+   
     sealed class ListSerializer<T> : ListSerializer<List<T>, T>
     {
         protected override List<T> Initialize(List<T> values, ISerializationContext context)
