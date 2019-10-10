@@ -11,10 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\lib\monaco-editor\monaco.d.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Properties\PublishProfiles\protogensite20170521042027 - Web Deploy.pubxml" />
   </ItemGroup>
 
@@ -34,14 +30,8 @@
     <ProjectReference Include="..\protogen.site.blazor.client\protogen.site.blazor.client.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\lib\monaco-editor\monaco.d.ts" />
-  </ItemGroup>
 
   <ItemGroup>
-    <None Update=".npmrc">
-      <DependentUpon>package.json</DependentUpon>
-    </None>
     <None Update="protoc.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
