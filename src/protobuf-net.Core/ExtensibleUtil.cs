@@ -20,9 +20,9 @@ namespace ProtoBuf
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
-        internal static IEnumerable<TValue> GetExtendedValues<TValue>(IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
+        internal static IEnumerable<TValue> GetExtendedValues<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
-            foreach (TValue value in GetExtendedValues(TypeModel.DefaultModel, typeof(TValue), instance, tag, format, singleton, allowDefinedTag))
+            foreach (TValue value in GetExtendedValues(model, typeof(TValue), instance, tag, format, singleton, allowDefinedTag))
             {
                 yield return value;
             }
@@ -37,6 +37,7 @@ namespace ProtoBuf
         internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
+            model ??= TypeModel.DefaultModel;
             if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
 #pragma warning disable RCS1227 // Validate arguments correctly.
@@ -83,6 +84,7 @@ namespace ProtoBuf
 
         internal static void AppendExtendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
+            model ??= TypeModel.DefaultModel;
             if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
             if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
 
