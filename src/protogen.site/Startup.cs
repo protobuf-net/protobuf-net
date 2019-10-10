@@ -36,7 +36,6 @@ namespace protogen.site
             app.UseResponseCompression();
             app.UseStaticFiles();
             app.UseClientSideBlazorFiles<ProtoBuf.Startup>();
-            //var dummy = ProtoBuf.Meta.RuntimeTypeModel.Default; //force init of model
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
