@@ -16,6 +16,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
-    <None Include="CodeGenerator.OneOfStub.cs" />
   </ItemGroup>
 </Project>

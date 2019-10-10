@@ -2,8 +2,8 @@
 using Microsoft.CSharp;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
-using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -13,7 +13,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -66,45 +65,7 @@ namespace ProtoBuf.Schemas
                        + "-65-74-45-6C-65-6D-65-6E-74-0C", hex);
         }
 
-        [Fact]
-        public void CanRountripExtensionData()
-        {
-            var obj = new CanRountripExtensionData_WithFields { X = 1, Y = 2};
-            using var ms = new MemoryStream();
-            Serializer.Serialize(ms, obj);
-            var a = BitConverter.ToString(ms.ToArray());
-            ms.Position = 0;
-            var raw = Serializer.Deserialize<CanRountripExtensionData_WithoutFields>(ms);
-            ms.Position = 0;
-            ms.SetLength(0);
-            Serializer.Serialize(ms, raw);
-            var b = BitConverter.ToString(ms.ToArray());
-
-            Assert.Equal(a, b);
-
-            var extData = raw.ExtensionData;
-            Assert.NotEqual(0, extData?.Length ?? 0);
-
-            extData = raw.ExtensionData;
-            Assert.NotEqual(0, extData?.Length ?? 0);
-        }
-        [ProtoContract]
-        private class CanRountripExtensionData_WithFields
-        {
-            [ProtoMember(1)]
-            public int X { get; set; }
-            [ProtoMember(2)]
-            public int Y { get; set; }
-        }
-        [ProtoContract]
-        private class CanRountripExtensionData_WithoutFields : Extensible
-        {
-            public byte[] ExtensionData
-            {
-                get { return DescriptorProto.GetExtensionData(this); }
-                set { DescriptorProto.SetExtensionData(this, value); }
-            }
-        }
+        
 
         [Fact]
         public void BasicCompileClientWorks()
@@ -119,7 +80,6 @@ namespace ProtoBuf.Schemas
         [Fact]
         public void EverythingProtoLangver3()
         {
-            _ = RuntimeTypeModel.Default; // initialize the default model
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "everything.proto";
 
@@ -309,7 +269,7 @@ namespace ProtoBuf.Schemas
             if (exitCode == 0)
             {
                 using var file = File.OpenRead(protocBinPath);
-                set = Serializer.Deserialize<FileDescriptorSet>(file);
+                set = CustomProtogenSerializer.Instance.Deserialize<FileDescriptorSet>(file);
                 protocJson = JsonConvert.SerializeObject(set, Formatting.Indented, jsonSettings);
                 jsonPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.json"));
                 File.WriteAllText(jsonPath, protocJson);
@@ -359,7 +319,7 @@ namespace ProtoBuf.Schemas
             var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
             using (var file = File.Create(parserBinPath))
             {
-                set.Serialize(RuntimeTypeModel.Default, file, false);
+                set.Serialize(CustomProtogenSerializer.Instance, file, false);
             }
 
             var parserJson = set.Serialize((s, _) => JsonConvert.SerializeObject(s, Formatting.Indented, jsonSettings), false);
@@ -411,7 +371,7 @@ namespace ProtoBuf.Schemas
             var parserBytes = File.ReadAllBytes(parserBinPath);
             using (var ms = new MemoryStream(parserBytes))
             {
-                var selfLoad = Serializer.Deserialize<FileDescriptorSet>(ms);
+                var selfLoad = CustomProtogenSerializer.Instance.Deserialize<FileDescriptorSet>(ms);
                 var selfLoadJson = JsonConvert.SerializeObject(selfLoad, Formatting.Indented, jsonSettings);
                 // should still be the same! 
                 Assert.Equal(parserJson, selfLoadJson);
