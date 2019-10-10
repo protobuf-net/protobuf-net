@@ -53,6 +53,7 @@ namespace ProtoBuf.Internal
 
         public void Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> value)
         {
+            // this deals with nulls and implicit zeros
             if (!EqualityComparer<TKey>.Default.Equals(value.Key, default))
             {
                 if (typeof(TKey) == typeof(string) && (string)(object)value.Key == "")
@@ -62,6 +63,8 @@ namespace ProtoBuf.Internal
                     state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
                 }
             }
+
+            // this deals with nulls and implicit zeros
             if (!EqualityComparer<TValue>.Default.Equals(value.Value, default))
             {
                 if (typeof(TValue) == typeof(string) && (string)(object)value.Value == "")

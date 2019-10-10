@@ -12,7 +12,6 @@ namespace ProtoBuf.Serializers
     {
         [Theory]
         [InlineData(typeof(int[]), typeof(VectorSerializer<int>))]
-        [InlineData(typeof(int[,]), null)]
         [InlineData(typeof(List<int>), typeof(ListSerializer<int>))]
         [InlineData(typeof(ListGenericSubclass<int>), typeof(ListSerializer<ListGenericSubclass<int>, int>))]
         [InlineData(typeof(ListNonGenericSubclass), typeof(ListSerializer<ListNonGenericSubclass, int>))]
@@ -64,6 +63,26 @@ namespace ProtoBuf.Serializers
                 Assert.NotNull(ser);
                 Assert.Equal(expected, ser.GetType());
             }
+        }
+
+        [Theory]
+        [InlineData(typeof(int[,]))]
+        [InlineData(typeof(ArraySegment<int>))]
+        [InlineData(typeof(List<int>[]))]
+        [InlineData(typeof(List<int[]>))]
+        [InlineData(typeof(int[][]))]
+        [InlineData(typeof(List<List<int>>))]
+        [InlineData(typeof(Dictionary<int[], int>))]
+        [InlineData(typeof(Dictionary<int, int[]>))]
+        [InlineData(typeof(Dictionary<int[], int[]>))]
+        public void NotSupportedScenarios(Type type)
+        {
+            var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
+            Assert.NotNull(provider);
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                _ = provider.Serializer;
+            });
         }
 
 

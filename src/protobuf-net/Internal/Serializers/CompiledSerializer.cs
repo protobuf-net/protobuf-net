@@ -1,9 +1,8 @@
-﻿using System;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+using System;
 using System.Diagnostics;
 using System.Reflection;
-using ProtoBuf.Internal;
-using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Internal.Serializers
 {

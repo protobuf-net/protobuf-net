@@ -100,7 +100,11 @@ namespace ProtoBuf.Issues
             // HasValidGenericArrayMessageName, for byte arrays
             var typeModel = RuntimeTypeModel.Create();
             var schema = typeModel.GetSchema(null);
-            Assert.Throws<NotSupportedException>( ()=>typeModel.Add(genericArrayType, true) );
+            Assert.Throws<NotSupportedException>( ()=>
+            {
+                typeModel.Add(genericArrayType, true);
+                schema = typeModel.GetSchema(null);
+            });
         }
     }
 

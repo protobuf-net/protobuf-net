@@ -305,11 +305,7 @@ message HazAliasedEnum {
             public Dictionary<int, List<int>> SourceOfProblem { get; set; }
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void ComplexMapShouldNotBreak_Array()
         {
             var obj = new HasEvilDictionary_Array();
@@ -321,11 +317,7 @@ message HazAliasedEnum {
             Assert.Equal("1,2,3", string.Join(",", arr2));
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void ComplexMapShouldNotBreak_List()
         {
             var obj = new HasEvilDictionary_List();

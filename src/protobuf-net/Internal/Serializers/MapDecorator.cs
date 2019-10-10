@@ -11,6 +11,7 @@ namespace ProtoBuf.Internal.Serializers
             SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
         {
             if (provider == null) ThrowHelper.ThrowArgumentNullException(nameof(provider));
+            _ = provider.Serializer; // primes and validates
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(
                 typeof(MapDecorator<,,>).MakeGenericType(provider.ForType, keyType, valueType),
                 new object[] { fieldNumber, features, keyFeatures, valueFeatures, provider });

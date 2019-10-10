@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
 {
@@ -118,7 +119,34 @@ namespace ProtoBuf.Serializers
             var known = (RepeatedSerializerStub)s_knownTypes[type];
             if (known == null)
             {
-                known = RepeatedSerializerStub.Create(type, GetProviderForType(type));
+                var rawProvider = GetProviderForType(type);
+                if (rawProvider == null)
+                {   
+                    if (type.IsArray && type != typeof(byte[]))
+                    {
+                        // multi-dimensional
+                        known = NotSupported(s_GeneralNotSupported, type, type.GetElementType());
+                    }
+                    else
+                    {   // not repeated
+                        known = RepeatedSerializerStub.Empty;
+                    }
+                }
+                else
+                {
+                    // check for nesting
+                    known = RepeatedSerializerStub.Create(type, rawProvider);
+                    if (TestIfNested(known))
+                    {
+                        known = NotSupported(s_NestedNotSupported, known.ForType, known.ItemType);
+                    }
+                    else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ArraySegment<>))
+                    {   // will need to think about this, especially for ArraySegment<bytes>
+                        known = NotSupported(s_GeneralNotSupported, known.ForType, known.ItemType);
+                    }
+                }
+
+
                 lock (s_knownTypes)
                 {
                     s_knownTypes[type] = known;
@@ -126,6 +154,31 @@ namespace ProtoBuf.Serializers
             }
 
             return known.IsEmpty ? null : known;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static RepeatedSerializerStub NotSupported(MethodInfo kind, Type collectionType, Type itemType)
+            => RepeatedSerializerStub.Create(collectionType, kind.MakeGenericMethod(collectionType, itemType));
+
+        static readonly MethodInfo
+            s_NestedNotSupported = typeof(RepeatedSerializer).GetMethod(nameof(RepeatedSerializer.CreateNestedDataNotSupported)),
+            s_GeneralNotSupported = typeof(RepeatedSerializer).GetMethod(nameof(RepeatedSerializer.CreateNotSupported));
+
+        private static bool TestIfNested(RepeatedSerializerStub repeated)
+        {
+            if (repeated?.ItemType == null) return false; // fine
+
+            if (repeated.IsMap)
+            {
+                repeated.ResolveMapTypes(out var key, out var value);
+                if (key == repeated.ForType || TryGetRepeatedProvider(key) != null) return true;
+                if (value == repeated.ForType || TryGetRepeatedProvider(value) != null) return true;
+            }
+            else
+            {
+                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) return true;
+            }
+            return false;
         }
 
         private static MemberInfo GetProviderForType(Type type)
@@ -136,12 +189,9 @@ namespace ProtoBuf.Serializers
             {
                 // the fun bit here is checking we mean a *vector*
                 if (type == typeof(byte[])) return null; // special-case, "bytes"
-                return s_Array.Resolve(type, type.GetElementType().MakeArrayType());
-            }
 
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ArraySegment<>))
-            {   // will need to think about this, especially for ArraySegment<bytes>
-                ThrowHelper.ThrowNotSupportedException("ArraySegment<T> support is incomplete");
+                var vectorType = type.GetElementType().MakeArrayType();
+                return vectorType == type ? s_Array.Resolve(type, vectorType) : null;
             }
 
             MemberInfo bestMatch = null;

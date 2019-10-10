@@ -282,13 +282,13 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void ArrayOfListShouldThrow()
         {
-            try {
+            Assert.Throws<NotSupportedException>(() =>
+            {
                 var model = RuntimeTypeModel.Create();
                 model.Add(typeof(NastyType), true).Add(1, nameof(NastyType.ArrayOfList));
                 model.CompileInPlace();
-                    Assert.Equal(42, 0); // fail
-            }
-            catch (NotSupportedException) { }
+                Assert.Equal(42, 0); // fail
+            });
         }
         [Fact]
         public void BasicListIsFine()

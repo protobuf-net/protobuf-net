@@ -11,6 +11,7 @@ namespace ProtoBuf.Serializers
     internal sealed class RepeatedSerializerStub
     {
         internal static readonly RepeatedSerializerStub Empty = new RepeatedSerializerStub(null, null);
+
         public MemberInfo Provider { get; }
         public bool IsMap { get; }
         internal bool IsValidProtobufMap(RuntimeTypeModel model)
@@ -57,14 +58,20 @@ namespace ProtoBuf.Serializers
         [MethodImpl(MethodImplOptions.NoInlining)]
         private object CreateSerializer()
         {
-            var provider = RuntimeTypeModel.GetUnderlyingProvider(Provider, ForType);
-            _serializer = provider switch
+            try
             {
-                FieldInfo field when field.IsStatic => field.GetValue(null),
-                MethodInfo method when method.IsStatic => method.Invoke(null, null),
-                _ => null,
-            };
-            return _serializer;
+                _serializer = RuntimeTypeModel.GetUnderlyingProvider(Provider, ForType) switch
+                {
+                    FieldInfo field when field.IsStatic => field.GetValue(null),
+                    MethodInfo method when method.IsStatic => method.Invoke(null, null),
+                    _ => null,
+                };
+                return _serializer;
+            }
+            catch(TargetInvocationException tie) when (tie.InnerException != null)
+            {
+                throw tie.InnerException;
+            }
         }
 
         internal void EmitProvider(CompilerContext ctx) => EmitProvider(ctx.IL);

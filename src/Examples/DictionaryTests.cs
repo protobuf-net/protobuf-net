@@ -182,11 +182,7 @@ namespace Examples.Dictionary
 etc
          */
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedConcreteConcreteDictionary()
         {
             Dictionary<string, Dictionary<string, string>> data = new Dictionary<string, Dictionary<string, string>>
@@ -208,11 +204,7 @@ etc
             Assert.Equal(expected, hex);
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedInterfaceInterfaceDictionary()
         {
             IDictionary<string, IDictionary<string, string>> data = new Dictionary<string, IDictionary<string, string>>
@@ -225,11 +217,7 @@ etc
             CheckNested(clone, "clone");
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedInterfaceConcreteDictionary()
         {
             IDictionary<string, Dictionary<string, string>> data = new Dictionary<string, Dictionary<string, string>>
@@ -241,11 +229,8 @@ etc
             var clone = Serializer.DeepClone(data);
             CheckNested(clone, "clone");
         }
-#if KNOWN_GAPS
+
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedConcreteInterfaceDictionary()
         {
             Dictionary<string, IDictionary<string, string>> data = new Dictionary<string, IDictionary<string, string>>
