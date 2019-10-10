@@ -300,8 +300,8 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
-                => ImplReadBytes(ref state, new Span<byte>(target.Array, target.Offset, target.Count), target.Count);
+            private protected override void ImplReadBytes(ref State state, Span<byte> target)
+                => ImplReadBytes(ref state, target, target.Length);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ReadOnlySpan<byte> Consume(ref State state, int bytes)

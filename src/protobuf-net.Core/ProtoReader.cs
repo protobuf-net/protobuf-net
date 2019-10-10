@@ -2,9 +2,11 @@
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ProtoBuf
@@ -24,7 +26,22 @@ namespace ProtoBuf
         private protected abstract string ImplReadString(ref State state, int bytes);
         private protected abstract void ImplSkipBytes(ref State state, long count);
         private protected abstract int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value);
-        private protected abstract void ImplReadBytes(ref State state, ArraySegment<byte> target);
+        private protected abstract void ImplReadBytes(ref State state, Span<byte> target);
+        private protected virtual void ImplReadBytes(ref State state, ReadOnlySequence<byte> target)
+        {
+            if (target.IsSingleSegment)
+            {
+                ImplReadBytes(ref state, MemoryMarshal.AsMemory(target.First).Span);
+            }
+            else
+            {
+                foreach (var segment in target)
+                {
+                    ImplReadBytes(ref state, MemoryMarshal.AsMemory(segment).Span);
+                }
+            }
+        }
+
         private protected abstract bool IsFullyConsumed(ref State state);
 
         private TypeModel _model;
