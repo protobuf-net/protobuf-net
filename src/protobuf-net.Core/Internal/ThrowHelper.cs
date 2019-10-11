@@ -91,6 +91,6 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowInvalidPackedOperationException(WireType wireType, Type type)
-            => throw new ProtoPackedException($"Invalid wire-type for packed encoding: {wireType}; processing {type.NormalizeName()}");
+            => throw new ProtoException($"Invalid wire-type for packed encoding: {wireType}; processing {type.NormalizeName()}");
     }
 }

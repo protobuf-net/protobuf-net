@@ -21,11 +21,4 @@ namespace ProtoBuf
         /// <summary>Creates a new ProtoException instance.</summary>
         protected ProtoException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
-
-    [Serializable]
-    internal sealed class ProtoPackedException : ProtoException
-    {
-        /// <summary>Creates a new ProtoPackedException instance.</summary>
-        public ProtoPackedException(string message) : base(message) { }
-    }
 }
