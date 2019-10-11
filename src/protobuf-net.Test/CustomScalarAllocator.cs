@@ -1,9 +1,12 @@
 ﻿using Pipelines.Sockets.Unofficial.Arenas;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using ProtoBuf.unittest;
 using System;
 using System.Buffers;
 using System.IO;
+using System.Linq;
+using System.Text;
 using Xunit;
 
 namespace ProtoBuf
@@ -11,19 +14,27 @@ namespace ProtoBuf
     public class CustomScalarAllocator
     {
         [Fact]
+        public void CustomScalarIL()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add<HazRegularString>();
+            model.Add<HazBlobish>();
+            model.CompileAndVerify();
+        }
+
+        [Fact]
         public void CustomBlobLikeReader()
         {
             using var ms = new MemoryStream();
-            Serializer.Serialize(ms,
-                new HazRegularString { Value = "a ☁ ☂ bc ☃ ☄" });
+            var s = "a ☁ ☂ bc ☃ ☄";
+            Serializer.Serialize(ms, new HazRegularString { Value = s });
+            var expected = Encoding.UTF8.GetBytes(s);
             ms.Position = 0;
 
             using var arena = new Arena<byte>();
             var ctx = new MyCustomContext(arena);
-            using (var reader = ProtoReader.State.Create(ms, RuntimeTypeModel.Default, ctx))
-            {
-                
-            }
+            var blobish = Serializer.Deserialize<HazBlobish>(ms, context: ctx);
+            Assert.True(blobish.Value.Payload.ToArray().SequenceEqual(expected));
         }
 
         [ProtoContract]

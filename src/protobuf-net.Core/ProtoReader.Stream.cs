@@ -261,7 +261,9 @@ namespace ProtoBuf
                 // at this point, we know that len <= available
                 if (len > 0)
                 {   // still need data, but we have enough buffered
-                    new Span<byte>(_ioBuffer, _ioIndex, _available).CopyTo(target);
+                    new Span<byte>(_ioBuffer, _ioIndex, len).CopyTo(target);
+                    _available -= len;
+                    _ioIndex += len;
                 }
             }
 
