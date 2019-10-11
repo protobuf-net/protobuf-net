@@ -195,7 +195,7 @@ namespace ProtoBuf
                     {
                         int take = Math.Min(s.RemainingInCurrent, target.Length);
                         reader.Peek(ref s, take).CopyTo(target);
-                        target = target.Slice(available);
+                        target = target.Slice(take);
                         available += take;
                     }
 
@@ -211,6 +211,7 @@ namespace ProtoBuf
                     }
 
                     if (available != 10) span = span.Slice(0, available);
+
                     return ProtoReader.State.TryParseUInt64Varint(span, 0, out val);
                 }
             }
@@ -331,7 +332,7 @@ namespace ProtoBuf
                 unsafe int ViaStackAlloc(ref State s, Read32VarintMode m, out uint val)
                 {
                     byte* stack = stackalloc byte[10]; // because otherwise compiler is convinced we're screwing up
-                    Span<byte> span = new Span<byte>(stack, 10);
+                    Span<byte> span = new Span<byte>(stack, 10); // (see CS8352 / CS8350)
                     Span<byte> target = span;
                     var currentBuffer = Peek(ref s, Math.Min(target.Length, s.RemainingInCurrent));
                     currentBuffer.CopyTo(target);
