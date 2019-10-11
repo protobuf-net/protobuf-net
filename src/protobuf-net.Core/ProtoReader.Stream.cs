@@ -1,9 +1,11 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -236,11 +238,9 @@ namespace ProtoBuf
                 _ioIndex += 8;
                 return result;
             }
-            private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
+            private protected override void ImplReadBytes(ref State state, Span<byte> target)
             {
-                var value = target.Array;
-                var offset = target.Offset;
-                var len = target.Count;
+                var len = target.Length;
                 // value is now sized with the final length, and (if necessary)
                 // contains the old data up to "offset"
                 Advance(len); // assume success
@@ -249,9 +249,9 @@ namespace ProtoBuf
                     if (_available > 0)
                     {
                         // copy what we *do* have
-                        Buffer.BlockCopy(_ioBuffer, _ioIndex, value, offset, _available);
+                        new Span<byte>(_ioBuffer, _ioIndex, _available).CopyTo(target);
                         len -= _available;
-                        offset += _available;
+                        target = target.Slice(_available);
                         _ioIndex = _available = 0; // we've drained the buffer
                     }
                     //  now refill the buffer (without overflowing it)
@@ -261,9 +261,9 @@ namespace ProtoBuf
                 // at this point, we know that len <= available
                 if (len > 0)
                 {   // still need data, but we have enough buffered
-                    Buffer.BlockCopy(_ioBuffer, _ioIndex, value, offset, len);
-                    _ioIndex += len;
+                    new Span<byte>(_ioBuffer, _ioIndex, len).CopyTo(target);
                     _available -= len;
+                    _ioIndex += len;
                 }
             }
 

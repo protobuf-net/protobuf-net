@@ -21,6 +21,17 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// Creates a new instance from a protocol-buffer stream
+        /// </summary>
+        /// <typeparam name="T">The type to be created.</typeparam>
+        /// <returns>A new, initialized instance.</returns>
+        public static T Deserialize<T>(Stream source, T value = default, SerializationContext context = default, long length = ProtoReader.TO_EOF)
+        {
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            return state.DeserializeRootImpl<T>(value);
+        }
+
+        /// <summary>
 		/// Creates a new instance from a protocol-buffer stream
 		/// </summary>
 		/// <param name="type">The type to be created.</param>
@@ -33,7 +44,7 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Writes a protocol-buffer representation of the given type from the supplied buffer.
+        /// Creates a new instance from a protocol-buffer stream
         /// </summary>
         public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
@@ -42,7 +53,7 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Writes a protocol-buffer representation of the given type from the supplied buffer.
+        /// Creates a new instance from a protocol-buffer stream
         /// </summary>
         public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {

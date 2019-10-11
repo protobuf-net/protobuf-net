@@ -6,7 +6,7 @@ namespace ProtoBuf
     /// <summary>
     /// Additional information about a serialization operation
     /// </summary>
-    public sealed class SerializationContext
+    public class SerializationContext
     {
         private bool frozen;
         internal void Freeze() { frozen = true; }

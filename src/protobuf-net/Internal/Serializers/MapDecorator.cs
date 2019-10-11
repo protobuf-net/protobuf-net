@@ -59,8 +59,8 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadValue(loc);
             ctx.LoadValue((int)_keyFeatures);
             ctx.LoadValue((int)_valueFeatures);
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
+            ctx.LoadSelfAsService<ISerializer<TKey>, TKey>();
+            ctx.LoadSelfAsService<ISerializer<TValue>, TValue>();
             ctx.EmitCall(method);
         }
         public void EmitRead(CompilerContext ctx, Local valueFrom)
@@ -74,8 +74,8 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadValue(loc);
             ctx.LoadValue((int)_keyFeatures);
             ctx.LoadValue((int)_valueFeatures);
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
+            ctx.LoadSelfAsService<ISerializer<TKey>, TKey>();
+            ctx.LoadSelfAsService<ISerializer<TValue>, TValue>();
             ctx.EmitCall(method);
         }
     }

@@ -2,9 +2,11 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -261,7 +263,7 @@ namespace ProtoBuf
                         if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
                         break;
                     default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        ThrowHelper.ThrowInvalidPackedOperationException(WireType, typeof(T));
                         break;
                 }
             }
@@ -314,33 +316,89 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public byte[] AppendBytes(byte[] value)
             {
+                switch (_reader.WireType)
                 {
-                    switch (_reader.WireType)
+                    case WireType.String:
+                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        _reader.WireType = WireType.None;
+                        if (len == 0) return value ?? EmptyBlob;
+                        int offset;
+                        if (value == null || value.Length == 0)
+                        {
+                            offset = 0;
+                            value = new byte[len];
+                        }
+                        else
+                        {
+                            offset = value.Length;
+                            byte[] tmp = new byte[value.Length + len];
+                            Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
+                            value = tmp;
+                        }
+                        _reader.ImplReadBytes(ref this, new Span<byte>(value, offset, len));
+                        return value;
+                    //case WireType.Varint:
+                    //    return new byte[0];
+                    default:
+                        ThrowWireTypeException();
+                        return default;
+                }
+            }
+
+            /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be empty); supported wire-types: String
+            /// </summary>
+            /// <remarks>A custom allocator may be employed, in which case the sequence it returns will be treated as mutable</remarks>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public ReadOnlySequence<byte> AppendBytes(ReadOnlySequence<byte> value, 
+                Func<ISerializationContext, int, ReadOnlySequence<byte>> allocator = default)
+            {
+                switch (_reader.WireType)
+                {
+                    case WireType.String:
+                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        _reader.WireType = WireType.None;
+                        if (len == 0) return value;
+
+                        ReadOnlySequence<byte> newData;
+                        int newLength = checked((int)(value.Length + len));
+                        if (allocator == null)
+                        {
+                            newData = new ReadOnlySequence<byte>(new byte[newLength]);
+                        }
+                        else
+                        {
+                            newData = allocator(Context, newLength)
+                                .Slice(0, newLength); // don't trust the allocator to get the length right!
+                        }
+
+                        // copy the old data (if any) into the new result
+                        if (!value.IsEmpty) CopySequence(from: value, to: newData);
+                        // read the data into the new part
+                        _reader.ImplReadBytes(ref this, newData.Slice(start: value.Length));
+                        return newData;
+                    default:
+                        ThrowWireTypeException();
+                        return default;
+                }
+
+                static void CopySequence(in ReadOnlySequence<byte> from, in ReadOnlySequence<byte> to)
+                {
+                    if (to.IsSingleSegment)
                     {
-                        case WireType.String:
-                            int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
-                            _reader.WireType = WireType.None;
-                            if (len == 0) return value ?? EmptyBlob;
-                            int offset;
-                            if (value == null || value.Length == 0)
-                            {
-                                offset = 0;
-                                value = new byte[len];
-                            }
-                            else
-                            {
-                                offset = value.Length;
-                                byte[] tmp = new byte[value.Length + len];
-                                Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
-                                value = tmp;
-                            }
-                            _reader.ImplReadBytes(ref this, new ArraySegment<byte>(value, offset, len));
-                            return value;
-                        //case WireType.Varint:
-                        //    return new byte[0];
-                        default:
-                            ThrowWireTypeException();
-                            return default;
+                        from.CopyTo(MemoryMarshal.AsMemory(to.First).Span);
+                    }
+                    else
+                    {
+                        if (to.Length < from.Length) ThrowHelper.ThrowInvalidOperationException();
+                        SequencePosition origin = from.Start;
+                        foreach (var segment in to)
+                        {
+                            var target = MemoryMarshal.AsMemory(segment).Span;
+                            var tmp = from.Slice(origin, target.Length);
+                            origin = tmp.End;
+                            tmp.CopyTo(target);
+                        }
                     }
                 }
             }
