@@ -147,6 +147,7 @@ namespace ProtoBuf.Serializers
             where TProvider : class
             => SerializerCache<TProvider, T>.InstanceField;
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static object GetInstance(Type providerType, Type type)
             => typeof(SerializerCache<,>).MakeGenericType(providerType, type)
                     .GetField(nameof(SerializerCache<PrimaryTypeProvider, string>.InstanceField),

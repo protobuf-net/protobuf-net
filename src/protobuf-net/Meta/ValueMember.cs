@@ -403,11 +403,7 @@ namespace ProtoBuf.Meta
                         }
 
                         _ = TryGetCoreSerializer(model, dataFormat, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-                        //Type underlyingItemType = SupportNull ? ItemType : Nullable.GetUnderlyingType(ItemType) ?? ItemType;
 
-                        //Debug.Assert(underlyingItemType == ser.ExpectedType
-                        //    || (ser.ExpectedType == typeof(object) && !underlyingItemType.IsValueType)
-                        //    , $"Wrong type in the tail; expected {ser.ExpectedType}, received {underlyingItemType}");
 
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
@@ -415,14 +411,7 @@ namespace ProtoBuf.Meta
 #if FEAT_NULL_LIST_ITEMS
                         if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
 #endif
-                        //if (MemberType.IsArray)
-                        //{
-                        //    ser = ArrayDecorator.Create(ItemType, FieldNumber, listFeatures);
-                        //}
-                        //else
-                        //{
                         ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures);
-                        //}
                     }
                 }
                 else

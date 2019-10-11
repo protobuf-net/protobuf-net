@@ -73,32 +73,121 @@ namespace ProtoBuf.Internal.Serializers
 
         public override Type ExpectedType => typeof(T);
 
+        private ISerializer<T> _customSerializer;
+        private ISerializer<T> CustomSerializer => MetaType.SerializerType is null ? null : (_customSerializer ?? CreateExternal());
+
+        private ISerializer<T> CreateExternal()
+            => _customSerializer = (ISerializer<T>)SerializerCache.GetInstance(MetaType.SerializerType, typeof(T));
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteMessage<T>((int)(default), TypeHelper<T>.FromObject(value));
+        {
+            var category = GetCategory();
+            switch (category)
+            {
+                case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                case SerializerFeatures.CategoryMessage:
+                    state.WriteMessage<T>(default(SerializerFeatures), TypeHelper<T>.FromObject(value), CustomSerializer);
+                    break;
+                case SerializerFeatures.CategoryScalar:
+                    CustomSerializer.Write(ref state, TypeHelper<T>.FromObject(value));
+                    break;
+                default:
+                    category.ThrowInvalidCategory();
+                    break;
+            }
+        }
+
+        private SerializerFeatures GetCategory()
+        {
+            var custom = CustomSerializer;
+            return custom == null ? SerializerFeatures.CategoryMessage : custom.Features.GetCategory();
+        }
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadMessage<T>(default, TypeHelper<T>.FromObject(value), null);
+        {
+            var category = GetCategory();
+            switch (category)
+            {
+                case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                case SerializerFeatures.CategoryMessage:
+                    return state.ReadMessage<T>(default, TypeHelper<T>.FromObject(value), CustomSerializer);
+                case SerializerFeatures.CategoryScalar:
+                    return CustomSerializer.Read(ref state, TypeHelper<T>.FromObject(value));
+                default:
+                    category.ThrowInvalidCategory();
+                    return default;
+            }
+        }
 
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
-            => SubItemSerializer.EmitWriteMessage<T>(null, WireType.String, ctx, valueFrom);
+        {
+            var category = GetCategory();
+            switch (GetCategory())
+            {
+                case SerializerFeatures.CategoryMessage:
+                case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                    SubItemSerializer.EmitWriteMessage<T>(null, WireType.String, ctx, valueFrom, serializerType: MetaType.SerializerType);
+                    break;
+                case SerializerFeatures.CategoryScalar:
+                    using (var loc = ctx.GetLocalWithValue(typeof(T), valueFrom))
+                    {
+                        EmitLoadCustomSerializer(ctx, MetaType.SerializerType, typeof(T));
+                        ctx.LoadState();
+                        ctx.LoadValue(loc);
+                        ctx.EmitCall(typeof(ISerializer<T>).GetMethod(nameof(ISerializer<T>.Write), BindingFlags.Public | BindingFlags.Instance));
+                    }
+                    break;
+                default:
+                    category.ThrowInvalidCategory();
+                    break;
+
+            }
+        }
 
         public override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            using var tmp = ctx.GetLocalWithValue(typeof(T), valueFrom);
-            // and make sure we have a non-stack-based source
-            SubItemSerializer.EmitReadMessage<T>(ctx, tmp);
+            // make sure we have a non-stack-based source
+            using var loc = ctx.GetLocalWithValue(typeof(T), valueFrom);
+            var category = GetCategory();
+            switch (category)
+            {
+                case SerializerFeatures.CategoryMessage:
+                case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                    SubItemSerializer.EmitReadMessage<T>(ctx, loc, serializerType: MetaType.SerializerType);
+                    break;
+                case SerializerFeatures.CategoryScalar:
+                    EmitLoadCustomSerializer(ctx, MetaType.SerializerType, typeof(T));
+                    ctx.LoadState();
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(typeof(ISerializer<T>).GetMethod(nameof(ISerializer<T>.Read), BindingFlags.Public | BindingFlags.Instance));
+                    break;
+                default:
+                    category.ThrowInvalidCategory();
+                    break;
+
+            }
         }
 
         bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType)
-            => wireType switch {
-                WireType.String => true,
-                WireType.StartGroup => true,
-                _ => false
-            };
+        {
+            switch (GetCategory())
+            {
+                case SerializerFeatures.CategoryMessage:
+                case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                    return wireType switch
+                       {
+                           WireType.String => true,
+                           WireType.StartGroup => true,
+                           _ => false
+                       };
+                default:
+                    return false;
+            }
+        }
+            
 
         void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, CompilerContext ctx, Local valueFrom)
-            => SubItemSerializer.EmitWriteMessage<T>(fieldNumber, wireType, ctx, valueFrom);
+            => SubItemSerializer.EmitWriteMessage<T>(fieldNumber, wireType, ctx, valueFrom, serializerType: MetaType.SerializerType);
     }
 
 
@@ -163,22 +252,21 @@ namespace ProtoBuf.Internal.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }
 
+        protected static void EmitLoadCustomSerializer(CompilerContext ctx, Type serializerType, Type forType)
+        {
+            var provider = RuntimeTypeModel.GetUnderlyingProvider(serializerType, forType);
+            RuntimeTypeModel.EmitProvider(provider, ctx.IL);
+        }
+
         public static void EmitWriteMessage<T>(int? fieldNumber, WireType wireType, CompilerContext ctx, Local value = null,
-            FieldInfo serializer = null, bool applyRecursionCheck = true)
+            FieldInfo serializer = null, bool applyRecursionCheck = true, Type serializerType = null)
         {
             using var tmp = ctx.GetLocalWithValue(typeof(T), value);
             ctx.LoadState();
             if (fieldNumber.HasValue) ctx.LoadValue(fieldNumber.Value);
             ctx.LoadValue((int)(applyRecursionCheck ? default : SerializerFeatures.OptionSkipRecursionCheck));
             ctx.LoadValue(tmp);
-            if (serializer == null)
-            {
-                ctx.LoadSelfAsService<ISerializer<T>, T>();
-            }
-            else
-            {
-                ctx.LoadValue(serializer, checkAccessibility: false);
-            }
+            LoadSerializer<T>(ctx, serializer, serializerType);
             var methodFamily = wireType switch
             {
                 WireType.StartGroup => s_WriteGroup,
@@ -187,7 +275,23 @@ namespace ProtoBuf.Internal.Serializers
             ctx.EmitCall(methodFamily[fieldNumber.HasValue ? 4 : 3].MakeGenericMethod(typeof(T)));
         }
 
-        public static void EmitReadMessage<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null)
+        private static void LoadSerializer<T>(CompilerContext ctx, FieldInfo serializer, Type serializerType)
+        {
+            if (serializerType is object)
+            {
+                EmitLoadCustomSerializer(ctx, serializerType, typeof(T));
+            }
+            else if (serializer is object)
+            {
+                ctx.LoadValue(serializer, checkAccessibility: false);
+            }
+            else
+            {
+                ctx.LoadSelfAsService<ISerializer<T>, T>();
+            }
+        }
+        public static void EmitReadMessage<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null
+            , Type serializerType = null)
         {
             // state.ReadMessage<T>(default, value, serializer);
             ctx.LoadState();
@@ -209,14 +313,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 ctx.LoadValue(value);
             }
-            if (serializer == null)
-            {
-                ctx.LoadSelfAsService<ISerializer<T>, T>();
-            }
-            else
-            {
-                ctx.LoadValue(serializer, checkAccessibility: false);
-            }
+            LoadSerializer<T>(ctx, serializer, serializerType);
             ctx.EmitCall(s_ReadMessage.MakeGenericMethod(typeof(T)));
         }
 
@@ -239,19 +336,20 @@ namespace ProtoBuf.Internal.Serializers
                 && method.GetParameters().Length == 3
              select method).Single();
 
-        protected ISerializerProxy Proxy { get; private set; }
+        protected ISerializerProxy Proxy => MetaType;
+        protected MetaType MetaType { get; private set; }
 
 
-        internal static IRuntimeProtoSerializerNode Create(Type type, ISerializerProxy proxy)
+        internal static IRuntimeProtoSerializerNode Create(Type type, MetaType metaType)
         {
             var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubValueSerializer<>).MakeGenericType(type), nonPublic: true);
-            obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            obj.MetaType = metaType ?? throw new ArgumentNullException(nameof(metaType));
             return (IRuntimeProtoSerializerNode)obj;
         }
-        internal static IRuntimeProtoSerializerNode Create(Type actualType, ISerializerProxy proxy, Type parentType)
+        internal static IRuntimeProtoSerializerNode Create(Type actualType, MetaType metaType, Type parentType)
         {
             var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubTypeSerializer<,>).MakeGenericType(parentType, actualType), nonPublic: true);
-            obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            obj.MetaType = metaType ?? throw new ArgumentNullException(nameof(metaType));
             return (IRuntimeProtoSerializerNode)obj;
         }
     }
