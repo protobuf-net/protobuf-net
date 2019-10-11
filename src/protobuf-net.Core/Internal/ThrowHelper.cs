@@ -88,5 +88,9 @@ namespace ProtoBuf.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNestedDataNotSupported(Type declaringType)
             => throw new NotSupportedException($"Nested or jagged lists, arrays and maps are not supported: {declaringType.NormalizeName()}");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidPackedOperationException(WireType wireType, Type type)
+            => throw new ProtoPackedException($"Invalid wire-type for packed encoding: {wireType}; processing {type.NormalizeName()}");
     }
 }

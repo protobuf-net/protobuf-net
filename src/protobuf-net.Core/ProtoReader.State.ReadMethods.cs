@@ -263,7 +263,7 @@ namespace ProtoBuf
                         if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
                         break;
                     default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        ThrowHelper.ThrowInvalidPackedOperationException(WireType, typeof(T));
                         break;
                 }
             }

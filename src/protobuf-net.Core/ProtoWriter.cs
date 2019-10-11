@@ -194,7 +194,7 @@ namespace ProtoBuf
         /// </summary>
         public SerializationContext Context { get; private set; }
 
-#if DEBUG
+#if DEBUG || TRACK_USAGE
         int _usageCount;
         partial void OnDispose()
         {
@@ -214,6 +214,7 @@ namespace ProtoBuf
             }
         }
 #endif
+
         partial void OnDispose();
         partial void OnInit(bool impactCount);
 

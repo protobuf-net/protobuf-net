@@ -10,7 +10,9 @@ using System.Text;
 using System.Threading;
 using Xunit;
 
-namespace ProtoBuf
+#pragma warning disable IDE0019
+
+namespace ProtoBuf.Test
 {
     public class CustomScalarAllocator
     {
@@ -22,6 +24,25 @@ namespace ProtoBuf
             model.Add<HazRegularString>();
             model.Add<HazBlobish>();
             model.CompileAndVerify(deleteOnSuccess: false);
+        }
+
+        [Fact]
+        public void CustomScalarSchema()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add<HazRegularString>();
+            model.Add<HazBlobish>();
+            var schema = model.GetSchema(null);
+            Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazBlobish {
+   bytes Value = 1;
+}
+message HazRegularString {
+   string Value = 1;
+}
+", schema);
         }
 
         [Fact]
@@ -87,7 +108,7 @@ namespace ProtoBuf
 
         // this is our custom scalar; it has a custom serializer that
         // grabs chunks of memory from a custom allocator
-        [ProtoContract(Serializer = typeof(Blobish.Serializer))]
+        [ProtoContract(Serializer = typeof(Blobish.Serializer), Name = "bytes")]
         public readonly struct Blobish
         {
             public ReadOnlySequence<byte> Payload { get; }

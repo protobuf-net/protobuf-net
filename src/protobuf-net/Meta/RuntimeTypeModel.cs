@@ -283,6 +283,7 @@ namespace ProtoBuf.Meta
                 for (int i = 0; i < metaTypesArr.Length; i++)
                 {
                     MetaType tmp = metaTypesArr[i];
+                    if (tmp.SerializerType is object) continue; // not our concern
                     if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
                     tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax);
                 }

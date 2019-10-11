@@ -218,7 +218,7 @@ namespace ProtoBuf.Serializers
                     expectedLength = Measure(values, serializer, state.Context, wireType);
                     break;
                 default:
-                    ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}; serializing {typeof(TItem).NormalizeName()}");
+                    ThrowHelper.ThrowInvalidPackedOperationException(wireType, typeof(TItem));
                     expectedLength = default;
                     break;
             }

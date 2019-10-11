@@ -53,26 +53,33 @@ namespace ProtoBuf.Internal
 
         public void Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> value)
         {
-            // this deals with nulls and implicit zeros
-            if (!EqualityComparer<TKey>.Default.Equals(value.Key, default))
+            try
             {
-                if (typeof(TKey) == typeof(string) && (string)(object)value.Key == "")
-                { } // don't write empty strings; ugly, but it works
-                else
+                // this deals with nulls and implicit zeros
+                if (!EqualityComparer<TKey>.Default.Equals(value.Key, default))
                 {
-                    state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
+                    if (typeof(TKey) == typeof(string) && (string)(object)value.Key == "")
+                    { } // don't write empty strings; ugly, but it works
+                    else
+                    {
+                        state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
+                    }
+                }
+
+                // this deals with nulls and implicit zeros
+                if (!EqualityComparer<TValue>.Default.Equals(value.Value, default))
+                {
+                    if (typeof(TValue) == typeof(string) && (string)(object)value.Value == "")
+                    { } // don't write empty strings; ugly, but it works
+                    else
+                    {
+                        state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
+                    }
                 }
             }
-
-            // this deals with nulls and implicit zeros
-            if (!EqualityComparer<TValue>.Default.Equals(value.Value, default))
-            {
-                if (typeof(TValue) == typeof(string) && (string)(object)value.Value == "")
-                { } // don't write empty strings; ugly, but it works
-                else
-                {
-                    state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
-                }
+            catch (ProtoPackedException ppe)
+            {   // something very odd is happning, but *very* rarely (always "Issue54"); investigating
+                ThrowHelper.ThrowInvalidOperationException(ppe.Message + $" with features {_keyFeatures}/{_valueFeatures}", ppe); 
             }
         }
     }

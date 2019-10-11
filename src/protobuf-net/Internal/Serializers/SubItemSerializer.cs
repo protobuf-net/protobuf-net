@@ -86,7 +86,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 case SerializerFeatures.CategoryMessageWrappedAtRoot:
                 case SerializerFeatures.CategoryMessage:
-                    state.WriteMessage<T>(default(SerializerFeatures), TypeHelper<T>.FromObject(value), CustomSerializer);
+                    state.WriteMessage<T>(default, TypeHelper<T>.FromObject(value), CustomSerializer);
                     break;
                 case SerializerFeatures.CategoryScalar:
                     CustomSerializer.Write(ref state, TypeHelper<T>.FromObject(value));
