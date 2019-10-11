@@ -469,35 +469,43 @@ namespace ProtoBuf
             /// Writes a byte-array to the stream; supported wire-types: String
             /// </summary>
             public void WriteBytes(byte[] data, int offset, int length)
+                => WriteBytes(new ReadOnlyMemory<byte>(data, offset, length));
+
+            /// <summary>
+            /// Writes a byte-array to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(byte[] data)
+                => WriteBytes(new ReadOnlyMemory<byte>(data));
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(ReadOnlyMemory<byte> data)
             {
                 var writer = _writer;
+                var length = data.Length;
                 switch (writer.WireType)
                 {
                     case WireType.Fixed32:
                         if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
-                        writer.ImplWriteBytes(ref this, data, offset, 4);
+                        writer.ImplWriteBytes(ref this, data);
                         writer.AdvanceAndReset(4);
                         return;
                     case WireType.Fixed64:
                         if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
-                        writer.ImplWriteBytes(ref this, data, offset, 8);
+                        writer.ImplWriteBytes(ref this, data);
                         writer.AdvanceAndReset(8);
                         return;
                     case WireType.String:
                         writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)length) + length);
                         if (length == 0) return;
-                        writer.ImplWriteBytes(ref this, data, offset, length);
+                        writer.ImplWriteBytes(ref this, data);
                         break;
                     default:
                         ThrowInvalidSerializationOperation();
                         break;
                 }
             }
-
-            /// <summary>
-            /// Writes a byte-array to the stream; supported wire-types: String
-            /// </summary>
-            public void WriteBytes(byte[] data) => WriteBytes(data, 0, data.Length);
 
             /// <summary>
             /// Writes an object to the input writer as a root value; if the
@@ -798,7 +806,7 @@ namespace ProtoBuf
                     {
                         if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
                         {
-                            _writer.ImplWriteBytes(ref this, data.Array, data.Offset, data.Count);
+                            _writer.ImplWriteBytes(ref this, new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
                             _writer.Advance(data.Count);
                         }
                         else

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -341,8 +342,8 @@ namespace ProtoBuf
         internal abstract int ImplWriteVarint64(ref State state, ulong value);
         protected private abstract void ImplWriteFixed32(ref State state, uint value);
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
-        protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);
-        protected private abstract void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data);
+        protected private abstract void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data);
+        protected private abstract void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data);
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
         private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);

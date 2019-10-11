@@ -110,7 +110,7 @@ namespace ProtoBuf
                     // could use encoder, but... this is pragmatic
                     var arr = ArrayPool<byte>.Shared.Rent(expectedBytes);
                     UTF8.GetBytes(value, 0, value.Length, arr, 0);
-                    ImplWriteBytes(ref state, arr, 0, expectedBytes);
+                    ImplWriteBytes(ref state, new ReadOnlyMemory<byte>(arr, 0, expectedBytes));
                 }
             }
 
@@ -121,10 +121,10 @@ namespace ProtoBuf
                 state.Init(_writer.GetMemory(128));
             }
 
-            private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
+            private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> bytes)
             {
-                var span = new ReadOnlySpan<byte>(data, offset, length);
-                if (length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
+                var span = bytes.Span;
+                if (bytes.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                 else FallbackWriteBytes(ref state, span);
             }
 

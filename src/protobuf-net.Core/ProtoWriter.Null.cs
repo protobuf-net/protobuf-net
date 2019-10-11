@@ -1,6 +1,7 @@
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -127,7 +128,7 @@ namespace ProtoBuf
                 Advance(bytes);
             }
 
-            private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data) { }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data) { }
 

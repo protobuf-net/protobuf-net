@@ -1,8 +1,10 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -119,12 +121,13 @@ namespace ProtoBuf
             private byte[] ioBuffer;
             private int ioIndex;
 
-            protected private override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
+            protected private override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> bytes)
             {
+                var length = bytes.Length;
                 if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
                 {
                     DemandSpace(length, this, ref state);
-                    Buffer.BlockCopy(data, offset, ioBuffer, ioIndex, length);
+                    bytes.CopyTo(new Memory<byte>(ioBuffer, ioIndex, length));
                     ioIndex += length;
                 }
                 else
@@ -132,10 +135,48 @@ namespace ProtoBuf
                     // writing data that is bigger than the buffer (and the buffer
                     // isn't currently locked due to a sub-object needing the size backfilled)
                     state.Flush(); // commit any existing data from the buffer
-                                      // now just write directly to the underlying stream
-                    dest.Write(data, offset, length);
+                                   // now just write directly to the underlying stream
+
+                    // prefer using the array API, even on .NET Core (for now),
+                    // because many implementations won't have overridden the method yet
+                    if (MemoryMarshal.TryGetArray(bytes, out var segment))
+                    {
+                        dest.Write(segment.Array, segment.Offset, segment.Count);
+                    }
+                    else
+                    {
+#if PLAT_SPAN_OVERLOADS
+                        dest.Write(bytes.Span);
+#else
+                        WriteFallback(bytes.Span, dest);
+#endif
+                    }
                     // since we've flushed offset etc is 0, and remains
                     // zero since we're writing directly to the stream
+                }
+            }
+
+            static void WriteFallback(ReadOnlySpan<byte> bytes, Stream stream)
+            {
+                var buffer = ArrayPool<byte>.Shared.Rent(2048);
+                try
+                {
+                    var target = new Span<byte>(buffer);
+                    var capacity = target.Length;
+                    // add all the chunks of (buffer size)
+                    while (bytes.Length >= capacity)
+                    {
+                        bytes.Slice(0, capacity).CopyTo(target);
+                        stream.Write(buffer, 0, capacity);
+                        bytes = bytes.Slice(start: capacity);
+                    }
+                    // and anything that is left
+                    bytes.CopyTo(target);
+                    stream.Write(buffer, 0, bytes.Length);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
 

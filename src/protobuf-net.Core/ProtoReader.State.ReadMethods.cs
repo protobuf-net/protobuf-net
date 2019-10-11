@@ -346,6 +346,51 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
+            /// </summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public ReadOnlyMemory<byte> AppendBytes(ReadOnlyMemory<byte> value, Func<ISerializationContext, int, Memory<byte>> allocator = default)
+                => AppendBytes(MemoryMarshal.AsMemory(value), allocator);
+
+            /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
+            /// </summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public Memory<byte> AppendBytes(Memory<byte> value, Func<ISerializationContext, int, Memory<byte>> allocator = default)
+            {
+                switch (_reader.WireType)
+                {
+                    case WireType.String:
+                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        _reader.WireType = WireType.None;
+                        if (len == 0) return value;
+
+                        int newLength = checked((int)(value.Length + len));
+                        Memory<byte> newData;
+                        if (allocator == null)
+                        {
+                            newData = new byte[newLength];
+                        }
+                        else
+                        {
+                            newData = allocator(Context, newLength)
+                                .Slice(0, newLength); // don't trust the allocator to get the length right!
+                        }
+
+                        // copy the old data (if any) into the new result
+                        if (!value.IsEmpty) value.CopyTo(newData);
+                        // read the data into the new part
+                        _reader.ImplReadBytes(ref this, newData.Span.Slice(start: value.Length));
+                        return newData;
+                    //case WireType.Varint:
+                    //    return new byte[0];
+                    default:
+                        ThrowWireTypeException();
+                        return default;
+                }
+            }
+
+            /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be empty); supported wire-types: String
             /// </summary>
             /// <remarks>A custom allocator may be employed, in which case the sequence it returns will be treated as mutable</remarks>
