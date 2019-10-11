@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Internal;
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -119,30 +120,38 @@ namespace ProtoBuf.Serializers
             var known = (RepeatedSerializerStub)s_knownTypes[type];
             if (known == null)
             {
-                var rawProvider = GetProviderForType(type);
-                if (rawProvider == null)
-                {   
-                    if (type.IsArray && type != typeof(byte[]))
-                    {
-                        // multi-dimensional
-                        known = NotSupported(s_GeneralNotSupported, type, type.GetElementType());
+                Type genDef;
+                if (type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
+                {
+                    if (genDef == typeof(Span<>) || genDef == typeof(ReadOnlySpan<>))
+                    {   // needs special handling because can't use Span<T> as a TSomething in a Foo<TSomething>
+                        throw new NotSupportedException("Serialization cannot work with [ReadOnly]Span<T>; [ReadOnly]Memory<T> may be enabled later");
                     }
-                    else
-                    {   // not repeated
-                        known = RepeatedSerializerStub.Empty;
-                    }
+                    known = NotSupported(s_GeneralNotSupported, type, type.GetGenericArguments()[0]);
                 }
                 else
                 {
-                    // check for nesting
-                    known = RepeatedSerializerStub.Create(type, rawProvider);
-                    if (TestIfNestedNotSupported(known))
+                    var rawProvider = GetProviderForType(type);
+                    if (rawProvider == null)
                     {
-                        known = NotSupported(s_NestedNotSupported, known.ForType, known.ItemType);
+                        if (type.IsArray && type != typeof(byte[]))
+                        {
+                            // multi-dimensional
+                            known = NotSupported(s_GeneralNotSupported, type, type.GetElementType());
+                        }
+                        else
+                        {   // not repeated
+                            known = RepeatedSerializerStub.Empty;
+                        }
                     }
-                    else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ArraySegment<>))
-                    {   // will need to think about this, especially for ArraySegment<bytes>
-                        known = NotSupported(s_GeneralNotSupported, known.ForType, known.ItemType);
+                    else
+                    {
+                        // check for nesting
+                        known = RepeatedSerializerStub.Create(type, rawProvider);
+                        if (TestIfNestedNotSupported(known))
+                        {
+                            known = NotSupported(s_NestedNotSupported, known.ForType, known.ItemType);
+                        }
                     }
                 }
 
@@ -155,6 +164,17 @@ namespace ProtoBuf.Serializers
 
             return known.IsEmpty ? null : known;
         }
+
+        static readonly Type[] NotSupportedFlavors = new[]
+        {   // see notes in /src/protobuf-net.Test/Serializers/Collections.cs for reasons and roadmap
+            typeof(ArraySegment<>),
+            typeof(Span<>),
+            typeof(ReadOnlySpan<>),
+            typeof(Memory<>),
+            typeof(ReadOnlyMemory<>),
+            typeof(ReadOnlySequence<>),
+            typeof(IMemoryOwner<>),
+        };
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static RepeatedSerializerStub NotSupported(MethodInfo kind, Type collectionType, Type itemType)

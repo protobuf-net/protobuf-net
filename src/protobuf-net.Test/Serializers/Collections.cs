@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -70,12 +71,27 @@ namespace ProtoBuf.Serializers
         }
 
         [Theory]
+        // these are things we don't expect to support at any point
         [InlineData(typeof(int[,]))]
-        [InlineData(typeof(ArraySegment<int>))]
         [InlineData(typeof(List<int>[]))]
         [InlineData(typeof(List<int[]>))]
         [InlineData(typeof(int[][]))]
         [InlineData(typeof(List<List<int>>))]
+
+        // these are things we'll probably light up later as "repeated",
+        [InlineData(typeof(ArraySegment<int>))]
+        [InlineData(typeof(Memory<int>))]
+        [InlineData(typeof(ReadOnlyMemory<int>))]
+        [InlineData(typeof(ReadOnlySequence<int>))]
+        [InlineData(typeof(IMemoryOwner<int>))]
+
+        // these are things we'll probably light up later as "bytes",
+        [InlineData(typeof(ArraySegment<byte>))]
+        [InlineData(typeof(Memory<byte>))]
+        [InlineData(typeof(ReadOnlyMemory<byte>))]
+        [InlineData(typeof(ReadOnlySequence<byte>))]
+        [InlineData(typeof(IMemoryOwner<byte>))]
+
         public void NotSupportedScenarios(Type type)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
@@ -86,6 +102,22 @@ namespace ProtoBuf.Serializers
             });
         }
 
+        // spans a: can't be stored, so the concept of assigning them
+        // is bad; and b: can't be used as generics, so can't be expressed
+        // as ISerializer<Span<Foo>>, etc; all in all: just nope!
+        [Theory]
+        [InlineData(typeof(Span<int>))]
+        [InlineData(typeof(Span<byte>))]
+        [InlineData(typeof(ReadOnlySpan<int>))]
+        [InlineData(typeof(ReadOnlySpan<byte>))]
+        public void SpansAreReallyReallyNotSupported(Type type)
+        {
+            var ex = Assert.Throws<NotSupportedException>(() =>
+            {
+                RepeatedSerializers.TryGetRepeatedProvider(type);
+            });
+            Assert.Equal("Serialization cannot work with [ReadOnly]Span<T>; [ReadOnly]Memory<T> may be enabled later", ex.Message);
+        }
 
         class CustomEnumerable : IEnumerable<int>, ICollection<int>
         {
