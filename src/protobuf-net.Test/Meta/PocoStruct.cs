@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 using ProtoBuf.Meta;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.unittest.Meta
-{
-    
+{   
     public class PocoClass
     {
+        private ITestOutputHelper Log { get; }
+        public PocoClass(ITestOutputHelper _log) => Log = _log;
+
         public class Company
         {
             private readonly List<Employee> employees = new List<Employee>();
@@ -37,7 +40,7 @@ namespace ProtoBuf.unittest.Meta
             using var ms = new MemoryStream();
             model.Serialize(ms, comp);
             ms.Position = 0;
-            Console.WriteLine("Bytes: " + ms.Length);
+            Log.WriteLine("Bytes: " + ms.Length);
 #pragma warning disable CS0618
             clone = (Company) model.Deserialize(ms, null, typeof(Company));
 #pragma warning restore CS0618
@@ -50,6 +53,9 @@ namespace ProtoBuf.unittest.Meta
     
     public class PocoStruct
     {
+        private ITestOutputHelper Log { get; }
+        public PocoStruct(ITestOutputHelper _log) => Log = _log;
+
         public struct Company
         {
             private List<Employee> employees;
@@ -80,7 +86,7 @@ namespace ProtoBuf.unittest.Meta
             {
                 model.Serialize(ms, comp);
                 ms.Position = 0;
-                Console.WriteLine("Bytes: " + ms.Length);
+                Log.WriteLine("Bytes: " + ms.Length);
 #pragma warning disable CS0618
                 clone = (Company)model.Deserialize(ms, null, typeof(Company));
 #pragma warning restore CS0618

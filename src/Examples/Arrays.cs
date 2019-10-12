@@ -5,6 +5,8 @@ using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Linq;
+using Xunit.Abstractions;
+
 namespace Examples
 {
     [ProtoContract]
@@ -76,6 +78,9 @@ namespace Examples
     
     public class ArrayTests
     {
+        private ITestOutputHelper Log { get; }
+        public ArrayTests(ITestOutputHelper _log) => Log = _log;
+
         [ProtoContract]
         class Foo { }
         [Fact]
@@ -366,7 +371,7 @@ namespace Examples
 
             MemoryStream stm = new MemoryStream();
             Serializer.Serialize(stm, t);
-            Console.WriteLine(stm.Length);
+            Log.WriteLine(stm.Length.ToString());
         }
         static void VerifyNodeTree(Node node) {
             Node clone = Serializer.DeepClone(node);

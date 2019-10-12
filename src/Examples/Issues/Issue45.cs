@@ -4,19 +4,22 @@ using Xunit;
 using System;
 using ProtoBuf;
 using System.IO;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
 {
-    
     public class LateLoadedTests
     {
+        private ITestOutputHelper Log { get; }
+        public LateLoadedTests(ITestOutputHelper _log) => Log = _log;
+
         [Fact]
         public void TestLateLoad()
         {
             const string dllPath = "LateLoaded.dll";
             if(!File.Exists(dllPath))
             {
-                Console.WriteLine("Late-load dll not found {0}; test inconclusive", dllPath);
+                Log.WriteLine("Late-load dll not found {0}; test inconclusive", dllPath);
                 return;
             }
             Assembly assembly = Assembly.LoadFrom(dllPath);

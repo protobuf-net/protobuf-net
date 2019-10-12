@@ -4,13 +4,15 @@ using ProtoBuf.Meta;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
+using Xunit.Abstractions;
 
 namespace Examples
-{
-    
+{   
     public class StupidlyComplexModel
     {
+        private ITestOutputHelper Log { get; }
+        public StupidlyComplexModel(ITestOutputHelper _log) => Log = _log;
+
         [Fact]
         public void TimeStupidlyComplexModel()
         {
@@ -47,7 +49,7 @@ namespace Examples
             [ProtoMember(20)] public int T {get;set;}
         }
 
-        private static void TimeModel<T>(int count, Action<TypeModel, string> test = null)
+        private void TimeModel<T>(int count, Action<TypeModel, string> test = null)
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
@@ -62,9 +64,8 @@ namespace Examples
                 model.Compile();
             }
             watch.Stop();
-            Console.WriteLine(string.Format("{0}: {1}ms/Compile, {2} types, {3}ms total, {4} iteratons",
+            Log.WriteLine(string.Format("{0}: {1}ms/Compile, {2} types, {3}ms total, {4} iteratons",
                 typeof(T).Name, watch.ElapsedMilliseconds / count, typeCount, watch.ElapsedMilliseconds, count));
-            
         }
 
 

@@ -15,11 +15,15 @@ namespace ProtoBuf.unittest.Perf
     using Issue103Types;
     using Xunit;
     using System.Diagnostics;
-using ProtoBuf.Meta;
+    using ProtoBuf.Meta;
     using System.IO;
-    
+    using Xunit.Abstractions;
+
     public class Issue103
     {
+        private ITestOutputHelper Log { get; }
+        public Issue103(ITestOutputHelper _log) => Log = _log;
+
         static RuntimeTypeModel CreateModel()
         {
             var model = RuntimeTypeModel.Create();
@@ -56,11 +60,9 @@ using ProtoBuf.Meta;
             model.CompileInPlace();
             RunTestIssue103(50000, typeA, typeB, model, "CompileInPlace");
             RunTestIssue103(50000, typeA, typeB, model.Compile(), "Compile");
-            
-
         }
 
-        private static void RunTestIssue103(int loop, TypeA typeA, TypeB typeB, TypeModel model, string caption)
+        private void RunTestIssue103(int loop, TypeA typeA, TypeB typeB, TypeModel model, string caption)
         {
             // for JIT and preallocation
             MemoryStream ms = new MemoryStream();
@@ -113,10 +115,10 @@ using ProtoBuf.Meta;
             }
             typeBDeser.Stop();
 
-            Console.WriteLine(caption + " A/ser\t" + (typeASer.ElapsedMilliseconds * 1000 / loop) + " μs/item");
-            Console.WriteLine(caption + " A/deser\t" + (typeADeser.ElapsedMilliseconds * 1000 / loop) + " μs/item");
-            Console.WriteLine(caption + " B/ser\t" + (typeBSer.ElapsedMilliseconds * 1000 / loop) + " μs/item");
-            Console.WriteLine(caption + " B/deser\t" + (typeBDeser.ElapsedMilliseconds * 1000 / loop) + " μs/item");
+            Log.WriteLine(caption + " A/ser\t" + (typeASer.ElapsedMilliseconds * 1000 / loop) + " μs/item");
+            Log.WriteLine(caption + " A/deser\t" + (typeADeser.ElapsedMilliseconds * 1000 / loop) + " μs/item");
+            Log.WriteLine(caption + " B/ser\t" + (typeBSer.ElapsedMilliseconds * 1000 / loop) + " μs/item");
+            Log.WriteLine(caption + " B/deser\t" + (typeBDeser.ElapsedMilliseconds * 1000 / loop) + " μs/item");
         }
     }
 }

@@ -4,12 +4,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
 {
-    
     public class Issue167
     {
+        private ITestOutputHelper Log { get; }
+        public Issue167(ITestOutputHelper _log) => Log = _log;
+
         [Fact]
         public void Execute()
         {
@@ -21,9 +24,9 @@ namespace Examples.Issues
                     Serializer.Serialize<Problematic>(memStream, test); //causes stackoverflow exception.
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
+                Log.WriteLine(ex.StackTrace);
             }
         }
 
@@ -44,6 +47,4 @@ namespace Examples.Issues
             }
         }
     }
-
-    
 }
