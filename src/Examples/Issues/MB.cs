@@ -10,6 +10,7 @@ using System.Diagnostics;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using Examples;
+using Xunit.Abstractions;
 
 namespace TestMediaBrowser
 {
@@ -124,9 +125,10 @@ namespace TestMediaBrowser
 
 #endregion
 
-    
     public class TestSerialization
     {
+        private ITestOutputHelper Log { get; }
+        public TestSerialization(ITestOutputHelper _log) => Log = _log;
 
         [Fact]
         public void TestSerializerShouldSupportNulls()
@@ -401,15 +403,13 @@ namespace TestMediaBrowser
 
         }
 
-
-        static void TimeAction(string description, Action func)
+        private void TimeAction(string description, Action func)
         {
             var watch = new Stopwatch();
             watch.Start();
             func();
             watch.Stop();
-            Console.Write(description);
-            Console.WriteLine(" Time Elapsed {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("{0} Time Elapsed {1} ms", description, watch.ElapsedMilliseconds);
         }
     }
 }

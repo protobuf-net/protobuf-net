@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -9,26 +8,30 @@ using ProtoBuf.Meta;
 using SampleDto;
 using Xunit;
 using ProtoBuf.unittest;
+using Xunit.Abstractions;
+using System.Text;
 
 namespace FX11
 {
     public class FX11_Program
     {
+        private ITestOutputHelper Log { get; }
+        public FX11_Program(ITestOutputHelper _log) => Log = _log;
         /*
         public void CheckThisTestRunIsForCLR2()
         {   // because TestDriven.NET on VS2010 gets uppity
             Assert.AreEqual(2, Environment.Version.Major);
         }*/
 
-        private static void DumpObject(string header, PropertyInfo[] props, object obj) {
-            Console.WriteLine();
-            Console.WriteLine(header);
-            Console.WriteLine();
+        private void DumpObject(string header, PropertyInfo[] props, object obj) {
+            Log.WriteLine("");
+            Log.WriteLine(header);
+            Log.WriteLine("");
             foreach(PropertyInfo prop in props) {
-                Console.WriteLine("\t" + prop.Name + "\t" + Convert.ToString(prop.GetValue(obj, null)));
+                Log.WriteLine("\t" + prop.Name + "\t" + Convert.ToString(prop.GetValue(obj, null)));
             }
         }
-        public static RuntimeTypeModel BuildMeta(int loop = 100000)
+        public RuntimeTypeModel BuildMeta(int loop = 100000)
         {
             RuntimeTypeModel model;
 #if !FX11
@@ -84,7 +87,7 @@ namespace FX11
 
             DumpObject("Original", props, prod);
 
-            Console.WriteLine("Iterations: " + loop);
+            Log.WriteLine("Iterations: " + loop);
             Stopwatch watch;
             using MemoryStream reuseDump = new MemoryStream(100 * 1024);
 #if FX30
@@ -92,7 +95,7 @@ namespace FX11
 
             using (MemoryStream ms = new MemoryStream()) {
                 dcs.WriteObject(ms, prod);
-                Console.WriteLine("DataContractSerializer: {0} bytes", ms.Length);
+                Log.WriteLine("DataContractSerializer: {0} bytes", ms.Length);
             }
 
             watch = Stopwatch.StartNew();
@@ -102,7 +105,7 @@ namespace FX11
                 dcs.WriteObject(reuseDump, prod);
             }
             watch.Stop();
-            Console.WriteLine("DataContractSerializer serialize: {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("DataContractSerializer serialize: {0} ms", watch.ElapsedMilliseconds);
             watch = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
             {
@@ -110,7 +113,7 @@ namespace FX11
                 dcs.ReadObject(reuseDump);
             }
             watch.Stop();
-            Console.WriteLine("DataContractSerializer deserialize: {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("DataContractSerializer deserialize: {0} ms", watch.ElapsedMilliseconds);
 
             {
             reuseDump.Position = 0;
@@ -122,7 +125,7 @@ namespace FX11
 
             using (MemoryStream ms = new MemoryStream()) {
                 ndcs.Serialize(ms, prod);
-                Console.WriteLine("NetDataContractSerializer: {0} bytes", ms.Length);
+                Log.WriteLine("NetDataContractSerializer: {0} bytes", ms.Length);
             }
 
             watch = Stopwatch.StartNew();
@@ -132,7 +135,7 @@ namespace FX11
                 ndcs.Serialize(reuseDump, prod);
             }
             watch.Stop();
-            Console.WriteLine("NetDataContractSerializer serialize: {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("NetDataContractSerializer serialize: {0} ms", watch.ElapsedMilliseconds);
             watch = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
             {
@@ -140,7 +143,7 @@ namespace FX11
                 ndcs.Deserialize(reuseDump);
             }
             watch.Stop();
-            Console.WriteLine("NetDataContractSerializer deserialize: {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("NetDataContractSerializer deserialize: {0} ms", watch.ElapsedMilliseconds);
 
             {
             reuseDump.Position = 0;
@@ -160,12 +163,14 @@ namespace FX11
                 byte[] buffer = ms.GetBuffer();
 #endif
                 int len = (int)ms.Length;
-                Console.WriteLine("protobuf-net v2: {0} bytes", len);
+                Log.WriteLine("protobuf-net v2: {0} bytes", len);
+                var sb = new StringBuilder();
                 for (int i = 0; i < len; i++)
                 {
-                    Console.Write(buffer[i].ToString("x2"));
+                    sb.Append(buffer[i].ToString("x2"));
                 }
-                Console.WriteLine();
+                Log.WriteLine(sb.ToString());
+                Log.WriteLine("");
             }
             watch = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
@@ -174,7 +179,7 @@ namespace FX11
                 compiled.Serialize(reuseDump, prod);
             }
             watch.Stop();
-            Console.WriteLine("protobuf-net v2 serialize: {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("protobuf-net v2 serialize: {0} ms", watch.ElapsedMilliseconds);
 
             watch = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
@@ -188,7 +193,7 @@ namespace FX11
 
             if (loop > 0)
             {
-                Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
+                Log.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
                 {
                     reuseDump.Position = 0;
 #pragma warning disable CS0618
@@ -230,11 +235,11 @@ namespace FX11
             if (loop > 0)
             {
                 Product clone = (Product)compiled.DeepClone(prod);
-                Console.WriteLine(clone.CategoryID);
-                Console.WriteLine(clone.ProductName);
-                Console.WriteLine(clone.CreationDate);
-                Console.WriteLine(clone.ProductID);
-                Console.WriteLine(clone.UnitPrice);
+                Log.WriteLine(clone.CategoryID?.ToString());
+                Log.WriteLine(clone.ProductName);
+                Log.WriteLine(clone.CreationDate?.ToString());
+                Log.WriteLine(clone.ProductID.ToString());
+                Log.WriteLine(clone.UnitPrice?.ToString());
             }
 
 #endif
@@ -293,17 +298,17 @@ namespace FX11
             }
             return product1;
         }
-        private static void PurgeWithGusto(string path)
+        private void PurgeWithGusto(string path)
         {
             if (File.Exists(path))
             {
                 try { File.Delete(path); }
                 catch
                 {
-                    Console.WriteLine("Oops, " + path + " is locked; try looking in process explorer (sysinternals)");
+                    Log.WriteLine("Oops, " + path + " is locked; try looking in process explorer (sysinternals)");
                     for (int i = 30; i != 0; i--)
                     {
-                        Console.WriteLine(i);
+                        Log.WriteLine(i.ToString());
                         System.Threading.Thread.Sleep(1000);
                     }
                 }
@@ -314,7 +319,7 @@ namespace FX11
         {
             WriteHeading(".NET version");
 #if !COREFX
-            Console.WriteLine(Environment.Version);
+            Log.WriteLine(Environment.Version.ToString());
 #endif
             RuntimeTypeModel orderModel = RuntimeTypeModel.Create();
             orderModel.Add(typeof(OrderHeader), true);
@@ -361,21 +366,21 @@ namespace FX11
                 serializer.Serialize(ms, cust);
                 ms.Position = 0;
                 Customer clone = (Customer)serializer.Deserialize(ms, null, typeof(Customer));
-                Console.WriteLine(clone.Id);
-                Console.WriteLine(clone.Name);
+                Log.WriteLine(clone.Id);
+                Log.WriteLine(clone.Name);
             }
              */
 #endif
         }
-        private static void WriteHeading(string caption)
+        private void WriteHeading(string caption)
         {
-            Console.WriteLine();
-            Console.WriteLine(caption);
-            Console.WriteLine(new string('=', caption.Length));
-            Console.WriteLine();
+            Log.WriteLine("");
+            Log.WriteLine(caption);
+            Log.WriteLine(new string('=', caption.Length));
+            Log.WriteLine("");
         }
 
-        private static void WriteCustomer(TypeModel model, string caption, object obj)
+        private void WriteCustomer(TypeModel model, string caption, object obj)
         {
             WriteHeading(caption);
             byte[] blob;
@@ -386,11 +391,13 @@ namespace FX11
 #pragma warning restore CS0618
                 blob = ms.ToArray();
             }
+            var sb = new StringBuilder();
             foreach (byte b in blob)
             {
-                Console.Write(b.ToString("x2"));
+                sb.Append(b.ToString("x2"));
             }
-            Console.WriteLine();
+            Log.WriteLine(sb.ToString());
+            Log.WriteLine("");
 
             using (MemoryStream ms = new MemoryStream(blob))
             {
@@ -398,9 +405,9 @@ namespace FX11
                 object clone = model.Deserialize(ms, null, obj.GetType());
 #pragma warning restore CS0618
                 string oldS = Convert.ToString(obj), newS = Convert.ToString(clone);
-                Console.WriteLine(oldS == newS ? ("match: " + newS) : ("delta" + oldS + " vs " + newS));
+                Log.WriteLine(oldS == newS ? ("match: " + newS) : ("delta" + oldS + " vs " + newS));
             }
-            Console.WriteLine();
+            Log.WriteLine("");
         }
     }
 }

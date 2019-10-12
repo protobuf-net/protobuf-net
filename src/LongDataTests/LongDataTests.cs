@@ -3,13 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace LongDataTests
 {
     public class LongDataTests
     {
+        private ITestOutputHelper Log { get; }
+        public LongDataTests(ITestOutputHelper _log) => Log = _log;
+
         [ProtoContract]
         public class MyModelInner
         {
@@ -70,31 +73,30 @@ namespace LongDataTests
 #pragma warning restore xUnit1004 // Test methods should not be skipped
         public void CanSerializeLongData()
         {
-            Console.WriteLine($"PID: {Process.GetCurrentProcess().Id}");
+            Log.WriteLine($"PID: {Process.GetCurrentProcess().Id}");
             const string path = "large.data";
             var watch = Stopwatch.StartNew();
             const int COUNT = 50000000;
 
-            Console.WriteLine($"Creating model with {COUNT} items...");
+            Log.WriteLine($"Creating model with {COUNT} items...");
             var outer = CreateOuterModel(COUNT);
             watch.Stop();
-            Console.WriteLine($"Created in {watch.ElapsedMilliseconds}ms");
+            Log.WriteLine($"Created in {watch.ElapsedMilliseconds}ms");
 
             var model = new MyModelWrapper { Group = outer };
             int oldHash = model.GetHashCode();
             using (var file = File.Create(path))
             {
-                Console.Write("Serializing...");
+                Log.WriteLine("Serializing...");
                 watch = Stopwatch.StartNew();
                 Serializer.Serialize(file, model);
                 watch.Stop();
-                Console.WriteLine();
-                Console.WriteLine($"Wrote: {COUNT} in {file.Length >> 20} MiB ({file.Length / COUNT} each), {watch.ElapsedMilliseconds}ms");
+                Log.WriteLine($"Wrote: {COUNT} in {file.Length >> 20} MiB ({file.Length / COUNT} each), {watch.ElapsedMilliseconds}ms");
             }
 
             using (var file = File.OpenRead(path))
             {
-                Console.WriteLine($"Verifying {file.Length >> 20} MiB...");
+                Log.WriteLine($"Verifying {file.Length >> 20} MiB...");
                 watch = Stopwatch.StartNew();
                 var state = ProtoReader.State.Create(file, null, null);
                 try
@@ -117,7 +119,7 @@ namespace LongDataTests
                     }
                     catch
                     {
-                        Console.WriteLine($"field 2, {i} of {COUNT}, @ {state.GetPosition()}");
+                        Log.WriteLine($"field 2, {i} of {COUNT}, @ {state.GetPosition()}");
                         throw;
                     }
                 }
@@ -126,16 +128,16 @@ namespace LongDataTests
                     state.Dispose();
                 }
                 watch.Start();
-                Console.WriteLine($"Verified {file.Length >> 20} MiB in {watch.ElapsedMilliseconds}ms");
+                Log.WriteLine($"Verified {file.Length >> 20} MiB in {watch.ElapsedMilliseconds}ms");
             }
             using (var file = File.OpenRead(path))
             {
-                Console.WriteLine($"Deserializing {file.Length >> 20} MiB");
+                Log.WriteLine($"Deserializing {file.Length >> 20} MiB");
                 watch = Stopwatch.StartNew();
                 var clone = Serializer.Deserialize<MyModelWrapper>(file);
                 watch.Stop();
                 var newHash = clone.GetHashCode();
-                Console.WriteLine($"{oldHash} vs {newHash}, {newHash == oldHash}, {watch.ElapsedMilliseconds}ms");
+                Log.WriteLine($"{oldHash} vs {newHash}, {newHash == oldHash}, {watch.ElapsedMilliseconds}ms");
             }
         }
     }

@@ -9,6 +9,8 @@ namespace test
     using Xunit;
     using ProtoBuf;
     using Examples;
+    using Xunit.Abstractions;
+
     [XmlType]
     public class SimpleObject : IEquatable<SimpleObject>
     {
@@ -49,6 +51,9 @@ namespace test
     
     public class TestIncorrectStream
     {
+        private ITestOutputHelper Log { get; }
+        public TestIncorrectStream(ITestOutputHelper _log) => Log = _log;
+
         [Fact]
         public void TestDeserializationFromXml()
         {
@@ -65,7 +70,7 @@ namespace test
                 XmlWriter writer = XmlWriter.Create(sb);
                 XmlSerializer xmlSerializer = new XmlSerializer(typeof(SimpleObject));
                 xmlSerializer.Serialize(writer, original);
-                Console.WriteLine(sb.ToString());
+                Log.WriteLine(sb.ToString());
 
                 // use XML text as input stream for XML deserialization
                 byte[] bytes = Encoding.Unicode.GetBytes(sb.ToString());

@@ -8,12 +8,15 @@ using System.Threading;
 using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
 {
-    
     public class SO1930209
     {
+        private ITestOutputHelper Log { get; }
+        public SO1930209(ITestOutputHelper _log) => Log = _log;
+
         [Fact]
         public void ExecuteSimpleNestedShouldNotBuffer()
         {
@@ -42,7 +45,7 @@ namespace Examples.Issues
 #if DEBUG
             model.ForwardsOnly = true;
 #endif
-            Console.WriteLine("Inventing data...");
+            Log.WriteLine("Inventing data...");
             var watch = Stopwatch.StartNew();
             var arr = new B[5];
             for (int i = 0; i < arr.Length; i++)
@@ -56,18 +59,18 @@ namespace Examples.Issues
             }
             var orig = new A {Array1 = arr};
             watch.Stop();
-            Console.WriteLine("{0}ms", watch.ElapsedMilliseconds);
-            Console.WriteLine("Serializing...");
+            Log.WriteLine("{0}ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("Serializing...");
             watch = Stopwatch.StartNew();
             using (var file = File.Create(@"big.file"))
             {
                 model.Serialize(file, orig);
             }
             watch.Stop();
-            Console.WriteLine("{0}ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("{0}ms", watch.ElapsedMilliseconds);
             var len = new FileInfo(@"big.file").Length;
-            Console.WriteLine("{0} bytes", len);
-            Console.WriteLine("Deserializing...");
+            Log.WriteLine("{0} bytes", len);
+            Log.WriteLine("Deserializing...");
             watch = Stopwatch.StartNew();
             A clone;
             using (var file = File.OpenRead(@"big.file"))
@@ -77,11 +80,11 @@ namespace Examples.Issues
 #pragma warning restore CS0618
             }
             watch.Stop();
-            Console.WriteLine("{0}ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("{0}ms", watch.ElapsedMilliseconds);
             int chk1 = GetCheckSum(orig), chk2 = GetCheckSum(clone);
-            Console.WriteLine("Checksum: {0} vs {1}", chk1, chk2);
+            Log.WriteLine("Checksum: {0} vs {1}", chk1, chk2);
             Assert.Equal(chk1, chk2);
-            Console.WriteLine("All done...");
+            Log.WriteLine("All done...");
         }
 
         private static int GetCheckSum(A a)

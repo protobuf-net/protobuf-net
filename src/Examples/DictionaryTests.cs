@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Examples.Dictionary
 {
@@ -45,7 +46,7 @@ namespace Examples.Dictionary
         }
     }
 
-    
+
     public class DictionaryTests
     {
         [Fact]
@@ -181,6 +182,8 @@ namespace Examples.Dictionary
     67-68-69 = "ghi"
 etc
          */
+        private ITestOutputHelper Log { get; }
+        public NestedDictionaryTests(ITestOutputHelper _log) => Log = _log;
 
         [Fact]
         public void TestNestedConcreteConcreteDictionary()
@@ -295,15 +298,15 @@ etc
             int l2 = BulkTest(model, o2, out int s2, out int d2);
             int l3 = BulkTest(model, o3, out int s3, out int d3);
 
-            Console.WriteLine("Bytes (props)\t" + l1);
-            Console.WriteLine("Ser (props)\t" + s1);
-            Console.WriteLine("Deser (props)\t" + d1);
-            Console.WriteLine("Bytes (kv-default)\t" + l2);
-            Console.WriteLine("Ser (kv-default)\t" + s2);
-            Console.WriteLine("Deser (kv-default)\t" + d2);
-            Console.WriteLine("Bytes (kv-grouped)\t" + l3);
-            Console.WriteLine("Ser (kv-grouped)\t" + s3);
-            Console.WriteLine("Deser (kv-grouped)\t" + d3);
+            Log.WriteLine("Bytes (props)\t" + l1);
+            Log.WriteLine("Ser (props)\t" + s1);
+            Log.WriteLine("Deser (props)\t" + d1);
+            Log.WriteLine("Bytes (kv-default)\t" + l2);
+            Log.WriteLine("Ser (kv-default)\t" + s2);
+            Log.WriteLine("Deser (kv-default)\t" + d2);
+            Log.WriteLine("Bytes (kv-grouped)\t" + l3);
+            Log.WriteLine("Ser (kv-grouped)\t" + s3);
+            Log.WriteLine("Deser (kv-grouped)\t" + d3);
 
             using var state = ProtoWriter.State.Create(Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
@@ -317,7 +320,7 @@ etc
             }
             watch.Stop();
             state.Close();
-            Console.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
+            Log.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
             
         }
         const int LOOP = 500000;
