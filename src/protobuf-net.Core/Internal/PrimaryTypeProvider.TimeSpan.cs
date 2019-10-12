@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Serializers;
 using System;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
@@ -98,6 +99,7 @@ namespace ProtoBuf.Internal
             return new ScaledTicks(value, scale, kind);
         }
 
+        [StructLayout(LayoutKind.Auto)]
         [ProtoContract(Name = ".bcl.TimeSpan")]
         internal readonly struct ScaledTicks
         {

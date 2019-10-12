@@ -1,8 +1,7 @@
-﻿using ProtoBuf.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -10,6 +9,7 @@ namespace ProtoBuf
     {
         private readonly Dictionary<ObjectKey, long> _knownLengths = new Dictionary<ObjectKey, long>();
 
+        [StructLayout(LayoutKind.Auto)]
         private readonly struct ObjectKey : IEquatable<ObjectKey>
         {
             private readonly object _obj;

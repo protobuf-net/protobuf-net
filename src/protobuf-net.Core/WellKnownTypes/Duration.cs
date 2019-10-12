@@ -2,6 +2,7 @@
 using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
@@ -167,6 +168,7 @@ namespace ProtoBuf.WellKnownTypes
     /// from a Timestamp. 
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Duration", Serializer = typeof(PrimaryTypeProvider))]
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct Duration
     {
         /// <summary>

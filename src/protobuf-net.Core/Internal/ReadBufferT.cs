@@ -4,11 +4,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
 
     // kinda like List<T>, but with some array-pool love
+    [StructLayout(LayoutKind.Auto)]
     internal struct ReadBuffer<T> : IDisposable, ICollection<T>, IReadOnlyCollection<T>, ICollection
     {
         public void Clear() => _count = 0;

@@ -17,6 +17,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writer state
         /// </summary>
+        [StructLayout(LayoutKind.Auto)]
         public ref partial struct State
         {
             internal bool IsActive => !_span.IsEmpty;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
@@ -163,6 +164,7 @@ namespace ProtoBuf
             Context = context;
         }
 
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct WriteState
         {
             internal WriteState(long position, int fieldNumber, WireType wireType)

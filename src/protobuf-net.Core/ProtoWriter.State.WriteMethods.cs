@@ -327,7 +327,7 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                if (!(TypeHelper<T>.CanBeNull && value is null))
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
@@ -339,7 +339,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                if (!(TypeHelper<T>.CanBeNull && value is null))
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     WriteFieldHeader(fieldNumber, WireType.StartGroup);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
@@ -360,7 +360,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                if (!(TypeHelper<T>.CanBeNull && value is null))
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     features.InheritFrom(serializer.Features);
@@ -545,7 +545,7 @@ namespace ProtoBuf
                     // to preserve legacy behavior of DateTime/TimeSpan etc
                     WriteMessage<T>(1, default, value, serializer);
                 }
-                else if (TypeHelper<T>.CanBeNull && value == null)
+                else if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value))
                 {
                     // nothing to do
                 }

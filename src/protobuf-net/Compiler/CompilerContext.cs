@@ -12,9 +12,11 @@ using System.Collections;
 using System.Linq;
 using System.Globalization;
 using ProtoBuf.Internal.Serializers;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Compiler
 {
+    [StructLayout(LayoutKind.Auto)]
     internal readonly struct CodeLabel
     {
         public readonly Label Value;

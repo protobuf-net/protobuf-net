@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Serializers
 {
@@ -152,7 +153,9 @@ namespace ProtoBuf.Serializers
             while (values.MoveNext())
             {
                 var value = values.Current;
-                if (TypeHelper<TItem>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<TItem>();
+                if (TypeHelper<TItem>.CanBeNull && TypeHelper<TItem>.ValueChecker.IsNull(value))
+                    ThrowHelper.ThrowNullReferenceException<TItem>();
+
                 state.WriteFieldHeader(fieldNumber, wireType);
                 switch (category)
                 {
@@ -196,7 +199,6 @@ namespace ProtoBuf.Serializers
             while (values.MoveNext())
             {
                 var value = values.Current;
-                if (TypeHelper<TItem>.CanBeNull && value is null) ThrowHelper.ThrowNullReferenceException<TItem>();
                 state.WireType = wireType; // tell the serializer what we want to do
                 serializer.Write(ref state, value);
             }
@@ -554,6 +556,7 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
         }
 
+        [StructLayout(LayoutKind.Auto)]
         struct Enumerator : IEnumerator<T>
         {
             public void Reset() => ThrowHelper.ThrowNotSupportedException();

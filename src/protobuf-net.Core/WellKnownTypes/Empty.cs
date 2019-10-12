@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
@@ -29,6 +30,7 @@ namespace ProtoBuf.WellKnownTypes
     /// A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Empty", Serializer = typeof(PrimaryTypeProvider))]
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct Empty
     {
     }

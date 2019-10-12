@@ -1,11 +1,13 @@
 ﻿using ProtoBuf.Internal;
 using System;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Meta
 {
     /// <summary>
     /// Describes a named constant integer, i.e. an enum value
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct EnumMember : IEquatable<EnumMember>
     {
         /// <summary>

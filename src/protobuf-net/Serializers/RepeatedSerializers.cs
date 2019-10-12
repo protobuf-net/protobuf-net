@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Serializers
 {
@@ -40,7 +41,8 @@ namespace ProtoBuf.Serializers
             return null;
         }
 
-        readonly struct MethodTuple
+        [StructLayout(LayoutKind.Auto)]
+        private readonly struct MethodTuple
         {
             public string Name => Method.Name;
             private MethodInfo Method { get; }

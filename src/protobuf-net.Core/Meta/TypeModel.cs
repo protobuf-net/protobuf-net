@@ -295,7 +295,7 @@ namespace ProtoBuf.Meta
 
         internal static long SerializeImpl<T>(ref ProtoWriter.State state, T value)
         {
-            if (TypeHelper<T>.CanBeNull && value == null) return 0;
+            if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)) return 0;
 
             var serializer = TryGetSerializer<T>(state.Model);
             if (serializer == null)
@@ -1237,7 +1237,7 @@ namespace ProtoBuf.Meta
             if (!System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>())
                 return value; // whether it is trivial or complex, we already have a full clone of a value-type
 #endif
-            if (TypeHelper<T>.CanBeNull && value == null) return value;
+            if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)) return value;
 
             var serializer = TryGetSerializer<T>(this);
             if (serializer == null)

@@ -35,7 +35,23 @@ namespace ProtoBuf.Internal
         ISerializer<ulong?>,
         ISerializer<sbyte?>,
         ISerializer<short?>,
-        ISerializer<char?>
+        ISerializer<char?>,
+
+        IValueChecker<string>,
+        IValueChecker<int>,
+        IValueChecker<long>,
+        IValueChecker<bool>,
+        IValueChecker<float>,
+        IValueChecker<double>,
+        IValueChecker<byte[]>,
+        IValueChecker<byte>,
+        IValueChecker<ushort>,
+        IValueChecker<uint>,
+        IValueChecker<ulong>,
+        IValueChecker<sbyte>,
+        IValueChecker<short>,
+        IValueChecker<char>,
+        IValueChecker<Uri>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -270,5 +286,37 @@ namespace ProtoBuf.Internal
         SerializerFeatures ISerializer<double?>.Features => ((ISerializer<double>)this).Features;
         void ISerializer<double?>.Write(ref ProtoWriter.State state, double? value) => ((ISerializer<double>)this).Write(ref state, value.Value);
         double? ISerializer<double?>.Read(ref ProtoReader.State state, double? value) => ((ISerializer<double>)this).Read(ref state, value.GetValueOrDefault());
+
+
+        bool IValueChecker<string>.HasNonTrivialValue(string value) => !string.IsNullOrEmpty(value);
+        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => !string.IsNullOrEmpty(value.OriginalString);
+        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value != null && value.Length != 0;
+        bool IValueChecker<sbyte>.HasNonTrivialValue(sbyte value) => value != 0;
+        bool IValueChecker<short>.HasNonTrivialValue(short value) => value != 0;
+        bool IValueChecker<int>.HasNonTrivialValue(int value) => value != 0;
+        bool IValueChecker<long>.HasNonTrivialValue(long value) => value != 0;
+        bool IValueChecker<byte>.HasNonTrivialValue(byte value) => value != 0;
+        bool IValueChecker<ushort>.HasNonTrivialValue(ushort value) => value != 0;
+        bool IValueChecker<uint>.HasNonTrivialValue(uint value) => value != 0;
+        bool IValueChecker<ulong>.HasNonTrivialValue(ulong value) => value != 0;
+        bool IValueChecker<char>.HasNonTrivialValue(char value) => value != 0;
+        bool IValueChecker<bool>.HasNonTrivialValue(bool value) => value;
+        bool IValueChecker<float>.HasNonTrivialValue(float value) => value != 0;
+        bool IValueChecker<double>.HasNonTrivialValue(double value) => value != 0;
+        bool IValueChecker<sbyte>.IsNull(sbyte value) => false;
+        bool IValueChecker<short>.IsNull(short value) => false;
+        bool IValueChecker<int>.IsNull(int value) => false;
+        bool IValueChecker<long>.IsNull(long value) => false;
+        bool IValueChecker<byte>.IsNull(byte value) => false;
+        bool IValueChecker<ushort>.IsNull(ushort value) => false;
+        bool IValueChecker<uint>.IsNull(uint value) => false;
+        bool IValueChecker<ulong>.IsNull(ulong value) => false;
+        bool IValueChecker<char>.IsNull(char value) => false;
+        bool IValueChecker<bool>.IsNull(bool value) => false;
+        bool IValueChecker<float>.IsNull(float value) => false;
+        bool IValueChecker<double>.IsNull(double value) => false;
+        bool IValueChecker<string>.IsNull(string value) => value == null;
+        bool IValueChecker<byte[]>.IsNull(byte[] value) => value == null;
+        bool IValueChecker<Uri>.IsNull(Uri value) => value == null;
     }
 }

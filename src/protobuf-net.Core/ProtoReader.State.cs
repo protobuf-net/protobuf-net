@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -14,6 +15,7 @@ namespace ProtoBuf
         /// <summary>
         /// Holds state used by the deserializer
         /// </summary>
+        [StructLayout(LayoutKind.Auto)]
         public ref partial struct State
         {
             /// <summary>
@@ -201,6 +203,7 @@ namespace ProtoBuf
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void NoContextThrowOverflow() => default(State).ThrowOverflow();
 
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct SolidState : IDisposable
         {
             public void Dispose() => _reader?.Dispose();

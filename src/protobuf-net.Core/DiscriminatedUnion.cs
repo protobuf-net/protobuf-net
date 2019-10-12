@@ -5,6 +5,7 @@ namespace ProtoBuf
 {
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
+    [StructLayout(LayoutKind.Auto)]
     public readonly partial struct DiscriminatedUnionObject
     {
         /// <summary>The value typed as Object</summary>

@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Serializers
 {
@@ -270,6 +271,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Represents the state of an inheritance deserialization operation
     /// </summary>
+    [StructLayout(LayoutKind.Auto)]
     public struct SubTypeState<T>
         where T : class
     {
