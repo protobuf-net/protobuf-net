@@ -28,6 +28,13 @@ artifacts:
 
 deploy:
 - provider: NuGet
+  server: https://www.myget.org/F/protobuf-net/api/v2
+  on:
+    branch: master
+  api_key:
+    secure: PV7ERAltWWLhy7AT2h+Vb5c1BM9/WFgvggb+rKyQ8hDg3fYqpZauYdidOOgt2lp4
+  symbol_server: https://www.myget.org/F/protobuf-net/symbols/api/v2/package
+- provider: NuGet
   server: https://www.myget.org/F/stackoverflow/api/v2
   on:
     branch: master
