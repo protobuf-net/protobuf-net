@@ -468,14 +468,22 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String
             /// </summary>
-            public void WriteBytes(byte[] data, int offset, int length)
-                => WriteBytes(new ReadOnlyMemory<byte>(data, offset, length));
+            public void WriteBytes(ArraySegment<byte> data)
+                => WriteBytes(new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
 
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String
             /// </summary>
             public void WriteBytes(byte[] data)
                 => WriteBytes(new ReadOnlyMemory<byte>(data));
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
+                =>WriteBytes((ReadOnlyMemory<byte>)(
+                    converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model)
+                    ).GetMemory(value));
 
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String

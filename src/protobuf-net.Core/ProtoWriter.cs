@@ -70,7 +70,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(HotPath)]
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
-            => writer.DefaultState().WriteBytes(data, offset, length);
+            => writer.DefaultState().WriteBytes(new ReadOnlyMemory<byte>(data, offset, length));
 
         private int depth = 0;
         private const int RecursionCheckDepth = 25;

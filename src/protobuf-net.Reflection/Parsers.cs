@@ -1615,7 +1615,7 @@ namespace Google.Protobuf.Reflection
                                             ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
                                             continue;
                                         }
-                                        state.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length);
+                                        state.WriteBytes(new ReadOnlyMemory<byte>(ms.GetBuffer(), 0, (int)ms.Length));
                                     }
                                 }
                                 break;
