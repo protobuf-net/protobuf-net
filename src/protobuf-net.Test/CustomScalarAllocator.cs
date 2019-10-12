@@ -53,7 +53,7 @@ message HazMemoryBlobish {
 message HazRegularString {
    string Value = 1;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
