@@ -19,7 +19,7 @@ nuget:
 
 build_script:
   - cmd: dotnet build Build.csproj -c Release /p:CI=true /p:GeneratePackageOnBuild=false
-  - cmd: dotnet test Build.csproj -c Release
+  - cmd: dotnet test Build.csproj -c Release /p:CI=true
   - cmd: dotnet pack Build.csproj --no-build -c Release /p:Packing=true /p:PackageOutputPath=%CD%\.nupkgs /p:CI=true
 
 test: off

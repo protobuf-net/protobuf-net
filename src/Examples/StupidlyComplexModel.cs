@@ -13,6 +13,7 @@ namespace Examples
         private ITestOutputHelper Log { get; }
         public StupidlyComplexModel(ITestOutputHelper _log) => Log = _log;
 
+#if LONG_RUNNING
         [Fact]
         public void TimeStupidlyComplexModel()
         {
@@ -23,6 +24,7 @@ namespace Examples
         {
             TimeModel<SimpleModel>(100);
         }
+#endif
 
         [ProtoContract]
         public class SimpleModel
@@ -68,7 +70,7 @@ namespace Examples
                 typeof(T).Name, watch.ElapsedMilliseconds / count, typeCount, watch.ElapsedMilliseconds, count));
         }
 
-
+#if LONG_RUNNING
         [Fact]
         public void TestStupidlyComplexModel()
         {
@@ -84,6 +86,7 @@ namespace Examples
             model.Compile("TestStupidlyComplexModel", "TestStupidlyComplexModel.dll");
             PEVerify.AssertValid("TestStupidlyComplexModel.dll");
         }
+#endif
 
         private void Test(TypeModel model, string test)
         {

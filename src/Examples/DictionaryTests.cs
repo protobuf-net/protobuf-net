@@ -263,9 +263,9 @@ etc
             Assert.Equal(2, inner.Keys.Count); //, message);
             Assert.Equal("pqr", inner["mno"]); //, message);
             Assert.Equal("vwx", inner["stu"]); //, message);
-
         }
 
+#if LONG_RUNNING
         [Fact]
         public void CheckPerformanceNotInsanelyBad()
         {
@@ -323,6 +323,8 @@ etc
             Log.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
             
         }
+#endif
+
         const int LOOP = 500000;
         static int BulkTest<T>(TypeModel model, T obj, out int serialize, out int deserialize) where T: class
         {
