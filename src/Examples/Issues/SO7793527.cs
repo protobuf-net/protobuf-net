@@ -96,21 +96,32 @@ namespace Examples.Issues
 #endif
 
         [Fact]
-        public void ProtobufNet_DoesNotSupportNakedEnumerables()
+        public void ProtobufNet_SupportsNakedEnumerables()
         {
-            var iex = Assert.Throws<InvalidOperationException>(() =>
+            var ser = RuntimeTypeModel.Create();
+            using var ms = new MemoryStream();
+            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ms.Position = 0;
+            var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
+            Assert.NotNull(clone.Bars);
+            Assert.Single(clone.Bars);
+        }
+
+        [Fact]
+        public void ProtobufNet_SupportsNakedEnumerables_ButMustBeAddable()
+        {
+            var ser = RuntimeTypeModel.Create();
+            using var ms = new MemoryStream();
+            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ms.Position = 0;
+            // let's make Bars non-null in the target object, with something immutable
+            // (an empty array), to see how it goes boom
+            var obj = new FooEnumerable { Bars = Array.Empty<Bar>() };
+            var ex = Assert.Throws<InvalidOperationException>(() =>
             {
-                var ser = RuntimeTypeModel.Create();
-                using var ms = new MemoryStream();
-                ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
-                ms.Position = 0;
-#pragma warning disable CS0618
-                var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
-#pragma warning restore CS0618
-                Assert.NotNull(clone.Bars);
-                Assert.Single(clone.Bars);
+                var clone = (FooEnumerable)ser.Deserialize(ms, obj, typeof(FooEnumerable));
             });
-            Assert.Equal("No serializer defined for type: System.Collections.Generic.IEnumerable`1[Examples.Issues.SO7793527+Bar]", iex.Message);
+            Assert.Equal("For repeated data declared as System.Collections.Generic.IEnumerable`1[Examples.Issues.SO7793527+Bar], the *underlying* collection (Examples.Issues.SO7793527+Bar[]) must implement ICollection<T> and must not declare itself read-only; alternative (more exotic) collections can be used, but must be declared using their well-known form (for example, a member could be declared as ImmutableHashSet<T>)", ex.Message);
         }
 
         // see https://gist.github.com/gmcelhanon/5391894

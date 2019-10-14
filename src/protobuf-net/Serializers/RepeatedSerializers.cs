@@ -97,8 +97,7 @@ namespace ProtoBuf.Serializers
             Add(typeof(Stack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateStack), new[] { root, targs[0] }), false);
 
             // fallbacks, these should be at the end
-            Add(typeof(ICollection<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateCollection), new[] { root, targs[0] }), false);
-            Add(typeof(IReadOnlyCollection<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateReadOnlyCollection), new[] { root, targs[0] }), false);
+            Add(typeof(IEnumerable<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateEnumerable), new[] { root, targs[0] }), false);
         }
 
         public static void Add(Type type, Func<Type, Type, Type[], MemberInfo> implementation, bool exactOnly = true)
@@ -117,7 +116,7 @@ namespace ProtoBuf.Serializers
 
         internal static RepeatedSerializerStub TryGetRepeatedProvider(Type type)
         {
-            if (type == null) return null;
+            if (type == null || type == typeof(string)) return null;
 
             var known = (RepeatedSerializerStub)s_knownTypes[type];
             if (known == null)
@@ -212,31 +211,38 @@ namespace ProtoBuf.Serializers
 
             MemberInfo bestMatch = null;
             int bestMatchPriority = int.MaxValue;
+            bool bestIsAmbiguous = false;
             void Consider(MemberInfo member, int priority)
             {
                 if (priority < bestMatchPriority)
                 {
                     bestMatch = member;
                     bestMatchPriority = priority;
+                    bestIsAmbiguous = false;
+                }
+                else if (priority == bestMatchPriority)
+                {
+                    if (!Equals(bestMatch, member))
+                        bestIsAmbiguous = true;
                 }
             }
 
             Type current = type;
             while (current != null && current != typeof(object))
             {
-                if (TryGetProvider(type, current, out var found, out var priority)) Consider(found, priority);
+                if (TryGetProvider(type, current, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
                 current = current.BaseType;
             }
 
             foreach (var iType in type.GetInterfaces())
             {
-                if (TryGetProvider(type, iType, out var found, out var priority)) Consider(found, priority);
+                if (TryGetProvider(type, iType, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
             }
 
-            return bestMatch;
+            return bestIsAmbiguous ? null : bestMatch;
         }
 
-        private static bool TryGetProvider(Type root, Type current, out MemberInfo member, out int priority)
+        private static bool TryGetProvider(Type root, Type current, int bestMatchPriority, out MemberInfo member, out int priority)
         {
             var found = (Registration)s_providers[current];
             if (found == null && current.IsGenericType)
@@ -244,7 +250,9 @@ namespace ProtoBuf.Serializers
                 found = (Registration)s_providers[current.GetGenericTypeDefinition()];
             }
 
-            if (found == null || (found.ExactOnly && root != current))
+            if (found == null
+                || (found.Priority > bestMatchPriority)
+                || (found.ExactOnly && root != current))
             {
                 member = null;
                 priority = default;

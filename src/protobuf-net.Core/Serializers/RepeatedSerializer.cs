@@ -44,29 +44,16 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a serializer that operates on most common collections</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateCollection<TCollection, T>()
-            where TCollection : ICollection<T>
-            => SerializerCache<CollectionSerializer<TCollection, TCollection, T>>.InstanceField;
+        public static RepeatedSerializer<TCollection, T> CreateEnumerable<TCollection, T>()
+            where TCollection : class, IEnumerable<T>
+            => SerializerCache<EnumerableSerializer<TCollection, TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on most common collections</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateCollection<TCollection, TCreate, T>()
-            where TCollection : ICollection<T>
+        public static RepeatedSerializer<TCollection, T> CreateEnumerable<TCollection, TCreate, T>()
+            where TCollection : class, IEnumerable<T>
             where TCreate : TCollection
-            => SerializerCache<CollectionSerializer<TCollection, TCreate, T>>.InstanceField;
-
-        /// <summary>Create a serializer that operates on read-only collections</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateReadOnlyCollection<TCollection, T>()
-            where TCollection : IReadOnlyCollection<T>
-            => SerializerCache<ReadOnlyCollectionSerializer<TCollection, TCollection, T>>.InstanceField;
-
-        /// <summary>Create a serializer that operates on read-only collections</summary>
-        [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateReadOnlyCollection<TCollection, TCreate, T>()
-            where TCollection : IReadOnlyCollection<T>
-            where TCreate : TCollection
-            => SerializerCache<ReadOnlyCollectionSerializer<TCollection, TCreate, T>>.InstanceField;
+            => SerializerCache<EnumerableSerializer<TCollection, TCreate, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -375,35 +362,15 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    sealed class CollectionSerializer<TCollection, TCreate, T> : RepeatedSerializer<TCollection, T>
-        where TCollection : ICollection<T>
+    class EnumerableSerializer<TCollection, TCreate, T> : RepeatedSerializer<TCollection, T>
+        where TCollection : class, IEnumerable<T>
         where TCreate : TCollection
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
             // note: don't call TypeModel.CreateInstance: *we are the factory*
             => values ?? (typeof(TCreate).IsInterface ? (TCollection)(object)new List<T>() : TypeModel.ActivatorCreate<TCreate>());
-        protected override TCollection Clear(TCollection values, ISerializationContext context)
-        {
-            values.Clear();
-            return values;
-        }
 
         protected override int TryGetCount(TCollection values) => TryGetCountDefault(values); // don't trust them much
-
-        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
-        {
-            switch (values)
-            {
-                case List<T> list:
-                    list.AddRange(newValues);
-                    break;
-                default:
-                    foreach (var item in newValues.AsSpan())
-                        values.Add(item);
-                    break;
-            }
-            return values;
-        }
 
         internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -440,31 +407,23 @@ namespace ProtoBuf.Serializers
             {
                 iter?.Dispose();
             }
-
         }
-    }
 
-    sealed class ReadOnlyCollectionSerializer<TCollection, TCreate, T> : RepeatedSerializer<TCollection, T>
-        where TCollection : IReadOnlyCollection<T>
-        where TCreate : TCollection
-    {
-        protected override TCollection Initialize(TCollection values, ISerializationContext context)
-            // note: don't call TypeModel.CreateInstance: *we are the factory*
-            => values ?? (typeof(TCreate).IsInterface ? (TCollection)(object)new List<T>() : TypeModel.ActivatorCreate<TCreate>());
+        private static void ThrowInvalidCollectionType(object collection)
+            => ThrowHelper.ThrowInvalidOperationException($"For repeated data declared as {typeof(TCollection).NormalizeName()}, the *underlying* collection ({collection?.GetType().NormalizeName()}) must implement ICollection<T> and must not declare itself read-only; alternative (more exotic) collections can be used, but must be declared using their well-known form (for example, a member could be declared as ImmutableHashSet<T>)");
+
         protected override TCollection Clear(TCollection values, ISerializationContext context)
         {
-            if (values is ICollection<T> mutable)
+            if (values is ICollection<T> collection && !collection.IsReadOnly)
             {
-                mutable.Clear();
+                collection.Clear();
             }
-            else if (values.Count != 0)
+            else
             {
-                ThrowHelper.ThrowInvalidOperationException("It was not possible to clear the collection");
+                ThrowInvalidCollectionType(values);
             }
             return values;
         }
-
-        protected override int TryGetCount(TCollection values) => TryGetCountDefault(values); // don't trust them much
 
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
@@ -473,53 +432,15 @@ namespace ProtoBuf.Serializers
                 case List<T> list:
                     list.AddRange(newValues);
                     break;
-                case ICollection<T> collection:
+                case ICollection<T> collection when !collection.IsReadOnly:
                     foreach (var item in newValues.AsSpan())
                         collection.Add(item);
                     break;
                 default:
-                    ThrowHelper.ThrowInvalidOperationException("It was not possible to add to the collection");
+                    ThrowInvalidCollectionType(values);
                     break;
             }
             return values;
-        }
-
-        internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
-        {
-            var iter = values.GetEnumerator();
-            try
-            {
-                return Measure(ref iter, serializer, context, wireType);
-            }
-            finally
-            {
-                iter?.Dispose();
-            }
-        }
-        internal override void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<T> serializer, WireType wireType)
-        {
-            var iter = values.GetEnumerator();
-            try
-            {
-                WritePacked(ref state, ref iter, serializer, wireType);
-            }
-            finally
-            {
-                iter?.Dispose();
-            }
-        }
-        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer)
-        {
-            var iter = values.GetEnumerator();
-            try
-            {
-                Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
-            }
-            finally
-            {
-                iter?.Dispose();
-            }
-
         }
     }
 
