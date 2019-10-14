@@ -1,5 +1,7 @@
 # protobuf-net
-protobuf-net is a contract based serializer for .NET code, that happens to write data in the "protocol buffers" serialization format engineered by Google. The API, however, is very different to Google's, and follows typical .NET patterns (it is broadly comparable, in usage, to XmlSerializer, DataContractSerializer, etc). It should work for most .NET languages that write standard types and can use attributes.
+protobuf-net is a contract based serializer for .NET code, that happens to write data in the "protocol buffers" serialization format engineered by Google. The API, however, is very different to Google's, and follows typical .NET patterns (it is broadly comparable, in usage, to `XmlSerializer`, `DataContractSerializer`, etc). It should work for most .NET languages that write standard types and can use attributes.
+
+[![Build status](https://ci.appveyor.com/api/projects/status/1pj6gk7h37bjn200/branch/master?svg=true)](https://ci.appveyor.com/project/StackExchange/protobuf-net/branch/master)
 
 ## Release Notes
 
@@ -10,17 +12,21 @@ To understand how protobuf-net relates to protobuf [see here](https://protobuf-n
 ---
 
 ## Supported Runtimes
-- .NET Framework 2.0+
-- .NET Standard 1.0+ (note that 1.0 is very restricted, and suits iOS etc; use the highest .NET Standard that works for your platform)
-- UAP 10.0(+?)
-
-It is possible to build for more specific TFMs, but *right now* I've simplified the build to those. If you need help
-with a custom build: let me know.
+- .NET Framework 4.6.1+
+- .NET Standard 2.0+
 
 ## Runtime Installation
 
-Packages are available on NuGet: [`protobuf-net`](https://www.nuget.org/packages/protobuf-net). You can use the following command in the Package Manager Console:
-`Install-Package protobuf-net`
+All stable and some pre-release packages are available on NuGet. CI Builds are available via MyGet (feed URL: `https://www.myget.org/F/protobuf-net/api/v3/index.json `).
+
+You can use the following command in the Package Manager Console:
+```ps
+Install-Package protobuf-net
+```
+
+| Package | NuGet Stable | NuGet Pre-release | Downloads | MyGet |
+| ------- | ------------ | ----------------- | --------- | ----- |
+| [protobuf-net](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/v/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/vpre/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/dt/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net MyGet](https://img.shields.io/myget/protobuf-net/vpre/protobuf-net.svg)](https://www.myget.org/feed/protobuf-net/package/nuget/protobuf-net) |
 
 ## Basic usage
 
@@ -123,4 +129,4 @@ In v2, everything that can be done with attributes can also be configured at run
 
 ## Support
 
-I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on github](https://github.com/protobuf-net/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell).
+I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on GitHub](https://github.com/protobuf-net/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell).

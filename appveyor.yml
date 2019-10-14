@@ -19,7 +19,7 @@ nuget:
 
 build_script:
   - cmd: dotnet build Build.csproj -c Release /p:CI=true /p:GeneratePackageOnBuild=false
-  - cmd: dotnet test Build.csproj -c Release
+  - cmd: dotnet test Build.csproj -c Release /p:CI=true
   - cmd: dotnet pack Build.csproj --no-build -c Release /p:Packing=true /p:PackageOutputPath=%CD%\.nupkgs /p:CI=true
 
 test: off
@@ -27,6 +27,13 @@ artifacts:
 - path: .\.nupkgs\*.nupkg
 
 deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/protobuf-net/api/v2
+  on:
+    branch: master
+  api_key:
+    secure: PV7ERAltWWLhy7AT2h+Vb5c1BM9/WFgvggb+rKyQ8hDg3fYqpZauYdidOOgt2lp4
+  symbol_server: https://www.myget.org/F/protobuf-net/symbols/api/v2/package
 - provider: NuGet
   server: https://www.myget.org/F/stackoverflow/api/v2
   on:

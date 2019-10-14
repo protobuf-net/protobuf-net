@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿#if LONG_RUNNING
+using Xunit;
 using ProtoBuf;
 using System.Collections.Generic;
 using System.IO;
@@ -69,3 +70,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif
