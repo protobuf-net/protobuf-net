@@ -81,26 +81,11 @@ using (var file = File.OpenRead("person.bin")) {
 
 #### Notes for Identifiers
 
-* they must be positive integers 
+* they must be positive integers (for best portability, they should be `<= 536870911` and not in the range `19000-19999`)
 * they must be unique within a single type but the same numbers can be re-used in sub-types if inheritance is enabled 
 * the identifiers must not conflict with any inheritance identifiers (discussed later) 
-* lower numbers take less space - don't start 100,000,000 
+* lower numbers take less space - don't start at 100,000,000 
 * the identifier is important; you can change the member-name, or shift it between a property and a field, but changing the identifier changes the data 
-
-#### Notes on types
-
-supported: 
-* custom classes that: 
-  * are marked as data-contract 
-  * have a parameterless constructor 
-  * for Silverlight: are public 
-* many common primitives etc 
-* single dimension arrays: T[] 
-* List<T> / IList<T> 
-* Dictionary<TKey,TValue> / IDictionary<TKey,TValue> 
-* any type which implements IEnumerable<T> and has an Add(T) method 
-
-The code assumes that types will be mutable around the elected members. Accordingly, custom structs are not supported, since they should be immutable. 
 
 ## Advanced subjects
 
@@ -125,8 +110,8 @@ the `protogen` tool is available as a zip from that location, or [as a "global t
 
 ### Alternative to attributes
 
-In v2, everything that can be done with attributes can also be configured at runtime via `RuntimeTypeModel`. The Serializer.* methods are basically just shortcuts to RuntimeTypeModel.Default.*, so to manipulate the behaviour of Serializer.*, you must configure RuntimeTypeModel.Default. 
+In v2+, everything that can be done with attributes can also be configured at runtime via `RuntimeTypeModel`. The Serializer.* methods are basically just shortcuts to RuntimeTypeModel.Default.*, so to manipulate the behaviour of Serializer.*, you must configure RuntimeTypeModel.Default. 
 
 ## Support
 
-I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on GitHub](https://github.com/protobuf-net/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell).
+I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on GitHub](https://github.com/protobuf-net/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell) or see the "Sponsor" link [at the top of the GitHub page](https://github.com/protobuf-net/protobuf-net).
