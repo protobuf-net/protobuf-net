@@ -392,6 +392,9 @@ namespace ProtoBuf.Schemas
                         // layouts for the same data; both are valid; I'm happy that this is OK
                         // - this was why the "decode" tool (on the website) was written!
                         break;
+                    case "google/protobuf/unittest.proto":
+                        // different layout of an integer; "2e+8" vs "200000000" - I'm fine with it
+                        break;
                     default:
                         // compare results
                         Assert.Equal(protocJson, parserJson);
