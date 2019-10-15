@@ -79,6 +79,11 @@ namespace ProtoBuf
 
                 if (actual != Length) ThrowHelper.ThrowInvalidOperationException($"Invalid length; expected {Length}, actual: {actual}");
             }
+            catch (Exception ex)
+            {
+                ex.Data?.Add("ProtoBuf.MeasuredLength", Length);
+                throw;
+            }
             finally
             {
                 state.Dispose();
