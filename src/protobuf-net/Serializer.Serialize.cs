@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -15,8 +16,17 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
         public static void Serialize<T>(Stream destination, T instance)
+            => Serialize<T>(destination, instance, userState: null);
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// </summary>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="destination">The destination stream to write to.</param>
+        /// <param name="userState">Additional state for this serialization operation</param>
+        public static void Serialize<T>(Stream destination, T instance, object userState)
         {
-            var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default);
+            var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default, userState);
             try
             {
                 TypeModel.SerializeImpl<T>(ref state, instance);
@@ -33,10 +43,10 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
-        /// <param name="context">Additional serialization context</param>
-        public static void Serialize<T>(IBufferWriter<byte> destination, T instance, SerializationContext context = null)
+        /// <param name="userState">Additional serialization context</param>
+        public static void Serialize<T>(IBufferWriter<byte> destination, T instance, object userState = null)
         {
-            var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default, context);
+            var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default, userState);
             try
             {
                 TypeModel.SerializeImpl<T>(ref state, instance);
@@ -53,9 +63,9 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
-        public static void Serialize<T>(System.Runtime.Serialization.SerializationInfo info, T instance) where T : class, System.Runtime.Serialization.ISerializable
+        public static void Serialize<T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
-            Serialize<T>(info, new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence), instance);
+            Serialize<T>(info, new StreamingContext(StreamingContextStates.Persistence), instance);
         }
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
@@ -64,14 +74,14 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public static void Serialize<T>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
+        public static void Serialize<T>(System.Runtime.Serialization.SerializationInfo info, StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException(nameof(info));
             if (instance == null) throw new ArgumentNullException(nameof(instance));
             if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
             using MemoryStream ms = new MemoryStream();
-            RuntimeTypeModel.Default.Serialize(ms, instance, context);
+            RuntimeTypeModel.Default.Serialize<T>(ms, instance, context.Context);
             info.AddValue(ProtoBinaryField, ms.ToArray());
         }
 

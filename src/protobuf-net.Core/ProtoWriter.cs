@@ -147,9 +147,9 @@ namespace ProtoBuf
         /// Creates a new writer against a stream
         /// </summary>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="userState">Additional context about this serialization operation</param>
         /// <param name="impactCount">Whether this initialization should impact usage counters (to check for double-usage)</param>
-        internal virtual void Init(TypeModel model, SerializationContext context, bool impactCount)
+        internal virtual void Init(TypeModel model, object userState, bool impactCount)
         {
             OnInit(impactCount);
             _position64 = 0;
@@ -159,9 +159,8 @@ namespace ProtoBuf
             fieldNumber = 0;
             this.model = model;
             WireType = WireType.None;
-            if (context == null) { context = SerializationContext.Default; }
-            else { context.Freeze(); }
-            Context = context;
+            if (userState is SerializationContext context) context.Freeze();
+            UserState = userState;
         }
 
         [StructLayout(LayoutKind.Auto)]
@@ -195,7 +194,13 @@ namespace ProtoBuf
         /// <summary>
         /// Addition information about this serialization operation.
         /// </summary>
-        public SerializationContext Context { get; private set; }
+        [Obsolete("Prefer " + nameof(UserState))]
+        public SerializationContext Context => SerializationContext.AsSerializationContext(this);
+
+        /// <summary>
+        /// Addition information about this serialization operation.
+        /// </summary>
+        public object UserState { get; private set; }
 
 #if DEBUG || TRACK_USAGE
         int _usageCount;
@@ -236,7 +241,7 @@ namespace ProtoBuf
             recursionStack?.Clear();
             ClearKnownObjects();
             model = null;
-            Context = null;
+            UserState = null;
         }
 
         protected private virtual void ClearKnownObjects()

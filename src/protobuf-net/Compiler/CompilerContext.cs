@@ -1420,7 +1420,7 @@ namespace ProtoBuf.Compiler
         //    Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
         //}
 
-        internal void LoadSerializationContext(bool oldApi) // old api = SerializationContext; new api = ISerializationContext
+        internal void LoadSerializationContext(Type asType) // old api = SerializationContext; new api = ISerializationContext
         {
             LoadState();
             switch (_signature)
@@ -1438,9 +1438,21 @@ namespace ProtoBuf.Compiler
                     ThrowHelper.ThrowInvalidOperationException($"Cannot load context for {_signature}");
                     break;
             }
-            if (oldApi)
+            if (asType == typeof(ISerializationContext))
             {
-                LoadValue(typeof(ISerializationContext).GetProperty(nameof(ISerializationContext.Context)));
+                // fine, done
+            }
+            else if (asType == typeof(SerializationContext))
+            {
+                EmitCall(typeof(SerializationContext).GetMethod(nameof(SerializationContext.AsSerializationContext)));
+            }
+            else if (asType == typeof(SerializationContext))
+            {
+                EmitCall(typeof(SerializationContext).GetMethod(nameof(SerializationContext.AsStreamingContext)));
+            }
+            else
+            {
+                ThrowHelper.ThrowArgumentException($"Unexpected context type: {asType.NormalizeName()}");
             }
         }
 

@@ -27,10 +27,10 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="dest">The destination stream</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
-            /// <param name="context">Additional context about this serialization operation</param>
-            public static State Create(Stream dest, TypeModel model, SerializationContext context = null)
+            /// <param name="userState">Additional context about this serialization operation</param>
+            public static State Create(Stream dest, TypeModel model, object userState = null)
             {
-                var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
+                var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, userState);
                 return new State(writer);
             }
         }
@@ -45,10 +45,10 @@ namespace ProtoBuf
             private protected override bool ImplDemandFlushOnDispose => true;
 
             private StreamProtoWriter() { }
-            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
+            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, object userState)
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
-                obj.Init(model, context, true);
+                obj.Init(model, userState, true);
                 if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
                 if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
                 //if (model == null) ThrowHelper.ThrowArgumentNullException("model");
@@ -57,9 +57,9 @@ namespace ProtoBuf
                 return obj;
             }
 
-            internal override void Init(TypeModel model, SerializationContext context, bool impactCount)
+            internal override void Init(TypeModel model, object userState, bool impactCount)
             {
-                base.Init(model, context, impactCount);
+                base.Init(model, userState, impactCount);
                 ioIndex = 0;
                 flushLock = 0;
             }
@@ -156,6 +156,7 @@ namespace ProtoBuf
                 }
             }
 
+#if !PLAT_SPAN_OVERLOADS
             static void WriteFallback(ReadOnlySpan<byte> bytes, Stream stream)
             {
                 var buffer = ArrayPool<byte>.Shared.Rent(2048);
@@ -179,7 +180,7 @@ namespace ProtoBuf
                     ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
-
+#endif
             private protected override void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data)
             {
                 int length = checked((int)data.Length);

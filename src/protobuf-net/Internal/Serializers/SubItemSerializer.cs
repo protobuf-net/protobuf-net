@@ -242,7 +242,7 @@ namespace ProtoBuf.Internal.Serializers
             ((IProtoTypeSerializer)Proxy.Serializer).EmitCreateInstance(ctx, callNoteObject);
         }
 
-        void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
+        void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context)
         {
             ((IProtoTypeSerializer)Proxy.Serializer).Callback(value, callbackType, context);
         }

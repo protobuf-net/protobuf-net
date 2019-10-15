@@ -17,11 +17,11 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="source">The source buffer</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-            /// <param name="context">Additional context about this serialization operation</param>
-            public static State Create(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
+            /// <param name="userState">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlySequence<byte> source, TypeModel model, object userState = null)
             {
                 var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
-                reader.Init(source, model, context);
+                reader.Init(source, model, userState);
                 return new State(reader);
             }
 
@@ -30,9 +30,9 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="source">The source buffer</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-            /// <param name="context">Additional context about this serialization operation</param>
-            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
-                => Create(new ReadOnlySequence<byte>(source), model, context);
+            /// <param name="userState">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, object userState = null)
+                => Create(new ReadOnlySequence<byte>(source), model, userState);
 
 #if FEAT_DYNAMIC_REF
             internal void SetRootObject(object value) => _reader.SetRootObject(value);
@@ -151,9 +151,9 @@ namespace ProtoBuf
                 Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
-            internal void Init(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)
+            internal void Init(ReadOnlySequence<byte> source, TypeModel model, object userState)
             {
-                base.Init(model, context);
+                base.Init(model, userState);
                 _source = source.GetEnumerator();
             }
 
