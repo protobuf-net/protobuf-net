@@ -13,6 +13,7 @@ using System.Linq;
 using System.Globalization;
 using ProtoBuf.Internal.Serializers;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf.Compiler
 {
@@ -1446,7 +1447,7 @@ namespace ProtoBuf.Compiler
             {
                 EmitCall(typeof(SerializationContext).GetMethod(nameof(SerializationContext.AsSerializationContext)));
             }
-            else if (asType == typeof(SerializationContext))
+            else if (asType == typeof(StreamingContext))
             {
                 EmitCall(typeof(SerializationContext).GetMethod(nameof(SerializationContext.AsStreamingContext)));
             }
