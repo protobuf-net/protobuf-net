@@ -352,7 +352,7 @@ namespace ProtoBuf
             /// <returns>The updated instance; this may be different to the instance argument if
             /// either the original instance was null, or the stream defines a known sub-type of the
             /// original instance.</returns>
-            public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, TypeResolver resolver, out object value)
+            public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, ProtoBuf.TypeResolver resolver, out object value)
             {
                 value = RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, null, style, 0, resolver);
                 return value != null;
@@ -428,5 +428,12 @@ namespace ProtoBuf
         [Obsolete]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static void FlushPool() { }
+
+
+        /// <summary>
+        /// Maps a field-number to a type
+        /// </summary>
+        [Obsolete("Please use ProtoBuf.TypeResolver", true)]
+        public delegate Type TypeResolver(int fieldNumber);
     }
 }
