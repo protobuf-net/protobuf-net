@@ -40,13 +40,19 @@ namespace ProtoBuf
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {
                 var buffer = ArrayPool<byte>.Shared.Rent(8 * 1024);
-                while (true)
+                try
                 {
-                    int bytes = source.Read(buffer, 0, buffer.Length);
-                    if (bytes <= 0) break;
-                    Advance(bytes);
+                    while (true)
+                    {
+                        int bytes = source.Read(buffer, 0, buffer.Length);
+                        if (bytes <= 0) break;
+                        Advance(bytes);
+                    }
                 }
-                ArrayPool<byte>.Shared.Return(buffer);
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
             }
 
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)

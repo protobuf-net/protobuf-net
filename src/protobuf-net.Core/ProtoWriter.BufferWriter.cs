@@ -120,8 +120,15 @@ namespace ProtoBuf
                 {
                     // could use encoder, but... this is pragmatic
                     var arr = ArrayPool<byte>.Shared.Rent(expectedBytes);
-                    UTF8.GetBytes(value, 0, value.Length, arr, 0);
-                    ImplWriteBytes(ref state, new ReadOnlyMemory<byte>(arr, 0, expectedBytes));
+                    try
+                    {
+                        UTF8.GetBytes(value, 0, value.Length, arr, 0);
+                        FallbackWriteBytes(ref state, new ReadOnlySpan<byte>(arr, 0, expectedBytes));
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(arr);
+                    }
                 }
             }
 

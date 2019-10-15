@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -156,10 +157,16 @@ namespace ProtoBuf
 #if PLAT_SPAN_OVERLOADS
                     bytes = source.Read(Remaining);
 #else
-                    var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(RemainingInCurrent);
-                    bytes = source.Read(arr, 0, RemainingInCurrent);
-                    if (bytes > 0) new Span<byte>(arr, 0, bytes).CopyTo(Remaining);
-                    System.Buffers.ArrayPool<byte>.Shared.Return(arr);
+                    var arr = ArrayPool<byte>.Shared.Rent(RemainingInCurrent);
+                    try
+                    {
+                        bytes = source.Read(arr, 0, RemainingInCurrent);
+                        if (bytes > 0) new Span<byte>(arr, 0, bytes).CopyTo(Remaining);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(arr);
+                    }
 #endif
                 }
                 if (bytes > 0)
