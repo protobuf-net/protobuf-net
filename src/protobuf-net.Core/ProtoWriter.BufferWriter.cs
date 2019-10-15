@@ -75,7 +75,18 @@ namespace ProtoBuf
             {
                 if (state.IsActive)
                 {
-                    _writer.Advance(state.ConsiderWritten());
+                    int bytes = 0;
+                    try
+                    {
+                        bytes = state.ConsiderWritten();
+                        _writer.Advance(bytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.Data?.Add("ProtoBuf.Position", _position64);
+                        ex.Data?.Add("ProtoBuf.Flushing", bytes);
+                        throw;
+                    }
                 }
                 return true;
             }
