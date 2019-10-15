@@ -29,7 +29,7 @@ namespace ProtoBuf
             // this is for use as a sub-component of the buffer-writer
             internal NullProtoWriter(NetObjectCache knownObjects) : base(knownObjects) { }
 
-            private protected override void Dispose()
+            internal override void Dispose()
             {
                 base.Dispose();
                 Pool<NullProtoWriter>.Put(this);

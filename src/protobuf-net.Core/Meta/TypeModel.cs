@@ -268,18 +268,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public long Measure<T>(T value, object userState = null)
-        {
-            var state = ProtoWriter.NullProtoWriter.CreateNullProtoWriter(this, userState);
-            try
-            {
-                return SerializeImpl<T>(ref state, value);
-            }
-            finally
-            {
-                state.Dispose();
-            }
-        }
+        public MeasureState<T> Measure<T>(T value, object userState = null)
+            => new MeasureState<T>(this, value, userState);
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied writer.

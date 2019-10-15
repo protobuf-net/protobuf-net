@@ -873,5 +873,15 @@ namespace ProtoBuf
                 ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
             }
         }
+
+        internal void InitializeFrom(ProtoWriter writer) => netCache?.InitializeFrom(writer?.netCache);
+
+        internal void CopyBack(ProtoWriter writer) => netCache?.CopyBack(writer?.netCache);
+
+        internal int GetLengthHits(out int misses)
+        {
+            misses = netCache?.LengthMisses ?? 0;
+            return netCache?.LengthHits ?? 0;
+        }
     }
 }
