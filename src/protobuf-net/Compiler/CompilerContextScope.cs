@@ -115,14 +115,12 @@ namespace ProtoBuf.Compiler
                         else if (parameterType == typeof(SerializationContext))
                         {
                             il.Emit(OpCodes.Ldarg_1);
-                            il.EmitCall(OpCodes.Callvirt, typeof(ISerializationContext).GetProperty(nameof(ISerializationContext.Context)).GetGetMethod(), null);
+                            il.EmitCall(OpCodes.Call, typeof(SerializationContext).GetMethod(nameof(SerializationContext.AsSerializationContext)), null);
                         }
                         else if (parameterType == typeof(StreamingContext))
                         {
                             il.Emit(OpCodes.Ldarg_1);
-                            il.EmitCall(OpCodes.Callvirt, typeof(ISerializationContext).GetProperty(nameof(ISerializationContext.Context)).GetGetMethod(), null);
-                            MethodInfo op = typeof(SerializationContext).GetMethod("op_Implicit", new Type[] { typeof(SerializationContext) });
-                            il.EmitCall(OpCodes.Call, op, null);
+                            il.EmitCall(OpCodes.Call, typeof(SerializationContext).GetMethod(nameof(SerializationContext.AsStreamingContext)), null);
                         }
                         else
                         {
@@ -141,7 +139,7 @@ namespace ProtoBuf.Compiler
                     method.DefineParameter(2, ParameterAttributes.None, "context");
 
                     WriteCall(method.GetILGenerator(), callback);
-                    
+
                     var cctor = type.DefineTypeInitializer();
                     var il = cctor.GetILGenerator();
                     il.Emit(OpCodes.Ldnull);

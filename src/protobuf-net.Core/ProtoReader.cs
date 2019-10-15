@@ -99,14 +99,13 @@ namespace ProtoBuf
         /// <summary>
         /// Initialize the reader
         /// </summary>
-        internal void Init(TypeModel model, SerializationContext context)
+        internal void Init(TypeModel model, object userState)
         {
             OnInit();
             _model = model;
 
-            if (context == null) { context = SerializationContext.Default; }
-            else { context.Freeze(); }
-            this.context = context;
+            if (userState is SerializationContext context) context.Freeze();
+            UserState = userState;
             _longPosition = 0;
             _depth = _fieldNumber = 0;
 
@@ -118,12 +117,16 @@ namespace ProtoBuf
 #endif
         }
 
-        private SerializationContext context;
+        /// <summary>
+        /// Addition information about this deserialization operation.
+        /// </summary>
+        public object UserState { get; private set; }
 
         /// <summary>
         /// Addition information about this deserialization operation.
         /// </summary>
-        public SerializationContext Context => context;
+        [Obsolete("Prefer " + nameof(UserState))]
+        public SerializationContext Context => SerializationContext.AsSerializationContext(this);
 
         /// <summary>
         /// Releases resources used by the reader, but importantly <b>does not</b> Dispose the 
@@ -734,11 +737,10 @@ namespace ProtoBuf
         {
             if (parent == null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
             TypeModel model = parent.Model;
-            SerializationContext ctx = parent.Context;
+            var userState = parent.UserState;
             if (model == null) ThrowHelper.ThrowInvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
-
-            var writeState = ProtoWriter.State.Create(ms, model, ctx);
+            var writeState = ProtoWriter.State.Create(ms, model, userState);
             try
             {
                 model.SerializeRootFallback(ref writeState, from);
@@ -748,7 +750,7 @@ namespace ProtoBuf
                 writeState.Dispose();
             }
             ms.Position = 0;
-            using var state = ProtoReader.State.Create(ms, model);
+            using var state = ProtoReader.State.Create(ms, model, userState);
             return state.DeserializeRootFallback(to, type: null);
         }
     }

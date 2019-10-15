@@ -25,9 +25,20 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type to be created.</typeparam>
         /// <returns>A new, initialized instance.</returns>
-        public static T Deserialize<T>(Stream source, T value = default, SerializationContext context = default, long length = ProtoReader.TO_EOF)
+        public static T Deserialize<T>(Stream source, T value, SerializationContext context, long length = ProtoReader.TO_EOF)
         {
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            return state.DeserializeRootImpl<T>(value);
+        }
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream
+        /// </summary>
+        /// <typeparam name="T">The type to be created.</typeparam>
+        /// <returns>A new, initialized instance.</returns>
+        public static T Deserialize<T>(Stream source, T value = default, object userState = default, long length = ProtoReader.TO_EOF)
+        {
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -46,18 +57,18 @@ namespace ProtoBuf
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream
         /// </summary>
-        public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
+        public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream
         /// </summary>
-        public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
+        public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState);
             return state.DeserializeRootImpl<T>(value);
         }
     }

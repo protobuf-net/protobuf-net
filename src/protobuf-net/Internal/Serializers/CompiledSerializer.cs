@@ -118,7 +118,7 @@ namespace ProtoBuf.Internal.Serializers
 
         object IProtoTypeSerializer.CreateInstance(ISerializationContext context) => head.CreateInstance(context);
 
-        public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
+        public void Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context)
         {
             head.Callback(value, callbackType, context); // these routes only used when bits of the model not compiled
         }

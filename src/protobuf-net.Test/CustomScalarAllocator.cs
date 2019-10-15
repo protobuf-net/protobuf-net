@@ -86,9 +86,9 @@ message HazRegularString {
             ms.Position = 0;
 
             using var arena = new Arena<byte>();
-            var ctx = new MyCustomContext(arena);
+            var ctx = new MyState(arena);
             ctx.Reset();
-            var blobish = model.Deserialize<HazBlobish>(ms, context: ctx);
+            var blobish = model.Deserialize<HazBlobish>(ms, userState: ctx);
             Assert.True(blobish.Value.Payload.ToArray().SequenceEqual(expected));
             Assert.Equal(20, ctx.TotalAllocatedSequence);
             Assert.Equal(0, ctx.TotalAllocatedMemory);
@@ -96,7 +96,7 @@ message HazRegularString {
             // check we can write the right bytes
             ms.Position = 0;
             ms.SetLength(0); // wipe
-            model.Serialize<HazBlobish>(ms, blobish, context: ctx);
+            model.Serialize<HazBlobish>(ms, blobish, userState: ctx);
             // expect: "field 1, length prefixed, 20 bytes" + the UTF8 payload
             Assert.Equal("0A-14-" + BitConverter.ToString(expected), BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
         }
@@ -131,9 +131,9 @@ message HazRegularString {
             ms.Position = 0;
 
             using var arena = new Arena<byte>();
-            var ctx = new MyCustomContext(arena);
+            var ctx = new MyState(arena);
             ctx.Reset();
-            var blobish = model.Deserialize<HazMemoryBlobish>(ms, context: ctx);
+            var blobish = model.Deserialize<HazMemoryBlobish>(ms, userState: ctx);
             Assert.True(blobish.Value.Payload.ToArray().SequenceEqual(expected));
             Assert.Equal(0, ctx.TotalAllocatedSequence);
             Assert.Equal(20, ctx.TotalAllocatedMemory);
@@ -141,7 +141,7 @@ message HazRegularString {
             // check we can write the right bytes
             ms.Position = 0;
             ms.SetLength(0); // wipe
-            model.Serialize<HazMemoryBlobish>(ms, blobish, context: ctx);
+            model.Serialize<HazMemoryBlobish>(ms, blobish, userState: ctx);
             // expect: "field 1, length prefixed, 20 bytes" + the UTF8 payload
             Assert.Equal("0A-14-" + BitConverter.ToString(expected), BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
         }
@@ -207,7 +207,7 @@ message HazRegularString {
             {
                 var oldLength = value.Payload.Length;
                 var newLength = oldLength + additionalCapacity;
-                var newData = context.Context is IBlobAllocator allocator ? allocator.AllocateMemory(newLength).Slice(0, newLength) : new byte[newLength];
+                var newData = context.UserState is IBlobAllocator allocator ? allocator.AllocateMemory(newLength).Slice(0, newLength) : new byte[newLength];
                 value.Payload.CopyTo(newData);
                 value = new MemoryBlobish(newData);
                 return newData.Slice(oldLength);
@@ -264,10 +264,10 @@ message HazRegularString {
         // this is our custom context; we're using it to
         // make the 'arena' available to custom serializer,
         // by implementing the abstraction above
-        class MyCustomContext : SerializationContext, IBlobAllocator
+        class MyState : IBlobAllocator
         {
             private readonly Arena<byte> _arena;
-            public MyCustomContext(Arena<byte> arena)
+            public MyState(Arena<byte> arena)
                 => _arena = arena;
 
             public long TotalAllocatedSequence => Volatile.Read(ref _totalAllocatedSequence);

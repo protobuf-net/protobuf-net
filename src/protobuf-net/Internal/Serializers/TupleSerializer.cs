@@ -61,7 +61,7 @@ namespace ProtoBuf.Internal.Serializers
         public Type ExpectedType => typeof(T);
         Type IProtoTypeSerializer.BaseType => typeof(T);
 
-        void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
+        void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, ISerializationContext context) { }
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
         {

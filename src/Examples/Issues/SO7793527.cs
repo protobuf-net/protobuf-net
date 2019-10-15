@@ -119,7 +119,7 @@ namespace Examples.Issues
             var obj = new FooEnumerable { Bars = Array.Empty<Bar>() };
             var ex = Assert.Throws<InvalidOperationException>(() =>
             {
-                var clone = (FooEnumerable)ser.Deserialize(ms, obj, typeof(FooEnumerable));
+                var clone = (FooEnumerable)ser.Deserialize(ms, obj, type: typeof(FooEnumerable));
             });
             Assert.Equal("For repeated data declared as System.Collections.Generic.IEnumerable`1[Examples.Issues.SO7793527+Bar], the *underlying* collection (Examples.Issues.SO7793527+Bar[]) must implement ICollection<T> and must not declare itself read-only; alternative (more exotic) collections can be used, but must be declared using their well-known form (for example, a member could be declared as ImmutableHashSet<T>)", ex.Message);
         }

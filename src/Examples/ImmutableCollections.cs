@@ -234,7 +234,7 @@ namespace Examples
             try
             {
 #pragma warning disable CS0618
-                model.Deserialize(ms, clone, null); // this is append!
+                model.Deserialize(ms, clone, type: null); // this is append!
 #pragma warning restore CS0618
             }
             catch (Exception ex)

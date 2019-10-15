@@ -91,7 +91,7 @@ namespace ProtoBuf.Schemas
             HasTimestamp hazTs;
             using (var ms = new MemoryStream())
             {
-                model.Serialize(ms, hazDt, null);
+                model.Serialize(ms, hazDt);
                 ms.Position = 0;
 #pragma warning disable CS0618
                 hazTs = (HasTimestamp)model.Deserialize(ms, null, typeof(HasTimestamp));

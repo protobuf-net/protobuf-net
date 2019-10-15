@@ -17,7 +17,7 @@ namespace ProtoBuf.Internal.Serializers
 
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
 
-        void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
+        void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, ISerializationContext context) { }
 
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)

@@ -13,7 +13,8 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## v3.0.0-alpha
 
-- **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
+- **breaking change** if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
+- **breaking change** by necessity, `ProtoBuf.Serializer+TypeResolver` has moved to `ProtoBuf.Serializer`; this is a rarely used API, but comsumers will need to be recompiled against the new type
 - **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
 - **breaking change** - dynamic typing (i.e. storing the `Type` metadata) and reference-tracking (`AsReference`, `AsReferenceDefault`, `DynamicType`) are not implemented/supported; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited
 - **breaking change** - non-generic list-like APIs like `IList` or `ICollection` are no longer supported; there is a new API for processing custom collection types

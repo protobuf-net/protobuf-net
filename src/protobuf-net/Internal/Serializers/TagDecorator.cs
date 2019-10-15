@@ -15,7 +15,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public object CreateInstance(ISerializationContext source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
 
-        public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
+        public void Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context)
             => (Tail as IProtoTypeSerializer)?.Callback(value, callbackType, context);
             
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)

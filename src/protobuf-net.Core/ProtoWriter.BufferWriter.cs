@@ -16,25 +16,25 @@ namespace ProtoBuf
             /// <summary>
             /// Create a new ProtoWriter that tagets a buffer writer
             /// </summary>
-            public static State Create(IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
-                => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, context);
+            public static State Create(IBufferWriter<byte> writer, TypeModel model, object userState = null)
+                => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, userState);
         }
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
+            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, object userState)
             {
                 if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
-                obj.Init(model, context, true);
+                obj.Init(model, userState, true);
                 obj._writer = writer;
                 return new State(obj);
             }
 
-            internal override void Init(TypeModel model, SerializationContext context, bool impactCount)
+            internal override void Init(TypeModel model, object userState, bool impactCount)
             {
-                base.Init(model, context, impactCount);
-                _nullWriter.Init(model, context, impactCount: false);
+                base.Init(model, userState, impactCount);
+                _nullWriter.Init(model, userState, impactCount: false);
             }
 
             private IBufferWriter<byte> _writer;

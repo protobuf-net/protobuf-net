@@ -232,10 +232,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        /// <param name="context">Additional information about this serialization operation.</param>
-        public long Serialize<T>(Stream dest, T value, SerializationContext context = null)
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public long Serialize<T>(Stream dest, T value, object userState = null)
         {
-            var state = ProtoWriter.State.Create(dest, this, context);
+            var state = ProtoWriter.State.Create(dest, this, userState);
             try
             {
                 return SerializeImpl<T>(ref state, value);
@@ -251,10 +251,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        /// <param name="context">Additional information about this serialization operation.</param>
-        public long Serialize<T>(IBufferWriter<byte> dest, T value, SerializationContext context = null)
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public long Serialize<T>(IBufferWriter<byte> dest, T value, object userState = null)
         {
-            var state = ProtoWriter.State.Create(dest, this, context);
+            var state = ProtoWriter.State.Create(dest, this, userState);
             try
             {
                 return SerializeImpl<T>(ref state, value);
@@ -268,9 +268,9 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public long Measure<T>(T value, SerializationContext context = null)
+        public long Measure<T>(T value, object userState = null)
         {
-            var state = ProtoWriter.NullProtoWriter.CreateNullProtoWriter(this, context);
+            var state = ProtoWriter.NullProtoWriter.CreateNullProtoWriter(this, userState);
             try
             {
                 return SerializeImpl<T>(ref state, value);
@@ -674,15 +674,15 @@ namespace ProtoBuf.Meta
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
         /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
-        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(Stream source, T value = default, SerializationContext context = null)
+        public T Deserialize<T>(Stream source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, this, context);
+            using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -690,15 +690,15 @@ namespace ProtoBuf.Meta
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
         /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
-        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
+        public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, this, context);
+            using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -706,15 +706,15 @@ namespace ProtoBuf.Meta
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
         /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
-        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
+        public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, this, context);
+            using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -1231,7 +1231,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public T DeepClone<T>(T value, SerializationContext context = null)
+        public T DeepClone<T>(T value, object userState = null)
         {
 #if PLAT_ISREF
             if (!System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -1252,9 +1252,9 @@ namespace ProtoBuf.Meta
             else
             {
                 using var ms = new MemoryStream();
-                Serialize<T>(ms, value, context);
+                Serialize<T>(ms, value, userState);
                 ms.Position = 0;
-                return Deserialize<T>(ms, default, context);
+                return Deserialize<T>(ms, default, userState);
             }
         }
 

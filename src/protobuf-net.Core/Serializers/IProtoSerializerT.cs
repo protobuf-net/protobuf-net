@@ -340,9 +340,9 @@ namespace ProtoBuf.Serializers
             {
                 using var ms = new MemoryStream();
                 // this <object> sneakily finds the correct base-type
-                context.Model.Serialize<object>(ms, value, context.Context);
+                context.Model.Serialize<object>(ms, value, context.UserState);
                 ms.Position = 0;
-                return context.Model.Deserialize<T>(ms, typed, context.Context);
+                return context.Model.Deserialize<T>(ms, typed, context.UserState);
             }
         }
 

@@ -10,17 +10,17 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static State CreateNull(TypeModel model, SerializationContext context = null)
-            => NullProtoWriter.CreateNullProtoWriter(model, context);
+        internal static State CreateNull(TypeModel model, object userState = null)
+            => NullProtoWriter.CreateNullProtoWriter(model, userState);
 
         internal sealed class NullProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
 
-            internal static State CreateNullProtoWriter(TypeModel model, SerializationContext context)
+            internal static State CreateNullProtoWriter(TypeModel model, object userState)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
-                obj.Init(model, context, true);
+                obj.Init(model, userState, true);
                 return new State(obj);
             }
 

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -35,19 +36,24 @@ namespace ProtoBuf
         {
             return RuntimeTypeModel.Default.GetSchema(typeof(T), syntax);
         }
+
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public static T DeepClone<T>(T instance, SerializationContext context = null)
-        {
-            return RuntimeTypeModel.Default.DeepClone<T>(instance, context);
-        }
+        public static T DeepClone<T>(T instance, SerializationContext context)
+            => RuntimeTypeModel.Default.DeepClone<T>(instance, context);
+
+        /// <summary>
+        /// Create a deep clone of the supplied instance; any sub-items are also cloned.
+        /// </summary>
+        public static T DeepClone<T>(T instance, object userState = null)
+            => RuntimeTypeModel.Default.DeepClone<T>(instance, userState);
 
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public static long Measure<T>(T value, SerializationContext context = null)
-            => RuntimeTypeModel.Default.Measure<T>(value, context);
+        public static long Measure<T>(T value, object userState = null)
+            => RuntimeTypeModel.Default.Measure<T>(value, userState);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance.
@@ -124,9 +130,9 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(System.Runtime.Serialization.SerializationInfo info, T instance) where T : class, System.Runtime.Serialization.ISerializable
+        public static void Merge<T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
-            Merge<T>(info, new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence), instance);
+            Merge<T>(info, new StreamingContext(StreamingContextStates.Persistence), instance);
         }
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
@@ -135,8 +141,8 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public static void Merge<T>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context, T instance)
-            where T : class, System.Runtime.Serialization.ISerializable
+        public static void Merge<T>(SerializationInfo info, StreamingContext context, T instance)
+            where T : class, ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException(nameof(info));
@@ -145,7 +151,7 @@ namespace ProtoBuf
 
             byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
             using MemoryStream ms = new MemoryStream(buffer);
-            T result = RuntimeTypeModel.Default.Deserialize<T>(ms, instance, context);
+            T result = RuntimeTypeModel.Default.Deserialize<T>(ms, instance, context.Context);
             if (!ReferenceEquals(result, instance))
             {
                 throw new ProtoException("Deserialization changed the instance; cannot succeed.");
@@ -346,7 +352,7 @@ namespace ProtoBuf
             /// <returns>The updated instance; this may be different to the instance argument if
             /// either the original instance was null, or the stream defines a known sub-type of the
             /// original instance.</returns>
-            public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, TypeResolver resolver, out object value)
+            public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, ProtoBuf.TypeResolver resolver, out object value)
             {
                 value = RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, null, style, 0, resolver);
                 return value != null;
@@ -422,5 +428,12 @@ namespace ProtoBuf
         [Obsolete]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static void FlushPool() { }
+
+
+        /// <summary>
+        /// Maps a field-number to a type
+        /// </summary>
+        [Obsolete("Please use ProtoBuf.TypeResolver", true)]
+        public delegate Type TypeResolver(int fieldNumber);
     }
 }

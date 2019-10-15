@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using System;
 
 namespace ProtoBuf
 {
@@ -11,9 +12,10 @@ namespace ProtoBuf
         /// The type-model that represents the operation
         /// </summary>
         TypeModel Model { get; }
+
         /// <summary>
-        /// The serialization-context specified for the operation
+        /// Addition information about this serialization operation.
         /// </summary>
-        SerializationContext Context { get; }
+        object UserState { get; }
     }
 }
