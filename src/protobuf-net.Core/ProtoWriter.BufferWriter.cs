@@ -49,7 +49,7 @@ namespace ProtoBuf
 
             private readonly NullProtoWriter _nullWriter;
 
-            private protected override void Dispose()
+            internal override void Dispose()
             {
                 base.Dispose();
                 Pool<BufferWriterProtoWriter>.Put(this);

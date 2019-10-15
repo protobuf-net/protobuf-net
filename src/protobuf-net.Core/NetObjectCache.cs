@@ -29,15 +29,19 @@ namespace ProtoBuf
             public bool Equals(ObjectKey other) => this._obj == other._obj & this._subTypeLevel == other._subTypeLevel;
         }
 
+        int _hit, _miss;
+
         [MethodImpl(ProtoReader.HotPath)]
         public bool TryGetKnownLength(object obj, Type subTypeLevel, out long length)
         {
             if (_knownLengths.TryGetValue(new ObjectKey(obj, subTypeLevel), out length))
             {
+                _hit++;
                 return true;
             }
             else
             {
+                _miss++;
                 length = default;
                 return false;
             }
@@ -228,6 +232,29 @@ namespace ProtoBuf
             if (objectKeys != null) objectKeys.Clear();
 #endif
             _knownLengths.Clear();
+            _hit = _miss = 0;
+        }
+
+        internal int LengthHits => _hit;
+        internal int LengthMisses => _miss;
+
+        internal void InitializeFrom(NetObjectCache master)
+        {
+            if (master != null)
+            {
+                _knownLengths.Clear();
+                foreach (var pair in master._knownLengths)
+                    _knownLengths.Add(pair.Key, pair.Value);
+            }
+        }
+
+        internal void CopyBack(NetObjectCache master)
+        {
+            if (master != null)
+            {
+                master._hit += _hit;
+                master._miss += _miss;
+            }
         }
     }
 }

@@ -226,7 +226,7 @@ namespace ProtoBuf
         partial void OnDispose();
         partial void OnInit(bool impactCount);
 
-        protected private virtual void Dispose()
+        internal virtual void Dispose()
         {
             OnDispose();
             Cleanup();

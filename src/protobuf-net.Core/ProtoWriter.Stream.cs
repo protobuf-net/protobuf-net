@@ -64,7 +64,7 @@ namespace ProtoBuf
                 flushLock = 0;
             }
 
-            protected private override void Dispose()
+            internal override void Dispose()
             {
                 base.Dispose();
                 Pool<StreamProtoWriter>.Put(this);
