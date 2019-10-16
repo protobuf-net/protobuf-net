@@ -171,15 +171,16 @@ namespace ProtoBuf
                 while (true)
                 {
                     GetBuffer(ref state);
-                    if (span.Length <= state.RemainingInCurrent)
+                    int remaining = state.RemainingInCurrent;
+                    if (span.Length <= remaining)
                     {
                         state.LocalWriteBytes(span);
                         return;
                     }
                     else
                     {
-                        state.LocalWriteBytes(span.Slice(0, state.RemainingInCurrent));
-                        span = span.Slice(state.RemainingInCurrent);
+                        state.LocalWriteBytes(span.Slice(0, remaining));
+                        span = span.Slice(remaining);
                     }
                 }
             }
