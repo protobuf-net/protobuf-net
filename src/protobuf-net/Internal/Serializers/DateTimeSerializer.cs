@@ -14,10 +14,10 @@ namespace ProtoBuf.Internal.Serializers
 
         private readonly bool includeKind, wellKnown;
 
-        public DateTimeSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
+        public DateTimeSerializer(DataFormat dataFormat, Meta.TypeModel model)
         {
             wellKnown = dataFormat == DataFormat.WellKnown;
-            includeKind = model?.SerializeDateTimeKind() == true;
+            includeKind = model?.HasOption(Meta.TypeModel.TypeModelOptions.IncludeDateTimeKind) == true;
         }
 
         public object Read(ref ProtoReader.State state, object value)

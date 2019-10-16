@@ -388,23 +388,23 @@ namespace ProtoBuf.unittest.Meta
             var orig = new PackedData { ListInt32 = new List<int>(), ListSingle = new List<float>(), ListDouble = new List<double>()};
 
             var clone = RoundTrip(model, orig, "Runtime", out int len);
-            Assert.Equal(0, len); //, "Runtime");
-            Assert.Null(clone.ListDouble);
-            Assert.Null(clone.ListInt32);
-            Assert.Null(clone.ListSingle);
+            Assert.Equal(6, len); //, "Runtime");
+            Assert.Empty(clone.ListDouble);
+            Assert.Empty(clone.ListInt32);
+            Assert.Empty(clone.ListSingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.Equal(0, len); //, "CompileInPlace");
-            Assert.Null(clone.ListDouble);
-            Assert.Null(clone.ListInt32);
-            Assert.Null(clone.ListSingle);
+            Assert.Equal(6, len); //, "CompileInPlace");
+            Assert.Empty(clone.ListDouble);
+            Assert.Empty(clone.ListInt32);
+            Assert.Empty(clone.ListSingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.Equal(0, len); //, "Compile");
-            Assert.Null(clone.ListDouble);
-            Assert.Null(clone.ListInt32);
-            Assert.Null(clone.ListSingle);
+            Assert.Equal(6, len); //, "Compile");
+            Assert.Empty(clone.ListDouble);
+            Assert.Empty(clone.ListInt32);
+            Assert.Empty(clone.ListSingle);
         }
 
 #pragma warning disable IDE0060
@@ -504,23 +504,23 @@ namespace ProtoBuf.unittest.Meta
             var orig = new PackedData { ArrayInt32 = new int[0], ArraySingle = new float[0], ArrayDouble = new double[0] };
 
             var clone = RoundTrip(model, orig, "Runtime", out int len);
-            Assert.Equal(0, len); //, "Runtime");
-            Assert.Null(clone.ArrayDouble);
-            Assert.Null(clone.ArrayInt32);
-            Assert.Null(clone.ArraySingle);
+            Assert.Equal(6, len); //, "Runtime");
+            Assert.Empty(clone.ArrayDouble);
+            Assert.Empty(clone.ArrayInt32);
+            Assert.Empty(clone.ArraySingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.Equal(0, len); //, "CompileInPlace");
-            Assert.Null(clone.ArrayDouble);
-            Assert.Null(clone.ArrayInt32);
-            Assert.Null(clone.ArraySingle);
+            Assert.Equal(6, len); //, "CompileInPlace");
+            Assert.Empty(clone.ArrayDouble);
+            Assert.Empty(clone.ArrayInt32);
+            Assert.Empty(clone.ArraySingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.Equal(0, len); //, "Compile");
-            Assert.Null(clone.ArrayDouble);
-            Assert.Null(clone.ArrayInt32);
-            Assert.Null(clone.ArraySingle);
+            Assert.Equal(6, len); //, "Compile");
+            Assert.Empty(clone.ArrayDouble);
+            Assert.Empty(clone.ArrayInt32);
+            Assert.Empty(clone.ArraySingle);
         }
         [Fact]
         public void TestNullRoundTrip()

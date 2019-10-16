@@ -26,19 +26,42 @@ namespace ProtoBuf.Meta
             => SerializerCache<TProvider, T>.InstanceField;
 
         /// <summary>
-        /// Should the <c>Kind</c> be included on date/time values?
+        /// Specifies optional behaviors associated with a type model
         /// </summary>
-        protected internal virtual bool SerializeDateTimeKind() => false;
+        [Flags]
+        public enum TypeModelOptions
+        {
+            /// <summary>
+            /// No additional options
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// Should the deserializer attempt to avoid duplicate copies of the same string?
+            /// </summary>
+            InternStrings = 1 << 0,
+            /// <summary>
+            /// Should the <c>Kind</c> be included on date/time values?
+            /// </summary>
+            IncludeDateTimeKind = 1 << 1,
+            /// <summary>
+            /// Should zero-length packed arrays be serialized? (this is the v2 behavior, but skipping them is more efficient)
+            /// </summary>
+            SkipZeroLengthPackedArrays = 1 << 2,
+        }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal bool HasOption(TypeModelOptions options)
+            => (Options & options) != 0;
+
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal bool OmitsOption(TypeModelOptions options)
+            => (Options & options) == 0;
 
         /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+        /// Specifies optional behaviors associated with this model
         /// </summary>
-        public bool InternStrings => GetInternStrings();
-
-        /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-        /// </summary>
-        protected internal virtual bool GetInternStrings() => false;
+        public virtual TypeModelOptions Options => 0;
 
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
