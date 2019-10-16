@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
 using Xunit;
@@ -15,12 +16,55 @@ namespace ProtoBuf.Test
         private readonly ITestOutputHelper _log;
         private void Log(string message) => _log?.WriteLine(message);
 
+
+        class MyMessage
+        {
+            public int X { get; set; }
+            public string Y { get; set; }
+        }
+
+        class MyTypeModel : TypeModel
+        {
+            public static MyTypeModel Instance { get; } = new MyTypeModel();
+            private MyTypeModel() { }
+
+            protected internal override ISerializer<T> GetSerializer<T>()
+                => GetSerializer<MyServices, T>();
+
+            class MyServices : ISerializer<MyMessage>
+            {
+                public SerializerFeatures Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+
+                public MyMessage Read(ref ProtoReader.State state, MyMessage value)
+                {
+                    value ??= new MyMessage();
+                    int field;
+                    while ((field = state.ReadFieldHeader()) > 0)
+                    {
+                        switch(field)
+                        {
+                            case 12: value.Y = state.ReadString(); break;
+                            case 42: value.X = state.ReadInt32(); break;
+                            default: state.SkipField(); break;
+                        }
+                    }
+                    return value;
+                }
+
+                public void Write(ref ProtoWriter.State state, MyMessage value)
+                {
+                    state.WriteString(12, value.Y);
+                    state.WriteInt32Varint(42, value.X);
+                }
+            }
+        }
+
         [Fact]
         public void WriteAllTheThings()
         {
             using var cw = new CountingWriter();
-            
-            var state = ProtoWriter.State.Create(cw, RuntimeTypeModel.Default);
+
+            var state = ProtoWriter.State.Create(cw, MyTypeModel.Instance);
             try
             {
                 var rand = new Random(12345);
@@ -135,6 +179,24 @@ namespace ProtoBuf.Test
                 state.Flush();
                 Log($"After {ITER_COUNT}x{nameof(state.WriteBytes)}/{WireType.String}: {cw.TotalBytes}");
                 Assert.Equal(cw.TotalBytes, state.GetPosition());
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    var obj = new MyMessage { X = GetInt32(), Y = GetString() };
+                    state.WriteFieldHeader(GetField(), WireType.String);
+                    state.WriteMessage(default, obj);
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(state.WriteMessage)}/{WireType.String}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    var obj = new MyMessage { X = GetInt32(), Y = GetString() };
+                    state.WriteFieldHeader(GetField(), WireType.StartGroup);
+                    state.WriteMessage(default, obj);
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(state.WriteMessage)}/{WireType.StartGroup}: {cw.TotalBytes}");
             }
             catch
             {
@@ -182,7 +244,7 @@ namespace ProtoBuf.Test
                 Recycle(ref _buffer);
                 _buffer = ArrayPool<byte>.Shared.Rent(size);
             }
-            
+
             private static void Recycle(ref byte[] array)
             {
                 var tmp = array;
