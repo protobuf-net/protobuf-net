@@ -2,6 +2,7 @@
 using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -68,8 +69,7 @@ namespace ProtoBuf.Test
             try
             {
                 var rand = new Random(12345);
-                const int ITER_COUNT = 1024;
-                const int MAXLEN = 2048;
+                const int ITER_COUNT = 1024, SMALL_ITER_COUNT = 128, MAXLEN = 2048;
                 int GetField() => rand.Next(1, 2048);
                 int GetInt32() => rand.Next(int.MinValue, int.MaxValue);
                 long GetInt64()
@@ -95,6 +95,40 @@ namespace ProtoBuf.Test
                     var len = rand.Next(array.Length);
                     return new ArraySegment<byte>(array, 0, len);
                 }
+                var valuesInt32 = new List<int>();
+                List<int> GetValuesInt32()
+                {
+                    valuesInt32.Clear();
+                    var len = rand.Next(MAXLEN);
+                    for (int i = 0; i < len; i++)
+                        valuesInt32.Add(GetInt32());
+                    return valuesInt32;
+                }
+                var valuesString = new List<string>();
+                List<string> GetValuesString()
+                {
+                    valuesString.Clear();
+                    var len = rand.Next(MAXLEN);
+                    for (int i = 0; i < len; i++)
+                        valuesString.Add(GetString());
+                    return valuesString;
+                }
+
+                MyMessage GetMessage()
+                {
+                    return new MyMessage { X = GetInt32(), Y = GetString() };
+                }
+                var valuesMessage = new List<MyMessage>();
+                List<MyMessage> GetValuesMessage()
+                {
+                    valuesMessage.Clear();
+                    var len = rand.Next(MAXLEN);
+                    for (int i = 0; i < len; i++)
+                        valuesMessage.Add(GetMessage());
+                    return valuesMessage;
+                }
+
+                //////////////////////////////////////
 
                 for (int i = 0; i < ITER_COUNT; i++)
                 {
@@ -182,21 +216,100 @@ namespace ProtoBuf.Test
 
                 for (int i = 0; i < ITER_COUNT; i++)
                 {
-                    var obj = new MyMessage { X = GetInt32(), Y = GetString() };
                     state.WriteFieldHeader(GetField(), WireType.String);
-                    state.WriteMessage(default, obj);
+                    state.WriteMessage(default, GetMessage());
                 }
                 state.Flush();
                 Log($"After {ITER_COUNT}x{nameof(state.WriteMessage)}/{WireType.String}: {cw.TotalBytes}");
 
                 for (int i = 0; i < ITER_COUNT; i++)
                 {
-                    var obj = new MyMessage { X = GetInt32(), Y = GetString() };
                     state.WriteFieldHeader(GetField(), WireType.StartGroup);
-                    state.WriteMessage(default, obj);
+                    state.WriteMessage(default, GetMessage());
                 }
                 state.Flush();
                 Log($"After {ITER_COUNT}x{nameof(state.WriteMessage)}/{WireType.StartGroup}: {cw.TotalBytes}");
+
+                var repeatedInt32 = RepeatedSerializer.CreateList<int>();
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeVarint, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeVarint}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeSignedVarint, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeSignedVarint}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeFixed32, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeFixed32}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeFixed64, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeFixed64}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeSignedVarint | SerializerFeatures.OptionPackedDisabled, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeSignedVarint | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeFixed32 | SerializerFeatures.OptionPackedDisabled, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeFixed32 | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
+
+                for (int i = 0; i < ITER_COUNT; i++)
+                {
+                    repeatedInt32.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeFixed64 | SerializerFeatures.OptionPackedDisabled, GetValuesInt32());
+                }
+                state.Flush();
+                Log($"After {ITER_COUNT}x{nameof(repeatedInt32.WriteRepeated)}/{SerializerFeatures.WireTypeFixed64 | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
+
+                var repeatedString = RepeatedSerializer.CreateList<string>();
+                for (int i = 0; i < SMALL_ITER_COUNT; i++)
+                {
+                    repeatedString.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeString, GetValuesString());
+                }
+                state.Flush();
+                Log($"After {SMALL_ITER_COUNT}x{nameof(repeatedString.WriteRepeated)} ({nameof(String)})/{SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
+
+                var repeatedMessage = RepeatedSerializer.CreateList<MyMessage>();
+                for (int i = 0; i < SMALL_ITER_COUNT; i++)
+                {
+                    repeatedMessage.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeString, GetValuesMessage());
+                }
+                state.Flush();
+                Log($"After {SMALL_ITER_COUNT}x{nameof(repeatedString.WriteRepeated)} ({nameof(MyMessage)})/{SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
+
+                for (int i = 0; i < SMALL_ITER_COUNT; i++)
+                {
+                    repeatedMessage.WriteRepeated(ref state, GetField(), SerializerFeatures.WireTypeStartGroup, GetValuesMessage());
+                }
+                state.Flush();
+                Log($"After {SMALL_ITER_COUNT}x{nameof(repeatedString.WriteRepeated)} ({nameof(MyMessage)})/{SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled}: {cw.TotalBytes}");
             }
             catch
             {
