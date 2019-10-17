@@ -114,18 +114,34 @@ namespace ProtoBuf.Serializers
             features.InheritFrom(serializerFeatures);
 
             int count = TryGetCount(values);
-            if (count == 0) return;
 
             var category = serializerFeatures.GetCategory();
             var wireType = features.GetWireType();
-            if (TypeHelper<TItem>.CanBePacked && !features.IsPackedDisabled() && count > 1 && serializer is IMeasuringSerializer<TItem> measurer)
+            if (TypeHelper<TItem>.CanBePacked && !features.IsPackedDisabled() && (count == 0 || count > 1) && serializer is IMeasuringSerializer<TItem> measurer)
             {
                 if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
-                WritePacked(ref state, fieldNumber, wireType, values, count, measurer);
+                if (count == 0)
+                {
+                    WriteZeroLengthPackedHeader(ref state, fieldNumber);
+                }
+                else
+                {
+                    WritePacked(ref state, fieldNumber, wireType, values, count, measurer);
+                }
             }
             else
             {
-                Write(ref state, fieldNumber, category, wireType, values, serializer);
+                if (count != 0) Write(ref state, fieldNumber, category, wireType, values, serializer);
+            }
+        }
+
+        private void WriteZeroLengthPackedHeader(ref ProtoWriter.State state, int fieldNumber)
+        {
+            if (state.Model.OmitsOption(TypeModel.TypeModelOptions.SkipZeroLengthPackedArrays))
+            {   // we only need to write these for exact v2 compatibility
+                state.WriteFieldHeader(fieldNumber, WireType.String);
+                var writer = state.GetWriter();
+                writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, 0UL));
             }
         }
 

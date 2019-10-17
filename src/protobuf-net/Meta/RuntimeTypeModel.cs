@@ -22,28 +22,39 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class RuntimeTypeModel : TypeModel
     {
-        private ushort options;
-        private const ushort
-           OPTIONS_InferTagFromNameDefault = 1,
-           OPTIONS_IsDefaultModel = 2,
-           OPTIONS_Frozen = 4,
-           OPTIONS_AutoAddMissingTypes = 8,
-           OPTIONS_AutoCompile = 16,
-           OPTIONS_UseImplicitZeroDefaults = 32,
-           OPTIONS_AllowParseableTypes = 64,
-           OPTIONS_AutoAddProtoContractTypesOnly = 128,
-           OPTIONS_IncludeDateTimeKind = 256,
-           OPTIONS_InternStrings = 512;
+        private RuntimeTypeModelOptions _options;
 
-        private bool GetOption(ushort option)
+        enum RuntimeTypeModelOptions
         {
-            return (options & option) == option;
+            None = 0,
+            InternStrings = TypeModelOptions.InternStrings,
+            IncludeDateTimeKind = TypeModelOptions.IncludeDateTimeKind,
+            SkipZeroLengthPackedArrays = TypeModelOptions.SkipZeroLengthPackedArrays,
+
+            TypeModelMask = InternStrings | IncludeDateTimeKind | SkipZeroLengthPackedArrays,
+
+            // stuff specific to RuntimeTypeModel
+            InferTagFromNameDefault = 1 << 4,
+            IsDefaultModel = 1 << 5,
+            Frozen = 1 << 6,
+            AutoAddMissingTypes = 1 << 7,
+            AutoCompile = 1 << 8,
+            UseImplicitZeroDefaults = 1 << 9,
+            AllowParseableTypes = 1 << 10,
+            AutoAddProtoContractTypesOnly = 1 << 11,
         }
 
-        private void SetOption(ushort option, bool value)
+        /// <summary>
+        /// Specifies optional behaviors associated with this model
+        /// </summary>
+        public override TypeModelOptions Options => (TypeModelOptions)(_options & RuntimeTypeModelOptions.TypeModelMask);
+
+        private bool GetOption(RuntimeTypeModelOptions option) => (_options & option) != 0;
+
+        private void SetOption(RuntimeTypeModelOptions option, bool value)
         {
-            if (value) options |= option;
-            else options &= (ushort)~option;
+            if (value) _options |= option;
+            else _options &= ~option;
         }
 
         internal CompilerContextScope Scope { get; } = CompilerContextScope.CreateInProcess();
@@ -58,8 +69,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool InferTagFromNameDefault
         {
-            get { return GetOption(OPTIONS_InferTagFromNameDefault); }
-            set { SetOption(OPTIONS_InferTagFromNameDefault, value); }
+            get { return GetOption(RuntimeTypeModelOptions.InferTagFromNameDefault); }
+            set { SetOption(RuntimeTypeModelOptions.InferTagFromNameDefault, value); }
         }
 
         /// <summary>
@@ -69,8 +80,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoAddProtoContractTypesOnly
         {
-            get { return GetOption(OPTIONS_AutoAddProtoContractTypesOnly); }
-            set { SetOption(OPTIONS_AutoAddProtoContractTypesOnly, value); }
+            get { return GetOption(RuntimeTypeModelOptions.AutoAddProtoContractTypesOnly); }
+            set { SetOption(RuntimeTypeModelOptions.AutoAddProtoContractTypesOnly, value); }
         }
 
         /// <summary>
@@ -87,14 +98,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool UseImplicitZeroDefaults
         {
-            get { return GetOption(OPTIONS_UseImplicitZeroDefaults); }
+            get { return GetOption(RuntimeTypeModelOptions.UseImplicitZeroDefaults); }
             set
             {
-                if (!value && GetOption(OPTIONS_IsDefaultModel))
+                if (!value && GetOption(RuntimeTypeModelOptions.IsDefaultModel))
                 {
                     throw new InvalidOperationException("UseImplicitZeroDefaults cannot be disabled on the default model");
                 }
-                SetOption(OPTIONS_UseImplicitZeroDefaults, value);
+                SetOption(RuntimeTypeModelOptions.UseImplicitZeroDefaults, value);
             }
         }
 
@@ -104,8 +115,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AllowParseableTypes
         {
-            get { return GetOption(OPTIONS_AllowParseableTypes); }
-            set { SetOption(OPTIONS_AllowParseableTypes, value); }
+            get { return GetOption(RuntimeTypeModelOptions.AllowParseableTypes); }
+            set { SetOption(RuntimeTypeModelOptions.AllowParseableTypes, value); }
         }
 
         /// <summary>
@@ -113,32 +124,29 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IncludeDateTimeKind
         {
-            get { return GetOption(OPTIONS_IncludeDateTimeKind); }
-            set { SetOption(OPTIONS_IncludeDateTimeKind, value); }
+            get { return GetOption(RuntimeTypeModelOptions.IncludeDateTimeKind); }
+            set { SetOption(RuntimeTypeModelOptions.IncludeDateTimeKind, value); }
+        }
+
+        /// <summary>
+        /// Should zero-length packed arrays be serialized? (this is the v2 behavior, but skipping them is more efficient)
+        /// </summary>
+        public bool SkipZeroLengthPackedArrays
+        {
+            get { return GetOption(RuntimeTypeModelOptions.SkipZeroLengthPackedArrays); }
+            set { SetOption(RuntimeTypeModelOptions.SkipZeroLengthPackedArrays, value); }
         }
 
         /// <summary>
         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
         /// </summary>
         /// <remarks>Note this does not use the global .NET string interner</remarks>
-        public new bool InternStrings
+        public bool InternStrings
         {
-            get { return GetOption(OPTIONS_InternStrings); }
-            set { SetOption(OPTIONS_InternStrings, value); }
+            get { return GetOption(RuntimeTypeModelOptions.InternStrings); }
+            set { SetOption(RuntimeTypeModelOptions.InternStrings, value); }
         }
 
-        /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-        /// </summary>
-        protected internal override bool GetInternStrings() => InternStrings;
-
-        /// <summary>
-        /// Should the <c>Kind</c> be included on date/time values?
-        /// </summary>
-        protected internal override bool SerializeDateTimeKind()
-        {
-            return GetOption(OPTIONS_IncludeDateTimeKind);
-        }
 
         private static class DeferredModelLoader
         {
@@ -433,7 +441,7 @@ namespace ProtoBuf.Meta
         {
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
-            SetOption(OPTIONS_IsDefaultModel, isDefault);
+            SetOption(RuntimeTypeModelOptions.IsDefaultModel, isDefault);
 #if !DEBUG
             try
             {
@@ -727,8 +735,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoCompile
         {
-            get { return GetOption(OPTIONS_AutoCompile); }
-            set { SetOption(OPTIONS_AutoCompile, value); }
+            get { return GetOption(RuntimeTypeModelOptions.AutoCompile); }
+            set { SetOption(RuntimeTypeModelOptions.AutoCompile, value); }
         }
 
         /// <summary>
@@ -738,15 +746,15 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoAddMissingTypes
         {
-            get { return GetOption(OPTIONS_AutoAddMissingTypes); }
+            get { return GetOption(RuntimeTypeModelOptions.AutoAddMissingTypes); }
             set
             {
-                if (!value && GetOption(OPTIONS_IsDefaultModel))
+                if (!value && GetOption(RuntimeTypeModelOptions.IsDefaultModel))
                 {
                     throw new InvalidOperationException("The default model must allow missing types");
                 }
                 ThrowIfFrozen();
-                SetOption(OPTIONS_AutoAddMissingTypes, value);
+                SetOption(RuntimeTypeModelOptions.AutoAddMissingTypes, value);
             }
         }
         /// <summary>
@@ -754,7 +762,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         private void ThrowIfFrozen()
         {
-            if (GetOption(OPTIONS_Frozen)) throw new InvalidOperationException("The model cannot be changed once frozen");
+            if (GetOption(RuntimeTypeModelOptions.Frozen)) throw new InvalidOperationException("The model cannot be changed once frozen");
         }
 
         /// <summary>
@@ -762,8 +770,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public void Freeze()
         {
-            if (GetOption(OPTIONS_IsDefaultModel)) throw new InvalidOperationException("The default model cannot be frozen");
-            SetOption(OPTIONS_Frozen, true);
+            if (GetOption(RuntimeTypeModelOptions.IsDefaultModel)) throw new InvalidOperationException("The default model cannot be frozen");
+            SetOption(RuntimeTypeModelOptions.Frozen, true);
         }
 
         /// <summary>Resolve a service relative to T</summary>
@@ -942,7 +950,9 @@ namespace ProtoBuf.Meta
             MethodInfo baseMethod;
             try
             {
-                baseMethod = type.BaseType.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+                baseMethod = type.BaseType.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (baseMethod == null)
+                    throw new ArgumentException($"Unable to resolve '{name}'");
             }
             catch (Exception ex)
             {
@@ -1176,12 +1186,8 @@ namespace ProtoBuf.Meta
 
         private void WriteConstructorsAndOverrides(TypeBuilder type, Type serviceType)
         {
-            var il = Override(type, nameof(TypeModel.GetInternStrings));
-            il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-            il.Emit(OpCodes.Ret);
-
-            il = Override(type, nameof(TypeModel.SerializeDateTimeKind));
-            il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+            var il = Override(type, "get_" + nameof(TypeModel.Options));
+            CompilerContext.LoadValue(il, (int)Options);
             il.Emit(OpCodes.Ret);
 
             il = Override(type, nameof(TypeModel.GetSerializer), out var genericArgs);

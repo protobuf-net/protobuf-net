@@ -8,11 +8,8 @@ namespace ProtoBuf.Reflection.Internal
     {
         private CustomProtogenSerializer() { }
         internal static TypeModel Instance { get; } = new CustomProtogenSerializer();
-        protected override bool GetInternStrings() => false;
 
         protected override ISerializer<T> GetSerializer<T>() =>
             SerializerCache.Get<CustomProtogenSerializerServices, T>();
-
-        protected override bool SerializeDateTimeKind() => false;
     }
 }

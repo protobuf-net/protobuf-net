@@ -12,7 +12,7 @@ namespace ProtoBuf
         public void DictionaryListList_Empty() => RoundTripWithoutValue(new HazDictionaryWithLists(), "");
 
         [Theory]
-        [InlineData(new object[] { new int[] { }, "D2-02-00" })] // field 42, length 0
+        [InlineData(new object[] { new int[] { }, "D2-02-02-0A-00" })] // field 42, length 0, field 1 = (empty)
         [InlineData(new object[] { new int[] { 7 }, "D2-02-02-08-07" })] // field 42, length 2; field 1 = 7
         [InlineData(new object[] { new int[] { 4, 5}, "D2-02-04-0A-02-04-05" })] // field 42, length 4; field 1 = 4, field 1 = 5
         // note: v2 was "D2-02-04-08-04-08-05", but this is equivalent as 'packed'
