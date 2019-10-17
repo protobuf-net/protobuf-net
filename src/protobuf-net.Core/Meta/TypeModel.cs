@@ -61,7 +61,9 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Specifies optional behaviors associated with this model
         /// </summary>
-        public virtual TypeModelOptions Options => 0;
+        public virtual TypeModelOptions Options => DefaultOptions;
+
+        internal const TypeModelOptions DefaultOptions = 0; // important: WriteConstructorsAndOverrides only overrides if different
 
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
