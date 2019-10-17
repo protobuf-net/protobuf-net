@@ -14,6 +14,7 @@ using ProtoBuf.Internal;
 using System.Linq;
 using System.Collections.Generic;
 using ProtoBuf.Internal.Serializers;
+using System.Globalization;
 
 namespace ProtoBuf.Meta
 {
@@ -1186,9 +1187,14 @@ namespace ProtoBuf.Meta
 
         private void WriteConstructorsAndOverrides(TypeBuilder type, Type serviceType)
         {
-            var il = Override(type, "get_" + nameof(TypeModel.Options));
-            CompilerContext.LoadValue(il, (int)Options);
-            il.Emit(OpCodes.Ret);
+            ILGenerator il;
+            var options = Options;
+            if (options != TypeModel.DefaultOptions)
+            {
+                il = Override(type, "get_" + nameof(TypeModel.Options));
+                CompilerContext.LoadValue(il, (int)options);
+                il.Emit(OpCodes.Ret);
+            }
 
             il = Override(type, nameof(TypeModel.GetSerializer), out var genericArgs);
             var genericT = genericArgs.Single();
@@ -1295,12 +1301,30 @@ namespace ProtoBuf.Meta
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
         {
+            // there are only a few permutations of "features" you want; share them between like-minded types
+            var featuresLookup = new Dictionary<SerializerFeatures, MethodInfo>();
+
+            MethodInfo GetFeaturesMethod(SerializerFeatures features)
+            {
+                if (!featuresLookup.TryGetValue(features, out var method))
+                {
+                    var name = nameof(ISerializer<int>.Features) + "_" + ((int)features).ToString(CultureInfo.InvariantCulture);
+                    var newMethod = type.DefineMethod(name, MethodAttributes.Private | MethodAttributes.Virtual,
+                        typeof(SerializerFeatures), Type.EmptyTypes);
+                    ILGenerator il = newMethod.GetILGenerator();
+                    CompilerContext.LoadValue(il, (int)features);
+                    il.Emit(OpCodes.Ret);
+                    method = featuresLookup[features] = newMethod;
+                }
+                return method;
+            }
+
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
-                ILGenerator il;
+
                 if (runtimeType.IsEnum || metaType.SerializerType is object || TryGetRepeatedProvider(metaType.Type) != null)
                 {   // we don't implement these
                     continue;
@@ -1316,7 +1340,7 @@ namespace ProtoBuf.Meta
                 var serType = typeof(ISerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
 
-                il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Read));
+                var il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Read));
                 using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
@@ -1339,9 +1363,8 @@ namespace ProtoBuf.Meta
                     ctx.Return();
                 }
 
-                il = CompilerContextScope.Implement(type, serType, "get_" + nameof(ISerializer<string>.Features));
-                CompilerContext.LoadValue(il, (int)serializer.Features);
-                il.Emit(OpCodes.Ret);
+                var featuresGetter = serType.GetProperty(nameof(ISerializer<string>.Features)).GetGetMethod();
+                type.DefineMethodOverride(GetFeaturesMethod(serializer.Features), featuresGetter);
 
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)
@@ -1386,7 +1409,7 @@ namespace ProtoBuf.Meta
         private TypeBuilder WriteBasicTypeModel(string typeName, ModuleBuilder module,
             Type baseType, bool @internal)
         {
-            TypeAttributes typeAttributes = (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
+            TypeAttributes typeAttributes = (baseType.Attributes & ~(TypeAttributes.Abstract | TypeAttributes.Serializable)) | TypeAttributes.Sealed;
             if (@internal) typeAttributes &= ~TypeAttributes.Public;
 
             return module.DefineType(typeName, typeAttributes, baseType);
