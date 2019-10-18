@@ -10,7 +10,7 @@ namespace ProtoBuf.Meta
     /// <summary>
     /// Provides protobuf serialization support for a number of types
     /// </summary>
-    public abstract class TypeModel
+    public abstract partial class TypeModel
     {
 #if COREFX
         internal TypeInfo MapType(TypeInfo type)

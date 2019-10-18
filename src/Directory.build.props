@@ -7,7 +7,7 @@
     <DelaySign>False</DelaySign>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
     <Copyright>See https://github.com/mgravell/protobuf-net</Copyright>
-    <PackageLicenseUrl>https://github.com/mgravell/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/mgravell/protobuf-net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mgravell/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
