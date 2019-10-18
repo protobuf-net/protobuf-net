@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using System;
 using System.IO;
 using Xunit;
 
@@ -6,10 +7,19 @@ namespace ProtoBuf
 {
     public class InputOutputAPI
     {
+        private static object ModelObj => RuntimeTypeModel.Default;
         [Fact]
-        public void IsStreamInput() => Assert.True(RuntimeTypeModel.Default is IProtoInput<Stream>);
+        public void IsStreamInput() => Assert.True(ModelObj is IProtoInput<Stream>);
         [Fact]
-        public void IsStreamOutput() => Assert.True(RuntimeTypeModel.Default is IProtoOutput<Stream>);
+        public void IsArrayInput() => Assert.True(ModelObj is IProtoInput<byte[]>);
+        [Fact]
+        public void IsArraySegmentInput() => Assert.True(ModelObj is IProtoInput<ArraySegment<byte>>);
+        [Fact]
+        public void IsStreamOutput() => Assert.True(ModelObj is IProtoOutput<Stream>);
+        [Fact]
+        public void IsArrayOutput() => Assert.False(ModelObj is IProtoOutput<byte[]>);
+        [Fact]
+        public void IsArraySegmentOutput() => Assert.False(ModelObj is IProtoOutput<ArraySegment<byte>>);
 
         [ProtoContract]
         public class SomeModel
@@ -30,6 +40,19 @@ namespace ProtoBuf
 
                 IProtoInput<Stream> input = RuntimeTypeModel.Default;
                 var clone = input.Deserialize<SomeModel>(ms);
+
+                Assert.NotSame(orig, clone);
+                Assert.Equal(42, clone.Id);
+
+                IProtoInput<byte[]> arrayInput = RuntimeTypeModel.Default;
+                clone = arrayInput.Deserialize<SomeModel>(ms.ToArray());
+
+                Assert.NotSame(orig, clone);
+                Assert.Equal(42, clone.Id);
+
+                var segment = new ArraySegment<byte>(ms.GetBuffer(), 0, (int)ms.Length);
+                IProtoInput<ArraySegment<byte>> segmentInput = RuntimeTypeModel.Default;
+                clone = segmentInput.Deserialize<SomeModel>(segment);
 
                 Assert.NotSame(orig, clone);
                 Assert.Equal(42, clone.Id);
