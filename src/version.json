@@ -6,6 +6,6 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/master$",
-    "^refs/heads/2.4.2$"
+    "^refs/heads/2.4.1$"
   ]
 }
