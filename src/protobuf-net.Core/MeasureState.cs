@@ -51,7 +51,7 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Gets the calculated length of this serialize operation, im bytes
+        /// Gets the calculated length of this serialize operation, in bytes
         /// </summary>
         public long Length { get; }
 
