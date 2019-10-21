@@ -14,6 +14,10 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## 2.4.3
+
+- add `IMeasuredProtoOutput<T>` API for discovering input/output capabilities (this is to allow testing for 3.0 features)
+
 ## 2.4.2
 
 - add `IProtoInput<T>` / `IProtoOutput<T>` API for discovering input/output capabilities (this is to allow testing for 3.0 features)
