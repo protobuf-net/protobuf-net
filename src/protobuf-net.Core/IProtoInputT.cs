@@ -1,13 +1,13 @@
 ﻿namespace ProtoBuf
 {
     /// <summary>
-    /// Represents the ability to serialize values to an output of type <typeparamref name="TOutput"/>
+    /// Represents the ability to deserialize values from an input of type <typeparamref name="TInput"/>
     /// </summary>
-    public interface IProtoOutput<TOutput>
+    public interface IProtoInput<TInput>
     {
         /// <summary>
-        /// Serialize the provided value
+        /// Deserialize a value from the input
         /// </summary>
-        void Serialize<T>(TOutput destination, T value, object userState = null);
+        T Deserialize<T>(TInput source, T value = default, object userState = null);
     }
 }

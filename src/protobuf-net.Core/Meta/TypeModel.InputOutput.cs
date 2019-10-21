@@ -11,7 +11,9 @@ namespace ProtoBuf.Meta
         IProtoInput<ReadOnlyMemory<byte>>,
         IProtoInput<ReadOnlySequence<byte>>,
         IProtoOutput<Stream>,
-        IProtoOutput<IBufferWriter<byte>>
+        IProtoOutput<IBufferWriter<byte>>,
+        IMeasuredProtoOutput<Stream>,
+        IMeasuredProtoOutput<IBufferWriter<byte>>
     {
         T IProtoInput<Stream>.Deserialize<T>(Stream source, T value, object userState)
             => Deserialize<T>(source, value, userState);
@@ -37,5 +39,11 @@ namespace ProtoBuf.Meta
 
         void IProtoOutput<IBufferWriter<byte>>.Serialize<T>(IBufferWriter<byte> destination, T value, object userState)
             => Serialize<T>(destination, value, userState);
+
+        void IMeasuredProtoOutput<Stream>.Serialize<T>(MeasureState<T> measured, Stream destination)
+            => measured.Serialize(destination);
+
+        void IMeasuredProtoOutput<IBufferWriter<byte>>.Serialize<T>(MeasureState<T> measured, IBufferWriter<byte> destination)
+            => measured.Serialize(destination);
     }
 }
