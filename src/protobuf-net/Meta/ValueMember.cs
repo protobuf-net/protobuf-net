@@ -356,6 +356,25 @@ namespace ProtoBuf.Meta
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
+        internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat, DataFormat keyFormat, DataFormat valueFormat,
+            bool asReference, bool dynamicType, bool isMap, bool overwriteList, int fieldNumber)
+        {
+
+            repeated.ResolveMapTypes(out var keyType, out var valueType);
+            _ = TryGetCoreSerializer(model, keyFormat, keyType, out var keyWireType, false, false, false, false);
+            _ = TryGetCoreSerializer(model, valueFormat, valueType, out var valueWireType, asReference, dynamicType, false, true);
+
+
+            WireType rootWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
+            SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
+            if (!isMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
+            if (overwriteList) features |= SerializerFeatures.OptionClearCollection;
+
+
+            return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
+                keyWireType.AsFeatures(), valueWireType.AsFeatures());
+        }
+
         private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
@@ -377,19 +396,7 @@ namespace ProtoBuf.Meta
                             AsReference = MetaType.GetAsReferenceDefault(valueType);
                         }
 #endif
-                        repeated.ResolveMapTypes(out var keyType, out var valueType);
-                        _ = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
-                        _ = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
-
-
-                        WireType rootWireType = DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                        SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
-                        if (!IsMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
-                        if (OverwriteList) features |= SerializerFeatures.OptionClearCollection;
-
-                        
-                        ser = MapDecorator.Create(repeated, keyType, valueType, FieldNumber, features,
-                            keyWireType.AsFeatures(), valueWireType.AsFeatures());
+                        ser = CreateMap(repeated, model, DataFormat, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
                     }
                     else
                     {

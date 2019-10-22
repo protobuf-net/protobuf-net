@@ -44,8 +44,13 @@ namespace ProtoBuf.Internal.Serializers
                 {
                     serializer = new TagDecorator(i + 1, wireType, false, tail);
                 }
+                else if (repeated.IsMap)
+                {
+                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
+                }
                 else
                 {
+
                     SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
                     serializer = RepeatedDecorator.Create(repeated, i + 1, listFeatures);
                 }

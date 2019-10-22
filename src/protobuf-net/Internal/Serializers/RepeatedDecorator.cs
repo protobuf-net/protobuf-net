@@ -54,6 +54,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
+            _ = Serializer; // this is to force a type-check
             var method = typeof(RepeatedSerializer<TCollection, T>).GetMethod(nameof(RepeatedSerializer<TCollection, T>.ReadRepeated));
 
             using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
