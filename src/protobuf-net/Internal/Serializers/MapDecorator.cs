@@ -49,6 +49,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
+            _ = Serializer; // this is to force a type-check
             var method = typeof(MapSerializer<TCollection, TKey, TValue>).GetMethod(nameof(MapSerializer<TCollection, TKey, TValue>.WriteMap));
 
             using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
