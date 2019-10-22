@@ -59,7 +59,7 @@ namespace ProtoBuf
                 return !except.Contains(t);
             };
 
-            RuntimeTypeModel.CreateForAssembly(GetType().Assembly, options);
+            AutoCompileTypeModel.CreateForAssembly(GetType().Assembly, options);
             PEVerify.AssertValid(path);
         }
     }

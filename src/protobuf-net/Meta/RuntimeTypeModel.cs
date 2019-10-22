@@ -15,6 +15,7 @@ using System.Linq;
 using System.Collections.Generic;
 using ProtoBuf.Internal.Serializers;
 using System.Globalization;
+using System.ComponentModel;
 
 namespace ProtoBuf.Meta
 {
@@ -154,7 +155,14 @@ namespace ProtoBuf.Meta
             internal static readonly RuntimeTypeModel Instance = new RuntimeTypeModel(true, "(default)");
         }
 
+        internal static void OnDebugLog(string message, Type type)
+            => DebugLog?.Invoke(message, type);
 
+        /// <summary>
+        /// Something interesting happened for a type
+        /// </summary>
+        [Obsolete("This API is not intended for consumer usage"), Browsable(false)]
+        public static event Action<string, Type> DebugLog;
 
         /// <summary>
         /// The default model, used to support ProtoBuf.Serializer
@@ -1724,45 +1732,6 @@ namespace ProtoBuf.Meta
 
         private readonly string _name;
 
-        /// <summary>
-        /// Create a model that serializes all types from an
-        /// assembly specified by type
-        /// </summary>
-        public static new TypeModel CreateForAssembly<T>()
-            => CreateForAssembly(typeof(T).Assembly);
-
-        /// <summary>
-        /// Create a model that serializes all types from an
-        /// assembly specified by type
-        /// </summary>
-        public static new TypeModel CreateForAssembly(Type type)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            return CreateForAssembly(type.Assembly);
-        }
-
-        /// <summary>
-        /// Create a model that serializes all types from an assembly
-        /// </summary>
-        public static new TypeModel CreateForAssembly(Assembly assembly)
-            => CreateForAssembly(assembly, null);
-
-        /// <summary>
-        /// Create a model that serializes all types from an assembly
-        /// </summary>
-        public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)
-        {
-            if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
-            if (options == null)
-            {
-                var obj = (TypeModel)s_assemblyModels[assembly];
-                if (obj != null) return obj;
-            }
-            return CreateForAssemblyImpl(assembly, options);
-        }
-
-        private readonly static Hashtable s_assemblyModels = new Hashtable();
-
         internal static bool IsFullyPublic(Type type) => IsFullyPublic(type, out _);
 
         internal static bool IsFullyPublic(Type type, out Type cause)
@@ -1796,32 +1765,25 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        private static TypeModel CreateForAssemblyImpl(Assembly assembly, CompilerOptions options)
-        {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            lock (assembly)
-            {
-                var found = (TypeModel)s_assemblyModels[assembly];
-                if (found != null) return found;
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly<T>()
+            => AutoCompileTypeModel.CreateForAssembly<T>();
 
-                RuntimeTypeModel model = null;
-                foreach (var type in assembly.GetTypes())
-                {
-                    if (type.IsGenericTypeDefinition) continue;
-                    if (!IsFullyPublic(type)) continue;
-                    if (!type.IsDefined(typeof(ProtoContractAttribute), true)) continue;
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Type type)
+            => AutoCompileTypeModel.CreateForAssembly(type);
 
-                    if (options != null && !options.OnIncludeType(type)) continue;
-
-                    (model ?? (model = Create())).Add(type, true);
-                }
-                if (model == null)
-                    throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
-                var compiled = model.Compile(options);
-                s_assemblyModels[assembly] = compiled;
-                return compiled;
-            }
-        }
+        /// <summary>
+        /// Create a model that serializes all types from an assembly
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Assembly assembly)
+            => AutoCompileTypeModel.CreateForAssembly(assembly);
     }
 
     /// <summary>
