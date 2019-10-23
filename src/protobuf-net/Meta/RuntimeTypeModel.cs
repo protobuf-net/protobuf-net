@@ -26,24 +26,25 @@ namespace ProtoBuf.Meta
     {
         private RuntimeTypeModelOptions _options;
 
-        enum RuntimeTypeModelOptions
+        private enum RuntimeTypeModelOptions
         {
             None = 0,
             InternStrings = TypeModelOptions.InternStrings,
             IncludeDateTimeKind = TypeModelOptions.IncludeDateTimeKind,
             SkipZeroLengthPackedArrays = TypeModelOptions.SkipZeroLengthPackedArrays,
+            AllowPackedEncodingAtRoot = TypeModelOptions.AllowPackedEncodingAtRoot,
 
-            TypeModelMask = InternStrings | IncludeDateTimeKind | SkipZeroLengthPackedArrays,
+            TypeModelMask = InternStrings | IncludeDateTimeKind | SkipZeroLengthPackedArrays | AllowPackedEncodingAtRoot,
 
             // stuff specific to RuntimeTypeModel
-            InferTagFromNameDefault = 1 << 4,
-            IsDefaultModel = 1 << 5,
-            Frozen = 1 << 6,
-            AutoAddMissingTypes = 1 << 7,
-            AutoCompile = 1 << 8,
-            UseImplicitZeroDefaults = 1 << 9,
-            AllowParseableTypes = 1 << 10,
-            AutoAddProtoContractTypesOnly = 1 << 11,
+            InferTagFromNameDefault = 1 << 10,
+            IsDefaultModel = 1 << 11,
+            Frozen = 1 << 12,
+            AutoAddMissingTypes = 1 << 13,
+            AutoCompile = 1 << 14,
+            UseImplicitZeroDefaults = 1 << 15,
+            AllowParseableTypes = 1 << 16,
+            AutoAddProtoContractTypesOnly = 1 << 17,
         }
 
         /// <summary>
@@ -137,6 +138,15 @@ namespace ProtoBuf.Meta
         {
             get { return GetOption(RuntimeTypeModelOptions.SkipZeroLengthPackedArrays); }
             set { SetOption(RuntimeTypeModelOptions.SkipZeroLengthPackedArrays, value); }
+        }
+
+        /// <summary>
+        /// Should root-values allow "packed" encoding? (v2 does not support this)
+        /// </summary>
+        public bool AllowPackedEncodingAtRoot
+        {
+            get { return GetOption(RuntimeTypeModelOptions.AllowPackedEncodingAtRoot); }
+            set { SetOption(RuntimeTypeModelOptions.AllowPackedEncodingAtRoot, value); }
         }
 
         /// <summary>

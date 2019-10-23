@@ -27,6 +27,31 @@ namespace ProtoBuf.Test.Issues
             Test(dll);
         }
 
+        [Theory]
+        [InlineData(true, "0A-03-01-02-03")]
+        [InlineData(false, "08-01-08-02-08-03")]
+        public void DoNotEmitPackedRootsByDefault(bool allowed, string expected)
+        {
+            var model = RuntimeTypeModel.Create();
+            Assert.False(model.AllowPackedEncodingAtRoot);
+            if (allowed)
+            {
+                model.AllowPackedEncodingAtRoot = true;
+                Assert.True(model.AllowPackedEncodingAtRoot);
+            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, new List<int> { 1, 2, 3 });
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal(expected, hex);
+
+            ms.Position = 0;
+            var clone = model.Deserialize<List<int>>(ms);
+            Assert.Equal(3, clone.Count);
+            Assert.Equal(1, clone[0]);
+            Assert.Equal(2, clone[1]);
+            Assert.Equal(3, clone[2]);
+        }
+
         private static void Test(TypeModel model)
         {
             var data = Tuple.Create(
