@@ -288,9 +288,9 @@ namespace ProtoBuf.Internal
         double? ISerializer<double?>.Read(ref ProtoReader.State state, double? value) => ((ISerializer<double>)this).Read(ref state, value.GetValueOrDefault());
 
 
-        bool IValueChecker<string>.HasNonTrivialValue(string value) => !string.IsNullOrEmpty(value);
-        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => !string.IsNullOrEmpty(value.OriginalString);
-        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value != null && value.Length != 0;
+        bool IValueChecker<string>.HasNonTrivialValue(string value) => value != null; //  note: we write "" (when found), for compat
+        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => value?.OriginalString != null; //  note: we write "" (when found), for compat
+        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value != null;  //  note: we write [] (when found), for compat
         bool IValueChecker<sbyte>.HasNonTrivialValue(sbyte value) => value != 0;
         bool IValueChecker<short>.HasNonTrivialValue(short value) => value != 0;
         bool IValueChecker<int>.HasNonTrivialValue(int value) => value != 0;

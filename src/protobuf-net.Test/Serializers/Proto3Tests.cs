@@ -273,7 +273,7 @@ message HazAliasedEnum {
                     Lookup =
                     {
                         new HazMapEquiv.Entry { Key = 1, Value = "abc" },
-                        new HazMapEquiv.Entry { },
+                        new HazMapEquiv.Entry { Value = "" },
                         new HazMapEquiv.Entry { Key = 2, Value = "def" },
                     }
                 });
