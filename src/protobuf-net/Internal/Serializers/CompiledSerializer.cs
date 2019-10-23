@@ -11,18 +11,13 @@ namespace ProtoBuf.Internal.Serializers
         where TBase : class
         where T : class, TBase
     {
-        private int _serializeCount, _deserializeCount, _subSerializeCount, _subDeserializeCount;
         private readonly Compiler.ProtoSerializer<T> subTypeSerializer;
         private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
         private readonly Func<ISerializationContext, T> factory;
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
         {
-            bool isFirst = Interlocked.Increment(ref _deserializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first read", typeof(T));
-            value = state.ReadBaseType<TBase, T>(value);
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first read", typeof(T));
-            return value;
+            return state.ReadBaseType<TBase, T>(value);
         }
 
         T IFactory<T>.Create(ISerializationContext context)
@@ -30,45 +25,28 @@ namespace ProtoBuf.Internal.Serializers
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            bool isFirst = Interlocked.Increment(ref _deserializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first read", typeof(T));
-            value = state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first read", typeof(T));
-            return value;
+            return state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
         }
 
 
         void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
         {
-            bool isFirst = Interlocked.Increment(ref _serializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first write", typeof(T));
             state.WriteBaseType<TBase>(value);
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first write", typeof(T));
         }
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            bool isFirst = Interlocked.Increment(ref _serializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first write", typeof(T));
             state.WriteBaseType<TBase>(TypeHelper<T>.FromObject(value));
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first write", typeof(T));
         }
 
         void ISubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
         {
-            bool isFirst = Interlocked.Increment(ref _subSerializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first sub-write", typeof(T));
             subTypeSerializer(ref state, value);
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first sub-write", typeof(T));
         }
 
         T ISubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
         {
-            bool isFirst = Interlocked.Increment(ref _subDeserializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first sub-read", typeof(T));
-            var ret = subTypeDeserializer(ref state, value);
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first sub-read", typeof(T));
-            return ret;
+            return subTypeDeserializer(ref state, value);
         }
 
         public InheritanceCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
@@ -97,7 +75,6 @@ namespace ProtoBuf.Internal.Serializers
     internal class SimpleCompiledSerializer<T> : CompiledSerializer,
         ISerializer<T>, IFactory<T>
     {
-        private int _serializeCount, _deserializeCount;
         protected readonly Compiler.ProtoSerializer<T> serializer;
         protected readonly Compiler.ProtoDeserializer<T> deserializer;
         private readonly Func<ISerializationContext, T> factory;
@@ -127,36 +104,22 @@ namespace ProtoBuf.Internal.Serializers
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
         {
-            bool isFirst = Interlocked.Increment(ref _deserializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first read", typeof(T));
-            value = deserializer(ref state, value);
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first read", typeof(T));
-            return value;
+            return deserializer(ref state, value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            bool isFirst = Interlocked.Increment(ref _deserializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first read", typeof(T));
-            value = deserializer(ref state, TypeHelper<T>.FromObject(value));
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first read", typeof(T));
-            return value;
+            return deserializer(ref state, TypeHelper<T>.FromObject(value));
         }
 
         void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
         {
-            bool isFirst = Interlocked.Increment(ref _serializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first write", typeof(T));
             serializer(ref state, value);
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first write", typeof(T));
         }
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            bool isFirst = Interlocked.Increment(ref _serializeCount) == 1;
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Pre first write", typeof(T));
             serializer(ref state, TypeHelper<T>.FromObject(value));
-            if (isFirst) RuntimeTypeModel.OnDebugLog("Post first write", typeof(T));
         }
 
         T IFactory<T>.Create(ISerializationContext context)

@@ -54,11 +54,11 @@ namespace ProtoBuf.Internal
 
         public void Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> value)
         {
-            // this deals with nulls, empty strings, and implicit zeros
+            // this deals with nulls and implicit zeros
             if (TypeHelper<TKey>.ValueChecker.HasNonTrivialValue(value.Key))
                 state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
 
-            // this deals with nulls, empty strings, and implicit zeros
+            // this deals with nulls and implicit zeros
             if (TypeHelper<TValue>.ValueChecker.HasNonTrivialValue(value.Value))
                 state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
         }

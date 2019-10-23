@@ -155,15 +155,6 @@ namespace ProtoBuf.Meta
             internal static readonly RuntimeTypeModel Instance = new RuntimeTypeModel(true, "(default)");
         }
 
-        internal static void OnDebugLog(string message, Type type)
-            => DebugLog?.Invoke(message, type);
-
-        /// <summary>
-        /// Something interesting happened for a type
-        /// </summary>
-        [Obsolete("This API is not intended for consumer usage"), Browsable(false)]
-        public static event Action<string, Type> DebugLog;
-
         /// <summary>
         /// The default model, used to support ProtoBuf.Serializer
         /// </summary>
