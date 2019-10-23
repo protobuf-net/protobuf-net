@@ -110,7 +110,7 @@ namespace ProtoBuf
             _depth = _fieldNumber = 0;
 
             blockEnd64 = long.MaxValue;
-            InternStrings = (model ?? TypeModel.DefaultModel)?.HasOption(TypeModel.TypeModelOptions.InternStrings) ?? false;
+            InternStrings = model.HasOption(TypeModel.TypeModelOptions.InternStrings);
             WireType = WireType.None;
 #if FEAT_DYNAMIC_REF
             trapCount = 1;

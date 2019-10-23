@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Serializers;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Runtime.InteropServices;
 
@@ -36,8 +37,7 @@ namespace ProtoBuf.Internal
 
         void ISerializer<DateTime>.Write(ref ProtoWriter.State state, DateTime value)
         {
-            var model = state.Model;
-            var includeKind = model != null && model.HasOption(Meta.TypeModel.TypeModelOptions.IncludeDateTimeKind);
+            var includeKind = state.Model.HasOption(TypeModel.TypeModelOptions.IncludeDateTimeKind);
             ((ISerializer<ScaledTicks>)this).Write(ref state, ScaledTicks.Create(value, includeKind));
         }
 

@@ -13,6 +13,24 @@ using System.Threading;
 
 namespace ProtoBuf.Meta
 {
+    internal static class TypeModelExtensions
+    {
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static bool HasOption(this TypeModel model, TypeModel.TypeModelOptions options)
+        {
+            var modelOptions = model == null ? TypeModel.DefaultOptions : model.Options;
+            return (modelOptions & options) != 0;
+        }
+
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static bool OmitsOption(this TypeModel model, TypeModel.TypeModelOptions options)
+        {
+            var modelOptions = model == null ? TypeModel.DefaultOptions : model.Options;
+            return (modelOptions & options) == 0;
+        }
+    }
+
     /// <summary>
     /// Provides protobuf serialization support for a number of types
     /// </summary>
@@ -53,15 +71,6 @@ namespace ProtoBuf.Meta
             /// </summary>
             AllowPackedEncodingAtRoot = 1 << 3,
         }
-
-        [MethodImpl(ProtoReader.HotPath)]
-        internal bool HasOption(TypeModelOptions options)
-            => (Options & options) != 0;
-
-
-        [MethodImpl(ProtoReader.HotPath)]
-        internal bool OmitsOption(TypeModelOptions options)
-            => (Options & options) == 0;
 
         /// <summary>
         /// Specifies optional behaviors associated with this model
