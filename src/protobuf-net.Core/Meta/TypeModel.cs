@@ -48,6 +48,10 @@ namespace ProtoBuf.Meta
             /// Should zero-length packed arrays be serialized? (this is the v2 behavior, but skipping them is more efficient)
             /// </summary>
             SkipZeroLengthPackedArrays = 1 << 2,
+            /// <summary>
+            /// Should root-values allow "packed" encoding? (v2 does not support this)
+            /// </summary>
+            AllowPackedEncodingAtRoot = 1 << 3,
         }
 
         [MethodImpl(ProtoReader.HotPath)]

@@ -569,6 +569,8 @@ namespace ProtoBuf
                             serializer.Write(ref this, value);
                             break;
                         case SerializerFeatures.CategoryRepeated:
+                            if (Model.OmitsOption(TypeModel.TypeModelOptions.AllowPackedEncodingAtRoot))
+                                features |= SerializerFeatures.OptionPackedDisabled;
                             ((IRepeatedSerializer<T>)serializer).WriteRepeated(ref this, 1, features, value);
                             break;
                         default:
