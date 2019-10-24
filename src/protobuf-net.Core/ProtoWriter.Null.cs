@@ -10,7 +10,7 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static State CreateNull(TypeModel model, object userState = null, long abortAfter = -1)
+        internal static State CreateNull(TypeModel model, object userState, long abortAfter)
             => NullProtoWriter.CreateNullProtoWriter(model, userState, abortAfter);
 
         internal sealed class NullProtoWriter : ProtoWriter
@@ -30,7 +30,11 @@ namespace ProtoBuf
             private NullProtoWriter() { } // gets own object cache
 
             // this is for use as a sub-component of the buffer-writer
-            internal NullProtoWriter(NetObjectCache knownObjects) : base(knownObjects) { }
+            internal NullProtoWriter(NetObjectCache knownObjects)
+                : base(knownObjects)
+            {
+                _abortAfter = long.MaxValue;
+            }
 
             internal override void Dispose()
             {
