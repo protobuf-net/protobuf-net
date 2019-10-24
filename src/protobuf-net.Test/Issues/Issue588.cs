@@ -6,7 +6,7 @@ namespace ProtoBuf.Test.Issues
 {
     public class Issue588
     {
-        [Fact]
+        [Fact(Skip = "concurrency means that this is *really* harmful to the other tests")]
         public void CanSwapDefaultModel()
         {
             var oldModel = RuntimeTypeModel.Default;
