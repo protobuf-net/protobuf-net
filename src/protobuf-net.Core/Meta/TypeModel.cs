@@ -307,8 +307,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public MeasureState<T> Measure<T>(T value, object userState = null)
-            => new MeasureState<T>(this, value, userState);
+        public MeasureState<T> Measure<T>(T value, object userState = null, long abortAfter = -1)
+            => new MeasureState<T>(this, value, userState, abortAfter);
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied writer.

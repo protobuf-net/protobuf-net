@@ -52,6 +52,48 @@ namespace ProtoBuf.Test.Issues
             Assert.Equal(3, clone[2]);
         }
 
+        [Fact]
+        public void LengthLimitedMeasure_WorksByDefault()
+        {
+            var data = Tuple.Create(
+                new Dictionary<string, double>
+                {
+                    {"abc", 123 },
+                    {"def", 456 },
+                    {"ghi", 789 },
+                },
+                new Dictionary<string, double>
+                {
+                    {"jkl", 1011 },
+                    {"mno", 1213 },
+                });
+            using var measure = Serializer.Measure(data);
+            Assert.Equal(80, measure.Length);
+        }
+
+        [Fact]
+        public void LengthLimitedMeasure_FailsWhenOversize()
+        {
+            var data = Tuple.Create(
+                new Dictionary<string, double>
+                {
+                    {"abc", 123 },
+                    {"def", 456 },
+                    {"ghi", 789 },
+                },
+                new Dictionary<string, double>
+                {
+                    {"jkl", 1011 },
+                    {"mno", 1213 },
+                });
+            var ex = Assert.Throws<ProtoException>(() =>
+            {
+                using var measure = Serializer.Measure(data, abortAfter: 20);
+            });
+            Assert.Equal("Length 32 exceeds constrained size of 20 bytes", ex.Message);
+        }
+
+
         private static void Test(TypeModel model)
         {
             var data = Tuple.Create(

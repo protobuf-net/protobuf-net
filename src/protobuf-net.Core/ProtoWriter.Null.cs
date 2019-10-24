@@ -10,19 +10,22 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static State CreateNull(TypeModel model, object userState = null)
-            => NullProtoWriter.CreateNullProtoWriter(model, userState);
+        internal static State CreateNull(TypeModel model, object userState = null, long abortAfter = -1)
+            => NullProtoWriter.CreateNullProtoWriter(model, userState, abortAfter);
 
         internal sealed class NullProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
 
-            internal static State CreateNullProtoWriter(TypeModel model, object userState)
+            internal static State CreateNullProtoWriter(TypeModel model, object userState, long abortAfter)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
                 obj.Init(model, userState, true);
+                obj._abortAfter = abortAfter < 0 ? long.MaxValue : abortAfter;
                 return new State(obj);
             }
+
+            private long _abortAfter;
 
             private NullProtoWriter() { } // gets own object cache
 
@@ -47,12 +50,26 @@ namespace ProtoBuf
                         int bytes = source.Read(buffer, 0, buffer.Length);
                         if (bytes <= 0) break;
                         Advance(bytes);
+                        CheckOversized(ref state);
                     }
                 }
                 finally
                 {
                     ArrayPool<byte>.Shared.Return(buffer);
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal static void CheckOversized(long max, long actual)
+            {
+                if (max >= 0 & actual > max) ThrowHelper.ThrowProtoException($"Length {actual} exceeds constrained size of {max} bytes");
+            }
+
+            [MethodImpl(ProtoReader.HotPath)]
+            private void CheckOversized(ref State state)
+            {
+                var position = state.GetPosition();
+                if (position > _abortAfter) CheckOversized(_abortAfter, position);
             }
 
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
@@ -96,6 +113,7 @@ namespace ProtoBuf
                         break;
                 }
                 Advance(preamble + length);
+                CheckOversized(ref state);
                 WireType = WireType.None;
             }
             protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
@@ -132,6 +150,7 @@ namespace ProtoBuf
                         break;
                 }
                 Advance(bytes);
+                CheckOversized(ref state);
             }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data) { }
@@ -157,7 +176,7 @@ namespace ProtoBuf
         internal static int MeasureUInt32(uint value)
         {
 #if PLAT_INTRINSICS
-                return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+            return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
             int count = 1;
             while ((value >>= 7) != 0)
@@ -172,7 +191,7 @@ namespace ProtoBuf
         internal static int MeasureUInt64(ulong value)
         {
 #if PLAT_INTRINSICS
-                return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+            return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
             int count = 1;
             while ((value >>= 7) != 0)

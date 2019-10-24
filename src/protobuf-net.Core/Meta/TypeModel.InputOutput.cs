@@ -45,5 +45,11 @@ namespace ProtoBuf.Meta
 
         void IMeasuredProtoOutput<IBufferWriter<byte>>.Serialize<T>(MeasureState<T> measured, IBufferWriter<byte> destination)
             => measured.Serialize(destination);
+
+        MeasureState<T> IMeasuredProtoOutput<Stream>.Measure<T>(T value, object userState)
+            => Measure<T>(value, userState);
+
+        MeasureState<T> IMeasuredProtoOutput<IBufferWriter<byte>>.Measure<T>(T value, object userState)
+            => Measure<T>(value, userState);
     }
 }

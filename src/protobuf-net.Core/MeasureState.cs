@@ -22,15 +22,16 @@ namespace ProtoBuf
         private ProtoWriter _writer;
 #pragma warning restore IDE0069
 
-        internal MeasureState(TypeModel model, in T value, object userState)
+        internal MeasureState(TypeModel model, in T value, object userState, long abortAfter)
         {
             _model = model;
             _value = value;
             _userState = userState;
-            var nullState = ProtoWriter.NullProtoWriter.CreateNullProtoWriter(_model, userState);
+            var nullState = ProtoWriter.NullProtoWriter.CreateNullProtoWriter(_model, userState, abortAfter);
             try
             {
                 Length = TypeModel.SerializeImpl<T>(ref nullState, _value);
+                ProtoWriter.NullProtoWriter.CheckOversized(abortAfter, Length);
                 _writer = nullState.GetWriter();
             }
             catch

@@ -52,8 +52,8 @@ namespace ProtoBuf
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public static MeasureState<T> Measure<T>(T value, object userState = null)
-            => RuntimeTypeModel.Default.Measure<T>(value, userState);
+        public static MeasureState<T> Measure<T>(T value, object userState = null, long abortAfter = -1)
+            => RuntimeTypeModel.Default.Measure<T>(value, userState, abortAfter);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance.
