@@ -61,7 +61,7 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(ProtoReader.HotPath)]
         private TypeModel ForAssembly(Type type)
-            => type == null ? NullModel.Instance : CreateForAssembly(type.Assembly, null);
+            => type == null ? NullModel.Singleton : CreateForAssembly(type.Assembly, null);
 
         /// <summary>See TypeModel.GetSchema</summary>
         public override string GetSchema(Type type, ProtoSyntax syntax)

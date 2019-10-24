@@ -1060,20 +1060,19 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static TypeModel SetDefaultModel(TypeModel newValue)
         {
-            // the point here is to allow:
-            // 1. TypeModel.DefaultModel to set a non-null NullModel instance automagically
-            // 2. RuntimeTypeModel.Default to override that, changing either a null or a NullModel
-            // to the default RuntimeTypeModel
-            // 3. there is no 3; those are the supported scenarios
-            var fieldValue = Volatile.Read(ref s_defaultModel);
-            if (fieldValue == null || fieldValue is NullModel)
+            switch (newValue)
             {
-                if (newValue == null) newValue = NullModel.Instance;
-                Interlocked.CompareExchange(ref s_defaultModel, newValue, fieldValue);
-                fieldValue = Volatile.Read(ref s_defaultModel);
+                case null:
+                case NullModel _:
+                    // set to the null instance, but only if the field is null
+                    Interlocked.CompareExchange(ref s_defaultModel, NullModel.Singleton, null);
+                    break;
+                default:
+                    // something more exotic? (presumably RuntimeTypeModel); yeah, OK
+                    Interlocked.Exchange(ref s_defaultModel, newValue);
+                    break;
             }
-            return fieldValue;
-
+            return Volatile.Read(ref s_defaultModel);
         }
         private static TypeModel s_defaultModel;
 
@@ -1085,7 +1084,13 @@ namespace ProtoBuf.Meta
         internal sealed class NullModel : TypeModel
         {
             private NullModel() { }
-            public static NullModel Instance = new NullModel();
+            private static readonly NullModel s_Singleton = new NullModel();
+
+            public static TypeModel Singleton
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                get => s_Singleton;
+            }
             protected internal override ISerializer<T> GetSerializer<T>() => null;
         }
 

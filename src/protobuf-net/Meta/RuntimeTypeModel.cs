@@ -1,21 +1,19 @@
-﻿using System;
+﻿using ProtoBuf.Compiler;
+using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
+using ProtoBuf.Serializers;
+using System;
 using System.Collections;
-using System.Text;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-
-using ProtoBuf.Serializers;
-using System.Threading;
-using System.IO;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ProtoBuf.Compiler;
-using ProtoBuf.Internal;
-using System.Linq;
-using System.Collections.Generic;
-using ProtoBuf.Internal.Serializers;
-using System.Globalization;
-using System.ComponentModel;
+using System.Text;
+using System.Threading;
 
 namespace ProtoBuf.Meta
 {
@@ -105,9 +103,7 @@ namespace ProtoBuf.Meta
             set
             {
                 if (!value && GetOption(RuntimeTypeModelOptions.IsDefaultModel))
-                {
-                    throw new InvalidOperationException("UseImplicitZeroDefaults cannot be disabled on the default model");
-                }
+                    ThrowDefaultUseImplicitZeroDefaults();
                 SetOption(RuntimeTypeModelOptions.UseImplicitZeroDefaults, value);
             }
         }
@@ -159,25 +155,11 @@ namespace ProtoBuf.Meta
             set { SetOption(RuntimeTypeModelOptions.InternStrings, value); }
         }
 
-
-        private static class DeferredModelLoader
-        {
-            internal static readonly RuntimeTypeModel Instance = new RuntimeTypeModel(true, "(default)");
-        }
-
         /// <summary>
         /// The default model, used to support ProtoBuf.Serializer
         /// </summary>
         public static RuntimeTypeModel Default
-            => (DefaultModel as RuntimeTypeModel) ?? LoadDeferredModel();
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static RuntimeTypeModel LoadDeferredModel()
-        {
-            var model = DeferredModelLoader.Instance;
-            SetDefaultModel(model);
-            return model;
-        }
+            => (DefaultModel as RuntimeTypeModel) ?? CreateDefaultModelInstance();
 
         /// <summary>
         /// Returns a sequence of the Type instances that can be
@@ -760,13 +742,12 @@ namespace ProtoBuf.Meta
             set
             {
                 if (!value && GetOption(RuntimeTypeModelOptions.IsDefaultModel))
-                {
-                    throw new InvalidOperationException("The default model must allow missing types");
-                }
+                    ThrowDefaultAutoAddMissingTypes();
                 ThrowIfFrozen();
                 SetOption(RuntimeTypeModelOptions.AutoAddMissingTypes, value);
             }
         }
+
         /// <summary>
         /// Verifies that the model is still open to changes; if not, an exception is thrown
         /// </summary>
@@ -780,7 +761,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public void Freeze()
         {
-            if (GetOption(RuntimeTypeModelOptions.IsDefaultModel)) throw new InvalidOperationException("The default model cannot be frozen");
+            if (GetOption(RuntimeTypeModelOptions.IsDefaultModel)) ThrowDefaultFrozen();
             SetOption(RuntimeTypeModelOptions.Frozen, true);
         }
 
@@ -1785,6 +1766,71 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static new TypeModel CreateForAssembly(Assembly assembly)
             => AutoCompileTypeModel.CreateForAssembly(assembly);
+
+        /// <summary>
+        /// Promotes this model instance to be the default model; the default model is used by <see cref="Serializer"/> and <see cref="Serializer.NonGeneric"/>.
+        /// </summary>
+        public void MakeDefault()
+        {
+            lock (s_ModelSyncLock)
+            {
+                var oldModel = DefaultModel as RuntimeTypeModel;
+
+                if (ReferenceEquals(this, oldModel)) return; // we're already the default
+
+                try
+                {
+                    // pre-emptively set the IsDefaultModel flag on the current model
+                    SetOption(RuntimeTypeModelOptions.IsDefaultModel, true);
+
+                    // check invariants (no race condition here, because of ^^^)
+                    if (!UseImplicitZeroDefaults) ThrowDefaultUseImplicitZeroDefaults();
+                    if (!AutoAddMissingTypes) ThrowDefaultAutoAddMissingTypes();
+                    if (GetOption(RuntimeTypeModelOptions.Frozen)) ThrowDefaultFrozen();
+
+                    // actually flip the reference
+                    SetDefaultModel(this);
+                }
+                finally
+                {
+                    // clear the IsDefaultModel flag on anything that is not, in fact, the default
+                    var currentDefault = DefaultModel;
+                    if (!ReferenceEquals(this, currentDefault))
+                        SetOption(RuntimeTypeModelOptions.IsDefaultModel, false);
+
+                    if (oldModel != null && !ReferenceEquals(oldModel, currentDefault))
+                        oldModel.SetOption(RuntimeTypeModelOptions.IsDefaultModel, false);
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowDefaultAutoAddMissingTypes()
+            => throw new InvalidOperationException("The default model must allow missing types");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowDefaultUseImplicitZeroDefaults()
+            => throw new InvalidOperationException("UseImplicitZeroDefaults cannot be disabled on the default model");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowDefaultFrozen()
+            => throw new InvalidOperationException("The default model cannot be frozen");
+
+        private static readonly object s_ModelSyncLock = new object();
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static RuntimeTypeModel CreateDefaultModelInstance()
+        {
+            lock (s_ModelSyncLock)
+            {
+                if (!(DefaultModel is RuntimeTypeModel model))
+                {
+                    model = new RuntimeTypeModel(true, "(default)");
+                    SetDefaultModel(model);
+                }
+                return model;
+            }
+        }
     }
 
     /// <summary>

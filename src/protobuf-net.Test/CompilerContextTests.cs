@@ -12,7 +12,7 @@ namespace ProtoBuf
         [Fact]
         public void ManualCompiler()
         {
-            var nilModel = TypeModel.NullModel.Instance;
+            var nilModel = TypeModel.NullModel.Singleton;
             Assert.False(nilModel.IsDefined(typeof(string)));
             Assert.True(nilModel.CanSerialize(typeof(string)));
             Assert.True(nilModel.CanSerializeBasicType(typeof(string)));
