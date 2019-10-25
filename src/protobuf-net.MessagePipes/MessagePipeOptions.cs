@@ -109,11 +109,10 @@ namespace ProtoBuf.MessagePipes
         internal void Write<T>(IBufferWriter<byte> destination, T message)
         {
             using var measure = TypeModel.Measure<T>(message, UserState, MaxMessageSize);
-            var span = destination.GetSpan(11);
-            span[0] = 0x0A; // field 1, length prefixed
-            int bytes = ProtoWriter.State.WriteVarint64((ulong)measure.Length, span, 1);
-            destination.Advance(bytes + 1);
-            OnLog($"Serializing message of {measure.Length} bytes (header: {bytes + 1} bytes)");
+            var span = destination.GetSpan(10);
+            int bytes = ProtoWriter.State.WriteVarint64((ulong)measure.Length, span, 0);
+            destination.Advance(bytes);
+            OnLog($"Serializing message of {measure.Length} bytes (header: {bytes} bytes)");
             measure.Serialize(destination);
         }
 
@@ -151,21 +150,21 @@ namespace ProtoBuf.MessagePipes
 
         static long ReadMessageLength(ReadOnlySequence<byte> payload, out int headerLength)
         {
-            // check the first 11 bytes, if we have that many, for a header
-            if (payload.Length < 2)
+            if (payload.IsEmpty)
             {
                 headerLength = 0;
                 return 0;
             }
 
-            if (payload.IsSingleSegment || payload.First.Length >= 11)
+            // check the first 10 bytes, if we have that many, for a header
+            if (payload.IsSingleSegment || payload.First.Length >= 10)
                 return ReadMessageLength(payload.First.Span, out headerLength);
 
             var payloadLength = payload.Length;
-            if (payloadLength >= 11)
+            if (payloadLength >= 10)
             {
-                Span<byte> span = stackalloc byte[11];
-                payload.Slice(0, 11).CopyTo(span);
+                Span<byte> span = stackalloc byte[10];
+                payload.Slice(0, 10).CopyTo(span);
                 return ReadMessageLength(span, out headerLength);
             }
             else
@@ -181,9 +180,7 @@ namespace ProtoBuf.MessagePipes
             => throw new InvalidOperationException("An unexpected message header was encountered");
         static long ReadMessageLength(ReadOnlySpan<byte> header, out int headerLength)
         {
-            if (header[0] != 0x0A) ThrowInvalidHeader();
-
-            int bytes = ProtoReader.State.TryParseUInt64Varint(header, 1, out var bodyLength);
+            int bytes = ProtoReader.State.TryParseUInt64Varint(header, 0, out var bodyLength);
             if (bytes == 0)
             {
                 headerLength = 0;
@@ -191,7 +188,7 @@ namespace ProtoBuf.MessagePipes
             }
             else
             {
-                headerLength = bytes + 1;
+                headerLength = bytes;
                 return (long)bodyLength;
             }
         }

@@ -34,6 +34,7 @@ namespace ProtoBuf.MessagePipeTests
         [Fact]
         public async Task SimpleMessagePipe()
         {
+            var name = Guid.NewGuid().ToString();
             RuntimeTypeModel.Initialize();
             var received = new List<Message>();
 
@@ -44,7 +45,7 @@ namespace ProtoBuf.MessagePipeTests
             );
 
             Log("Creating server...");
-            using (var server = new NamedPipeServerStream(nameof(SimpleMessagePipe), PipeDirection.In, 1, PipeTransmissionMode.Byte,
+            using (var server = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Byte,
                 PipeOptions.Asynchronous | PipeOptions.WriteThrough))
             {
                 var receive = Task.Run(async () =>
@@ -62,7 +63,7 @@ namespace ProtoBuf.MessagePipeTests
                 });
 
                 Log("Creating client...");
-                using (var client = new NamedPipeClientStream(".", nameof(SimpleMessagePipe), PipeDirection.Out,
+                using (var client = new NamedPipeClientStream(".", name, PipeDirection.Out,
                     PipeOptions.Asynchronous | PipeOptions.WriteThrough))
                 {
                     Log("[Client] connecting...");
@@ -110,10 +111,11 @@ namespace ProtoBuf.MessagePipeTests
             public int Token { get; set; }
         }
 
-#if !net462 // this works on netcoreapp3.0; I haven't had time to figure out what is wrong on net462, but: client doesn't get the pong
+#if !NET462 // this works on netcoreapp3.0; I haven't had time to figure out what is wrong on net462, but: client doesn't get the pong
         [Fact]
         public async Task DuplexPipe()
         {
+            var name = Guid.NewGuid().ToString();
             RuntimeTypeModel.Initialize();
 
             var options = new MessagePipeOptions(
@@ -123,7 +125,7 @@ namespace ProtoBuf.MessagePipeTests
             );
 
             Log("Creating server...");
-            using (var server = new NamedPipeServerStream(nameof(SimpleMessagePipe), PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
+            using (var server = new NamedPipeServerStream(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
                 PipeOptions.Asynchronous | PipeOptions.WriteThrough))
             {
                 var duplex = MessagePipe.DuplexAsync<Pong, Ping>(server, options);
@@ -144,7 +146,7 @@ namespace ProtoBuf.MessagePipeTests
                 });
 
                 Log("Creating client...");
-                using (var client = new NamedPipeClientStream(".", nameof(SimpleMessagePipe), PipeDirection.InOut,
+                using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut,
                     PipeOptions.Asynchronous | PipeOptions.WriteThrough))
                 {
                     Log("[Client] connecting...");
