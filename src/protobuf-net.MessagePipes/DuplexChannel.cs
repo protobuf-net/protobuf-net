@@ -89,5 +89,55 @@ namespace ProtoBuf.MessagePipes
 
             OnLog("DisposeAsync complete");
         }
+
+        /// <summary>
+        /// Try to receive a single message from the reader
+        /// </summary>
+        public ValueTask<ReceiveResult> TryReceiveAsync(CancellationToken cancellationToken = default)
+        {
+            return Reader.TryRead(out var value)
+                ? new ValueTask<ReceiveResult>(new ReceiveResult(value))
+                : Awaited(this, cancellationToken);
+
+
+            static async ValueTask<ReceiveResult> Awaited(
+                DuplexChannel<TWrite, TRead> channel, CancellationToken cancellationToken)
+            {
+                if (await channel.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false)
+                    && channel.Reader.TryRead(out var value))
+                {
+                    return new ReceiveResult(value);
+                }
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// Indicates the result of TryReceiveAsync
+        /// </summary>
+        public readonly struct ReceiveResult
+        {
+            /// <summary>
+            /// Indicates the outcome of TryReceiveAsync attempt
+            /// </summary>
+            public bool IsSuccess(out TRead value)
+            {
+                value = Value;
+                return Success;
+            }
+            /// <summary>
+            /// Was it possible to receive a message?
+            /// </summary>
+            public bool Success { get; }
+            /// <summary>
+            /// The message received, if one
+            /// </summary>
+            public TRead Value { get; }
+            internal ReceiveResult(TRead value)
+            {
+                Success = true;
+                Value = value;
+            }
+        }
     }
 }

@@ -539,7 +539,7 @@ namespace ProtoBuf.Meta
 
                 MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
                 IRuntimeProtoSerializerNode ser = family == MetaType.AttributeFamily.None
-                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out WireType defaultWireType, false, false, false, false)
+                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out _, false, false, false, false)
                     : null;
 
                 if (ser != null) basicTypes.Add(new BasicType(type, ser));
