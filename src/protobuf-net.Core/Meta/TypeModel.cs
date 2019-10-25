@@ -1153,7 +1153,12 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}");
+            string suffix = null;
+            if (model is NullModel)
+            {
+                suffix = "; you may need to ensure that RuntimeTypeModel.Initialize has been invoked";
+            }
+            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}{suffix}");
             return default;
         }
 

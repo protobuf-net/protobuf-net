@@ -128,20 +128,25 @@ namespace ProtoBuf
                 RemainingInCurrent -= bytes;
             }
 
+            [MethodImpl(ProtoReader.HotPath)]
             internal int LocalWriteVarint64(ulong value)
             {
-                int count = 0;
-                var span = _span;
-                var index = OffsetInCurrent;
-                do
-                {
-                    span[index++] = (byte)((value & 0x7F) | 0x80);
-                    count++;
-                } while ((value >>= 7) != 0);
-                span[index - 1] &= 0x7F;
-
+                var count = WriteVarint64(value, _span, OffsetInCurrent);
                 OffsetInCurrent += count;
                 RemainingInCurrent -= count;
+                return count;
+            }
+
+            [MethodImpl(ProtoReader.HotPath)]
+            internal static int WriteVarint64(ulong value, Span<byte> span, int offset = 0)
+            {
+                int count = 0;
+                do
+                {
+                    span[offset++] = (byte)((value & 0x7F) | 0x80);
+                    count++;
+                } while ((value >>= 7) != 0);
+                span[offset - 1] &= 0x7F;
                 return count;
             }
 

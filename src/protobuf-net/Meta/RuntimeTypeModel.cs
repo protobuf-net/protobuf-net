@@ -22,6 +22,11 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class RuntimeTypeModel : TypeModel
     {
+        /// <summary>
+        /// Ensures that RuntimeTypeModel has been initialized, in advance of using methods on <see cref="Serializer"/>.
+        /// </summary>
+        public static void Initialize() => _ = Default;
+
         private RuntimeTypeModelOptions _options;
 
         private enum RuntimeTypeModelOptions
