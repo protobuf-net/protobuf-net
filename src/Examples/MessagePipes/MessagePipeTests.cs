@@ -31,7 +31,7 @@ namespace ProtoBuf.MessagePipeTests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "unreliable; do not ship")]
         public async Task SimpleMessagePipe()
         {
             var name = Guid.NewGuid().ToString();
@@ -111,8 +111,8 @@ namespace ProtoBuf.MessagePipeTests
             public int Token { get; set; }
         }
 
-#if !NET462 // this works on netcoreapp3.0; I haven't had time to figure out what is wrong on net462, but: client doesn't get the pong
-        [Fact]
+// this works on netcoreapp3.0; I haven't had time to figure out what is wrong on net462, but: client doesn't get the pong
+        [Fact(Skip = "unreliable; do not ship")]
         public async Task DuplexPipe()
         {
             var name = Guid.NewGuid().ToString();
@@ -171,7 +171,6 @@ namespace ProtoBuf.MessagePipeTests
             } // server is toast
             Log("[Server] end");
         }
-#endif
 
         static async Task WithTimeout(Task task, TimeSpan timeout, string message)
         {
