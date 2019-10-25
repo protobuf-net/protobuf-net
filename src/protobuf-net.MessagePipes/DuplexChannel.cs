@@ -63,12 +63,12 @@ namespace ProtoBuf.MessagePipes
         {
             do
             {
-                OnLog("AsServer waiting for messages...");
                 while (Reader.TryRead(out TRead request))
                 {
                     OnLog("AsServer writing response...");
                     await Writer.WriteAsync(server(request), cancellationToken).ConfigureAwait(false);
                 }
+                OnLog("AsServer awaiting requests...");
             } while (await Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false));
             OnLog("AsServer complete");
         }
