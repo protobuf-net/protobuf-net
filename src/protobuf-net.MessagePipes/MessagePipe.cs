@@ -58,7 +58,7 @@ namespace ProtoBuf.MessagePipes
             writer.OnReaderCompleted(s_ReaderCompleted, tcs); // attach to detect when the pipe is drained
 #pragma warning restore CS0618
 
-            await SendAsync<T>(writer, source, options.Without(MessagePipeFlags.LeaveOpen)); // send the data
+            await SendAsync<T>(writer, source, options.Without(MessagePipeFlags.LeaveOpen)).ConfigureAwait(false); // send the data
             await tcs.Task.ConfigureAwait(false); // wait for the pipe to drain
             await destination.FlushAsync().ConfigureAwait(false); // flush the stream
         }

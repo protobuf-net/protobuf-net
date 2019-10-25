@@ -85,7 +85,7 @@ namespace ProtoBuf.MessagePipes
 
             // wait for everything to be sent
             OnLog("DisposeAsync awaiting reader...");
-            await _send.Reader.Completion;
+            await _send.Reader.Completion.ConfigureAwait(false);
 
             OnLog("DisposeAsync complete");
         }
