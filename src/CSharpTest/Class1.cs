@@ -1,5 +1,4 @@
 ﻿using ProtoBuf;
-using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
@@ -28,13 +27,13 @@ static class Program
                 count--;
             }
         }
-        Add(8000);
+        Add(7500);
         using (var ms = new MemoryStream())
         {
             ms.Position = 0;
             ms.SetLength(0);
             Console.WriteLine("Count,Bytes,Milliseconds");
-            for (int i = 0; i < 15; i++)
+            for (int i = 0; i < 150; i++)
             {
                 Add(100);
                 var state = ProtoWriter.State.Create(ms, null);
@@ -97,11 +96,40 @@ static class MyServices
                     var tok2 = state.StartSubItem(null);
                     state.WriteFieldHeader(1, WireType.Varint);
                     state.WriteInt64(pair.Key);
-                    s_LongVector.WriteRepeated(ref state, 2, SerializerFeatures.WireTypeVarint | SerializerFeatures.WireTypeSpecified, pair.Value, null);
+                    WritePacked(ref state, pair.Value);
+
                     state.EndSubItem(tok2);
                 }
             }
             state.EndSubItem(tok);
         }
+    }
+
+    static void WritePacked(ref ProtoWriter.State state, long[] arr)
+    {
+        if (arr == null) return;
+        switch(arr.Length)
+        {
+            case 0:
+                state.WriteString(2, "");
+                break;
+            case 1:
+                state.WriteFieldHeader(1, WireType.Varint);
+                state.WriteInt64(arr[0]);
+                break;
+            default:
+                state.WriteFieldHeader(2, WireType.String);
+                var tok = state.StartSubItem(arr);
+                state.SetPackedField(2);
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    state.WriteFieldHeader(2, WireType.Varint);
+                    state.WriteInt64(arr[i]);
+                }
+                state.ClearPackedField(2);
+                state.EndSubItem(tok);
+                break;
+        }
+        //s_LongVector.WriteRepeated(ref state, 2, SerializerFeatures.WireTypeVarint | SerializerFeatures.WireTypeSpecified, arr, null);
     }
 }
