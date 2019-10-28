@@ -10,12 +10,10 @@ static class Program
 {
     static void Main()
     {
-        var model = new HockeyModel();
-        
         var payload = new Payload();
         var wrapped = new Wrapper { Data = payload };
         var rand = new Random(12345);
-        bool Add(int count)
+        void Add(int count)
         {
             var data = payload.Data;
             while (count > 0)
@@ -29,21 +27,34 @@ static class Program
                 data.Add(data.Count, arr);
                 count--;
             }
-            return count == 0;
         }
-
-
-        Add(7500);
-
-        Console.WriteLine("Count,Bytes,Milliseconds");
-        for (int i = 0; i < 15 && Add(100); i++)
+        Add(8000);
+        using (var ms = new MemoryStream())
         {
-            using (var ms = new MemoryStream())
+            ms.Position = 0;
+            ms.SetLength(0);
+            Console.WriteLine("Count,Bytes,Milliseconds");
+            for (int i = 0; i < 15; i++)
             {
-                var sw = Stopwatch.StartNew();
-                model.Serialize(ms, wrapped);
-                sw.Stop();
-                Console.WriteLine($"{payload.Data.Count}, {ms.Length} bytes,{sw.ElapsedMilliseconds}");
+                Add(100);
+                var state = ProtoWriter.State.Create(ms, null);
+                try
+                {
+                    var sw = Stopwatch.StartNew();
+                    MyServices.Write(ref state, wrapped);
+                    sw.Stop();
+                    Console.WriteLine($"{payload.Data.Count}, {ms.Length} bytes,{sw.ElapsedMilliseconds}");
+                    state.Flush();
+                }
+                catch
+                {
+                    state.Abandon();
+                    throw;
+                }
+                finally
+                {
+                    state.Dispose();
+                }
             }
         }
 
@@ -65,34 +76,32 @@ public sealed class Wrapper
     public Payload Data { get; set; }
 }
 
-class HockeyModel : TypeModel
+
+static class MyServices
 {
-    protected override ISerializer<T> GetSerializer<T>() => SerializerCache.Get<MyServices, T>();
-    sealed class MyServices : ISerializer<Payload>, ISerializer<Wrapper>, ISerializerProxy<long[]>
+    static readonly RepeatedSerializer<long[],long> s_LongVector = RepeatedSerializer.CreateVector<long>();
+
+    public static void Write(ref ProtoWriter.State state, Wrapper value)
     {
-        public ISerializer<long[]> Serializer => RepeatedSerializer.CreateVector<long>();
-
-        SerializerFeatures ISerializer<Payload>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
-        SerializerFeatures ISerializer<Wrapper>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
-
-        Payload ISerializer<Payload>.Read(ref ProtoReader.State state, Payload value) => throw new NotImplementedException();
-
-        Wrapper ISerializer<Wrapper>.Read(ref ProtoReader.State state, Wrapper value) => throw new NotImplementedException();
-
-        void ISerializer<Payload>.Write(ref ProtoWriter.State state, Payload value)
+        Payload payload = value.Data;
+        if (payload != null)
         {
-            Dictionary<long, long[]> data = value.Data;
+            state.WriteFieldHeader(1, WireType.String);
+            var tok = state.StartSubItem(payload);
+            var data = payload.Data;
             if (data != null)
             {
-                Dictionary<long, long[]> values = data;
-                MapSerializer.CreateDictionary<long, long[]>().WriteMap(ref state, 3, SerializerFeatures.OptionFailOnDuplicateKey | SerializerFeatures.WireTypeString, values, SerializerFeatures.WireTypeSpecified, SerializerFeatures.WireTypeSpecified, null, null);
+                foreach (var pair in data)
+                {
+                    state.WriteFieldHeader(1, WireType.String);
+                    var tok2 = state.StartSubItem(null);
+                    state.WriteFieldHeader(1, WireType.Varint);
+                    state.WriteInt64(pair.Key);
+                    s_LongVector.WriteRepeated(ref state, 2, SerializerFeatures.WireTypeVarint | SerializerFeatures.WireTypeSpecified, pair.Value, null);
+                    state.EndSubItem(tok2);
+                }
             }
-        }
-
-        void ISerializer<Wrapper>.Write(ref ProtoWriter.State state, Wrapper value)
-        {
-            Payload data = value.Data;
-            state.WriteMessage<Payload>(1, SerializerFeatures.CategoryRepeated, data, this);
+            state.EndSubItem(tok);
         }
     }
 }
