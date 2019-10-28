@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <IsTestProject>false</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <OutputType>exe</OutputType>
   </PropertyGroup>
   <ItemGroup>

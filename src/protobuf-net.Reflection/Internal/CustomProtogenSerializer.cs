@@ -9,7 +9,7 @@ namespace ProtoBuf.Reflection.Internal
         private CustomProtogenSerializer() { }
         internal static TypeModel Instance { get; } = new CustomProtogenSerializer();
 
-        protected override ISerializer<T> GetSerializer<T>() =>
+        protected internal override ISerializer<T> GetSerializer<T>() =>
             SerializerCache.Get<CustomProtogenSerializerServices, T>();
     }
 }

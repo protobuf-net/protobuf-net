@@ -1,4 +1,6 @@
 ﻿using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,9 +10,8 @@ static class Program
 {
     static void Main()
     {
-        Serializer.PrepareSerializer<Payload>();
-        Serializer.PrepareSerializer<Wrapper>();
-
+        var model = new HockeyModel();
+        
         var payload = new Payload();
         var wrapped = new Wrapper { Data = payload };
         var rand = new Random(12345);
@@ -32,41 +33,67 @@ static class Program
         }
 
 
-        Add(7000);
+        Add(7500);
 
-        for (int i = 0; i < 1000 && Add(100); i++)
+        Console.WriteLine("Count,Bytes,Milliseconds");
+        for (int i = 0; i < 15 && Add(100); i++)
         {
             using (var ms = new MemoryStream())
             {
                 var sw = Stopwatch.StartNew();
-                Serializer.Serialize(ms, payload);
+                model.Serialize(ms, wrapped);
                 sw.Stop();
-                Console.Write($"{payload.Data.Count}: {ms.Length} bytes/{sw.ElapsedMilliseconds}ms vs ");
-            }
-            using (var ms = new MemoryStream())
-            {
-                var sw = Stopwatch.StartNew();
-                Serializer.Serialize(ms, wrapped);
-                sw.Stop();
-                Console.WriteLine($"{ms.Length} bytes/{sw.ElapsedMilliseconds}ms");
+                Console.WriteLine($"{payload.Data.Count}, {ms.Length} bytes,{sw.ElapsedMilliseconds}");
             }
         }
 
 
         Console.WriteLine("All done");
     }
+}
 
-    [ProtoContract]
-    public class Payload
-    {
-        [ProtoMember(3)]
-        public Dictionary<long, long[]> Data { get; } = new Dictionary<long, long[]>();
-    }
+[ProtoContract]
+public sealed class Payload
+{
+    [ProtoMember(3)]
+    public Dictionary<long, long[]> Data { get; } = new Dictionary<long, long[]>();
+}
 
-    [ProtoContract]
-    public class Wrapper
+[ProtoContract]
+public sealed class Wrapper
+{
+    [ProtoMember(1)]
+    public Payload Data { get; set; }
+}
+
+class HockeyModel : TypeModel
+{
+    protected override ISerializer<T> GetSerializer<T>() => SerializerCache.Get<MyServices, T>();
+    sealed class MyServices : ISerializer<Payload>, ISerializer<Wrapper>, ISerializerProxy<long[]>
     {
-        [ProtoMember(1)]
-        public Payload Data { get; set; }
+        public ISerializer<long[]> Serializer => RepeatedSerializer.CreateVector<long>();
+
+        SerializerFeatures ISerializer<Payload>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+        SerializerFeatures ISerializer<Wrapper>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+
+        Payload ISerializer<Payload>.Read(ref ProtoReader.State state, Payload value) => throw new NotImplementedException();
+
+        Wrapper ISerializer<Wrapper>.Read(ref ProtoReader.State state, Wrapper value) => throw new NotImplementedException();
+
+        void ISerializer<Payload>.Write(ref ProtoWriter.State state, Payload value)
+        {
+            Dictionary<long, long[]> data = value.Data;
+            if (data != null)
+            {
+                Dictionary<long, long[]> values = data;
+                MapSerializer.CreateDictionary<long, long[]>().WriteMap(ref state, 3, SerializerFeatures.OptionFailOnDuplicateKey | SerializerFeatures.WireTypeString, values, SerializerFeatures.WireTypeSpecified, SerializerFeatures.WireTypeSpecified, null, null);
+            }
+        }
+
+        void ISerializer<Wrapper>.Write(ref ProtoWriter.State state, Wrapper value)
+        {
+            Payload data = value.Data;
+            state.WriteMessage<Payload>(1, SerializerFeatures.CategoryRepeated, data, this);
+        }
     }
 }

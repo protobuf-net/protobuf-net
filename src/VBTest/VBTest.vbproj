@@ -6,6 +6,7 @@
     <RootNamespace />
     <NoWarn>IDE1006</NoWarn>
     <IsTestProject>false</IsTestProject>
+    <DefineConstants></DefineConstants>
   </PropertyGroup>
   <!--
   9: ===3.5
