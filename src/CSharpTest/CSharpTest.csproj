@@ -8,7 +8,6 @@
     <OutputType>exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <ProjectReference Include="../protobuf-net.Core/protobuf-net.Core.csproj" />
   </ItemGroup>
-
 </Project>
