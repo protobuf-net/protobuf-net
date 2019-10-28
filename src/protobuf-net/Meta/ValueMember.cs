@@ -359,11 +359,16 @@ namespace ProtoBuf.Meta
         internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat, DataFormat keyFormat, DataFormat valueFormat,
             bool asReference, bool dynamicType, bool isMap, bool overwriteList, int fieldNumber)
         {
+            static Type FlattenRepeated(RuntimeTypeModel model, Type type)
+            {   // for the purposes of choosing features, we want to look inside things like arrays/lists/etc
+                if (type == null) return type;
+                var repeated = model == null ? RepeatedSerializers.TryGetRepeatedProvider(type) : model.TryGetRepeatedProvider(type);
+                return repeated == null ? type : repeated.ItemType;
+            }
 
             repeated.ResolveMapTypes(out var keyType, out var valueType);
-            _ = TryGetCoreSerializer(model, keyFormat, keyType, out var keyWireType, false, false, false, false);
-            _ = TryGetCoreSerializer(model, valueFormat, valueType, out var valueWireType, asReference, dynamicType, false, true);
-
+            _ = TryGetCoreSerializer(model, keyFormat, FlattenRepeated(model, keyType), out var keyWireType, false, false, false, true);
+            _ = TryGetCoreSerializer(model, valueFormat, FlattenRepeated(model, valueType), out var valueWireType, asReference, dynamicType, false, true);
 
             WireType rootWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
             SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;

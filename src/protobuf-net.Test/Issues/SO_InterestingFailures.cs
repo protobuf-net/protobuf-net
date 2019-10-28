@@ -7,14 +7,50 @@ using Xunit;
 
 namespace ProtoBuf.Test.Issues
 {
-    public class SO_DictionaryFail
+    public class SO_InterestingFailures
     {
+        [Theory]
+        [InlineData(false, false)]
+        [InlineData(false, true)]
+        [InlineData(true, false)]
+        [InlineData(true, true)]
+        public void CanSerializeNestedArrayAfterArray(bool array, bool dictionary)
+        {
+            var model = RuntimeTypeModel.Create();
+            if (array)
+            {
+                using var ms = new MemoryStream();
+                model.Serialize(ms, new long[] { 1, 2, 3 });
+                Assert.Equal("08-01-08-02-08-03", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+            }
+
+            if (dictionary)
+            {
+                using var ms = new MemoryStream();
+                model.Serialize(ms, new DictionaryNestedArray
+                {
+                    MyData = new Dictionary<long, long[]>
+                    {
+                        {42, new long[] {1,2,3 } },
+                    }
+                });
+                Assert.Equal("0A-07-08-2A-12-03-01-02-03", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+            }
+        }
+
+        [ProtoContract]
+        public class DictionaryNestedArray
+        {
+            [ProtoMember(1)]
+            public Dictionary<long, long[]> MyData { get; set; }
+        }
+
         [Fact]
         public void TupleDictionary()
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
-            model.Add<Tuple<Dictionary<string,double>, Dictionary<string,double>>>();
+            model.Add<Tuple<Dictionary<string, double>, Dictionary<string, double>>>();
             Test(model);
 
             var dll = model.CompileAndVerify(deleteOnSuccess: false);
@@ -109,7 +145,7 @@ namespace ProtoBuf.Test.Issues
                     {"mno", 1213 },
                 });
 
-            
+
 
             using var ms = new MemoryStream();
             model.Serialize(ms, data);
