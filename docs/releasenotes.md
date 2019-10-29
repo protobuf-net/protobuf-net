@@ -47,9 +47,13 @@ Other changes:
 - as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
 - common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
 
-## 2.4.2
+## 2.4.4
 
-- add `IProtoInput<T>` / `IProtoOutput<T>` API for discovering input/output capabilities (this is to allow testing for 3.0 features)
+- mark `DiscriminatedUnion*` types as `[Serializable]`
+
+## 2.4.2 / 2.4.3
+
+- add `IProtoInput<T>` / `IProtoOutput<T>` APIs for discovering input/output capabilities (this is to allow testing for 3.0 features)
 
 ## 2.4.1
 
