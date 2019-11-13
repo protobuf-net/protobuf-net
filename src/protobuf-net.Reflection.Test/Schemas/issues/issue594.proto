@@ -1,0 +1,21 @@
+﻿syntax = "proto3";
+/**
+ * Enumeration
+ */
+enum SomeEnum {
+  /**
+   * Reserve values
+   */
+  reserved 2, 4 to 9, 12 to max;
+  reserved "foo", "bar";
+  UNKNOWN = 0;
+  ENUM_01 = 1;
+  ENUM_03 = 3;
+  ENUM_10 = 10;
+  ENUM_11 = 11;
+}
+
+message SomeMessage {
+    reserved 2, 4 to 9, 12 to max;
+    reserved "foo", "bar";
+}
