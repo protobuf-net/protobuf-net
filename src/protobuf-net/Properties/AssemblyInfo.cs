@@ -52,3 +52,7 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(ProtoPartialMemberAttribute))]
 [assembly: TypeForwardedTo(typeof(ProtoPartialIgnoreAttribute))]
 [assembly: TypeForwardedTo(typeof(ImplicitFields))]
+[assembly: TypeForwardedTo(typeof(IProtoInput<>))]
+[assembly: TypeForwardedTo(typeof(IProtoOutput<>))]
+[assembly: TypeForwardedTo(typeof(IMeasuredProtoOutput<>))]
+[assembly: TypeForwardedTo(typeof(MeasureState<>))]

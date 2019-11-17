@@ -253,8 +253,9 @@ namespace Examples
            
             item.ListNoDefault = new List<int>();
             clone = Serializer.DeepClone(item);
-            Assert.Null(clone.ListNoDefault);
-           
+            Assert.NotNull(clone.ListNoDefault);
+            Assert.Empty(clone.ListNoDefault);
+
             item.ListNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ListNoDefault);
@@ -292,7 +293,8 @@ namespace Examples
 
             item.ItemArray = new int[0];
             clone = Serializer.DeepClone(item);
-            Assert.Null(clone.ItemArray);
+            Assert.NotNull(clone.ItemArray);
+            Assert.Empty(clone.ItemArray);
 
             item.ItemArray = new int[1] { 123 };
             clone = Serializer.DeepClone(item);
@@ -329,7 +331,8 @@ namespace Examples
 
             item.Custom = new CustomEnumerable();
             clone = Serializer.DeepClone(item);
-            Assert.Null(clone.Custom);
+            Assert.NotNull(clone.Custom);
+            Assert.Empty(clone.Custom);
 
             item.Custom.Add(123);
             clone = Serializer.DeepClone(item);

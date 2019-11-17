@@ -1,0 +1,3 @@
+﻿This API seems to be unreliable; it is deferred for now.
+
+Consider protobuf-net.Grpc instead

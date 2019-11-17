@@ -2,6 +2,7 @@
 using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
@@ -34,6 +35,7 @@ namespace ProtoBuf.WellKnownTypes
     /// Gregorian calendar backwards to year one.
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(PrimaryTypeProvider))]
+    [StructLayout(LayoutKind.Auto)]
     public readonly struct Timestamp
     {
         /// <summary>

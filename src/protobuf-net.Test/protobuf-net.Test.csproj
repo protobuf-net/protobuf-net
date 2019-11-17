@@ -6,9 +6,11 @@
     <Configurations>Debug;Release;VS</Configurations>
     <WithSpans>true</WithSpans>
     <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004</NoWarn>
+    <RootNamespace>ProtoBuf.Test</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">
@@ -21,6 +23,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.25" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />

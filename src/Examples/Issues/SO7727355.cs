@@ -1,5 +1,5 @@
-﻿using System;
-using System.Data;
+﻿#if LONG_RUNNING
+using System;
 using System.IO;
 using System.Threading;
 using Xunit;
@@ -94,3 +94,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

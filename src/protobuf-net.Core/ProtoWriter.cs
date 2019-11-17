@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
@@ -68,7 +70,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(HotPath)]
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
-            => writer.DefaultState().WriteBytes(data, offset, length);
+            => writer.DefaultState().WriteBytes(new ReadOnlyMemory<byte>(data, offset, length));
 
         private int depth = 0;
         private const int RecursionCheckDepth = 25;
@@ -145,9 +147,9 @@ namespace ProtoBuf
         /// Creates a new writer against a stream
         /// </summary>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="userState">Additional context about this serialization operation</param>
         /// <param name="impactCount">Whether this initialization should impact usage counters (to check for double-usage)</param>
-        internal virtual void Init(TypeModel model, SerializationContext context, bool impactCount)
+        internal virtual void Init(TypeModel model, object userState, bool impactCount)
         {
             OnInit(impactCount);
             _position64 = 0;
@@ -157,11 +159,11 @@ namespace ProtoBuf
             fieldNumber = 0;
             this.model = model;
             WireType = WireType.None;
-            if (context == null) { context = SerializationContext.Default; }
-            else { context.Freeze(); }
-            Context = context;
+            if (userState is SerializationContext context) context.Freeze();
+            UserState = userState;
         }
 
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct WriteState
         {
             internal WriteState(long position, int fieldNumber, WireType wireType)
@@ -192,9 +194,15 @@ namespace ProtoBuf
         /// <summary>
         /// Addition information about this serialization operation.
         /// </summary>
-        public SerializationContext Context { get; private set; }
+        [Obsolete("Prefer " + nameof(UserState))]
+        public SerializationContext Context => SerializationContext.AsSerializationContext(this);
 
-#if DEBUG
+        /// <summary>
+        /// Addition information about this serialization operation.
+        /// </summary>
+        public object UserState { get; private set; }
+
+#if DEBUG || TRACK_USAGE
         int _usageCount;
         partial void OnDispose()
         {
@@ -214,10 +222,11 @@ namespace ProtoBuf
             }
         }
 #endif
+
         partial void OnDispose();
         partial void OnInit(bool impactCount);
 
-        protected private virtual void Dispose()
+        internal virtual void Dispose()
         {
             OnDispose();
             Cleanup();
@@ -232,7 +241,7 @@ namespace ProtoBuf
             recursionStack?.Clear();
             ClearKnownObjects();
             model = null;
-            Context = null;
+            UserState = null;
         }
 
         protected private virtual void ClearKnownObjects()
@@ -340,8 +349,8 @@ namespace ProtoBuf
         internal abstract int ImplWriteVarint64(ref State state, ulong value);
         protected private abstract void ImplWriteFixed32(ref State state, uint value);
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
-        protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);
-        protected private abstract void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data);
+        protected private abstract void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data);
+        protected private abstract void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data);
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
         private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);

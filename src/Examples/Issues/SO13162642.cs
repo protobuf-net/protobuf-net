@@ -1,15 +1,18 @@
-﻿using Xunit;
+﻿#if LONG_RUNNING
+using Xunit;
 using ProtoBuf;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
-{
-    
+{   
     public class SO13162642
     {
+        private ITestOutputHelper Log { get; }
+        public SO13162642(ITestOutputHelper _log) => Log = _log;
+
         [Fact]
         public void Execute()
         {
@@ -21,7 +24,7 @@ namespace Examples.Issues
             using (var f = File.OpenRead("Data.protobuf"))
             {
                 var dtos = Serializer.DeserializeItems<DTO>(f, ProtoBuf.PrefixStyle.Base128, 1);
-                Console.WriteLine(dtos.Count());
+                Log.WriteLine(dtos.Count().ToString());
             }
         }
 
@@ -40,7 +43,7 @@ namespace Examples.Issues
             using (var f = File.OpenRead("Data.protobuf"))
             {
                 var dtos = Serializer.DeserializeItems<DTO>(f, ProtoBuf.PrefixStyle.Base128, 1);
-                Console.WriteLine(dtos.Count());
+                Log.WriteLine(dtos.Count().ToString());
             }
         }
 
@@ -67,3 +70,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

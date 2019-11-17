@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
@@ -41,6 +42,7 @@ namespace ProtoBuf.Internal
 
         public NodeEnumerator GetEnumerator() => new NodeEnumerator(head);
 
+        [StructLayout(LayoutKind.Auto)]
         public struct NodeEnumerator : IEnumerator
         {
             private int position;
@@ -58,7 +60,7 @@ namespace ProtoBuf.Internal
                 return (position <= len) && (++position < len);
             }
         }
-
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct Node
         {
             public object this[int index]
@@ -157,6 +159,7 @@ namespace ProtoBuf.Internal
             return false;
         }
 
+        [StructLayout(LayoutKind.Auto)]
         internal readonly struct Group<T>
         {
             public readonly int First;

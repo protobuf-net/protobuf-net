@@ -1,19 +1,19 @@
-﻿using System;
+﻿using ProtoBuf.Compiler;
+using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
+using ProtoBuf.Serializers;
+using System;
 using System.Collections;
-using System.Text;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-
-using ProtoBuf.Serializers;
-using System.Threading;
-using System.IO;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ProtoBuf.Compiler;
-using ProtoBuf.Internal;
-using System.Linq;
-using System.Collections.Generic;
-using ProtoBuf.Internal.Serializers;
+using System.Text;
+using System.Threading;
 
 namespace ProtoBuf.Meta
 {
@@ -22,28 +22,45 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class RuntimeTypeModel : TypeModel
     {
-        private ushort options;
-        private const ushort
-           OPTIONS_InferTagFromNameDefault = 1,
-           OPTIONS_IsDefaultModel = 2,
-           OPTIONS_Frozen = 4,
-           OPTIONS_AutoAddMissingTypes = 8,
-           OPTIONS_AutoCompile = 16,
-           OPTIONS_UseImplicitZeroDefaults = 32,
-           OPTIONS_AllowParseableTypes = 64,
-           OPTIONS_AutoAddProtoContractTypesOnly = 128,
-           OPTIONS_IncludeDateTimeKind = 256,
-           OPTIONS_InternStrings = 512;
+        /// <summary>
+        /// Ensures that RuntimeTypeModel has been initialized, in advance of using methods on <see cref="Serializer"/>.
+        /// </summary>
+        public static void Initialize() => _ = Default;
 
-        private bool GetOption(ushort option)
+        private RuntimeTypeModelOptions _options;
+
+        private enum RuntimeTypeModelOptions
         {
-            return (options & option) == option;
+            None = 0,
+            InternStrings = TypeModelOptions.InternStrings,
+            IncludeDateTimeKind = TypeModelOptions.IncludeDateTimeKind,
+            SkipZeroLengthPackedArrays = TypeModelOptions.SkipZeroLengthPackedArrays,
+            AllowPackedEncodingAtRoot = TypeModelOptions.AllowPackedEncodingAtRoot,
+
+            TypeModelMask = InternStrings | IncludeDateTimeKind | SkipZeroLengthPackedArrays | AllowPackedEncodingAtRoot,
+
+            // stuff specific to RuntimeTypeModel
+            InferTagFromNameDefault = 1 << 10,
+            IsDefaultModel = 1 << 11,
+            Frozen = 1 << 12,
+            AutoAddMissingTypes = 1 << 13,
+            AutoCompile = 1 << 14,
+            UseImplicitZeroDefaults = 1 << 15,
+            AllowParseableTypes = 1 << 16,
+            AutoAddProtoContractTypesOnly = 1 << 17,
         }
 
-        private void SetOption(ushort option, bool value)
+        /// <summary>
+        /// Specifies optional behaviors associated with this model
+        /// </summary>
+        public override TypeModelOptions Options => (TypeModelOptions)(_options & RuntimeTypeModelOptions.TypeModelMask);
+
+        private bool GetOption(RuntimeTypeModelOptions option) => (_options & option) != 0;
+
+        private void SetOption(RuntimeTypeModelOptions option, bool value)
         {
-            if (value) options |= option;
-            else options &= (ushort)~option;
+            if (value) _options |= option;
+            else _options &= ~option;
         }
 
         internal CompilerContextScope Scope { get; } = CompilerContextScope.CreateInProcess();
@@ -58,8 +75,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool InferTagFromNameDefault
         {
-            get { return GetOption(OPTIONS_InferTagFromNameDefault); }
-            set { SetOption(OPTIONS_InferTagFromNameDefault, value); }
+            get { return GetOption(RuntimeTypeModelOptions.InferTagFromNameDefault); }
+            set { SetOption(RuntimeTypeModelOptions.InferTagFromNameDefault, value); }
         }
 
         /// <summary>
@@ -69,8 +86,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoAddProtoContractTypesOnly
         {
-            get { return GetOption(OPTIONS_AutoAddProtoContractTypesOnly); }
-            set { SetOption(OPTIONS_AutoAddProtoContractTypesOnly, value); }
+            get { return GetOption(RuntimeTypeModelOptions.AutoAddProtoContractTypesOnly); }
+            set { SetOption(RuntimeTypeModelOptions.AutoAddProtoContractTypesOnly, value); }
         }
 
         /// <summary>
@@ -87,14 +104,12 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool UseImplicitZeroDefaults
         {
-            get { return GetOption(OPTIONS_UseImplicitZeroDefaults); }
+            get { return GetOption(RuntimeTypeModelOptions.UseImplicitZeroDefaults); }
             set
             {
-                if (!value && GetOption(OPTIONS_IsDefaultModel))
-                {
-                    throw new InvalidOperationException("UseImplicitZeroDefaults cannot be disabled on the default model");
-                }
-                SetOption(OPTIONS_UseImplicitZeroDefaults, value);
+                if (!value && GetOption(RuntimeTypeModelOptions.IsDefaultModel))
+                    ThrowDefaultUseImplicitZeroDefaults();
+                SetOption(RuntimeTypeModelOptions.UseImplicitZeroDefaults, value);
             }
         }
 
@@ -104,8 +119,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AllowParseableTypes
         {
-            get { return GetOption(OPTIONS_AllowParseableTypes); }
-            set { SetOption(OPTIONS_AllowParseableTypes, value); }
+            get { return GetOption(RuntimeTypeModelOptions.AllowParseableTypes); }
+            set { SetOption(RuntimeTypeModelOptions.AllowParseableTypes, value); }
         }
 
         /// <summary>
@@ -113,53 +128,43 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IncludeDateTimeKind
         {
-            get { return GetOption(OPTIONS_IncludeDateTimeKind); }
-            set { SetOption(OPTIONS_IncludeDateTimeKind, value); }
+            get { return GetOption(RuntimeTypeModelOptions.IncludeDateTimeKind); }
+            set { SetOption(RuntimeTypeModelOptions.IncludeDateTimeKind, value); }
+        }
+
+        /// <summary>
+        /// Should zero-length packed arrays be serialized? (this is the v2 behavior, but skipping them is more efficient)
+        /// </summary>
+        public bool SkipZeroLengthPackedArrays
+        {
+            get { return GetOption(RuntimeTypeModelOptions.SkipZeroLengthPackedArrays); }
+            set { SetOption(RuntimeTypeModelOptions.SkipZeroLengthPackedArrays, value); }
+        }
+
+        /// <summary>
+        /// Should root-values allow "packed" encoding? (v2 does not support this)
+        /// </summary>
+        public bool AllowPackedEncodingAtRoot
+        {
+            get { return GetOption(RuntimeTypeModelOptions.AllowPackedEncodingAtRoot); }
+            set { SetOption(RuntimeTypeModelOptions.AllowPackedEncodingAtRoot, value); }
         }
 
         /// <summary>
         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
         /// </summary>
         /// <remarks>Note this does not use the global .NET string interner</remarks>
-        public new bool InternStrings
+        public bool InternStrings
         {
-            get { return GetOption(OPTIONS_InternStrings); }
-            set { SetOption(OPTIONS_InternStrings, value); }
+            get { return GetOption(RuntimeTypeModelOptions.InternStrings); }
+            set { SetOption(RuntimeTypeModelOptions.InternStrings, value); }
         }
-
-        /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-        /// </summary>
-        protected internal override bool GetInternStrings() => InternStrings;
-
-        /// <summary>
-        /// Should the <c>Kind</c> be included on date/time values?
-        /// </summary>
-        protected internal override bool SerializeDateTimeKind()
-        {
-            return GetOption(OPTIONS_IncludeDateTimeKind);
-        }
-
-        private static class DeferredModelLoader
-        {
-            internal static readonly RuntimeTypeModel Instance = new RuntimeTypeModel(true, "(default)");
-        }
-
-
 
         /// <summary>
         /// The default model, used to support ProtoBuf.Serializer
         /// </summary>
         public static RuntimeTypeModel Default
-            => (DefaultModel as RuntimeTypeModel) ?? LoadDeferredModel();
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static RuntimeTypeModel LoadDeferredModel()
-        {
-            var model = DeferredModelLoader.Instance;
-            SetDefaultModel(model);
-            return model;
-        }
+            => (DefaultModel as RuntimeTypeModel) ?? CreateDefaultModelInstance();
 
         /// <summary>
         /// Returns a sequence of the Type instances that can be
@@ -257,6 +262,12 @@ namespace ProtoBuf.Meta
                 headerBuilder.Append("package ").Append(package).Append(';').AppendLine();
             }
 
+            // check for validity
+            foreach (var mt in requiredTypes)
+            {
+                _ = mt.Serializer; // force errors to happen if there's problems
+            }
+
             var imports = CommonImports.None;
             StringBuilder bodyBuilder = new StringBuilder();
             // sort them by schema-name
@@ -277,6 +288,7 @@ namespace ProtoBuf.Meta
                 for (int i = 0; i < metaTypesArr.Length; i++)
                 {
                     MetaType tmp = metaTypesArr[i];
+                    if (tmp.SerializerType is object) continue; // not our concern
                     if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
                     tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax);
                 }
@@ -400,21 +412,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void CheckNotNested(RepeatedSerializerStub repeated)
-        {
-            if (repeated == null) { } // fine
-            else if (repeated.IsMap)
-            {
-                repeated.ResolveMapTypes(out var key, out var value);
-                if (key == repeated.ForType || TryGetRepeatedProvider(key) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
-                if (value == repeated.ForType || TryGetRepeatedProvider(value) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
-            }
-            else
-            {
-                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) ThrowHelper.ThrowNestedDataNotSupported(repeated.ForType);
-            }
-        }
-
         private void TryGetCoreSerializer(List<MetaType> list, Type itemType)
         {
             var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out _, false, false, false, false);
@@ -441,7 +438,7 @@ namespace ProtoBuf.Meta
         {
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
-            SetOption(OPTIONS_IsDefaultModel, isDefault);
+            SetOption(RuntimeTypeModelOptions.IsDefaultModel, isDefault);
 #if !DEBUG
             try
             {
@@ -542,7 +539,7 @@ namespace ProtoBuf.Meta
 
                 MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
                 IRuntimeProtoSerializerNode ser = family == MetaType.AttributeFamily.None
-                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out WireType defaultWireType, false, false, false, false)
+                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out _, false, false, false, false)
                     : null;
 
                 if (ser != null) basicTypes.Add(new BasicType(type, ser));
@@ -735,8 +732,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoCompile
         {
-            get { return GetOption(OPTIONS_AutoCompile); }
-            set { SetOption(OPTIONS_AutoCompile, value); }
+            get { return GetOption(RuntimeTypeModelOptions.AutoCompile); }
+            set { SetOption(RuntimeTypeModelOptions.AutoCompile, value); }
         }
 
         /// <summary>
@@ -746,23 +743,22 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoAddMissingTypes
         {
-            get { return GetOption(OPTIONS_AutoAddMissingTypes); }
+            get { return GetOption(RuntimeTypeModelOptions.AutoAddMissingTypes); }
             set
             {
-                if (!value && GetOption(OPTIONS_IsDefaultModel))
-                {
-                    throw new InvalidOperationException("The default model must allow missing types");
-                }
+                if (!value && GetOption(RuntimeTypeModelOptions.IsDefaultModel))
+                    ThrowDefaultAutoAddMissingTypes();
                 ThrowIfFrozen();
-                SetOption(OPTIONS_AutoAddMissingTypes, value);
+                SetOption(RuntimeTypeModelOptions.AutoAddMissingTypes, value);
             }
         }
+
         /// <summary>
         /// Verifies that the model is still open to changes; if not, an exception is thrown
         /// </summary>
         private void ThrowIfFrozen()
         {
-            if (GetOption(OPTIONS_Frozen)) throw new InvalidOperationException("The model cannot be changed once frozen");
+            if (GetOption(RuntimeTypeModelOptions.Frozen)) throw new InvalidOperationException("The model cannot be changed once frozen");
         }
 
         /// <summary>
@@ -770,8 +766,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public void Freeze()
         {
-            if (GetOption(OPTIONS_IsDefaultModel)) throw new InvalidOperationException("The default model cannot be frozen");
-            SetOption(OPTIONS_Frozen, true);
+            if (GetOption(RuntimeTypeModelOptions.IsDefaultModel)) ThrowDefaultFrozen();
+            SetOption(RuntimeTypeModelOptions.Frozen, true);
         }
 
         /// <summary>Resolve a service relative to T</summary>
@@ -950,7 +946,9 @@ namespace ProtoBuf.Meta
             MethodInfo baseMethod;
             try
             {
-                baseMethod = type.BaseType.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+                baseMethod = type.BaseType.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (baseMethod == null)
+                    throw new ArgumentException($"Unable to resolve '{name}'");
             }
             catch (Exception ex)
             {
@@ -1184,13 +1182,14 @@ namespace ProtoBuf.Meta
 
         private void WriteConstructorsAndOverrides(TypeBuilder type, Type serviceType)
         {
-            var il = Override(type, nameof(TypeModel.GetInternStrings));
-            il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-            il.Emit(OpCodes.Ret);
-
-            il = Override(type, nameof(TypeModel.SerializeDateTimeKind));
-            il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-            il.Emit(OpCodes.Ret);
+            ILGenerator il;
+            var options = Options;
+            if (options != TypeModel.DefaultOptions)
+            {
+                il = Override(type, "get_" + nameof(TypeModel.Options));
+                CompilerContext.LoadValue(il, (int)options);
+                il.Emit(OpCodes.Ret);
+            }
 
             il = Override(type, nameof(TypeModel.GetSerializer), out var genericArgs);
             var genericT = genericArgs.Single();
@@ -1270,9 +1269,6 @@ namespace ProtoBuf.Meta
                     return null;
                 }
             }
-            if (repeated == null && type.IsArray && type != typeof(byte[]))
-                ThrowHelper.ThrowNotSupportedException("Multi-dimensional and non-vector arrays are not supported");
-            CheckNotNested(repeated);
             return repeated;
         }
 
@@ -1300,12 +1296,30 @@ namespace ProtoBuf.Meta
 
         private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
         {
+            // there are only a few permutations of "features" you want; share them between like-minded types
+            var featuresLookup = new Dictionary<SerializerFeatures, MethodInfo>();
+
+            MethodInfo GetFeaturesMethod(SerializerFeatures features)
+            {
+                if (!featuresLookup.TryGetValue(features, out var method))
+                {
+                    var name = nameof(ISerializer<int>.Features) + "_" + ((int)features).ToString(CultureInfo.InvariantCulture);
+                    var newMethod = type.DefineMethod(name, MethodAttributes.Private | MethodAttributes.Virtual,
+                        typeof(SerializerFeatures), Type.EmptyTypes);
+                    ILGenerator il = newMethod.GetILGenerator();
+                    CompilerContext.LoadValue(il, (int)features);
+                    il.Emit(OpCodes.Ret);
+                    method = featuresLookup[features] = newMethod;
+                }
+                return method;
+            }
+
             for (int index = 0; index < types.Count; index++)
             {
                 var metaType = (MetaType)types[index];
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
-                ILGenerator il;
+
                 if (runtimeType.IsEnum || metaType.SerializerType is object || TryGetRepeatedProvider(metaType.Type) != null)
                 {   // we don't implement these
                     continue;
@@ -1321,7 +1335,7 @@ namespace ProtoBuf.Meta
                 var serType = typeof(ISerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
 
-                il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Read));
+                var il = CompilerContextScope.Implement(type, serType, nameof(ISerializer<string>.Read));
                 using (var ctx = new CompilerContext(scope, il, false, CompilerContext.SignatureType.ReaderScope_Input, this, runtimeType, nameof(ISerializer<string>.Read)))
                 {
                     if (serializer.HasInheritance)
@@ -1344,9 +1358,8 @@ namespace ProtoBuf.Meta
                     ctx.Return();
                 }
 
-                il = CompilerContextScope.Implement(type, serType, "get_" + nameof(ISerializer<string>.Features));
-                CompilerContext.LoadValue(il, (int)serializer.Features);
-                il.Emit(OpCodes.Ret);
+                var featuresGetter = serType.GetProperty(nameof(ISerializer<string>.Features)).GetGetMethod();
+                type.DefineMethodOverride(GetFeaturesMethod(serializer.Features), featuresGetter);
 
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)
@@ -1391,7 +1404,7 @@ namespace ProtoBuf.Meta
         private TypeBuilder WriteBasicTypeModel(string typeName, ModuleBuilder module,
             Type baseType, bool @internal)
         {
-            TypeAttributes typeAttributes = (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
+            TypeAttributes typeAttributes = (baseType.Attributes & ~(TypeAttributes.Abstract | TypeAttributes.Serializable)) | TypeAttributes.Sealed;
             if (@internal) typeAttributes &= ~TypeAttributes.Public;
 
             return module.DefineType(typeName, typeAttributes, baseType);
@@ -1706,45 +1719,6 @@ namespace ProtoBuf.Meta
 
         private readonly string _name;
 
-        /// <summary>
-        /// Create a model that serializes all types from an
-        /// assembly specified by type
-        /// </summary>
-        public static new TypeModel CreateForAssembly<T>()
-            => CreateForAssembly(typeof(T).Assembly);
-
-        /// <summary>
-        /// Create a model that serializes all types from an
-        /// assembly specified by type
-        /// </summary>
-        public static new TypeModel CreateForAssembly(Type type)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            return CreateForAssembly(type.Assembly);
-        }
-
-        /// <summary>
-        /// Create a model that serializes all types from an assembly
-        /// </summary>
-        public static new TypeModel CreateForAssembly(Assembly assembly)
-            => CreateForAssembly(assembly, null);
-
-        /// <summary>
-        /// Create a model that serializes all types from an assembly
-        /// </summary>
-        public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)
-        {
-            if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
-            if (options == null)
-            {
-                var obj = (TypeModel)s_assemblyModels[assembly];
-                if (obj != null) return obj;
-            }
-            return CreateForAssemblyImpl(assembly, options);
-        }
-
-        private readonly static Hashtable s_assemblyModels = new Hashtable();
-
         internal static bool IsFullyPublic(Type type) => IsFullyPublic(type, out _);
 
         internal static bool IsFullyPublic(Type type, out Type cause)
@@ -1778,30 +1752,88 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        private static TypeModel CreateForAssemblyImpl(Assembly assembly, CompilerOptions options)
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly<T>()
+            => AutoCompileTypeModel.CreateForAssembly<T>();
+
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Type type)
+            => AutoCompileTypeModel.CreateForAssembly(type);
+
+        /// <summary>
+        /// Create a model that serializes all types from an assembly
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Assembly assembly)
+            => AutoCompileTypeModel.CreateForAssembly(assembly);
+
+        /// <summary>
+        /// Promotes this model instance to be the default model; the default model is used by <see cref="Serializer"/> and <see cref="Serializer.NonGeneric"/>.
+        /// </summary>
+        public void MakeDefault()
         {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
-            lock (assembly)
+            lock (s_ModelSyncLock)
             {
-                var found = (TypeModel)s_assemblyModels[assembly];
-                if (found != null) return found;
+                var oldModel = DefaultModel as RuntimeTypeModel;
 
-                RuntimeTypeModel model = null;
-                foreach (var type in assembly.GetTypes())
+                if (ReferenceEquals(this, oldModel)) return; // we're already the default
+
+                try
                 {
-                    if (type.IsGenericTypeDefinition) continue;
-                    if (!IsFullyPublic(type)) continue;
-                    if (!type.IsDefined(typeof(ProtoContractAttribute), true)) continue;
+                    // pre-emptively set the IsDefaultModel flag on the current model
+                    SetOption(RuntimeTypeModelOptions.IsDefaultModel, true);
 
-                    if (options != null && !options.OnIncludeType(type)) continue;
+                    // check invariants (no race condition here, because of ^^^)
+                    if (!UseImplicitZeroDefaults) ThrowDefaultUseImplicitZeroDefaults();
+                    if (!AutoAddMissingTypes) ThrowDefaultAutoAddMissingTypes();
+                    if (GetOption(RuntimeTypeModelOptions.Frozen)) ThrowDefaultFrozen();
 
-                    (model ?? (model = Create())).Add(type, true);
+                    // actually flip the reference
+                    SetDefaultModel(this);
                 }
-                if (model == null)
-                    throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
-                var compiled = model.Compile(options);
-                s_assemblyModels[assembly] = compiled;
-                return compiled;
+                finally
+                {
+                    // clear the IsDefaultModel flag on anything that is not, in fact, the default
+                    var currentDefault = DefaultModel;
+                    if (!ReferenceEquals(this, currentDefault))
+                        SetOption(RuntimeTypeModelOptions.IsDefaultModel, false);
+
+                    if (oldModel != null && !ReferenceEquals(oldModel, currentDefault))
+                        oldModel.SetOption(RuntimeTypeModelOptions.IsDefaultModel, false);
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowDefaultAutoAddMissingTypes()
+            => throw new InvalidOperationException("The default model must allow missing types");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowDefaultUseImplicitZeroDefaults()
+            => throw new InvalidOperationException("UseImplicitZeroDefaults cannot be disabled on the default model");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowDefaultFrozen()
+            => throw new InvalidOperationException("The default model cannot be frozen");
+
+        private static readonly object s_ModelSyncLock = new object();
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static RuntimeTypeModel CreateDefaultModelInstance()
+        {
+            lock (s_ModelSyncLock)
+            {
+                if (!(DefaultModel is RuntimeTypeModel model))
+                {
+                    model = new RuntimeTypeModel(true, "(default)");
+                    SetDefaultModel(model);
+                }
+                return model;
             }
         }
     }

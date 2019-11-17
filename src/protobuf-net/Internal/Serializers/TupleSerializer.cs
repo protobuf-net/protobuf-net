@@ -44,8 +44,13 @@ namespace ProtoBuf.Internal.Serializers
                 {
                     serializer = new TagDecorator(i + 1, wireType, false, tail);
                 }
+                else if (repeated.IsMap)
+                {
+                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
+                }
                 else
                 {
+
                     SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
                     serializer = RepeatedDecorator.Create(repeated, i + 1, listFeatures);
                 }
@@ -61,7 +66,7 @@ namespace ProtoBuf.Internal.Serializers
         public Type ExpectedType => typeof(T);
         Type IProtoTypeSerializer.BaseType => typeof(T);
 
-        void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
+        void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, ISerializationContext context) { }
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
         {

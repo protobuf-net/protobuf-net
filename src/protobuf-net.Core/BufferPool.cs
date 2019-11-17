@@ -43,7 +43,7 @@ namespace ProtoBuf
                 ReleaseBufferToPool(ref buffer);
             }
 
-            var newBuffer = GetCachedBuffer(toFitAtLeastBytes) ?? new byte[newLength];
+            var newBuffer = GetCachedBuffer(newLength) ?? new byte[newLength];
 
             if (copyBytes > 0)
             {

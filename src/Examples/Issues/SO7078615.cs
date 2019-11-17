@@ -3,11 +3,10 @@ using System.IO;
 using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using System;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
 {
-    
     public class SO7078615
     {
         [ProtoContract] // treat the interface as a contract
@@ -68,6 +67,9 @@ namespace Examples.Issues
     
     public class SO7078615_NoAttribs
     {
+        private ITestOutputHelper Log { get; }
+        public SO7078615_NoAttribs(ITestOutputHelper _log) => Log = _log;
+
         public interface IMessage { }
         public interface IEvent : IMessage { }
         public class DogBarkedEvent : IEvent
@@ -128,7 +130,7 @@ namespace Examples.Issues
             }
             watch.Stop();
             var hoisted = watch.ElapsedMilliseconds;
-            Console.WriteLine(hoisted);
+            Log.WriteLine(hoisted.ToString());
             watch = Stopwatch.StartNew();
             {
                 for (int i = 0; i < values.Length; i++)
@@ -136,12 +138,9 @@ namespace Examples.Issues
             }
             watch.Stop();
             var direct = watch.ElapsedMilliseconds;
-            Console.WriteLine(direct);
+            Log.WriteLine(direct.ToString());
             Assert.True(2 < 3);
             Assert.True(hoisted < direct);
         }
-
-        
     }
-
 }

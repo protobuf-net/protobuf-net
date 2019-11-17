@@ -37,7 +37,7 @@ namespace ProtoBuf.Tests
         [Fact]
         public void ManualWriter_Null()
         {
-            var state = ProtoWriter.CreateNull(RuntimeTypeModel.Default, null);
+            var state = ProtoWriter.CreateNull(RuntimeTypeModel.Default, null, -1);
             try
             {
                 ManualWriter(ref state);

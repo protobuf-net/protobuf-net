@@ -1,5 +1,5 @@
 ﻿using ProtoBuf.Internal;
-using System;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -21,40 +21,34 @@ namespace ProtoBuf
             set { if (context != value) { ThrowIfFrozen(); context = value; } }
         }
 
-        private static readonly SerializationContext @default;
-
-        static SerializationContext()
-        {
-            @default = new SerializationContext();
-            @default.Freeze();
-        }
         /// <summary>
         /// A default SerializationContext, with minimal information.
         /// </summary>
-        internal static SerializationContext Default => @default;
+        internal static SerializationContext Default { get; } = new SerializationContext { frozen = true };
 
-        private System.Runtime.Serialization.StreamingContextStates state = System.Runtime.Serialization.StreamingContextStates.Persistence;
+        private StreamingContextStates state = StreamingContextStates.Persistence;
+
         /// <summary>
         /// Gets or sets the source or destination of the transmitted data.
         /// </summary>
-        public System.Runtime.Serialization.StreamingContextStates State
+        public StreamingContextStates State
         {
             get { return state; }
             set { if (state != value) { ThrowIfFrozen(); state = value; } }
         }
 
-		/// <summary>
-		/// Convert a SerializationContext to a StreamingContext
-		/// </summary>
-		public static implicit operator System.Runtime.Serialization.StreamingContext(SerializationContext ctx)
+        /// <summary>
+        /// Convert a SerializationContext to a StreamingContext
+        /// </summary>
+        public static implicit operator StreamingContext(SerializationContext ctx)
         {
-            if (ctx == null) return new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence);
-            return new System.Runtime.Serialization.StreamingContext(ctx.state, ctx.context);
+            if (ctx == null) return new StreamingContext(StreamingContextStates.Persistence);
+            return new StreamingContext(ctx.state, ctx.context);
         }
         /// <summary>
         /// Convert a StreamingContext to a SerializationContext
         /// </summary>
-        public static implicit operator SerializationContext (System.Runtime.Serialization.StreamingContext ctx)
+        public static implicit operator SerializationContext(StreamingContext ctx)
         {
             SerializationContext result = new SerializationContext
             {
@@ -63,6 +57,34 @@ namespace ProtoBuf
             };
 
             return result;
+        }
+
+        /// <summary>
+        /// Create a StreamingContext from a serialization context
+        /// </summary>
+        public static StreamingContext AsStreamingContext(ISerializationContext context)
+        {
+            var userState = context?.UserState;
+            if (userState is SerializationContext ctx) return new StreamingContext(ctx.state, ctx.context);
+            return new StreamingContext(StreamingContextStates.Persistence, userState);
+        }
+
+        /// <summary>
+        /// Creates a frozen SerializationContext from a serialization context
+        /// </summary>
+        public static SerializationContext AsSerializationContext(ISerializationContext context)
+        {
+            var userState = context?.UserState;
+            return userState switch
+            {
+                null => Default,
+                SerializationContext ctx => ctx,
+                _ => new SerializationContext
+                {
+                    context = context,
+                    frozen = true,
+                },
+            };
         }
     }
 

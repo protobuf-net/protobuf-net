@@ -22,6 +22,28 @@ namespace Google.Protobuf.Reflection
 
         IType Find(string name);
     }
+
+    internal interface IReserved<TRange, TField>
+        where TRange : IReservedRange
+        where TField : IField
+    {
+        List<string> ReservedNames { get; }
+        List<TRange> ReservedRanges { get; }
+        List<TField> Fields { get; }
+    }
+
+    internal interface IReservedRange
+    {
+        int Start { get; set; }
+        int End { get; set; }
+    }
+
+    internal interface IField
+    {
+        int Number { get; }
+        string Name { get; }
+    }
+
     public partial class FileDescriptorSet
     {
         internal const string Namespace = ".google.protobuf.";
@@ -219,8 +241,10 @@ namespace Google.Protobuf.Reflection
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
             => TryResolve(path, from, out var descriptor) ? descriptor : null;
     }
-    public partial class DescriptorProto : ISchemaObject, IType, IMessage
+    public partial class DescriptorProto : ISchemaObject, IType, IMessage, IReserved<DescriptorProto.ReservedRange, FieldDescriptorProto>
     {
+        public partial class ReservedRange : IReservedRange { }
+
         public static byte[] GetExtensionData(IExtensible obj)
         {
             var ext = obj?.GetExtensionObject(false);
@@ -311,7 +335,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "reserved"))
             {
-                ParseReservedRanges(ctx);
+                ParseReservedRanges(ctx, this, "field", MaxField, true);
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "extensions"))
             {
@@ -462,7 +486,9 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.None;
         }
 
-        private void ParseReservedRanges(ParserContext ctx)
+        internal static void ParseReservedRanges<TRange, TField>(ParserContext ctx, IReserved<TRange, TField> reserved, string label, int? max, bool extendRange)
+            where TRange : class, IReservedRange, new()
+            where TField : IField
         {
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
@@ -473,12 +499,12 @@ namespace Google.Protobuf.Reflection
                     while (true)
                     {
                         var name = tokens.Consume(TokenType.StringLiteral);
-                        var conflict = Fields.Find(x => x.Name == name);
+                        var conflict = reserved.Fields.Find(x => x.Name == name);
                         if (conflict != null)
                         {
-                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by field {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
+                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by {label} {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
                         }
-                        ReservedNames.Add(name);
+                        reserved.ReservedNames.Add(name);
 
                         if (tokens.ConsumeIf(TokenType.Symbol, ","))
                         {
@@ -500,15 +526,15 @@ namespace Google.Protobuf.Reflection
                         if (tokens.Read().Is(TokenType.AlphaNumeric, "to"))
                         {
                             tokens.Consume();
-                            to = tokens.ConsumeInt32();
+                            to = tokens.ConsumeInt32(max);
                         }
-                        var conflict = Fields.Find(x => x.Number >= from && x.Number <= to);
+                        var conflict = reserved.Fields.Find(x => x.Number >= from && x.Number <= to);
                         if (conflict != null)
                         {
-                            ctx.Errors.Error(tokens.Previous, $"field {conflict.Number} is already in use by '{conflict.Name}'", ErrorCode.FieldDuplicatedNumber
-                                );
+                            ctx.Errors.Error(tokens.Previous, $"{label} {conflict.Number} is already in use by '{conflict.Name}'", ErrorCode.FieldDuplicatedNumber);
                         }
-                        ReservedRanges.Add(new ReservedRange { Start = from, End = to + 1 });
+                        if (extendRange) to++; // message are extended (i.e. range is whatever+1); enums are not; because reasons
+                        reserved.ReservedRanges.Add(new TRange { Start = from, End = to });
 
                         token = tokens.Read();
                         if (token.Is(TokenType.Symbol, ","))
@@ -1615,7 +1641,7 @@ namespace Google.Protobuf.Reflection
                                             ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
                                             continue;
                                         }
-                                        state.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length);
+                                        state.WriteBytes(new ReadOnlyMemory<byte>(ms.GetBuffer(), 0, (int)ms.Length));
                                     }
                                 }
                                 break;
@@ -1668,14 +1694,18 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    public partial class EnumDescriptorProto : ISchemaObject, IType
+    public partial class EnumDescriptorProto : ISchemaObject, IType, IReserved<EnumDescriptorProto.EnumReservedRange, EnumValueDescriptorProto>
     {
+        public partial class EnumReservedRange : IReservedRange { }
+
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         string IType.FullyQualifiedName => FullyQualifiedName;
         IType IType.Parent => Parent;
         IType IType.Find(string name) => null;
         internal string FullyQualifiedName { get; set; }
+
+        List<EnumValueDescriptorProto> IReserved<EnumReservedRange, EnumValueDescriptorProto>.Fields => Values;
 
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out EnumDescriptorProto obj)
         {
@@ -1697,6 +1727,10 @@ namespace Google.Protobuf.Reflection
             {
                 Options = ctx.ParseOptionStatement(Options, this);
             }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "reserved"))
+            {
+                DescriptorProto.ParseReservedRanges(ctx, this, "enum", int.MaxValue, false);
+            }
             else
             {
                 Values.Add(EnumValueDescriptorProto.Parse(ctx));
@@ -1704,7 +1738,7 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.None;
         }
     }
-    public partial class FieldDescriptorProto : ISchemaObject
+    public partial class FieldDescriptorProto : ISchemaObject, IField
     {
         public bool IsPacked(string syntax)
         {
@@ -2058,7 +2092,7 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    public partial class EnumValueDescriptorProto
+    public partial class EnumValueDescriptorProto : IField
     {
         internal static EnumValueDescriptorProto Parse(ParserContext ctx)
         {

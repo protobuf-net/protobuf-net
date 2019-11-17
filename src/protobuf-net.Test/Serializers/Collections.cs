@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,14 +12,17 @@ namespace ProtoBuf.Serializers
     public class Collections
     {
         [Theory]
+        [InlineData(typeof(string), null)]
+        [InlineData(typeof(DoubleEnumerable), null)] // ambiguous? you can go without, then!
+
         [InlineData(typeof(int[]), typeof(VectorSerializer<int>))]
-        [InlineData(typeof(int[,]), null)]
         [InlineData(typeof(List<int>), typeof(ListSerializer<int>))]
         [InlineData(typeof(ListGenericSubclass<int>), typeof(ListSerializer<ListGenericSubclass<int>, int>))]
         [InlineData(typeof(ListNonGenericSubclass), typeof(ListSerializer<ListNonGenericSubclass, int>))]
-        [InlineData(typeof(Collection<int>), typeof(CollectionSerializer<Collection<int>, Collection<int>, int>))]
-        [InlineData(typeof(ICollection<int>), typeof(CollectionSerializer<ICollection<int>, ICollection<int>, int>))]
-        [InlineData(typeof(IList<int>), typeof(CollectionSerializer<IList<int>, IList<int>, int>))]
+        [InlineData(typeof(Collection<int>), typeof(EnumerableSerializer<Collection<int>, Collection<int>, int>))]
+        [InlineData(typeof(ICollection<int>), typeof(EnumerableSerializer<ICollection<int>, ICollection<int>, int>))]
+        [InlineData(typeof(IEnumerable<int>), typeof(EnumerableSerializer<IEnumerable<int>, IEnumerable<int>, int>))]
+        [InlineData(typeof(IList<int>), typeof(EnumerableSerializer<IList<int>, IList<int>, int>))]
         [InlineData(typeof(Dictionary<int, string>), typeof(DictionarySerializer<int, string>))]
         [InlineData(typeof(IDictionary<int, string>), typeof(DictionarySerializer<IDictionary<int,string>,int, string>))]
         [InlineData(typeof(ImmutableArray<int>), typeof(ImmutableArraySerializer<int>))]
@@ -27,11 +31,11 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IImmutableDictionary<int, string>), typeof(ImmutableIDictionarySerializer<int, string>))]
         [InlineData(typeof(Queue<int>), typeof(QueueSerializer<Queue<int>, int>))]
         [InlineData(typeof(Stack<int>), typeof(StackSerializer<Stack<int>, int>))]
-        [InlineData(typeof(CustomGenericCollection<int>), typeof(CollectionSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>,int>))]
-        [InlineData(typeof(CustomNonGenericCollection), typeof(CollectionSerializer<CustomNonGenericCollection,CustomNonGenericCollection,bool>))]
-        [InlineData(typeof(IReadOnlyCollection<string>), typeof(ReadOnlyCollectionSerializer<IReadOnlyCollection<string>, IReadOnlyCollection<string>, string>))]
-        [InlineData(typeof(CustomNonGenericReadOnlyCollection), typeof(ReadOnlyCollectionSerializer<CustomNonGenericReadOnlyCollection, CustomNonGenericReadOnlyCollection, string>))]
-        [InlineData(typeof(CustomGenericReadOnlyCollection<string>), typeof(ReadOnlyCollectionSerializer<CustomGenericReadOnlyCollection<string>, CustomGenericReadOnlyCollection<string>, string>))]
+        [InlineData(typeof(CustomGenericCollection<int>), typeof(EnumerableSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>,int>))]
+        [InlineData(typeof(CustomNonGenericCollection), typeof(EnumerableSerializer<CustomNonGenericCollection,CustomNonGenericCollection,bool>))]
+        [InlineData(typeof(IReadOnlyCollection<string>), typeof(EnumerableSerializer<IReadOnlyCollection<string>, IReadOnlyCollection<string>, string>))]
+        [InlineData(typeof(CustomNonGenericReadOnlyCollection), typeof(EnumerableSerializer<CustomNonGenericReadOnlyCollection, CustomNonGenericReadOnlyCollection, string>))]
+        [InlineData(typeof(CustomGenericReadOnlyCollection<string>), typeof(EnumerableSerializer<CustomGenericReadOnlyCollection<string>, CustomGenericReadOnlyCollection<string>, string>))]
 
         [InlineData(typeof(ImmutableList<string>), typeof(ImmutableListSerializer<string>))]
         [InlineData(typeof(IImmutableList<string>), typeof(ImmutableIListSerializer<string>))]
@@ -48,7 +52,10 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(ConcurrentQueue<string>), typeof(ConcurrentQueueSerializer<ConcurrentQueue<string>, string>))]
         [InlineData(typeof(IProducerConsumerCollection<string>), typeof(ProducerConsumerSerializer<IProducerConsumerCollection<string>, string>))]
 
-        [InlineData(typeof(CustomEnumerable), typeof(CollectionSerializer<CustomEnumerable, CustomEnumerable, int>))]
+        [InlineData(typeof(CustomEnumerable), typeof(EnumerableSerializer<CustomEnumerable, CustomEnumerable, int>))]
+        [InlineData(typeof(Dictionary<int[], int>), typeof(DictionarySerializer<int[], int>))]
+        [InlineData(typeof(Dictionary<int, int[]>), typeof(DictionarySerializer<int, int[]>))]
+        [InlineData(typeof(Dictionary<int[], int[]>), typeof(DictionarySerializer<int[], int[]>))]
 
         public void TestWhatProviderWeGet(Type type, Type expected)
         {
@@ -66,6 +73,54 @@ namespace ProtoBuf.Serializers
             }
         }
 
+        [Theory]
+        // these are things we don't expect to support at any point
+        [InlineData(typeof(int[,]))]
+        [InlineData(typeof(List<int>[]))]
+        [InlineData(typeof(List<int[]>))]
+        [InlineData(typeof(int[][]))]
+        [InlineData(typeof(List<List<int>>))]
+
+        // these are things we'll probably light up later as "repeated",
+        [InlineData(typeof(ArraySegment<int>))]
+        [InlineData(typeof(Memory<int>))]
+        [InlineData(typeof(ReadOnlyMemory<int>))]
+        [InlineData(typeof(ReadOnlySequence<int>))]
+        [InlineData(typeof(IMemoryOwner<int>))]
+
+        // these are things we'll probably light up later as "bytes",
+        [InlineData(typeof(ArraySegment<byte>))]
+        [InlineData(typeof(Memory<byte>))]
+        [InlineData(typeof(ReadOnlyMemory<byte>))]
+        [InlineData(typeof(ReadOnlySequence<byte>))]
+        [InlineData(typeof(IMemoryOwner<byte>))]
+
+        public void NotSupportedScenarios(Type type)
+        {
+            var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
+            Assert.NotNull(provider);
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                _ = provider.Serializer;
+            });
+        }
+
+        // spans a: can't be stored, so the concept of assigning them
+        // is bad; and b: can't be used as generics, so can't be expressed
+        // as ISerializer<Span<Foo>>, etc; all in all: just nope!
+        [Theory]
+        [InlineData(typeof(Span<int>))]
+        [InlineData(typeof(Span<byte>))]
+        [InlineData(typeof(ReadOnlySpan<int>))]
+        [InlineData(typeof(ReadOnlySpan<byte>))]
+        public void SpansAreReallyReallyNotSupported(Type type)
+        {
+            var ex = Assert.Throws<NotSupportedException>(() =>
+            {
+                RepeatedSerializers.TryGetRepeatedProvider(type);
+            });
+            Assert.Equal("Serialization cannot work with [ReadOnly]Span<T>; [ReadOnly]Memory<T> may be enabled later", ex.Message);
+        }
 
         class CustomEnumerable : IEnumerable<int>, ICollection<int>
         {
@@ -133,6 +188,13 @@ namespace ProtoBuf.Serializers
             IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
             bool ICollection<bool>.Remove(bool item) => throw new NotImplementedException();
             #endregion
+        }
+
+        public class DoubleEnumerable : IEnumerable<string>, IEnumerable<int>
+        {
+            IEnumerator<string> IEnumerable<string>.GetEnumerator() => throw new NotImplementedException();
+            IEnumerator<int> IEnumerable<int>.GetEnumerator() => throw new NotImplementedException();
+            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
         }
 
     }

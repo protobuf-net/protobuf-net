@@ -2,9 +2,11 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -261,7 +263,7 @@ namespace ProtoBuf
                         if (GetPosition() != end) ThrowHelper.ThrowInvalidOperationException("over-read packed data");
                         break;
                     default:
-                        ThrowHelper.ThrowInvalidOperationException($"Invalid wire-type for packed encoding: {wireType}");
+                        ThrowHelper.ThrowInvalidPackedOperationException(WireType, typeof(T));
                         break;
                 }
             }
@@ -313,37 +315,125 @@ namespace ProtoBuf
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
             public byte[] AppendBytes(byte[] value)
+                => AppendBytes(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            public ReadOnlyMemory<byte> AppendBytes(ReadOnlyMemory<byte> value)
+                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            public Memory<byte> AppendBytes(Memory<byte> value)
+                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            public ArraySegment<byte> AppendBytes(ArraySegment<byte> value)
+                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            public TStorage AppendBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
+                => AppendBytesImpl(value, converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model));
+
+            private TStorage AppendBytesImpl<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
             {
+                switch (_reader.WireType)
                 {
-                    switch (_reader.WireType)
-                    {
-                        case WireType.String:
-                            int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
-                            _reader.WireType = WireType.None;
-                            if (len == 0) return value ?? EmptyBlob;
-                            int offset;
-                            if (value == null || value.Length == 0)
-                            {
-                                offset = 0;
-                                value = new byte[len];
-                            }
-                            else
-                            {
-                                offset = value.Length;
-                                byte[] tmp = new byte[value.Length + len];
-                                Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
-                                value = tmp;
-                            }
-                            _reader.ImplReadBytes(ref this, new ArraySegment<byte>(value, offset, len));
-                            return value;
-                        //case WireType.Varint:
-                        //    return new byte[0];
-                        default:
-                            ThrowWireTypeException();
-                            return default;
-                    }
+                    case WireType.String:
+                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        _reader.WireType = WireType.None;
+                        if (len == 0) return converter.NonNull(value);
+
+                        // expand the storage
+#if DEBUG
+                        var oldLength = converter.GetLength(value);
+#endif
+                        var newChunk = converter.Expand(Context, ref value, len);
+#if DEBUG
+                        if (converter.GetLength(value) != (oldLength + len))
+                            ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
+                        if (newChunk.Length != len)
+                            ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
+#endif               
+                        // read the data into the new part
+                        _reader.ImplReadBytes(ref this, newChunk.Span);
+
+                        return value;
+                    //case WireType.Varint:
+                    //    return new byte[0];
+                    default:
+                        ThrowWireTypeException();
+                        return default;
                 }
             }
+
+            ///// <summary>
+            ///// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be empty); supported wire-types: String
+            ///// </summary>
+            ///// <remarks>A custom allocator may be employed, in which case the sequence it returns will be treated as mutable</remarks>
+            //[MethodImpl(MethodImplOptions.NoInlining)]
+            //public ReadOnlySequence<byte> AppendBytes(ReadOnlySequence<byte> value, 
+            //    Func<ISerializationContext, int, ReadOnlySequence<byte>> allocator = default)
+            //{
+            //    switch (_reader.WireType)
+            //    {
+            //        case WireType.String:
+            //            int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+            //            _reader.WireType = WireType.None;
+            //            if (len == 0) return value;
+
+            //            ReadOnlySequence<byte> newData;
+            //            int newLength = checked((int)(value.Length + len));
+            //            if (allocator == null)
+            //            {
+            //                newData = new ReadOnlySequence<byte>(new byte[newLength]);
+            //            }
+            //            else
+            //            {
+            //                newData = allocator(Context, newLength)
+            //                    .Slice(0, newLength); // don't trust the allocator to get the length right!
+            //            }
+
+            //            // copy the old data (if any) into the new result
+            //            if (!value.IsEmpty) CopySequence(from: value, to: newData);
+            //            // read the data into the new part
+            //            _reader.ImplReadBytes(ref this, newData.Slice(start: value.Length));
+            //            return newData;
+            //        default:
+            //            ThrowWireTypeException();
+            //            return default;
+            //    }
+
+            //    static void CopySequence(in ReadOnlySequence<byte> from, in ReadOnlySequence<byte> to)
+            //    {
+            //        if (to.IsSingleSegment)
+            //        {
+            //            from.CopyTo(MemoryMarshal.AsMemory(to.First).Span);
+            //        }
+            //        else
+            //        {
+            //            if (to.Length < from.Length) ThrowHelper.ThrowInvalidOperationException();
+            //            SequencePosition origin = from.Start;
+            //            foreach (var segment in to)
+            //            {
+            //                var target = MemoryMarshal.AsMemory(segment).Span;
+            //                var tmp = from.Slice(origin, target.Length);
+            //                origin = tmp.End;
+            //                tmp.CopyTo(target);
+            //            }
+            //        }
+            //    }
+            //}
 
             /// <summary>
             /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
@@ -744,7 +834,9 @@ namespace ProtoBuf
                     {
                         writeState.Dispose();
                     }
+#pragma warning disable IDE0059 // Unnecessary assignment of a value - the rule is wrong; this matters
                     commit = true;
+#pragma warning restore IDE0059
                 }
                 finally { extn.EndAppend(dest, commit); }
             }

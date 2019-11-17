@@ -2,9 +2,11 @@
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ProtoBuf
@@ -24,7 +26,22 @@ namespace ProtoBuf
         private protected abstract string ImplReadString(ref State state, int bytes);
         private protected abstract void ImplSkipBytes(ref State state, long count);
         private protected abstract int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value);
-        private protected abstract void ImplReadBytes(ref State state, ArraySegment<byte> target);
+        private protected abstract void ImplReadBytes(ref State state, Span<byte> target);
+        private protected virtual void ImplReadBytes(ref State state, ReadOnlySequence<byte> target)
+        {
+            if (target.IsSingleSegment)
+            {
+                ImplReadBytes(ref state, MemoryMarshal.AsMemory(target.First).Span);
+            }
+            else
+            {
+                foreach (var segment in target)
+                {
+                    ImplReadBytes(ref state, MemoryMarshal.AsMemory(segment).Span);
+                }
+            }
+        }
+
         private protected abstract bool IsFullyConsumed(ref State state);
 
         private TypeModel _model;
@@ -82,31 +99,34 @@ namespace ProtoBuf
         /// <summary>
         /// Initialize the reader
         /// </summary>
-        internal void Init(TypeModel model, SerializationContext context)
+        internal void Init(TypeModel model, object userState)
         {
             OnInit();
             _model = model;
 
-            if (context == null) { context = SerializationContext.Default; }
-            else { context.Freeze(); }
-            this.context = context;
+            if (userState is SerializationContext context) context.Freeze();
+            UserState = userState;
             _longPosition = 0;
             _depth = _fieldNumber = 0;
 
             blockEnd64 = long.MaxValue;
-            InternStrings = (model ?? TypeModel.DefaultModel)?.InternStrings ?? false;
+            InternStrings = model.HasOption(TypeModel.TypeModelOptions.InternStrings);
             WireType = WireType.None;
 #if FEAT_DYNAMIC_REF
             trapCount = 1;
 #endif
         }
 
-        private SerializationContext context;
+        /// <summary>
+        /// Addition information about this deserialization operation.
+        /// </summary>
+        public object UserState { get; private set; }
 
         /// <summary>
         /// Addition information about this deserialization operation.
         /// </summary>
-        public SerializationContext Context => context;
+        [Obsolete("Prefer " + nameof(UserState))]
+        public SerializationContext Context => SerializationContext.AsSerializationContext(this);
 
         /// <summary>
         /// Releases resources used by the reader, but importantly <b>does not</b> Dispose the 
@@ -717,11 +737,10 @@ namespace ProtoBuf
         {
             if (parent == null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
             TypeModel model = parent.Model;
-            SerializationContext ctx = parent.Context;
+            var userState = parent.UserState;
             if (model == null) ThrowHelper.ThrowInvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
-
-            var writeState = ProtoWriter.State.Create(ms, model, ctx);
+            var writeState = ProtoWriter.State.Create(ms, model, userState);
             try
             {
                 model.SerializeRootFallback(ref writeState, from);
@@ -731,7 +750,7 @@ namespace ProtoBuf
                 writeState.Dispose();
             }
             ms.Position = 0;
-            using var state = ProtoReader.State.Create(ms, model);
+            using var state = ProtoReader.State.Create(ms, model, userState);
             return state.DeserializeRootFallback(to, type: null);
         }
     }

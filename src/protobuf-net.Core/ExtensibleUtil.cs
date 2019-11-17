@@ -113,25 +113,14 @@ namespace ProtoBuf
                 {
                     state.Dispose();
                 }
+#pragma warning disable IDE0059 // Unnecessary assignment of a value - the rule is wrong; this matters
                 commit = true;
+#pragma warning restore IDE0059
             }
             finally
             {
                 extn.EndAppend(stream, commit);
             }
         }
-
-        //        /// <summary>
-        //        /// Stores the given value into the instance's stream; the serializer
-        //        /// is inferred from TValue and format.
-        //        /// </summary>
-        //        /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
-        //        public static void AppendExtendValueTyped<TSource, TValue>(
-        //            TypeModel model, TSource instance, int tag, DataFormat format, TValue value)
-        //            where TSource : class, IExtensible
-        //        {
-        //            AppendExtendValue(model, instance, tag, format, value);
-        //        }
-
     }
 }

@@ -327,7 +327,7 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                if (!(TypeHelper<T>.CanBeNull && value is null))
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
@@ -339,7 +339,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                if (!(TypeHelper<T>.CanBeNull && value is null))
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     WriteFieldHeader(fieldNumber, WireType.StartGroup);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
@@ -360,7 +360,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                if (!(TypeHelper<T>.CanBeNull && value is null))
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     features.InheritFrom(serializer.Features);
@@ -468,36 +468,52 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String
             /// </summary>
-            public void WriteBytes(byte[] data, int offset, int length)
+            public void WriteBytes(ArraySegment<byte> data)
+                => WriteBytes(new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
+
+            /// <summary>
+            /// Writes a byte-array to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(byte[] data)
+                => WriteBytes(new ReadOnlyMemory<byte>(data));
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
+                =>WriteBytes((ReadOnlyMemory<byte>)(
+                    converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model)
+                    ).GetMemory(value));
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(ReadOnlyMemory<byte> data)
             {
                 var writer = _writer;
+                var length = data.Length;
                 switch (writer.WireType)
                 {
                     case WireType.Fixed32:
                         if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
-                        writer.ImplWriteBytes(ref this, data, offset, 4);
+                        writer.ImplWriteBytes(ref this, data);
                         writer.AdvanceAndReset(4);
                         return;
                     case WireType.Fixed64:
                         if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
-                        writer.ImplWriteBytes(ref this, data, offset, 8);
+                        writer.ImplWriteBytes(ref this, data);
                         writer.AdvanceAndReset(8);
                         return;
                     case WireType.String:
                         writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)length) + length);
                         if (length == 0) return;
-                        writer.ImplWriteBytes(ref this, data, offset, length);
+                        writer.ImplWriteBytes(ref this, data);
                         break;
                     default:
                         ThrowInvalidSerializationOperation();
                         break;
                 }
             }
-
-            /// <summary>
-            /// Writes a byte-array to the stream; supported wire-types: String
-            /// </summary>
-            public void WriteBytes(byte[] data) => WriteBytes(data, 0, data.Length);
 
             /// <summary>
             /// Writes an object to the input writer as a root value; if the
@@ -537,7 +553,7 @@ namespace ProtoBuf
                     // to preserve legacy behavior of DateTime/TimeSpan etc
                     WriteMessage<T>(1, default, value, serializer);
                 }
-                else if (TypeHelper<T>.CanBeNull && value == null)
+                else if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value))
                 {
                     // nothing to do
                 }
@@ -553,6 +569,8 @@ namespace ProtoBuf
                             serializer.Write(ref this, value);
                             break;
                         case SerializerFeatures.CategoryRepeated:
+                            if (Model.OmitsOption(TypeModel.TypeModelOptions.AllowPackedEncodingAtRoot))
+                                features |= SerializerFeatures.OptionPackedDisabled;
                             ((IRepeatedSerializer<T>)serializer).WriteRepeated(ref this, 1, features, value);
                             break;
                         default:
@@ -798,7 +816,7 @@ namespace ProtoBuf
                     {
                         if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
                         {
-                            _writer.ImplWriteBytes(ref this, data.Array, data.Offset, data.Count);
+                            _writer.ImplWriteBytes(ref this, new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
                             _writer.Advance(data.Count);
                         }
                         else
@@ -856,6 +874,16 @@ namespace ProtoBuf
 #pragma warning restore RCS1097 // Remove redundant 'ToString' call.
                 ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
             }
+        }
+
+        internal void InitializeFrom(ProtoWriter writer) => netCache?.InitializeFrom(writer?.netCache);
+
+        internal void CopyBack(ProtoWriter writer) => netCache?.CopyBack(writer?.netCache);
+
+        internal int GetLengthHits(out int misses)
+        {
+            misses = netCache?.LengthMisses ?? 0;
+            return netCache?.LengthHits ?? 0;
         }
     }
 }

@@ -380,7 +380,7 @@ namespace Examples
 #endif
             using var ms = new MemoryStream();
             SerializationContext ctx = new SerializationContext { Context = new object()};
-            model.Serialize(ms, orig, ctx);
+            model.Serialize(ms, orig, context: ctx);
             Assert.Null(orig.B.ReadState);
             Assert.Same(ctx.Context, orig.B.WriteState);
 #if REMOTING

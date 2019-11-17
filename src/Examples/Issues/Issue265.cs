@@ -55,7 +55,7 @@ namespace Examples.Issues
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             var orig = new int[] {3, 4, 5};
-            Program.CheckBytes(orig, model, "0A-03-03-04-05");
+            Program.CheckBytes(orig, model, "08-03-08-04-08-05");
             var clone = (int[])model.DeepClone(orig);
             Assert.Equal("3,4,5", string.Join(",", clone)); //, "clone");
         }
@@ -140,7 +140,7 @@ message List_E {
         {
             var value = new[] {E.V0, E.V1, E.V2};
             Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
-            Program.CheckBytes(value, model, "0A-03-00-01-02");
+            Program.CheckBytes(value, model, "08-00-08-01-08-02");
             var clone = (E[]) model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
             value.SequenceEqual(clone);
@@ -149,7 +149,7 @@ message List_E {
         {
             var value = new List<E> { E.V0, E.V1, E.V2 };
             Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
-            Program.CheckBytes(value, model, "0A-03-00-01-02");
+            Program.CheckBytes(value, model, "08-00-08-01-08-02");
             var clone = (List<E>)model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
             value.SequenceEqual(clone);

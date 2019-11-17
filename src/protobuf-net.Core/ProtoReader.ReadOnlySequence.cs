@@ -17,11 +17,11 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="source">The source buffer</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-            /// <param name="context">Additional context about this serialization operation</param>
-            public static State Create(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
+            /// <param name="userState">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlySequence<byte> source, TypeModel model, object userState = null)
             {
                 var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
-                reader.Init(source, model, context);
+                reader.Init(source, model, userState);
                 return new State(reader);
             }
 
@@ -30,9 +30,9 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="source">The source buffer</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-            /// <param name="context">Additional context about this serialization operation</param>
-            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, SerializationContext context = null)
-                => Create(new ReadOnlySequence<byte>(source), model, context);
+            /// <param name="userState">Additional context about this serialization operation</param>
+            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, object userState = null)
+                => Create(new ReadOnlySequence<byte>(source), model, userState);
 
 #if FEAT_DYNAMIC_REF
             internal void SetRootObject(object value) => _reader.SetRootObject(value);
@@ -151,9 +151,9 @@ namespace ProtoBuf
                 Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
-            internal void Init(ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)
+            internal void Init(ReadOnlySequence<byte> source, TypeModel model, object userState)
             {
-                base.Init(model, context);
+                base.Init(model, userState);
                 _source = source.GetEnumerator();
             }
 
@@ -195,7 +195,7 @@ namespace ProtoBuf
                     {
                         int take = Math.Min(s.RemainingInCurrent, target.Length);
                         reader.Peek(ref s, take).CopyTo(target);
-                        target = target.Slice(available);
+                        target = target.Slice(take);
                         available += take;
                     }
 
@@ -211,6 +211,7 @@ namespace ProtoBuf
                     }
 
                     if (available != 10) span = span.Slice(0, available);
+
                     return ProtoReader.State.TryParseUInt64Varint(span, 0, out val);
                 }
             }
@@ -300,8 +301,8 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
-                => ImplReadBytes(ref state, new Span<byte>(target.Array, target.Offset, target.Count), target.Count);
+            private protected override void ImplReadBytes(ref State state, Span<byte> target)
+                => ImplReadBytes(ref state, target, target.Length);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ReadOnlySpan<byte> Consume(ref State state, int bytes)
@@ -331,7 +332,7 @@ namespace ProtoBuf
                 unsafe int ViaStackAlloc(ref State s, Read32VarintMode m, out uint val)
                 {
                     byte* stack = stackalloc byte[10]; // because otherwise compiler is convinced we're screwing up
-                    Span<byte> span = new Span<byte>(stack, 10);
+                    Span<byte> span = new Span<byte>(stack, 10); // (see CS8352 / CS8350)
                     Span<byte> target = span;
                     var currentBuffer = Peek(ref s, Math.Min(target.Length, s.RemainingInCurrent));
                     currentBuffer.CopyTo(target);

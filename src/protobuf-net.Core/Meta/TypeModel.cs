@@ -1,3 +1,4 @@
+
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Serializers;
 using System;
@@ -12,6 +13,24 @@ using System.Threading;
 
 namespace ProtoBuf.Meta
 {
+    internal static class TypeModelExtensions
+    {
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static bool HasOption(this TypeModel model, TypeModel.TypeModelOptions options)
+        {
+            var modelOptions = model == null ? TypeModel.DefaultOptions : model.Options;
+            return (modelOptions & options) != 0;
+        }
+
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static bool OmitsOption(this TypeModel model, TypeModel.TypeModelOptions options)
+        {
+            var modelOptions = model == null ? TypeModel.DefaultOptions : model.Options;
+            return (modelOptions & options) == 0;
+        }
+    }
+
     /// <summary>
     /// Provides protobuf serialization support for a number of types
     /// </summary>
@@ -26,19 +45,39 @@ namespace ProtoBuf.Meta
             => SerializerCache<TProvider, T>.InstanceField;
 
         /// <summary>
-        /// Should the <c>Kind</c> be included on date/time values?
+        /// Specifies optional behaviors associated with a type model
         /// </summary>
-        protected internal virtual bool SerializeDateTimeKind() => false;
+        [Flags]
+        public enum TypeModelOptions
+        {
+            /// <summary>
+            /// No additional options
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// Should the deserializer attempt to avoid duplicate copies of the same string?
+            /// </summary>
+            InternStrings = 1 << 0,
+            /// <summary>
+            /// Should the <c>Kind</c> be included on date/time values?
+            /// </summary>
+            IncludeDateTimeKind = 1 << 1,
+            /// <summary>
+            /// Should zero-length packed arrays be serialized? (this is the v2 behavior, but skipping them is more efficient)
+            /// </summary>
+            SkipZeroLengthPackedArrays = 1 << 2,
+            /// <summary>
+            /// Should root-values allow "packed" encoding? (v2 does not support this)
+            /// </summary>
+            AllowPackedEncodingAtRoot = 1 << 3,
+        }
 
         /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+        /// Specifies optional behaviors associated with this model
         /// </summary>
-        public bool InternStrings => GetInternStrings();
+        public virtual TypeModelOptions Options => DefaultOptions;
 
-        /// <summary>
-        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
-        /// </summary>
-        protected internal virtual bool GetInternStrings() => false;
+        internal const TypeModelOptions DefaultOptions = 0; // important: WriteConstructorsAndOverrides only overrides if different
 
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
@@ -232,10 +271,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        /// <param name="context">Additional information about this serialization operation.</param>
-        public long Serialize<T>(Stream dest, T value, SerializationContext context = null)
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public long Serialize<T>(Stream dest, T value, object userState = null)
         {
-            var state = ProtoWriter.State.Create(dest, this, context);
+            var state = ProtoWriter.State.Create(dest, this, userState);
             try
             {
                 return SerializeImpl<T>(ref state, value);
@@ -251,10 +290,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        /// <param name="context">Additional information about this serialization operation.</param>
-        public long Serialize<T>(IBufferWriter<byte> dest, T value, SerializationContext context = null)
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public long Serialize<T>(IBufferWriter<byte> dest, T value, object userState = null)
         {
-            var state = ProtoWriter.State.Create(dest, this, context);
+            var state = ProtoWriter.State.Create(dest, this, userState);
             try
             {
                 return SerializeImpl<T>(ref state, value);
@@ -268,18 +307,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public long Measure<T>(T value, SerializationContext context = null)
-        {
-            var state = ProtoWriter.NullProtoWriter.CreateNullProtoWriter(this, context);
-            try
-            {
-                return SerializeImpl<T>(ref state, value);
-            }
-            finally
-            {
-                state.Dispose();
-            }
-        }
+        public MeasureState<T> Measure<T>(T value, object userState = null, long abortAfter = -1)
+            => new MeasureState<T>(this, value, userState, abortAfter);
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied writer.
@@ -295,7 +324,7 @@ namespace ProtoBuf.Meta
 
         internal static long SerializeImpl<T>(ref ProtoWriter.State state, T value)
         {
-            if (TypeHelper<T>.CanBeNull && value == null) return 0;
+            if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)) return 0;
 
             var serializer = TryGetSerializer<T>(state.Model);
             if (serializer == null)
@@ -674,15 +703,15 @@ namespace ProtoBuf.Meta
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
         /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
-        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(Stream source, T value = default, SerializationContext context = null)
+        public T Deserialize<T>(Stream source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, this, context);
+            using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -690,15 +719,15 @@ namespace ProtoBuf.Meta
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
         /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
-        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
+        public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, this, context);
+            using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -706,15 +735,15 @@ namespace ProtoBuf.Meta
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
         /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
-        /// <param name="context">Additional information about this serialization operation.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
+        public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
         {
-            using var state = ProtoReader.State.Create(source, this, context);
+            using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -1031,20 +1060,19 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static TypeModel SetDefaultModel(TypeModel newValue)
         {
-            // the point here is to allow:
-            // 1. TypeModel.DefaultModel to set a non-null NullModel instance automagically
-            // 2. RuntimeTypeModel.Default to override that, changing either a null or a NullModel
-            // to the default RuntimeTypeModel
-            // 3. there is no 3; those are the supported scenarios
-            var fieldValue = Volatile.Read(ref s_defaultModel);
-            if (fieldValue == null || fieldValue is NullModel)
+            switch (newValue)
             {
-                if (newValue == null) newValue = NullModel.Instance;
-                Interlocked.CompareExchange(ref s_defaultModel, newValue, fieldValue);
-                fieldValue = Volatile.Read(ref s_defaultModel);
+                case null:
+                case NullModel _:
+                    // set to the null instance, but only if the field is null
+                    Interlocked.CompareExchange(ref s_defaultModel, NullModel.Singleton, null);
+                    break;
+                default:
+                    // something more exotic? (presumably RuntimeTypeModel); yeah, OK
+                    Interlocked.Exchange(ref s_defaultModel, newValue);
+                    break;
             }
-            return fieldValue;
-
+            return Volatile.Read(ref s_defaultModel);
         }
         private static TypeModel s_defaultModel;
 
@@ -1056,7 +1084,13 @@ namespace ProtoBuf.Meta
         internal sealed class NullModel : TypeModel
         {
             private NullModel() { }
-            public static NullModel Instance = new NullModel();
+            private static readonly NullModel s_Singleton = new NullModel();
+
+            public static TypeModel Singleton
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)]
+                get => s_Singleton;
+            }
             protected internal override ISerializer<T> GetSerializer<T>() => null;
         }
 
@@ -1119,7 +1153,12 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
         {
-            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}");
+            string suffix = null;
+            if (model is NullModel)
+            {
+                suffix = "; you may need to ensure that RuntimeTypeModel.Initialize has been invoked";
+            }
+            ThrowHelper.ThrowInvalidOperationException($"No serializer for type {typeof(T).NormalizeName()} is available for model {model?.ToString() ?? "(none)"}{suffix}");
             return default;
         }
 
@@ -1231,13 +1270,13 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public T DeepClone<T>(T value, SerializationContext context = null)
+        public T DeepClone<T>(T value, object userState = null)
         {
 #if PLAT_ISREF
             if (!System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>())
                 return value; // whether it is trivial or complex, we already have a full clone of a value-type
 #endif
-            if (TypeHelper<T>.CanBeNull && value == null) return value;
+            if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)) return value;
 
             var serializer = TryGetSerializer<T>(this);
             if (serializer == null)
@@ -1252,9 +1291,9 @@ namespace ProtoBuf.Meta
             else
             {
                 using var ms = new MemoryStream();
-                Serialize<T>(ms, value, context);
+                Serialize<T>(ms, value, userState);
                 ms.Position = 0;
-                return Deserialize<T>(ms, default, context);
+                return Deserialize<T>(ms, default, userState);
             }
         }
 
@@ -1377,9 +1416,7 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNestedListsNotSupported(Type type)
-        {
-            throw new NotSupportedException("Nested or jagged lists and arrays are not supported: " + (type?.FullName ?? "(null)"));
-        }
+            => ThrowHelper.ThrowNestedDataNotSupported(type);
 
         /// <summary>
         /// Indicates that the given type cannot be constructed; it may still be possible to 

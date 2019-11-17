@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -17,6 +18,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writer state
         /// </summary>
+        [StructLayout(LayoutKind.Auto)]
         public ref partial struct State
         {
             internal bool IsActive => !_span.IsEmpty;
@@ -126,20 +128,25 @@ namespace ProtoBuf
                 RemainingInCurrent -= bytes;
             }
 
+            [MethodImpl(ProtoReader.HotPath)]
             internal int LocalWriteVarint64(ulong value)
             {
-                int count = 0;
-                var span = _span;
-                var index = OffsetInCurrent;
-                do
-                {
-                    span[index++] = (byte)((value & 0x7F) | 0x80);
-                    count++;
-                } while ((value >>= 7) != 0);
-                span[index - 1] &= 0x7F;
-
+                var count = WriteVarint64(value, _span, OffsetInCurrent);
                 OffsetInCurrent += count;
                 RemainingInCurrent -= count;
+                return count;
+            }
+
+            [MethodImpl(ProtoReader.HotPath)]
+            internal static int WriteVarint64(ulong value, Span<byte> span, int offset = 0)
+            {
+                int count = 0;
+                do
+                {
+                    span[offset++] = (byte)((value & 0x7F) | 0x80);
+                    count++;
+                } while ((value >>= 7) != 0);
+                span[offset - 1] &= 0x7F;
                 return count;
             }
 
@@ -155,10 +162,16 @@ namespace ProtoBuf
 #if PLAT_SPAN_OVERLOADS
                     bytes = source.Read(Remaining);
 #else
-                    var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(RemainingInCurrent);
-                    bytes = source.Read(arr, 0, RemainingInCurrent);
-                    if (bytes > 0) new Span<byte>(arr, 0, bytes).CopyTo(Remaining);
-                    System.Buffers.ArrayPool<byte>.Shared.Return(arr);
+                    var arr = ArrayPool<byte>.Shared.Rent(RemainingInCurrent);
+                    try
+                    {
+                        bytes = source.Read(arr, 0, RemainingInCurrent);
+                        if (bytes > 0) new Span<byte>(arr, 0, bytes).CopyTo(Remaining);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(arr);
+                    }
 #endif
                 }
                 if (bytes > 0)

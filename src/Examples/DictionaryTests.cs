@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Examples.Dictionary
 {
@@ -45,7 +46,7 @@ namespace Examples.Dictionary
         }
     }
 
-    
+
     public class DictionaryTests
     {
         [Fact]
@@ -181,12 +182,10 @@ namespace Examples.Dictionary
     67-68-69 = "ghi"
 etc
          */
+        private ITestOutputHelper Log { get; }
+        public NestedDictionaryTests(ITestOutputHelper _log) => Log = _log;
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedConcreteConcreteDictionary()
         {
             Dictionary<string, Dictionary<string, string>> data = new Dictionary<string, Dictionary<string, string>>
@@ -208,11 +207,7 @@ etc
             Assert.Equal(expected, hex);
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedInterfaceInterfaceDictionary()
         {
             IDictionary<string, IDictionary<string, string>> data = new Dictionary<string, IDictionary<string, string>>
@@ -225,11 +220,7 @@ etc
             CheckNested(clone, "clone");
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedInterfaceConcreteDictionary()
         {
             IDictionary<string, Dictionary<string, string>> data = new Dictionary<string, Dictionary<string, string>>
@@ -241,11 +232,8 @@ etc
             var clone = Serializer.DeepClone(data);
             CheckNested(clone, "clone");
         }
-#if KNOWN_GAPS
+
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void TestNestedConcreteInterfaceDictionary()
         {
             Dictionary<string, IDictionary<string, string>> data = new Dictionary<string, IDictionary<string, string>>
@@ -275,9 +263,9 @@ etc
             Assert.Equal(2, inner.Keys.Count); //, message);
             Assert.Equal("pqr", inner["mno"]); //, message);
             Assert.Equal("vwx", inner["stu"]); //, message);
-
         }
 
+#if LONG_RUNNING
         [Fact]
         public void CheckPerformanceNotInsanelyBad()
         {
@@ -310,15 +298,15 @@ etc
             int l2 = BulkTest(model, o2, out int s2, out int d2);
             int l3 = BulkTest(model, o3, out int s3, out int d3);
 
-            Console.WriteLine("Bytes (props)\t" + l1);
-            Console.WriteLine("Ser (props)\t" + s1);
-            Console.WriteLine("Deser (props)\t" + d1);
-            Console.WriteLine("Bytes (kv-default)\t" + l2);
-            Console.WriteLine("Ser (kv-default)\t" + s2);
-            Console.WriteLine("Deser (kv-default)\t" + d2);
-            Console.WriteLine("Bytes (kv-grouped)\t" + l3);
-            Console.WriteLine("Ser (kv-grouped)\t" + s3);
-            Console.WriteLine("Deser (kv-grouped)\t" + d3);
+            Log.WriteLine("Bytes (props)\t" + l1);
+            Log.WriteLine("Ser (props)\t" + s1);
+            Log.WriteLine("Deser (props)\t" + d1);
+            Log.WriteLine("Bytes (kv-default)\t" + l2);
+            Log.WriteLine("Ser (kv-default)\t" + s2);
+            Log.WriteLine("Deser (kv-default)\t" + d2);
+            Log.WriteLine("Bytes (kv-grouped)\t" + l3);
+            Log.WriteLine("Ser (kv-grouped)\t" + s3);
+            Log.WriteLine("Deser (kv-grouped)\t" + d3);
 
             using var state = ProtoWriter.State.Create(Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
@@ -332,9 +320,11 @@ etc
             }
             watch.Stop();
             state.Close();
-            Console.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
+            Log.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
             
         }
+#endif
+
         const int LOOP = 500000;
         static int BulkTest<T>(TypeModel model, T obj, out int serialize, out int deserialize) where T: class
         {

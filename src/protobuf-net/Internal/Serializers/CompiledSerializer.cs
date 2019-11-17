@@ -1,40 +1,53 @@
-﻿using System;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+using System;
 using System.Diagnostics;
 using System.Reflection;
-using ProtoBuf.Internal;
-using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
+using System.Threading;
 
 namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, ISerializer<T>, ISubTypeSerializer<T>, IFactory<T>
         where TBase : class
         where T : class, TBase
-    { 
+    {
         private readonly Compiler.ProtoSerializer<T> subTypeSerializer;
         private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
         private readonly Func<ISerializationContext, T> factory;
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
-            => state.ReadBaseType<TBase, T>(value);
+        {
+            return state.ReadBaseType<TBase, T>(value);
+        }
 
         T IFactory<T>.Create(ISerializationContext context)
             => factory?.Invoke(context);
 
         public override object Read(ref ProtoReader.State state, object value)
-            => state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
+        {
+            return state.ReadBaseType<TBase, T>(TypeHelper<T>.FromObject(value));
+        }
+
 
         void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
-            => state.WriteBaseType<TBase>(value);
+        {
+            state.WriteBaseType<TBase>(value);
+        }
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => state.WriteBaseType<TBase>(TypeHelper<T>.FromObject(value));
+        {
+            state.WriteBaseType<TBase>(TypeHelper<T>.FromObject(value));
+        }
 
         void ISubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
-            => subTypeSerializer(ref state, value);
+        {
+            subTypeSerializer(ref state, value);
+        }
 
         T ISubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
-            => subTypeDeserializer(ref state, value);
+        {
+            return subTypeDeserializer(ref state, value);
+        }
 
         public InheritanceCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
@@ -65,6 +78,7 @@ namespace ProtoBuf.Internal.Serializers
         protected readonly Compiler.ProtoSerializer<T> serializer;
         protected readonly Compiler.ProtoDeserializer<T> deserializer;
         private readonly Func<ISerializationContext, T> factory;
+
         public SimpleCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
         {
@@ -72,7 +86,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 serializer = Compiler.CompilerContext.BuildSerializer<T>(model.Scope, head, model);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new InvalidOperationException($"Unable to bind serializer: " + ex.Message, ex);
             }
@@ -89,16 +103,24 @@ namespace ProtoBuf.Internal.Serializers
         }
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
-            => deserializer(ref state, value);
+        {
+            return deserializer(ref state, value);
+        }
 
         public override object Read(ref ProtoReader.State state, object value)
-            => deserializer(ref state, TypeHelper<T>.FromObject(value));
+        {
+            return deserializer(ref state, TypeHelper<T>.FromObject(value));
+        }
 
         void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
-            => serializer(ref state, value);
+        {
+            serializer(ref state, value);
+        }
 
         public override void Write(ref ProtoWriter.State state, object value)
-            => serializer(ref state, TypeHelper<T>.FromObject(value));
+        {
+            serializer(ref state, TypeHelper<T>.FromObject(value));
+        }
 
         T IFactory<T>.Create(ISerializationContext context)
             => factory == null ? default : factory.Invoke(context);
@@ -119,7 +141,7 @@ namespace ProtoBuf.Internal.Serializers
 
         object IProtoTypeSerializer.CreateInstance(ISerializationContext context) => head.CreateInstance(context);
 
-        public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
+        public void Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context)
         {
             head.Callback(value, callbackType, context); // these routes only used when bits of the model not compiled
         }

@@ -11,6 +11,7 @@ namespace ProtoBuf.Internal.Serializers
             SerializerFeatures keyFeatures, SerializerFeatures valueFeatures)
         {
             if (provider == null) ThrowHelper.ThrowArgumentNullException(nameof(provider));
+            _ = provider.Serializer; // primes and validates
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(
                 typeof(MapDecorator<,,>).MakeGenericType(provider.ForType, keyType, valueType),
                 new object[] { fieldNumber, features, keyFeatures, valueFeatures, provider });
@@ -48,6 +49,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
+            _ = Serializer; // this is to force a type-check
             var method = typeof(MapSerializer<TCollection, TKey, TValue>).GetMethod(nameof(MapSerializer<TCollection, TKey, TValue>.WriteMap));
 
             using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
@@ -58,8 +60,8 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadValue(loc);
             ctx.LoadValue((int)_keyFeatures);
             ctx.LoadValue((int)_valueFeatures);
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
+            ctx.LoadSelfAsService<ISerializer<TKey>, TKey>();
+            ctx.LoadSelfAsService<ISerializer<TValue>, TValue>();
             ctx.EmitCall(method);
         }
         public void EmitRead(CompilerContext ctx, Local valueFrom)
@@ -73,8 +75,8 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadValue(loc);
             ctx.LoadValue((int)_keyFeatures);
             ctx.LoadValue((int)_valueFeatures);
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
-            ctx.LoadSelfAsService<ISerializer<TKey>, TValue>();
+            ctx.LoadSelfAsService<ISerializer<TKey>, TKey>();
+            ctx.LoadSelfAsService<ISerializer<TValue>, TValue>();
             ctx.EmitCall(method);
         }
     }

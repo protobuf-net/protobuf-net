@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -136,6 +137,14 @@ namespace ProtoBuf.Internal
             t = null;
             return false;
         }
+
+        internal static object GetValueTypeChecker(Type type)
+        {
+            var underlying = Nullable.GetUnderlyingType(type) ?? type;
+            return typeof(StructValueChecker<>).MakeGenericType(underlying)
+                .GetField(nameof(StructValueChecker<int>.Instance))
+                .GetValue(null);
+        }
     }
 
     internal static class TypeHelper<T>
@@ -144,7 +153,12 @@ namespace ProtoBuf.Internal
 
         public static readonly bool CanBeNull = default(T) == null;
 
-        public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
+        public static readonly IValueChecker<T> ValueChecker =
+            SerializerCache<PrimaryTypeProvider>.InstanceField as IValueChecker<T>
+            ?? ReferenceValueChecker.Instance as IValueChecker<T>
+            ?? (IValueChecker<T>)TypeHelper.GetValueTypeChecker(typeof(T));
+
+        public static readonly bool CanBePacked = !CanBeNull && TypeHelper.CanBePacked(typeof(T));
 
         public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
 
@@ -153,5 +167,35 @@ namespace ProtoBuf.Internal
         public static T FromObject(object value) => value == null ? default : (T)value;
 
         public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
+    }
+
+    internal interface IValueChecker<in T>
+    {
+        bool HasNonTrivialValue(T value);
+        bool IsNull(T value);
+    }
+    internal sealed class ReferenceValueChecker : IValueChecker<object>
+    {
+        private ReferenceValueChecker() { }
+        public static readonly ReferenceValueChecker Instance = new ReferenceValueChecker();
+
+        /// <summary>
+        /// Indicates whether a value is non-null and needs serialization (non-zero, not an empty string, etc)
+        /// </summary>
+        bool IValueChecker<object>.HasNonTrivialValue(object value) => value != null;
+        /// <summary>
+        /// Indicates whether a value is null
+        /// </summary>
+        bool IValueChecker<object>.IsNull(object value) => value == null;
+    }
+    internal sealed class StructValueChecker<T> : IValueChecker<T?>, IValueChecker<T>
+        where T : struct
+    {
+        private StructValueChecker() { }
+        public static readonly StructValueChecker<T> Instance = new StructValueChecker<T>();
+        bool IValueChecker<T?>.HasNonTrivialValue(T? value) => value.HasValue;
+        bool IValueChecker<T?>.IsNull(T? value) => !value.HasValue;
+        bool IValueChecker<T>.HasNonTrivialValue(T value) => true;
+        bool IValueChecker<T>.IsNull(T value) => false;
     }
 }

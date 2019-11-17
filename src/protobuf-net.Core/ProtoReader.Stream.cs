@@ -1,9 +1,11 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -18,9 +20,12 @@ namespace ProtoBuf
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
         [Obsolete(PreferStateAPI, false)]
         public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
+            => Create(source, model, (object)context, length);
+
+        internal static ProtoReader Create(Stream source, TypeModel model, object userState, long length)
         {
             var reader = Pool<StreamProtoReader>.TryGet() ?? new StreamProtoReader();
-            reader.Init(source, model ?? TypeModel.DefaultModel, context, length);
+            reader.Init(source, model ?? TypeModel.DefaultModel, userState, length);
             return reader;
         }
 
@@ -31,21 +36,21 @@ namespace ProtoBuf
             /// </summary>
             /// <param name="source">The source stream</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-            /// <param name="context">Additional context about this serialization operation</param>
+            /// <param name="userState">Additional context about this serialization operation</param>
             /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-            public static State Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
+            public static State Create(Stream source, TypeModel model, object userState = null, long length = TO_EOF)
             {
 #if PREFER_SPANS
                 if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
                 {
                     return Create(new System.Buffers.ReadOnlySequence<byte>(
-                        segment.Array, segment.Offset, segment.Count), model, context);
+                        segment.Array, segment.Offset, segment.Count), model, userState);
                 }
 #endif
 
 
 #pragma warning disable CS0618 // Type or member is obsolete
-                var reader = ProtoReader.Create(source, model, context, length);
+                var reader = ProtoReader.Create(source, model, userState, length);
 #pragma warning restore CS0618 // Type or member is obsolete
                 return new State(reader);
             }
@@ -136,9 +141,9 @@ namespace ProtoBuf
             public StreamProtoReader(Stream source, TypeModel model, SerializationContext context)
                 => Init(source, model, context, TO_EOF);
 
-            internal void Init(Stream source, TypeModel model, SerializationContext context, long length)
+            internal void Init(Stream source, TypeModel model, object userState, long length)
             {
-                Init(model, context);
+                base.Init(model, userState);
                 if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
                 if (!source.CanRead) ThrowHelper.ThrowArgumentException("Cannot read from stream", nameof(source));
 
@@ -236,11 +241,9 @@ namespace ProtoBuf
                 _ioIndex += 8;
                 return result;
             }
-            private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
+            private protected override void ImplReadBytes(ref State state, Span<byte> target)
             {
-                var value = target.Array;
-                var offset = target.Offset;
-                var len = target.Count;
+                var len = target.Length;
                 // value is now sized with the final length, and (if necessary)
                 // contains the old data up to "offset"
                 Advance(len); // assume success
@@ -249,9 +252,9 @@ namespace ProtoBuf
                     if (_available > 0)
                     {
                         // copy what we *do* have
-                        Buffer.BlockCopy(_ioBuffer, _ioIndex, value, offset, _available);
+                        new Span<byte>(_ioBuffer, _ioIndex, _available).CopyTo(target);
                         len -= _available;
-                        offset += _available;
+                        target = target.Slice(_available);
                         _ioIndex = _available = 0; // we've drained the buffer
                     }
                     //  now refill the buffer (without overflowing it)
@@ -261,9 +264,9 @@ namespace ProtoBuf
                 // at this point, we know that len <= available
                 if (len > 0)
                 {   // still need data, but we have enough buffered
-                    Buffer.BlockCopy(_ioBuffer, _ioIndex, value, offset, len);
-                    _ioIndex += len;
+                    new Span<byte>(_ioBuffer, _ioIndex, len).CopyTo(target);
                     _available -= len;
+                    _ioIndex += len;
                 }
             }
 

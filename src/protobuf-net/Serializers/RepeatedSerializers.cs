@@ -1,10 +1,13 @@
 ﻿using ProtoBuf.Internal;
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Serializers
 {
@@ -38,7 +41,8 @@ namespace ProtoBuf.Serializers
             return null;
         }
 
-        readonly struct MethodTuple
+        [StructLayout(LayoutKind.Auto)]
+        private readonly struct MethodTuple
         {
             public string Name => Method.Name;
             private MethodInfo Method { get; }
@@ -93,8 +97,7 @@ namespace ProtoBuf.Serializers
             Add(typeof(Stack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateStack), new[] { root, targs[0] }), false);
 
             // fallbacks, these should be at the end
-            Add(typeof(ICollection<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateCollection), new[] { root, targs[0] }), false);
-            Add(typeof(IReadOnlyCollection<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateReadOnlyCollection), new[] { root, targs[0] }), false);
+            Add(typeof(IEnumerable<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateEnumerable), new[] { root, targs[0] }), false);
         }
 
         public static void Add(Type type, Func<Type, Type, Type[], MemberInfo> implementation, bool exactOnly = true)
@@ -113,12 +116,47 @@ namespace ProtoBuf.Serializers
 
         internal static RepeatedSerializerStub TryGetRepeatedProvider(Type type)
         {
-            if (type == null) return null;
+            if (type == null || type == typeof(string)) return null;
 
             var known = (RepeatedSerializerStub)s_knownTypes[type];
             if (known == null)
             {
-                known = RepeatedSerializerStub.Create(type, GetProviderForType(type));
+                Type genDef;
+                if (type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
+                {
+                    if (genDef == typeof(Span<>) || genDef == typeof(ReadOnlySpan<>))
+                    {   // needs special handling because can't use Span<T> as a TSomething in a Foo<TSomething>
+                        throw new NotSupportedException("Serialization cannot work with [ReadOnly]Span<T>; [ReadOnly]Memory<T> may be enabled later");
+                    }
+                    known = NotSupported(s_GeneralNotSupported, type, type.GetGenericArguments()[0]);
+                }
+                else
+                {
+                    var rawProvider = GetProviderForType(type);
+                    if (rawProvider == null)
+                    {
+                        if (type.IsArray && type != typeof(byte[]))
+                        {
+                            // multi-dimensional
+                            known = NotSupported(s_GeneralNotSupported, type, type.GetElementType());
+                        }
+                        else
+                        {   // not repeated
+                            known = RepeatedSerializerStub.Empty;
+                        }
+                    }
+                    else
+                    {
+                        // check for nesting
+                        known = RepeatedSerializerStub.Create(type, rawProvider);
+                        if (TestIfNestedNotSupported(known))
+                        {
+                            known = NotSupported(s_NestedNotSupported, known.ForType, known.ItemType);
+                        }
+                    }
+                }
+
+
                 lock (s_knownTypes)
                 {
                     s_knownTypes[type] = known;
@@ -126,6 +164,36 @@ namespace ProtoBuf.Serializers
             }
 
             return known.IsEmpty ? null : known;
+        }
+
+        static readonly Type[] NotSupportedFlavors = new[]
+        {   // see notes in /src/protobuf-net.Test/Serializers/Collections.cs for reasons and roadmap
+            typeof(ArraySegment<>),
+            typeof(Span<>),
+            typeof(ReadOnlySpan<>),
+            typeof(Memory<>),
+            typeof(ReadOnlyMemory<>),
+            typeof(ReadOnlySequence<>),
+            typeof(IMemoryOwner<>),
+        };
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static RepeatedSerializerStub NotSupported(MethodInfo kind, Type collectionType, Type itemType)
+            => RepeatedSerializerStub.Create(collectionType, kind.MakeGenericMethod(collectionType, itemType));
+
+        static readonly MethodInfo
+            s_NestedNotSupported = typeof(RepeatedSerializer).GetMethod(nameof(RepeatedSerializer.CreateNestedDataNotSupported)),
+            s_GeneralNotSupported = typeof(RepeatedSerializer).GetMethod(nameof(RepeatedSerializer.CreateNotSupported));
+
+        private static bool TestIfNestedNotSupported(RepeatedSerializerStub repeated)
+        {
+            if (repeated?.ItemType == null) return false; // fine
+
+            if (!repeated.IsMap) // we allow nesting on dictionaries, just not on arrays/lists etc
+            {
+                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) return true;
+            }
+            return false;
         }
 
         private static MemberInfo GetProviderForType(Type type)
@@ -136,41 +204,45 @@ namespace ProtoBuf.Serializers
             {
                 // the fun bit here is checking we mean a *vector*
                 if (type == typeof(byte[])) return null; // special-case, "bytes"
-                return s_Array.Resolve(type, type.GetElementType().MakeArrayType());
-            }
 
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ArraySegment<>))
-            {   // will need to think about this, especially for ArraySegment<bytes>
-                ThrowHelper.ThrowNotSupportedException("ArraySegment<T> support is incomplete");
+                var vectorType = type.GetElementType().MakeArrayType();
+                return vectorType == type ? s_Array.Resolve(type, vectorType) : null;
             }
 
             MemberInfo bestMatch = null;
             int bestMatchPriority = int.MaxValue;
+            bool bestIsAmbiguous = false;
             void Consider(MemberInfo member, int priority)
             {
                 if (priority < bestMatchPriority)
                 {
                     bestMatch = member;
                     bestMatchPriority = priority;
+                    bestIsAmbiguous = false;
+                }
+                else if (priority == bestMatchPriority)
+                {
+                    if (!Equals(bestMatch, member))
+                        bestIsAmbiguous = true;
                 }
             }
 
             Type current = type;
             while (current != null && current != typeof(object))
             {
-                if (TryGetProvider(type, current, out var found, out var priority)) Consider(found, priority);
+                if (TryGetProvider(type, current, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
                 current = current.BaseType;
             }
 
             foreach (var iType in type.GetInterfaces())
             {
-                if (TryGetProvider(type, iType, out var found, out var priority)) Consider(found, priority);
+                if (TryGetProvider(type, iType, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
             }
 
-            return bestMatch;
+            return bestIsAmbiguous ? null : bestMatch;
         }
 
-        private static bool TryGetProvider(Type root, Type current, out MemberInfo member, out int priority)
+        private static bool TryGetProvider(Type root, Type current, int bestMatchPriority, out MemberInfo member, out int priority)
         {
             var found = (Registration)s_providers[current];
             if (found == null && current.IsGenericType)
@@ -178,7 +250,9 @@ namespace ProtoBuf.Serializers
                 found = (Registration)s_providers[current.GetGenericTypeDefinition()];
             }
 
-            if (found == null || (found.ExactOnly && root != current))
+            if (found == null
+                || (found.Priority > bestMatchPriority)
+                || (found.ExactOnly && root != current))
             {
                 member = null;
                 priority = default;

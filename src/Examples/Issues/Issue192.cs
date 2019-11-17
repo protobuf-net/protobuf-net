@@ -36,7 +36,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<NotSupportedException>(() =>
             {
-                Serializer.Deserialize<List<SomeType>[]>(Stream.Null);
+                Serializer.DeepClone<List<SomeType>[]>(new List<SomeType>[0]);
             }, "Nested or jagged lists, arrays and maps are not supported: System.Collections.Generic.List`1[Examples.Issues.Issue192+SomeType][]");
         }
         [Fact]
@@ -44,7 +44,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<NotSupportedException>(() =>
             {
-                var wrapped = new Wrapper();
+                var wrapped = new Wrapper { List = new List<SomeType>[0] };
                 var clone = Serializer.DeepClone(wrapped);
             }, "Nested or jagged lists, arrays and maps are not supported: System.Collections.Generic.List`1[Examples.Issues.Issue192+SomeType][]");
         }

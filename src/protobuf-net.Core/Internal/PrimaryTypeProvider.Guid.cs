@@ -72,9 +72,9 @@ namespace ProtoBuf.Internal
             {
                 byte[] blob = value.ToByteArray();
                 state.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
-                state.WriteBytes(blob, 0, 8);
+                state.WriteBytes(new ReadOnlyMemory<byte>(blob, 0, 8));
                 state.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
-                state.WriteBytes(blob, 8, 8);
+                state.WriteBytes(new ReadOnlyMemory<byte>(blob, 8, 8));
             }
         }
 

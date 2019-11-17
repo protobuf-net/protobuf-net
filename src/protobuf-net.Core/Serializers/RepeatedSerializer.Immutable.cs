@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Serializers
 {
@@ -92,6 +93,7 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
         }
 
+        [StructLayout(LayoutKind.Auto)]
         struct Enumerator : IEnumerator<T>
         {
             public void Reset() => ThrowHelper.ThrowNotSupportedException();
@@ -312,6 +314,7 @@ namespace ProtoBuf.Serializers
             WritePacked(ref state, ref iter, serializer, wireType);
         }
 
+        [StructLayout(LayoutKind.Auto)]
         struct Enumerator : IEnumerator<T>
         {
             private ImmutableStack<T>.Enumerator _iter;
@@ -424,6 +427,7 @@ namespace ProtoBuf.Serializers
             WritePacked(ref state, ref iter, serializer, wireType);
         }
 
+        [StructLayout(LayoutKind.Auto)]
         struct Enumerator : IEnumerator<T>
         {
             private ImmutableQueue<T>.Enumerator _iter;

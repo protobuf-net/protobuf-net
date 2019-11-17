@@ -1,6 +1,7 @@
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -9,26 +10,33 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
-        internal static State CreateNull(TypeModel model, SerializationContext context = null)
-            => NullProtoWriter.CreateNullProtoWriter(model, context);
+        internal static State CreateNull(TypeModel model, object userState, long abortAfter)
+            => NullProtoWriter.CreateNullProtoWriter(model, userState, abortAfter);
 
         internal sealed class NullProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
 
-            internal static State CreateNullProtoWriter(TypeModel model, SerializationContext context)
+            internal static State CreateNullProtoWriter(TypeModel model, object userState, long abortAfter)
             {
                 var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
-                obj.Init(model, context, true);
+                obj.Init(model, userState, true);
+                obj._abortAfter = abortAfter < 0 ? long.MaxValue : abortAfter;
                 return new State(obj);
             }
+
+            private long _abortAfter;
 
             private NullProtoWriter() { } // gets own object cache
 
             // this is for use as a sub-component of the buffer-writer
-            internal NullProtoWriter(NetObjectCache knownObjects) : base(knownObjects) { }
+            internal NullProtoWriter(NetObjectCache knownObjects)
+                : base(knownObjects)
+            {
+                _abortAfter = long.MaxValue;
+            }
 
-            private protected override void Dispose()
+            internal override void Dispose()
             {
                 base.Dispose();
                 Pool<NullProtoWriter>.Put(this);
@@ -39,13 +47,33 @@ namespace ProtoBuf
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {
                 var buffer = ArrayPool<byte>.Shared.Rent(8 * 1024);
-                while (true)
+                try
                 {
-                    int bytes = source.Read(buffer, 0, buffer.Length);
-                    if (bytes <= 0) break;
-                    Advance(bytes);
+                    while (true)
+                    {
+                        int bytes = source.Read(buffer, 0, buffer.Length);
+                        if (bytes <= 0) break;
+                        Advance(bytes);
+                        CheckOversized(ref state);
+                    }
                 }
-                ArrayPool<byte>.Shared.Return(buffer);
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal static void CheckOversized(long max, long actual)
+            {
+                if (max >= 0 & actual > max) ThrowHelper.ThrowProtoException($"Length {actual} exceeds constrained size of {max} bytes");
+            }
+
+            [MethodImpl(ProtoReader.HotPath)]
+            private void CheckOversized(ref State state)
+            {
+                var position = state.GetPosition();
+                if (position > _abortAfter) CheckOversized(_abortAfter, position);
             }
 
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
@@ -89,6 +117,7 @@ namespace ProtoBuf
                         break;
                 }
                 Advance(preamble + length);
+                CheckOversized(ref state);
                 WireType = WireType.None;
             }
             protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
@@ -125,9 +154,10 @@ namespace ProtoBuf
                         break;
                 }
                 Advance(bytes);
+                CheckOversized(ref state);
             }
 
-            private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data) { }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data) { }
 
@@ -150,7 +180,7 @@ namespace ProtoBuf
         internal static int MeasureUInt32(uint value)
         {
 #if PLAT_INTRINSICS
-                return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+            return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
             int count = 1;
             while ((value >>= 7) != 0)
@@ -165,7 +195,7 @@ namespace ProtoBuf
         internal static int MeasureUInt64(ulong value)
         {
 #if PLAT_INTRINSICS
-                return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+            return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
             int count = 1;
             while ((value >>= 7) != 0)

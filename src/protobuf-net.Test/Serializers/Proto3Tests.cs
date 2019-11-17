@@ -29,7 +29,7 @@ enum RegularEnum {
    B = 1;
    C = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void HazBasicEnum_WorksForKnownAndUnknownValues()
@@ -78,7 +78,7 @@ enum StrictEnum {
    B = 1;
    C = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void HazStrictEnum_WorksForKnownAndUnknownValues()
@@ -121,7 +121,7 @@ enum AliasedEnum {
 message HazAliasedEnum {
    optional AliasedEnum Value = 1 [default = A];
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void HazAliasedEnum_WorksForKnownAndUnknownValues()
@@ -273,7 +273,7 @@ message HazAliasedEnum {
                     Lookup =
                     {
                         new HazMapEquiv.Entry { Key = 1, Value = "abc" },
-                        new HazMapEquiv.Entry { },
+                        new HazMapEquiv.Entry { Value = "" },
                         new HazMapEquiv.Entry { Key = 2, Value = "def" },
                     }
                 });
@@ -305,11 +305,7 @@ message HazAliasedEnum {
             public Dictionary<int, List<int>> SourceOfProblem { get; set; }
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void ComplexMapShouldNotBreak_Array()
         {
             var obj = new HasEvilDictionary_Array();
@@ -321,11 +317,7 @@ message HazAliasedEnum {
             Assert.Equal("1,2,3", string.Join(",", arr2));
         }
 
-#if KNOWN_GAPS
         [Fact]
-#else
-        [Fact(Skip = "nested dictionaries")]
-#endif
         public void ComplexMapShouldNotBreak_List()
         {
             var obj = new HasEvilDictionary_List();
@@ -347,7 +339,7 @@ package ProtoBuf.Serializers;
 message HazMap {
    map<int32,string> Lookup = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -360,7 +352,7 @@ package ProtoBuf.Serializers;
 message HazMapWithDataFormat {
    map<sint32,sint64> Lookup = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
 #if FEAT_DYNAMIC_REF
@@ -376,7 +368,7 @@ import ""protobuf-net/protogen.proto""; // custom protobuf-net options
 message HasRefDynamic {
    optional .bcl.NetObjectProxy Obj = 1 [(.protobuf_net.fieldopt).asRef = true, (.protobuf_net.fieldopt).dynamicType = true];
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
         [ProtoContract]
         public class HasRefDynamic
@@ -402,7 +394,7 @@ message HazTime {
    optional .bcl.TimeSpan c = 3;
    optional .google.protobuf.Duration d = 4;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract]
@@ -429,7 +421,7 @@ message TestPackNonPackedSchemas {
    repeated float NonPacked = 2;
    optional bool Boolean = 3 [default = false];
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -444,7 +436,7 @@ message TestPackNonPackedSchemas {
    repeated float NonPacked = 2 [packed = false];
    bool Boolean = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -462,7 +454,7 @@ enum SomeEnum {
    A = 1;
    C = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         public Proto3Tests(ITestOutputHelper log)
@@ -497,7 +489,7 @@ enum SomeEnum {
    A = 1;
    C = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -515,7 +507,7 @@ enum SomeEnum {
    A = 1;
    C = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract]
@@ -603,7 +595,7 @@ package ProtoBuf.Serializers;
 message HazImplicitMap {
    map<int32,string> Lookup = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract]
@@ -627,7 +619,7 @@ message KeyValuePair_Int32_String {
    optional int32 Key = 1;
    optional string Value = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
         [ProtoContract]
         public class HazDisabledMap
@@ -649,7 +641,7 @@ message KeyValuePair_Double_String {
    optional double Key = 1;
    optional string Value = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
         [ProtoContract]
         public class HazInvalidKeyTypeMap

@@ -59,10 +59,7 @@ namespace Examples.Issues
             PEVerify.AssertValid(name + ".dll");
         }
         static bool SerializeDateTimeKind(TypeModel model)
-        {
-            return (bool)typeof(TypeModel).GetMethod(
-                "SerializeDateTimeKind", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(model, null);
-        }
+            => (model.Options & TypeModel.TypeModelOptions.IncludeDateTimeKind) != 0;
 
         static void CompareDates(HazTime expected, HazTime actual, bool withKind, string model)
         {

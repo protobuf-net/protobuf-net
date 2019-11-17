@@ -16,25 +16,25 @@ namespace ProtoBuf
             /// <summary>
             /// Create a new ProtoWriter that tagets a buffer writer
             /// </summary>
-            public static State Create(IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
-                => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, context);
+            public static State Create(IBufferWriter<byte> writer, TypeModel model, object userState = null)
+                => BufferWriterProtoWriter.CreateBufferWriterProtoWriter(writer, model, userState);
         }
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
+            internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, object userState)
             {
                 if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
-                obj.Init(model, context, true);
+                obj.Init(model, userState, true);
                 obj._writer = writer;
                 return new State(obj);
             }
 
-            internal override void Init(TypeModel model, SerializationContext context, bool impactCount)
+            internal override void Init(TypeModel model, object userState, bool impactCount)
             {
-                base.Init(model, context, impactCount);
-                _nullWriter.Init(model, context, impactCount: false);
+                base.Init(model, userState, impactCount);
+                _nullWriter.Init(model, userState, impactCount: false);
             }
 
             private IBufferWriter<byte> _writer;
@@ -49,7 +49,7 @@ namespace ProtoBuf
 
             private readonly NullProtoWriter _nullWriter;
 
-            private protected override void Dispose()
+            internal override void Dispose()
             {
                 base.Dispose();
                 Pool<BufferWriterProtoWriter>.Put(this);
@@ -75,7 +75,18 @@ namespace ProtoBuf
             {
                 if (state.IsActive)
                 {
-                    _writer.Advance(state.ConsiderWritten());
+                    int bytes = 0;
+                    try
+                    {
+                        bytes = state.ConsiderWritten();
+                        _writer.Advance(bytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.Data?.Add("ProtoBuf.Position", _position64);
+                        ex.Data?.Add("ProtoBuf.Flushing", bytes);
+                        throw;
+                    }
                 }
                 return true;
             }
@@ -109,8 +120,15 @@ namespace ProtoBuf
                 {
                     // could use encoder, but... this is pragmatic
                     var arr = ArrayPool<byte>.Shared.Rent(expectedBytes);
-                    UTF8.GetBytes(value, 0, value.Length, arr, 0);
-                    ImplWriteBytes(ref state, arr, 0, expectedBytes);
+                    try
+                    {
+                        UTF8.GetBytes(value, 0, value.Length, arr, 0);
+                        FallbackWriteBytes(ref state, new ReadOnlySpan<byte>(arr, 0, expectedBytes));
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(arr);
+                    }
                 }
             }
 
@@ -121,10 +139,10 @@ namespace ProtoBuf
                 state.Init(_writer.GetMemory(128));
             }
 
-            private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
+            private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> bytes)
             {
-                var span = new ReadOnlySpan<byte>(data, offset, length);
-                if (length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
+                var span = bytes.Span;
+                if (bytes.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
                 else FallbackWriteBytes(ref state, span);
             }
 
@@ -153,15 +171,16 @@ namespace ProtoBuf
                 while (true)
                 {
                     GetBuffer(ref state);
-                    if (span.Length <= state.RemainingInCurrent)
+                    int remaining = state.RemainingInCurrent;
+                    if (span.Length <= remaining)
                     {
                         state.LocalWriteBytes(span);
                         return;
                     }
                     else
                     {
-                        state.LocalWriteBytes(span.Slice(0, state.RemainingInCurrent));
-                        span = span.Slice(state.RemainingInCurrent);
+                        state.LocalWriteBytes(span.Slice(0, remaining));
+                        span = span.Slice(remaining);
                     }
                 }
             }

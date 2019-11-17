@@ -6,14 +6,15 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 - gRPC: see [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc)
 - 2.4.*: critical maintenance only (no feature work planned)
-- 3.0: new custom serializer API; "pipelines" support; split core and reflection code-bases into separate libs
-- 3.1: support for custom scalars; `Any` support
+- 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
+- 3.1: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
 ## v3.0.0-alpha
 
-- **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
+- **breaking change** if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
+- **breaking change** by necessity, `ProtoBuf.Serializer+TypeResolver` has moved to `ProtoBuf.Serializer`; this is a rarely used API, but comsumers will need to be recompiled against the new type
 - **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
 - **breaking change** - dynamic typing (i.e. storing the `Type` metadata) and reference-tracking (`AsReference`, `AsReferenceDefault`, `DynamicType`) are not implemented/supported; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited
 - **breaking change** - non-generic list-like APIs like `IList` or `ICollection` are no longer supported; there is a new API for processing custom collection types
@@ -27,7 +28,6 @@ Some features are currently incomplete; this may restrict usage for some scenari
 - serialization callbacks on inheritance models are currently only supported at the root type; workaround: `virtual` / `override`
 - tuple-based types and types with surrogates cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
 - null-item retention in lists/arrays is not currently implemented
-- dictionaries with "repeated" data (lists, inner-dictionaries, etc) as the `TKey` or `TValue` are not yet reimplemented
 - custom default types for collection initializers are not yet implemented; a simple workaround is to initialize the collection in the type
 
 There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably
@@ -46,6 +46,14 @@ Other changes:
 - empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
 - as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
 - common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
+
+## 2.4.4
+
+- mark `DiscriminatedUnion*` types as `[Serializable]`
+
+## 2.4.2 / 2.4.3
+
+- add `IProtoInput<T>` / `IProtoOutput<T>` APIs for discovering input/output capabilities (this is to allow testing for 3.0 features)
 
 ## 2.4.1
 

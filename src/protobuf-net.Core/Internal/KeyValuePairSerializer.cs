@@ -1,10 +1,12 @@
 ﻿using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    internal struct KeyValuePairSerializer<TKey, TValue> : ISerializer<KeyValuePair<TKey, TValue>>
+    [StructLayout(LayoutKind.Auto)]
+    internal readonly struct KeyValuePairSerializer<TKey, TValue> : ISerializer<KeyValuePair<TKey, TValue>>
     {
         public SerializerFeatures Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 
@@ -27,7 +29,6 @@ namespace ProtoBuf.Internal
             TKey key = pair.Key;
             TValue value = pair.Value;
             int field;
-            bool haveKey = false, haveValue = false;
             while ((field = state.ReadFieldHeader()) > 0)
             {
                 switch (field)
@@ -43,9 +44,9 @@ namespace ProtoBuf.Internal
                         break;
                 }
             }
-            if (TypeHelper<TKey>.IsReferenceType && !haveKey && key is null)
+            if (TypeHelper<TKey>.IsReferenceType && TypeHelper<TKey>.ValueChecker.IsNull(key))
                 key = TypeModel.CreateInstance<TKey>(state.Context, _keySerializer);
-            if (TypeHelper<TValue>.IsReferenceType && !haveValue && value is null)
+            if (TypeHelper<TValue>.IsReferenceType && TypeHelper<TValue>.ValueChecker.IsNull(value))
                 value = TypeModel.CreateInstance<TValue>(state.Context, _valueSerializer);
 
             return new KeyValuePair<TKey, TValue>(key, value);
@@ -53,24 +54,13 @@ namespace ProtoBuf.Internal
 
         public void Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> value)
         {
-            if (!EqualityComparer<TKey>.Default.Equals(value.Key, default))
-            {
-                if (typeof(TKey) == typeof(string) && (string)(object)value.Key == "")
-                { } // don't write empty strings; ugly, but it works
-                else
-                {
-                    state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
-                }
-            }
-            if (!EqualityComparer<TValue>.Default.Equals(value.Value, default))
-            {
-                if (typeof(TValue) == typeof(string) && (string)(object)value.Value == "")
-                { } // don't write empty strings; ugly, but it works
-                else
-                {
-                    state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
-                }
-            }
+            // this deals with nulls and implicit zeros
+            if (TypeHelper<TKey>.ValueChecker.HasNonTrivialValue(value.Key))
+                state.WriteAny(1, _keyFeatures, value.Key, _keySerializer);
+
+            // this deals with nulls and implicit zeros
+            if (TypeHelper<TValue>.ValueChecker.HasNonTrivialValue(value.Value))
+                state.WriteAny(2, _valueFeatures, value.Value, _valueSerializer);
         }
     }
 }

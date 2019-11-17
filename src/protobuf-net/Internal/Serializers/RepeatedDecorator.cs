@@ -11,6 +11,7 @@ namespace ProtoBuf.Internal.Serializers
         public static IRuntimeProtoSerializerNode Create(RepeatedSerializerStub stub, int fieldNumber, SerializerFeatures features)
         {
             if (stub == null) ThrowHelper.ThrowArgumentNullException(nameof(stub), $"No suitable repeated serializer resolved for {stub.ForType.NormalizeName()}");
+            _ = stub.Serializer; // primes and validates
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(typeof(RepeatedDecorator<,>).MakeGenericType(stub.ForType, stub.ItemType),
                 new object[] { fieldNumber, features, stub });
         }
@@ -53,6 +54,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
+            _ = Serializer; // this is to force a type-check
             var method = typeof(RepeatedSerializer<TCollection, T>).GetMethod(nameof(RepeatedSerializer<TCollection, T>.ReadRepeated));
 
             using var loc = ctx.GetLocalWithValue(ExpectedType, valueFrom);
