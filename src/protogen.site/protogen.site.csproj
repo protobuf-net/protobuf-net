@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Configurations>Debug;Release;VS</Configurations>
     <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
-
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
