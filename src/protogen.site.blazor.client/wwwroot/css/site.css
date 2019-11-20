@@ -1,0 +1,20 @@
+﻿
+html,
+body {
+    height: 100%;
+}
+
+.nav-tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: -webkit-box;
+    display: -moz-box;
+}
+
+    .nav-tabs > li {
+        float: none;
+    }
+
+        .nav-tabs > li a.nav-link.active {
+            border-bottom: 3px #007bff solid;
+        }

@@ -1,0 +1,287 @@
+﻿@using System.Net.Http
+@using Google.Protobuf.Reflection
+@using System.IO
+@using ProtoBuf.Reflection
+@using ProtoBuf.Models
+@using System.Text.Json
+
+@inject HttpClient Http
+@page "/"
+
+
+<EditForm Model="@model" OnValidSubmit="@Generate" class="flex-grow-1">
+    <DataAnnotationsValidator />
+    <div class="row pt-2 h-100">
+        <div class="col-6  d-flex flex-column">
+            @if (showMoreOptions)
+            {
+                <button type="button" @onclick="e => showMoreOptions = !showMoreOptions" class="btn btn-secondary btn-block">
+                    Back
+                </button>
+                <div class="alert alert-info   flex-grow-1 " style=" overflow-y: auto;min-height: 0px;">
+
+                    <h3>Code generation options</h3>
+
+                    @if (model.IsProtobugGen())
+                    {
+
+                        @if (model.HasLanguageVersion())
+                        {
+                            <div class="form-group ml-2">
+                                <label for="version">@model.Language Version</label>
+                                <InputSelect id="version" @bind-Value="model.LanguageVersion" class="form-control">
+
+                                    @foreach (var version in model.GetLanguageVersions())
+                                                {
+                                        <option value="@version">@version</option>
+                                                }
+                                    /**/
+                                    /**/
+                                    /**/
+                                    /**/
+                                </InputSelect>
+                            </div>
+                        }
+                        <div class="form-group form-check ml-2">
+                            <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
+                            <label class="form-check-label" for="oneof">
+                                <code>oneof</code> should use enum
+                            </label>
+                        </div>
+                        <div class="form-group form-check ">
+                            <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
+                            <label class="form-check-label" for="repeated_accessors">
+                                <code>repeated</code> should emit <code>set</code> accessors
+                            </label>
+                        </div>
+                        <div class="form-group ">
+                            <label for="namingConvention">Naming convention</label>
+                            <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control">
+                                @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
+                                        {
+                                    <option value="@namingConvention">@namingConvention</option>
+                                        }
+                                /**/
+                                /**/
+                            </InputSelect>
+                        </div>
+                        <div class="form-group">
+
+                            <button  type="button" class="btn btn-sm btn-secondary" @onclick="LoadProtoWithOptions">
+                                Load proto with options
+                            </button>
+                        </div>
+                    }
+                    <div class="form-group">
+                        <button type="button" class="btn btn-sm btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="form-row mb-2" style="flex: none;">
+                    <div class="col">
+                        <InputSelect id="language" @bind-Value="model.Language" class="form-control">
+                            <option value="" disabled selected>Select the target language</option>
+
+                            @foreach (var language in Enum.GetValues(typeof(GeneratorViewModel.GeneratorLanguageEnum)))
+                                {
+                                <option value="@language">@language</option>
+                                }
+                            /**/
+                            /**/
+                            /**/
+                        </InputSelect>
+                    </div>
+                    <div class="col">
+
+
+                        <button type="submit" class="btn btn-primary btn-block" disabled="@loading">
+                            @if (loading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <text> Generating </text>
+                            }
+                            else
+                            {
+                                <text> Generate </text>
+                            }
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" @onclick="e => showMoreOptions = !showMoreOptions" class="btn btn-secondary btn-block">
+                            Options
+                        </button>
+                    </div>
+                </div>
+            }
+            <div class="@(showMoreOptions ? "d-none":"form-group  flex-grow-1 h-100")">
+                <MonacoEditor @ref="protoEditor" Language="protobuf" @bind-Content="model.ProtoContent"></MonacoEditor>
+            </div>
+        </div>
+        <div class="col-6  d-flex flex-column">
+
+            <ValidationSummary />
+            @if (errors != null)
+            {
+
+                @foreach (var error in errors)
+                {
+                    <div class="alert @(error.IsWarning ? "alert-warning":"alert-danger")">
+                        @error.ToString()
+                    </div>
+                }
+            }
+            @if (exceptionMessage != null)
+            {
+                <pre class="alert alert-danger">@exceptionMessage</pre>
+            }
+            @if (codeFiles != null)
+            {
+                <ul class="nav nav-tabs mb-2">
+                    @foreach (var file in codeFiles)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link  @(currentCodeFile == file ? "active":"")" href="#" @onclick="() => currentCodeFile = file">  @file.Name</a>
+                        </li>
+                    }
+                </ul>
+                <div class="form-group flex-grow-1  d-flex flex-column">
+                    @if (currentCodeFile != null)
+                    {
+
+                        <MonacoEditor Language="@model.GetMonacoLanguage()" Content="@currentCodeFile.Text" ReadOnly="true"></MonacoEditor>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+</EditForm>
+@code{
+
+    bool showMoreOptions = false;
+    bool loading = false;
+
+    MonacoEditor protoEditor;
+
+    Error[] errors;
+
+    private GeneratorViewModel model = new GeneratorViewModel();
+
+    private List<CodeFile> codeFiles;
+
+    private CodeFile currentCodeFile;
+
+    private string exceptionMessage;
+
+    protected async Task LoadSample()
+    {
+        model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto");
+        showMoreOptions = false;
+    }
+
+    protected async Task LoadProtoWithOptions()
+    {
+
+        model.ProtoContent = await Http.GetStringAsync("https://gist.githubusercontent.com/mgravell/c545f903467fd7fa441ad80c5433d331/raw/59e0681069463c016eb06a630991945aa783b90f/configure_protogen.proto");
+        showMoreOptions = false;
+
+    }
+    protected async Task Generate()
+    {
+        try
+        {
+            loading = true;
+            codeFiles = null;
+            exceptionMessage = null;
+            errors = null;
+            await protoEditor.ClearErrors();
+            StateHasChanged();
+            using (var reader = new StringReader(model.ProtoContent))
+            {
+                var set = new FileDescriptorSet
+                {
+                    ImportValidator = path => true
+                };
+                set.Add("my.proto", true, reader);
+
+                set.Process();
+                errors = set.GetErrors();
+                if (errors.Any())
+                {
+                    foreach (var error in errors)
+                    {
+                        await protoEditor.AddError(error.IsError, error.LineNumber, error.LineNumber, error.ColumnNumber, error.ColumnNumber + error.LineContents.Length, error.Message);
+                    }
+                    return;
+                }
+
+                if (model.IsProtobugGen() && !model.ProtoContent.Contains("import"))
+                {
+                    ProtobufnetGenerate(set);
+                }
+                else
+                {
+                    await ServerSideGenerate();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            exceptionMessage = "An unhandled exception occured : " + e.Message + ". StackTrace : " + e.StackTrace;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    private async Task ServerSideGenerate()
+    {
+        var response = await Http.PostAsync("/generate",
+            new StringContent(JsonSerializer.Serialize(model),System.Text.Encoding.UTF8, "application/json"));
+        var content = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+        {
+            using (var output = JsonDocument.Parse(content))
+            {
+                SetCodeFiles(output.RootElement.EnumerateArray()
+                    .Select(j => new CodeFile(
+                        j.GetProperty("name").GetString(),
+                        j.GetProperty("text").GetString()))
+                    .ToList());
+            }
+        }
+        else
+        {
+            if (content.Contains("Exception"))//did not find a better way for handling exception or error file
+            {
+                this.exceptionMessage = content;
+            }
+            else
+            {
+                using (var output = JsonDocument.Parse(content))
+                    errors = Error.Parse(
+                        output.RootElement.GetProperty("stdout").GetRawText(),
+                        output.RootElement.GetProperty("stderr").GetRawText()
+                    );
+            }
+        }
+    }
+    private void ProtobufnetGenerate(FileDescriptorSet set)
+    {
+        
+        var generateResult = model.GetCodeGenerator()
+            .Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions())
+            .ToList();
+        SetCodeFiles(generateResult);
+
+    }
+
+    private void SetCodeFiles(List<CodeFile> files)
+    {
+        codeFiles = files;
+        currentCodeFile = files.FirstOrDefault();
+    }
+
+}

@@ -1,0 +1,126 @@
+﻿@using ProtoBuf.Models
+@using System.Text
+@using System.IO
+@WriteTier((DecodeModel.GetReader()))
+
+@code {
+
+    [Parameter]
+    public DecodeModel DecodeModel { get; set; }
+
+
+    private RenderFragment<ProtoReader> WriteTier;
+
+    protected override void OnInitialized()
+    {
+        WriteTier = reader =>@<div class="ml-5 border-left  border-secondary pl-1">
+        @{
+            long start = reader.Position;
+            int field;
+            while ((field = reader.ReadFieldHeader()) > 0)
+            {
+                long payloadStart = reader.Position;
+
+                <div>
+                    Field #@reader.FieldNumber: @AsHex(start, payloadStart - start)
+                    <span class="badge badge-secondary">@reader.WireType</span>
+                    @switch (reader.WireType)
+                    {
+                        case WireType.Varint:
+                        case WireType.Fixed32:
+                        case WireType.Fixed64:
+                            // just pretending everything is integers for now, for simplicity
+                            var val = reader.ReadInt64();
+                            <span>
+                                Value = @val, Hex = @AsHex(payloadStart, reader.Position - payloadStart)
+                            </span>
+                            break;
+                        case WireType.String:
+                            // now, this could be a sub-message, or it could be a UTF8 string
+                            // this isn't efficient, but it works
+                            var payloadBytes = ProtoReader.AppendBytes(null, reader);
+                            <span>
+                                Length = @payloadBytes.Length, Hex = @AsHex(payloadStart, reader.Position - payloadStart - payloadBytes.Length),
+
+                                @try
+                                {
+                                    var utf8 = Encoding.UTF8.GetString(payloadBytes);
+                                    if (utf8.Length > 16)
+                                    {
+                                        <span title="@utf8">UTF8 = "@utf8.Substring(0, 16) ..." (total @utf8.Length chars)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>UTF8 = "@utf8"</span>
+                                    }
+                                }
+                                catch
+                                {
+                                    <span class="badge badge-warning">Non UTF8 string</span>
+                                }
+                            </span>
+
+                            @using (var subReader = TestCouldBeProto(payloadBytes))
+                            {
+                                if (subReader != null)
+                                {
+                                    <div class="ml-5">As sub-object : </div>
+                                    @WriteTier(subReader)
+                                }
+                            }
+                            break;
+                        case WireType.StartGroup:
+                            // explicit group
+                            var tok = ProtoReader.StartSubItem(reader);
+                            @*
+                                    this doesn't display anything interesting, reader.Position == payloadStart
+                                <div class="ml-5">
+                                    Group, Hexa = @AsHex(payloadStart, reader.Position - payloadStart)
+                                </div>
+                            *@
+                            @WriteTier(reader)
+                            ProtoReader.EndSubItem(tok, reader);
+                            break;
+                        default:
+                            throw new InvalidOperationException("oops we missed this!");
+                    }
+                </div>
+                start = reader.Position;
+            }
+
+        }
+    </div>;
+}
+
+
+string AsHex(long start, long count) => BitConverter.ToString(DecodeModel.Data, checked((int)start), checked((int)count));
+
+static ProtoReader TestCouldBeProto(byte[] payload)
+{
+  if (payload == null || payload.Length == 0)
+      return null; // not worth bothering with
+  try
+  {
+      var ms = new MemoryStream(payload);
+#pragma warning disable CS0618
+      using (var test = ProtoReader.Create(ms, null, null))
+#pragma warning restore CS0618
+      {   // can we make it to the end without failing?
+          int field;
+          while ((field = test.ReadFieldHeader()) > 0)
+              test.SkipField();
+      }
+      // if we got this far... it has potential!
+
+      ms.Position = 0; //rewind and do it all again!
+#pragma warning disable CS0618
+      return ProtoReader.Create(ms, null, null);
+#pragma warning restore CS0618
+  }
+  catch
+  {
+      // nope, then
+      return null;
+  }
+}
+}
