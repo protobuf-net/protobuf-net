@@ -119,6 +119,18 @@ namespace ProtoBuf.Internal.Serializers
             }
         }
 
+        protected override WireType GetDefaultWireType(ref DataFormat dataFormat)
+        {
+            var ser = CustomSerializer;
+            if (ser != null)
+            {
+                var features = ser.Features;
+                if (features.GetCategory() == SerializerFeatures.CategoryScalar)
+                    return features.GetWireType();
+            }
+            return base.GetDefaultWireType(ref dataFormat);
+        }
+
         public override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             var category = GetCategory();
@@ -340,12 +352,17 @@ namespace ProtoBuf.Internal.Serializers
         protected MetaType MetaType { get; private set; }
 
 
-        internal static IRuntimeProtoSerializerNode Create(Type type, MetaType metaType)
+        internal static IRuntimeProtoSerializerNode Create(Type type, MetaType metaType, ref DataFormat dataFormat, out WireType defaultWireType)
         {
             var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubValueSerializer<>).MakeGenericType(type), nonPublic: true);
             obj.MetaType = metaType ?? throw new ArgumentNullException(nameof(metaType));
+            defaultWireType = obj.GetDefaultWireType(ref dataFormat);
             return (IRuntimeProtoSerializerNode)obj;
         }
+
+        protected virtual WireType GetDefaultWireType(ref DataFormat dataFormat)
+            => dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
+
         internal static IRuntimeProtoSerializerNode Create(Type actualType, MetaType metaType, Type parentType)
         {
             var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubTypeSerializer<,>).MakeGenericType(parentType, actualType), nonPublic: true);
