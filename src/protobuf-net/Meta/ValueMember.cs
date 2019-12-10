@@ -647,10 +647,9 @@ namespace ProtoBuf.Meta
                     return default;
 #endif
                 }
-                if (model.IsDefined(type))
+                if (meta != null)
                 {
-                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return SubItemSerializer.Create(type, meta);
+                    return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
                 }
             }
             defaultWireType = WireType.None;
