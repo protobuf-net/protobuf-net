@@ -115,23 +115,32 @@ namespace ProtoBuf.Meta
                 throw new ArgumentException(derivedType.NormalizeName() + " is not a valid sub-type of " + Type.NormalizeName(), nameof(derivedType));
             }
 
-            MetaType derivedMeta = model[derivedType];
-            ThrowIfFrozen();
-            derivedMeta.ThrowIfFrozen();
-
-            if (IsAutoTuple || derivedMeta.IsAutoTuple)
+            int opaqueToken = 0;
+            try
             {
-                ThrowTupleTypeWithInheritance(derivedType);
+                model.TakeLock(ref opaqueToken);
+                MetaType derivedMeta = model[derivedType];
+                ThrowIfFrozen();
+                derivedMeta.ThrowIfFrozen();
+
+                if (IsAutoTuple || derivedMeta.IsAutoTuple)
+                {
+                    ThrowTupleTypeWithInheritance(derivedType);
+                }
+                if (surrogate != null) ThrowSubTypeWithSurrogate(Type);
+                if (derivedMeta.surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
+
+                SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
+                ThrowIfFrozen();
+
+                derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
+                (_subTypes ?? (_subTypes = new List<SubType>())).Add(subType);
+                return this;
             }
-            if (surrogate != null) ThrowSubTypeWithSurrogate(Type);
-            if (derivedMeta.surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
-
-            SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
-            ThrowIfFrozen();
-
-            derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
-            (_subTypes ?? (_subTypes = new List<SubType>())).Add(subType);
-            return this;
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
         }
 
         private static void ThrowTupleTypeWithInheritance(Type type)
