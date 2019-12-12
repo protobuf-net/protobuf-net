@@ -48,7 +48,6 @@ namespace ProtoBuf.Reflection
             }
             set.Process();
             var results = new List<CodeFile>();
-            var newErrors = new List<Error>();
 
             try
             {

@@ -34,50 +34,48 @@ namespace protogen.site.Controllers
         [HttpPost]
         public IActionResult Generate([FromBody] GeneratorViewModel generatorViewModel)
         {
-            using (var reader = new StringReader(generatorViewModel.ProtoContent))
+            using var reader = new StringReader(generatorViewModel.ProtoContent);
+            var set = new FileDescriptorSet
             {
-                var set = new FileDescriptorSet
-                {
-                    ImportValidator = path => ValidateImport(path),
-                };
-                set.AddImportPath(Path.Combine(_host.WebRootPath, "protoc"));
-                set.Add("my.proto", true, reader);
+                ImportValidator = path => ValidateImport(path),
+            };
+            set.AddImportPath(Path.Combine(_host.WebRootPath, "protoc"));
+            set.Add("my.proto", true, reader);
 
-                set.Process();
-                var errors = set.GetErrors();
-                if (errors.Length != 0)
-                    //code parsing is supposed to happening client side, so we don't send error here
-                    return BadRequest();
-                if (generatorViewModel.IsProtobugGen())
-                {
-                    return Ok( 
-                        generatorViewModel
-                            .GetCodeGenerator()
-                            .Generate(set, generatorViewModel.GetNameNormalizerForConvention(), 
-                                generatorViewModel.GetOptions())
-                            .ToList());
-                    }
+            set.Process();
+            var errors = set.GetErrors();
+            if (errors.Length != 0)
+                //code parsing is supposed to happening client side, so we don't send error here
+                return BadRequest();
+            if (generatorViewModel.IsProtobugGen())
+            {
+                return Ok( 
+                    generatorViewModel
+                        .GetCodeGenerator()
+                        .Generate(set, generatorViewModel.GetNameNormalizerForConvention(), 
+                            generatorViewModel.GetOptions())
+                        .ToList());
+                }
 
-                // we're going to offer protoc! hold me...
-                if (generatorViewModel.ProtoContent.Contains("import"))
+            // we're going to offer protoc! hold me...
+            if (generatorViewModel.ProtoContent.Contains("import"))
+            {
+                // code output disabled because of import
+                return BadRequest();
+            }
+            else
+            {
+                var files = RunProtoc(_host,
+                    generatorViewModel.ProtoContent,
+                    generatorViewModel.GetProtocTooling(),
+                    out var stdout,
+                    out var stderr,
+                    out var exitCode);
+                if (exitCode != 0)
                 {
-                    // code output disabled because of import
-                    return BadRequest();
+                    return base.StatusCode(500, new { stderr, stdout, exitCode });
                 }
-                else
-                {
-                    var files = RunProtoc(_host,
-                        generatorViewModel.ProtoContent,
-                        generatorViewModel.GetProtocTooling(),
-                        out var stdout,
-                        out var stderr,
-                        out var exitCode);
-                    if (exitCode != 0)
-                    {
-                        return base.StatusCode(500, new { stderr, stdout, exitCode });
-                    }
-                    return Ok(files);
-                }
+                return Ok(files);
             }
         }
 

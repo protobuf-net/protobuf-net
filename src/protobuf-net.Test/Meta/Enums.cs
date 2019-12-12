@@ -135,16 +135,6 @@ namespace ProtoBuf.unittest.Meta
             Assert.Equal(original.U64, clone.U64); //, caption);
         }
 
-        TTo ChangeType<TTo>(TypeModel model, object value)
-        {
-            using var ms = new MemoryStream();
-#pragma warning disable CS0618
-            model.Serialize(ms, value);
-            ms.Position = 0;
-            return (TTo)model.Deserialize(ms, null, typeof(TTo));
-#pragma warning restore CS0618
-        }
-
         [Fact]
         public void AddInvalidEnum() // which is now perfectly legal
         {

@@ -15,13 +15,14 @@ namespace ProtoBuf.ServiceModel
     public sealed class XmlProtoSerializer : XmlObjectSerializer
     {
         private readonly TypeModel model;
-        private readonly bool isList, autoCreate;
+        private readonly bool autoCreate;
         private readonly Type type;
 
+#pragma warning disable IDE0060 // Remove unused parameter "isList"
         internal XmlProtoSerializer(TypeModel model, Type type, bool isList)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             this.model = model ?? throw new ArgumentNullException(nameof(model));
-            this.isList = isList;
             this.type = type ?? throw new ArgumentOutOfRangeException(nameof(type));
             this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
         }
@@ -49,7 +50,7 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            bool known = IsKnownType(model, type, out isList);
+            bool known = IsKnownType(model, type, out _);
             if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
             this.model = model;
             this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
