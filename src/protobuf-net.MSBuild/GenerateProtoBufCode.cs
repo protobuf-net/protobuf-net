@@ -21,6 +21,8 @@ namespace ProtoBuf.MSBuild
 
         public string Language { get; set; }
 
+        public string Services { get; set; }
+
         [Output]
         public ITaskItem[] ProtoCodeFile { get; set; }
 
@@ -101,7 +103,10 @@ namespace ProtoBuf.MSBuild
                 return false;
             }
 
-            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["services"] = Services
+            };
 
             var codeFiles = new List<ITaskItem>();
             var files = codegen.Generate(set, options: options);

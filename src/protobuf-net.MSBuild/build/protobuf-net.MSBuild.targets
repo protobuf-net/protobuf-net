@@ -32,6 +32,7 @@
       OutputPath="$(ProtoCodeGenerationRoot)"
       DefaultNamespace="$(RootNamespace)"
       Language="$(Language)"
+      Services="$(GrpcServices)"
     >
       <Output 
         TaskParameter="ProtoCodeFile"

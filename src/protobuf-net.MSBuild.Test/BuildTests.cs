@@ -116,5 +116,11 @@ namespace ProtoBuf.Build
             Assert.Single(testLogger.Errors);
             Assert.Single(testLogger.Warnings);
         }
+
+        [Fact]
+        public void ServicesGenTest()
+        {
+            BuildProject("Data/Proj4/Proj.csproj");
+        }
     }
 }

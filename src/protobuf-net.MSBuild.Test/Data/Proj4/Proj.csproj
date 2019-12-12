@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>TestNS</RootNamespace>
+    <TargetFramework>net461</TargetFramework>
+    <GrpcServices>true</GrpcServices>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="protobuf-net.Grpc" Version="1.0.21" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)/../Common.props"/>
+</Project>
