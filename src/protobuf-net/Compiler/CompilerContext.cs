@@ -122,7 +122,6 @@ namespace ProtoBuf.Compiler
         public static ProtoSubTypeDeserializer<T> BuildSubTypeDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
             where T : class
         {
-            Type type = head.ExpectedType;
             using CompilerContext ctx = new CompilerContext(scope, head.ExpectedType, SignatureType.ReaderScope_Input, true, model, typeof(SubTypeState<T>), typeof(T));
             head.EmitRead(ctx, ctx.InputValue);
             // note that EmitRead will unwrap the T for us on the stack
@@ -133,8 +132,7 @@ namespace ProtoBuf.Compiler
 
         public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model, bool isScalar = false)
         {
-            Type type = head.ExpectedType;
-            using CompilerContext ctx = new CompilerContext(scope, type, SignatureType.ReaderScope_Input, true, model, typeof(T), typeof(T));
+            using CompilerContext ctx = new CompilerContext(scope, head.ExpectedType, SignatureType.ReaderScope_Input, true, model, typeof(T), typeof(T));
 
             head.EmitRead(ctx, ctx.InputValue);
             if (!isScalar) ctx.LoadValue(ctx.InputValue);

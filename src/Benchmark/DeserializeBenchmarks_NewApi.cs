@@ -22,7 +22,9 @@ namespace Benchmark
         [Benchmark(Description = "C")]
         public protogen.Database ROM_C() => ROM_New(_c);
 
+#pragma warning disable IDE0051 // Remove unused private members
         static void Dispose(IDisposable input) => input?.Dispose();
+#pragma warning restore IDE0051 // Remove unused private members
 
         //[BenchmarkCategory("ROM_RefState")]
         //[Benchmark(Description = "C_Pooled")]

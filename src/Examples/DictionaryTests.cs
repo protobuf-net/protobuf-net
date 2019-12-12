@@ -36,10 +36,7 @@ namespace Examples.Dictionary
             return Value == other.Value;
         }
 
-        public override int GetHashCode()
-        {
-            return Value.GetHashCode();
-        }
+        public override int GetHashCode() => Value.GetHashCode();
         public override bool Equals(object obj)
         {
             return Equals(obj as SimpleData);

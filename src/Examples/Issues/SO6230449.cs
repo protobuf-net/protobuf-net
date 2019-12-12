@@ -35,7 +35,7 @@ namespace Examples.Issues
             List<Foo> foos = new List<Foo>();
             do
             {
-                var len = ProtoReader.ReadLengthPrefix(ms, false, PrefixStyle.Base128, out var fieldNumber, out bytesRead);
+                var len = ProtoReader.ReadLengthPrefix(ms, false, PrefixStyle.Base128, out _, out bytesRead);
                 if (bytesRead <= 0) continue;
 
 #pragma warning disable CS0618

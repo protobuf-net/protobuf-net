@@ -27,7 +27,7 @@ namespace ProtoBuf
         /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source, T value, SerializationContext context, long length = ProtoReader.TO_EOF)
         {
-            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, context, length);
             return state.DeserializeRootImpl<T>(value);
         }
 
@@ -38,7 +38,7 @@ namespace ProtoBuf
         /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source, T value = default, object userState = default, long length = ProtoReader.TO_EOF)
         {
-            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState);
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState, length);
             return state.DeserializeRootImpl<T>(value);
         }
 
