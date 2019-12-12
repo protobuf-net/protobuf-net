@@ -8,8 +8,8 @@
 	</PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="protobuf-net" Version="2.4.0" />
-    <PackageReference Include="protobuf-net.Reflection" Version="2.3.17" />
+    <PackageReference Include="protobuf-net" Version="3.0.0-alpha.*" />
+    <PackageReference Include="protobuf-net.Reflection" Version="3.0.0-alpha.*" />
 <!-- something went very odd here; paths are wrong?
     <Reference Include="protobuf-net">
       <HintPath>$(ProtoBuildAsmRoot)protobuf-net.dll</HintPath>

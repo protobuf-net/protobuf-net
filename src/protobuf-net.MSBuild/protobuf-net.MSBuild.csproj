@@ -29,8 +29,8 @@
     </ProjectReference>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj"/>
   </ItemGroup>
-
-  <Target Name="CopyBuildFiles" AfterTargets="CoreBuild" BeforeTargets="_CalculateInputsOutputsForPack">
+  
+  <Target Name="CopyBuildFiles" AfterTargets="CoreBuild" BeforeTargets="_CalculateInputsOutputsForPack;_IntermediatePack">
     <ItemGroup>
       <Content Include="$(OutDir)\*.dll" PackagePath="build\" />
     </ItemGroup>
