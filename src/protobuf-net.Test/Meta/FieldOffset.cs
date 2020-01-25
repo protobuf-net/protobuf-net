@@ -53,7 +53,7 @@ message Foo {
         {
             var model = RuntimeTypeModel.Create();
             var mt = model.Add(typeof(Foo), true);
-            mt.ApplyFieldOffset(-4); // fine because no-op
+            mt.ApplyFieldOffset(-4); // leaves everything +ve
 
             var proto = model.GetSchema(typeof(Foo), ProtoSyntax.Proto3);
             Assert.Equal(@"syntax = ""proto3"";
@@ -78,7 +78,7 @@ message Foo {
         {
             var model = RuntimeTypeModel.Create();
             var mt = model.Add(typeof(Foo), true);
-            mt.ApplyFieldOffset(4); // fine because no-op
+            mt.ApplyFieldOffset(4);
 
             var proto = model.GetSchema(typeof(Foo), ProtoSyntax.Proto3);
             Assert.Equal(@"syntax = ""proto3"";
