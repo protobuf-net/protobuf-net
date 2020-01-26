@@ -35,7 +35,7 @@
 //        public void Test()
 //        {
 //            var a = new A { B = new B() };
-//            var model = TypeModel.Create();
+//            var model = RuntimeTypeModel.Create();
 //            model.Add(typeof(B), )
 //            using (var m = new MemoryStream())
 //            {

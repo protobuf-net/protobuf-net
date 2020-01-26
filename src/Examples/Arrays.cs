@@ -82,7 +82,7 @@ namespace Examples
         public void DeserializeNakedArray()
         {
             var arr = new Foo[0];
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Foo[] foo = (Foo[])model.DeepClone(arr);
             Assert.Empty(foo);
         }
@@ -90,7 +90,7 @@ namespace Examples
         public void DeserializeBusyArray()
         {
             var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Foo[] foo = (Foo[])model.DeepClone(arr);
             Assert.Equal(3, foo.Length);
         }
@@ -98,7 +98,7 @@ namespace Examples
         public void TestOverwriteVersusAppend()
         {
             var orig = new WithAndWithoutOverwrite { Append = new[] {7,8}, Overwrite = new[] { 9,10}};
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(WithAndWithoutOverwrite), true);
 
@@ -120,7 +120,7 @@ namespace Examples
         public void TestSkipConstructor()
         {
             var orig = new WithSkipConstructor { Values = new[] { 4, 5 } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(WithSkipConstructor), true);
 

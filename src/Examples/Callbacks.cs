@@ -315,7 +315,7 @@ namespace Examples
         [Fact]
         public void CallbacksWithContext()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Test(model);
 

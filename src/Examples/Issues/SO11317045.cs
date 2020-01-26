@@ -54,7 +54,7 @@ namespace Examples.Issues
             };
 
             var stream = new MemoryStream();
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
 #if DEBUG // this is only available in debug builds; if set, an exception is
           // thrown if the stream tries to buffer

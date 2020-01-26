@@ -133,7 +133,7 @@ enum blah {
         [Fact]
         public void TestNonNullValues()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.UseImplicitZeroDefaults = false;
 
             string proto = model.GetSchema(typeof (NonNullValues));

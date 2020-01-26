@@ -39,7 +39,7 @@ namespace Examples.Issues
         [Fact]
         public void TestMediaColorDirect()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Color), false).Add("A","R","G","B");
 
             RoundtripTypeWithColor(model);
@@ -48,7 +48,7 @@ namespace Examples.Issues
         [Fact]
         public void TestMediaColorSurrogate()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Color), false).SetSurrogate(typeof(MyColor));
 
             RoundtripTypeWithColor(model);

@@ -55,7 +55,7 @@ namespace ProtoBuf.unittest.Meta
             for (int i = 0; i < 100; i++)
             {
                 ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -120,7 +120,7 @@ namespace ProtoBuf.unittest.Meta
             for (int i = 0; i < 100; i++)
             {
                 ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -212,7 +212,7 @@ namespace ProtoBuf.unittest.Meta
             for (int i = 0; i < 100; i++)
             {
                 ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -265,7 +265,7 @@ namespace ProtoBuf.unittest.Meta
             for (int i = 0; i < 100; i++)
             {
                 ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -332,7 +332,7 @@ namespace ProtoBuf.unittest.Meta
             {
                 
                 ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;

@@ -26,7 +26,7 @@ namespace ProtoBuf.unittest.Meta
         public class AList : List<ConcreteA> { }
         public static RuntimeTypeModel BuildModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(ConcreteC), false).Add("C");
             model.Add(typeof(ConcreteB), false).Add("B");
             model.Add(typeof(ConcreteA), false).Add("A").AddSubType(2, typeof(ConcreteC));

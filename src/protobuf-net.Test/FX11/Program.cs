@@ -34,7 +34,7 @@ namespace FX11
             
             RuntimeTypeModel model;
 #if !FX11
-            model = TypeModel.Create();
+            model = RuntimeTypeModel.Create();
             model.Add(typeof(Order), false)
                 .Add(1, "OrderID")
                 .Add(2, "CustomerID")
@@ -233,7 +233,7 @@ namespace FX11
 
 
 #endif
-                model = TypeModel.Create();
+                model = RuntimeTypeModel.Create();
             model.Add(typeof(Customer), false)
                .Add(1, "Id")
                .Add(3, "Name")
@@ -310,7 +310,7 @@ namespace FX11
 #if !COREFX
             Console.WriteLine(Environment.Version);
 #endif
-            RuntimeTypeModel orderModel = TypeModel.Create();
+            RuntimeTypeModel orderModel = RuntimeTypeModel.Create();
             orderModel.Add(typeof(OrderHeader), true);
             orderModel.Add(typeof(OrderDetail), true);
 

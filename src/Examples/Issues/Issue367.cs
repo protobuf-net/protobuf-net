@@ -22,7 +22,7 @@ namespace Examples.Issues
         [Fact]
         public void LockContention_DTO()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Func<object, byte[]> serialize = obj =>
             {
                 using (var ms = new MemoryStream())
@@ -44,7 +44,7 @@ namespace Examples.Issues
         [Fact]
         public void LockContention_BasicType()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Func<object, byte[]> serialize = obj =>
             {
                 using (var ms = new MemoryStream())
@@ -66,7 +66,7 @@ namespace Examples.Issues
         [Fact]
         public void LockContention_Dictionary()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Func<object, byte[]> serialize = obj =>
             {
                 using (var ms = new MemoryStream())

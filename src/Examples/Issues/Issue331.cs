@@ -35,7 +35,7 @@ namespace Examples.Issues
 
         static RuntimeTypeModel CreateModel(bool baseFirst)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(Tree), true);
             if (baseFirst)

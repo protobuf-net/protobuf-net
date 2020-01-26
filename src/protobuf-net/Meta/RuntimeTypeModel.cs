@@ -377,7 +377,20 @@ namespace ProtoBuf.Meta
             CascadeDependents(list, temp);
         }
 
-        internal RuntimeTypeModel(bool isDefault)
+#if !NO_RUNTIME
+        /// <summary>
+        /// Creates a new runtime model, to which the caller
+        /// can add support for a range of types. A model
+        /// can be used "as is", or can be compiled for
+        /// optimal performance.
+        /// </summary>
+        public new static RuntimeTypeModel Create()
+        {
+            return new RuntimeTypeModel(false);
+        }
+#endif
+
+        private RuntimeTypeModel(bool isDefault)
         {
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
