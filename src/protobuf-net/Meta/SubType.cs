@@ -29,13 +29,30 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private readonly int fieldNumber;
+        private int _fieldNumber;
 
         /// <summary>
         /// The field-number that is used to encapsulate the data (as a nested
         /// message) for the derived dype.
         /// </summary>
-        public int FieldNumber => fieldNumber;
+        public int FieldNumber
+        {
+            get => _fieldNumber;
+            internal set
+            {
+                if (_fieldNumber != value)
+                {
+                    MetaType.AssertValidFieldNumber(value);
+                    ThrowIfFrozen();
+                    _fieldNumber = value;
+                }
+            }
+        }
+
+        private void ThrowIfFrozen()
+        {
+            if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
+        }
 
         /// <summary>
         /// The sub-type to be considered.
@@ -53,7 +70,7 @@ namespace ProtoBuf.Meta
         public SubType(int fieldNumber, MetaType derivedType, DataFormat format)
         {
             if (fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-            this.fieldNumber = fieldNumber;
+            _fieldNumber = fieldNumber;
             this.derivedType = derivedType ?? throw new ArgumentNullException(nameof(derivedType));
             this.dataFormat = format;
         }
@@ -71,7 +88,7 @@ namespace ProtoBuf.Meta
             if(dataFormat == DataFormat.Group) wireType = WireType.StartGroup; // only one exception
             
             IRuntimeProtoSerializerNode ser = SubItemSerializer.Create(derivedType.Type, derivedType, parentType);
-            return new TagDecorator(fieldNumber, wireType, false, ser);
+            return new TagDecorator(_fieldNumber, wireType, false, ser);
         }
     }
 }

@@ -2046,5 +2046,59 @@ namespace ProtoBuf.Meta
             }
             return false;
         }
+
+        /// <summary>
+        /// Apply a shift to all fields (and sub-types) on this type
+        /// </summary>
+        /// <param name="offset">The change in field number to apply</param>
+        /// <remarks>The resultant field numbers must still all be considered valid</remarks>
+        [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public void ApplyFieldOffset(int offset)
+        {
+            if (Type.IsEnum) throw new InvalidOperationException("Cannot apply field-offset to an enum");
+            if (offset == 0) return; // nothing to do
+            int opaqueToken = 0;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+
+                var fields = _fields;
+                var subTypes = _subTypes;
+                if (fields != null)
+                {
+                    foreach (ValueMember field in fields)
+                        AssertValidFieldNumber(field.FieldNumber + offset);
+                }
+                if (subTypes != null)
+                {
+                    foreach (SubType subType in subTypes)
+                        AssertValidFieldNumber(subType.FieldNumber + offset);
+                }
+
+                // we've checked the ranges are all OK; since we're moving everything, we can't overlap ourselves
+                // so: we can just move
+                if (fields != null)
+                {
+                    foreach (ValueMember field in fields)
+                        field.FieldNumber += offset;
+                }
+                if (subTypes != null)
+                {
+                    foreach (SubType subType in subTypes)
+                        subType.FieldNumber += offset;
+                }
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+        }
+
+        internal static void AssertValidFieldNumber(int fieldNumber)
+        {
+            if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+        }
     }
 }

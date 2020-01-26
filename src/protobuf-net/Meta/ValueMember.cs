@@ -15,10 +15,24 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class ValueMember
     {
+
+        private int _fieldNumber;
         /// <summary>
         /// The number that identifies this member in a protobuf stream
         /// </summary>
-        public int FieldNumber { get; }
+        public int FieldNumber
+        {
+            get => _fieldNumber;
+            internal set
+            {
+                if (_fieldNumber != value)
+                {
+                    MetaType.AssertValidFieldNumber(value);
+                    ThrowIfFrozen();
+                    _fieldNumber = value;
+                }
+            }
+        }
 
         private MemberInfo backingMember;
         /// <summary>
