@@ -384,7 +384,8 @@ namespace ProtoBuf.Meta
         /// can be used "as is", or can be compiled for
         /// optimal performance.
         /// </summary>
-        public new static RuntimeTypeModel Create()
+        /// <param name="name">not used currently; this is for compatibility with v3</param>
+        public static RuntimeTypeModel Create(string name = null)
         {
             return new RuntimeTypeModel(false);
         }
