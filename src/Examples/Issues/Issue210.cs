@@ -23,7 +23,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldDeserializeWithStaticConstructor()
         {
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
             typeModel.AutoCompile = true;
             typeModel.Deserialize(new MemoryStream(), null, typeof(ProtoTestOne));
         }

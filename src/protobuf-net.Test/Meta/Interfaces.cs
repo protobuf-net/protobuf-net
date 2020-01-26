@@ -26,7 +26,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void ExposeInterfaceWithDefaultImplementation()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             // note the following sets for the ConstructType for the ISomeInferface, not specifically for Foo
             model.Add(typeof(ISomeInterface), false).Add("Foo").ConstructType = typeof(SomeClass2);
             model.Add(typeof(SomeClass), false).Add("SomeProperty");

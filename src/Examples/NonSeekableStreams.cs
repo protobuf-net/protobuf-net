@@ -17,7 +17,7 @@ namespace Examples
         [Fact]
         public void ShouldNotRequireSeeking()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             byte[] raw;
             const int EXPECTED = 830;
             using(var fs = new FakeStream())

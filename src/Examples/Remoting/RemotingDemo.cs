@@ -190,7 +190,7 @@ namespace Examples.Remoting
             
             ProtoFragment frag2 = new ProtoFragment { Foo = frag1.Foo, Bar = frag1.Bar };
             Type regular = typeof(RegularFragment), proto = typeof(ProtoFragment);
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof(ProtoFragment), true);
             

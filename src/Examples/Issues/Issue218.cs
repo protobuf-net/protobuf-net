@@ -24,7 +24,7 @@ namespace Examples.Issues
         public void Execute()
         {
 
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
             typeModel.AutoCompile = true;
             var obj = new Test() {Title = "MyTitle", BackgroundImageToUpload = new byte[0]};
 

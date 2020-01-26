@@ -13,7 +13,7 @@ namespace Examples.Issues
         public void Execute()
         {
             
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.SetDefaultFactory(typeof(SO14532116).GetMethod("ObjectMaker"));
 

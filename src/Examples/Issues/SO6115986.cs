@@ -33,7 +33,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             m.Add(typeof(D), false).Add("Y");
             m.Add(typeof(IYObject), false).AddSubType(1, typeof(YObject)).Add(2, "Z");
             m.Add(typeof(YObject), false).Add("X");
@@ -78,7 +78,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             var d = new D { Y = new YObject { X = "a" } };
             d.Y.Z = 123;
             using (var ms = new MemoryStream())

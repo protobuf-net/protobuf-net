@@ -1183,9 +1183,10 @@ namespace ProtoBuf.Meta
         /// can be used "as is", or can be compiled for
         /// optimal performance.
         /// </summary>
+        [Obsolete("Please use RuntimeTypeModel.Create", false)]
         public static RuntimeTypeModel Create()
         {
-            return new RuntimeTypeModel(false);
+            return RuntimeTypeModel.Create();
         }
 #endif
 

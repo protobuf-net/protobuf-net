@@ -17,7 +17,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var runtimeTypeModel = TypeModel.Create();
+            var runtimeTypeModel = RuntimeTypeModel.Create();
             var myExceptionType = typeof(MyException);
             var metaType = runtimeTypeModel.Add(myExceptionType, false);
             metaType.SetSurrogate(typeof(BinarySerializationSurrogate<>).MakeGenericType(myExceptionType));
