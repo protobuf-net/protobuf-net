@@ -1,53 +1,78 @@
-﻿using ProtoBuf.Serializers;
+﻿using ProtoBuf.Compiler;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal.Serializers
 {
-    internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
+    abstract class SurrogateSerializer : IRuntimeProtoSerializerNode
     {
-        public SerializerFeatures Features => rootTail.Features;
-        bool IProtoTypeSerializer.IsSubType => false;
-        bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
-        void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject) { throw new NotSupportedException(); }
-        bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
-        bool IProtoTypeSerializer.CanCreateInstance() => false;
+        public abstract SerializerFeatures Features { get; }
+        public abstract Type ExpectedType { get; }
+        public abstract bool RequiresOldValue { get; }
+        public abstract bool ReturnsValue { get; }
 
-        object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
+        public abstract void EmitRead(CompilerContext ctx, Local entity);
+        public abstract void EmitWrite(CompilerContext ctx, Local valueFrom);
+        public abstract object Read(ref ProtoReader.State state, object value);
+        public abstract void Write(ref ProtoWriter.State state, object value);
+    }
+    internal sealed class SurrogateSerializer<TDeclared, TSurrogate> : SurrogateSerializer, ISerializer<TDeclared>
+    {
+        private readonly TypeModel _model;
+        public override SerializerFeatures Features
+        {
+            get
+            {
+                if (_serializer == null && _model != null && _model.CanSerialize(typeof(TSurrogate), true, true, true, out var category)
+                    && category == SerializerFeatures.CategoryMessage)
+                {   // looks like a message, then
+                    return SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+                }
+                // otherwise, we'll have to actually resolve the serializer
+                return Serializer.Features;
+            }
+        }
 
-        void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, ISerializationContext context) { }
+        TDeclared ISerializer<TDeclared>.Read(ref ProtoReader.State state, TDeclared value)
+            => (TDeclared)Read(ref state, value);
 
-
-        T ISerializer<T>.Read(ref ProtoReader.State state, T value)
-            => (T)Read(ref state, value);
-
-        void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
+        void ISerializer<TDeclared>.Write(ref ProtoWriter.State state, TDeclared value)
             => Write(ref state, value);
 
-        public bool ReturnsValue => false;
+        public override bool ReturnsValue => true;
 
-        public bool RequiresOldValue => true;
+        public override bool RequiresOldValue => true;
 
-        public Type ExpectedType => typeof(T);
-        Type IProtoTypeSerializer.BaseType => ExpectedType;
-
-        private readonly Type declaredType;
-        private readonly MethodInfo toTail, fromTail;
-        private readonly IProtoTypeSerializer rootTail;
-
-        public SurrogateSerializer(Type declaredType, IProtoTypeSerializer rootTail)
+        private ISerializer<TSurrogate> Serializer => _serializer ?? CreateSerializer();
+        private ISerializer<TSurrogate> _serializer;
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private ISerializer<TSurrogate> CreateSerializer()
         {
-            Debug.Assert(declaredType != null, "declaredType");
-            Debug.Assert(rootTail != null, "rootTail");
-            Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
-            Debug.Assert(!rootTail.ReturnsValue, "ReturnsValue");
-            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
-            this.declaredType = declaredType;
-            this.rootTail = rootTail;
+            try
+            {
+                return _serializer = TypeModel.GetSerializer<TSurrogate>(_model);
+            }
+            catch(Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to create surrogate serializer for {typeof(TSurrogate).NormalizeName()}", ex);
+            }
+            
+        }
+
+        public override Type ExpectedType => typeof(TDeclared);
+        // Type IProtoTypeSerializer.BaseType => ExpectedType;
+
+        private readonly MethodInfo toTail, fromTail;
+
+        public SurrogateSerializer(TypeModel model)
+        {
             toTail = GetConversion(true);
             fromTail = GetConversion(false);
+            _model = model;
         }
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
@@ -98,60 +123,82 @@ namespace ProtoBuf.Internal.Serializers
 
         public MethodInfo GetConversion(bool toTail)
         {
-            Type to = toTail ? declaredType : ExpectedType;
-            Type from = toTail ? ExpectedType : declaredType;
-            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(ExpectedType, from, to, out op))
+            Type to = toTail ? typeof(TSurrogate) : typeof(TDeclared);
+            Type from = toTail ? typeof(TDeclared) : typeof(TSurrogate);
+            if (HasCast(typeof(TSurrogate), from, to, out MethodInfo op) || HasCast(typeof(TDeclared), from, to, out op))
             {
                 return op;
             }
             throw new InvalidOperationException("No suitable conversion operator found for surrogate: " +
-                ExpectedType.FullName + " / " + declaredType.FullName);
+                typeof(TDeclared).FullName + " / " + typeof(TSurrogate).FullName);
         }
 
-        public void Write(ref ProtoWriter.State state, object value)
-        {
-            rootTail.Write(ref state, toTail.Invoke(null, new object[] { value }));
-        }
+        public override void Write(ref ProtoWriter.State state, object value)
+            => Serializer.Write(ref state, (TSurrogate)toTail.Invoke(null, new object[] { value }));
 
-        public object Read(ref ProtoReader.State state, object value)
+        public override object Read(ref ProtoReader.State state, object value)
         {
             // convert the incoming value
             object[] args = { value };
             value = toTail.Invoke(null, args);
 
             // invoke the tail and convert the outgoing value
-            args[0] = rootTail.Read(ref state, value);
+            args[0] = state.ReadAny<TSurrogate>(SurrogateFeatures, (TSurrogate)value, _serializer);
             return fromTail.Invoke(null, args);
         }
 
-        bool IProtoTypeSerializer.HasInheritance => false;
+        SerializerFeatures SurrogateFeatures => default;
 
-        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-            => ((IRuntimeProtoSerializerNode)this).EmitRead(ctx, valueFrom);
+        static readonly MethodInfo s_ReadAny =
+            (from method in typeof(ProtoReader.State).GetMethods()
+             where method.Name == nameof(ProtoReader.State.ReadAny)
+             let args = method.GetParameters()
+             where method.IsGenericMethodDefinition && args.Length == 3
+             select method.MakeGenericMethod(typeof(TSurrogate))).Single();
 
-        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-            => ((IRuntimeProtoSerializerNode)this).EmitWrite(ctx, valueFrom);
+        static readonly MethodInfo s_Write
+            = typeof(ISerializer<TSurrogate>).GetMethod(nameof(ISerializer<TSurrogate>.Write));
 
-        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        public override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            Debug.Assert(valueFrom != null); // don't support stack-head for this
-            using Compiler.Local converted = new Compiler.Local(ctx, declaredType);
-            ctx.LoadValue(valueFrom); // load primary onto stack
-            ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
-            ctx.StoreValue(converted); // store into surrogate local
+            // snapshot the input
+            using var loc = ctx.GetLocalWithValue(typeof(TDeclared), valueFrom);
+            
+            ctx.LoadState();
+            ctx.LoadValue((int)SurrogateFeatures);
+            ctx.LoadValue(loc);
+            ctx.EmitCall(toTail); // convert it out
+            ctx.LoadSelfAsService<ISerializer<TSurrogate>, TSurrogate>();
+            ctx.EmitCall(s_ReadAny); // downstream processing against surrogate local
 
-            rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
-
-            ctx.LoadValue(converted); // load from surrogate local
+            // and convert it back
             ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
             ctx.StoreValue(valueFrom); // store back into primary
         }
 
-        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        public override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
+            // snapshot the input
+            using var loc = ctx.GetLocalWithValue(typeof(TDeclared), valueFrom);
+
+            
+            var forSure = ctx.LoadSelfAsService<ISerializer<TSurrogate>, TSurrogate>();
+            // if (!forSure)
+            {
+                var haveSerializer = ctx.DefineLabel();
+                using var serializer = new Compiler.Local(ctx, typeof(ISerializer<TSurrogate>));
+                ctx.StoreValue(serializer);
+                ctx.LoadValue(serializer);
+                ctx.BranchIfTrue(haveSerializer, true);
+                ctx.MarkLabel(haveSerializer);
+                ctx.LoadValue(serializer);
+            }
+
+            // (stack: serializer)
+            ctx.LoadState();
             ctx.LoadValue(valueFrom);
             ctx.EmitCall(toTail);
-            rootTail.EmitWrite(ctx, null);
+            ctx.EmitCall(s_Write);
         }
     }
 }

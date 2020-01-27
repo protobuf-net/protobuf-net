@@ -8,7 +8,8 @@ namespace ProtoBuf.Serializers
     internal static class SerializerCache<TProvider>
              where TProvider : class
     {
-        internal static readonly TProvider InstanceField = (TProvider)Activator.CreateInstance(typeof(TProvider), nonPublic: true);
+        internal static readonly TProvider InstanceField = (TProvider)SerializerCache.CheckedCreate(
+            typeof(TProvider), "provider");
         public static ISerializer<T> GetSerializer<T>()
             => SerializerCache<TProvider, T>.InstanceField;
     }
@@ -40,6 +41,18 @@ namespace ProtoBuf.Serializers
     /// </summary>
     public static class SerializerCache
     {
+        internal static object CheckedCreate(Type type, string label)
+        {
+            try
+            {
+                return Activator.CreateInstance(type, nonPublic: true);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Unable to create {label} '{type.NormalizeName()}': {ex.Message}", ex);
+            }
+        }
+
         ///// <summary>
         ///// Provides access to a singleton instance of a given serializer
         ///// </summary>

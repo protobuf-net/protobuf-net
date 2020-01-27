@@ -294,22 +294,26 @@ namespace ProtoBuf.Compiler
 
         public bool IsService => Scope.IsFullEmit && !IsStatic;
 
-        public void LoadSelfAsService<TService, T>() where TService : class
+        public bool LoadSelfAsService<TService, T>() where TService : class
         {
             if (IsStatic || TypeModel.TryGetSerializer<T>(null) is object) // don't claim inbuilts
             {
                 LoadNullRef();
+                return false;
             }
             else
             {
                 Emit(OpCodes.Ldarg_0); // push ourselves
                 if (Scope.IsFullEmit && Scope.ImplementsServiceFor<T>())
-                { } // yay, we should be fine here
+                {
+                    return true; // yay, we should be fine here
+                }
                 else
                 {
                     // otherwise, we'll use isinst to find
                     // out at runtime, else loading null
                     TryCast(typeof(TService));
+                    return false;
                 }
             }
         }

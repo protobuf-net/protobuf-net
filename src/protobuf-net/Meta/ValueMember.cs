@@ -649,7 +649,19 @@ namespace ProtoBuf.Meta
                 }
                 if (meta != null)
                 {
-                    return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
+                    var surrogateType = meta.SurrogateType;
+                    if (surrogateType != null)
+                    {
+                        meta.AssertNoInheritanceAndYieldRoot();
+                        var ss = (SurrogateSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<,>).MakeGenericType(meta.Type, surrogateType),
+                            args: new object[] { model });
+                        defaultWireType = ss.Features.GetWireType();
+                        return ss;
+                    }
+                    else
+                    {
+                        return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
+                    }
                 }
             }
             defaultWireType = WireType.None;

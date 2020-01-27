@@ -437,6 +437,22 @@ namespace ProtoBuf.Meta
 
         private bool HasRealInheritance()
             => (baseType != null && baseType != this) || (_subTypes?.Count ?? 0) > 0;
+
+        internal MetaType AssertNoInheritanceAndYieldRoot()
+        {
+            if (HasRealInheritance()) ThrowSubTypeWithSurrogate(Type);
+            MetaType mt = model.FindWithoutAdd(surrogate), mtBase;
+            if (mt != null)
+            {
+                if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
+                while ((mtBase = mt.baseType) != null)
+                {
+                    if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
+                    mt = mtBase;
+                }
+            }
+            return mt;
+        }
         private IProtoTypeSerializer BuildSerializer()
         {
             if (SerializerType != null)
@@ -464,14 +480,7 @@ namespace ProtoBuf.Meta
             bool involvedInInheritance = HasRealInheritance();
             if (surrogate != null)
             {
-                if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
-                MetaType mt = model[surrogate], mtBase;
-                while ((mtBase = mt.baseType) != null) {
-                    if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
-                    mt = mtBase;
-                }
-                return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
-                    args: new object[] { surrogate, mt.Serializer });
+                throw new InvalidOperationException("shouldn't happen now");
             }
             if (IsAutoTuple)
             {
@@ -1299,13 +1308,7 @@ namespace ProtoBuf.Meta
             // no point in offering chaining; no options are respected
         }
 
-        internal bool HasSurrogate
-        {
-            get
-            {
-                return surrogate != null;
-            }
-        }
+        internal Type SurrogateType => surrogate;
 
         internal MetaType GetSurrogateOrSelf()
         {
