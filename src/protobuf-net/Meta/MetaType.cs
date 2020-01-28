@@ -510,6 +510,14 @@ namespace ProtoBuf.Meta
 
         internal void ApplyDefaultBehaviour()
         {
+            TypeAddedEventArgs args = null; // allows us to share the event-args between events
+            RuntimeTypeModel.OnBeforeApplyDefaultBehaviour(this, ref args);
+            if (args == null || args.ApplyDefaultBehaviour) ApplyDefaultBehaviourImpl();
+            RuntimeTypeModel.OnAfterApplyDefaultBehaviour(this, ref args);
+        }
+
+        internal void ApplyDefaultBehaviourImpl()
+        {
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
                 && GetContractFamily(model, baseType, null) != MetaType.AttributeFamily.None)
