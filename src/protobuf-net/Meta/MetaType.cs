@@ -417,14 +417,14 @@ namespace ProtoBuf.Meta
             var root = GetRootType(this);
             if (!ReferenceEquals(root, this)) return root.Type;
             if (_subTypes != null && _subTypes.Count != 0) return root.Type;
-            
+
             return null;
         }
 
         private SerializerFeatures GetFeatures()
         {
             if (Type.IsEnum) return SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
-            
+
             if (!Type.IsValueType)
             {
                 var bt = GetRootType(this);
@@ -455,7 +455,7 @@ namespace ProtoBuf.Meta
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
-                
+
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, repeated.ItemType, null, DataFormat.Default);
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
@@ -559,6 +559,13 @@ namespace ProtoBuf.Meta
         }
 
         internal void ApplyDefaultBehaviour()
+        {
+            TypeAddedEventArgs args = null; // allows us to share the event-args between events
+            RuntimeTypeModel.OnBeforeApplyDefaultBehaviour(this, ref args);
+            if (args == null || args.ApplyDefaultBehaviour) ApplyDefaultBehaviourImpl();
+            RuntimeTypeModel.OnAfterApplyDefaultBehaviour(this, ref args);
+        }
+        private void ApplyDefaultBehaviourImpl()
         {
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
