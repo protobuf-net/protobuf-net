@@ -122,5 +122,11 @@ namespace ProtoBuf.Build
         {
             BuildProject("Data/Proj4/Proj.csproj");
         }
+
+        [Fact]
+        public void NameNormalizationTest()
+        {
+            BuildProject("Data/Proj5/Proj.csproj");
+        }
     }
 }

@@ -23,6 +23,8 @@ namespace ProtoBuf.MSBuild
 
         public string Services { get; set; }
 
+        public string NameNormalizaton { get; set; }
+
         [Output]
         public ITaskItem[] ProtoCodeFile { get; set; }
 
@@ -105,7 +107,8 @@ namespace ProtoBuf.MSBuild
 
             var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["services"] = Services
+                ["services"] = Services,
+                ["names"] = NameNormalizaton
             };
 
             var codeFiles = new List<ITaskItem>();

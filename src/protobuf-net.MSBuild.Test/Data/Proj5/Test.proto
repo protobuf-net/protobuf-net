@@ -1,0 +1,5 @@
+﻿syntax = "proto2";
+
+message TestMessage {
+  optional string snake_case_name = 1;
+}

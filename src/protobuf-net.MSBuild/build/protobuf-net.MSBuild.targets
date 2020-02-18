@@ -33,6 +33,7 @@
       DefaultNamespace="$(RootNamespace)"
       Language="$(Language)"
       Services="$(GrpcServices)"
+      NameNormalizaton="$(ProtoNameNormalization)"
     >
       <Output 
         TaskParameter="ProtoCodeFile"

@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>TestNS</RootNamespace>
+    <TargetFramework>net461</TargetFramework>
+    <ProtoNameNormalization>original</ProtoNameNormalization>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)/../Common.props"/>
+</Project>
