@@ -636,7 +636,8 @@ namespace Google.Protobuf.Reflection
         IType IType.Find(string name)
         {
             return (IType)MessageTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
-                ?? (IType)EnumTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+                ?? (IType)EnumTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? (IType)Services.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
         internal bool HasPendingImports { get; private set; }
         internal FileDescriptorSet Parent { get; private set; }
@@ -1021,6 +1022,15 @@ namespace Google.Protobuf.Reflection
                 ext.Parent = parent;
             }
         }
+        private static void SetParents(string prefix, ServiceDescriptorProto parent)
+        {
+            var fqn = parent.FullyQualifiedName = prefix + "." + parent.Name;
+            foreach (var method in parent.Methods)
+            {
+                method.Parent = parent;
+                method.FullyQualifiedName = fqn + "." + method.Name;
+            }
+        }
         internal void BuildTypeHierarchy(FileDescriptorSet set)
         {
             // build the tree starting at the root
@@ -1032,6 +1042,11 @@ namespace Google.Protobuf.Reflection
                 SetParents(prefix, type);
             }
             foreach (var type in MessageTypes)
+            {
+                type.Parent = this;
+                SetParents(prefix, type);
+            }
+            foreach (var type in Services)
             {
                 type.Parent = this;
                 SetParents(prefix, type);
@@ -2010,8 +2025,15 @@ namespace Google.Protobuf.Reflection
         List<FieldDescriptorProto> Fields { get; }
     }
 
-    public partial class ServiceDescriptorProto : ISchemaObject
+    public partial class ServiceDescriptorProto : ISchemaObject, IType
     {
+        public override string ToString() => Name;
+        internal IType Parent { get; set; }
+        string IType.FullyQualifiedName => FullyQualifiedName;
+        IType IType.Parent => Parent;
+        IType IType.Find(string name) => Methods.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        internal string FullyQualifiedName { get; set; }
+
         internal static bool TryParse(ParserContext ctx, out ServiceDescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
@@ -2022,6 +2044,7 @@ namespace Google.Protobuf.Reflection
             }
             return false;
         }
+
         void ISchemaObject.ReadOne(ParserContext ctx)
         {
             ctx.AbortState = AbortState.Statement;
@@ -2040,8 +2063,15 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    public partial class MethodDescriptorProto : ISchemaObject
+    public partial class MethodDescriptorProto : ISchemaObject, IType
     {
+        public override string ToString() => Name;
+        internal IType Parent { get; set; }
+        string IType.FullyQualifiedName => FullyQualifiedName;
+        IType IType.Parent => Parent;
+        IType IType.Find(string name) => null;
+        internal string FullyQualifiedName { get; set; }
+
         internal Token InputTypeToken { get; set; }
         internal Token OutputTypeToken { get; set; }
 

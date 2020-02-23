@@ -9,9 +9,13 @@
 
   <ItemGroup>
     <None Remove="basic.proto" />
+    <None Remove="basic_service.proto" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="basic_service.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="basic.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
