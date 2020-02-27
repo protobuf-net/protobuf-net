@@ -14,7 +14,7 @@ namespace ProtoBuf.Meta
             mt.ApplyFieldOffset(0); // fine because no-op
 
             var proto = model.GetSchema(typeof(Foo), ProtoSyntax.Proto3);
-            Assert.Equal(@"syntax = ""proto3"";
+            Assert.Equal(NormalizeLineEndings(@"syntax = ""proto3"";
 package ProtoBuf.Meta;
 
 message Bar {
@@ -28,7 +28,7 @@ message Foo {
       Bar Bar = 42;
    }
 }
-", proto);
+"), NormalizeLineEndings(proto));
         }
 
         [Fact]
@@ -56,7 +56,7 @@ message Foo {
             mt.ApplyFieldOffset(-4); // leaves everything +ve
 
             var proto = model.GetSchema(typeof(Foo), ProtoSyntax.Proto3);
-            Assert.Equal(@"syntax = ""proto3"";
+            Assert.Equal(NormalizeLineEndings(@"syntax = ""proto3"";
 package ProtoBuf.Meta;
 
 message Bar {
@@ -70,7 +70,7 @@ message Foo {
       Bar Bar = 38;
    }
 }
-", proto);
+"), NormalizeLineEndings(proto));
         }
 
         [Fact]
@@ -81,7 +81,7 @@ message Foo {
             mt.ApplyFieldOffset(4);
 
             var proto = model.GetSchema(typeof(Foo), ProtoSyntax.Proto3);
-            Assert.Equal(@"syntax = ""proto3"";
+            Assert.Equal(NormalizeLineEndings(@"syntax = ""proto3"";
 package ProtoBuf.Meta;
 
 message Bar {
@@ -95,8 +95,11 @@ message Foo {
       Bar Bar = 46;
    }
 }
-", proto);
+"), NormalizeLineEndings(proto));
         }
+
+        private static string NormalizeLineEndings(string text)
+            => text.Replace("\r\n", "\n").Replace("\r", "\n");
     }
 
     [ProtoContract]
