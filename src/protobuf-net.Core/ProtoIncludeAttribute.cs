@@ -51,7 +51,7 @@ namespace ProtoBuf
         public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
 
         /// <summary>
-        /// Specifies whether the inherited sype's sub-message should be
+        /// Specifies whether the inherited type's sub-message should be
         /// written with a length-prefix (default), or with group markers.
         /// </summary>
         [DefaultValue(DataFormat.Default)]
