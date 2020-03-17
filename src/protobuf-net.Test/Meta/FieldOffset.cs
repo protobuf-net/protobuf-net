@@ -28,7 +28,7 @@ message Foo {
       Bar Bar = 42;
    }
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -70,7 +70,7 @@ message Foo {
       Bar Bar = 38;
    }
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -95,7 +95,7 @@ message Foo {
       Bar Bar = 46;
    }
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
     }
 
