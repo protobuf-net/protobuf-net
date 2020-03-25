@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Serializers;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Text;
 
@@ -19,8 +20,9 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<sbyte>,
         IMeasuringSerializer<short>,
         IMeasuringSerializer<char>,
-
         IMeasuringSerializer<Uri>,
+        IMeasuringSerializer<Type>,
+
         IFactory<string>,
         IFactory<byte[]>,
 
@@ -51,7 +53,8 @@ namespace ProtoBuf.Internal
         IValueChecker<sbyte>,
         IValueChecker<short>,
         IValueChecker<char>,
-        IValueChecker<Uri>
+        IValueChecker<Uri>,
+        IValueChecker<Type>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -287,9 +290,20 @@ namespace ProtoBuf.Internal
         void ISerializer<double?>.Write(ref ProtoWriter.State state, double? value) => ((ISerializer<double>)this).Write(ref state, value.Value);
         double? ISerializer<double?>.Read(ref ProtoReader.State state, double? value) => ((ISerializer<double>)this).Read(ref state, value.GetValueOrDefault());
 
+        Type ISerializer<Type>.Read(ref ProtoReader.State state, Type value) => state.ReadType();
+        void ISerializer<Type>.Write(ref ProtoWriter.State state, Type value) => state.WriteType(value);
+        SerializerFeatures ISerializer<Type>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
+        int IMeasuringSerializer<Type>.Measure(ISerializationContext context, WireType wireType, Type value)
+            => wireType switch
+            {
+                WireType.String => Encoding.UTF8.GetByteCount(TypeModel.SerializeType(context?.Model, value)),
+                _ => -1,
+            };
+
 
         bool IValueChecker<string>.HasNonTrivialValue(string value) => value != null; //  note: we write "" (when found), for compat
         bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => value?.OriginalString != null; //  note: we write "" (when found), for compat
+        bool IValueChecker<Type>.HasNonTrivialValue(Type value) => value != null;
         bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value != null;  //  note: we write [] (when found), for compat
         bool IValueChecker<sbyte>.HasNonTrivialValue(sbyte value) => value != 0;
         bool IValueChecker<short>.HasNonTrivialValue(short value) => value != 0;
@@ -318,5 +332,6 @@ namespace ProtoBuf.Internal
         bool IValueChecker<string>.IsNull(string value) => value == null;
         bool IValueChecker<byte[]>.IsNull(byte[] value) => value == null;
         bool IValueChecker<Uri>.IsNull(Uri value) => value == null;
+        bool IValueChecker<Type>.IsNull(Type value) => value == null;
     }
 }
