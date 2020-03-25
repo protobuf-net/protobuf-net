@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -54,6 +53,22 @@ IsCoreFX ? @"0A-5A-53-79-73-74-65-6D-2E-53-74-72-69-6E-67-2C-20-6D-73-63-6F-72-6
             Assert.Equal(typeof(string), clone[0]);
             Assert.Equal(typeof(uint), clone[1]);
         }
+
+        [Fact]
+        public void WrappedAndVectorAreSame()
+        {
+            var data = new[] { typeof(string), typeof(uint) };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, data);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Log(hex);
+            
+            ms.Position = 0;
+            var clone = Serializer.Deserialize<WrappedBasic>(ms).Vector;
+            Assert.Equal(2, clone.Length);
+            Assert.Equal(typeof(string), clone[0]);
+            Assert.Equal(typeof(uint), clone[1]);
+        }
     }
 
     [ProtoContract]
@@ -62,6 +77,13 @@ IsCoreFX ? @"0A-5A-53-79-73-74-65-6D-2E-53-74-72-69-6E-67-2C-20-6D-73-63-6F-72-6
         [ProtoMember(1)]
         public Type Single { get; set; }
         [ProtoMember(2)]
+        public Type[] Vector { get; set; }
+    }
+
+    [ProtoContract]
+    public class WrappedBasic
+    {
+        [ProtoMember(1)]
         public Type[] Vector { get; set; }
     }
 }
