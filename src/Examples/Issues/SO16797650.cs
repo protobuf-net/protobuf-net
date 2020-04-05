@@ -37,7 +37,8 @@ namespace Examples.Issues
         [Fact]
         public void AddSubtypeAtRuntime()
         {
-            var messageBase = RuntimeTypeModel.Default[typeof(MessageBase)];
+            var model = RuntimeTypeModel.Create();
+            var messageBase = model[typeof(MessageBase)];
             // this could be explicit in code, or via some external config file
             // that you process at startup
             messageBase.AddSubType(10, typeof(Echo)); // would need to **reliably** be 10
@@ -50,9 +51,9 @@ namespace Examples.Issues
             using (var ms = new MemoryStream())
             {
 #pragma warning disable CS0618
-                Serializer.NonGeneric.Serialize(ms, echo);
+                model.Serialize(ms, echo);
                 ms.Position = 0;
-                echo1 = (MessageBase)Serializer.NonGeneric.Deserialize(typeof(MessageBase), ms);
+                echo1 = model.Deserialize<MessageBase>(ms);
 #pragma warning restore CS0618
             }
             Assert.Same(echo.GetType(), echo1.GetType());

@@ -115,9 +115,9 @@ namespace ProtoBuf.Reflection
         internal static T ConsumeEnum<T>(this Peekable<Token> tokens) where T : struct
         {
             var token = tokens.Read();
-            _ = tokens.ConsumeString();
+            var value = tokens.ConsumeString();
 
-            if (!EnumCache<T>.TryGet(token.Value, out T val))
+            if (!EnumCache<T>.TryGet(value, out T val))
                 token.Throw(ErrorCode.InvalidEnum, "Unable to parse " + typeof(T).Name);
             return val;
         }
