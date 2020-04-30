@@ -443,6 +443,7 @@ namespace ProtoBuf.Meta
             {
                 return ExternalSerializer.Create(Type, SerializerType);
             }
+            Validate();
             var repeated = model.TryGetRepeatedProvider(Type);
 
             if (repeated != null)
@@ -680,7 +681,13 @@ namespace ProtoBuf.Meta
                 {
                     if (name == null && item.TryGet("TypeName", out tmp)) name = (string)tmp;
                 }
+
+                if (fullAttributeTypeName == "ProtoBuf.ProtoReservedAttribute" && item.Target is ProtoReservedAttribute reservation)
+                {
+                    AddReservation(reservation);
+                }
             }
+
             if (!string.IsNullOrEmpty(name)) Name = name;
             if (implicitMode != ImplicitFields.None)
             {
@@ -1867,7 +1874,7 @@ namespace ProtoBuf.Meta
                         NewLine(builder, indent + 1).Append("// ").Append(member.Name).Append(" = ").Append(member.Value).Append(';').Append(" // note: enums should be valid 32-bit integers");
                     }
                 }
-
+                if (HasReservations) AppendReservations();
                 NewLine(builder, indent).Append('}');
                 if (!allValid) NewLine(builder, indent).Append("*/");
             }
@@ -1981,7 +1988,29 @@ namespace ProtoBuf.Meta
                     }
                     NewLine(builder, indent + 1).Append("}");
                 }
+                if (HasReservations) AppendReservations();
                 NewLine(builder, indent).Append('}');
+            }
+
+            void AppendReservations()
+            {
+                foreach (var reservation in _reservations)
+                {
+                    NewLine(builder, indent + 1).Append("reserved ");
+                    if (reservation.From != 0)
+                    {
+                        builder.Append(reservation.From);
+                        if (reservation.To != reservation.From) builder.Append(" to ").Append(reservation.To);
+
+                    }
+                    else
+                    {
+                        builder.Append('\"').Append(reservation.Name).Append('\"');
+                    }
+                    builder.Append(';');
+                    if (!string.IsNullOrWhiteSpace(reservation.Comment))
+                        builder.Append(" /* ").Append(reservation.Comment).Append(" */");
+                }
             }
         }
 
@@ -2106,6 +2135,130 @@ namespace ProtoBuf.Meta
         internal static void AssertValidFieldNumber(int fieldNumber)
         {
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+        }
+
+        /// <summary>
+        /// Adds a single number field reservation
+        /// </summary>
+        public MetaType AddReservation(int field, string comment = null)
+            => AddReservation(new ProtoReservedAttribute(field, comment));
+        /// <summary>
+        /// Adds range number field reservation
+        /// </summary>
+        public MetaType AddReservation(int from, int to, string comment = null)
+            => AddReservation(new ProtoReservedAttribute(from, to, comment));
+        /// <summary>
+        /// Adds a named field reservation
+        /// </summary>
+        public MetaType AddReservation(string field, string comment = null)
+            => AddReservation(new ProtoReservedAttribute(field, comment));
+        private MetaType AddReservation(ProtoReservedAttribute reservation)
+        {
+            reservation.Verify();
+            int opaqueToken = default;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+                _reservations ??= new List<ProtoReservedAttribute>();
+                _reservations.Add(reservation);
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+            return this;
+        }
+
+        private List<ProtoReservedAttribute> _reservations;
+
+        internal bool HasReservations => (_reservations?.Count ?? 0) != 0;
+
+        internal void Validate() => ValidateReservations(); // just this for now, but: in case we need more later
+
+        internal void ValidateReservations()
+        {
+            if (!(HasReservations && (HasFields || HasSubtypes || HasEnums))) return;
+
+            foreach (var reservation in _reservations)
+            {
+                if (reservation.From != 0)
+                {
+                    if (_fields != null)
+                    {
+                        foreach (var field in _fields)
+                        {
+                            if (field.FieldNumber >= reservation.From && field.FieldNumber <= reservation.To)
+                            {
+                                throw new InvalidOperationException($"Field {field.FieldNumber} is reserved and cannot be used for data member '{field.Name}'{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_enums != null)
+                    {
+                        foreach (var @enum in _enums)
+                        {
+                            var val = @enum.TryGetInt32();
+                            if (val.HasValue && val.Value >= reservation.From && val.Value <= reservation.To)
+                            {
+                                throw new InvalidOperationException($"Field {val.Value} is reserved and cannot be used for enum value '{@enum.Name}'{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_subTypes != null)
+                    {
+                        foreach (var subType in _subTypes)
+                        {
+                            if (subType.FieldNumber >= reservation.From && subType.FieldNumber <= reservation.To)
+                            {
+                                throw new InvalidOperationException($"Field {subType.FieldNumber} is reserved and cannot be used for sub-type '{subType.DerivedType.Type.NormalizeName()}'{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (_fields != null)
+                    {
+                        foreach (var field in _fields)
+                        {
+                            if (field.Name == reservation.Name)
+                            {
+                                throw new InvalidOperationException($"Field '{field.Name}' is reserved and cannot be used for data member {field.FieldNumber}{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_enums != null)
+                    {
+                        foreach (var @enum in _enums)
+                        {
+                            if (@enum.Name == reservation.Name)
+                            {
+                                throw new InvalidOperationException($"Field '{@enum.Name}' is reserved and cannot be used for enum value {@enum.Value}{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_subTypes != null)
+                    {
+                        foreach (var subType in _subTypes)
+                        {
+                            var name = subType.DerivedType.Name;
+                            if (string.IsNullOrWhiteSpace(name)) name = subType.DerivedType.Type.Name;
+                            if (name == reservation.Name)
+                            {
+                                throw new InvalidOperationException($"Field '{name}' is reserved and cannot be used for sub-type {subType.FieldNumber}{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            static string CommentSuffix(ProtoReservedAttribute reservation)
+            {
+                var comment = reservation.Comment;
+                if (string.IsNullOrWhiteSpace(comment)) return "";
+                return " (" + comment.Trim() + ")";
+            }
         }
     }
 }

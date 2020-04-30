@@ -1348,6 +1348,7 @@ namespace ProtoBuf.Meta
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
 
+                metaType.Validate();
                 if (runtimeType.IsEnum || metaType.SerializerType is object || TryGetRepeatedProvider(metaType.Type) != null)
                 {   // we don't implement these
                     continue;
