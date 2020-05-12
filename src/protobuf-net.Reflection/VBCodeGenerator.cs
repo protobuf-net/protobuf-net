@@ -1,12 +1,11 @@
 ﻿using Google.Protobuf.Reflection;
-using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     /// <summary>
     /// A code generator that writes VB

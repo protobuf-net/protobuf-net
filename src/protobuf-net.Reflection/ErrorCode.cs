@@ -1,4 +1,4 @@
-﻿namespace ProtoBuf
+﻿namespace ProtoBuf.Reflection.Internal
 {
     /// <summary>
     /// Registry of known errors / warnings
