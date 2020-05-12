@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -43,7 +44,9 @@ namespace ProtoBuf.Reflection
             foreach (var file in files)
             {
                 using var reader = new StringReader(file.Text);
+#if DEBUG_COMPILE
                 Console.WriteLine($"Parsing {file.Name}...");
+#endif
                 set.Add(file.Name, true, reader);
             }
             set.Process();

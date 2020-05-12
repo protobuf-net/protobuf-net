@@ -2,6 +2,7 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -2345,11 +2346,11 @@ namespace ProtoBuf.Reflection
             List<Error> errors = new List<Error>();
             using (var reader = new StringReader(stdout))
             {
-                Add(reader, errors, ProtoBuf.ErrorCode.ProtocError);
+                Add(reader, errors, ErrorCode.ProtocError);
             }
             using (var reader = new StringReader(stderr))
             {
-                Add(reader, errors, ProtoBuf.ErrorCode.ProtocError);
+                Add(reader, errors, ErrorCode.ProtocError);
             }
             return errors.ToArray();
         }
