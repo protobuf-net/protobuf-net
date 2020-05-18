@@ -208,7 +208,10 @@ namespace ProtoBuf.Meta
             return this;
         }
 
-        internal string GetSchemaTypeName()
+        /// <summary>
+        /// Returns the public Type name of this Type used in serialization
+        /// </summary>
+        public string GetSchemaTypeName()
         {
             if (surrogate != null) return model[surrogate].GetSchemaTypeName();
 
