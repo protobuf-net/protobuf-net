@@ -223,6 +223,11 @@ namespace ProtoBuf.Meta
             callbacks.AfterDeserialize = ResolveMethod(afterDeserialize, true);
             return this;
         }
+        
+        /// <summary>
+        /// Returns the public Type name of this Type used in serialization
+        /// </summary>
+        public string GetSchemaTypeName() => GetSchemaTypeName(null);
 
         internal string GetSchemaTypeName(HashSet<Type> callstack)
         {
