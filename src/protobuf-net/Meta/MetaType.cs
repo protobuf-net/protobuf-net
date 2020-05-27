@@ -480,6 +480,7 @@ namespace ProtoBuf.Meta
                 }
 
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, repeated.ItemType, null, DataFormat.Default);
+                fakeMember.CompatibilityLevel = CompatibilityLevel;
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
@@ -590,6 +591,9 @@ namespace ProtoBuf.Meta
         }
         private void ApplyDefaultBehaviourImpl()
         {
+            if (CompatibilityLevel == CompatibilityLevel.NotSpecified)
+                CompatibilityLevel = TypeCompatibilityHelper.GetLevel(Type);
+
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
                 && GetContractFamily(model, baseType, null) != MetaType.AttributeFamily.None)
@@ -1156,6 +1160,7 @@ namespace ProtoBuf.Meta
                     : null;
             if (vm != null)
             {
+                vm.CompatibilityLevel = TypeCompatibilityHelper.GetLevel(member, CompatibilityLevel);
                 vm.BackingMember = normalizedAttribute.BackingMember;
                 Type finalType = Type;
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);
@@ -1469,6 +1474,7 @@ namespace ProtoBuf.Meta
             }
 
             ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, repeated?.ItemType, defaultType, DataFormat.Default, defaultValue);
+            newField.CompatibilityLevel = CompatibilityLevel; // default to inherited
             if (backingField != null)
                 newField.SetName(mi.Name);
             Add(newField);
