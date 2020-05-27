@@ -5,12 +5,18 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class TimeSpanSerializer : IRuntimeProtoSerializerNode
     {
+        private static TimeSpanSerializer s_Legacy, s_Duration;
         private static readonly Type expectedType = typeof(TimeSpan);
-        private readonly bool wellKnown;
-        public TimeSpanSerializer(DataFormat dataFormat)
-        {
-            wellKnown = dataFormat == DataFormat.WellKnown;
-        }
+        private readonly bool _useDuration;
+
+        public static TimeSpanSerializer Create(CompatibilityLevel compatibilityLevel)
+            => compatibilityLevel >= CompatibilityLevel.Level240
+            ? s_Duration ??= new TimeSpanSerializer(true)
+            : s_Legacy ??= new TimeSpanSerializer(false);
+
+        private TimeSpanSerializer(bool useDuration)
+            => _useDuration = useDuration;
+
         public Type ExpectedType => expectedType;
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
@@ -19,7 +25,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            if (wellKnown)
+            if (_useDuration)
             {
                 return BclHelpers.ReadDuration(ref state);
             }
@@ -32,7 +38,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            if (wellKnown)
+            if (_useDuration)
             {
                 BclHelpers.WriteDuration(ref state, (TimeSpan)value);
             }
@@ -45,13 +51,13 @@ namespace ProtoBuf.Internal.Serializers
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitStateBasedWrite(
-                wellKnown ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom, typeof(BclHelpers));
+                _useDuration ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom, typeof(BclHelpers));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            if (wellKnown) ctx.LoadValue(entity);
+            if (_useDuration) ctx.LoadValue(entity);
             ctx.EmitStateBasedRead(typeof(BclHelpers),
-                wellKnown ? nameof(BclHelpers.ReadDuration) : nameof(BclHelpers.ReadTimeSpan),
+                _useDuration ? nameof(BclHelpers.ReadDuration) : nameof(BclHelpers.ReadTimeSpan),
                 ExpectedType);
         }
     }

@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace ProtoBuf
 {
     /// <summary>
@@ -42,8 +44,9 @@ namespace ProtoBuf
         /// <summary>
         /// When applied to members of types such as DateTime or TimeSpan, specifies
         /// that the "well known" standardized representation should be use; DateTime uses Timestamp,
-        /// 
+        /// TimeSpan uses Duration.
         /// </summary>
-        WellKnown
+        [Obsolete("This option is replaced with " + nameof(CompatibilityLevel) + ", and is only used for " + nameof(CompatibilityLevel.Level200) + ", where it changes this field to " + nameof(CompatibilityLevel.Level240), false)]
+        WellKnown,
     }
 }

@@ -184,6 +184,7 @@ namespace ProtoBuf.Meta
             var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;
+            CompatibilityLevel compatibilityLevel = CompatibilityLevel.NotSpecified;
             if (type == null)
             { // generate for the entire model
                 foreach (MetaType meta in types)
@@ -201,7 +202,7 @@ namespace ProtoBuf.Meta
                 Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
 
-                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out var _, false, false, false, false) != null);
+                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, compatibilityLevel, type, out var _, false, false, false, false) != null);
                 if (!isInbuiltType)
                 {
                     //Agenerate just relative to the supplied type
@@ -210,6 +211,7 @@ namespace ProtoBuf.Meta
 
                     // get the required types
                     primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
+                    compatibilityLevel = primaryType.CompatibilityLevel;
                     requiredTypes.Add(primaryType);
                     CascadeDependents(requiredTypes, primaryType);
                 }
@@ -280,7 +282,7 @@ namespace ProtoBuf.Meta
             if (isInbuiltType)
             {
                 bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, false, false, ref imports))
+                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, compatibilityLevel, false, false, ref imports))
                     .Append(" value = 1;").AppendLine().Append('}');
             }
             else
@@ -414,7 +416,7 @@ namespace ProtoBuf.Meta
 
         private void TryGetCoreSerializer(List<MetaType> list, Type itemType)
         {
-            var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out _, false, false, false, false);
+            var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, CompatibilityLevel.NotSpecified, itemType, out _, false, false, false, false);
             if (coreSerializer != null)
             {
                 return;
@@ -539,7 +541,7 @@ namespace ProtoBuf.Meta
 
                 MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
                 IRuntimeProtoSerializerNode ser = family == MetaType.AttributeFamily.None
-                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out _, false, false, false, false)
+                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default,  CompatibilityLevel.NotSpecified, type, out _, false, false, false, false)
                     : null;
 
                 if (ser != null) basicTypes.Add(new BasicType(type, ser));
@@ -1607,16 +1609,16 @@ namespace ProtoBuf.Meta
         public event LockContentedEventHandler LockContended;
 #pragma warning restore RCS1159 // Use EventHandler<T>.
 
-        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
-            => GetSchemaTypeName(callstack, effectiveType, dataFormat, asReference, dynamicType, ref imports, out _);
-        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports)
+            => GetSchemaTypeName(callstack, effectiveType, dataFormat, compatibilityLevel, asReference, dynamicType, ref imports, out _);
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
         {
             altName = null;
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
             if (effectiveType == typeof(byte[])) return "bytes";
 
-            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out var _, false, false, false, false);
+            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out var _, false, false, false, false);
             if (ser == null)
             {   // model type
                 if (asReference || dynamicType)
@@ -1631,7 +1633,7 @@ namespace ProtoBuf.Meta
                 if (mt.Type.IsEnum && !mt.IsValidEnum())
                 {
                     altName = actual;
-                    actual = GetSchemaTypeName(callstack, Enum.GetUnderlyingType(mt.Type), dataFormat, asReference, dynamicType, ref imports);
+                    actual = GetSchemaTypeName(callstack, Enum.GetUnderlyingType(mt.Type), dataFormat, CompatibilityLevel.NotSpecified, asReference, dynamicType, ref imports);
                 }
                 return actual;
             }
@@ -1686,23 +1688,33 @@ namespace ProtoBuf.Meta
                         switch (dataFormat)
                         {
                             case DataFormat.FixedSize: return "sint64";
-                            case DataFormat.WellKnown:
-                                imports |= CommonImports.Timestamp;
-                                return ".google.protobuf.Timestamp";
                             default:
-                                imports |= CommonImports.Bcl;
-                                return ".bcl.DateTime";
+                                if (compatibilityLevel >= CompatibilityLevel.Level240)
+                                {
+                                    imports |= CommonImports.Timestamp;
+                                    return ".google.protobuf.Timestamp";
+                                }
+                                else
+                                {
+                                    imports |= CommonImports.Bcl;
+                                    return ".bcl.DateTime";
+                                }
                         }
                     case ProtoTypeCode.TimeSpan:
                         switch (dataFormat)
                         {
                             case DataFormat.FixedSize: return "sint64";
-                            case DataFormat.WellKnown:
-                                imports |= CommonImports.Duration;
-                                return ".google.protobuf.Duration";
                             default:
-                                imports |= CommonImports.Bcl;
-                                return ".bcl.TimeSpan";
+                                if (compatibilityLevel >= CompatibilityLevel.Level240)
+                                {
+                                    imports |= CommonImports.Duration;
+                                    return ".google.protobuf.Duration";
+                                }
+                                else
+                                {
+                                    imports |= CommonImports.Bcl;
+                                    return ".bcl.TimeSpan";
+                                }
                         }
                     case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
                     case ProtoTypeCode.Guid: imports |= CommonImports.Bcl; return ".bcl.Guid";

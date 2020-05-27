@@ -53,6 +53,23 @@ namespace ProtoBuf.Meta
 
         internal RuntimeTypeModel Model => model;
 
+        private CompatibilityLevel _compatibilityLevel;
+        /// <summary>
+        /// Gets or sets the <see cref="CompatibilityLevel"/> for this instance
+        /// </summary>
+        public CompatibilityLevel CompatibilityLevel
+        {
+            get => _compatibilityLevel;
+            set
+            {
+                if (value != _compatibilityLevel)
+                {
+                    if (HasFields) ThrowHelper.ThrowInvalidOperationException($"{CompatibilityLevel} cannot be set once fields have been defined");
+                    _compatibilityLevel = value;
+                }
+            }
+        }
+
         /// <summary>
         /// When used to compile a model, should public serialization/deserialzation methods
         /// be included for this type?
@@ -485,7 +502,7 @@ namespace ProtoBuf.Meta
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor == null) throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
-                    args: new object[] { model, ctor, mapping, GetFeatures() });
+                    args: new object[] { model, ctor, mapping, GetFeatures(), CompatibilityLevel });
             }
 
             if (HasFields) Fields.TrimExcess();
@@ -1778,15 +1795,15 @@ namespace ProtoBuf.Meta
                     repeated.ResolveMapTypes(out var key, out var value);
 
                     NewLine(builder, indent + 1).Append("map<")
-                        .Append(model.GetSchemaTypeName(callstack, key, DataFormat.Default, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, key, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports))
                         .Append(", ")
-                        .Append(model.GetSchemaTypeName(callstack, value, DataFormat.Default, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, value, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports))
                         .Append("> items = 1;");
                 }
                 else
                 {
                     NewLine(builder, indent + 1).Append("repeated ")
-                        .Append(model.GetSchemaTypeName(callstack, repeated.ItemType, DataFormat.Default, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, repeated.ItemType, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports))
                         .Append(" items = 1;");
                 }
                 NewLine(builder, indent).Append('}');
@@ -1811,7 +1828,7 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
-                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, false, false, ref imports).Replace('.', '_'))
+                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports).Replace('.', '_'))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
                     NewLine(builder, indent).Append('}');
@@ -1896,8 +1913,8 @@ namespace ProtoBuf.Meta
                         repeated = model.TryGetRepeatedProvider(member.MemberType);
                         repeated.ResolveMapTypes(out var keyType, out var valueType);
 
-                        var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, false, false, ref imports);
-                        schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
+                        var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, member.CompatibilityLevel, false, false, ref imports);
+                        schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapValueFormat, member.CompatibilityLevel, member.AsReference, member.DynamicType, ref imports);
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
                             .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
                     }

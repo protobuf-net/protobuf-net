@@ -13,7 +13,7 @@ namespace ProtoBuf.Internal.Serializers
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
         private readonly IRuntimeProtoSerializerNode[] tails;
-        public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members, SerializerFeatures features)
+        public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members, SerializerFeatures features, CompatibilityLevel compatibilityLevel)
         {
             this.ctor = ctor ?? throw new ArgumentNullException(nameof(ctor));
             this.members = members ?? throw new ArgumentNullException(nameof(members));
@@ -34,7 +34,7 @@ namespace ProtoBuf.Internal.Serializers
                 {
                     asReference = model[tmp].AsReferenceDefault;
                 }
-                IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out WireType wireType, asReference, false, false, true), serializer;
+                IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, compatibilityLevel, tmp, out WireType wireType, asReference, false, false, true), serializer;
                 if (tail == null)
                 {
                     throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
@@ -46,7 +46,7 @@ namespace ProtoBuf.Internal.Serializers
                 }
                 else if (repeated.IsMap)
                 {
-                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
+                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, compatibilityLevel, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
                 }
                 else
                 {

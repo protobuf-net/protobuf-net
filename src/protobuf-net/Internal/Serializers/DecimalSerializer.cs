@@ -5,8 +5,11 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class DecimalSerializer : IRuntimeProtoSerializerNode
     {
+        public static DecimalSerializer Create(CompatibilityLevel _)
+            => s_Instance; // TODO - future support re https://github.com/protocolbuffers/protobuf/pull/7039
+
         private DecimalSerializer() { }
-        internal static readonly DecimalSerializer Instance = new DecimalSerializer();
+        private static readonly DecimalSerializer s_Instance = new DecimalSerializer();
 
         private static readonly Type expectedType = typeof(decimal);
 

@@ -138,7 +138,7 @@ namespace ProtoBuf.Reflection
                .WriteLine($"//   Input: {Path.GetFileName(ctx.File.Name)}")
                .WriteLine("// </auto-generated>")
                .WriteLine()
-               .Write($"#pragma warning disable {prefix}0612, {prefix}1591, {prefix}3021");
+               .Write($"#pragma warning disable {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
                 tw.Write(AdditionalSuppressionCodes);
@@ -166,7 +166,7 @@ namespace ProtoBuf.Reflection
             {
                 ctx.Outdent().WriteLine("}").WriteLine();
             }
-            var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}1591, {prefix}3021");
+            var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
                 tw.Write(AdditionalSuppressionCodes);

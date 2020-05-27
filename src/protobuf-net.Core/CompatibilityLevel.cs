@@ -15,16 +15,28 @@ namespace ProtoBuf
     public enum CompatibilityLevel
     {
         /// <summary>
-        /// Uses bcl.proto for DateTime, TimeSpan, Guid and Decimal, for compatibility
-        /// with all versions of protobuf-net, at the expense of being inconvenient
-        /// for use with other protobuf implementations
+        /// Functionally identical to <see cref="Level200"/>
+        /// </summary>
+#if DEBUG
+        [Obsolete("These should probably be... specified")]
+#endif
+        NotSpecified = 0,
+        /// <summary>
+        /// Uses bcl.proto for <see cref="DateTime"/>, <see cref="TimeSpan"/>, <see cref="Guid"/> and <see cref="decimal"/>, for compatibility
+        /// with all versions of protobuf-net, at the expense of being inconvenient for use with other protobuf implementations.
+        /// </summary>
+        Level200 = 200,
+        /// <summary>
+        /// Like <see cref="Level200"/>, but uses '.google.protobuf.Timestamp' for <see cref="DateTime"/> and '.google.protobuf.Duration' for <see cref="TimeSpan"/>.
+        /// This is functionally identical to a <see cref="Level200"/> configuration that specifies <see cref="DataFormat.WellKnown"/>.
         /// </summary>
         Level240 = 240,
         /// <summary>
-        /// Uses WellKnownTypes.Timestamp for DateTime, WellKnownTypes.Duration for TimeSpan,
-        /// string for Guid ("N"); Decimal is TBD, tracking https://github.com/protocolbuffers/protobuf/pull/7039
+        /// Like <see cref="Level240"/>, but uses 'string' for <see cref="Guid"/>.
         /// </summary>
         Level300 = 300,
+
+        // next likely addition: Decimal, tracking https://github.com/protocolbuffers/protobuf/pull/7039
     }
 
     /// <summary>
@@ -33,7 +45,8 @@ namespace ProtoBuf
     [ImmutableObject(true)]
     [AttributeUsage(
         AttributeTargets.Assembly | AttributeTargets.Module
-        | AttributeTargets.Class | AttributeTargets.Struct,
+        | AttributeTargets.Class | AttributeTargets.Struct
+        | AttributeTargets.Field | AttributeTargets.Property,
         AllowMultiple =false, Inherited = true)]
     public sealed class CompatibilityLevelAttribute : Attribute
     {
