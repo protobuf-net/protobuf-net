@@ -149,13 +149,13 @@ namespace ProtoBuf.Internal.Serializers
             {
                 Type type = GetMemberType(i);
                 ctx.LoadAddress(loc, ExpectedType);
-                if (members[i] is FieldInfo)
+                if (members[i] is FieldInfo fieldInfo)
                 {
-                    ctx.LoadValue((FieldInfo)members[i]);
+                    ctx.LoadValue(fieldInfo);
                 }
-                else if (members[i] is PropertyInfo)
+                else if (members[i] is PropertyInfo propertyInfo)
                 {
-                    ctx.LoadValue((PropertyInfo)members[i]);
+                    ctx.LoadValue(propertyInfo);
                 }
                 ctx.WriteNullCheckedTail(type, tails[i], null);
             }
@@ -244,13 +244,13 @@ namespace ProtoBuf.Internal.Serializers
                 for (int i = 0; i < members.Length; i++)
                 {
                     ctx.LoadAddress(objValue, ExpectedType);
-                    if (members[i] is FieldInfo)
+                    if (members[i] is FieldInfo fieldInfo)
                     {
-                        ctx.LoadValue((FieldInfo)members[i]);
+                        ctx.LoadValue(fieldInfo);
                     }
-                    else if (members[i] is PropertyInfo)
+                    else if (members[i] is PropertyInfo propertyInfo)
                     {
-                        ctx.LoadValue((PropertyInfo)members[i]);
+                        ctx.LoadValue(propertyInfo);
                     }
                     ctx.StoreValue(locals[i]);
                 }

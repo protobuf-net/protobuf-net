@@ -151,7 +151,7 @@ namespace ProtoBuf.Meta
                 ThrowIfFrozen();
 
                 derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
-                (_subTypes ?? (_subTypes = new List<SubType>())).Add(subType);
+                (_subTypes ??= new List<SubType>()).Add(subType);
                 return this;
             }
             finally
@@ -196,7 +196,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Returns the set of callbacks defined for this type
         /// </summary>
-        public CallbackSet Callbacks => callbacks ?? (callbacks = new CallbackSet(this));
+        public CallbackSet Callbacks => callbacks ??= new CallbackSet(this);
 
         private bool IsValueType
         {
@@ -479,8 +479,10 @@ namespace ProtoBuf.Meta
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
 
-                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, repeated.ItemType, null, DataFormat.Default);
-                fakeMember.CompatibilityLevel = CompatibilityLevel;
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, repeated.ItemType, null, DataFormat.Default)
+                {
+                    CompatibilityLevel = CompatibilityLevel
+                };
                 return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
@@ -543,7 +545,7 @@ namespace ProtoBuf.Meta
                 MethodInfo method = tmp.HasCallbacks ? tmp.Callbacks.BeforeDeserialize : null;
                 if (method != null)
                 {
-                    (baseCtorCallbacks ?? (baseCtorCallbacks = new List<MethodInfo>())).Add(method);
+                    (baseCtorCallbacks ??= new List<MethodInfo>()).Add(method);
                 }
                 tmp = tmp.BaseType;
             }
@@ -657,12 +659,12 @@ namespace ProtoBuf.Meta
                 {
                     if (item.TryGet(nameof(ProtoPartialIgnoreAttribute.MemberName), out tmp) && tmp != null)
                     {
-                        (partialIgnores ?? (partialIgnores = new List<string>())).Add((string)tmp);
+                        (partialIgnores ??= new List<string>()).Add((string)tmp);
                     }
                 }
                 if (!isEnum && fullAttributeTypeName == "ProtoBuf.ProtoPartialMemberAttribute")
                 {
-                    (partialMembers ?? (partialMembers = new List<AttributeMap>())).Add(item);
+                    (partialMembers ??= new List<AttributeMap>()).Add(item);
                 }
 
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
@@ -1473,8 +1475,10 @@ namespace ProtoBuf.Meta
                 defaultType = repeated.ForType;
             }
 
-            ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, repeated?.ItemType, defaultType, DataFormat.Default, defaultValue);
-            newField.CompatibilityLevel = CompatibilityLevel; // default to inherited
+            ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, repeated?.ItemType, defaultType, DataFormat.Default, defaultValue)
+            {
+                CompatibilityLevel = CompatibilityLevel // default to inherited
+            };
             if (backingField != null)
                 newField.SetName(mi.Name);
             Add(newField);
@@ -1531,10 +1535,10 @@ namespace ProtoBuf.Meta
 
         private List<ValueMember> _fields = null;
         internal bool HasFields => _fields != null && _fields.Count != 0;
-        internal List<ValueMember> Fields => _fields ?? (_fields = new List<ValueMember>());
+        internal List<ValueMember> Fields => _fields ??= new List<ValueMember>();
 
         private List<EnumMember> _enums = new List<EnumMember>();
-        internal List<EnumMember> Enums => _enums ?? (_enums = new List<EnumMember>());
+        internal List<EnumMember> Enums => _enums ??= new List<EnumMember>();
         internal bool HasEnums => _enums != null && _enums.Count != 0;
 
         /// <summary>
@@ -1944,9 +1948,9 @@ namespace ProtoBuf.Meta
                             {
                                 // ignore
                             }
-                            else if (member.DefaultValue is bool)
+                            else if (member.DefaultValue is bool boolValue)
                             {   // need to be lower case (issue 304)
-                                AddOption(builder, ref hasOption).Append((bool)member.DefaultValue ? "default = true" : "default = false");
+                                AddOption(builder, ref hasOption).Append(boolValue ? "default = true" : "default = false");
                             }
                             else
                             {

@@ -973,8 +973,8 @@ namespace ProtoBuf.Reflection
                 if (!ReferenceEquals(target, declaring))
                 {
                     // special-case: if both are the package (file), and they have the same namespace: we're OK
-                    if (target is FileDescriptorProto && declaring is FileDescriptorProto
-                        && normalizer.GetName((FileDescriptorProto)declaring) == normalizer.GetName((FileDescriptorProto)target))
+                    if (target is FileDescriptorProto targetFDP && declaring is FileDescriptorProto declaringFDP
+                        && normalizer.GetName(declaringFDP) == normalizer.GetName(targetFDP))
                     {
                         // that's fine, keep going
                     }

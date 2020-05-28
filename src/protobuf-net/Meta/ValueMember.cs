@@ -221,7 +221,7 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                return serializer ?? (serializer = BuildSerializer());
+                return serializer ??= BuildSerializer();
             }
         }
 

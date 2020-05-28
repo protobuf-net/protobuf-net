@@ -38,7 +38,7 @@ namespace ProtoBuf.Compiler
         private readonly RuntimeTypeModel _model;
 
         private ModuleBuilder GetModule()
-            => _module ?? (_module = GetSharedModule());
+            => _module ??= GetSharedModule();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ModuleBuilder GetSharedModule() => SharedModule.Shared;

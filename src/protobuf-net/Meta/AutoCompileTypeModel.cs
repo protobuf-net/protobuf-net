@@ -92,7 +92,7 @@ namespace ProtoBuf.Meta
 
                     if (options != null && !options.OnIncludeType(type)) continue;
 
-                    (model ?? (model = RuntimeTypeModel.Create())).Add(type, true);
+                    (model ??= RuntimeTypeModel.Create()).Add(type, true);
                 }
                 if (model == null)
                     throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");

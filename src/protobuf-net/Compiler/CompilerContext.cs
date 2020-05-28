@@ -771,11 +771,11 @@ namespace ProtoBuf.Compiler
 
             if (isTrusted)
             {
-                (knownTrustedAssemblies ?? (knownTrustedAssemblies = new List<Assembly>())).Add(assembly);
+                (knownTrustedAssemblies ??= new List<Assembly>()).Add(assembly);
             }
             else
             {
-                (knownUntrustedAssemblies ?? (knownUntrustedAssemblies = new List<Assembly>())).Add(assembly);
+                (knownUntrustedAssemblies ??= new List<Assembly>()).Add(assembly);
             }
             return isTrusted;
         }

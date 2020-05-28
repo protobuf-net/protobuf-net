@@ -357,8 +357,8 @@ namespace ProtoBuf.Meta
                         for (int i = 0; i < mapping.Length; i++)
                         {
                             Type type = null;
-                            if (mapping[i] is PropertyInfo) type = ((PropertyInfo)mapping[i]).PropertyType;
-                            else if (mapping[i] is FieldInfo) type = ((FieldInfo)mapping[i]).FieldType;
+                            if (mapping[i] is PropertyInfo propertyInfo) type = propertyInfo.PropertyType;
+                            else if (mapping[i] is FieldInfo fieldInfo) type = fieldInfo.FieldType;
                             TryGetCoreSerializer(list, type);
                         }
                     }
@@ -1080,7 +1080,7 @@ namespace ProtoBuf.Meta
             internal bool OnIncludeType(Type type)
             {
                 var evt = IncludeType;
-                return evt == null ? true : evt(type);
+                return evt is null || evt(type);
             }
         }
 

@@ -18,7 +18,7 @@ namespace ProtoBuf
         /// Functionally identical to <see cref="Level200"/>
         /// </summary>
 #if DEBUG
-        [Obsolete("These should probably be... specified")]
+        // [Obsolete("These should probably be... specified")]
 #endif
         NotSpecified = 0,
         /// <summary>
