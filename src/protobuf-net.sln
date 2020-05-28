@@ -54,6 +54,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.MessagePipes", "protobuf-net.MessagePipes\protobuf-net.MessagePipes.csproj", "{07AD4B11-8385-4232-BAD3-3F5B3A28A008}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.TestCompatibilityLevel", "protobuf-net.TestCompatibilityLevel\protobuf-net.TestCompatibilityLevel.csproj", "{5573019D-19EA-4947-B84C-C5861D51C728}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,6 +171,12 @@ Global
 		{07AD4B11-8385-4232-BAD3-3F5B3A28A008}.Release|Any CPU.Build.0 = Release|Any CPU
 		{07AD4B11-8385-4232-BAD3-3F5B3A28A008}.VS|Any CPU.ActiveCfg = Release|Any CPU
 		{07AD4B11-8385-4232-BAD3-3F5B3A28A008}.VS|Any CPU.Build.0 = Release|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

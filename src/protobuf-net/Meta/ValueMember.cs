@@ -103,10 +103,20 @@ namespace ProtoBuf.Meta
         /// </summary>
         public CompatibilityLevel CompatibilityLevel
         {
-            get => _compatibilityLevel;
+            get
+            {
+                var level = _compatibilityLevel;
+#pragma warning disable CS0618
+                if (level <= CompatibilityLevel.Level200 && DataFormat == DataFormat.WellKnown)
+#pragma warning restore CS0618
+                {
+                    return CompatibilityLevel.Level240;
+                }
+                return level;
+            }
             set
             {
-                if (_compatibilityLevel != value)
+                if (_compatibilityLevel != value && CompatibilityLevel != value)
                 {
                     ThrowIfFrozen();
                     _compatibilityLevel = value;
@@ -519,6 +529,9 @@ namespace ProtoBuf.Meta
                 case DataFormat.ZigZag: return WireType.SignedVarint;
                 case DataFormat.FixedSize: return width == 32 ? WireType.Fixed32 : WireType.Fixed64;
                 case DataFormat.TwosComplement:
+#pragma warning disable CS0618
+                case DataFormat.WellKnown: return WireType.Varint;
+#pragma warning restore CS0618
                 case DataFormat.Default: return WireType.Varint;
                 default: throw new InvalidOperationException();
             }

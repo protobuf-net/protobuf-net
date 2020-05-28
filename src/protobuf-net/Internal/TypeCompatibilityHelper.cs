@@ -27,11 +27,12 @@ namespace ProtoBuf.Internal
                 }
                 // I'd rather calculate it twice *outside* the lock than have a single lock
                 // that could be blocking multiple paths; so: use indexer-set instead of Add
-                var known = CalculateFor(module);
+                var calculated = CalculateFor(module);
                 lock (s_ByModule)
                 {
-                    s_ByModule[module] = known;
+                    s_ByModule[module] = calculated;
                 }
+                return calculated;
             }
             return CompatibilityLevel.Level200;
 
