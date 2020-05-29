@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using Google.Protobuf;
 using ProtoBuf;
 using ProtoBuf.Meta;
@@ -8,7 +9,7 @@ using System.IO;
 
 namespace Benchmark
 {
-    [ClrJob, CoreJob, MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp30), MemoryDiagnoser]
     public partial class SerializeBenchmarks
     {
 

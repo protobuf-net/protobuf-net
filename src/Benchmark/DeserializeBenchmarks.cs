@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace Benchmark
 {
-    [ClrJob, CoreJob, MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp30), MemoryDiagnoser]
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     [CategoriesColumn]
     public partial class DeserializeBenchmarks
