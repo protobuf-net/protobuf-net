@@ -349,8 +349,8 @@ namespace ProtoBuf
         /// Writes a Guid to a protobuf stream
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static void WriteGuidString(ref ProtoWriter.State state, Guid value)
-            => new GuidString(value).Write(ref state);
+        public static void WriteGuidBytes(ref ProtoWriter.State state, Guid value)
+            => new GuidBytes(value).Write(ref state);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
@@ -373,8 +373,8 @@ namespace ProtoBuf
         /// Parses a Guid from a protobuf stream
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static Guid ReadGuidString(ref ProtoReader.State state)
-            => GuidString.Read(ref state);
+        public static Guid ReadGuidBytes(ref ProtoReader.State state)
+            => GuidBytes.Read(ref state);
 
 #if FEAT_DYNAMIC_REF
         private const int

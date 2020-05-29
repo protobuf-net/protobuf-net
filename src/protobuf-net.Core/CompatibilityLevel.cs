@@ -32,7 +32,7 @@ namespace ProtoBuf
         /// </summary>
         Level240 = 240,
         /// <summary>
-        /// Like <see cref="Level240"/>, but uses 'string' for <see cref="Guid"/>.
+        /// Like <see cref="Level240"/>, but uses 'bytes' for <see cref="Guid"/> (always big-endian format, regardless of guid-variant).
         /// </summary>
         Level300 = 300,
 

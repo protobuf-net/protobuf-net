@@ -26,7 +26,7 @@ namespace ProtoBuf.Internal.Serializers
         {
             if (_asString)
             {
-                BclHelpers.WriteGuidString(ref state, (Guid)value);
+                BclHelpers.WriteGuidBytes(ref state, (Guid)value);
             }
             else
             {
@@ -37,19 +37,19 @@ namespace ProtoBuf.Internal.Serializers
         public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return _asString ? BclHelpers.ReadGuidString(ref state) : BclHelpers.ReadGuid(ref state);
+            return _asString ? BclHelpers.ReadGuidBytes(ref state) : BclHelpers.ReadGuid(ref state);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitStateBasedWrite(
-                _asString ? nameof(BclHelpers.WriteGuidString) : nameof(BclHelpers.WriteGuid), valueFrom, typeof(BclHelpers));
+                _asString ? nameof(BclHelpers.WriteGuidBytes) : nameof(BclHelpers.WriteGuid), valueFrom, typeof(BclHelpers));
         }
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitStateBasedRead(typeof(BclHelpers),
-                _asString ? nameof(BclHelpers.ReadGuidString) : nameof(BclHelpers.ReadGuid), ExpectedType);
+                _asString ? nameof(BclHelpers.ReadGuidBytes) : nameof(BclHelpers.ReadGuid), ExpectedType);
         }
     }
 }

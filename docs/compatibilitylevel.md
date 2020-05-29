@@ -26,7 +26,7 @@ At the current time, the levels defined are:
 
 - `200` - uses `bcl.proto` for `DateTime`, `TimeSpan`, `Guid` and `Decimal`
 - `240` - like `200`, but uses [`.google.protobuf.Timestamp`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/timestamp.proto) for `DateTime` and [`.google.protobuf.Duration`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/duration.proto) for `TimeSpan`
-- `300` - like `240`, but uses `string` for `Guid`
+- `300` - like `240`, but uses `bytes` for `Guid` (always in big-endian UUID format, 16 bytes, similar to the common text representation)
 
 There will probably be another tier added when there is a well-known decimal type, as per [this discussion](https://github.com/protocolbuffers/protobuf/pull/7039).
 

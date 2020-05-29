@@ -1718,7 +1718,7 @@ namespace ProtoBuf.Meta
                         }
                     case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
                     case ProtoTypeCode.Guid:
-                        if (compatibilityLevel >= CompatibilityLevel.Level300) return "string";
+                        if (compatibilityLevel >= CompatibilityLevel.Level300) return "bytes";
                         imports |= CommonImports.Bcl;
                         return ".bcl.Guid";
                     case ProtoTypeCode.Type: return "string";

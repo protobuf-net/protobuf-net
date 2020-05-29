@@ -267,7 +267,7 @@ message InheritedDerivedDetermines {
    int32 Int32 = 1;
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
-   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   bytes Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
    .bcl.Decimal Decimal = 5;
 }");
 
@@ -305,7 +305,7 @@ message AllDefaultWithModuleLevel {
    int32 Int32 = 1;
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
-   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   bytes Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
    .bcl.Decimal Decimal = 5;
 }");
 
@@ -322,7 +322,7 @@ message AllDefaultWithModuleLevel_Clean {
    int32 Int32 = 1;
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
-   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   bytes Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
 }");
 
         [Fact]
@@ -390,7 +390,7 @@ message AllDefaultWithModuleLevel_Clean {
                 using var ms = new MemoryStream();
                 model.Serialize(ms, obj);
                 var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-                Assert.Equal("0A-24-39-64-30-35-38-62-31-30-2D-63-31-35-33-2D-34-33-61-35-2D-61-31-38-61-2D-30-37-30-34-39-32-63-34-31-63-32-32", hex);
+                Assert.Equal("0A-10-9D-05-8B-10-C1-53-43-A5-A1-8A-07-04-92-C4-1C-22", hex);
                 ms.Position = 0;
                 var clone = model.Deserialize<HazGuid>(ms);
                 Assert.Equal(guid, clone.Value);
@@ -401,15 +401,14 @@ message AllDefaultWithModuleLevel_Clean {
         public void CheckExpectedHex()
         {
             using var ms = new MemoryStream();
-            Serializer.Serialize(ms, new HazString { Value = "9d058b10-c153-43a5-a18a-070492c41c22" });
+            Serializer.Serialize(ms, new HazBytes { Value = new byte[] { 0x9d, 0x05, 0x8b, 0x10, 0xc1, 0x53, 0x43, 0xa5, 0xa1, 0x8a, 0x07, 0x04, 0x92, 0xc4, 0x1c, 0x22 } });
             var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
             Log(hex);
-            Assert.Equal("0A-24-39-64-30-35-38-62-31-30-2D-63-31-35-33-2D-34-33-61-35-2D-61-31-38-61-2D-30-37-30-34-39-32-63-34-31-63-32-32", hex);
+            Assert.Equal("0A-10-9D-05-8B-10-C1-53-43-A5-A1-8A-07-04-92-C4-1C-22", hex);
             /*
             0A = field 1, type String
-            24 = length 36
-            payload = 39-64-30-35-38-62-31-30-2D-63-31-35-33-2D-34-33-61-35-2D-61-31-38-61-2D-30-37-30-34-39-32-63-34-31-63-32-32
-            UTF8: 9d058b10-c153-43a5-a18a-070492c41c22
+            10 = length 16
+            payload = 9D-05-8B-10-C1-53-43-A5-A1-8A-07-04-92-C4-1C-22
              */
         }
 
@@ -421,10 +420,10 @@ message AllDefaultWithModuleLevel_Clean {
         }
 
         [ProtoContract]
-        public class HazString
+        public class HazBytes
         {
             [ProtoMember(1)]
-            public string  Value { get; set; }
+            public byte[] Value { get; set; }
         }
     }
 }
