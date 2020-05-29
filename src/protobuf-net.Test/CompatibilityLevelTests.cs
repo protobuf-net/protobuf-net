@@ -2,7 +2,7 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Test.TestCompatibilityLevel;
 using System;
-using System.Runtime.CompilerServices;
+using System.IO;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -267,7 +267,7 @@ message InheritedDerivedDetermines {
    int32 Int32 = 1;
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
-   .bcl.Guid Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
    .bcl.Decimal Decimal = 5;
 }");
 
@@ -305,7 +305,7 @@ message AllDefaultWithModuleLevel {
    int32 Int32 = 1;
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
-   .bcl.Guid Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
    .bcl.Decimal Decimal = 5;
 }");
 
@@ -322,6 +322,7 @@ message AllDefaultWithModuleLevel_Clean {
    int32 Int32 = 1;
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
+   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
 }");
 
         [Fact]
@@ -368,6 +369,62 @@ message AllDefaultWithModuleLevel_Clean {
             [ProtoMember(1)]
             [CompatibilityLevel((CompatibilityLevel)42)]
             public int Value { get; set; }
+        }
+
+        [Fact]
+        public void RoundTripGuid300()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add<HazGuid>();
+
+            Check(model);
+            model.CompileInPlace();
+            Check(model);
+            Check(model.Compile());
+
+            static void Check(TypeModel model)
+            {
+                var guid = Guid.Parse("9d058b10-c153-43a5-a18a-070492c41c22");
+                var obj = new HazGuid { Value = guid };
+                using var ms = new MemoryStream();
+                model.Serialize(ms, obj);
+                var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Assert.Equal("0A-24-39-64-30-35-38-62-31-30-2D-63-31-35-33-2D-34-33-61-35-2D-61-31-38-61-2D-30-37-30-34-39-32-63-34-31-63-32-32", hex);
+                ms.Position = 0;
+                var clone = model.Deserialize<HazGuid>(ms);
+                Assert.Equal(guid, clone.Value);
+            }
+        }
+
+        [Fact]
+        public void CheckExpectedHex()
+        {
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, new HazString { Value = "9d058b10-c153-43a5-a18a-070492c41c22" });
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Log(hex);
+            Assert.Equal("0A-24-39-64-30-35-38-62-31-30-2D-63-31-35-33-2D-34-33-61-35-2D-61-31-38-61-2D-30-37-30-34-39-32-63-34-31-63-32-32", hex);
+            /*
+            0A = field 1, type String
+            24 = length 36
+            payload = 39-64-30-35-38-62-31-30-2D-63-31-35-33-2D-34-33-61-35-2D-61-31-38-61-2D-30-37-30-34-39-32-63-34-31-63-32-32
+            UTF8: 9d058b10-c153-43a5-a18a-070492c41c22
+             */
+        }
+
+        [ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class HazGuid
+        {
+            [ProtoMember(1)]
+            public Guid Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazString
+        {
+            [ProtoMember(1)]
+            public string  Value { get; set; }
         }
     }
 }

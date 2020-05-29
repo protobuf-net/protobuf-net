@@ -31,8 +31,8 @@ namespace ProtoBuf.Test.TestCompatibilityLevel
         public DateTime DateTime { get; set; }
         [ProtoMember(3)]
         public TimeSpan TimeSpan { get; set; }
-        //[ProtoMember(4)]
-        //public Guid Guid { get; set; }
+        [ProtoMember(4)]
+        public Guid Guid { get; set; }
         //[ProtoMember(5)]
         //public decimal Decimal { get; set; }
     }

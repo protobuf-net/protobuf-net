@@ -346,6 +346,13 @@ namespace ProtoBuf
             => state.WriteMessage<Guid>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
+        /// Writes a Guid to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteGuidString(ref ProtoWriter.State state, Guid value)
+            => new GuidString(value).Write(ref state);
+
+        /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -361,6 +368,13 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuid(ref ProtoReader.State state)
             => state.ReadMessage<Guid>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+
+        /// <summary>
+        /// Parses a Guid from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static Guid ReadGuidString(ref ProtoReader.State state)
+            => GuidString.Read(ref state);
 
 #if FEAT_DYNAMIC_REF
         private const int
