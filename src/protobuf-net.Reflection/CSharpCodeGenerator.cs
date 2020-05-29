@@ -138,6 +138,7 @@ namespace ProtoBuf.Reflection
                .WriteLine($"//   Input: {Path.GetFileName(ctx.File.Name)}")
                .WriteLine("// </auto-generated>")
                .WriteLine()
+               .WriteLine("#region Designer generated code")
                .Write($"#pragma warning disable {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
@@ -172,6 +173,7 @@ namespace ProtoBuf.Reflection
                 tw.Write(AdditionalSuppressionCodes);
             }
             tw.WriteLine();
+            tw.WriteLine("#endregion");
         }
         /// <summary>
         /// Start an enum
