@@ -1923,8 +1923,8 @@ namespace ProtoBuf.Meta
                         repeated = model.TryGetRepeatedProvider(member.MemberType);
                         repeated.ResolveMapTypes(out var keyType, out var valueType);
 
-                        var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, member.CompatibilityLevel, false, false, ref imports);
-                        schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapValueFormat, member.CompatibilityLevel, member.AsReference, member.DynamicType, ref imports);
+                        var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, member.EffectiveCompatibilityLevel, false, false, ref imports);
+                        schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapValueFormat, member.EffectiveCompatibilityLevel, member.AsReference, member.DynamicType, ref imports);
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
                             .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
                     }

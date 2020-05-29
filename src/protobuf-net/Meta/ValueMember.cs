@@ -103,6 +103,19 @@ namespace ProtoBuf.Meta
         /// </summary>
         public CompatibilityLevel CompatibilityLevel
         {
+            get => _compatibilityLevel;
+            set
+            {
+                if (_compatibilityLevel != value)
+                {
+                    ThrowIfFrozen();
+                    _compatibilityLevel = value;
+                }
+            }
+        }
+
+        internal CompatibilityLevel EffectiveCompatibilityLevel
+        {
             get
             {
                 var level = _compatibilityLevel;
@@ -113,14 +126,6 @@ namespace ProtoBuf.Meta
                     return CompatibilityLevel.Level240;
                 }
                 return level;
-            }
-            set
-            {
-                if (_compatibilityLevel != value && CompatibilityLevel != value)
-                {
-                    ThrowIfFrozen();
-                    _compatibilityLevel = value;
-                }
             }
         }
 
@@ -444,7 +449,7 @@ namespace ProtoBuf.Meta
                             AsReference = MetaType.GetAsReferenceDefault(valueType);
                         }
 #endif
-                        ser = CreateMap(repeated, model, DataFormat, CompatibilityLevel, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
+                        ser = CreateMap(repeated, model, DataFormat, EffectiveCompatibilityLevel, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
                     }
                     else
                     {
@@ -457,7 +462,7 @@ namespace ProtoBuf.Meta
 #endif
                         }
 
-                        _ = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+                        _ = TryGetCoreSerializer(model, DataFormat, EffectiveCompatibilityLevel, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
 
 
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
@@ -471,7 +476,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+                    ser = TryGetCoreSerializer(model, DataFormat, EffectiveCompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
                     if (ser == null)
                     {
                         throw new InvalidOperationException("No serializer defined for type: " + MemberType.ToString());
@@ -773,7 +778,7 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports, out string altName)
         {
             Type effectiveType = ItemType ?? MemberType;
-            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, CompatibilityLevel, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports, out altName);
+            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, EffectiveCompatibilityLevel, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports, out altName);
         }
 
         internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>
