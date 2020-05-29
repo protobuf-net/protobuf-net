@@ -1,13 +1,14 @@
 ﻿#if INTRINSICS
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using System;
 using System.Numerics;
 
 namespace Benchmark
 {
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-    [CoreJob]
+    [SimpleJob(RuntimeMoniker.NetCoreApp30)]
     public class VarintEncodeBenchmarks
     {
         const int LOOP_SIZE = 2048;
