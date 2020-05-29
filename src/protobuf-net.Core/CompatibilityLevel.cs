@@ -45,7 +45,7 @@ namespace ProtoBuf
     [ImmutableObject(true)]
     [AttributeUsage(
         AttributeTargets.Assembly | AttributeTargets.Module
-        | AttributeTargets.Class | AttributeTargets.Struct
+        | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface
         | AttributeTargets.Field | AttributeTargets.Property,
         AllowMultiple = false, Inherited = true)]
     public sealed class CompatibilityLevelAttribute : Attribute
