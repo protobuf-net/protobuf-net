@@ -109,6 +109,7 @@ namespace ProtoBuf.Meta
                 if (_compatibilityLevel != value)
                 {
                     ThrowIfFrozen();
+                    CompatibilityLevelAttribute.AssertValid(value);
                     _compatibilityLevel = value;
                 }
             }

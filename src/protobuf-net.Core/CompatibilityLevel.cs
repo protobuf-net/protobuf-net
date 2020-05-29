@@ -47,7 +47,7 @@ namespace ProtoBuf
         AttributeTargets.Assembly | AttributeTargets.Module
         | AttributeTargets.Class | AttributeTargets.Struct
         | AttributeTargets.Field | AttributeTargets.Property,
-        AllowMultiple =false, Inherited = true)]
+        AllowMultiple = false, Inherited = true)]
     public sealed class CompatibilityLevelAttribute : Attribute
     {
         /// <summary>
@@ -60,5 +60,22 @@ namespace ProtoBuf
         /// </summary>
         public CompatibilityLevelAttribute(CompatibilityLevel level)
             => Level = level;
+
+        internal static void AssertValid(CompatibilityLevel compatibilityLevel)
+        {
+            switch(compatibilityLevel)
+            {
+                case CompatibilityLevel.NotSpecified:
+                case CompatibilityLevel.Level200:
+                case CompatibilityLevel.Level240:
+                case CompatibilityLevel.Level300:
+                    break;
+                default:
+                    Throw(compatibilityLevel);
+                    break;
+            }
+            static void Throw(CompatibilityLevel compatibilityLevel)
+                => throw new ArgumentOutOfRangeException(nameof(compatibilityLevel), $"Compatiblity level '{compatibilityLevel}' is not recognized.");
+        }
     }
 }

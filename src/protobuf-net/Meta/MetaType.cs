@@ -65,6 +65,7 @@ namespace ProtoBuf.Meta
                 if (value != _compatibilityLevel)
                 {
                     if (HasFields) ThrowHelper.ThrowInvalidOperationException($"{CompatibilityLevel} cannot be set once fields have been defined");
+                    CompatibilityLevelAttribute.AssertValid(value);
                     _compatibilityLevel = value;
                 }
             }

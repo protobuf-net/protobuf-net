@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Test.TestCompatibilityLevel;
 using System;
+using System.Runtime.CompilerServices;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -322,5 +323,51 @@ message AllDefaultWithModuleLevel_Clean {
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
 }");
+
+        [Fact]
+        public void AllKnownLevelsAreValid()
+        {
+            foreach(CompatibilityLevel level in Enum.GetValues(typeof(CompatibilityLevel)))
+            {
+                CompatibilityLevelAttribute.AssertValid(level);
+            }
+        }
+
+        [Theory]
+        [InlineData(42)]
+        [InlineData(-1)]
+        [InlineData(int.MaxValue)]
+        [InlineData(int.MinValue)]
+        [InlineData(205)]
+        public void InvalidLevelsAreDetected(int value)
+        {
+            var ex = Assert.Throws<ArgumentOutOfRangeException>("compatibilityLevel", () =>
+                CompatibilityLevelAttribute.AssertValid((CompatibilityLevel)value));
+            Assert.StartsWith($"Compatiblity level '{value}' is not recognized.", ex.Message);
+        }
+
+        [Fact]
+        public void InvalidLevelDetectedAtType()
+            => Assert.Throws<ArgumentOutOfRangeException>("compatibilityLevel", () => RuntimeTypeModel.Create().Add<InvalidCompatibilityLevelForType>());
+
+        [CompatibilityLevel((CompatibilityLevel)42)]
+        [ProtoContract]
+        public class InvalidCompatibilityLevelForType
+        {
+            [ProtoMember(1)]
+            public int Value { get; set; }
+        }
+
+        [Fact]
+        public void InvalidLevelDetectedAtMember()
+            => Assert.Throws<ArgumentOutOfRangeException>("compatibilityLevel", () => RuntimeTypeModel.Create().Add<InvalidCompatibilityLevelForType>());
+
+        [ProtoContract]
+        public class InvalidCompatibilityLevelForMember
+        {
+            [ProtoMember(1)]
+            [CompatibilityLevel((CompatibilityLevel)42)]
+            public int Value { get; set; }
+        }
     }
 }
