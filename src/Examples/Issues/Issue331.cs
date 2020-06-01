@@ -1,15 +1,14 @@
-﻿using Xunit;
+﻿#if FEAT_DYNAMIC_REF
+
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class Issue331
     {
         [ProtoContract]
@@ -35,7 +34,7 @@ namespace Examples.Issues
 
         static RuntimeTypeModel CreateModel(bool baseFirst)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(Tree), true);
             if (baseFirst)
@@ -89,7 +88,7 @@ namespace Examples.Issues
             PEVerify.AssertValid("Issue331_DerivedFirst.dll");
             var type = Type.GetType("Issue331_DerivedFirst, Issue331_DerivedFirst");
             Assert.NotNull(type); //, "resolve type");
-            ser = (TypeModel)Activator.CreateInstance(type);
+            ser = (TypeModel)Activator.CreateInstance(type, nonPublic: true);
             CheckModel(ser);
 #endif
         }
@@ -129,7 +128,7 @@ namespace Examples.Issues
             PEVerify.AssertValid("Issue331_BaseFirst.dll");
             var type = Type.GetType("Issue331_BaseFirst, Issue331_BaseFirst");
             Assert.NotNull(type); //, "resolve type");
-            ser = (TypeModel)Activator.CreateInstance(type);
+            ser = (TypeModel)Activator.CreateInstance(type, nonPublic: true);
             CheckModel(ser);
 #endif
         }
@@ -159,3 +158,6 @@ namespace Examples.Issues
         }
     }
 }
+
+
+#endif

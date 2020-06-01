@@ -4,13 +4,16 @@ using ProtoBuf.Meta;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
+using Xunit.Abstractions;
 
 namespace Examples
-{
-    
+{   
     public class StupidlyComplexModel
     {
+        private ITestOutputHelper Log { get; }
+        public StupidlyComplexModel(ITestOutputHelper _log) => Log = _log;
+
+#if LONG_RUNNING
         [Fact]
         public void TimeStupidlyComplexModel()
         {
@@ -21,6 +24,7 @@ namespace Examples
         {
             TimeModel<SimpleModel>(100);
         }
+#endif
 
         [ProtoContract]
         public class SimpleModel
@@ -47,12 +51,12 @@ namespace Examples
             [ProtoMember(20)] public int T {get;set;}
         }
 
-        private static void TimeModel<T>(int count, Action<TypeModel, string> test = null)
+        private void TimeModel<T>(int count, Action<TypeModel, string> test = null)
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(T), true);
-            if (test != null) test(model, "Time");
+            test?.Invoke(model, "Time");
             model.Compile(); // do discovery etc
             int typeCount = model.GetTypes().Cast<MetaType>().Count();
 
@@ -62,12 +66,11 @@ namespace Examples
                 model.Compile();
             }
             watch.Stop();
-            Console.WriteLine(string.Format("{0}: {1}ms/Compile, {2} types, {3}ms total, {4} iteratons",
+            Log.WriteLine(string.Format("{0}: {1}ms/Compile, {2} types, {3}ms total, {4} iteratons",
                 typeof(T).Name, watch.ElapsedMilliseconds / count, typeCount, watch.ElapsedMilliseconds, count));
-            
         }
 
-
+#if LONG_RUNNING
         [Fact]
         public void TestStupidlyComplexModel()
         {
@@ -83,6 +86,7 @@ namespace Examples
             model.Compile("TestStupidlyComplexModel", "TestStupidlyComplexModel.dll");
             PEVerify.AssertValid("TestStupidlyComplexModel.dll");
         }
+#endif
 
         private void Test(TypeModel model, string test)
         {

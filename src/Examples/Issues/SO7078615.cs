@@ -3,11 +3,10 @@ using System.IO;
 using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using System;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
 {
-    
     public class SO7078615
     {
         [ProtoContract] // treat the interface as a contract
@@ -41,7 +40,7 @@ namespace Examples.Issues
             {
                   NameOfDog = "Woofy", Times = 5
             }, copy;
-            var model = TypeModel.Create(); // could also use the default model, but
+            var model = RuntimeTypeModel.Create(); // could also use the default model, but
             using(var ms = new MemoryStream()) // separation makes life easy for my tests
             {
                 var tmp = new DontAskWrapper {Message = msg};
@@ -49,8 +48,10 @@ namespace Examples.Issues
                 ms.Position = 0;
                 string hex = Program.GetByteString(ms.ToArray());
                 Debug.WriteLine(hex);
-               
+
+#pragma warning disable CS0618
                 var wrapper = (DontAskWrapper)model.Deserialize(ms, null, typeof(DontAskWrapper));
+#pragma warning restore CS0618
                 copy = wrapper.Message;
              }
             // check the data is all there
@@ -66,6 +67,9 @@ namespace Examples.Issues
     
     public class SO7078615_NoAttribs
     {
+        private ITestOutputHelper Log { get; }
+        public SO7078615_NoAttribs(ITestOutputHelper _log) => Log = _log;
+
         public interface IMessage { }
         public interface IEvent : IMessage { }
         public class DogBarkedEvent : IEvent
@@ -86,7 +90,7 @@ namespace Examples.Issues
                 NameOfDog = "Woofy",
                 Times = 5
             }, copy;
-            var model = TypeModel.Create(); // could also use the default model, but
+            var model = RuntimeTypeModel.Create(); // could also use the default model, but
             model.Add(typeof (DogBarkedEvent), false).Add("NameOfDog", "Times");
             model.Add(typeof (IMessage), false).AddSubType(1, typeof (DogBarkedEvent));
             model.Add(typeof (DontAskWrapper), false).Add("Message");
@@ -99,7 +103,9 @@ namespace Examples.Issues
                 string hex = Program.GetByteString(ms.ToArray());
                 Debug.WriteLine(hex);
 
+#pragma warning disable CS0618
                 var wrapper = (DontAskWrapper)model.Deserialize(ms, null, typeof(DontAskWrapper));
+#pragma warning restore CS0618
                 copy = wrapper.Message;
             }
             // check the data is all there
@@ -110,7 +116,9 @@ namespace Examples.Issues
             Assert.Equal(orig.NameOfDog, typed.NameOfDog);
         }
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "Long running")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void TestPerf()
         {
             int[] values = new int[100000000];
@@ -122,7 +130,7 @@ namespace Examples.Issues
             }
             watch.Stop();
             var hoisted = watch.ElapsedMilliseconds;
-            Console.WriteLine(hoisted);
+            Log.WriteLine(hoisted.ToString());
             watch = Stopwatch.StartNew();
             {
                 for (int i = 0; i < values.Length; i++)
@@ -130,12 +138,9 @@ namespace Examples.Issues
             }
             watch.Stop();
             var direct = watch.ElapsedMilliseconds;
-            Console.WriteLine(direct);
+            Log.WriteLine(direct.ToString());
             Assert.True(2 < 3);
             Assert.True(hoisted < direct);
         }
-
-        
     }
-
 }

@@ -138,6 +138,7 @@ namespace ProtoBuf.Reflection
                .WriteLine($"//   Input: {Path.GetFileName(ctx.File.Name)}")
                .WriteLine("// </auto-generated>")
                .WriteLine()
+               .WriteLine("#region Designer generated code")
                .Write($"#pragma warning disable {prefix}0612, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
@@ -172,6 +173,7 @@ namespace ProtoBuf.Reflection
                 tw.Write(AdditionalSuppressionCodes);
             }
             tw.WriteLine();
+            tw.WriteLine("#endregion");
         }
         /// <summary>
         /// Start an enum
@@ -265,13 +267,13 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public override string GetAccess(Access access)
         {
-            switch (access)
+            return access switch
             {
-                case Access.Internal: return "internal";
-                case Access.Public: return "public";
-                case Access.Private: return "private";
-                default: return base.GetAccess(access);
-            }
+                Access.Internal => "internal",
+                Access.Public => "public",
+                Access.Private => "private",
+                _ => base.GetAccess(access),
+            };
         }
 
         /// <summary>
@@ -622,7 +624,11 @@ namespace ProtoBuf.Reflection
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
-        private static readonly Version CSharp6 = new Version(6, 0), CSharp3 = new Version(3, 0), CSharp7_1 = new Version(7, 1);
+        private static readonly Version
+            CSharp3 = new Version(3, 0),
+            CSharp4 = new Version(4, 0),
+            CSharp6 = new Version(6, 0),
+            CSharp7_1 = new Version(7, 1);
 
         /// <summary>
         /// Starts an extgensions block
@@ -764,6 +770,9 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Indicate which types will commonly use arrays
+        /// </summary>
         protected virtual bool UseArray(FieldDescriptorProto field)
         {
             switch (field.type)
@@ -787,6 +796,9 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Obtain a relative name from a type name
+        /// </summary>
         protected string MakeRelativeName(GeneratorContext ctx, string typeName)
         {
             var target = ctx.TryFind<DescriptorProto>(typeName);
@@ -802,6 +814,45 @@ namespace ProtoBuf.Reflection
             return Escape(typeName);
         }
 
+        private string GetTypeName(GeneratorContext ctx, string typeName)
+        {
+            string dataFormat = "";
+            bool isMap = false;
+            return GetTypeName(ctx, null, typeName, ref dataFormat, ref isMap, false);
+        }
+
+        private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, string typeName, ref string dataFormat, ref bool isMap,
+            bool nonNullable = false)
+        {
+            switch (typeName)
+            {
+                case WellKnownTypeTimestamp:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
+                case WellKnownTypeDuration:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
+                case WellKnownTypeEmpty:
+                    return "global::ProtoBuf.Empty";
+                case ".bcl.NetObjectProxy":
+                    return "object";
+                case ".bcl.DateTime":
+                    return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
+                case ".bcl.TimeSpan":
+                    return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
+                case ".bcl.Decimal":
+                    return nonNullable ? "decimal" : "decimal?";
+                case ".bcl.Guid":
+                    return nonNullable ? "global::System.Guid" : "global::System.Guid?";
+            }
+            var msgType = ctx.TryFind<DescriptorProto>(typeName);
+            if ( field!= null && field.type == FieldDescriptorProto.Type.TypeGroup)
+            {
+                dataFormat = nameof(DataFormat.Group);
+            }
+            isMap = msgType?.Options?.MapEntry ?? false;
+            return field == null ? MakeRelativeName(ctx, typeName) : MakeRelativeName(field, msgType, ctx.NameNormalizer);
+        }
         private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, out string dataFormat, out bool isMap,
             bool nonNullable = false)
         {
@@ -855,32 +906,7 @@ namespace ProtoBuf.Reflection
                     return MakeRelativeName(field, enumType, ctx.NameNormalizer);
                 case FieldDescriptorProto.Type.TypeGroup:
                 case FieldDescriptorProto.Type.TypeMessage:
-                    switch (field.TypeName)
-                    {
-                        case WellKnownTypeTimestamp:
-                            dataFormat = "WellKnown";
-                            return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
-                        case WellKnownTypeDuration:
-                            dataFormat = "WellKnown";
-                            return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
-                        case ".bcl.NetObjectProxy":
-                            return "object";
-                        case ".bcl.DateTime":
-                            return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
-                        case ".bcl.TimeSpan":
-                            return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
-                        case ".bcl.Decimal":
-                            return nonNullable ? "decimal" : "decimal?";
-                        case ".bcl.Guid":
-                            return nonNullable ? "global::System.Guid" : "global::System.Guid?";
-                    }
-                    var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
-                    if (field.type == FieldDescriptorProto.Type.TypeGroup)
-                    {
-                        dataFormat = nameof(DataFormat.Group);
-                    }
-                    isMap = msgType?.Options?.MapEntry ?? false;
-                    return MakeRelativeName(field, msgType, ctx.NameNormalizer);
+                    return GetTypeName(ctx, field, field.TypeName, ref dataFormat, ref isMap, nonNullable);
                 default:
                     return field.TypeName;
             }
@@ -992,7 +1018,93 @@ namespace ProtoBuf.Reflection
             return sb.ToString();
         }
 
-        private const string WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
-                     WellKnownTypeDuration = ".google.protobuf.Duration";
+        private const string
+            WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
+            WellKnownTypeDuration = ".google.protobuf.Duration",
+            WellKnownTypeEmpty = ".google.protobuf.Empty";
+
+
+        /// <summary>
+        /// Emit code preceeding a set of service methods
+        /// </summary>
+        protected override void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(service);
+            var tw = ctx.Write("[global::System.ServiceModel.ServiceContract(");
+            if (name != service.Name) tw.Write($@"Name = @""{service.Name}""");
+            tw.WriteLine(")]");
+            WriteOptions(ctx, service.Options);
+            ctx.WriteLine($"{GetAccess(GetAccess(service))} interface {Escape(name)}").WriteLine("{").Indent();
+        }
+
+        /// <summary>
+        /// Emit code following a set of service methods
+        /// </summary>
+        protected override void WriteServiceFooter(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
+        }
+
+        /// <summary>
+        /// Emit code representing a service method
+        /// </summary>
+        protected override void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(method);
+            if (name != method.Name)
+            {
+                ctx.WriteLine($@"[global::System.ServiceModel.OperationContract(Name = @""{method.Name}"")]");
+            }
+            WriteOptions(ctx, method.Options);
+
+            string returnType, inputType;
+            if (method.ServerStreaming)
+            {
+                returnType = "global::System.Collections.Generic.IAsyncEnumerable<" + GetTypeName(ctx, method.OutputType) + ">";
+            }
+            else
+            {
+                if (method.OutputType == WellKnownTypeEmpty)
+                {
+                    returnType = "global::System.Threading.Tasks.ValueTask";
+                }
+                else
+                {
+                    returnType = "global::System.Threading.Tasks.ValueTask<" + GetTypeName(ctx, method.OutputType) + ">";
+                }
+            }
+            if (method.ClientStreaming)
+            {
+                inputType = "global::System.Collections.Generic.IAsyncEnumerable<" + GetTypeName(ctx, method.InputType) + ">"; 
+            }
+            else
+            {
+                if (method.InputType == WellKnownTypeEmpty)
+                {
+                    inputType = null;
+                }
+                else
+                {
+                    inputType = GetTypeName(ctx, method.InputType);
+                }
+            }
+
+            var tw = ctx.Write($"{returnType} {Escape(name)}Async(");
+            if (inputType != null)
+            {
+                tw.Write(inputType);
+                tw.Write(method.ClientStreaming ? " values, " : " value, ");
+            }
+            tw.Write("global::ProtoBuf.Grpc.CallContext context");
+            if (ctx.Supports(CSharp4))
+            {
+                tw.Write(" = default");
+                if (!ctx.Supports(CSharp7_1))
+                {
+                    tw.Write("(global::ProtoBuf.Grpc.CallContext)");
+                }
+            }
+            tw.WriteLine(");");
+        }
     }
 }

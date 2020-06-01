@@ -16,12 +16,10 @@ namespace ProtoBuf.unittest.Attribs
 #endif
             
             byte[] ser;
-            using (var ms = new MemoryStream())
-            {
-                var t = new ForTupleSerializer(123, "abc");
-                Serializer.Serialize(ms, t);
-                ser = ms.ToArray();
-            }
+            using var ms = new MemoryStream();
+            var t = new ForTupleSerializer(123, "abc");
+            Serializer.Serialize(ms, t);
+            ser = ms.ToArray();
         }
 
         public class ForTupleSerializer

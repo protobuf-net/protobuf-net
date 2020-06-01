@@ -33,20 +33,20 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             m.Add(typeof(D), false).Add("Y");
             m.Add(typeof(IYObject), false).AddSubType(1, typeof(YObject)).Add(2, "Z");
             m.Add(typeof(YObject), false).Add("X");
             var d = new D { Y = new YObject { X = "a" } };
             d.Y.Z = 123;
-            using (var ms = new MemoryStream())
-            {
-                m.Serialize(ms, d);
-                ms.Position = 0;
-                var d2 = (D)m.Deserialize(ms, null, typeof(D));
-                Assert.Equal("a",d2.Y.X);
-                Assert.Equal(123, d2.Y.Z);
-            }
+            using var ms = new MemoryStream();
+            m.Serialize(ms, d);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var d2 = (D)m.Deserialize(ms, null, typeof(D));
+#pragma warning restore CS0618
+            Assert.Equal("a", d2.Y.X);
+            Assert.Equal(123, d2.Y.Z);
         }
     }
 
@@ -78,17 +78,17 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             var d = new D { Y = new YObject { X = "a" } };
             d.Y.Z = 123;
-            using (var ms = new MemoryStream())
-            {
-                m.Serialize(ms, d);
-                ms.Position = 0;
-                var d2 = (D)m.Deserialize(ms, null, typeof(D));
-                Assert.Equal("a", d2.Y.X);
-                Assert.Equal(123, d2.Y.Z);
-            }
+            using var ms = new MemoryStream();
+            m.Serialize(ms, d);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var d2 = (D)m.Deserialize(ms, null, typeof(D));
+#pragma warning disable CS0618
+            Assert.Equal("a", d2.Y.X);
+            Assert.Equal(123, d2.Y.Z);
         }
     }
 }

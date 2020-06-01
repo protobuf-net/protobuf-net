@@ -1,21 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ProtoBuf.Serializers;
-using System.IO;
-using Xunit;
+﻿using ProtoBuf.Compiler;
+using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Meta;
-using ProtoBuf.Compiler;
+using ProtoBuf.Serializers;
+using System;
+using System.IO;
+using System.Text;
+using Xunit;
 
 namespace ProtoBuf.unittest.Serializers
 {
     internal static partial class Util
     {
 #if !NO_INTERNAL_CONTEXT
-        public static void Test(object value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
+        public static void Test<T>(T value, Type innerType, Func<IRuntimeProtoSerializerNode, IRuntimeProtoSerializerNode> ctor,
             string expectedHex)
         {
+            Assert.NotEqual(typeof(object), typeof(T));
             byte[] expected = new byte[expectedHex.Length / 2];
             for (int i = 0; i < expected.Length; i++)
             {
@@ -25,26 +25,33 @@ namespace ProtoBuf.unittest.Serializers
             var ser = ctor(nil);
 
             var model = RuntimeTypeModel.Create();
-            var decorator = model.GetSerializer(ser, false);
+            var decorator = model.GetSerializer<T>(ser, false);
             Test(value, decorator, "decorator", expected);
 
-            var compiled = model.GetSerializer(ser, true);
+            var compiled = model.GetSerializer<T>(ser, true);
             Test(value, compiled, "compiled", expected);
         }
 
-#pragma warning disable RCS1163 // Unused parameter.
-        public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
+        public static void Test<T>(T obj, ProtoSerializer<T> serializer, string message, byte[] expected)
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             byte[] data;
             using (MemoryStream ms = new MemoryStream())
             {
                 long reported;
-                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
+                var state = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default, null);
+                try
                 {
-                    serializer(writer, ref state, obj);
-                    writer.Close(ref state);
-                    reported = ProtoWriter.GetLongPosition(writer, ref state);
+                    serializer(ref state, obj);
+                    state.Close();
+#pragma warning disable CS0618
+                    reported = state.GetPosition();
+#pragma warning restore CS0618
+                }
+                finally
+                {
+                    state.Dispose();
                 }
                 data = ms.ToArray();
                 Assert.Equal(reported, data.Length); //, message + ":reported/actual");
@@ -61,7 +68,9 @@ namespace ProtoBuf.unittest.Serializers
             byte[] raw;
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, value);
+#pragma warning restore CS0618
                 raw = ms.ToArray();
             }
 
@@ -70,7 +79,9 @@ namespace ProtoBuf.unittest.Serializers
             model.CompileInPlace();
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 model.Serialize(ms, value);
+#pragma warning restore CS0618
                 raw = ms.ToArray();
             }
 
@@ -80,15 +91,17 @@ namespace ProtoBuf.unittest.Serializers
             PEVerify.Verify("compiled.dll");
             using (MemoryStream ms = new MemoryStream())
             {
+#pragma warning disable CS0618
                 compiled.Serialize(ms, value);
+#pragma warning restore CS0618
                 raw = ms.ToArray();
             }
             Assert.Equal(hex, GetHex(raw));
         }
 #if !NO_INTERNAL_CONTEXT
-        public static void Test<T>(T value, Func<IProtoSerializer, IProtoSerializer> ctor, string expectedHex)
+        public static void Test<T>(T value, Func<IRuntimeProtoSerializerNode, IRuntimeProtoSerializerNode> ctor, string expectedHex)
         {
-            Test(value, typeof(T), ctor, expectedHex);
+            Test<T>(value, typeof(T), ctor, expectedHex);
         }
 #endif
         internal static string GetHex(byte[] bytes)
@@ -102,20 +115,23 @@ namespace ProtoBuf.unittest.Serializers
             return sb.ToString();
         }
 
-        public delegate void WriterRunner(ProtoWriter writer, ref ProtoWriter.State state);
+        public delegate void WriterRunner(ref ProtoWriter.State state);
 
         public static void Test(WriterRunner action, string expectedHex)
         {
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            var state = ProtoWriter.State.Create(ms, RuntimeTypeModel.Default, null);
+            try
             {
-                using (var pw = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
-                {
-                    action(pw, ref state);
-                    pw.Close(ref state);
-                }
-                string s = GetHex(ms.ToArray());
-                Assert.Equal(expectedHex, s);
+                action(ref state);
+                state.Close();
             }
+            finally
+            {
+                state.Dispose();
+            }
+            string s = GetHex(ms.ToArray());
+            Assert.Equal(expectedHex, s);
         }
     }
 }

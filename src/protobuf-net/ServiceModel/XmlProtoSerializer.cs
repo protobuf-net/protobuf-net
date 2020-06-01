@@ -1,9 +1,11 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf.ServiceModel
 {
@@ -13,17 +15,16 @@ namespace ProtoBuf.ServiceModel
     public sealed class XmlProtoSerializer : XmlObjectSerializer
     {
         private readonly TypeModel model;
-        private readonly int key;
-        private readonly bool isList, isEnum;
+        private readonly bool autoCreate;
         private readonly Type type;
-        internal XmlProtoSerializer(TypeModel model, int key, Type type, bool isList)
+
+#pragma warning disable IDE0060 // Remove unused parameter "isList"
+        internal XmlProtoSerializer(TypeModel model, Type type, bool isList)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
-            if (key < 0) throw new ArgumentOutOfRangeException(nameof(key));
             this.model = model ?? throw new ArgumentNullException(nameof(model));
-            this.key = key;
-            this.isList = isList;
             this.type = type ?? throw new ArgumentOutOfRangeException(nameof(type));
-            this.isEnum = Helpers.IsEnum(type);
+            this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
         }
         /// <summary>
         /// Attempt to create a new serializer for the given model and type
@@ -34,10 +35,9 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            int key = GetKey(model, ref type, out bool isList);
-            if (key >= 0)
+            if (IsKnownType(model, type, out bool isList))
             {
-                return new XmlProtoSerializer(model, key, type, isList);
+                return new XmlProtoSerializer(model, type, isList);
             }
             return null;
         }
@@ -50,37 +50,26 @@ namespace ProtoBuf.ServiceModel
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            key = GetKey(model, ref type, out isList);
+            bool known = IsKnownType(model, type, out _);
+            if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
             this.model = model;
+            this.autoCreate = TypeModel.PrepareDeserialize(null, ref type);
             this.type = type;
-            this.isEnum = Helpers.IsEnum(type);
-            if (key < 0) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
         }
 
-        private static int GetKey(TypeModel model, ref Type type, out bool isList)
+        private static bool IsKnownType(TypeModel model, Type type, out bool isList)
         {
             if (model != null && type != null)
             {
-                int key = model.GetKey(ref type);
-                if (key >= 0)
+                if (model.CanSerialize(type, true, true, true, out var category))
                 {
-                    isList = false;
-                    return key;
-                }
-                Type itemType = TypeModel.GetListItemType(type);
-                if (itemType != null)
-                {
-                    key = model.GetKey(ref itemType);
-                    if (key >= 0)
-                    {
-                        isList = true;
-                        return key;
-                    }
+                    isList = category.IsRepeated();
+                    return true;
                 }
             }
 
             isList = false;
-            return -1;
+            return false;
         }
 
         /// <summary>
@@ -115,23 +104,26 @@ namespace ProtoBuf.ServiceModel
             }
             else
             {
-                using (MemoryStream ms = new MemoryStream())
+                using MemoryStream ms = new MemoryStream();
+                var state = ProtoWriter.State.Create(ms, model, null);
+                try
                 {
-                    if (isList)
-                    {
-                        model.Serialize(ms, graph, null);
-                    }
-                    else
-                    {
-                        using (ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null))
-                        {
-                            model.Serialize(protoWriter, ref state, key, graph);
-                            protoWriter.Close(ref state);
-                        }
-                    }
-                    byte[] buffer = ms.GetBuffer();
-                    writer.WriteBase64(buffer, 0, (int)ms.Length);
+
+                    if (!DynamicStub.TrySerializeRoot(type, model, ref state, graph))
+                        TypeModel.ThrowUnexpectedType(type, model);
                 }
+                catch
+                {
+                    state.Abandon();
+                    throw;
+                }
+                finally
+                {
+                    state.Dispose();
+                }
+                Helpers.GetBuffer(ms, out var segment);
+                writer.WriteBase64(segment.Array, segment.Offset, segment.Count);
+
             }
         }
 
@@ -161,49 +153,32 @@ namespace ProtoBuf.ServiceModel
                 if (!isSelfClosed) reader.ReadEndElement();
                 return null;
             }
-            if (isSelfClosed) // no real content
+            object ReadFrom(ReadOnlyMemory<byte> payload)
             {
-                if (isList || isEnum)
-                {
-                    return model.Deserialize(Stream.Null, null, type, null);
-                }
-                ProtoReader protoReader = null;
+                var state = ProtoReader.State.Create(payload, model, null);
                 try
                 {
-                    protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
-                    return model.DeserializeCore(protoReader, ref state, key, null);
+                    object result = null;
+                    if (!DynamicStub.TryDeserializeRoot(type, model, ref state, ref result, autoCreate))
+                        TypeModel.ThrowUnexpectedType(type, model);
+                    return result;
                 }
                 finally
                 {
-                    protoReader?.Recycle();
+                    state.Dispose();
                 }
             }
 
-            object result;
-            Helpers.DebugAssert(reader.CanReadBinaryContent, "CanReadBinaryContent");
-            using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
+            if (isSelfClosed) // no real content
             {
-                if (isList || isEnum)
-                {
-                    result = model.Deserialize(ms, null, type, null);
-                }
-                else
-                {
-                    ProtoReader protoReader = null;
-                    try
-                    {
-                        protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
-                        result = model.DeserializeCore(protoReader, ref state, key, null);
-                    }
-                    finally
-                    {
-                        protoReader?.Recycle();
-                    }
-                }
+                return ReadFrom(Array.Empty<byte>());
             }
+
+
+            Debug.Assert(reader.CanReadBinaryContent, "CanReadBinaryContent");
+            ReadOnlyMemory<byte> payload = reader.ReadContentAsBase64();
             reader.ReadEndElement();
-            return result;
+            return ReadFrom(payload);
         }
     }
 }
-#endif

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.Build.Traversal/2.0.19">
+  <ItemGroup>
+    <!-- After moving files around, this can be src\**\*.csroj -->
+    <ProjectReference Include="src\protobuf-net\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.Core\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.MSBuild\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.Protogen\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.Reflection\*.csproj" />
+    <!--<ProjectReference Include="src\protobuf-net.MessagePipes\*.csproj" />-->
+    <ProjectReference Include="src\protogen\*.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="$(Packing) != 'true'">
+    <ProjectReference Include="src\*\*.csproj" Exclude="src\protogen.Site\*.csproj" />
+    <!-- <ProjectReference Include="samples\**\*.csproj" Exclude="samples\**\*Mvc5*.csproj" />
+    <ProjectReference Include="tests\**\*.csproj" /> -->
+  </ItemGroup>
+</Project>

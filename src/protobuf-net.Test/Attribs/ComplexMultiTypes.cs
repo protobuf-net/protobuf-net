@@ -70,7 +70,7 @@ namespace ProtoBuf.unittest.Attribs
 
         private static RuntimeTypeModel BuildModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(ComponentContainerDTO), true);
             model.Add(typeof(ComponentDTO), true);
             /*
@@ -107,12 +107,16 @@ namespace ProtoBuf.unittest.Attribs
 
         }
 
+#pragma warning disable IDE0060
         private static void CheckEmptyEntityDto(TypeModel model, string message) {
+#pragma warning restore IDE0060
             // Test 1 - simple case, EntityDTO only
             var memstream = new MemoryStream();
             model.Serialize(memstream, new EntityDTO() { Id = 1 });
             memstream.Seek(0, SeekOrigin.Begin);
+#pragma warning disable CS0618
             var result = (EntityDTO)model.Deserialize(memstream, null, typeof(EntityDTO));
+#pragma warning restore CS0618
 
             Assert.Equal(typeof(EntityDTO), result.GetType()); //, message + ":type");
             Assert.Equal(1, result.Id); //, message + ":Id");
@@ -138,7 +142,10 @@ namespace ProtoBuf.unittest.Attribs
             CheckEntityDtoWithItems(model.Compile(), "Compile");
 
         }
+
+#pragma warning disable IDE0060
         private static void CheckEntityDtoWithItems(TypeModel model, string message) {
+#pragma warning restore IDE0060
             var entity = new EntityDTO() { Id = 1 };
             var healthComponent = new HealthDTO() { CurrentHealth = 100, Owner = entity, Name = "Health", Id = 2 };
             entity.Components.Add(healthComponent);
@@ -148,7 +155,9 @@ namespace ProtoBuf.unittest.Attribs
             MemoryStream memstream2 = new MemoryStream();
             model.Serialize(memstream2, entity);
             memstream2.Seek(0, SeekOrigin.Begin);
+#pragma warning disable CS0618
             var result2 = (EntityDTO)model.Deserialize(memstream2, null, typeof(EntityDTO));
+#pragma warning restore CS0618
 
             Assert.Equal(1, result2.Id); //, message + ":Id");
             Assert.Equal(2, result2.Components.Count); //, message + ":Count");

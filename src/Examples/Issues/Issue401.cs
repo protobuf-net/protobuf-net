@@ -10,11 +10,11 @@ namespace ProtoBuf.Issues
         public void IsDefinedWorksWhenAddingTypes()
         {
             var type = typeof(MyClass);
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
 
             Assert.False(m.IsDefined(type));
 
-            var protoType = m.Add(type, true);
+            _ = m.Add(type, true);
 
             Assert.True(m.IsDefined(type));
         }
@@ -23,7 +23,7 @@ namespace ProtoBuf.Issues
         public void IsDefinedWorksWhenUsingIndexer()
         {
             var type = typeof(MyClass);
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
 
             Assert.False(m.IsDefined(type));
             var mt = m[type];
@@ -41,7 +41,7 @@ namespace ProtoBuf.Issues
         {
             var baseType = typeof(MyBaseClass);
             var subType = typeof(MyDerivedClass);
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
 
             Assert.False(m.IsDefined(baseType));
             Assert.False(m.IsDefined(subType));

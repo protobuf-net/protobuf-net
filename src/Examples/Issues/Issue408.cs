@@ -26,26 +26,32 @@ namespace Examples.Issues
         [Fact]
         public void ShouldSerializeValueTypeSubTypes()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 
-            ConfigureTypeModel(model);
-            model.Compile("ShouldSerializeValueTypeSubTypes", "ShouldSerializeValueTypeSubTypes.dll");
-            PEVerify.AssertValid("ShouldSerializeValueTypeSubTypes.dll");
-            TestValueType(model);
-            // This bug only occured in compiled type models
-            TestValueType(model.Compile());
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                ConfigureTypeModel(model);
+            }, "You cannot reconfigure System.Object");
+            //model.Compile("ShouldSerializeValueTypeSubTypes", "ShouldSerializeValueTypeSubTypes.dll");
+            //PEVerify.AssertValid("ShouldSerializeValueTypeSubTypes.dll");
+            //TestValueType(model);
+            //// This bug only occured in compiled type models
+            //TestValueType(model.Compile());
         }
 
         [Fact]
         public void ShouldSerializeBoxedValueType()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 
-            ConfigureTypeModel(model);
-            model.Add(typeof(Container), true);
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                ConfigureTypeModel(model);
+            }, "You cannot reconfigure System.Object");
+            //model.Add(typeof(Container), true);
 
-            TestBoxedValueType(model);
-            TestValueType(model.Compile());
+            //TestBoxedValueType(model);
+            //TestValueType(model.Compile());
         }
 
         private static void ConfigureTypeModel(RuntimeTypeModel model)
@@ -89,7 +95,6 @@ namespace Examples.Issues
         {
             var obj = new Point {X = 1, Y = 2};
             var clone = model.DeepClone(obj);
-            Assert.NotNull(clone);
             Assert.IsType<Point>(clone);
 
             var point = (Point) clone;
@@ -99,10 +104,10 @@ namespace Examples.Issues
 
         private static void TestNull(TypeModel model)
         {
-            using (var stream = new MemoryStream())
-            {
-                Assert.Throws<ArgumentNullException>(() => model.Serialize(stream, null));
-            }
+            using var stream = new MemoryStream();
+#pragma warning disable CS0618
+            Assert.Throws<ArgumentNullException>(() => model.Serialize(stream, null));
+#pragma warning restore CS0618
         }
     }
 }

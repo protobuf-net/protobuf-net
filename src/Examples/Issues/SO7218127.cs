@@ -1,10 +1,10 @@
-﻿using Xunit;
+﻿#if FEAT_DYNAMIC_REF
+
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-
-    
     public class SO7218127
     {
         [Fact]
@@ -35,3 +35,5 @@ namespace Examples.Issues
         }
     }
 }
+
+#endif

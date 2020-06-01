@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -194,6 +195,26 @@ namespace ProtoBuf.Reflection
                 preferred = Pluralize(preferred);
             }
             return GetName(definition.Parent as DescriptorProto, preferred, definition.Name, true);
+        }
+
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
+        public virtual string GetName(ServiceDescriptorProto definition)
+        {
+            var name = definition?.Options?.GetOptions()?.Name;
+            if (!string.IsNullOrWhiteSpace(name)) return name;
+            return "I" + GetName(definition.Name); // .NET convention
+        }
+
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
+        public virtual string GetName(MethodDescriptorProto definition)
+        {
+            var name = definition?.Options?.GetOptions()?.Name;
+            if (!string.IsNullOrWhiteSpace(name)) return name;
+            return GetName(definition.Name);
         }
 
         internal bool IsCaseSensitive { get; set; }

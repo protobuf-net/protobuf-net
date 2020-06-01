@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ProtoBuf;
+using ProtoBuf.Meta;
 using Xunit;
 
 namespace Examples.Issues
@@ -33,7 +34,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldHandleGenerics()
         {
-            var protoFile = Serializer.GetProto<BaseModel<List<IdName>>>();
+            var protoFile = Serializer.GetProto<BaseModel<List<IdName>>>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package Examples.Issues;
 
@@ -45,7 +46,7 @@ message IdName {
    optional int32 Id = 1 [default = 0];
    optional string Name = 2;
 }
-", protoFile);
+", protoFile, ignoreLineEndingDifferences: true);
         }
     }
 }

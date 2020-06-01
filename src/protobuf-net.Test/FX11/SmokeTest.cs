@@ -20,7 +20,7 @@ namespace Tests.Dnx
         [Fact]
         public void CanCompile()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Foo), true);
             var compiled = model.Compile();
 

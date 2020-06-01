@@ -23,7 +23,7 @@ namespace Examples.Issues
             byte[] buf;
             SeniorDeveloper<bool> p2;
 
-            var t = TimeSpan.Parse("01:10:00");
+            _ = TimeSpan.Parse("01:10:00");
 
             var s = new ProtoBufModalSerializer(1);
 
@@ -64,10 +64,10 @@ namespace Proto
             this.label = label;
             this._modal = RuntimeTypeModel.Create();
             //this._modal.AutoAddMissingTypes = true;
-            this.init();
+            this.Init();
         }
 
-        private void init()
+        private void Init()
         {
             Dictionary<Type, List<Type>> repo = new Dictionary<Type, List<Type>>();
 
@@ -86,13 +86,11 @@ namespace Proto
                                  .Add(this.GetDMProperties(lValue).Select(p => p.Name)
                                  .ToArray());
 
-                    this.setCallbacks(meta);
+                    this.SetCallbacks(meta);
 
                     if (type.BaseType != null && type.BaseType != typeof(Object))
                     {
-                        List<Type> childs;
-
-                        if (!repo.TryGetValue(type.BaseType, out childs))
+                        if (!repo.TryGetValue(type.BaseType, out var childs))
                         {
                             childs = new List<Type>();
                             repo.Add(type.BaseType, childs);
@@ -131,11 +129,11 @@ namespace Proto
 
         public virtual object Deserialize(byte[] serializedObj, Type objectType)
         {
-            using (var memStream = new MemoryStream(serializedObj))
-            {
-                //return Serializer.NonGeneric.Deserialize(objectType, memStream);
-                return this._modal.Deserialize(memStream, null, objectType);
-            }
+            using var memStream = new MemoryStream(serializedObj);
+            //return Serializer.NonGeneric.Deserialize(objectType, memStream);
+#pragma warning disable CS0618
+            return this._modal.Deserialize(memStream, null, objectType);
+#pragma warning restore CS0618
         }
 
         public virtual byte[] Serialize(object obj)
@@ -145,23 +143,22 @@ namespace Proto
 
         public virtual byte[] Serialize(Type objectType, object obj)
         {
-            using (var memStream = new MemoryStream())
-            {
-                //Serializer.NonGeneric.Serialize(memStream, obj);
-                this._modal.Serialize(memStream, obj);
+            using var memStream = new MemoryStream();
+            //Serializer.NonGeneric.Serialize(memStream, obj);
+#pragma warning disable CS0618
+            this._modal.Serialize(memStream, obj);
+#pragma warning restore CS0618
 
-                return memStream.ToArray();
-            }
+            return memStream.ToArray();
         }
 
         public virtual TType Deserialize<TType>(byte[] serializedObj)
         {
-            using (var memStream = new MemoryStream(serializedObj))
-            {
-                //return Serializer.Deserialize<TType>(memStream);
-                return (TType)this._modal.Deserialize(memStream, null, typeof(TType));
-
-            }
+            using var memStream = new MemoryStream(serializedObj);
+            //return Serializer.Deserialize<TType>(memStream);
+#pragma warning disable CS0618
+            return (TType)this._modal.Deserialize(memStream, null, typeof(TType));
+#pragma warning restore CS0618
         }
 
 
@@ -194,7 +191,7 @@ namespace Proto
             }
         }
 
-        private void setCallbacks(MetaType meta)
+        private void SetCallbacks(MetaType meta)
         {
             MethodInfo beforeDeserialized = null;
             MethodInfo afterDeserialized = null;
@@ -234,10 +231,16 @@ namespace Types
         }
 
         [OnDeserialized]
-        public void OnDesr(StreamingContext c)
+        public void OnDesr(StreamingContext c) => OnDesr();
+
+        [OnSerializing]
+        public void OnSer(StreamingContext c) => OnSer();
+
+        protected virtual void OnDesr()
         {
             Console.WriteLine("OnDeserialized");
         }
+        protected virtual void OnSer() { }
     }
 
     [DataContract]
@@ -268,16 +271,16 @@ namespace Types
             return base.ToString() + " VeryBoaring=" + VeryBoaring.ToString();
         }
 
-        [OnDeserialized]
-        public void OnDesrd(StreamingContext c)
+        protected override void OnDesr()
         {
             Console.WriteLine("OnDeserialized");
+            base.OnDesr();
         }
 
-        [OnSerializing]
-        public void X(StreamingContext c)
+        protected override void OnSer()
         {
             Console.WriteLine("OnSerializing");
+            base.OnSer();
         }
     }
 }

@@ -61,14 +61,14 @@ namespace Examples.Issues
         public void Execute()
         {
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(A), true);
             model.Add(typeof(B), true);
             model.Add(typeof(C), true);
             model.Add(typeof(D), true);
             model.Add(typeof(TestCase), true);
 
-            string s = model.GetSchema(null);
+            _ = model.GetSchema(null);
 
             Assert.Null(model[typeof(A)].BaseType); //, "A");
             Assert.Same(model[typeof(A)], model[typeof(B)].BaseType); //, "B");

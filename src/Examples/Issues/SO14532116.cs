@@ -13,7 +13,7 @@ namespace Examples.Issues
         public void Execute()
         {
             
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.SetDefaultFactory(typeof(SO14532116).GetMethod("ObjectMaker"));
 
@@ -44,7 +44,9 @@ namespace Examples.Issues
         }
 
 
+#pragma warning disable IDE0060 // Remove unused parameter
         private void Test(TypeModel model, string p)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             var obj = Foo.Create(123);
 
@@ -67,7 +69,7 @@ namespace Examples.Issues
             {
                 obj = Foo.Create();
             } else {
-                obj = Activator.CreateInstance(type);
+                obj = Activator.CreateInstance(type, nonPublic: true);
             }
             Interlocked.Increment(ref count);
             return obj;

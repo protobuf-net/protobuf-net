@@ -1,144 +1,51 @@
-﻿<!--
-problems building? try using Sdk="Microsoft.NET.Sdk" instead of Sdk="MSBuild.Sdk.Extras",
-and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
--->
-
-<Project Sdk="Microsoft.NET.Sdk">
-<!--<Project Sdk="MSBuild.Sdk.Extras">-->
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net40;net461;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1;netstandard2.1</TargetFrameworks>
-    <!--net20;net35;uap10.0-->
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
-    <!-- new build tools spit these out -->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-
-    <!-- this is how we will configure the builds relatively cleanly -->
-    <ImportLibs>net</ImportLibs>
-    <FeatureCompiler>true</FeatureCompiler>
-    <FeatureServiceModel>true</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>true</FeatureServiceModelConfiguration>
-    <PlatformXmlSerializer>true</PlatformXmlSerializer>
-    <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
-    <Configurations>Debug;Release;VS</Configurations>
-    <PlatformMemoryStreamBuffer>true</PlatformMemoryStreamBuffer>
-    <PlatformGetUninitialized>true</PlatformGetUninitialized>
-    <PlatformSpans>true</PlatformSpans>
-    <PlatformSpanOverloads>false</PlatformSpanOverloads>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
+  
   <!-- define configuration per-platform -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <FeatureCompiler>false</FeatureCompiler>
-    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
-    <DefineConstants>$(DefineConstants);COREFX;UAP</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.0'">
-    <DefineConstants>$(DefineConstants);PROFILE259;FEAT_SAFE</DefineConstants>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <FeatureCompiler>false</FeatureCompiler>
-    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
-    <PlatformXmlSerializer>false</PlatformXmlSerializer>
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-    <PlatformGetUninitialized>false</PlatformGetUninitialized>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
-    <ImportLibs>standard</ImportLibs>
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
-    <PlatformGetUninitialized>false</PlatformGetUninitialized>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
+    <FeatureServiceModelConfiguration>true</FeatureServiceModelConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
-    <ImportLibs>standard</ImportLibs>
-    <FeatureServiceModel>true</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
-    <ImportLibs>none</ImportLibs>
-    <FeatureServiceModel>true</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <PlatformSpanOverloads>true</PlatformSpanOverloads>
+    <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
-    <ImportLibs>none</ImportLibs>
-    <FeatureServiceModel>true</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <PlatformSpanOverloads>true</PlatformSpanOverloads>
-  </PropertyGroup>
-  <!-- apply the configuration options (typical via defines that switch code flows) -->
-  <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformMemoryStreamBuffer)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_MEMORY_STREAM_BUFFER</DefineConstants>
-  </PropertyGroup>  
-  <PropertyGroup Condition="'$(FeatureServiceModel)' == 'true'">
-    <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModelConfiguration)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformXmlSerializer)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_XMLSERIALIZER</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformSpans)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_SPANS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformSpans)' == 'true' and '$(PlatformSpanOverloads)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_SPAN_OVERLOADS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformGetUninitialized)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_GET_UNINITIALIZED</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(ImportLibs)|$(FeatureServiceModel)' == 'net|true'">
-    <Reference Include="System.ServiceModel" />
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
   </ItemGroup>
-  <ItemGroup Condition="'$(ImportLibs)' == 'standard' and '$(FeatureCompiler)' == 'true'">
-    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.6.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.6.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(ImportLibs)' == 'none' and '$(FeatureServiceModel)' == 'true'">
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.6.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(ImportLibs)' == 'standard' and '$(FeatureServiceModel)' == 'true'">
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.7.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(ImportLibs)' != 'none' and '$(PlatformSpans)' == 'true'">
-    <PackageReference Include="System.Memory" Version="4.5.1" />
-    <PackageReference Include="System.Buffers" Version="4.5.0" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(ImportLibs)' == 'standard'">
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />    
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
 </Project>

@@ -12,7 +12,7 @@ namespace ProtoBuf.Issues
         [Fact]
         public void CanGenerateGenericArraySchema()
         {
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
 
             typeModel.Add(typeof(ClassWithGenericField<SimpleClass[]>), true);
 
@@ -28,16 +28,16 @@ namespace ProtoBuf.Issues
         [InlineData(typeof(ClassWithGenericField<SimpleClass[]>), "repeated SimpleClass Value = 1;", "ClassWithGenericField_Array_SimpleClass")]
         [InlineData(typeof(ClassWithGenericField<byte[]>), "bytes Value = 1;", "ClassWithGenericField_Array_Byte")]
         [InlineData(typeof(ClassWithGenericField<int[]>), "repeated int32 Value = 1;", "ClassWithGenericField_Array_Int32")]
-        public void HasValidGenericArraySchema( Type genericArrayType ,string expectedValueDecl, string expectedMessageName)
+        public void HasValidGenericArraySchema(Type genericArrayType ,string expectedValueDecl, string expectedMessageName)
         {
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for different array types
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
 
             typeModel.Add(genericArrayType, true);
 
             // Will throw System.ArgumentException in v3.0.0-alpha.43 (except for byte[])
-            string schema = typeModel.GetSchema(null);
+            string schema = typeModel.GetSchema(null, ProtoSyntax.Proto2);
 
             // Validate schema. Can be significantly improved, but should suffice for this 
             // bug fix I think.
@@ -66,7 +66,7 @@ namespace ProtoBuf.Issues
         {
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for different array types
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
 
             typeModel.Add(genericArrayType, true);
 
@@ -98,9 +98,13 @@ namespace ProtoBuf.Issues
         {
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for byte arrays
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
             var schema = typeModel.GetSchema(null);
-            Assert.Throws<NotSupportedException>( ()=>typeModel.Add(genericArrayType, true) );
+            Assert.Throws<NotSupportedException>( ()=>
+            {
+                typeModel.Add(genericArrayType, true);
+                schema = typeModel.GetSchema(null);
+            });
         }
     }
 

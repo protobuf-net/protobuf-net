@@ -2,8 +2,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0;netcoreapp2.1;net47;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.0;net472</TargetFrameworks>
     <NoWarn>CS1591</NoWarn>
+    <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.0'">$(DefineConstants);INTRINSICS</DefineConstants>
+    <RootNamespace>Benchmark</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,12 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.11.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.1.8" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>

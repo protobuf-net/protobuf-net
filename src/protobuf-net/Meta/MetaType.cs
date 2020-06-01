@@ -1,14 +1,11 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 using System.Text;
 using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Collections.Generic;
-
-#if PROFILE259
-using System.Linq;
-#endif
+using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Meta
 {
@@ -19,7 +16,9 @@ namespace ProtoBuf.Meta
     {
         internal sealed class Comparer : IComparer, IComparer<MetaType>
         {
-            public static readonly Comparer Default = new Comparer();
+            internal Comparer(HashSet<Type> callstack) => _callstack = callstack;
+            private readonly HashSet<Type> _callstack;
+
             public int Compare(object x, object y)
             {
                 return Compare(x as MetaType, y as MetaType);
@@ -30,7 +29,10 @@ namespace ProtoBuf.Meta
                 if (x == null) return -1;
                 if (y == null) return 1;
 
-                return string.Compare(x.GetSchemaTypeName(), y.GetSchemaTypeName(), StringComparison.Ordinal);
+                return string.Compare(
+                    x.GetSchemaTypeName(_callstack),
+                    y.GetSchemaTypeName(_callstack),
+                    StringComparison.Ordinal);
             }
         }
         /// <summary>
@@ -41,7 +43,7 @@ namespace ProtoBuf.Meta
             return Type.ToString();
         }
 
-        IProtoSerializer ISerializerProxy.Serializer => Serializer;
+        IRuntimeProtoSerializerNode ISerializerProxy.Serializer => Serializer;
         private MetaType baseType;
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType BaseType => baseType;
 
-        internal TypeModel Model => model;
+        internal RuntimeTypeModel Model => model;
 
         /// <summary>
         /// When used to compile a model, should public serialization/deserialzation methods
@@ -66,18 +68,22 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AsReferenceDefault
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_AsReferenceDefault); }
             set { SetFlag(OPTIONS_AsReferenceDefault, value, true); }
+#else
+            get => false;
+            [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+            set { if (value != AsReferenceDefault) ThrowHelper.ThrowNotSupportedException(); }
+#endif
+
         }
 
-        private BasicList subTypes;
+        private List<SubType> _subTypes;
         private bool IsValidSubType(Type subType)
         {
-#if COREFX || PROFILE259
-            return typeInfo.IsAssignableFrom(subType.GetTypeInfo());
-#else
-            return Type.IsAssignableFrom(subType);
-#endif
+            return subType != null && !subType.IsValueType
+                && Type.IsAssignableFrom(subType);
         }
         /// <summary>
         /// Adds a known sub-type to the inheritance model
@@ -86,6 +92,13 @@ namespace ProtoBuf.Meta
         {
             return AddSubType(fieldNumber, derivedType, DataFormat.Default);
         }
+
+        private static void ThrowSubTypeWithSurrogate(Type type)
+        {
+            ThrowHelper.ThrowInvalidOperationException(
+                $"Types with surrogates cannot be used in inheritance hierarchies: {type.NormalizeName()}");
+        }
+
         /// <summary>
         /// Adds a known sub-type to the inheritance model
         /// </summary>
@@ -93,34 +106,49 @@ namespace ProtoBuf.Meta
         {
             if (derivedType == null) throw new ArgumentNullException(nameof(derivedType));
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-#if COREFX || COREFX || PROFILE259
-			if (!(typeInfo.IsClass || typeInfo.IsInterface) || typeInfo.IsSealed) {
-#else
             if (!(Type.IsClass || Type.IsInterface) || Type.IsSealed)
             {
-#endif
-                throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
+                throw new InvalidOperationException("Sub-types can only be added to non-sealed classes: " + Type.NormalizeName());
             }
             if (!IsValidSubType(derivedType))
             {
-                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + Type.Name, nameof(derivedType));
+                throw new ArgumentException(derivedType.NormalizeName() + " is not a valid sub-type of " + Type.NormalizeName(), nameof(derivedType));
             }
-            MetaType derivedMeta = model[derivedType];
-            ThrowIfFrozen();
-            derivedMeta.ThrowIfFrozen();
-            SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
-            ThrowIfFrozen();
 
-            derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
-            (subTypes ?? (subTypes = new BasicList())).Add(subType);
-            model.ResetKeyCache();
-            return this;
+            int opaqueToken = 0;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                MetaType derivedMeta = model[derivedType];
+                ThrowIfFrozen();
+                derivedMeta.ThrowIfFrozen();
+
+                if (IsAutoTuple || derivedMeta.IsAutoTuple)
+                {
+                    ThrowTupleTypeWithInheritance(derivedType);
+                }
+                if (surrogate != null) ThrowSubTypeWithSurrogate(Type);
+                if (derivedMeta.surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
+
+                SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
+                ThrowIfFrozen();
+
+                derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
+                (_subTypes ?? (_subTypes = new List<SubType>())).Add(subType);
+                return this;
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
         }
-#if COREFX || PROFILE259
-		internal static readonly TypeInfo ienumerable = typeof(IEnumerable).GetTypeInfo();
-#else
-        internal static readonly Type ienumerable = typeof(IEnumerable);
-#endif
+
+        private static void ThrowTupleTypeWithInheritance(Type type)
+        {
+            ThrowHelper.ThrowInvalidOperationException(
+                $"Tuple-based types cannot be used in inheritance hierarchies: {type.NormalizeName()}");
+        }
+
         private void SetBaseType(MetaType baseType)
         {
             if (baseType == null) throw new ArgumentNullException(nameof(baseType));
@@ -146,7 +174,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether the current type has defined subtypes
         /// </summary>
-        public bool HasSubtypes => subTypes != null && subTypes.Count != 0;
+        public bool HasSubtypes => _subTypes != null && _subTypes.Count != 0;
 
         /// <summary>
         /// Returns the set of callbacks defined for this type
@@ -157,11 +185,7 @@ namespace ProtoBuf.Meta
         {
             get
             {
-#if COREFX || PROFILE259
-				return typeInfo.IsValueType;
-#else
                 return Type.IsValueType;
-#endif
             }
         }
         /// <summary>
@@ -199,57 +223,80 @@ namespace ProtoBuf.Meta
             callbacks.AfterDeserialize = ResolveMethod(afterDeserialize, true);
             return this;
         }
+        
+        /// <summary>
+        /// Returns the public Type name of this Type used in serialization
+        /// </summary>
+        public string GetSchemaTypeName() => GetSchemaTypeName(null);
 
-        internal string GetSchemaTypeName()
+        internal string GetSchemaTypeName(HashSet<Type> callstack)
         {
-            if (surrogate != null) return model[surrogate].GetSchemaTypeName();
+            callstack ??= new HashSet<Type>();
+            if (!callstack.Add(Type)) return Type.Name; // recursion detected; give up
 
-            if (!string.IsNullOrEmpty(name)) return name;
-
-            string typeName = Type.Name;
-            if (Type
-#if COREFX || PROFILE259
-                .GetTypeInfo()
-#endif
-                .IsGenericType)
+            try
             {
-                var sb = new StringBuilder(typeName);
-                int split = typeName.IndexOf('`');
-                if (split >= 0) sb.Length = split;
-                foreach (Type arg in Type
-#if COREFX || PROFILE259
-					.GetTypeInfo().GenericTypeArguments
-#else
-                    .GetGenericArguments()
-#endif
-                    )
+                if (surrogate != null && !callstack.Contains(surrogate))
                 {
-                    sb.Append('_');
-                    Type tmp = arg;
-                    int key = model.GetKey(ref tmp);
-                    MetaType mt;
-                    if (key >= 0 && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
-                    {
-                        sb.Append(mt.GetSchemaTypeName());
-                    }
-                    else if (tmp.IsArray)
-                    {
-                        // Cannot use Name of array, since that's not a valid protobuf
-                        // name.
-                        sb.Append("Array_");
-                        // No need to check for nesting/array rank here. If that's invalid
-                        // other parts of the schema generator will throw.
-                        sb.Append(tmp.GetElementType().Name);
-                    } else
-                    { 
-                        sb.Append(tmp.Name);
-                    }
+                    return model[surrogate].GetSchemaTypeName(callstack);
                 }
-                return sb.ToString();
-            }
 
-            return typeName;
+                if (!string.IsNullOrEmpty(name)) return name;
+
+                string typeName = Type.Name;
+
+                if (Type.IsArray) return GetArrayName(Type.GetElementType());
+                if (Type.IsGenericType)
+                {
+                    var sb = new StringBuilder(typeName);
+                    int split = typeName.IndexOf('`');
+                    if (split >= 0) sb.Length = split;
+                    foreach (Type arg in Type.GetGenericArguments())
+                    {
+                        sb.Append('_');
+                        Type tmp = arg;
+                        bool isKnown = model.IsDefined(tmp);
+                        MetaType mt;
+                        if (isKnown && (mt = model[tmp]) != null)
+                        {
+                            sb.Append(mt.GetSchemaTypeName(callstack));
+                        }
+                        else if (tmp.IsArray)
+                        {
+                            sb.Append(GetArrayName(tmp.GetElementType()));
+                        }
+                        else
+                        {
+                            //try a speculative add
+                            mt = null;
+                            try { mt = model.Add(tmp); }
+                            catch { }
+                            if (mt != null) sb.Append(mt.GetSchemaTypeName(callstack));
+                            else sb.Append(tmp.Name); // give up
+                        }
+                    }
+                    return sb.ToString();
+                }
+
+                return typeName;
+
+                string GetArrayName(Type elementType)
+                {
+                    // Cannot use Name of array, since that's not a valid protobuf
+                    // name.
+                    // No need to check for nesting/array rank here. If that's invalid
+                    // other parts of the schema generator will throw.
+                    MetaType mt;
+                    var name = (model.IsDefined(elementType) && (mt = model[elementType]) != null) ? mt.GetSchemaTypeName(callstack) : elementType.Name;
+                    return "Array_" + name;
+                }
+            }
+            finally
+            {
+                callstack.Remove(Type);
+            }
         }
+
 
         private string name;
 
@@ -292,11 +339,7 @@ namespace ProtoBuf.Meta
         private MethodInfo ResolveMethod(string name, bool instance)
         {
             if (string.IsNullOrEmpty(name)) return null;
-#if COREFX
-            return instance ? Helpers.GetInstanceMethod(typeInfo, name) : Helpers.GetStaticMethod(typeInfo, name);
-#else
             return instance ? Helpers.GetInstanceMethod(Type, name) : Helpers.GetStaticMethod(Type, name);
-#endif
         }
 
         private readonly RuntimeTypeModel model;
@@ -312,31 +355,22 @@ namespace ProtoBuf.Meta
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            if (type.IsArray) throw InbuiltType(type);
-            IProtoSerializer coreSerializer = model.TryGetBasicTypeSerializer(type);
+            IRuntimeProtoSerializerNode coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
                 throw InbuiltType(type);
             }
 
             Type = type;
-#if COREFX || PROFILE259
-			this.typeInfo = type.GetTypeInfo();
-#endif
-            this.model = model;
-
-            if (Helpers.IsEnum(type))
+            if (type.IsArray)
             {
-#if COREFX || PROFILE259
-				EnumPassthru = typeInfo.IsDefined(typeof(FlagsAttribute), false);
-#else
-                EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
-#endif
+                // we'all allow add, to allow proxy generation, but
+                // don't play with it too much!
+                SetFlag(OPTIONS_Frozen, true, false);
             }
+            this.model = model;
         }
-#if COREFX || PROFILE259
-		private readonly TypeInfo typeInfo;
-#endif
+
         /// <summary>
         /// Throws an exception if the type has been made immutable
         /// </summary>
@@ -352,25 +386,24 @@ namespace ProtoBuf.Meta
         /// </summary>
         public Type Type { get; }
 
-        private IProtoTypeSerializer serializer;
+        private IProtoTypeSerializer _serializer;
         internal IProtoTypeSerializer Serializer
         {
             get
             {
-                if (serializer == null)
+                if (_serializer == null)
                 {
                     int opaqueToken = 0;
                     try
                     {
                         model.TakeLock(ref opaqueToken);
-                        if (serializer == null)
+                        if (_serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
                             SetFlag(OPTIONS_Frozen, true, false);
-                            serializer = BuildSerializer();
-#if FEAT_COMPILER
+                            _serializer = BuildSerializer();
+
                             if (model.AutoCompile) CompileInPlace();
-#endif
                         }
                     }
                     finally
@@ -378,84 +411,113 @@ namespace ProtoBuf.Meta
                         model.ReleaseLock(opaqueToken);
                     }
                 }
-                return serializer;
+                return _serializer;
             }
         }
-        internal bool IsList
+
+        internal Type GetInheritanceRoot()
         {
-            get
-            {
-                Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
-                return itemType != null;
-            }
+            if (Type.IsValueType) return null;
+
+            var root = GetRootType(this);
+            if (!ReferenceEquals(root, this)) return root.Type;
+            if (_subTypes != null && _subTypes.Count != 0) return root.Type;
+
+            return null;
         }
+
+        private SerializerFeatures GetFeatures()
+        {
+            if (Type.IsEnum) return SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
+
+            if (!Type.IsValueType)
+            {
+                var bt = GetRootType(this);
+                if (!ReferenceEquals(bt, this)) return bt.GetFeatures();
+            }
+            var features = SerializerFeatures.CategoryMessage;
+            features |= IsGroup ? SerializerFeatures.WireTypeStartGroup : SerializerFeatures.WireTypeString;
+            return features;
+        }
+
+        private bool HasRealInheritance()
+            => (baseType != null && baseType != this) || (_subTypes?.Count ?? 0) > 0;
         private IProtoTypeSerializer BuildSerializer()
         {
-            if (Helpers.IsEnum(Type))
+            if (SerializerType != null)
             {
-                return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(Type, GetEnumMap()));
+                return ExternalSerializer.Create(Type, SerializerType);
             }
-            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
-            if (itemType != null)
+            Validate();
+            var repeated = model.TryGetRepeatedProvider(Type);
+
+            if (repeated != null)
             {
                 if (surrogate != null)
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
                 }
-                if (subTypes != null && subTypes.Count != 0)
+                if (_subTypes != null && _subTypes.Count != 0)
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
-                Type defaultType = null;
-                ResolveListTypes(model, Type, ref itemType, ref defaultType);
-                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
-                return new TypeSerializer(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, repeated.ItemType, null, DataFormat.Default);
+                return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
+                    constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
+
+            bool involvedInInheritance = HasRealInheritance();
             if (surrogate != null)
             {
+                if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
                 MetaType mt = model[surrogate], mtBase;
-                while ((mtBase = mt.baseType) != null) { mt = mtBase; }
-                return new SurrogateSerializer(Type, surrogate, mt.Serializer);
+                while ((mtBase = mt.baseType) != null) {
+                    if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
+                    mt = mtBase;
+                }
+                return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
+                    args: new object[] { surrogate, mt.Serializer });
             }
             if (IsAutoTuple)
             {
+                if (involvedInInheritance) ThrowTupleTypeWithInheritance(Type);
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor == null) throw new InvalidOperationException();
-                return new TupleSerializer(model, ctor, mapping);
+                return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
+                    args: new object[] { model, ctor, mapping, GetFeatures() });
             }
 
-            fields.Trim();
-            int fieldCount = fields.Count;
-            int subTypeCount = subTypes?.Count ?? 0;
+            if (HasFields) Fields.TrimExcess();
+            if (HasEnums) Enums.TrimExcess();
+
+            int fieldCount = _fields?.Count ?? 0;
+            int subTypeCount = _subTypes?.Count ?? 0;
             int[] fieldNumbers = new int[fieldCount + subTypeCount];
-            IProtoSerializer[] serializers = new IProtoSerializer[fieldCount + subTypeCount];
+            IRuntimeProtoSerializerNode[] serializers = new IRuntimeProtoSerializerNode[fieldCount + subTypeCount];
             int i = 0;
             if (subTypeCount != 0)
             {
-                foreach (SubType subType in subTypes)
+                foreach (SubType subType in _subTypes)
                 {
-#if COREFX || PROFILE259
-					if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type.GetTypeInfo()))
-#else
-                    if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
-#endif
+                    if (!subType.DerivedType.IgnoreListHandling && model.TryGetRepeatedProvider(subType.DerivedType.Type) != null)
                     {
-                        throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
+                        ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
                     fieldNumbers[i] = subType.FieldNumber;
-                    serializers[i++] = subType.Serializer;
+                    serializers[i++] = subType.GetSerializer(Type);
                 }
             }
             if (fieldCount != 0)
             {
-                foreach (ValueMember member in fields)
+                foreach (ValueMember member in _fields)
                 {
                     fieldNumbers[i] = member.FieldNumber;
                     serializers[i++] = member.Serializer;
                 }
             }
 
-            BasicList baseCtorCallbacks = null;
+            List<MethodInfo> baseCtorCallbacks = null;
             MetaType tmp = BaseType;
 
             while (tmp != null)
@@ -463,7 +525,7 @@ namespace ProtoBuf.Meta
                 MethodInfo method = tmp.HasCallbacks ? tmp.Callbacks.BeforeDeserialize : null;
                 if (method != null)
                 {
-                    (baseCtorCallbacks ?? (baseCtorCallbacks = new BasicList())).Add(method);
+                    (baseCtorCallbacks ?? (baseCtorCallbacks = new List<MethodInfo>())).Add(method);
                 }
                 tmp = tmp.BaseType;
             }
@@ -474,7 +536,8 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
+            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor,
+                callbacks, constructType, factory, GetInheritanceRoot(), GetFeatures());
         }
 
         [Flags]
@@ -484,17 +547,13 @@ namespace ProtoBuf.Meta
         }
         private static Type GetBaseType(MetaType type)
         {
-#if COREFX || PROFILE259
-			return type.typeInfo.BaseType;
-#else
             return type.Type.BaseType;
-#endif
         }
-        internal static bool GetAsReferenceDefault(RuntimeTypeModel model, Type type)
+        internal static bool GetAsReferenceDefault(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            if (Helpers.IsEnum(type)) return false; // never as-ref
-            AttributeMap[] typeAttribs = AttributeMap.Create(model, type, false);
+            if (type.IsEnum) return false; // never as-ref
+            AttributeMap[] typeAttribs = AttributeMap.Create(type, false);
             for (int i = 0; i < typeAttribs.Length; i++)
             {
                 if (typeAttribs[i].AttributeType.FullName == "ProtoBuf.ProtoContractAttribute")
@@ -507,6 +566,13 @@ namespace ProtoBuf.Meta
 
         internal void ApplyDefaultBehaviour()
         {
+            TypeAddedEventArgs args = null; // allows us to share the event-args between events
+            RuntimeTypeModel.OnBeforeApplyDefaultBehaviour(this, ref args);
+            if (args == null || args.ApplyDefaultBehaviour) ApplyDefaultBehaviourImpl();
+            RuntimeTypeModel.OnAfterApplyDefaultBehaviour(this, ref args);
+        }
+        private void ApplyDefaultBehaviourImpl()
+        {
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
                 && GetContractFamily(model, baseType, null) != MetaType.AttributeFamily.None)
@@ -514,17 +580,17 @@ namespace ProtoBuf.Meta
                 model.FindOrAddAuto(baseType, true, false, false);
             }
 
-            AttributeMap[] typeAttribs = AttributeMap.Create(model, Type, false);
+            AttributeMap[] typeAttribs = AttributeMap.Create(Type, false);
             AttributeFamily family = GetContractFamily(model, Type, typeAttribs);
             if (family == AttributeFamily.AutoTuple)
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
             }
-            bool isEnum = !EnumPassthru && Helpers.IsEnum(Type);
+            bool isEnum = Type.IsEnum;
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
 
-            bool enumShouldUseImplicitPassThru = isEnum;
-            BasicList partialIgnores = null, partialMembers = null;
+            List<string> partialIgnores = null;
+            List<AttributeMap> partialMembers = null;
             int dataMemberOffset = 0, implicitFirstTag = 1;
             bool inferTagByName = model.InferTagFromNameDefault;
             ImplicitFields implicitMode = ImplicitFields.None;
@@ -548,11 +614,7 @@ namespace ProtoBuf.Meta
                     {
                         if (item.TryGet("knownTypeName", out tmp))
                         {
-                            knownType = TypeModel.ResolveKnownType((string)tmp, Type
-#if COREFX || PROFILE259
-                            .GetTypeInfo()
-#endif
-                            .Assembly);
+                            knownType = TypeModel.ResolveKnownType((string)tmp, Type.Assembly);
                         }
                         else if (item.TryGet("knownType", out tmp))
                         {
@@ -574,28 +636,20 @@ namespace ProtoBuf.Meta
                 {
                     if (item.TryGet(nameof(ProtoPartialIgnoreAttribute.MemberName), out tmp) && tmp != null)
                     {
-                        (partialIgnores ?? (partialIgnores = new BasicList())).Add((string)tmp);
+                        (partialIgnores ?? (partialIgnores = new List<string>())).Add((string)tmp);
                     }
                 }
                 if (!isEnum && fullAttributeTypeName == "ProtoBuf.ProtoPartialMemberAttribute")
                 {
-                    (partialMembers ?? (partialMembers = new BasicList())).Add(item);
+                    (partialMembers ?? (partialMembers = new List<AttributeMap>())).Add(item);
                 }
 
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
                 {
                     if (item.TryGet(nameof(ProtoContractAttribute.Name), out tmp)) name = (string)tmp;
-                    if (Helpers.IsEnum(Type)) // note this is subtly different to isEnum; want to do this even if [Flags]
+                    if (Type.IsEnum)
                     {
-                        if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthruHasValue), false, out tmp) && (bool)tmp)
-                        {
-                            if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthru), out tmp))
-                            {
-                                EnumPassthru = (bool)tmp;
-                                enumShouldUseImplicitPassThru = false;
-                                if (EnumPassthru) isEnum = false; // no longer treated as an enum
-                            }
-                        }
+                        // there aren't any interesting things to ask about for enums; they are just pass-thru
                     }
                     else
                     {
@@ -613,14 +667,14 @@ namespace ProtoBuf.Meta
 
                         if (item.TryGet(nameof(ProtoContractAttribute.SkipConstructor), out tmp)) UseConstructor = !(bool)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IgnoreListHandling), out tmp)) IgnoreListHandling = (bool)tmp;
+#if FEAT_DYNAMIC_REF
                         if (item.TryGet(nameof(ProtoContractAttribute.AsReferenceDefault), out tmp)) AsReferenceDefault = (bool)tmp;
+#endif
                         if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int)tmp > 0) implicitFirstTag = (int)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
 
-                        if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp))
-                        {
-                            SetSurrogate((Type)tmp);
-                        }
+                        if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp)) SetSurrogate((Type)tmp);
+                        if (item.TryGet(nameof(ProtoContractAttribute.Serializer), out tmp)) SerializerType = (Type)tmp;
                     }
                 }
 
@@ -632,7 +686,13 @@ namespace ProtoBuf.Meta
                 {
                     if (name == null && item.TryGet("TypeName", out tmp)) name = (string)tmp;
                 }
+
+                if (fullAttributeTypeName == "ProtoBuf.ProtoReservedAttribute" && item.Target is ProtoReservedAttribute reservation)
+                {
+                    AddReservation(reservation);
+                }
             }
+
             if (!string.IsNullOrEmpty(name)) Name = name;
             if (implicitMode != ImplicitFields.None)
             {
@@ -640,29 +700,12 @@ namespace ProtoBuf.Meta
             }
             MethodInfo[] callbacks = null;
 
-            BasicList members = new BasicList();
+            var members = new List<ProtoMemberAttribute>();
+            var enumMembers = new List<EnumMember>();
 
-#if PROFILE259
-			IEnumerable<MemberInfo> foundList;
-            if(isEnum) {
-                foundList = Type.GetRuntimeFields();
-            }
-            else
-            {
-                List<MemberInfo> list = new List<MemberInfo>();
-                foreach(PropertyInfo prop in Type.GetRuntimeProperties()) {
-                    MethodInfo getter = Helpers.GetGetMethod(prop, false, false);
-                    if(getter != null && !getter.IsStatic) list.Add(prop);
-                }
-                foreach(FieldInfo fld in Type.GetRuntimeFields()) if(fld.IsPublic && !fld.IsStatic) list.Add(fld);
-                foreach(MethodInfo mthd in Type.GetRuntimeMethods()) if(mthd.IsPublic && !mthd.IsStatic) list.Add(mthd);
-                foundList = list;
-            }
-#else
             MemberInfo[] foundList = Type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-#endif
-            bool hasConflictingEnumValue = false;
+
             foreach (MemberInfo member in foundList)
             {
                 if (member.DeclaringType != Type) continue;
@@ -692,7 +735,7 @@ namespace ProtoBuf.Meta
                     effectiveType = property.PropertyType;
                     isPublic = Helpers.GetGetMethod(property, false, false) != null;
                     isField = false;
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue, backingField);
+                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, enumMembers, backingField);
                 }
                 else if (member is FieldInfo field)
                 {
@@ -703,12 +746,12 @@ namespace ProtoBuf.Meta
                     { // only care about static things on enums; WinRT has a __value instance field!
                         continue;
                     }
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue);
+                    ApplyDefaultBehaviour_AddMembers(family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, enumMembers);
                 }
                 else if (member is MethodInfo method)
                 {
                     if (isEnum) continue;
-                    AttributeMap[] memberAttribs = AttributeMap.Create(model, method, false);
+                    AttributeMap[] memberAttribs = AttributeMap.Create(method, false);
                     if (memberAttribs != null && memberAttribs.Length > 0)
                     {
                         CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoBeforeSerializationAttribute", ref callbacks, 0);
@@ -723,19 +766,11 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (isEnum && enumShouldUseImplicitPassThru && !hasConflictingEnumValue)
-            {
-                EnumPassthru = true;
-                // but leave isEnum alone
-            }
-            var arr = new ProtoMemberAttribute[members.Count];
-            members.CopyTo(arr, 0);
-
             if (inferTagByName || implicitMode != ImplicitFields.None)
             {
-                Array.Sort(arr);
+                members.Sort();
                 int nextTag = implicitFirstTag;
-                foreach (ProtoMemberAttribute normalizedAttribute in arr)
+                foreach (ProtoMemberAttribute normalizedAttribute in members)
                 {
                     if (!normalizedAttribute.TagIsPinned) // if ProtoMember etc sets a tag, we'll trust it
                     {
@@ -744,13 +779,18 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            foreach (ProtoMemberAttribute normalizedAttribute in arr)
+            foreach (ProtoMemberAttribute normalizedAttribute in members)
             {
                 ValueMember vm = ApplyDefaultBehaviour(isEnum, normalizedAttribute);
                 if (vm != null)
                 {
                     Add(vm);
                 }
+            }
+
+            foreach (EnumMember enumMember in enumMembers)
+            {
+                Enums.Add(enumMember);
             }
 
             if (callbacks != null)
@@ -760,7 +800,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(TypeModel model, AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
+        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, List<AttributeMap>partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -773,15 +813,12 @@ namespace ProtoBuf.Meta
             }
 
             // we just don't like delegate types ;p
-#if COREFX || PROFILE259
-			if (effectiveType.GetTypeInfo().IsSubclassOf(typeof(Delegate))) effectiveType = null;
-#else
             if (effectiveType.IsSubclassOf(typeof(Delegate))) effectiveType = null;
-#endif
             if (effectiveType != null)
             {
-                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, ref hasConflictingEnumValue, backingMember);
+                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, out var enumMember, backingMember);
                 if (normalizedAttribute != null) members.Add(normalizedAttribute);
+                if (enumMember.HasValue) enumMembers.Add(enumMember);
             }
         }
 
@@ -795,7 +832,7 @@ namespace ProtoBuf.Meta
         {
             AttributeFamily family = AttributeFamily.None;
 
-            if (attributes == null) attributes = AttributeMap.Create(model, type, false);
+            if (attributes == null) attributes = AttributeMap.Create(type, false);
 
             for (int i = 0; i < attributes.Length; i++)
             {
@@ -823,7 +860,7 @@ namespace ProtoBuf.Meta
             }
             if (family == AttributeFamily.None)
             { // check for obvious tuples
-                if (ResolveTupleConstructor(type, out MemberInfo[] mapping) != null)
+                if (ResolveTupleConstructor(type, out MemberInfo[] _) != null)
                 {
                     family |= AttributeFamily.AutoTuple;
                 }
@@ -834,19 +871,14 @@ namespace ProtoBuf.Meta
         {
             mappedMembers = null;
             if (type == null) throw new ArgumentNullException(nameof(type));
-#if COREFX || PROFILE259
-			TypeInfo typeInfo = type.GetTypeInfo();
-            if (typeInfo.IsAbstract) return null; // as if!
-            ConstructorInfo[] ctors = Helpers.GetConstructors(typeInfo, false);
-#else
             if (type.IsAbstract) return null; // as if!
             ConstructorInfo[] ctors = Helpers.GetConstructors(type, false);
-#endif
+
             // need to have an interesting constructor to bother even checking this stuff
             if (ctors.Length == 0 || (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)) return null;
 
             MemberInfo[] fieldsPropsUnfiltered = Helpers.GetInstanceFieldsAndProperties(type, true);
-            BasicList memberList = new BasicList();
+            var memberList = new List<MemberInfo>();
             // for most types we'll enforce that you need readonly, because that is what protobuf-net
             // always did historically; but: if you smell so much like a Tuple that it is *in your name*,
             // we'll let you past that
@@ -928,11 +960,7 @@ namespace ProtoBuf.Meta
                     if (callbacks == null) { callbacks = new MethodInfo[8]; }
                     else if (callbacks[index] != null)
                     {
-#if COREFX || PROFILE259
-						Type reflected = method.DeclaringType;
-#else
                         Type reflected = method.ReflectedType;
-#endif
                         throw new ProtoException("Duplicate " + callbackTypeName + " callbacks on " + reflected.FullName);
                     }
                     callbacks[index] = method;
@@ -944,56 +972,32 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
 
-        private static ProtoMemberAttribute NormalizeProtoMember(TypeModel model, MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
+        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, List<AttributeMap> partialMembers, int dataMemberOffset, bool inferByTagName, out EnumMember enumMember, MemberInfo backingMember = null)
         {
+            enumMember = default;
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
             string name = null;
             bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, asReferenceHasValue = false, dynamicType = false, tagIsPinned = false, overwriteList = false;
             DataFormat dataFormat = DataFormat.Default;
             if (isEnum) forced = true;
-            AttributeMap[] attribs = AttributeMap.Create(model, member, true);
+            AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
             if (isEnum)
             {
-                attrib = GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute");
-                if (attrib != null)
-                {
-                    ignore = true;
-                }
-                else
+                if (GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute") == null)
                 {
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-#if PORTABLE || CF || COREFX || PROFILE259
-					fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
-#else
-                    fieldNumber = Convert.ToInt32(((FieldInfo)member).GetRawConstantValue());
-#endif
-                    if (attrib != null)
-                    {
-                        GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
 
-                        if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType
-#if COREFX || PROFILE259
-							 .GetTypeInfo()
-#endif
-                            , nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
-                        {
-                            if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object tmp))
-                            {
-                                if (fieldNumber != (int)tmp)
-                                {
-                                    hasConflictingEnumValue = true;
-                                }
-                                fieldNumber = (int)tmp;
-                            }
-                        }
-                    }
+                    var value = ((FieldInfo)member).GetRawConstantValue();
+                    if (attrib != null) GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
+                    if (string.IsNullOrWhiteSpace(name)) name = member.Name;
+
+                    enumMember = new EnumMember(value, name);
                 }
-                done = true;
+                return null;
             }
-
             if (!ignore && !done) // always consider ProtoMember 
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
@@ -1073,10 +1077,12 @@ namespace ProtoBuf.Meta
             if (ignore || (fieldNumber < minAcceptFieldNumber && !forced)) return null;
             ProtoMemberAttribute result = new ProtoMemberAttribute(fieldNumber, forced || inferByTagName)
             {
+#if FEAT_DYNAMIC_REF
                 AsReference = asReference,
                 AsReferenceHasValue = asReferenceHasValue,
-                DataFormat = dataFormat,
                 DynamicType = dynamicType,
+#endif
+                DataFormat = dataFormat,
                 IsPacked = isPacked,
                 OverwriteList = overwriteList,
                 IsRequired = isRequired,
@@ -1095,23 +1101,10 @@ namespace ProtoBuf.Meta
 
             Type effectiveType = Helpers.GetMemberType(member);
 
-            Type itemType = null;
-            Type defaultType = null;
-
             // check for list types
-            ResolveListTypes(model, effectiveType, ref itemType, ref defaultType);
-            bool ignoreListHandling = false;
-            // but take it back if it is explicitly excluded
-            if (itemType != null)
-            { // looks like a list, but double check for IgnoreListHandling
-                int idx = model.FindOrAddAuto(effectiveType, false, true, false);
-                if (idx >= 0 && (ignoreListHandling = model[effectiveType].IgnoreListHandling))
-                {
-                    itemType = null;
-                    defaultType = null;
-                }
-            }
-            AttributeMap[] attribs = AttributeMap.Create(model, member, true);
+            var repeated = model.TryGetRepeatedProvider(effectiveType);
+            
+            AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
             object defaultValue = null;
@@ -1142,16 +1135,12 @@ namespace ProtoBuf.Meta
                 if (attrib.TryGet("Value", out object tmp)) defaultValue = tmp;
             }
             ValueMember vm = (isEnum || normalizedAttribute.Tag > 0)
-                ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, itemType, defaultType, normalizedAttribute.DataFormat, defaultValue)
+                ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, repeated?.ItemType, null, normalizedAttribute.DataFormat, defaultValue)
                     : null;
             if (vm != null)
             {
                 vm.BackingMember = normalizedAttribute.BackingMember;
-#if COREFX || PROFILE259
-				TypeInfo finalType = typeInfo;
-#else
                 Type finalType = Type;
-#endif
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);
                 MethodInfo getMethod = Helpers.GetGetMethod(prop, true, true);
                 if (getMethod == null || getMethod.IsStatic) prop = null;
@@ -1161,7 +1150,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    MethodInfo method = Helpers.GetInstanceMethod(finalType, "ShouldSerialize" + member.Name, Helpers.EmptyTypes);
+                    MethodInfo method = Helpers.GetInstanceMethod(finalType, "ShouldSerialize" + member.Name, Type.EmptyTypes);
                     if (method != null && method.ReturnType == typeof(bool))
                     {
                         vm.SetSpecified(method, null);
@@ -1171,13 +1160,15 @@ namespace ProtoBuf.Meta
                 vm.IsPacked = normalizedAttribute.IsPacked;
                 vm.IsRequired = normalizedAttribute.IsRequired;
                 vm.OverwriteList = normalizedAttribute.OverwriteList;
+#if FEAT_DYNAMIC_REF
                 if (normalizedAttribute.AsReferenceHasValue)
                 {
                     vm.AsReference = normalizedAttribute.AsReference;
                 }
                 vm.DynamicType = normalizedAttribute.DynamicType;
+#endif
 
-                vm.IsMap = ignoreListHandling ? false : vm.ResolveMapTypes(out var _, out var _, out var _);
+                vm.IsMap = repeated != null && repeated.IsValidProtobufMap(model);
                 if (vm.IsMap) // is it even *allowed* to be a map?
                 {
                     if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
@@ -1313,12 +1304,16 @@ namespace ProtoBuf.Meta
             if (surrogateType != null)
             {
                 // note that BuildSerializer checks the **CURRENT TYPE** is OK to be surrogated
-                if (surrogateType != null && Helpers.IsAssignableFrom(typeof(IEnumerable), surrogateType))
+                if (typeof(IEnumerable).IsAssignableFrom(surrogateType))
                 {
-                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
+                    ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
+
+                if ((BaseType != null && BaseType != this) || (_subTypes?.Count ?? 0) > 0)
+                    ThrowSubTypeWithSurrogate(Type);
             }
             ThrowIfFrozen();
+
             this.surrogate = surrogateType;
             // no point in offering chaining; no options are respected
         }
@@ -1361,13 +1356,16 @@ namespace ProtoBuf.Meta
         private int GetNextFieldNumber()
         {
             int maxField = 0;
-            foreach (ValueMember member in fields)
+            if (HasFields)
             {
-                if (member.FieldNumber > maxField) maxField = member.FieldNumber;
+                foreach (ValueMember member in Fields)
+                {
+                    if (member.FieldNumber > maxField) maxField = member.FieldNumber;
+                }
             }
-            if (subTypes != null)
+            if (_subTypes != null)
             {
-                foreach (SubType subType in subTypes)
+                foreach (SubType subType in _subTypes)
                 {
                     if (subType.FieldNumber > maxField) maxField = subType.FieldNumber;
                 }
@@ -1419,41 +1417,16 @@ namespace ProtoBuf.Meta
         private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
             MemberInfo mi = null;
-#if PROFILE259
-			mi = Helpers.IsEnum(Type) ? Type.GetTypeInfo().GetDeclaredField(memberName) : Helpers.GetInstanceMember(Type.GetTypeInfo(), memberName);
-
-#else
-            MemberInfo[] members = Type.GetMember(memberName, Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            MemberInfo[] members = Type.GetMember(memberName, Type.IsEnum ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (members != null && members.Length == 1) mi = members[0];
-#endif
             if (mi == null) throw new ArgumentException("Unable to determine member: " + memberName, nameof(memberName));
 
             Type miType;
             PropertyInfo pi = null;
-            FieldInfo fi = null;
-#if PORTABLE || COREFX || PROFILE259
-			pi = mi as PropertyInfo;
-            if (pi == null)
-            {
-                fi = mi as FieldInfo;
-                if (fi == null)
-                {
-                    throw new NotSupportedException(mi.GetType().Name);
-                }
-                else
-                {
-                    miType = fi.FieldType;
-                }
-            }
-            else
-            {
-                miType = pi.PropertyType;
-            }
-#else
             switch (mi.MemberType)
             {
                 case MemberTypes.Field:
-                    fi = (FieldInfo)mi;
+                    var fi = (FieldInfo)mi;
                     miType = fi.FieldType; break;
                 case MemberTypes.Property:
                     pi = (PropertyInfo)mi;
@@ -1461,120 +1434,39 @@ namespace ProtoBuf.Meta
                 default:
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
-#endif
-            ResolveListTypes(model, miType, ref itemType, ref defaultType);
+            var repeated = model.TryGetRepeatedProvider(miType);
+            if (itemType != null && repeated?.ItemType != itemType) ThrowHelper.ThrowInvalidOperationException("Expected item type of " + repeated?.ItemType.NormalizeName());
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
             {
-                string name = $"<{((PropertyInfo)mi).Name}>k__BackingField";
-#if PROFILE259
-				var backingMembers = Type.GetTypeInfo().DeclaredMembers;
-	            var memberInfos = backingMembers as MemberInfo[] ?? backingMembers.ToArray();
-	            if (memberInfos.Length == 1)
-	            {
-		            MemberInfo first = memberInfos.FirstOrDefault();
-		            if (first is FieldInfo)
-		            {
-			            backingField = first;
-		            }
-	            }
-#else
-                var backingMembers = Type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var backingMembers = Type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Type.IsEnum ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (backingMembers != null && backingMembers.Length == 1 && backingMembers[0] is FieldInfo)
                     backingField = backingMembers[0];
-#endif
             }
-            ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
+            if (repeated != null)
+            {
+                if (defaultType != null && defaultType != repeated.ForType)
+                    ThrowHelper.ThrowNotSupportedException("Default types for collections are not currently supported; recommendation: initialize the colleciton in the type");
+                defaultType = repeated.ForType;
+            }
+
+            ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, repeated?.ItemType, defaultType, DataFormat.Default, defaultValue);
             if (backingField != null)
                 newField.SetName(mi.Name);
             Add(newField);
             return newField;
         }
 
-        internal static void ResolveListTypes(TypeModel model, Type type, ref Type itemType, ref Type defaultType)
-        {
-            if (type == null) return;
-            // handle arrays
-            if (type.IsArray)
-            {
-                if (type.GetArrayRank() != 1)
-                {
-                    throw new NotSupportedException("Multi-dimensional arrays are not supported");
-                }
-                itemType = type.GetElementType();
-                if (itemType == typeof(byte))
-                {
-                    defaultType = itemType = null;
-                }
-                else
-                {
-                    defaultType = type;
-                }
-            }
-            // handle lists
-            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
-
-            // check for nested data (not allowed)
-            if (itemType != null)
-            {
-                Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(model, itemType, ref nestedItemType, ref nestedDefaultType);
-                if (nestedItemType != null)
-                {
-                    throw TypeModel.CreateNestedListsNotSupported(type);
-                }
-            }
-
-            if (itemType != null && defaultType == null)
-            {
-#if COREFX || PROFILE259
-				TypeInfo typeInfo = type.GetTypeInfo();
-                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
-#else
-                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
-#endif
-                {
-                    defaultType = type;
-                }
-                if (defaultType == null)
-                {
-#if COREFX || PROFILE259
-					if (typeInfo.IsInterface)
-#else
-                    if (type.IsInterface)
-#endif
-                    {
-                        Type[] genArgs;
-#if COREFX || PROFILE259
-						if (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = typeInfo.GenericTypeArguments))
-#else
-                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-#endif
-                        {
-                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
-                        }
-                        else
-                        {
-                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
-                        }
-                    }
-                }
-                // verify that the default type is appropriate
-                if (defaultType != null && !Helpers.IsAssignableFrom(type, defaultType)) { defaultType = null; }
-            }
-        }
-
         private void Add(ValueMember member)
         {
+            if (Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Enums should use {nameof(SetEnumValues)} to customize the enum definitions");
             int opaqueToken = 0;
             try
             {
                 model.TakeLock(ref opaqueToken);
                 ThrowIfFrozen();
-                fields.Add(member);
+                Fields.Add(member);
             }
             finally
             {
@@ -1588,9 +1480,12 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                foreach (ValueMember member in fields)
+                if (HasFields)
                 {
-                    if (member.FieldNumber == fieldNumber) return member;
+                    foreach (ValueMember member in Fields)
+                    {
+                        if (member.FieldNumber == fieldNumber) return member;
+                    }
                 }
                 return null;
             }
@@ -1602,25 +1497,81 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                if (member == null) return null;
-                foreach (ValueMember x in fields)
+                if (member == null || !HasFields) return null;
+                foreach (ValueMember x in Fields)
                 {
                     if (x.Member == member || x.BackingMember == member) return x;
                 }
                 return null;
             }
         }
-        private readonly BasicList fields = new BasicList();
+
+        private List<ValueMember> _fields = null;
+        internal bool HasFields => _fields != null && _fields.Count != 0;
+        internal List<ValueMember> Fields => _fields ?? (_fields = new List<ValueMember>());
+
+        private List<EnumMember> _enums = new List<EnumMember>();
+        internal List<EnumMember> Enums => _enums ?? (_enums = new List<EnumMember>());
+        internal bool HasEnums => _enums != null && _enums.Count != 0;
 
         /// <summary>
         /// Returns the ValueMember instances associated with this type
         /// </summary>
         public ValueMember[] GetFields()
         {
-            ValueMember[] arr = new ValueMember[fields.Count];
-            fields.CopyTo(arr, 0);
+            if (!HasFields) return Array.Empty<ValueMember>();
+            var arr = Fields.ToArray();
             Array.Sort(arr, ValueMember.Comparer.Default);
             return arr;
+        }
+
+        /// <summary>
+        /// Returns the EnumMember instances associated with this type
+        /// </summary>
+        public EnumMember[] GetEnumValues()
+        {
+            if (!HasEnums) return Array.Empty<EnumMember>();
+            return Enums.ToArray();
+        }
+
+        /// <summary>
+        /// Add a new defined name/value pair for an enum
+        /// </summary>
+        public void SetEnumValues(EnumMember[] values)
+        {
+            if (!Type.IsEnum) ThrowHelper.ThrowInvalidOperationException($"Only enums should use {nameof(SetEnumValues)}");
+
+            if (values == null) ThrowHelper.ThrowArgumentNullException(nameof(values));
+
+            var typedClone = Array.ConvertAll(values, val => val.Normalize(Type));
+
+            foreach (var val in values)
+                val.Validate();
+
+            int opaqueToken = 0;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+                Enums.Clear();
+                Enums.AddRange(typedClone);
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+        }
+
+        internal bool IsValidEnum() => IsValidEnum(_enums);
+
+        internal static bool IsValidEnum(IList<EnumMember> values)
+        {
+            if (values == null || values.Count == 0) return false;
+            foreach(var val in values)
+            {
+                if (!val.TryGetInt32().HasValue) return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -1628,9 +1579,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public SubType[] GetSubtypes()
         {
-            if (subTypes == null || subTypes.Count == 0) return new SubType[0];
-            SubType[] arr = new SubType[subTypes.Count];
-            subTypes.CopyTo(arr, 0);
+            if (_subTypes == null || _subTypes.Count == 0) return Array.Empty<SubType>();
+            var arr = _subTypes.ToArray();
             Array.Sort(arr, SubType.Comparer.Default);
             return arr;
         }
@@ -1642,11 +1592,7 @@ namespace ProtoBuf.Meta
 
         private static IEnumerable<Type> GetAllGenericArguments(Type type)
         {
-#if PROFILE259
-	        var genericArguments = type.GetGenericTypeDefinition().GenericTypeArguments;
-#else
             var genericArguments = type.GetGenericArguments();
-#endif
             foreach (var arg in genericArguments)
             {
                 yield return arg;
@@ -1657,7 +1603,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-#if FEAT_COMPILER
         /// <summary>
         /// Compiles the serializer for this type; this is *not* a full
         /// standalone compile, but can significantly boost performance
@@ -1666,39 +1611,29 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-            if (!(serializer is CompiledSerializer))
+            var original = Serializer; // might lazily create
+            if (original is ICompiledSerializer || original.ExpectedType.IsEnum || model.TryGetRepeatedProvider(Type) != null)
+                return; // nothing to do
+            
+            var wrapped = CompiledSerializer.Wrap(original, model);
+            if (!ReferenceEquals(original, wrapped))
             {
-                serializer = CompiledSerializer.Wrap(Serializer, model);
+                _serializer = (IProtoTypeSerializer) wrapped;
+                Model.ResetServiceCache(Type);
             }
+            
         }
-#endif
 
         internal bool IsDefined(int fieldNumber)
         {
-            foreach (ValueMember field in fields)
+            if (HasFields)
             {
-                if (field.FieldNumber == fieldNumber) return true;
+                foreach (ValueMember field in Fields)
+                {
+                    if (field.FieldNumber == fieldNumber) return true;
+                }
             }
             return false;
-        }
-
-        internal int GetKey(bool demand, bool getBaseKey)
-        {
-            return model.GetKey(Type, demand, getBaseKey);
-        }
-
-        internal EnumSerializer.EnumPair[] GetEnumMap()
-        {
-            if (HasFlag(OPTIONS_EnumPassThru)) return null;
-            EnumSerializer.EnumPair[] result = new EnumSerializer.EnumPair[fields.Count];
-            for (int i = 0; i < result.Length; i++)
-            {
-                ValueMember member = (ValueMember)fields[i];
-                int wireValue = member.FieldNumber;
-                object value = member.GetRawEnumValue();
-                result[i] = new EnumSerializer.EnumPair(wireValue, value, member.MemberType);
-            }
-            return result;
         }
 
         /// <summary>
@@ -1707,8 +1642,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool EnumPassthru
         {
-            get { return HasFlag(OPTIONS_EnumPassThru); }
-            set { SetFlag(OPTIONS_EnumPassThru, value, true); }
+            [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, false)]
+            get => Type.IsEnum;
+            [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, true)]
+            set { if (value != EnumPassthru) ThrowHelper.ThrowNotSupportedException(); }
         }
 
         /// <summary>
@@ -1718,7 +1655,11 @@ namespace ProtoBuf.Meta
         public bool IgnoreListHandling
         {
             get { return HasFlag(OPTIONS_IgnoreListHandling); }
-            set { SetFlag(OPTIONS_IgnoreListHandling, value, true); }
+            set
+            {
+                SetFlag(OPTIONS_IgnoreListHandling, value, true);
+                model.ResetServiceCache(Type); // changes how collections are handled
+            }
         }
 
         internal bool Pending
@@ -1729,11 +1670,13 @@ namespace ProtoBuf.Meta
 
         private const ushort
             OPTIONS_Pending = 1,
-            OPTIONS_EnumPassThru = 2,
+            // OPTIONS_EnumPassThru = 2,
             OPTIONS_Frozen = 4,
             OPTIONS_PrivateOnApi = 8,
             OPTIONS_SkipConstructor = 16,
+#if FEAT_DYNAMIC_REF
             OPTIONS_AsReferenceDefault = 32,
+#endif
             OPTIONS_AutoTuple = 64,
             OPTIONS_IgnoreListHandling = 128,
             OPTIONS_IsGroup = 256;
@@ -1752,9 +1695,29 @@ namespace ProtoBuf.Meta
                 flags = (ushort)(flags & ~flag);
         }
 
+        private Type _serializerType;
+
+        /// <summary>
+        /// Specify a custom serializer for this type
+        /// </summary>
+        public Type SerializerType
+        {
+            get => _serializerType;
+            set
+            {
+                if (value != _serializerType)
+                {
+                    if (!value.IsClass)
+                        ThrowHelper.ThrowArgumentException("Custom serializer providers must be classes", nameof(SerializerType));
+                    ThrowIfFrozen();
+                    _serializerType = value;
+                }
+            }
+        }
+
         internal static MetaType GetRootType(MetaType source)
         {
-            while (source.serializer != null)
+            while (source._serializer != null)
             {
                 MetaType tmp = source.baseType;
                 if (tmp == null) return source;
@@ -1780,18 +1743,12 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-#if FEAT_COMPILER
-            return serializer is CompiledSerializer;
-#else
-            return false;
-#endif
+            return _serializer is CompiledSerializer;
         }
-
-        internal IEnumerable Fields => this.fields;
 
         internal static StringBuilder NewLine(StringBuilder builder, int indent)
         {
-            return Helpers.AppendLine(builder).Append(' ', indent * 3);
+            return builder.AppendLine().Append(' ', indent * 3);
         }
 
         internal bool IsAutoTuple => HasFlag(OPTIONS_AutoTuple);
@@ -1805,26 +1762,40 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_IsGroup, value, true); }
         }
 
-        internal void WriteSchema(StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
+        internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
         {
             if (surrogate != null) return; // nothing to write
 
-            ValueMember[] fieldsArr = new ValueMember[fields.Count];
-            fields.CopyTo(fieldsArr, 0);
-            Array.Sort(fieldsArr, ValueMember.Comparer.Default);
+            var repeated = model.TryGetRepeatedProvider(Type);
 
-            if (IsList)
+            if (repeated != null)
             {
-                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(Type), DataFormat.Default, false, false, ref imports);
-                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
-                NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
+                
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
+
+                if (repeated.IsValidProtobufMap(model))
+                {
+                    repeated.ResolveMapTypes(out var key, out var value);
+
+                    NewLine(builder, indent + 1).Append("map<")
+                        .Append(model.GetSchemaTypeName(callstack, key, DataFormat.Default, false, false, ref imports))
+                        .Append(", ")
+                        .Append(model.GetSchemaTypeName(callstack, value, DataFormat.Default, false, false, ref imports))
+                        .Append("> items = 1;");
+                }
+                else
+                {
+                    NewLine(builder, indent + 1).Append("repeated ")
+                        .Append(model.GetSchemaTypeName(callstack, repeated.ItemType, DataFormat.Default, false, false, ref imports))
+                        .Append(" items = 1;");
+                }
                 NewLine(builder, indent).Append('}');
             }
             else if (IsAutoTuple)
             { // key-value-pair etc
                 if (ResolveTupleConstructor(Type, out MemberInfo[] mapping) != null)
                 {
-                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                     for (int i = 0; i < mapping.Length; i++)
                     {
                         Type effectiveType;
@@ -1840,104 +1811,93 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
-                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref imports).Replace('.', '_'))
+                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, false, false, ref imports).Replace('.', '_'))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
                     NewLine(builder, indent).Append('}');
                 }
             }
-            else if (Helpers.IsEnum(Type))
+            else if (Type.IsEnum)
             {
-                NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
-                if (fieldsArr.Length == 0 && EnumPassthru)
+                var enums = GetEnumValues();
+
+
+                bool allValid = IsValidEnum(enums);
+                if (!allValid) NewLine(builder, indent).Append("/* for context only");
+                NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
+
+                if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
-                    if (Type
-#if COREFX || PROFILE259
-                    .GetTypeInfo()
-#endif
-                        .IsDefined(typeof(FlagsAttribute), true))
+                    NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
+                }                
+
+                bool needsAlias = false; // check whether we need to allow duplicate names
+                var uniqueFields = new HashSet<int>();
+                foreach (var field in enums)
+                {
+                    var parsed = field.TryGetInt32();
+                    if (parsed.HasValue && !uniqueFields.Add(parsed.Value))
                     {
-                        NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
+                        needsAlias = true;
+                        break;
+                    }
+                }
+
+                if (needsAlias)
+                {   // duplicated value requires allow_alias
+                    NewLine(builder, indent + 1).Append("option allow_alias = true;");
+                }
+
+                bool haveWrittenZero = false;
+                // write zero values **first**
+                foreach (var member in enums)
+                {
+                    var parsed = member.TryGetInt32();
+                    if (parsed.HasValue && parsed.Value == 0)
+                    {
+                        NewLine(builder, indent + 1).Append(member.Name).Append(" = 0;");
+                        haveWrittenZero = true;
+                    }
+                }
+
+                if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
+                {
+                    NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
+                }
+
+                // note array is already sorted, so zero would already be first
+                foreach (var member in enums)
+                {
+                    var parsed = member.TryGetInt32();
+                    if (parsed.HasValue)
+                    {
+                        if (parsed.Value == 0) continue;
+                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(parsed.Value).Append(';');
                     }
                     else
                     {
-                        NewLine(builder, indent + 1).Append("// this enumeration will be passed as a raw value");
-                    }
-                    foreach (FieldInfo field in
-#if PROFILE259
-						Type.GetRuntimeFields()
-#else
-                        Type.GetFields()
-#endif
-
-                        )
-                    {
-                        if (field.IsStatic && field.IsLiteral)
-                        {
-                            object enumVal;
-#if PORTABLE || CF || NETSTANDARD1_3 || NETSTANDARD1_4 || PROFILE259 || UAP
-							enumVal = Convert.ChangeType(field.GetValue(null), Enum.GetUnderlyingType(field.FieldType), System.Globalization.CultureInfo.InvariantCulture);
-#else
-                            enumVal = field.GetRawConstantValue();
-#endif
-                            NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";");
-                        }
+                        NewLine(builder, indent + 1).Append("// ").Append(member.Name).Append(" = ").Append(member.Value).Append(';').Append(" // note: enums should be valid 32-bit integers");
                     }
                 }
-                else
-                {
-                    Dictionary<int, int> countByField = new Dictionary<int, int>(fieldsArr.Length);
-                    bool needsAlias = false;
-                    foreach (var field in fieldsArr)
-                    {
-                        if (countByField.ContainsKey(field.FieldNumber))
-                        {  // no point actually counting; that's enough to know we have a problem
-                            needsAlias = true;
-                            break;
-                        }
-                        countByField.Add(field.FieldNumber, 1);
-                    }
-                    if (needsAlias)
-                    {   // duplicated value requires allow_alias
-                        NewLine(builder, indent + 1).Append("option allow_alias = true;");
-                    }
-
-                    bool haveWrittenZero = false;
-                    // write zero values **first**
-                    foreach (ValueMember member in fieldsArr)
-                    {
-                        if (member.FieldNumber == 0)
-                        {
-                            NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
-                            haveWrittenZero = true;
-                        }
-                    }
-                    if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
-                    {
-                        NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
-                    }
-                    // note array is already sorted, so zero would already be first
-                    foreach (ValueMember member in fieldsArr)
-                    {
-                        if (member.FieldNumber == 0) continue;
-                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
-                    }
-                }
+                if (HasReservations) AppendReservations();
                 NewLine(builder, indent).Append('}');
+                if (!allValid) NewLine(builder, indent).Append("*/");
             }
             else
             {
-                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                ValueMember[] fieldsArr = GetFields();
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
                     bool hasOption = false;
                     if (member.IsMap)
                     {
-                        member.ResolveMapTypes(out var _, out var keyType, out var valueType);
+                        repeated = model.TryGetRepeatedProvider(member.MemberType);
+                        repeated.ResolveMapTypes(out var keyType, out var valueType);
 
-                        var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref imports);
-                        schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
+                        var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, false, false, ref imports);
+                        schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
                             .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
                     }
@@ -1946,7 +1906,8 @@ namespace ProtoBuf.Meta
                         string ordinality = member.ItemType != null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
                         NewLine(builder, indent + 1).Append(ordinality);
                         if (member.DataFormat == DataFormat.Group) builder.Append("group ");
-                        schemaTypeName = member.GetSchemaTypeName(true, ref imports);
+
+                        schemaTypeName = member.GetSchemaTypeName(callstack, true, ref imports, out var altName);
                         builder.Append(schemaTypeName).Append(" ")
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
@@ -2002,20 +1963,22 @@ namespace ProtoBuf.Meta
                                 builder.Append(" // default value could not be applied: ").Append(member.DefaultValue);
                             }
                         }
+
+                        if (!string.IsNullOrWhiteSpace(altName))
+                            builder.Append(" // declared as invalid enum: ").Append(altName);
                     }
                     if (schemaTypeName == ".bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
-                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports));
+                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(callstack, false, ref imports, out _));
                     }
                 }
-                if (subTypes != null && subTypes.Count != 0)
+                if (_subTypes != null && _subTypes.Count != 0)
                 {
-                    SubType[] subTypeArr = new SubType[subTypes.Count];
-                    subTypes.CopyTo(subTypeArr, 0);
+                    SubType[] subTypeArr = _subTypes.ToArray();
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
                     string[] fieldNames = new string[subTypeArr.Length];
                     for(int i = 0; i < subTypeArr.Length;i++)
-                        fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName();
+                        fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName(callstack);
 
                     string fieldName = "subtype";
                     while (Array.IndexOf(fieldNames, fieldName) >= 0)
@@ -2030,7 +1993,29 @@ namespace ProtoBuf.Meta
                     }
                     NewLine(builder, indent + 1).Append("}");
                 }
+                if (HasReservations) AppendReservations();
                 NewLine(builder, indent).Append('}');
+            }
+
+            void AppendReservations()
+            {
+                foreach (var reservation in _reservations)
+                {
+                    NewLine(builder, indent + 1).Append("reserved ");
+                    if (reservation.From != 0)
+                    {
+                        builder.Append(reservation.From);
+                        if (reservation.To != reservation.From) builder.Append(" to ").Append(reservation.To);
+
+                    }
+                    else
+                    {
+                        builder.Append('\"').Append(reservation.Name).Append('\"');
+                    }
+                    builder.Append(';');
+                    if (!string.IsNullOrWhiteSpace(reservation.Comment))
+                        builder.Append(" /* ").Append(reservation.Comment).Append(" */");
+                }
             }
         }
 
@@ -2102,6 +2087,183 @@ namespace ProtoBuf.Meta
             }
             return false;
         }
+
+        /// <summary>
+        /// Apply a shift to all fields (and sub-types) on this type
+        /// </summary>
+        /// <param name="offset">The change in field number to apply</param>
+        /// <remarks>The resultant field numbers must still all be considered valid</remarks>
+        [System.ComponentModel.Browsable(false)]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public void ApplyFieldOffset(int offset)
+        {
+            if (Type.IsEnum) throw new InvalidOperationException("Cannot apply field-offset to an enum");
+            if (offset == 0) return; // nothing to do
+            int opaqueToken = 0;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+
+                var fields = _fields;
+                var subTypes = _subTypes;
+                if (fields != null)
+                {
+                    foreach (ValueMember field in fields)
+                        AssertValidFieldNumber(field.FieldNumber + offset);
+                }
+                if (subTypes != null)
+                {
+                    foreach (SubType subType in subTypes)
+                        AssertValidFieldNumber(subType.FieldNumber + offset);
+                }
+
+                // we've checked the ranges are all OK; since we're moving everything, we can't overlap ourselves
+                // so: we can just move
+                if (fields != null)
+                {
+                    foreach (ValueMember field in fields)
+                        field.FieldNumber += offset;
+                }
+                if (subTypes != null)
+                {
+                    foreach (SubType subType in subTypes)
+                        subType.FieldNumber += offset;
+                }
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+        }
+
+        internal static void AssertValidFieldNumber(int fieldNumber)
+        {
+            if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+        }
+
+        /// <summary>
+        /// Adds a single number field reservation
+        /// </summary>
+        public MetaType AddReservation(int field, string comment = null)
+            => AddReservation(new ProtoReservedAttribute(field, comment));
+        /// <summary>
+        /// Adds range number field reservation
+        /// </summary>
+        public MetaType AddReservation(int from, int to, string comment = null)
+            => AddReservation(new ProtoReservedAttribute(from, to, comment));
+        /// <summary>
+        /// Adds a named field reservation
+        /// </summary>
+        public MetaType AddReservation(string field, string comment = null)
+            => AddReservation(new ProtoReservedAttribute(field, comment));
+        private MetaType AddReservation(ProtoReservedAttribute reservation)
+        {
+            reservation.Verify();
+            int opaqueToken = default;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+                _reservations ??= new List<ProtoReservedAttribute>();
+                _reservations.Add(reservation);
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+            return this;
+        }
+
+        private List<ProtoReservedAttribute> _reservations;
+
+        internal bool HasReservations => (_reservations?.Count ?? 0) != 0;
+
+        internal void Validate() => ValidateReservations(); // just this for now, but: in case we need more later
+
+        internal void ValidateReservations()
+        {
+            if (!(HasReservations && (HasFields || HasSubtypes || HasEnums))) return;
+
+            foreach (var reservation in _reservations)
+            {
+                if (reservation.From != 0)
+                {
+                    if (_fields != null)
+                    {
+                        foreach (var field in _fields)
+                        {
+                            if (field.FieldNumber >= reservation.From && field.FieldNumber <= reservation.To)
+                            {
+                                throw new InvalidOperationException($"Field {field.FieldNumber} is reserved and cannot be used for data member '{field.Name}'{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_enums != null)
+                    {
+                        foreach (var @enum in _enums)
+                        {
+                            var val = @enum.TryGetInt32();
+                            if (val.HasValue && val.Value >= reservation.From && val.Value <= reservation.To)
+                            {
+                                throw new InvalidOperationException($"Field {val.Value} is reserved and cannot be used for enum value '{@enum.Name}'{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_subTypes != null)
+                    {
+                        foreach (var subType in _subTypes)
+                        {
+                            if (subType.FieldNumber >= reservation.From && subType.FieldNumber <= reservation.To)
+                            {
+                                throw new InvalidOperationException($"Field {subType.FieldNumber} is reserved and cannot be used for sub-type '{subType.DerivedType.Type.NormalizeName()}'{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (_fields != null)
+                    {
+                        foreach (var field in _fields)
+                        {
+                            if (field.Name == reservation.Name)
+                            {
+                                throw new InvalidOperationException($"Field '{field.Name}' is reserved and cannot be used for data member {field.FieldNumber}{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_enums != null)
+                    {
+                        foreach (var @enum in _enums)
+                        {
+                            if (@enum.Name == reservation.Name)
+                            {
+                                throw new InvalidOperationException($"Field '{@enum.Name}' is reserved and cannot be used for enum value {@enum.Value}{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                    if (_subTypes != null)
+                    {
+                        foreach (var subType in _subTypes)
+                        {
+                            var name = subType.DerivedType.Name;
+                            if (string.IsNullOrWhiteSpace(name)) name = subType.DerivedType.Type.Name;
+                            if (name == reservation.Name)
+                            {
+                                throw new InvalidOperationException($"Field '{name}' is reserved and cannot be used for sub-type {subType.FieldNumber}{CommentSuffix(reservation)}.");
+                            }
+                        }
+                    }
+                }
+            }
+
+            static string CommentSuffix(ProtoReservedAttribute reservation)
+            {
+                var comment = reservation.Comment;
+                if (string.IsNullOrWhiteSpace(comment)) return "";
+                return " (" + comment.Trim() + ")";
+            }
+        }
     }
 }
-#endif

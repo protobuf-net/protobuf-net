@@ -57,15 +57,15 @@ namespace Examples.Issues
         private static void TestGeneratedModel(TypeModel model, string message)
         {
             var a = new A_generated() { Age = 10, b = new B_generated { Balls = 23 } };
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, a);
-                Assert.True(ms.ToArray().SequenceEqual(new byte[] { 08, 10, 82, 2, 16, 23 }), message);
-                ms.Position = 0;
-                var clone = (A_generated)model.Deserialize(ms, null, typeof(A_generated));
-                Assert.Equal(10, clone.Age); //, message);
-                Assert.Equal(23, clone.b.Balls); //, message);
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, a);
+            Assert.True(ms.ToArray().SequenceEqual(new byte[] { 08, 10, 82, 2, 16, 23 }), message);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone = (A_generated)model.Deserialize(ms, null, typeof(A_generated));
+#pragma warning restore CS0618
+            Assert.Equal(10, clone.Age); //, message);
+            Assert.Equal(23, clone.b.Balls); //, message);
         }
         [Fact]
         public void TestSubclassDeserializes()
@@ -81,15 +81,17 @@ namespace Examples.Issues
             TestInheritanceModel(model.Compile(), "Compile");
         }
 
+#pragma warning disable IDE0060
         private static void TestInheritanceModel(TypeModel model, string message)
+#pragma warning restore IDE0060
         {
-            using (var ms = new MemoryStream(new byte[] {08, 10, 82, 2, 16, 23}))
-            {
-                var clone = (A)model.Deserialize(ms, null, typeof(A));
-                Assert.Equal(10, clone.Age); //, message);
-                B b = (B) clone;
-                Assert.Equal(23, b.Balls); //, message);
-            }
+            using var ms = new MemoryStream(new byte[] { 08, 10, 82, 2, 16, 23 });
+#pragma warning disable CS0618
+            var clone = (A)model.Deserialize(ms, null, typeof(A));
+#pragma warning restore CS0618
+            Assert.Equal(10, clone.Age); //, message);
+            B b = (B)clone;
+            Assert.Equal(23, b.Balls); //, message);
         }
     }
 }

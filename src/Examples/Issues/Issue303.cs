@@ -11,7 +11,7 @@ namespace Examples.Issues
     {
         static TypeModel GetModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof (Vegetable), true);
             model.Add(typeof (Animal), true);
             return model;
@@ -39,7 +39,7 @@ message vegetable {
 }
 ",
 
- model.GetSchema(null)
+ model.GetSchema(null, ProtoSyntax.Proto2)
 
 );
         }
@@ -93,7 +93,7 @@ message vegetable {
 }
 ",
 
- model.GetSchema(null)
+ model.GetSchema(null, ProtoSyntax.Proto2)
 
 );
         }
@@ -116,7 +116,7 @@ message cat {
 }
 ",
 
-                model.GetSchema(typeof(Animal))
+                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2)
 
                 );
         }
@@ -139,7 +139,7 @@ message cat {
 }
 ",
 
-                model.GetSchema(typeof(Animal))
+                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2)
 
                 );
         }

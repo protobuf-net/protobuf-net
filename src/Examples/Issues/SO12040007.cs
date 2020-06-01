@@ -23,7 +23,7 @@ namespace Examples.Issues
         [Fact]
         public void BasicVersusContract()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.True(model.CanSerialize(typeof(int)), "int Any");
             Assert.True(model.CanSerializeBasicType(typeof(int)), "int BasicType");
             Assert.False(model.CanSerializeContractType(typeof(int)), "int ContractType");
@@ -56,7 +56,7 @@ namespace Examples.Issues
         [Fact]
         public void BasicVersusContractArrays()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.True(model.CanSerialize(typeof(int[])), "int Any");
             Assert.True(model.CanSerializeBasicType(typeof(int[])), "int BasicType");
             Assert.False(model.CanSerializeContractType(typeof(int[])), "int ContractType");
@@ -89,7 +89,7 @@ namespace Examples.Issues
         [Fact]
         public void BasicVersusContractLists()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.True(model.CanSerialize(typeof(List<int>)), "int Any");
             Assert.True(model.CanSerializeBasicType(typeof(List<int>)), "int BasicType");
             Assert.False(model.CanSerializeContractType(typeof(List<int>)), "int ContractType");
@@ -121,7 +121,7 @@ namespace Examples.Issues
         [Fact]
         public void TestPrimitiveCanSerialize()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.True(model.CanSerialize(typeof(int)));
             Assert.True(model.CanSerialize(typeof(int?)));
             Assert.True(model.CanSerialize(typeof(short)));
@@ -140,7 +140,7 @@ namespace Examples.Issues
         [Fact]
         public void TestPrimitiveArraysCanSerialize()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.True(model.CanSerialize(typeof(int[])), "int");
             Assert.True(model.CanSerialize(typeof(int?[])), "int?");
             Assert.True(model.CanSerialize(typeof(short[])), "short");
@@ -158,7 +158,7 @@ namespace Examples.Issues
         [Fact]
         public void TestPrimitiveNestedArraysCannotSerialize()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.False(model.CanSerialize(typeof(int[][])));
             Assert.False(model.CanSerialize(typeof(int?[][])));
             Assert.False(model.CanSerialize(typeof(short[][])));
@@ -176,7 +176,7 @@ namespace Examples.Issues
         [Fact]
         public void TestPrimitiveMultidimArraysCannotSerialize()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.False(model.CanSerialize(typeof(int[,])));
             Assert.False(model.CanSerialize(typeof(int?[,])));
             Assert.False(model.CanSerialize(typeof(short[,])));

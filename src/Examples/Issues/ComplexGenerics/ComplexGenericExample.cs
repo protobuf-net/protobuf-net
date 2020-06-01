@@ -1,5 +1,4 @@
-﻿#if !COREFX
-namespace Examples.Issues.ComplexGenerics
+﻿namespace Examples.Issues.ComplexGenerics
 {
 /* Written in response to a question about how to handle multiple "packet" subclasses;
  * may as well keep it as a test...
@@ -11,16 +10,37 @@ namespace Examples.Issues.ComplexGenerics
     using System;
     using System.ComponentModel;
     using System.IO;
+    using ProtoBuf.Meta;
+    using Xunit.Abstractions;
 
-    
     public class ComplexGenericTest
     {
+        [Fact]
+        public void VerifyIL()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(Query));
+            model.Compile("ComplexGenericTest", "ComplexGenericTest.dll");
+            PEVerify.AssertValid("ComplexGenericTest.dll");
+        }
+
         [Fact]
         public void TestX()
         {
             Query query = new X { Result = "abc" };
             Assert.Equal(typeof(string), query.GetQueryType());
-            Query clone = Serializer.DeepClone<Query>(query);
+
+            using var ms = new MemoryStream();
+            Serializer.Serialize<Query>(ms, query);
+            ms.Position = 0;
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("B2-01-05-0A-03-61-62-63", hex);
+            // B2-01 = field 22, type String
+            // 05 = length 5
+            // 0A = field 1, type String
+            // 03 = length 3
+            // 61-62-63 = abc            
+            Query clone = Serializer.Deserialize<Query>(ms);
             Assert.NotNull(clone);
             Assert.NotSame(clone, query);
             Assert.IsType(query.GetType(), clone);
@@ -68,14 +88,14 @@ namespace Examples.Issues.ComplexGenerics
     [ProtoInclude(23, typeof(Y))]
     [ProtoInclude(25, typeof(SpecialQuery))]
     [ProtoContract]
-    abstract class Query : IQuery
+    public abstract class Query : IQuery
     {
         public string Result
         {
             get { return ResultString; }
             set { ResultString = value; }
         }
-        protected abstract string ResultString { get; set; }
+        public abstract string ResultString { get; set; }
 
         protected static string FormatQueryString<T>(T value)
         {
@@ -90,13 +110,13 @@ namespace Examples.Issues.ComplexGenerics
     }
     [ProtoContract]
     [ProtoInclude(21, typeof(Z))]
-    abstract class SpecialQuery : Query, IQuery<DataSet>
+    public abstract class SpecialQuery : Query, IQuery<DataSet>
     {
         
         public new DataSet Result { get; set; }
 
         [ProtoMember(1)]
-        protected override string ResultString
+        public override string ResultString
         {
             get {
                 if (Result == null) return null;
@@ -110,7 +130,7 @@ namespace Examples.Issues.ComplexGenerics
                 if (value == null) { Result = null; return; }
                 using (StringReader sr = new StringReader(value))
                 {
-                    DataSet ds = new DataSet();
+                    using DataSet ds = new DataSet();
                     ds.ReadXml(sr, XmlReadMode.ReadSchema);
                 }
             }
@@ -118,44 +138,43 @@ namespace Examples.Issues.ComplexGenerics
     }
 
     [ProtoContract]
-    class W : Query, IQuery<bool>
+    public class W : Query, IQuery<bool>
     {
         [ProtoMember(1)]
         public new bool Result { get; set; }
 
-        protected override string ResultString
+        public override string ResultString
         {
             get {return FormatQueryString(Result); }
             set { Result = ParseQueryString<bool>(value); }
         }
     }
     [ProtoContract]
-    class X : Query, IQuery<string>
+    public class X : Query, IQuery<string>
     {
         [ProtoMember(1)]
         public new string Result { get; set; }
 
-        protected override string ResultString
+        public override string ResultString
         {
             get { return Result ; }
             set { Result = value; }
         }
     }
     [ProtoContract]
-    class Y : Query, IQuery<int>
+    public class Y : Query, IQuery<int>
     {
         [ProtoMember(1)]
         public new int Result { get; set; }
 
-        protected override string ResultString
+        public override string ResultString
         {
             get { return FormatQueryString(Result); }
             set { Result = ParseQueryString<int>(value); }
         }
     }
     [ProtoContract]
-    class Z : SpecialQuery
+    public class Z : SpecialQuery
     {
     }
 }
-#endif

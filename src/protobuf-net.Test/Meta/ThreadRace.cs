@@ -54,8 +54,8 @@ namespace ProtoBuf.unittest.Meta
             var b = new AnotherType() { A = 123 };
             for (int i = 0; i < 100; i++)
             {
-                ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                using ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -119,8 +119,8 @@ namespace ProtoBuf.unittest.Meta
 
             for (int i = 0; i < 100; i++)
             {
-                ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                using ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -133,16 +133,16 @@ namespace ProtoBuf.unittest.Meta
                     {
                         try
                         {
-                            using (var ms = new MemoryStream(raw))
-                            {
-                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                                allGo.WaitOne();
-                                var data = (Dictionary<string,string>)model.Deserialize(ms, null, typeof(Dictionary<string,string>));
-                                if (data == null || data.Count != 3) throw new InvalidDataException();
-                                if (data["a"] != "b") throw new InvalidDataException();
-                                if (data["c"] != "d") throw new InvalidDataException();
-                                if (data["e"] != "f") throw new InvalidDataException();
-                            }
+                            using var ms = new MemoryStream(raw);
+                            if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                            allGo.WaitOne();
+#pragma warning disable CS0618
+                            var data = (Dictionary<string, string>)model.Deserialize(ms, null, typeof(Dictionary<string, string>));
+#pragma warning restore CS0618
+                            if (data == null || data.Count != 3) throw new InvalidDataException();
+                            if (data["a"] != "b") throw new InvalidDataException();
+                            if (data["c"] != "d") throw new InvalidDataException();
+                            if (data["e"] != "f") throw new InvalidDataException();
                         }
                         catch (Exception ex)
                         {
@@ -211,8 +211,8 @@ namespace ProtoBuf.unittest.Meta
 
             for (int i = 0; i < 100; i++)
             {
-                ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                using ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -225,13 +225,13 @@ namespace ProtoBuf.unittest.Meta
                     {
                         try
                         {
-                            using (var ms = new MemoryStream(raw))
-                            {
-                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                                else allGo.WaitOne();
-                                object obj = model.Deserialize(ms, null, typeof(A));
-                                if (obj.GetType() != typeof(Y)) throw new InvalidDataException("Should be a Y");
-                            }
+                            using var ms = new MemoryStream(raw);
+                            if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                            else allGo.WaitOne();
+#pragma warning disable CS0618
+                            object obj = model.Deserialize(ms, null, typeof(A));
+#pragma warning restore CS0618
+                            if (obj.GetType() != typeof(Y)) throw new InvalidDataException("Should be a Y");
                         }
                         catch (Exception ex)
                         {
@@ -264,8 +264,8 @@ namespace ProtoBuf.unittest.Meta
 
             for (int i = 0; i < 100; i++)
             {
-                ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                using ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -278,13 +278,11 @@ namespace ProtoBuf.unittest.Meta
                     {
                         try
                         {
-                            using (var ms = new MemoryStream())
-                            {
-                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                                else allGo.WaitOne();
-                                model.Serialize(ms, new Y());
-                                if (!ms.ToArray().SequenceEqual(raw)) throw new InvalidDataException("Bad serialization; " + GetHex(raw) + " vs " + GetHex(ms.ToArray()));
-                            }
+                            using var ms = new MemoryStream();
+                            if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                            else allGo.WaitOne();
+                            model.Serialize(ms, new Y());
+                            if (!ms.ToArray().SequenceEqual(raw)) throw new InvalidDataException("Bad serialization; " + GetHex(raw) + " vs " + GetHex(ms.ToArray()));
                         }
                         catch (Exception ex)
                         {
@@ -322,17 +320,17 @@ namespace ProtoBuf.unittest.Meta
             for(int i = 0 ; i < expected.Length ; i++)
             {
                 var model = RuntimeTypeModel.Create();
-                using (var ms = new MemoryStream())
-                {
-                    model.Serialize(ms, objs[i], null);
-                    expected[i] = GetHex(ms.ToArray());
-                }
+                using var ms = new MemoryStream();
+#pragma warning disable CS0618
+                model.Serialize(ms, objs[i], null);
+#pragma warning restore CS0618
+                expected[i] = GetHex(ms.ToArray());
             }
             for (int i = 0; i < 250; i++)
             {
                 
-                ManualResetEvent allGo = new ManualResetEvent(false);
-                var model = TypeModel.Create();
+                using ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = true;
                 object starter = new object();
                 int waiting = 20;
@@ -347,14 +345,14 @@ namespace ProtoBuf.unittest.Meta
                         {
                             object obj = objs[(int)oIndex];
                             string exp = expected[(int)oIndex];
-                            using (var ms = new MemoryStream())
-                            {
-                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                                else allGo.WaitOne();
-                                model.Serialize(ms, obj, null);
-                                string hex = GetHex(ms.ToArray());
-                                if (hex != exp) throw new InvalidDataException("Bad serialization; " + hex + " vs " + exp);
-                            }
+                            using var ms = new MemoryStream();
+                            if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                            else allGo.WaitOne();
+#pragma warning disable CS0618
+                            model.Serialize(ms, obj, null);
+#pragma warning restore CS0618
+                            string hex = GetHex(ms.ToArray());
+                            if (hex != exp) throw new InvalidDataException("Bad serialization; " + hex + " vs " + exp);
                         }
                         catch (Exception ex)
                         {

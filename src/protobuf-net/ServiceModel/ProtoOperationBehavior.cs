@@ -1,5 +1,4 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel.Description;
@@ -13,16 +12,14 @@ namespace ProtoBuf.ServiceModel
     /// </summary>
     public sealed class ProtoOperationBehavior : DataContractSerializerOperationBehavior
     {
-        private TypeModel model;
+        private TypeModel _model;
 
         /// <summary>
         /// Create a new ProtoOperationBehavior instance
         /// </summary>
         public ProtoOperationBehavior(OperationDescription operation) : base(operation)
         {
-#if !NO_RUNTIME
-            model = RuntimeTypeModel.Default;
-#endif
+            _model = RuntimeTypeModel.Default;
         }
 
         /// <summary>
@@ -30,10 +27,10 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public TypeModel Model
         {
-            get { return model; }
+            get { return _model; }
             set
             {
-                model = value ?? throw new ArgumentNullException(nameof(value));
+                _model = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -44,9 +41,8 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override XmlObjectSerializer CreateSerializer(Type type, XmlDictionaryString name, XmlDictionaryString ns, IList<Type> knownTypes)
         {
-            if (model == null) throw new InvalidOperationException("No Model instance has been assigned to the ProtoOperationBehavior");
-            return XmlProtoSerializer.TryCreate(model, type) ?? base.CreateSerializer(type, name, ns, knownTypes);
+            if (_model == null) throw new InvalidOperationException("No Model instance has been assigned to the ProtoOperationBehavior");
+            return XmlProtoSerializer.TryCreate(_model, type) ?? base.CreateSerializer(type, name, ns, knownTypes);
         }
     }
 }
-#endif

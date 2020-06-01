@@ -11,7 +11,8 @@ namespace Examples.Issues
         [Fact]
         public void Exec()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
+#pragma warning disable CS0618 // we know that EnumPassthru is obsolete; we still want to check the output
             Assert.True(model[typeof(A)].EnumPassthru, "A");
             Assert.True(model[typeof(B)].EnumPassthru, "B");
 
@@ -21,8 +22,9 @@ namespace Examples.Issues
             Assert.True(model[typeof(E)].EnumPassthru, "E");
             Assert.True(model[typeof(F)].EnumPassthru, "F");
 
-            Assert.False(model[typeof(G)].EnumPassthru, "G");
-            Assert.False(model[typeof(H)].EnumPassthru, "H");            
+            Assert.True(model[typeof(G)].EnumPassthru, "G");
+            Assert.True(model[typeof(H)].EnumPassthru, "H");
+#pragma warning restore CS0618
         }
 
         // no ProtoContract; with [Flags] is pass-thru, else not
@@ -37,15 +39,15 @@ namespace Examples.Issues
         public enum D { X, Y, Z }
 
         // ProtoContract with explicit pass-thru enabled; always pass-thru
-        [ProtoContract(EnumPassthru = true)]
+        [ProtoContract]
         public enum E { X, Y, Z }
-        [ProtoContract(EnumPassthru = true), Flags]
+        [ProtoContract, Flags]
         public enum F { X, Y, Z }
 
         // ProtoContract with explicit pass-thru disabled; never pass-thru (even if [Flags])
-        [ProtoContract(EnumPassthru = false)]
+        [ProtoContract]
         public enum G { X, Y, Z }
-        [ProtoContract(EnumPassthru = false), Flags]
+        [ProtoContract, Flags]
         public enum H { X, Y, Z }
     }
     

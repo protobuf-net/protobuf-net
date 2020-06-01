@@ -139,7 +139,7 @@ namespace Examples
         private static void TestDictionaryImpl<T>([CallerMemberName] string name = null)
             where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
 
             TestDictionaryImpl<T>(model, "Runtime");
@@ -159,38 +159,38 @@ namespace Examples
             var values = new Dictionary<int, string> { { 1, "a" }, { 2, "b" }, { 3, "c" }, { 4, "d" } };
             var obj = new T { Dictionary = ImmutableDictionary.Create<int,string>().AddRange(values) };
 
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            try
             {
-                try
-                {
-                    model.Serialize(ms, obj);
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                ms.Position = 0;
-                T clone;
-                try
-                {
-                    clone = (T)model.Deserialize(ms, null, typeof(T));
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                Assert.Equal(4, clone.Dictionary.Count); //, caption);
-                Assert.Equal("a", clone.Dictionary[1]); //, caption);
-                Assert.Equal("b", clone.Dictionary[2]); //, caption);
-                Assert.Equal("c", clone.Dictionary[3]); //, caption);
-                Assert.Equal("d", clone.Dictionary[4]); //, caption);
+                model.Serialize(ms, obj);
             }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":serialize", ex);
+            }
+            ms.Position = 0;
+            T clone;
+            try
+            {
+#pragma warning disable CS0618
+                clone = (T)model.Deserialize(ms, null, typeof(T));
+#pragma warning restore CS0618
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":deserialize", ex);
+            }
+            Assert.Equal(4, clone.Dictionary.Count); //, caption);
+            Assert.Equal("a", clone.Dictionary[1]); //, caption);
+            Assert.Equal("b", clone.Dictionary[2]); //, caption);
+            Assert.Equal("c", clone.Dictionary[3]); //, caption);
+            Assert.Equal("d", clone.Dictionary[4]); //, caption);
         }
 
         private static void TestListImpl<T>([CallerMemberName] string name = null)
             where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestListImpl<T>(model, "Runtime");
 
@@ -208,38 +208,45 @@ namespace Examples
             int[] values = { 1, 2, 3, 4 };
             var obj = new T { List = ImmutableList.Create<int>(values) };
 
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            try
             {
-                try
-                {
-                    model.Serialize(ms, obj);
-                } catch(Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                ms.Position = 0;
-                T clone;
-                try
-                {
-                    clone = (T)model.Deserialize(ms, null, typeof(T));
-                } catch(Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                AssertSequence(new[] { 1, 2, 3, 4 }, clone.List, caption);
-                ms.Position = 0;
-                try
-                {
-                    model.Deserialize(ms, clone, null); // this is append!
-                } catch(Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                AssertSequence(new[] { 1, 2, 3, 4, 1, 2, 3, 4 }, clone.List, caption);
+                model.Serialize(ms, obj);
             }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":serialize", ex);
+            }
+            ms.Position = 0;
+            T clone;
+            try
+            {
+#pragma warning disable CS0618
+                clone = (T)model.Deserialize(ms, null, typeof(T));
+#pragma warning restore CS0618
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":deserialize", ex);
+            }
+            AssertSequence(new[] { 1, 2, 3, 4 }, clone.List, caption);
+            ms.Position = 0;
+            try
+            {
+#pragma warning disable CS0618
+                model.Deserialize(ms, clone, type: null); // this is append!
+#pragma warning restore CS0618
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":serialize", ex);
+            }
+            AssertSequence(new[] { 1, 2, 3, 4, 1, 2, 3, 4 }, clone.List, caption);
         }
 
+#pragma warning disable IDE0060
         static void AssertSequence<T>(IEnumerable<T> expected, IEnumerable<T> actual, string caption)
+#pragma warning restore IDE0060
         {
             if (expected == null)
             {
@@ -262,7 +269,7 @@ namespace Examples
         //private static void TestArrayImpl<T>([CallerMemberName] string name = null)
         //    where T : class, IImmutableCollectionWrapper, new()
         //{
-        //    var model = TypeModel.Create();
+        //    var model = RuntimeTypeModel.Create();
         //    model.AutoCompile = false;
         //    TestArrayImpl<T>(model, "Runtime");
 
@@ -315,7 +322,7 @@ namespace Examples
         private static void TestHashSetImpl<T>([CallerMemberName] string name = null)
             where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestHashSetImpl<T>(model, "Runtime");
 
@@ -332,36 +339,36 @@ namespace Examples
             where T : class, IImmutableCollectionWrapper, new()
         {
             var obj = new T { HashSet = ImmutableHashSet.Create(1, 3, 2) };
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            try
             {
-                try
-                {
-                    model.Serialize(ms, obj);
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                ms.Position = 0;
-                T clone;
-                try
-                {
-                    clone = (T)model.Deserialize(ms, null, typeof(T));
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                Assert.Equal(3, clone.HashSet.Count); //, caption);
-                Assert.Contains(1, clone.HashSet); //, caption);
-                Assert.Contains(2, clone.HashSet); //, caption);
-                Assert.Contains(3, clone.HashSet); //, caption);
+                model.Serialize(ms, obj);
             }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":serialize", ex);
+            }
+            ms.Position = 0;
+            T clone;
+            try
+            {
+#pragma warning disable CS0618
+                clone = (T)model.Deserialize(ms, null, typeof(T));
+#pragma warning restore CS0618
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":deserialize", ex);
+            }
+            Assert.Equal(3, clone.HashSet.Count); //, caption);
+            Assert.Contains(1, clone.HashSet); //, caption);
+            Assert.Contains(2, clone.HashSet); //, caption);
+            Assert.Contains(3, clone.HashSet); //, caption);
         }
         private static void TestSortedSetImpl<T>([CallerMemberName] string name = null)
     where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestSortedSetImpl<T>(model, "Runtime");
 
@@ -378,33 +385,33 @@ namespace Examples
             where T : class, IImmutableCollectionWrapper, new()
         {
             var obj = new T { SortedSet = ImmutableSortedSet.Create(1, 3, 2) };
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            try
             {
-                try
-                {
-                    model.Serialize(ms, obj);
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                ms.Position = 0;
-                T clone;
-                try
-                {
-                    clone = (T)model.Deserialize(ms, null, typeof(T));
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                AssertSequence(new[] { 1, 2, 3 }, clone.SortedSet, caption);
+                model.Serialize(ms, obj);
             }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":serialize", ex);
+            }
+            ms.Position = 0;
+            T clone;
+            try
+            {
+#pragma warning disable CS0618
+                clone = (T)model.Deserialize(ms, null, typeof(T));
+#pragma warning restore CS0618
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":deserialize", ex);
+            }
+            AssertSequence(new[] { 1, 2, 3 }, clone.SortedSet, caption);
         }
         private static void TestSortedDictionaryImpl<T>([CallerMemberName] string name = null)
     where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestSortedDictionaryImpl<T>(model, "Runtime");
 
@@ -426,32 +433,32 @@ namespace Examples
                 {2,"b"}
             };
             var obj = new T { SortedDictionary = ImmutableSortedDictionary.Create<int, string>().AddRange(dict) };
-            using (var ms = new MemoryStream())
+            using var ms = new MemoryStream();
+            try
             {
-                try
-                {
-                    model.Serialize(ms, obj);
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                ms.Position = 0;
-                T clone;
-                try
-                {
-                    clone = (T)model.Deserialize(ms, null, typeof(T));
-                }
-                catch (Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                Assert.Equal(3, clone.SortedDictionary.Count); //, caption);
-                Assert.Equal("a", clone.SortedDictionary[1]); //, caption);
-                Assert.Equal("b", clone.SortedDictionary[2]); //, caption);
-                Assert.Equal("c", clone.SortedDictionary[3]); //, caption);
-                AssertSequence(new[] { 1, 2, 3 }, clone.SortedDictionary.Keys, caption);
+                model.Serialize(ms, obj);
             }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":serialize", ex);
+            }
+            ms.Position = 0;
+            T clone;
+            try
+            {
+#pragma warning disable CS0618
+                clone = (T)model.Deserialize(ms, null, typeof(T));
+#pragma warning restore CS0618
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(caption + ":deserialize", ex);
+            }
+            Assert.Equal(3, clone.SortedDictionary.Count); //, caption);
+            Assert.Equal("a", clone.SortedDictionary[1]); //, caption);
+            Assert.Equal("b", clone.SortedDictionary[2]); //, caption);
+            Assert.Equal("c", clone.SortedDictionary[3]); //, caption);
+            AssertSequence(new[] { 1, 2, 3 }, clone.SortedDictionary.Keys, caption);
         }
 
         interface IImmutableCollectionWrapper

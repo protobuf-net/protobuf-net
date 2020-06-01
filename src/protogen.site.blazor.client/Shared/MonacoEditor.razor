@@ -1,0 +1,83 @@
+﻿@inject IJSRuntime JsRuntime;
+<div class="h-100" style="border: 1px solid grey" @ref="editor"></div>
+@code {
+    private string _content;
+    private bool _initDone = false;
+
+    ElementReference editor;
+
+    [Parameter]
+    public string Language { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; } = false;
+
+    [Parameter]
+    public string Content
+    {
+        get
+        {
+            return _content;
+        }
+        set
+        {
+            if(_content == value)
+            {
+                //this break the SO exception : set content will trigger editor changed 
+                //value that'll trigger the binded value change that'll call this method ...
+                //this is not supposed to happen in chain binding, but it does because the jsinterop involved here 
+                return;
+            }
+            _content = value;
+            SetContent(value);
+        }
+    }
+    [Parameter]
+    public EventCallback<string> ContentChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("initMonaco",
+                editor,
+                DotNetObjectReference.Create(this),
+                Language,
+                ReadOnly);
+            _initDone = true;
+            if (!string.IsNullOrEmpty(Content))
+            {
+                SetContent(Content);
+            }
+        }
+    }
+
+    public void SetContent(string content)
+    {
+        if (_initDone) // the component is not initialized, we ignore the setvalue as it'll be done in OnAfterRenderAsync
+            ((IJSInProcessRuntime)JsRuntime).InvokeVoid("setMonaco", editor, content);
+    }
+    [JSInvokableAttribute("OnEditorValueChanged")]
+    public async Task OnEditorValueChanged(string content)
+    {
+        this._content = content;
+        await ContentChanged.InvokeAsync(content);
+    }
+
+    public async Task<string> GetContent()
+    {
+        return await JsRuntime.InvokeAsync<string>("getMonaco", editor);
+    }
+
+    public async Task AddError(bool isError, int lineNumber, int lineEnd, int columnNumber, int columnEnd, string text)
+    {
+        await JsRuntime.InvokeAsync<string>("addMonacoError", editor, lineNumber, lineEnd, columnNumber, columnEnd, text, isError);
+
+    }
+
+    public async Task ClearErrors()
+    {
+        await JsRuntime.InvokeVoidAsync("cleanMonacoError", editor);
+
+    }
+}

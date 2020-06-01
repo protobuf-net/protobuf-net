@@ -39,7 +39,7 @@ namespace ProtoBuf.Issues
         [Fact]
         public void TypeGeneratesProto()
         {
-            var proto = Serializer.GetProto<ModelWithTypeMember>();
+            var proto = Serializer.GetProto<ModelWithTypeMember>(Meta.ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Issues;
 
@@ -47,7 +47,7 @@ message ModelWithTypeMember {
    optional int32 Id = 1 [default = 0];
    optional string SomeType = 2;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [ProtoContract]
         public class ModelWithTypeMember

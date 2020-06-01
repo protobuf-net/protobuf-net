@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if FEAT_DYNAMIC_REF
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ namespace Examples
             var inner = new BasicReferenceTestInner();
             outer.Foo = outer.Bar = inner;
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(BasicReferenceTestOuter), true);
             model.Add(typeof(BasicReferenceTestInner), true);
 
@@ -70,7 +71,7 @@ namespace Examples
             inner.Self = inner;
             outer.Foo = inner;
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(BasicReferenceTestOuter), true);
             model.Add(typeof(BasicReferenceTestInner), true);
 
@@ -117,7 +118,7 @@ namespace Examples
         [Fact]
         public void StringNotInterned()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.InternStrings = false;
 
             var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
@@ -131,7 +132,7 @@ namespace Examples
         [Fact]
         public void StringInterned()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.InternStrings = true;
 
             var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
@@ -191,7 +192,7 @@ namespace Examples
             var inner = new BasicDynamicTestInner();
             outer.Foo = inner;
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(BasicDynamicTestOuter), true);
             model.Add(typeof(BasicDynamicTestInner), true); // assume we can at least know candidates at runtime, for now
 
@@ -238,7 +239,10 @@ namespace Examples
             [ProtoMember(1, DynamicType = true)]
             public object Value { get; set; }
         }
+
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "unsupported scenario")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         // this is failing currently; needs to handle base-type via dynamictype
         public void TestUnknownDerivedType()
         {
@@ -256,3 +260,4 @@ namespace Examples
 
     
 }
+#endif

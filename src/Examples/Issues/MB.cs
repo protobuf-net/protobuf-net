@@ -1,59 +1,63 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Xunit;
 using System.IO;
 #if !COREFX
 using System.Runtime.Serialization.Formatters.Binary;
 #endif
 using System.Diagnostics;
-using System.Xml.Serialization;
-using System.Reflection.Emit;
-using System.Reflection;
 using ProtoBuf;
+using ProtoBuf.Meta;
+using Examples;
+using Xunit.Abstractions;
 
 namespace TestMediaBrowser
 {
 
-#region test data
+    #region test data
 
-    enum Fur { smooth, fluffy }
+    public enum Fur { smooth, fluffy }
 
     [ProtoContract]
     [ProtoInclude(10, typeof(Animal))]
-    class Thing
+    public class Thing
     {
         [ProtoMember(1)]
         public int Age;
     }
     [ProtoContract]
     [ProtoInclude(10, typeof(Dog))]
-    class Animal : Thing
+    public class Animal : Thing
     {
 
         public Animal()
         {
             Random r = new Random();
-            legs = r.Next();
+            Legs = r.Next();
             Weight = r.Next();
         }
 
+
+        //#pragma warning disable IDE0044 // Add readonly modifier
+        //        [ProtoMember(1)]
+        //        private int legs;
+        //#pragma warning restore IDE0044 // Add readonly modifier
+
         [ProtoMember(1)]
-        private int legs;
-        public int Legs { get { return legs; } }
+        public int Legs { get; set; }
 
         [ProtoMember(2)]
-        public int Weight { get; private set; }
+        public int Weight { get; set; }
     }
     [ProtoContract]
-    class Dog : Animal
+    public class Dog : Animal
     {
 
         // its used during reflection tests 
-#pragma warning disable 169
+#pragma warning disable 169, IDE0044, IDE0051
         Fur i;
-#pragma warning restore 169
+#pragma warning restore 169, IDE0044, IDE0051
 
         [ProtoMember(1)]
         public Fur Fur { get; set; }
@@ -71,7 +75,9 @@ namespace TestMediaBrowser
         }
 
         [ProtoMember(1)]
+#pragma warning disable IDE0044 // Add readonly modifier
         int? age;
+#pragma warning restore IDE0044 // Add readonly modifier
         public int? Age { get { return age; } }
 
         [ProtoMember(2)]
@@ -96,7 +102,7 @@ namespace TestMediaBrowser
         public List<MisterNullable> Nullables { get; set; }
     }
     [ProtoContract]
-    class DateTimeClass
+    public class DateTimeClass
     {
         [ProtoMember(1)]
         public DateTime Date { get; set; }
@@ -119,9 +125,10 @@ namespace TestMediaBrowser
 
 #endregion
 
-    
     public class TestSerialization
     {
+        private ITestOutputHelper Log { get; }
+        public TestSerialization(ITestOutputHelper _log) => Log = _log;
 
         [Fact]
         public void TestSerializerShouldSupportNulls()
@@ -148,12 +155,24 @@ namespace TestMediaBrowser
 
         }
 
+#if EMIT_DLL
+        [Fact]
+        public void CompileDateTimeClassModel()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(DateTimeClass));
+            model.Compile("CompileDateTimeClassModel", "CompileDateTimeClassModel.dll");
+            PEVerify.AssertValid("CompileDateTimeClassModel.dll");
+        }
+#endif
 
         [Fact]
         public void TestUninitializedDatetimePersistance()
         {
             var original = new DateTimeClass();
+            Assert.NotNull(original);
             var copy = Serializer.DeepClone(original);
+            Assert.NotNull(copy);
             Assert.Equal(original.Date, copy.Date);
         }
 
@@ -161,8 +180,27 @@ namespace TestMediaBrowser
         public void TestInheritedClone()
         {
             Thing original = new Animal();
-            Assert.IsType<Animal>(Serializer.DeepClone(original));
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(Thing), true);
+
+            Assert.IsType<Animal>(model.DeepClone(original));
+            model.CompileInPlace();
+            Assert.IsType<Animal>(model.DeepClone(original));
+
+            var compiled = model.Compile();
+            Assert.IsType<Animal>(compiled.DeepClone(original));
         }
+
+        [Fact]
+        public void TestInheritedClone_PEVerify()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(Thing), true);
+            model.Compile("TestInheritedClone", "TestInheritedClone.dll");
+            PEVerify.AssertValid("TestInheritedClone.dll");
+        }
+
         /*
         [Fact]
         public void TestMergeDoesNotInventFields()
@@ -175,7 +213,9 @@ namespace TestMediaBrowser
             Assert.Null(other.TVDBSeriesId);
         }*/
 
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "This works differently by design; perhaps reverse order?")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void TestMerging()
         {
             var source = new MisterNullable(11)
@@ -312,14 +352,12 @@ namespace TestMediaBrowser
 #if !COREFX
             TimeAction("Standard serialization", () =>
             {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    BinaryFormatter bf = new BinaryFormatter();
-                    bf.Serialize(ms, list);
-                    ms.Position = 0;
-                    list = new List<DummyPersistanceObject>();
-                    list = (List<DummyPersistanceObject>)bf.Deserialize(ms);
-                }
+                using MemoryStream ms = new MemoryStream();
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(ms, list);
+                ms.Position = 0;
+                list = new List<DummyPersistanceObject>();
+                list = (List<DummyPersistanceObject>)bf.Deserialize(ms);
             });
 #endif
             GC.Collect();
@@ -347,36 +385,31 @@ namespace TestMediaBrowser
 
             TimeAction("Custom Serializer", () =>
             {
-                using (MemoryStream ms = new MemoryStream())
+                using MemoryStream ms = new MemoryStream();
+                foreach (var foo in list)
                 {
-                    foreach (var foo in list)
-                    {
-                        Serializer.Serialize(ms, foo);
-                    }
+                    Serializer.Serialize(ms, foo);
+                }
 
-                    ms.Position = 0;
+                ms.Position = 0;
 
-                    list = new List<DummyPersistanceObject>();
-                    for (int i = 0; i < 100000; i++)
-                    {
-                        list.Add(Serializer.Deserialize<DummyPersistanceObject>(ms));
-                    }
-
+                list = new List<DummyPersistanceObject>();
+                for (int i = 0; i < 100000; i++)
+                {
+                    list.Add(Serializer.Deserialize<DummyPersistanceObject>(ms));
                 }
             });
 
 
         }
 
-
-        static void TimeAction(string description, Action func)
+        private void TimeAction(string description, Action func)
         {
             var watch = new Stopwatch();
             watch.Start();
             func();
             watch.Stop();
-            Console.Write(description);
-            Console.WriteLine(" Time Elapsed {0} ms", watch.ElapsedMilliseconds);
+            Log.WriteLine("{0} Time Elapsed {1} ms", description, watch.ElapsedMilliseconds);
         }
     }
 }

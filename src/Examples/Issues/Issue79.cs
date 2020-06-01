@@ -41,7 +41,7 @@ namespace Examples.Issues
         {
 
             MyTypeWithFlags obj = new MyTypeWithFlags { SomeValue = value }, clone;
-            string caption = value + " (" + (int)value + ")";
+            // string caption = value + " (" + (int)value + ")";
             clone = Serializer.DeepClone(obj);
             Assert.Equal(value, clone.SomeValue); //, caption);
         }

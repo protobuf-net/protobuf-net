@@ -41,10 +41,10 @@ namespace Examples.Issues
         [Fact]
         public void AutoConfigOfModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var member = model[typeof(Foo)][1];
             Assert.Equal(typeof(Bar), member.ItemType);
-            Assert.Equal(typeof(List<Bar>), member.DefaultType);
+            Assert.Equal(typeof(IList<Bar>), member.DefaultType);
         }
         [Fact]
         public void DefaultToListT()
@@ -60,14 +60,12 @@ namespace Examples.Issues
         public void DataContractSerializer_DoesSupportNakedEnumerables()
         {
             var ser = new DataContractSerializer(typeof(FooEnumerable));
-            using (var ms = new MemoryStream())
-            {
-                ser.WriteObject(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
-                ms.Position = 0;
-                var clone = (FooEnumerable)ser.ReadObject(ms);
-                Assert.NotNull(clone.Bars);
-                Assert.Single(clone.Bars);
-            }
+            using var ms = new MemoryStream();
+            ser.WriteObject(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ms.Position = 0;
+            var clone = (FooEnumerable)ser.ReadObject(ms);
+            Assert.NotNull(clone.Bars);
+            Assert.Single(clone.Bars);
         }
         [Fact]
         public void XmlSerializer_DoesntSupportNakedEnumerables()
@@ -75,14 +73,12 @@ namespace Examples.Issues
             Program.ExpectFailure<InvalidOperationException>(() =>
             {
                 var ser = new XmlSerializer(typeof(FooEnumerable));
-                using (var ms = new MemoryStream())
-                {
-                    ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
-                    ms.Position = 0;
-                    var clone = (FooEnumerable)ser.Deserialize(ms);
-                    Assert.NotNull(clone.Bars);
-                    Assert.Single(clone.Bars);
-                }
+                using var ms = new MemoryStream();
+                ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+                ms.Position = 0;
+                var clone = (FooEnumerable)ser.Deserialize(ms);
+                Assert.NotNull(clone.Bars);
+                Assert.Single(clone.Bars);
             });
         }
 #if !COREFX
@@ -90,29 +86,42 @@ namespace Examples.Issues
         public void JavaScriptSerializer_DoesSupportNakedEnumerables()
         {
             var ser = new JavaScriptSerializer();
-            using (var ms = new MemoryStream())
-            {
-                string s = ser.Serialize(new FooEnumerable { Bars = new[] { new Bar { } } });
-                ms.Position = 0;
-                var clone = (FooEnumerable)ser.Deserialize(s, typeof(FooEnumerable));
-                Assert.NotNull(clone.Bars);
-                Assert.Single(clone.Bars);
-            }
+            using var ms = new MemoryStream();
+            string s = ser.Serialize(new FooEnumerable { Bars = new[] { new Bar { } } });
+            ms.Position = 0;
+            var clone = (FooEnumerable)ser.Deserialize(s, typeof(FooEnumerable));
+            Assert.NotNull(clone.Bars);
+            Assert.Single(clone.Bars);
         }
 #endif
 
         [Fact]
-        public void ProtobufNet_DoesSupportNakedEnumerables()
+        public void ProtobufNet_SupportsNakedEnumerables()
         {
-            var ser = TypeModel.Create();
-            using (var ms = new MemoryStream())
+            var ser = RuntimeTypeModel.Create();
+            using var ms = new MemoryStream();
+            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ms.Position = 0;
+            var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
+            Assert.NotNull(clone.Bars);
+            Assert.Single(clone.Bars);
+        }
+
+        [Fact]
+        public void ProtobufNet_SupportsNakedEnumerables_ButMustBeAddable()
+        {
+            var ser = RuntimeTypeModel.Create();
+            using var ms = new MemoryStream();
+            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ms.Position = 0;
+            // let's make Bars non-null in the target object, with something immutable
+            // (an empty array), to see how it goes boom
+            var obj = new FooEnumerable { Bars = Array.Empty<Bar>() };
+            var ex = Assert.Throws<InvalidOperationException>(() =>
             {
-                ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
-                ms.Position = 0;
-                var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
-                Assert.NotNull(clone.Bars);
-                Assert.Single(clone.Bars);
-            }
+                var clone = (FooEnumerable)ser.Deserialize(ms, obj, type: typeof(FooEnumerable));
+            });
+            Assert.Equal("For repeated data declared as System.Collections.Generic.IEnumerable`1[Examples.Issues.SO7793527+Bar], the *underlying* collection (Examples.Issues.SO7793527+Bar[]) must implement ICollection<T> and must not declare itself read-only; alternative (more exotic) collections can be used, but must be declared using their well-known form (for example, a member could be declared as ImmutableHashSet<T>)", ex.Message);
         }
 
         // see https://gist.github.com/gmcelhanon/5391894
@@ -120,10 +129,10 @@ namespace Examples.Issues
         public class GoalPlanningModel1
         {
             [ProtoMember(1)]
-            public IEnumerable<ProposedGoal> ProposedGoals { get; set; }
+            public ICollection<ProposedGoal> ProposedGoals { get; set; }
 
             [ProtoMember(2)]
-            public IEnumerable<PublishedGoal> PublishedGoals { get; set; }
+            public ICollection<PublishedGoal> PublishedGoals { get; set; }
         }
 
         // In order to get protobuf-net to serialize it, I have to change the IEnumerabe<T> members to IList<T>.
@@ -143,7 +152,7 @@ namespace Examples.Issues
         public class PublishedGoal { [ProtoMember(1)] public int X { get; set; } }
 
         [Fact]
-        public void TestPlanningModelWithEnumerables()
+        public void TestPlanningModelWithCollections()
         {
             var obj = new GoalPlanningModel1
             {
@@ -155,9 +164,9 @@ namespace Examples.Issues
             model.CompileInPlace();
             Verify(obj, model, "CompileInPlace");
             Verify(obj, model.Compile(), "Compile");
-            var dll = model.Compile("TestPlanningModelWithEnumerables", "TestPlanningModelWithEnumerables.dll");
+            var dll = model.Compile("TestPlanningModelWithCollections", "TestPlanningModelWithCollections.dll");
             Verify(obj, dll, "dll");
-            PEVerify.AssertValid("TestPlanningModelWithEnumerables.dll");
+            PEVerify.AssertValid("TestPlanningModelWithCollections.dll");
         }
 
         [Fact]
@@ -178,7 +187,9 @@ namespace Examples.Issues
             PEVerify.AssertValid("TestPlanningModelWithLists.dll");
         }
 
+#pragma warning disable IDE0060
         private static void Verify(GoalPlanningModel2 obj, TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             var clone = (GoalPlanningModel2)model.DeepClone(obj);
             Assert.Null(clone.PublishedGoals); //, caption + ":published");
@@ -186,7 +197,10 @@ namespace Examples.Issues
             Assert.Equal(1, clone.ProposedGoals.Count); //, caption + ":count");
             Assert.Equal(23, clone.ProposedGoals[0].X); //, caption + ":X");
         }
+
+#pragma warning disable IDE0060
         private static void Verify(GoalPlanningModel1 obj, TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             var clone = (GoalPlanningModel1)model.DeepClone(obj);
             Assert.Null(clone.PublishedGoals); //, caption + ":published");

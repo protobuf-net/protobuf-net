@@ -40,7 +40,7 @@ namespace ProtoBuf.unittest.Serializers
         [Fact]
         public void TestDateTimeCanCompileFully()
         {
-            var model = CreateModel().Compile("TestDateTimeCanCompileFully", "TestDateTimeCanCompileFully.dll");
+            _ = CreateModel().Compile("TestDateTimeCanCompileFully", "TestDateTimeCanCompileFully.dll");
             PEVerify.Verify("TestDateTimeCanCompileFully.dll");
         }
 
@@ -58,7 +58,7 @@ namespace ProtoBuf.unittest.Serializers
 
         static RuntimeTypeModel CreateModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithDateTime), false)
                 .Add(1, "When");
             return model;

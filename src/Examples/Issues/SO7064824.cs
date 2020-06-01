@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#if FEAT_DYNAMIC_REF
+using System.IO;
 using System;
 using Xunit;
 using ProtoBuf;
@@ -87,12 +88,12 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             }
             else
             {
-                switch (args.FormattedName)
+                args.Type = args.FormattedName switch
                 {
-                    case "Derived": args.Type = typeof(Derived); break;
-                    case "Base": args.Type = typeof(Base); break;
-                    default: throw new NotSupportedException(args.FormattedName);
-                }
+                    "Derived" => typeof(Derived),
+                    "Base" => typeof(Base),
+                    _ => throw new NotSupportedException(args.FormattedName),
+                };
             }
         }
 
@@ -116,12 +117,12 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
                 // this would be nice...
                 Assert.Equal(typeof(Base[]), cloned.BaseArray.GetType()); //, "array type");
-            }, "Conflicting item/add type");
+            }, "Unable to wrap BaseClassArrayContainerClass/BaseClassArrayContainerClass: Unable to bind deserializer: Conflicting item/add type");
         }
 
         RuntimeTypeModel CreateModel()
         {
-            RuntimeTypeModel model = TypeModel.Create();
+            RuntimeTypeModel model = RuntimeTypeModel.Create();
 
             model.Add(typeof(ObjectArrayContainerClass), true);
             model.Add(typeof(BaseClassArrayContainerClass), true);
@@ -140,3 +141,4 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
 
 }
+#endif

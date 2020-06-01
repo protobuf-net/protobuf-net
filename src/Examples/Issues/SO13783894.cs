@@ -15,46 +15,55 @@ namespace Examples.Issues
         [Fact]
         public void ConfigureBasicEnum()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(MyEnum), true);
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
             var obj2 = new Test<MyEnum> { Value = MyEnum.Foo };
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, obj1);
-                ms.Position = 0;
-                var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
-                ms.SetLength(0);
-                model.Serialize(ms, obj2);
-                ms.Position = 0;
-                var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+            using var ms = new MemoryStream();
+            model.Serialize(ms, obj1);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
+            ms.SetLength(0);
+            model.Serialize(ms, obj2);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
 
-                Assert.Equal(2, clone1.Value);
-                Assert.Equal(3, clone2.Value);
-            }
+            Assert.Equal(2, clone1.Value);
+            Assert.Equal(3, clone2.Value);
         }
         [Fact]
         public void ConfigureExplicitEnumValuesAtRuntime()
         {
-            var model = TypeModel.Create();
-            model.Add(typeof(MyEnum), false).Add(1, "Default").Add(10, "Foo");
+            var model = RuntimeTypeModel.Create();
+            var mt = model.Add(typeof(MyEnum), false);
+            mt.SetEnumValues(new[]
+            {// these **do not** change the serialized values
+                new EnumMember(1, "Default"),
+                new EnumMember((MyEnum)10, "Foo"),
+            });
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
             var obj2 = new Test<MyEnum> { Value = MyEnum.Foo };
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, obj1);
-                ms.Position = 0;
-                var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
-                ms.SetLength(0);
-                model.Serialize(ms, obj2);
-                ms.Position = 0;
-                var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+            using var ms = new MemoryStream();
+            model.Serialize(ms, obj1);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
+            ms.SetLength(0);
+            model.Serialize(ms, obj2);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
 
-                Assert.Equal(1, clone1.Value);
-                Assert.Equal(10, clone2.Value);
-            }
+            Assert.Equal(2, clone1.Value);
+            Assert.Equal(3, clone2.Value);
         }
         //[ProtoContract]
         enum MyEnum

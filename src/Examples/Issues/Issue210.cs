@@ -23,9 +23,11 @@ namespace Examples.Issues
         [Fact]
         public void ShouldDeserializeWithStaticConstructor()
         {
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
             typeModel.AutoCompile = true;
+#pragma warning disable CS0618
             typeModel.Deserialize(new MemoryStream(), null, typeof(ProtoTestOne));
+#pragma warning restore CS0618
         }
     }
 }

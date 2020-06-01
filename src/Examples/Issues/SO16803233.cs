@@ -22,7 +22,7 @@ namespace Examples.Issues
         [Fact]
         public void Test_Vanilla()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Execute_Vanilla(model, "Runtime");
             model.CompileInPlace();
@@ -34,7 +34,7 @@ namespace Examples.Issues
         [Fact]
         public void Test_WithLengthPrefix()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Execute_WithLengthPrefix(model, "Runtime");
             model.CompileInPlace();
@@ -45,34 +45,36 @@ namespace Examples.Issues
         }
 
 
-
+#pragma warning disable IDE0060
         void Execute_Vanilla(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             const Test original = Test.test2;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                model.Serialize(ms, original);
-                ms.Position = 0;
-                Assert.Equal("08-01", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
-                Test obj;
-                obj = (Test)model.Deserialize(ms, null, typeof(Test));
+            using MemoryStream ms = new MemoryStream();
+            model.Serialize(ms, original);
+            ms.Position = 0;
+            Assert.Equal("08-01", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+            Test obj;
+#pragma warning disable CS0618
+            obj = (Test)model.Deserialize(ms, null, typeof(Test));
+#pragma warning restore CS0618
 
-                Assert.Equal(original, obj);
-            }
+            Assert.Equal(original, obj);
         }
+
+#pragma warning disable IDE0060
         void Execute_WithLengthPrefix(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             const Test original = Test.test2;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                model.SerializeWithLengthPrefix(ms, original, typeof(Test), PrefixStyle.Fixed32, 1);
-                ms.Position = 0;
-                Assert.Equal("02-00-00-00-08-01", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
-                Test obj;
-                obj = (Test)model.DeserializeWithLengthPrefix(ms, null, typeof(Test), PrefixStyle.Fixed32, 1);
+            using MemoryStream ms = new MemoryStream();
+            model.SerializeWithLengthPrefix(ms, original, typeof(Test), PrefixStyle.Fixed32, 1);
+            ms.Position = 0;
+            Assert.Equal("02-00-00-00-08-01", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+            Test obj;
+            obj = (Test)model.DeserializeWithLengthPrefix(ms, null, typeof(Test), PrefixStyle.Fixed32, 1);
 
-                Assert.Equal(original, obj);
-            }
+            Assert.Equal(original, obj);
         }
     }
 }

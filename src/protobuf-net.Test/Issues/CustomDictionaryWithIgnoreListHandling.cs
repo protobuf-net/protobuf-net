@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.unittest;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +14,14 @@ namespace ProtoBuf.Issues
         public void MemberNotMarkedAsMap()
         {
             Assert.False(RuntimeTypeModel.Default[typeof(Item)][1].IsMap);
+        }
+
+        [Fact]
+        public void WriteValidModel()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(Item));
+            model.CompileAndVerify(deleteOnSuccess: false);
         }
 
         [Fact]

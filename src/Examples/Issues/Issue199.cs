@@ -26,8 +26,8 @@ namespace Examples.Issues
         [Fact]
         public void CompareWithWithoutImplicitDefaults()
         {
-            var with = TypeModel.Create();
-            var without = TypeModel.Create();
+            var with = RuntimeTypeModel.Create();
+            var without = RuntimeTypeModel.Create();
             without.AutoCompile = with.AutoCompile = false;
             with.UseImplicitZeroDefaults = true;
             without.UseImplicitZeroDefaults = false;

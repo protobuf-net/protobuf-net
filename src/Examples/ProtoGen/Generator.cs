@@ -13,7 +13,7 @@
 
 //namespace Examples.ProtoGen
 //{
-    
+
 //    public class Generator
 //    {
 //        public static string GetCode(params string[] args)
@@ -269,7 +269,7 @@
 //        private static void TestCompile<T>(T compiler, string code, params string[] extraReferences)
 //            where T : CodeDomProvider
 //        {
-//            if (compiler == null) compiler = (T)Activator.CreateInstance(typeof(T));
+//            if (compiler == null) compiler = (T)Activator.CreateInstance(typeof(T), nonPublic: true);
 //            string path = Path.GetTempFileName();
 //            try
 //            {

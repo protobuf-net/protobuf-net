@@ -11,7 +11,7 @@ namespace Examples.Issues
         [Fact]
         public void RoundTripUInt32EnumValue()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             var foo = new Foo {Value = StateEnum.Deleted};
 

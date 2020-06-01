@@ -139,35 +139,36 @@ namespace Examples.Issues
             model.AutoCompile = false;
             return model;
         }
+
         [Fact]
         public void ExecuteSimple()
         {
-            using (var ms = new MemoryStream())
-            {
-                var model = CreateModel();
-                model.Serialize(ms, CreateSimpleObj());
-                Assert.Equal("1A-13-0A-11-0A-03-61-62-63-12-0A-0A-03-64-65-66-12-03-67-68-69-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
-                ms.Position = 0;
-                var clone = (BaseResponse)model.Deserialize(ms, null, typeof(BaseResponse));
-                CheckObject(clone);
-            }
+            using var ms = new MemoryStream();
+            var model = CreateModel();
+            model.Serialize(ms, CreateSimpleObj());
+            Assert.Equal("1A-13-0A-11-0A-03-61-62-63-12-0A-0A-03-64-65-66-12-03-67-68-69-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone = (BaseResponse)model.Deserialize(ms, null, typeof(BaseResponse));
+#pragma warning restore CS0618
+            CheckObject(clone);
         }
 
         [Fact]
         public void ExecuteCustom()
         {
-            using (var ms = new MemoryStream())
-            {
-                var model = CreateModel();
+            using var ms = new MemoryStream();
+            var model = CreateModel();
 #if DEBUG
                 model.ForwardsOnly = true;
 #endif
-                model.Serialize(ms, CreateCustomObj());
-                Assert.Equal("1B-0B-0A-03-61-62-63-13-0A-03-64-65-66-12-03-67-68-69-14-0C-1C-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
-                ms.Position = 0;
-                var clone = (CustomBaseResponse)model.Deserialize(ms, null, typeof(CustomBaseResponse));
-                CheckObject(clone);
-            }
+            model.Serialize(ms, CreateCustomObj());
+            Assert.Equal("1B-0B-0A-03-61-62-63-13-0A-03-64-65-66-12-03-67-68-69-14-0C-1C-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone = (CustomBaseResponse)model.Deserialize(ms, null, typeof(CustomBaseResponse));
+#pragma warning restore CS0618
+            CheckObject(clone);
         }
     }
 

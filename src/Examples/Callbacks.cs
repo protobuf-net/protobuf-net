@@ -14,13 +14,13 @@ namespace Examples
         public string Bar { get; set;}
 
         [OnDeserialized]
-        void OnDeserialized() { History += ";OnDeserialized"; }
+        public void OnDeserialized() { History += ";OnDeserialized"; }
         [OnDeserializing]
-        void OnDeserializing() { History += ";OnDeserializing"; }
+        public void OnDeserializing() { History += ";OnDeserializing"; }
         [OnSerialized]
-        void OnSerialized() { History += ";OnSerialized"; }
+        public void OnSerialized() { History += ";OnSerialized"; }
         [OnSerializing]
-        void OnSerializing() { History += ";OnSerializing"; }
+        public void OnSerializing() { History += ";OnSerializing"; }
         public CallbackSimple() { History = "ctor"; }
         public string History { get; private set; }
     }
@@ -152,19 +152,28 @@ namespace Examples
 
         protected TestInheritedImplementedAtChild() { History = "ctor"; }
         public string History { get; protected set; }
+
+        [OnDeserialized]
+        protected virtual void OnDeserialized() { }
+        [OnDeserializing]
+        protected virtual void OnDeserializing() { }
+        [OnSerialized]
+        protected virtual void OnSerialized() { }
+        [OnSerializing]
+        protected virtual void OnSerializing() { }
     }
 
     [ProtoContract]
     class TestInheritedImplementedAtChildDerived : TestInheritedImplementedAtChild
     {
-        [OnDeserialized]
-        void OnDeserialized() { History += ";OnDeserialized"; }
-        [OnDeserializing]
-        void OnDeserializing() { History += ";OnDeserializing"; }
-        [OnSerialized]
-        void OnSerialized() { History += ";OnSerialized"; }
-        [OnSerializing]
-        void OnSerializing() { History += ";OnSerializing"; }
+        
+        protected override void OnDeserialized() { History += ";OnDeserialized"; }
+
+        protected override void OnDeserializing() { History += ";OnDeserializing"; }
+
+        protected override void OnSerialized() { History += ";OnSerialized"; }
+
+        protected override void OnSerializing() { History += ";OnSerializing"; }
 
         protected override string BarCore
         {
@@ -195,6 +204,7 @@ namespace Examples
                 for (int i = 0; i < extraTypes.Length; i++) model.Add(extraTypes[i], true);
             }
             model.AutoCompile = false;
+            
             Test<T, TCreate>(model, "Runtime");
 
             if(compile)
@@ -213,43 +223,53 @@ namespace Examples
             }
         }
 #pragma warning disable xUnit2002, xUnit2005 // it is convinced that TCreate is a value-type
+#pragma warning disable IDE0060 // Remove unused parameter
         static void Test<T, TCreate>(TypeModel model, string mode)
+#pragma warning restore IDE0060 // Remove unused parameter
             where TCreate : T, new()
             where T : ICallbackTest
         {
-            mode = ":" + mode;
-            TCreate cs = new TCreate
+            //try
             {
-                Bar = "abc"
-            };
-            string ctorExpected = typeof (TCreate)._IsValueType() ? null : "ctor";
-            Assert.NotNull(cs); //, "orig" + mode);
-            Assert.Equal(ctorExpected, cs.History); //, "orig before" + mode);
-            Assert.Equal("abc", cs.Bar); //, "orig before" + mode);
+                // mode = ":" + mode;
+                TCreate cs = new TCreate
+                {
+                    Bar = "abc"
+                };
+                string ctorExpected = typeof(TCreate)._IsValueType() ? null : "ctor";
+                Assert.NotNull(cs); //, "orig" + mode);
+                Assert.Equal(ctorExpected, cs.History); //, "orig before" + mode);
+                Assert.Equal("abc", cs.Bar); //, "orig before" + mode);
 
-            TCreate clone = (TCreate) model.DeepClone(cs);
-            if (!typeof (TCreate)._IsValueType())
-            {
-                Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                TCreate clone = (TCreate)model.DeepClone<TCreate>(cs);
+                if (!typeof(TCreate)._IsValueType())
+                {
+                    Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                }
+                Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
+
+                Assert.NotNull(clone); //, "clone" + mode);
+                Assert.NotSame(cs, clone); //, "clone" + mode);
+
+                Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone.History); //, "clone after" + mode);
+                Assert.Equal("abc", clone.Bar); //, "clone after" + mode);
+
+                T clone2 = (T)model.DeepClone(cs);
+                if (!typeof(TCreate)._IsValueType())
+                {
+                    Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
+                }
+                Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
+
+                Assert.NotNull(clone2); //, "clone2" + mode);
+                Assert.NotSame(cs, clone2); //, "clone2" + mode);
+                Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone2.History); //, "clone2 after" + mode);
+                Assert.Equal("abc", clone2.Bar); //, "clone2 after" + mode);
             }
-            Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
-
-            Assert.NotNull(clone); //, "clone" + mode);
-            Assert.NotSame(cs, clone); //, "clone" + mode);
-            Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone.History); //, "clone after" + mode);
-            Assert.Equal("abc", clone.Bar); //, "clone after" + mode);
-
-            T clone2 = (T) model.DeepClone(cs);
-            if (!typeof (TCreate)._IsValueType())
-            {
-                Assert.Equal(ctorExpected + ";OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History); //, "orig after" + mode);
-            }
-            Assert.Equal("abc", cs.Bar); //, "orig after" + mode);
-
-            Assert.NotNull(clone2); //, "clone2" + mode);
-            Assert.NotSame(cs, clone2); //, "clone2" + mode);
-            Assert.Equal(ctorExpected + ";OnDeserializing;OnDeserialized", clone2.History); //, "clone2 after" + mode);
-            Assert.Equal("abc", clone2.Bar); //, "clone2 after" + mode);
+            //catch(Exception ex)
+            //{
+            //    throw new InvalidOperationException(mode, ex);
+            //}
             
         }
 #pragma warning restore xUnit2002, xUnit2005
@@ -257,17 +277,33 @@ namespace Examples
         [ProtoContract]
         class DuplicateCallbacks
         {
+#pragma warning disable IDE0051 // Remove unused private members
             [ProtoBeforeSerialization]
             void Foo() {}
 
             [ProtoBeforeSerialization]
             void Bar() { }
+#pragma warning restore IDE0051 // Remove unused private members
         }
 
         [Fact]
         public void TestSimple()
         {
             Test<CallbackSimple, CallbackSimple>();
+        }
+
+        [Fact]
+        public void TestStructSimple_Basic()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(CallbackStructSimple), true);
+            model.Add(typeof(CallbackSimple), true);
+            var compiled = model.Compile("TestStructSimple", "TestStructSimple.dll");
+            PEVerify.AssertValid("TestStructSimple.dll");
+
+            var obj = new CallbackStructSimple();
+            var clone = compiled.DeepClone(obj);
+            Assert.Equal(";OnDeserializing;OnDeserialized", clone.History);
         }
 
         [Fact]
@@ -317,7 +353,7 @@ namespace Examples
         [Fact]
         public void CallbacksWithContext()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Test(model);
 
@@ -342,26 +378,26 @@ namespace Examples
             Assert.Null(orig.C.ReadState);
             Assert.Null(orig.C.WriteState);
 #endif
-            using (var ms = new MemoryStream())
-            {
-                SerializationContext ctx = new SerializationContext { Context = new object()};
-                model.Serialize(ms, orig, ctx);
-                Assert.Null(orig.B.ReadState);
-                Assert.Same(ctx.Context, orig.B.WriteState);
+            using var ms = new MemoryStream();
+            SerializationContext ctx = new SerializationContext { Context = new object()};
+            model.Serialize(ms, orig, context: ctx);
+            Assert.Null(orig.B.ReadState);
+            Assert.Same(ctx.Context, orig.B.WriteState);
 #if REMOTING
-                Assert.Null(orig.C.ReadState);
-                Assert.Same(ctx.Context, orig.C.WriteState);
+            Assert.Null(orig.C.ReadState);
+            Assert.Same(ctx.Context, orig.C.WriteState);
 #endif
-                ms.Position = 0;
-                ctx = new SerializationContext { Context = new object() };
-                clone = (CallbackWrapper)model.Deserialize(ms, null, typeof(CallbackWrapper), -1, ctx);
-                Assert.Same(ctx.Context, clone.B.ReadState);
-                Assert.Null(clone.B.WriteState);
+            ms.Position = 0;
+            ctx = new SerializationContext { Context = new object() };
+#pragma warning disable CS0618
+            clone = (CallbackWrapper)model.Deserialize(ms, null, typeof(CallbackWrapper), -1, ctx);
+#pragma warning restore CS0618
+            Assert.Same(ctx.Context, clone.B.ReadState);
+            Assert.Null(clone.B.WriteState);
 #if REMOTING
-                Assert.Same(ctx.Context, clone.C.ReadState);
-                Assert.Null(clone.C.WriteState);
+            Assert.Same(ctx.Context, clone.C.ReadState);
+            Assert.Null(clone.C.WriteState);
 #endif
-            }
         }
         [ProtoContract]
         public class CallbackWrapper
@@ -460,14 +496,16 @@ namespace Examples
             public string Bar { get; set; }
         }
 
-        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer, ref ProtoWriter.State state)
+#pragma warning disable IDE0051 // Remove unused private members
+        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ref ProtoWriter.State state)
+#pragma warning restore IDE0051 // Remove unused private members
         {
             obj.OnSerializing();
             string bar = obj.Bar;
             if(bar != null)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, writer, ref state);
-                ProtoWriter.WriteString(bar, writer, ref state);
+                state.WriteFieldHeader(1, WireType.String);
+                state.WriteString(bar);
             }
             obj.OnSerialized();
         }

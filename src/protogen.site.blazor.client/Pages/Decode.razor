@@ -1,0 +1,98 @@
+﻿@using ProtoBuf.Models;
+@using BlazorInputFile
+
+@page "/decode"
+<h3>
+    Online Protobuf Decoder.
+</h3>
+
+<p>This tool will pull apart arbitrary protobuf data (without requiring a schema), displaying the hierarchical content.</p>
+<EditForm Model="@model" OnValidSubmit="@DoDecode">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <InputSelect id="language" @bind-Value="model.DecodeContentType" class="form-control">
+            <option>(select)</option>
+            @foreach (DecodeViewModel.DecodeContentTypeEnum decodeContentType in Enum.GetValues(typeof(DecodeViewModel.DecodeContentTypeEnum)))
+            {
+                <option value="@decodeContentType" selected="@(decodeContentType == model.DecodeContentType)">@decodeContentType</option>
+            }
+        </InputSelect>
+    </div>
+    @switch (model.DecodeContentType)
+    {
+        case DecodeViewModel.DecodeContentTypeEnum.Base64:
+
+            <div class="form-group">
+                <textarea class="form-control" @bind="model.Base64" placeholder="Base64 string"></textarea>
+            </div>
+            break;
+        case DecodeViewModel.DecodeContentTypeEnum.Hexa:
+
+            <div class="form-group">
+                <textarea class="form-control" @bind="model.Hexadecimal" placeholder="Hexadecimal string"></textarea>
+            </div>
+            break;
+        case DecodeViewModel.DecodeContentTypeEnum.File:
+            <div class="form-group">
+                <InputFile OnChange="HandleSelection" />
+            </div>
+            break;
+        default:
+            throw new ArgumentOutOfRangeException($"Content type not handled : {model.DecodeContentType}");
+    }
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary btn-block" disabled="@loading">
+            @if (loading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <text> Decoding </text>
+            }
+            else
+            {
+                <text> Decode </text>
+            }
+        </button>
+    </div>
+
+    <ValidationSummary />
+</EditForm>
+@if (decodeModel != null)
+{
+    <h3>Results</h3>
+
+    <DecodeResult DecodeModel="@decodeModel"></DecodeResult>
+}
+@code {
+    DecodeViewModel model;
+    DecodeModel decodeModel;
+    bool loading = false;
+    protected override void OnInitialized()
+    {
+        model = new DecodeViewModel();
+    }
+    async Task DoDecode()
+    {
+        loading = true;
+        decodeModel = null;
+        StateHasChanged();
+        try
+        {
+            decodeModel = await model.GetDecodeModel();
+
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    void HandleSelection(IFileListEntry[] files)
+    {
+        var file = files.FirstOrDefault();
+        if (file != null)
+        {
+            model.File = file;
+        }
+    }
+
+}

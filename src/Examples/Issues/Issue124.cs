@@ -1,16 +1,16 @@
 ﻿#if !COREFX
+using ProtoBuf;
+using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xunit;
-using ProtoBuf;
 using System.Windows.Media;
-using ProtoBuf.Meta;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class Issue124
     {
         // note this is a simplified example that 
@@ -39,7 +39,7 @@ namespace Examples.Issues
         [Fact]
         public void TestMediaColorDirect()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Color), false).Add("A","R","G","B");
 
             RoundtripTypeWithColor(model);
@@ -48,7 +48,7 @@ namespace Examples.Issues
         [Fact]
         public void TestMediaColorSurrogate()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Color), false).SetSurrogate(typeof(MyColor));
 
             RoundtripTypeWithColor(model);

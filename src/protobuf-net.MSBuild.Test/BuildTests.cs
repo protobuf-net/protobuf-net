@@ -70,7 +70,9 @@ namespace ProtoBuf.Build
 
         private string BuildProject(string projFile)
         {
+#pragma warning disable IDE0067 // Dispose objects before losing scope
             var pc = new ProjectCollection(gp);
+#pragma warning restore IDE0067 // Dispose objects before losing scope
             var proj = pc.LoadProject(projFile);
             var restored = proj.Build("Restore", new[] { logger });
             if (!restored)
@@ -87,13 +89,13 @@ namespace ProtoBuf.Build
         [Fact]
         public void CSharpCodeGenTest()
         {
-            var exepath = BuildProject("Data/Proj1/Proj.csproj");
+            BuildProject("Data/Proj1/Proj.csproj");
         }
 
         [Fact]
         public void VBCodeGenTest()
         {
-            var exepath = BuildProject("Data/Proj2/Proj.vbproj");
+            BuildProject("Data/Proj2/Proj.vbproj");
         }
 
         [Fact]
@@ -102,7 +104,9 @@ namespace ProtoBuf.Build
             var testLogger = new TestLogger();
             const string projFile = "Data/Proj3/Proj.csproj";
 
+#pragma warning disable IDE0067 // Dispose objects before losing scope
             var pc = new ProjectCollection(gp);
+#pragma warning restore IDE0067 // Dispose objects before losing scope
             var proj = pc.LoadProject(projFile);
             var restored = proj.Build("Restore", new[] { logger });
             if (!restored) LogProps(proj);
@@ -111,6 +115,12 @@ namespace ProtoBuf.Build
             Assert.False(result);
             Assert.Single(testLogger.Errors);
             Assert.Single(testLogger.Warnings);
+        }
+
+        [Fact]
+        public void ServicesGenTest()
+        {
+            BuildProject("Data/Proj4/Proj.csproj");
         }
     }
 }

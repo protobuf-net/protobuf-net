@@ -21,6 +21,8 @@ namespace ProtoBuf.MSBuild
 
         public string Language { get; set; }
 
+        public string Services { get; set; }
+
         [Output]
         public ITaskItem[] ProtoCodeFile { get; set; }
 
@@ -29,15 +31,12 @@ namespace ProtoBuf.MSBuild
             if(lang == null)
                 return CSharpCodeGenerator.Default;
 
-            switch (lang)
+            return lang switch
             {
-                case "C#":
-                    return CSharpCodeGenerator.Default;
-                case "VB":
-                    return VBCodeGenerator.Default;
-                default:
-                    throw new NotSupportedException("protobuf code generation is not supported for language " + lang);
-            }
+                "C#" => CSharpCodeGenerator.Default,
+                "VB" => VBCodeGenerator.Default,
+                _ => throw new NotSupportedException("protobuf code generation is not supported for language " + lang),
+            };
         }
 
         public override bool Execute()
@@ -104,7 +103,10 @@ namespace ProtoBuf.MSBuild
                 return false;
             }
 
-            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["services"] = Services
+            };
 
             var codeFiles = new List<ITaskItem>();
             var files = codegen.Generate(set, options: options);

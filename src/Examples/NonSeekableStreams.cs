@@ -17,7 +17,7 @@ namespace Examples
         [Fact]
         public void ShouldNotRequireSeeking()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             byte[] raw;
             const int EXPECTED = 830;
             using(var fs = new FakeStream())
@@ -29,7 +29,14 @@ namespace Examples
             }
             using (var fs = new FakeStream(raw))
             {
+#pragma warning disable CS0618
                 var db = (Database)model.Deserialize(fs, null, typeof (Database));
+#pragma warning restore CS0618
+                Assert.Equal(EXPECTED, db.Orders.Count);
+            }
+            using (var fs = new FakeStream(raw))
+            {
+                var db = model.Deserialize<Database>(fs);
                 Assert.Equal(EXPECTED, db.Orders.Count);
             }
             using (var fs = new FakeStream(raw))

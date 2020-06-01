@@ -22,15 +22,15 @@ namespace Examples.Issues
         [Fact]
         public void LockContention_DTO()
         {
-            var model = TypeModel.Create();
-            Func<object, byte[]> serialize = obj =>
+            var model = RuntimeTypeModel.Create();
+            byte[] serialize(object obj)
             {
-                using (var ms = new MemoryStream())
-                {
-                    model.Serialize(ms, obj);
-                    return ms.ToArray();
-                }
-            };
+                using var ms = new MemoryStream();
+#pragma warning disable CS0618
+                model.Serialize(ms, obj);
+#pragma warning restore CS0618
+                return ms.ToArray();
+            }
             var tasks = new List<Task>(50000);
             for (var i = 0; i < 50000; i++)
             {
@@ -44,15 +44,15 @@ namespace Examples.Issues
         [Fact]
         public void LockContention_BasicType()
         {
-            var model = TypeModel.Create();
-            Func<object, byte[]> serialize = obj =>
+            var model = RuntimeTypeModel.Create();
+            byte[] serialize(object obj)
             {
-                using (var ms = new MemoryStream())
-                {
-                    model.Serialize(ms, obj);
-                    return ms.ToArray();
-                }
-            };
+                using var ms = new MemoryStream();
+#pragma warning disable CS0618
+                model.Serialize(ms, obj);
+#pragma warning restore CS0618
+                return ms.ToArray();
+            }
             var tasks = new List<Task>(50000);
             for (var i = 0; i < 50000; i++)
             {
@@ -66,15 +66,15 @@ namespace Examples.Issues
         [Fact]
         public void LockContention_Dictionary()
         {
-            var model = TypeModel.Create();
-            Func<object, byte[]> serialize = obj =>
+            var model = RuntimeTypeModel.Create();
+            byte[] serialize(object obj)
             {
-                using (var ms = new MemoryStream())
-                {
-                    model.Serialize(ms, obj);
-                    return ms.ToArray();
-                }
-            };
+                using var ms = new MemoryStream();
+#pragma warning disable CS0618
+                model.Serialize(ms, obj);
+#pragma warning restore CS0618
+                return ms.ToArray();
+            }
             var tasks = new List<Task>(50000);
             Dictionary<string, int> d = new Dictionary<string, int>
             {

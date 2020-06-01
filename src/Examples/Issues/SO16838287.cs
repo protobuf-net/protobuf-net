@@ -12,9 +12,9 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteRuntime()
         {
-            var model = GetModel();
             Program.ExpectFailure<NotSupportedException>(() =>
             {
+                var model = GetModel();
                 Execute(model, 20, 0, 20, "Runtime");
                 Execute(model, 1, 0, 18, "Runtime");
             }); // ICollection<T>.Add(T)
@@ -22,11 +22,10 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteCompileInPlace()
         {
-
-            var model = GetModel();
-            model.CompileInPlace();
             Program.ExpectFailure<NotSupportedException>(() =>
             {
+                var model = GetModel();
+                model.CompileInPlace();
                 Execute(model, 20, 0, 20, "CompileInPlace");
                 Execute(model, 1, 0, 18, "CompileInPlace");
             }); // ICollection<T>.Add(T)
@@ -34,10 +33,10 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteCompile()
         {
-            var model = GetModel();
-            var compiled = model.Compile();
             Program.ExpectFailure<NotSupportedException>(() =>
             {
+                var model = GetModel();
+                var compiled = model.Compile();
                 Execute(compiled, 20, 0, 20, "Compile");
                 Execute(compiled, 1, 0, 18, "Compile");
             }); // ICollection<T>.Add(T)
@@ -46,9 +45,12 @@ namespace Examples.Issues
         [Fact]
         public void VerifyCompile()
         {
-            var model = GetModel();
-            model.Compile("SO16838287", "SO16838287.dll");
-            PEVerify.AssertValid("SO16838287.dll");
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                var model = GetModel();
+                model.Compile("SO16838287", "SO16838287.dll");
+                PEVerify.AssertValid("SO16838287.dll");
+            });
         }
 
         static void Execute(TypeModel model, int size, int offset, int count, string caption)
@@ -67,7 +69,7 @@ namespace Examples.Issues
         }
         static RuntimeTypeModel GetModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(Foo), true);
             return model;

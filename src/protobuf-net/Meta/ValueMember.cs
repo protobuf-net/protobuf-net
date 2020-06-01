@@ -1,16 +1,12 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 using ProtoBuf.Serializers;
 using System.Globalization;
 using System.Collections.Generic;
-
-#if PROFILE259
 using System.Reflection;
-using System.Linq;
-#else
-using System.Reflection;
-#endif
+using System.Diagnostics;
+using ProtoBuf.Internal;
+using ProtoBuf.Internal.Serializers;
 
 namespace ProtoBuf.Meta
 {
@@ -19,10 +15,24 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class ValueMember
     {
+
+        private int _fieldNumber;
         /// <summary>
         /// The number that identifies this member in a protobuf stream
         /// </summary>
-        public int FieldNumber { get; }
+        public int FieldNumber
+        {
+            get => _fieldNumber;
+            internal set
+            {
+                if (_fieldNumber != value)
+                {
+                    MetaType.AssertValidFieldNumber(value);
+                    ThrowIfFrozen();
+                    _fieldNumber = value;
+                }
+            }
+        }
 
         private MemberInfo backingMember;
         /// <summary>
@@ -92,30 +102,29 @@ namespace ProtoBuf.Meta
             : this(model, fieldNumber, memberType, itemType, defaultType, dataFormat)
         {
             if (parentType == null) throw new ArgumentNullException(nameof(parentType));
-            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
 
             Member = member ?? throw new ArgumentNullException(nameof(member));
             ParentType = parentType;
-            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-            //#if WINRT
+            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
+            
             if (defaultValue != null && (defaultValue.GetType() != memberType))
-            //#else
-            //            if (defaultValue != null && !memberType.IsInstanceOfType(defaultValue))
-            //#endif
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
             }
             _defaultValue = defaultValue;
 
             MetaType type = model.FindWithoutAdd(memberType);
+#if FEAT_DYNAMIC_REF
             if (type != null)
             {
                 AsReference = type.AsReferenceDefault;
             }
             else
             { // we need to scan the hard way; can't risk recursion by fully walking it
-                AsReference = MetaType.GetAsReferenceDefault(model, memberType);
+                AsReference = MetaType.GetAsReferenceDefault(memberType);
             }
+#endif
         }
         /// <summary>
         /// Creates a new ValueMember instance
@@ -125,6 +134,10 @@ namespace ProtoBuf.Meta
             FieldNumber = fieldNumber;
             MemberType = memberType ?? throw new ArgumentNullException(nameof(memberType));
             ItemType = itemType;
+            if (defaultType == null && itemType != null)
+            {   // reasonable default
+                defaultType = memberType;
+            }
             DefaultType = defaultType;
 
             this.model = model ?? throw new ArgumentNullException(nameof(model));
@@ -132,34 +145,17 @@ namespace ProtoBuf.Meta
         }
         internal object GetRawEnumValue()
         {
-#if PORTABLE || CF || COREFX || PROFILE259
-			object value = ((FieldInfo)Member).GetValue(null);
-            switch(Helpers.GetTypeCode(Enum.GetUnderlyingType(((FieldInfo)Member).FieldType)))
-            {
-                case ProtoTypeCode.SByte: return (sbyte)value;
-                case ProtoTypeCode.Byte: return (byte)value;
-                case ProtoTypeCode.Int16: return (short)value;
-                case ProtoTypeCode.UInt16: return (ushort)value;
-                case ProtoTypeCode.Int32: return (int)value;
-                case ProtoTypeCode.UInt32: return (uint)value;
-                case ProtoTypeCode.Int64: return (long)value;
-                case ProtoTypeCode.UInt64: return (ulong)value;
-                default:
-                    throw new InvalidOperationException();
-            }
-#else
             return ((FieldInfo)Member).GetRawConstantValue();
-#endif
         }
         private static object ParseDefaultValue(Type type, object value)
         {
             {
-                Type tmp = Helpers.GetUnderlyingType(type);
+                Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
             }
             if (value is string s)
             {
-                if (Helpers.IsEnum(type)) return Helpers.ParseEnum(type, s);
+                if (type.IsEnum) return Enum.Parse(type, s, true);
 
                 switch (Helpers.GetTypeCode(type))
                 {
@@ -186,12 +182,12 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (Helpers.IsEnum(type)) return Enum.ToObject(type, value);
+            if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
-        private IProtoSerializer serializer;
-        internal IProtoSerializer Serializer
+        private IRuntimeProtoSerializerNode serializer;
+        internal IRuntimeProtoSerializerNode Serializer
         {
             get
             {
@@ -239,7 +235,7 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
-        /// Indicates whether this field should *repace* existing values (the default is false, meaning *append*).
+        /// Indicates whether this field should *replace* existing values (the default is false, meaning *append*).
         /// This option only applies to list/array data.
         /// </summary>
         public bool OverwriteList
@@ -262,8 +258,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AsReference
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_AsReference); }
             set { SetFlag(OPTIONS_AsReference, value, true); }
+#else
+            get => false;
+            [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+            set { if (value != AsReference) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
         /// <summary>
@@ -271,8 +273,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool DynamicType
         {
+#if FEAT_DYNAMIC_REF
             get { return HasFlag(OPTIONS_DynamicType); }
             set { SetFlag(OPTIONS_DynamicType, value, true); }
+#else
+            get => false;
+            [Obsolete(ProtoContractAttribute.ReferenceDynamicDisabled, true)]
+            set { if (value != DynamicType) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
         /// <summary>
@@ -362,201 +370,100 @@ namespace ProtoBuf.Meta
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
-        internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
+        internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat, DataFormat keyFormat, DataFormat valueFormat,
+            bool asReference, bool dynamicType, bool isMap, bool overwriteList, int fieldNumber)
         {
-            dictionaryType = keyType = valueType = null;
-            try
-            {
-#if COREFX || PROFILE259
-				var info = MemberType.GetTypeInfo();
-#else
-                var info = MemberType;
-#endif
-                if (ImmutableCollectionDecorator.IdentifyImmutable(MemberType, out _, out _, out _, out _, out _, out _))
-                {
-                    return false;
-                }
-                if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                {
-#if PROFILE259
-					var typeArgs = MemberType.GetGenericTypeDefinition().GenericTypeArguments;
-#else
-                    var typeArgs = MemberType.GetGenericArguments();
-#endif
-                    if (IsValidMapKeyType(typeArgs[0]))
-                    {
-                        keyType = typeArgs[0];
-                        valueType = typeArgs[1];
-                        dictionaryType = MemberType;
-                    }
-                    return false;
-                }
-#if PROFILE259
-				foreach (var iType in MemberType.GetTypeInfo().ImplementedInterfaces)
-#else
-                foreach (var iType in MemberType.GetInterfaces())
-#endif
-                {
-#if COREFX || PROFILE259
-					info = iType.GetTypeInfo();
-#else
-                    info = iType;
-#endif
-
-                    if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                    {
-                        if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + MemberType.FullName);
-#if PROFILE259
-						var typeArgs = iType.GetGenericTypeDefinition().GenericTypeArguments;
-#else
-                        var typeArgs = iType.GetGenericArguments();
-#endif
-                        if (IsValidMapKeyType(typeArgs[0]))
-                        {
-                            keyType = typeArgs[0];
-                            valueType = typeArgs[1];
-                            dictionaryType = MemberType;
-                        }
-                    }
-                }
-                if (dictionaryType == null) return false;
-
-                // (note we checked the key type already)
-                // not a map if value is repeated
-                Type itemType = null, defaultType = null;
-                model.ResolveListTypes(valueType, ref itemType, ref defaultType);
-                if (itemType != null) return false;
-
-                return dictionaryType != null;
+            static Type FlattenRepeated(RuntimeTypeModel model, Type type)
+            {   // for the purposes of choosing features, we want to look inside things like arrays/lists/etc
+                if (type == null) return type;
+                var repeated = model == null ? RepeatedSerializers.TryGetRepeatedProvider(type) : model.TryGetRepeatedProvider(type);
+                return repeated == null ? type : repeated.ItemType;
             }
-            catch
-            {
-                // if it isn't a good fit; don't use "map"
-                return false;
-            }
+
+            repeated.ResolveMapTypes(out var keyType, out var valueType);
+            _ = TryGetCoreSerializer(model, keyFormat, FlattenRepeated(model, keyType), out var keyWireType, false, false, false, true);
+            _ = TryGetCoreSerializer(model, valueFormat, FlattenRepeated(model, valueType), out var valueWireType, asReference, dynamicType, false, true);
+
+            WireType rootWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
+            SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
+            if (!isMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
+            if (overwriteList) features |= SerializerFeatures.OptionClearCollection;
+
+
+            return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
+                keyWireType.AsFeatures(), valueWireType.AsFeatures());
         }
 
-        private static bool IsValidMapKeyType(Type type)
-        {
-            if (type == null || Helpers.IsEnum(type)) return false;
-            switch (Helpers.GetTypeCode(type))
-            {
-                case ProtoTypeCode.Boolean:
-                case ProtoTypeCode.Byte:
-                case ProtoTypeCode.Char:
-                case ProtoTypeCode.Int16:
-                case ProtoTypeCode.Int32:
-                case ProtoTypeCode.Int64:
-                case ProtoTypeCode.String:
-
-                case ProtoTypeCode.SByte:
-                case ProtoTypeCode.UInt16:
-                case ProtoTypeCode.UInt32:
-                case ProtoTypeCode.UInt64:
-                    return true;
-            }
-            return false;
-        }
-        private IProtoSerializer BuildSerializer()
+        private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
             try
             {
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 var member = backingMember ?? Member;
-                IProtoSerializer ser;
-                if (IsMap)
-                {
-                    ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType);
+                IRuntimeProtoSerializerNode ser;
 
-                    if (dictionaryType == null)
-                    {
-                        throw new InvalidOperationException("Unable to resolve map type for type: " + MemberType.FullName);
-                    }
-                    var concreteType = DefaultType;
-                    if (concreteType == null && Helpers.IsClass(MemberType))
-                    {
-                        concreteType = MemberType;
-                    }
-                    var keySer = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
-                    if (!AsReference)
-                    {
-                        AsReference = MetaType.GetAsReferenceDefault(model, valueType);
-                    }
-                    var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
-#if PROFILE259
-					IEnumerable<ConstructorInfo> ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetTypeInfo().DeclaredConstructors;
-	                if (ctors.Count() != 1)
-	                {
-		                throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
-	                }
-	                ser = (IProtoSerializer)ctors.First().Invoke(new object[] {model, concreteType, keySer, valueSer, FieldNumber,
-		                DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
-#else
-                    var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
-                        BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-                    if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
-                    ser = (IProtoSerializer)ctors[0].Invoke(new object[] {concreteType, keySer, valueSer, FieldNumber,
-                        DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
-#endif
-                }
-                else
+                var repeated = model.TryGetRepeatedProvider(MemberType);
+                
+                if (repeated != null)
                 {
-                    Type finalType = ItemType ?? MemberType;
-                    ser = TryGetCoreSerializer(model, dataFormat, finalType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-                    if (ser == null)
+                    if (repeated.IsMap)
                     {
-                        throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
-                    }
-
-                    // apply tags
-                    if (ItemType != null && SupportNull)
-                    {
-                        if (IsPacked)
+#if FEAT_DYNAMIC_REF
+                        if (!AsReference)
                         {
-                            throw new NotSupportedException("Packed encodings cannot support null values");
+                            AsReference = MetaType.GetAsReferenceDefault(valueType);
                         }
-                        ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
-                        ser = new NullDecorator(ser);
-                        ser = new TagDecorator(FieldNumber, WireType.StartGroup, false, ser);
+#endif
+                        ser = CreateMap(repeated, model, DataFormat, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
                     }
                     else
                     {
-                        ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
-                    }
-                    // apply lists if appropriate
-                    if (ItemType != null)
-                    {
-                        Type underlyingItemType = SupportNull ? ItemType : Helpers.GetUnderlyingType(ItemType) ?? ItemType;
+                        if (SupportNull)
+                        {
+#if FEAT_NULL_LIST_ITEMS
+                            something new here; old code not even remotely compatible
+#else
+                            ThrowHelper.ThrowNotSupportedException("null items in lists");
+#endif
+                        }
 
-                        Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
-                            || (ser.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
-                            , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
-                        if (MemberType.IsArray)
-                        {
-                            ser = new ArrayDecorator(ser, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
-                        }
-                        else
-                        {
-                            ser = ListDecorator.Create(MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
-                        }
+                        _ = TryGetCoreSerializer(model, dataFormat, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+
+
+                        SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
+                        if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
+                        if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
+#if FEAT_NULL_LIST_ITEMS
+                        if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
+#endif
+                        ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures);
                     }
-                    else if (_defaultValue != null && !IsRequired && getSpecified == null)
-                    {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
-                        // as does "IsRequired"
-                        ser = new DefaultValueDecorator(_defaultValue, ser);
+                }
+                else
+                {
+                    ser = TryGetCoreSerializer(model, dataFormat, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+                    if (ser == null)
+                    {
+                        throw new InvalidOperationException("No serializer defined for type: " + MemberType.ToString());
+                    }
+
+                    // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
+                    
+                    else
+                    {
+                        ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
+
+                        if (_defaultValue != null && !IsRequired && getSpecified == null)
+                        {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
+                            // as does "IsRequired"
+                            ser = new DefaultValueDecorator(_defaultValue, ser);
+                        }
                     }
                     if (MemberType == typeof(Uri))
                     {
                         ser = new UriDecorator(ser);
                     }
-#if PORTABLE
-                    else if(memberType.FullName == typeof(Uri).FullName)
-                    {
-                        // In PCLs, the Uri type may not match (WinRT uses Internal/Uri, .Net uses System/Uri)
-                        ser = new ReflectedUriDecorator(memberType, model, ser);
-                    }
-#endif
                 }
                 if (member != null)
                 {
@@ -590,10 +497,10 @@ namespace ProtoBuf.Meta
         {
             switch (format)
             {
-                case DataFormat.ZigZag: return WireType.SignedVariant;
+                case DataFormat.ZigZag: return WireType.SignedVarint;
                 case DataFormat.FixedSize: return width == 32 ? WireType.Fixed32 : WireType.Fixed64;
                 case DataFormat.TwosComplement:
-                case DataFormat.Default: return WireType.Variant;
+                case DataFormat.Default: return WireType.Varint;
                 default: throw new InvalidOperationException();
             }
         }
@@ -610,20 +517,17 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,
+        internal static IRuntimeProtoSerializerNode TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,
             bool asReference, bool dynamicType, bool overwriteList, bool allowComplexTypes)
         {
-            {
-                Type tmp = Helpers.GetUnderlyingType(type);
-                if (tmp != null) type = tmp;
-            }
-            if (Helpers.IsEnum(type))
+            type = DynamicStub.GetEffectiveType(type);
+            if (type.IsEnum)
             {
                 if (allowComplexTypes && model != null)
                 {
                     // need to do this before checking the typecode; an int enum will report Int32 etc
-                    defaultWireType = WireType.Variant;
-                    return new EnumSerializer(type, model.GetEnumMap(type));
+                    defaultWireType = WireType.Varint;
+                    return new EnumMemberSerializer(type);
                 }
                 else
                 { // enum is fine for adding as a meta-type
@@ -636,70 +540,75 @@ namespace ProtoBuf.Meta
             {
                 case ProtoTypeCode.Int32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<Int32Serializer>.Singleton;
+                    return Int32Serializer.Instance;
                 case ProtoTypeCode.UInt32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<UInt32Serializer>.Singleton;
+                    return UInt32Serializer.Instance;
                 case ProtoTypeCode.Int64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return PrimitiveSerializer<Int64Serializer>.Singleton;
+                    return Int64Serializer.Instance;
                 case ProtoTypeCode.UInt64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return PrimitiveSerializer<UInt64Serializer>.Singleton;
+                    return UInt64Serializer.Instance;
                 case ProtoTypeCode.String:
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
-                        return new NetObjectSerializer(typeof(string), 0, BclHelpers.NetObjectOptions.AsReference);
+#if FEAT_DYNAMIC_REF
+                        return new NetObjectSerializer(typeof(string), BclHelpers.NetObjectOptions.AsReference);
+#else
+                        ThrowHelper.ThrowNotSupportedException(ProtoContractAttribute.ReferenceDynamicDisabled);
+                        return default;
+#endif
                     }
-                    return PrimitiveSerializer<StringSerializer>.Singleton;
+                    return StringSerializer.Instance;
                 case ProtoTypeCode.Single:
                     defaultWireType = WireType.Fixed32;
-                    return PrimitiveSerializer<SingleSerializer>.Singleton;
+                    return SingleSerializer.Instance;
                 case ProtoTypeCode.Double:
                     defaultWireType = WireType.Fixed64;
-                    return PrimitiveSerializer<DoubleSerializer>.Singleton;
+                    return DoubleSerializer.Instance;
                 case ProtoTypeCode.Boolean:
-                    defaultWireType = WireType.Variant;
-                    return PrimitiveSerializer<BooleanSerializer>.Singleton;
+                    defaultWireType = WireType.Varint;
+                    return BooleanSerializer.Instance;
                 case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new DateTimeSerializer(dataFormat, model);
                 case ProtoTypeCode.Decimal:
                     defaultWireType = WireType.String;
-                    return PrimitiveSerializer<DecimalSerializer>.Singleton;
+                    return DecimalSerializer.Instance;
                 case ProtoTypeCode.Byte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<ByteSerializer>.Singleton;
+                    return ByteSerializer.Instance;
                 case ProtoTypeCode.SByte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<SByteSerializer>.Singleton;
+                    return SByteSerializer.Instance;
                 case ProtoTypeCode.Char:
-                    defaultWireType = WireType.Variant;
-                    return PrimitiveSerializer<CharSerializer>.Singleton;
+                    defaultWireType = WireType.Varint;
+                    return CharSerializer.Instance;
                 case ProtoTypeCode.Int16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<Int16Serializer>.Singleton;
+                    return Int16Serializer.Instance;
                 case ProtoTypeCode.UInt16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return PrimitiveSerializer<UInt16Serializer>.Singleton;
+                    return UInt16Serializer.Instance;
                 case ProtoTypeCode.TimeSpan:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new TimeSpanSerializer(dataFormat);
                 case ProtoTypeCode.Guid:
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return PrimitiveSerializer<GuidSerializer>.Singleton;
+                    return GuidSerializer.Instance;
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
-                    return PrimitiveSerializer<StringSerializer>.Singleton;
+                    return StringSerializer.Instance;
                 case ProtoTypeCode.ByteArray:
                     defaultWireType = WireType.String;
                     return new BlobSerializer(overwriteList);
                 case ProtoTypeCode.Type:
                     defaultWireType = WireType.String;
-                    return PrimitiveSerializer<SystemTypeSerializer>.Singleton;
+                    return SystemTypeSerializer.Instance;
             }
-            IProtoSerializer parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
+            IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable != null)
             {
                 defaultWireType = WireType.String;
@@ -707,9 +616,8 @@ namespace ProtoBuf.Meta
             }
             if (allowComplexTypes && model != null)
             {
-                int key = model.GetKey(type, false, true);
                 MetaType meta = null;
-                if (key >= 0)
+                if (model.IsDefined(type))
                 {
                     meta = model[type];
                     if (dataFormat == DataFormat.Default && meta.IsGroup)
@@ -720,12 +628,14 @@ namespace ProtoBuf.Meta
 
                 if (asReference || dynamicType)
                 {
+#if FEAT_DYNAMIC_REF
                     BclHelpers.NetObjectOptions options = BclHelpers.NetObjectOptions.None;
                     if (asReference) options |= BclHelpers.NetObjectOptions.AsReference;
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;
+
                     if (meta != null)
                     { // exists
-                        if (asReference && Helpers.IsValueType(type))
+                        if (asReference && type.IsValueType)
                         {
                             string message = "AsReference cannot be used with value-types";
 
@@ -744,12 +654,16 @@ namespace ProtoBuf.Meta
                         if (meta.UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
                     }
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return new NetObjectSerializer(type, key, options);
+                    return new NetObjectSerializer(type, options);
+#else
+                    ThrowHelper.ThrowNotSupportedException(ProtoContractAttribute.ReferenceDynamicDisabled);
+                    defaultWireType = default;
+                    return default;
+#endif
                 }
-                if (key >= 0)
+                if (meta != null)
                 {
-                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return new SubItemSerializer(type, key, meta, true);
+                    return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
                 }
             }
             defaultWireType = WireType.None;
@@ -780,10 +694,14 @@ namespace ProtoBuf.Meta
            OPTIONS_IsPacked = 2,
            OPTIONS_IsRequired = 4,
            OPTIONS_OverwriteList = 8,
+#if FEAT_NULL_LIST_ITEMS
            OPTIONS_SupportNull = 16,
+#endif
+#if FEAT_DYNAMIC_REF
            OPTIONS_AsReference = 32,
-           OPTIONS_IsMap = 64,
-           OPTIONS_DynamicType = 128;
+           OPTIONS_DynamicType = 128,
+#endif
+           OPTIONS_IsMap = 64;
 
         private byte flags;
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }
@@ -804,14 +722,24 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool SupportNull
         {
+#if FEAT_NULL_LIST_ITEMS
             get { return HasFlag(OPTIONS_SupportNull); }
             set { SetFlag(OPTIONS_SupportNull, value, true); }
+#else
+            get => false;
+            [Obsolete(SupportNullNotImplemented, true)]
+            set { if (value != SupportNull) ThrowHelper.ThrowNotSupportedException(); }
+#endif
         }
 
-        internal string GetSchemaTypeName(bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports)
+#if !FEAT_NULL_LIST_ITEMS
+        internal const string SupportNullNotImplemented = "Nullable list elements are not currently implemented";
+#endif
+
+        internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports, out string altName)
         {
             Type effectiveType = ItemType ?? MemberType;
-            return model.GetSchemaTypeName(effectiveType, DataFormat, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports);
+            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports, out altName);
         }
 
         internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>
@@ -834,4 +762,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

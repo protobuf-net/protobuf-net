@@ -1,12 +1,14 @@
-﻿using Xunit;
-using Examples.Ppt;
-using System.Collections.Generic;
+﻿using Examples.Ppt;
 using ProtoBuf;
-using System.Linq;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
-using System.IO;
 using System.Collections;
-using System.Net;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Xunit;
 
 namespace Examples
 {
@@ -17,12 +19,20 @@ namespace Examples
         public string Foo { get; set; }
     }
 
-    class CustomEnumerable : IEnumerable<int>
+    class CustomEnumerable : IEnumerable<int>, ICollection<int>
     {
         private readonly List<int> items = new List<int>();
         IEnumerator<int> IEnumerable<int>.GetEnumerator() { return items.GetEnumerator(); }
         IEnumerator IEnumerable.GetEnumerator() { return items.GetEnumerator(); }
         public void Add(int value) { items.Add(value); }
+
+        // need ICollection<int> for Add to work
+        bool ICollection<int>.IsReadOnly => false;
+        void ICollection<int>.Clear() => items.Clear();
+        int ICollection<int>.Count => items.Count;
+        bool ICollection<int>.Contains(int item) => items.Contains(item);
+        bool ICollection<int>.Remove(int item) => items.Remove(item);
+        void ICollection<int>.CopyTo(int[] array, int arrayIndex) => items.CopyTo(array, arrayIndex);
     }
     [ProtoContract]
     class EntityWithPackedInts
@@ -181,7 +191,8 @@ namespace Examples
                 Custom = new CustomEnumerable { 1, 2, 3, 4, 5, 1000 }
             };
             item.ClearList();
-            Assert.True(Program.CheckBytes(item, 0x22, 07, 01, 02, 03, 04, 05, 0xE8, 07));
+            RuntimeTypeModel.Default.Add<CustomEnumerable>();
+            Program.CheckBytes(item, "22-07-01-02-03-04-05-E8-07");
 
             var clone = Serializer.DeepClone(item);
             Assert.NotSame(item.Custom, clone.Custom);
@@ -244,7 +255,7 @@ namespace Examples
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ListNoDefault);
             Assert.Empty(clone.ListNoDefault);
-           
+
             item.ListNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ListNoDefault);
@@ -269,8 +280,6 @@ namespace Examples
             Assert.NotNull(clone.ItemArray);
             Assert.Single(clone.ItemArray);
             Assert.Equal(123, clone.ItemArray[0]);
-
-            
         }
 
 
@@ -380,6 +389,111 @@ namespace Examples
             Assert.Equal(foos[0].Foo, clone[0].Foo);
             Assert.Equal(foos[1].Foo, clone[1].Foo);
         }
+        
+        [Theory]
+        [InlineData(SerializerFeatures.WireTypeVarint, "22-10-08-FF-FF-FF-FF-FF-FF-FF-FF-FF-01-12-03-61-62-63-22-05-12-03-64-65-66-22-07-08-01-12-03-67-68-69")]
+        /*
+        22 = field 4, type String
+        10 = length 16
+           08 = field 1, type Varint
+           FF-FF-FF-FF-FF-FF-FF-FF-FF-01 = -1 (raw)
+           12 = field 2, type String
+           03 = length 3
+           61-62-63 = abc
+        22 = field 4, type String
+        05 = length 5
+           12 = field 2, type String
+           03 = length 3
+           64-65-66 = def
+        22 = field 4, type String
+        07 = length 7
+           08 = field 1, type Varint
+           01 = 1 (raw)
+           12 = field 2, type String
+           03 = length 3
+           67-68-69 = ghi
+        */
+        [InlineData(SerializerFeatures.WireTypeSignedVarint, "22-07-08-01-12-03-61-62-63-22-05-12-03-64-65-66-22-07-08-02-12-03-67-68-69")]
+        /*
+        22 = field 4, type String
+        07 = length 7
+           08 = field 1, type Varint
+           01 = -1 (zigzag)
+           12 = field 2, type String
+           03 = length 3
+           61-62-63 = abc
+        22 = field 4, type String
+           05 = length 5
+           12 = field 2, type String
+           03 = length 3
+           64-65-66 = def
+        22 = field 4, type String
+        07 = length 7
+           08 = field 1, type Varint
+           02 = 1 (zigzag)
+           12 = field 2, type String
+           03 = length 3
+           67-68-69 = ghi
+        */
+        public void ReadWriteMapWorks(SerializerFeatures keyFeatures, string expected)
+        {
+            using var ms = new MemoryStream();
+
+            var data = new Dictionary<int, string>
+            {
+                { -1, "abc" },
+                { 0, "def" },
+                { 1, "ghi" },
+            };
+
+            var writer = ProtoWriter.State.Create(ms, null);
+            try
+            {
+                MapSerializer.CreateDictionary<int,string>().WriteMap(ref writer, 4, default, data, keyFeatures, default);
+                writer.Close();
+            }
+            catch
+            {
+                writer.Abandon();
+                throw;
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal(expected, hex);
+            ms.Position = 0;
+
+            data = null;
+            var reader = ProtoReader.State.Create(ms, null);
+            try
+            {
+                int field;
+                while((field = reader.ReadFieldHeader()) > 0)
+                {
+                    switch(field)
+                    {
+                        case 4:
+                            data = MapSerializer.CreateDictionary<int, string>().ReadMap(ref reader, default, data, keyFeatures, default);
+                            break;
+                        default:
+                            reader.SkipField();
+                            break;
+                    }
+                }
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+            Assert.NotNull(data);
+            Assert.Equal(3, data.Count);
+
+            var s = string.Join(", ", data.OrderBy(x => x.Key).Select(x => $"{x.Key}={x.Value}"));
+            Assert.Equal("-1=abc, 0=def, 1=ghi", s);
+        }
 
         [Fact]
         public void TestCompositeDictionary()
@@ -474,7 +588,7 @@ namespace Examples
             CheckLists(list, clone);
         }
 
-        class Test3Enumerable : IEnumerable<Test3>
+        class Test3Enumerable : IEnumerable<Test3>, IProducerConsumerCollection<Test3>
         {
             private readonly List<Test3> items = new List<Test3>();
 
@@ -489,6 +603,36 @@ namespace Examples
             }
 
             public void Add(Test3 item) { items.Add(item); }
+
+            // for the Add API
+            int ICollection.Count => items.Count;
+
+            bool IProducerConsumerCollection<Test3>.TryAdd(Test3 value)
+            {
+                items.Add(value);
+                return true;
+            }
+
+            bool IProducerConsumerCollection<Test3>.TryTake(out Test3 item)
+            {
+                if (items.Count == 0)
+                {
+                    item = default;
+                    return false;
+                }
+                item = items[items.Count - 1];
+                items.RemoveAt(items.Count - 1);
+                return true;
+            }
+
+            object ICollection.SyncRoot => ((ICollection)items).SyncRoot;
+            bool ICollection.IsSynchronized => ((ICollection)items).IsSynchronized;
+
+            void ICollection.CopyTo(Array array, int index) => ((ICollection)items).CopyTo(array, index);
+
+            Test3[] IProducerConsumerCollection<Test3>.ToArray() => items.ToArray();
+            void IProducerConsumerCollection<Test3>.CopyTo(Test3[] array, int index) => items.CopyTo(array, index);
+
         }
 
         [Fact]
@@ -536,13 +680,22 @@ namespace Examples
         [Fact]
         public void TestPackedArrayString()
         {
-            Program.ExpectFailure<InvalidOperationException>(() =>
+            using (var ms = new MemoryStream())
             {
-                Serializer.DeepClone(new ArrayOfString());
-            }, "Only simple data-types can use packed encoding");
+                var obj = new ArrayOfPackedString { Items = new[] { "abc", "def", "ghi" } };
+                Serializer.Serialize(ms, obj);
+                ms.Position = 0;
+
+                // silently ignores us, and just writes them as non-packed
+                var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Assert.Equal("0A-03-61-62-63-0A-03-64-65-66-0A-03-67-68-69", hex);
+
+                var clone = Serializer.Deserialize<ArrayOfPackedString>(ms);
+                Assert.True(clone.Items.SequenceEqual(new[] { "abc", "def", "ghi" }));
+            }
         }
         [ProtoContract]
-        class ArrayOfString
+        class ArrayOfPackedString
         {
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
             public string[] Items { get; set; }
@@ -550,38 +703,50 @@ namespace Examples
         [Fact]
         public void TestPackedListDateTime()
         {
-            Program.ExpectFailure<InvalidOperationException>(() =>
-            {
-                Serializer.DeepClone(new ListOfDateTime());
-            }, "Only simple data-types can use packed encoding");
+            // it will just quietly ignore us
+            var obj = new ListOfDateTime { Items = { new DateTime(2000, 1, 1) } };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, obj);
+            ms.Position = 0;
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-04-08-9A-AB-01", hex); // == 10957 days expressed as zig-zag
+            var clone = Serializer.Deserialize<ListOfDateTime>(ms);
+            Assert.NotSame(obj, clone);
+            var single = Assert.Single(clone.Items);
+            Assert.Equal(new DateTime(2000, 1, 1), single);
+
         }
         [ProtoContract]
         class ListOfDateTime
         {
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
-            public List<DateTime> Items { get; set; }
+            public List<DateTime> Items { get; } = new List<DateTime>();
         }
         [Fact]
         public void TestPackedCustomOfSubMessage()
         {
-            Program.ExpectFailure<InvalidOperationException>(() => { 
-            Serializer.DeepClone(new CustomOfSubMessage());
-                }, "Only simple data-types can use packed encoding");
+            // it will just quietly ignore us
+            var obj = new CustomOfSubMessage { Items = { new CustomItem { }, new CustomItem { }, new CustomItem { } } };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, obj);
+            ms.Position = 0;
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-00-0A-00-0A-00", hex);
+            var clone = Serializer.Deserialize<CustomOfSubMessage>(ms);
+            Assert.NotSame(obj, clone);
+            Assert.Equal(3, clone.Items.Count);
         }
 
         [ProtoContract]
         class CustomOfSubMessage
         {
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
-            public CustomCollection Items { get; set; }
+            public CustomCollection Items { get; } = new CustomCollection();
         }
         [ProtoContract]
         class CustomItem { }
-        class CustomCollection : IEnumerable<CustomItem>
+        class CustomCollection : List<CustomItem>
         {
-            public void Add(CustomItem item) { throw new NotImplementedException(); }
-            public IEnumerator<CustomItem> GetEnumerator() { throw new NotImplementedException(); }
-            IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
         }
 
         class Test3Comparer : IEqualityComparer<Test3>

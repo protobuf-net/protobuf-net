@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#if FEAT_DYNAMIC_REF
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -43,9 +45,11 @@ namespace Examples.Issues
         [Fact]
         public void TestBasicDuplicatedString()
         {
-            BasicDuplicatedString foo = new BasicDuplicatedString(), clone;
-            foo.A = new string('a', 40);
-            foo.B = new string('a', 40);
+            BasicDuplicatedString foo = new BasicDuplicatedString
+            {
+                A = new string('a', 40),
+                B = new string('a', 40)
+            }, clone;
             Assert.NotSame(foo.A, foo.B); // different string refs
 
             using (var ms = new MemoryStream())
@@ -63,7 +67,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             m.AutoCompile = false;
             m.Add(typeof(object), false).AddSubType(1, typeof(A)).AddSubType(2, typeof(B));
 
@@ -76,14 +80,17 @@ namespace Examples.Issues
         private static void Test(TypeModel m)
         {
             var list = new List<object> { new A { Id = "Abracadabra" }, new B { Id = "Focuspocus" }, new A { Id = "Abracadabra" }, };
-            using (var ms = new MemoryStream())
-            {
-                m.Serialize(ms, list);
-                ms.Position = 0;
-                var list2 = (List<object>)m.Deserialize(ms, null, typeof(List<object>));
-                Debug.Assert(list.SequenceEqual(list2));
-                File.WriteAllBytes(@"output.dump", ms.ToArray());
-            }
+            using var ms = new MemoryStream();
+            m.Serialize(ms, list);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var list2 = (List<object>)m.Deserialize(ms, null, typeof(List<object>));
+#pragma warning restore CS0618
+            Debug.Assert(list.SequenceEqual(list2));
+            File.WriteAllBytes(@"output.dump", ms.ToArray());
         }
     }
 }
+
+
+#endif

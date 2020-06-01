@@ -1,5 +1,4 @@
-﻿#if FEAT_COMPILER
-using System;
+﻿using System;
 using System.Reflection.Emit;
 
 namespace ProtoBuf.Compiler
@@ -55,4 +54,3 @@ namespace ProtoBuf.Compiler
         }
     }
 }
-#endif

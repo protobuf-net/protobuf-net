@@ -1,92 +1,62 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>netcoreapp2.1;net452;netcoreapp3.0</TargetFrameworks>
-    <LibImport>net</LibImport>
+    <TargetFrameworks>net462;netcoreapp3.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
-    <LibImport>core</LibImport>
+    <DefineConstants Condition="$(CI) != 'true'">$(DefineConstants);LONG_RUNNING</DefineConstants>
+    <NoWarn>$(NoWarn);IDE0060;IDE0051;IDE0044;IDE0063;IDE0028;IDE0034;IDE1006;IDE0017;IDE0052;xUnit1004</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
-    <LibImport>core</LibImport>
+    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net452'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework)=='net462'">
+    <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT;PLAT_SPANS;EMIT_DLL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\Tools\nwind.proto.bin" />
-  </ItemGroup>
-  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net.MessagePipes\protobuf-net.MessagePipes.csproj" />
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="System.Threading.Channels" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net452'">
+  <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
-    <PackageReference Include="Iesi.Collections" Version="4.0.3" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(LibImport)' == 'net'">
+    <PackageReference Include="Iesi.Collections" Version="4.0.4" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
-    <Reference Include="System.configuration" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Drawing" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
+    <Reference Include="System.ServiceModel" />
     <Reference Include="WindowsBase" />
-    <Reference Include="System.ServiceModel">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.ServiceModel.Web">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-
-    <None Update="../Tools/nwind.proto.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
-  <ItemGroup Condition="'$(LibImport)'=='core'">
-    <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
-    <PackageReference Include="System.Threading" Version="4.3.0" />
-    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-
-    <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="..\Tools\nwind.proto.bin" Link="nwind.proto.bin" />
+    <None Include="..\Tools\nwind.proto.bin" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

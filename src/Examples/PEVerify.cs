@@ -20,12 +20,12 @@ namespace Examples
             }
         }
 #endif
-        public static bool AssertValid(string path)
+        public static void AssertValid(string path)
         {
 #if COREFX
-            return true;
+            return;
 #else
-            if (unavailable) return true;
+            if (unavailable) return;
             if(!File.Exists(path))
             {
                 throw new FileNotFoundException(path);
@@ -38,7 +38,7 @@ namespace Examples
                 if (proc.WaitForExit(10000))
                 {
                     Assert.Equal(0, proc.ExitCode); //, path);
-                    return proc.ExitCode == 0;
+                    return; // proc.ExitCode == 0;
                 }
                 else
                 {

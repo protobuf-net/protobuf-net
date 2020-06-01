@@ -7,7 +7,20 @@ using ProtoBuf.unittest.Serializers;
 namespace ProtoBuf.unittest.Meta
 {
 
-    
+    public class DefaultModel
+    {
+        [Fact]
+        public void DefaultModelAvailable()
+        {
+            TypeModel.ResetDefaultModel();
+            var model = TypeModel.DefaultModel;
+            Assert.IsType<TypeModel.NullModel>(model);
+
+            _ = RuntimeTypeModel.Default;
+            model = TypeModel.DefaultModel;
+            Assert.IsType<RuntimeTypeModel>(model);
+        }
+    }
     public class Basic
     {
         public class Customer
@@ -16,7 +29,7 @@ namespace ProtoBuf.unittest.Meta
             public string Name { get; set; }
             public static RuntimeTypeModel BuildMeta()
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.Add(typeof(Customer), false)
                     .Add(1, "Id")
                     .Add(2, "Name");
@@ -54,17 +67,17 @@ namespace ProtoBuf.unittest.Meta
             var meta = Customer.BuildMeta();
             Customer cust = new Customer { Id = 123, Name = "abc" };
 
-            using (var ms = new MemoryStream())
-            {
-                meta.Serialize(ms, cust);
-                Assert.NotEqual(0, ms.Length); //, "no data written");
-                ms.Position = 0;
-                Customer clone = (Customer)meta.Deserialize(ms, null, typeof(Customer));
-                Assert.NotSame(cust, clone);
-                Assert.NotNull(clone); //, "clone was not materialized");
-                Assert.Equal(cust.Id, clone.Id);
-                Assert.Equal(cust.Name, clone.Name);
-            }
+            using var ms = new MemoryStream();
+            meta.Serialize(ms, cust);
+            Assert.NotEqual(0, ms.Length); //, "no data written");
+            ms.Position = 0;
+#pragma warning disable CS0618
+            Customer clone = (Customer)meta.Deserialize(ms, null, typeof(Customer));
+#pragma warning restore CS0618
+            Assert.NotSame(cust, clone);
+            Assert.NotNull(clone); //, "clone was not materialized");
+            Assert.Equal(cust.Id, clone.Id);
+            Assert.Equal(cust.Name, clone.Name);
         }
         
     }

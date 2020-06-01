@@ -1,5 +1,4 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-using System.ServiceModel.Description;
+﻿using System.ServiceModel.Description;
 
 namespace ProtoBuf.ServiceModel
 {
@@ -70,8 +69,10 @@ namespace ProtoBuf.ServiceModel
             {
                 description.Behaviors.Remove(dcsOperationBehavior);
 
-                ProtoOperationBehavior newBehavior = new ProtoOperationBehavior(description);
-                newBehavior.MaxItemsInObjectGraph = dcsOperationBehavior.MaxItemsInObjectGraph;
+                ProtoOperationBehavior newBehavior = new ProtoOperationBehavior(description)
+                {
+                    MaxItemsInObjectGraph = dcsOperationBehavior.MaxItemsInObjectGraph
+                };
                 description.Behaviors.Add(newBehavior);
             }
         }
@@ -79,4 +80,3 @@ namespace ProtoBuf.ServiceModel
         #endregion
     }
 }
-#endif

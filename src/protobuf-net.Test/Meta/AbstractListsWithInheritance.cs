@@ -7,7 +7,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.unittest.Meta
 {
-    
+
     public class AbstractListsWithInheritance
     {
 
@@ -17,24 +17,34 @@ namespace ProtoBuf.unittest.Meta
         public sealed class ConcreteC : ConcreteA { public int C { get; set; } }
 
         /* exists to expose different list types in a single type */
-        public class Wrapper {
-            public List<SomeBaseType> BaseList {get;set;}
-            public List<ConcreteA> AList {get;set;}
-            public List<ConcreteC> CList {get;set;}
-            public IList<ConcreteA> AbstractAList { get; set; }
+        public class Wrapper
+        {
+            public List<SomeBaseType> BaseList { get; set; }
+            public List<ConcreteA> AList { get; set; }
+            public List<ConcreteC> CList { get; set; }
+            public IList<ConcreteA> AbstractAList { get; } = new AList();
         }
         public class AList : List<ConcreteA> { }
-        public static RuntimeTypeModel BuildModel()
+        public static RuntimeTypeModel BuildModel(bool specifyDefaultType = false)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(ConcreteC), false).Add("C");
             model.Add(typeof(ConcreteB), false).Add("B");
             model.Add(typeof(ConcreteA), false).Add("A").AddSubType(2, typeof(ConcreteC));
             model.Add(typeof(SomeBaseType), false).Add("BaseProp")
                 .AddSubType(2, typeof(ConcreteA)).AddSubType(3, typeof(ConcreteB));
             model.Add(typeof(Wrapper), false).Add("BaseList", "AList", "CList")
-                .Add(4, "AbstractAList", null, typeof(AList));
+                .Add(4, "AbstractAList", null, specifyDefaultType ? typeof(AList) : null);
             return model;
+        }
+
+        [Fact]
+        public void CannotSpecifyBaseType()
+        {
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                BuildModel(true);
+            });
         }
 
         [Fact]
@@ -74,7 +84,7 @@ namespace ProtoBuf.unittest.Meta
             var model = BuildModel();
             Wrapper wrap = new Wrapper
             {
-                AbstractAList = new AList {
+                AbstractAList = {
                 new ConcreteA { A = 12, BaseProp = 34},
                 new ConcreteC { A = 56, BaseProp = 78, C = 90 }
             }
@@ -97,7 +107,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.NotNull(wrapper); //, message + " wrapper");
             Assert.Null(wrapper.BaseList); //, message + " BaseList");
             Assert.Null(wrapper.CList); //, message + " CList");
-            Assert.Null(wrapper.AbstractAList); //, message + " AbstractAList");
+            Assert.NotNull(wrapper.AbstractAList); //, message + " AbstractAList");
             Assert.NotNull(wrapper.AList); //, message + " AList");
             Assert.Equal(2, wrapper.AList.Count);
             Assert.Equal(typeof(ConcreteA), wrapper.AList[0].GetType());

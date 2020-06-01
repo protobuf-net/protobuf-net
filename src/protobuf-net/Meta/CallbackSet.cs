@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Meta
@@ -19,14 +18,14 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                switch (callbackType)
+                return callbackType switch
                 {
-                    case TypeModel.CallbackType.BeforeSerialize: return beforeSerialize;
-                    case TypeModel.CallbackType.AfterSerialize: return afterSerialize;
-                    case TypeModel.CallbackType.BeforeDeserialize: return beforeDeserialize;
-                    case TypeModel.CallbackType.AfterDeserialize: return afterDeserialize;
-                    default: throw new ArgumentException("Callback type not supported: " + callbackType.ToString(), nameof(callbackType));
-                }
+                    TypeModel.CallbackType.BeforeSerialize => beforeSerialize,
+                    TypeModel.CallbackType.AfterSerialize => afterSerialize,
+                    TypeModel.CallbackType.BeforeDeserialize => beforeDeserialize,
+                    TypeModel.CallbackType.AfterDeserialize => afterDeserialize,
+                    _ => throw new ArgumentException("Callback type not supported: " + callbackType.ToString(), nameof(callbackType)),
+                };
             }
         }
 
@@ -38,9 +37,7 @@ namespace ProtoBuf.Meta
                 Type paramType = args[i].ParameterType;
                 if (paramType == typeof(SerializationContext)) { }
                 else if (paramType == typeof(System.Type)) { }
-#if PLAT_BINARYFORMATTER
                 else if (paramType == typeof(System.Runtime.Serialization.StreamingContext)) { }
-#endif
                 else { return false; }
             }
             return true;
@@ -107,4 +104,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

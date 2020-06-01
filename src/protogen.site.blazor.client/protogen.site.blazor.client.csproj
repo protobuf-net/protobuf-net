@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <LangVersion>7.3</LangVersion>
+    <RazorLangVersion>3.0</RazorLangVersion>
+    <BlazorLinkOnBuild>true</BlazorLinkOnBuild>
+    <SignAssembly>false</SignAssembly>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- extends watching group to include *.razor files -->
+    <Watch Include="**\*.razor" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BlazorInputFile" Version="0.1.0-preview-00002" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor" Version="3.0.0-preview9.19465.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="3.0.0-preview9.19465.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.HttpClient" Version="3.0.0-preview9.19465.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.DevServer" Version="3.0.0-preview9.19465.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+  </ItemGroup>
+</Project>

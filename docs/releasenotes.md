@@ -1,28 +1,64 @@
 # Release Notes
 
-Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
+Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/master/src)
 
-protobuf-net needs to be built with MSBuild, due to some of the target platforms.
+## Roadmap
 
-The easiest way to do this is via Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) - build `src\protobuf-net.sln`
+- gRPC: see [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc)
+- 2.4.*: critical maintenance only (no feature work planned)
+- 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
+- 3.1: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
+- 3.2: protogen support for emitting pre-coded custom serializers
+- future: build-time tooling from code-first (aka "generators")
 
-## (not yet started)
+## v3.0.0-alpha
 
-- gRPC?
-- build-time tooling from code-first
-- `dynamic` API over types known only via descriptors loaded at runtime
-- `Any` support
+- **breaking change** if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
+- **breaking change** by necessity, `ProtoBuf.Serializer+TypeResolver` has moved to `ProtoBuf.Serializer`; this is a rarely used API, but comsumers will need to be recompiled against the new type
+- **breaking change** - mapped enum values are no longer supported; all enums are treated as pass-thru, in line with "proto3" semantics
+- **breaking change** - dynamic typing (i.e. storing the `Type` metadata) and reference-tracking (`AsReference`, `AsReferenceDefault`, `DynamicType`) are not implemented/supported; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited
+- **breaking change** - non-generic list-like APIs like `IList` or `ICollection` are no longer supported; there is a new API for processing custom collection types
 
-
-## v3.0.0-alpha.3
-
-- **breaking change** (hence 3.0) if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
-- if using `ProtoReader` you *should* now move to the `ref State` API too, although the old API will continue to
-  work with `Stream`-based readers; it **will not** work with `ReadOnlySequence<byte>` readers
-- "pipelines" (`ReadOnlySequence<byte>`) support for the **read** API (not write yet)
-- significant performance improvements in all read scenarios
+- new state-based reader/writer API (works with streams, buffers, etc)
+- entire new custom serializer API
 - new `CreateForAssembly(...)` API (various overloads) for working with precompiled (at runtime) type models (faster than `RuntimeTypeModel`, but less flexible)
-- significant amounts of code tidying; many yaks were shawn
+
+Some features are currently incomplete; this may restrict usage for some scenarios:
+
+- serialization callbacks on inheritance models are currently only supported at the root type; workaround: `virtual` / `override`
+- tuple-based types and types with surrogates cannot currently be used in inheritance chains - mostly because I need to figure out what that even *means*
+- null-item retention in lists/arrays is not currently implemented
+- custom default types for collection initializers are not yet implemented; a simple workaround is to initialize the collection in the type
+
+There are some additional changes that are *technically* breaks, but which are simply bizarre things that probably
+never should have been allowed; these changes should not impact most people!
+
+- it is no longer valid to attempt to configure `object`
+- it is no longer valid to define an inheritance involving value-types
+- undeclared inheritance base-types are no longer supported; meaning: if you serialize a `Foo : FooBase` **as a `FooBase`**, but only tell the serializer about `Foo` (never mentioning `FooBase`), it will fail
+- all APIs that take `int key` referring to `Type` are deprecated; user code should not be directly using these APIs, so no impact is expected
+- the `TypeModel` API surface (for implementing custom models) has changed; user code should not be directly using these APIs, so no impact is expected
+- the default .proto syntax has been changed from `Proto2` to `Proto3`; if this is a problem, either specify it explicitly, or there is a global option for the default syntax
+
+Other changes:
+
+- in line with the Google implementation, the serializer now optimally chooses when to use "packed" encoding, rather than taking the user too literally
+- empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
+- as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
+- common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
+
+## 2.4.4
+
+- mark `DiscriminatedUnion*` types as `[Serializable]`
+
+## 2.4.2 / 2.4.3
+
+- add `IProtoInput<T>` / `IProtoOutput<T>` APIs for discovering input/output capabilities (this is to allow testing for 3.0 features)
+
+## 2.4.1
+
+- fixes for .NET Core 3, thanks @szehetner
+- (this build deliberately *does not* update package dependencies, to reduce impact)
 
 ## v2.4.0
 

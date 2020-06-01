@@ -11,7 +11,7 @@ namespace ProtoBuf.unittest.Serializers
         public void BasicPairTest()
         {
             var pair = new KeyValuePair<int, string>(123, "abc");
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (KeyValuePair<int, string>)model.DeepClone(pair);
             Assert.Equal(pair.Key, clone.Key); //, "Runtime");
             Assert.Equal(pair.Value, clone.Value); //, "Runtime");
@@ -30,7 +30,7 @@ namespace ProtoBuf.unittest.Serializers
         public void DictionaryInt32KeyTest()
         {
             var data = new Dictionary<int, string> { { 123, "abc" }, { 456, "def" } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (Dictionary<int, string>)model.DeepClone(data);
             Assert.Equal(2, clone.Count);
             Assert.Equal("abc", clone[123]); //, "Runtime");
@@ -52,7 +52,7 @@ namespace ProtoBuf.unittest.Serializers
         public void DictionarySingleKeyTest()
         {
             var data = new Dictionary<float, string> { { 123, "abc" }, { 456, "def" } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (Dictionary<float, string>)model.DeepClone(data);
             Assert.Equal(2, clone.Count);
             Assert.Equal("abc", clone[123]); //, "Runtime");
@@ -74,7 +74,7 @@ namespace ProtoBuf.unittest.Serializers
         public void TypeWithPairTest()
         {
             var orig = new TypeWithPair { Pair = new KeyValuePair<string, decimal>("abc", 123.45M) };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (TypeWithPair)model.DeepClone(orig);
             Assert.Equal("abc", clone.Pair.Key); //, "Runtime");
             Assert.Equal(123.45M, clone.Pair.Value); //, "Runtime");
@@ -96,7 +96,7 @@ namespace ProtoBuf.unittest.Serializers
         public void TypeWithDictionaryTest()
         {
             var orig = new TypeWithDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (TypeWithDictionary)model.DeepClone(orig);
             Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
@@ -118,7 +118,7 @@ namespace ProtoBuf.unittest.Serializers
         public void ShouldWorkWithAutoLoadDisabledRuntime()
         {
             var orig = new TypeWithDictionary {Data = new Dictionary<string, decimal> {{"abc", 123.45M}}};
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof (TypeWithDictionary), true);
             var clone = (TypeWithDictionary) model.DeepClone(orig);
@@ -130,7 +130,7 @@ namespace ProtoBuf.unittest.Serializers
         public void ShouldWorkWithAutoLoadDisabledAndAddedExplicitlyRuntime()
         {
             var orig = new TypeWithDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof(TypeWithDictionary), true);
             model.Add(typeof(KeyValuePair<string,decimal>), true);
@@ -142,7 +142,7 @@ namespace ProtoBuf.unittest.Serializers
         public void ShouldWorkWithAutoLoadDisabledCompileInPlace()
         {
             var orig = new TypeWithDictionary {Data = new Dictionary<string, decimal> {{"abc", 123.45M}}};
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof (TypeWithDictionary), true);
             model.CompileInPlace();
@@ -154,14 +154,17 @@ namespace ProtoBuf.unittest.Serializers
         public void ShouldWorkWithAutoLoadDisabledCompile()
         {
             var orig = new TypeWithDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof(TypeWithDictionary), true);
 
             var compiled = model.Compile("MapSerializer", "ShouldWorkWithAutoLoadDisabledCompile.dll");
             PEVerify.Verify("ShouldWorkWithAutoLoadDisabledCompile.dll");
+            var clone = (TypeWithDictionary)compiled.DeepClone(orig);
+            Assert.Single(clone.Data);
+            Assert.Equal(123.45M, clone.Data["abc"]);
 
-            var clone = (TypeWithDictionary)model.Compile().DeepClone(orig);
+            clone = (TypeWithDictionary)model.Compile().DeepClone(orig);
             Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]);
         }
@@ -170,7 +173,7 @@ namespace ProtoBuf.unittest.Serializers
         public void TypeWithIDictionaryTest()
         {
             var orig = new TypeWithIDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (TypeWithIDictionary)model.DeepClone(orig);
             Assert.Equal(1, clone.Data.Count);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");

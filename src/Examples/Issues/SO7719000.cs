@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Xunit;
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
+using System;
+using System.IO;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
+
     public class SO7719000
     {
         public abstract class Message
@@ -48,35 +45,39 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var model = TypeModel.Create();
-            model.AutoCompile = false;
-            // message hierarchy
+            var ex = Assert.Throws<InvalidOperationException>(() =>
             {
-                var messages = model.Add(typeof(Message), true);
-                messages.AddSubType(1, typeof(SomeMessage));
-                model[typeof(SomeMessage)].UseConstructor = false;
-            }
+                var model = RuntimeTypeModel.Create();
+                model.AutoCompile = false;
+                // message hierarchy
+                {
+                    var messages = model.Add(typeof(Message), true);
+                    messages.AddSubType(1, typeof(SomeMessage));
+                    model[typeof(SomeMessage)].UseConstructor = false;
+                }
 
-            // events hierarchy
-            {
-                var events = model.Add(typeof(Event), true);
-                events.AddSubType(1, typeof(SomeEvent));
-                model[typeof(SomeEvent)].Add("SomeField").UseConstructor = false;
-            }
+                // events hierarchy
+                {
+                    var events = model.Add(typeof(Event), true);
+                    events.AddSubType(1, typeof(SomeEvent));
+                    model[typeof(SomeEvent)].Add(nameof(SomeEvent.SomeField)).UseConstructor = false;
+                }
+            });
+            Assert.Equal("Tuple-based types cannot be used in inheritance hierarchies: Examples.Issues.SO7719000+SomeMessage", ex.Message);
 
-            // descriptor
-            var eventDescriptorModel = model.Add(typeof(Descriptor), true);
-            eventDescriptorModel.UseConstructor = false;
+            //// descriptor
+            //var eventDescriptorModel = model.Add(typeof(Descriptor), true);
+            //eventDescriptorModel.UseConstructor = false;
 
-            RunTest(model, "Runtime");
+            //RunTest(model, "Runtime");
 
-            model.CompileInPlace();
-            RunTest(model, "CompileInPlace");
+            //model.CompileInPlace();
+            //RunTest(model, "CompileInPlace");
 
-            RunTest(model.Compile(), "Compile");
+            //RunTest(model.Compile(), "Compile");
 
-            model.Compile("SO7719000", "SO7719000.dll");
-            PEVerify.AssertValid("SO7719000.dll");
+            //model.Compile("SO7719000", "SO7719000.dll");
+            //PEVerify.AssertValid("SO7719000.dll");
         }
         private void RunTest(TypeModel typeModel, string caption)
         {

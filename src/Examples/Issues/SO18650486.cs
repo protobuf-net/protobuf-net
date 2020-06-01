@@ -7,6 +7,7 @@ using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
+#pragma warning disable IDE1006 // naming
 namespace Examples.Issues
 {
 
@@ -21,7 +22,7 @@ namespace Examples.Issues
 #else
             const int OuterLoop = 500;
 #endif
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             // Execute(OuterLoop, model, "RT");
             model.CompileInPlace();
@@ -51,7 +52,9 @@ namespace Examples.Issues
                         ms.SetLength(0);
                         model.Serialize(ms, classThree);
                         ms.Position = 0;
+#pragma warning disable CS0618
                         var des = model.Deserialize(ms, null, typeof(ClassThree));
+#pragma warning restore CS0618
                         var aaa = des;
                     }
                     counter.Stop();

@@ -12,13 +12,15 @@ namespace ProtoBuf.unittest.Serializers
     {
         [Fact]
         public void TestWriteSubItemWithShortBlob() {
-            Util.Test((ProtoWriter pw, ref ProtoWriter.State st) =>
+            Util.Test((ref ProtoWriter.State st) =>
             {
-                ProtoWriter.WriteFieldHeader(5, WireType.String, pw, ref st);
-                SubItemToken token = ProtoWriter.StartSubItem(new object(), pw, ref st);
-                ProtoWriter.WriteFieldHeader(6, WireType.String, pw, ref st);
-                ProtoWriter.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 }, pw, ref st);
-                ProtoWriter.EndSubItem(token, pw, ref st);
+                st.WriteFieldHeader(5, WireType.String);
+#pragma warning disable CS0618
+                SubItemToken token = st.StartSubItem(new object());
+                st.WriteFieldHeader(6, WireType.String);
+                st.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
+                st.EndSubItem(token);
+#pragma warning restore CS0618
             }, "2A" // 5 * 8 + 2 = 42
              + "0A" // sub-item length = 10
              + "32" // 6 * 8 + 2 = 50 = 0x32

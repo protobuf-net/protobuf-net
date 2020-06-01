@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ProtoBuf;
-using Xunit;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
+using System;
 using System.IO;
+using Xunit;
 
 namespace Examples.Issues
 {
@@ -44,13 +41,13 @@ namespace Examples.Issues
         [ProtoMember(1)]
         public I Unknown { get; set; }
     }
-    
+
     public class Issue185
     {
         [Fact]
         public void ExecuteWithConstructType()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
+            var argEx = Program.ExpectFailure<ArgumentException>(() =>
             {
                 var m = RuntimeTypeModel.Create();
                 m.AutoCompile = false;
@@ -65,38 +62,47 @@ namespace Examples.Issues
                 m.CompileInPlace();
                 Test(m, c, "CompileInPlace");
                 Test(m.Compile(), c, "Compile");
-            }, @"The supplied default implementation cannot be created: Examples.Issues.O
-Parameter name: constructType");
+            });
+            Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
+            Assert.Equal("constructType", argEx.ParamName);
         }
+
+#pragma warning disable IDE0060
         static void Test(TypeModel model, C c, string caption)
+#pragma warning restore IDE0060
         {
             Assert.Equal(43, c.Unknown.N); //, "braindead");
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, c);
-                Assert.True(1 > 0);
-                Assert.True(ms.Length > 0); //, "Nothing written");
-                ms.Position = 0;
-                var c2 = (C)model.Deserialize(ms, null, typeof(C));
-                Assert.Equal(c.Unknown.N, c2.Unknown.N); //, caption);
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, c);
+            Assert.True(1 > 0);
+            Assert.True(ms.Length > 0); //, "Nothing written");
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var c2 = (C)model.Deserialize(ms, null, typeof(C));
+#pragma warning restore CS0618
+            Assert.Equal(c.Unknown.N, c2.Unknown.N); //, caption);
         }
         [Fact]
         public void ExecuteWithSubType()
         {
-            var m = RuntimeTypeModel.Create();
-            m.AutoCompile = false;
-            m.Add(typeof(C), false).SetSurrogate(typeof(CS));
-            m.Add(typeof(O), false).SetSurrogate(typeof(OS));
-            m.Add(typeof(I), false).AddSubType(1, typeof(O));
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+            {
+                var m = RuntimeTypeModel.Create();
+                m.AutoCompile = false;
+                m.Add(typeof(C), false).SetSurrogate(typeof(CS));
+                m.Add(typeof(O), false).SetSurrogate(typeof(OS));
+                m.Add(typeof(I), false).AddSubType(1, typeof(O));
 
-            var c = new C();
-            c.PopulateRun();
+                var c = new C();
+                c.PopulateRun();
 
-            Test(m, c, "Runtime");
-            m.CompileInPlace();
-            Test(m, c, "CompileInPlace");
-            Test(m.Compile(), c, "Compile");
+                Test(m, c, "Runtime");
+                m.CompileInPlace();
+                Test(m, c, "CompileInPlace");
+                Test(m.Compile(), c, "Compile");
+            });
+            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.O", ex.Message);
+
         }
     }
 }

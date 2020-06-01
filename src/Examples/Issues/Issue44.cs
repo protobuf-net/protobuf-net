@@ -16,7 +16,7 @@ namespace Examples.Issues
         [Fact]
         public void DateTimeKind_NotSerializedByDefault()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Assert.False(model.IncludeDateTimeKind);
         }
@@ -34,7 +34,7 @@ namespace Examples.Issues
 
         private static void DateTimeKind_SerializedElectively(bool includeDateTimeKind, string name)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.IncludeDateTimeKind = includeDateTimeKind;
             var original = HazTime.Create();
@@ -59,10 +59,7 @@ namespace Examples.Issues
             PEVerify.AssertValid(name + ".dll");
         }
         static bool SerializeDateTimeKind(TypeModel model)
-        {
-            return (bool)typeof(TypeModel).GetMethod(
-                "SerializeDateTimeKind", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(model, null);
-        }
+            => (model.Options & TypeModel.TypeModelOptions.IncludeDateTimeKind) != 0;
 
         static void CompareDates(HazTime expected, HazTime actual, bool withKind, string model)
         {

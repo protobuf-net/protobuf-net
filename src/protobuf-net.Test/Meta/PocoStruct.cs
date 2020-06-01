@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using Xunit;
 using ProtoBuf.Meta;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.unittest.Meta
-{
-    
+{   
     public class PocoClass
     {
+        private ITestOutputHelper Log { get; }
+        public PocoClass(ITestOutputHelper _log) => Log = _log;
+
         public class Company
         {
             private readonly List<Employee> employees = new List<Employee>();
@@ -23,7 +26,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void CanSerializeCompany()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Company), false).Add("Employees");
             model.Add(typeof(Employee), false).Add("EmployeeName", "Designation");
             model.CompileInPlace();
@@ -34,12 +37,13 @@ namespace ProtoBuf.unittest.Meta
                     new Employee { Designation = "Grunt", EmployeeName = "Jo"},
                     new Employee { Designation = "Scapegoat", EmployeeName = "Alex"}}
             }, clone;
-            using(var ms = new MemoryStream()) {
-                model.Serialize(ms, comp);
-                ms.Position = 0;
-                Console.WriteLine("Bytes: " + ms.Length);
-                clone = (Company) model.Deserialize(ms, null, typeof(Company));
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, comp);
+            ms.Position = 0;
+            Log.WriteLine("Bytes: " + ms.Length);
+#pragma warning disable CS0618
+            clone = (Company) model.Deserialize(ms, null, typeof(Company));
+#pragma warning restore CS0618
             Assert.Equal(3, clone.Employees.Count);
             Assert.Equal("Boss", clone.Employees[0].Designation);
             Assert.Equal("Alex", clone.Employees[2].EmployeeName);
@@ -49,6 +53,9 @@ namespace ProtoBuf.unittest.Meta
     
     public class PocoStruct
     {
+        private ITestOutputHelper Log { get; }
+        public PocoStruct(ITestOutputHelper _log) => Log = _log;
+
         public struct Company
         {
             private List<Employee> employees;
@@ -63,7 +70,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void CanSerializeCompany()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Company), false).Add("Employees");
             model.Add(typeof(Employee), false).Add("EmployeeName", "Designation");
             model.CompileInPlace();
@@ -79,8 +86,10 @@ namespace ProtoBuf.unittest.Meta
             {
                 model.Serialize(ms, comp);
                 ms.Position = 0;
-                Console.WriteLine("Bytes: " + ms.Length);
+                Log.WriteLine("Bytes: " + ms.Length);
+#pragma warning disable CS0618
                 clone = (Company)model.Deserialize(ms, null, typeof(Company));
+#pragma warning restore CS0618
             }
             Assert.Equal(3, clone.Employees.Count);
             Assert.Equal("Boss", clone.Employees[0].Designation);

@@ -45,9 +45,11 @@ namespace Examples
                 CanHazFactory orig = new CanHazFactory {Foo = 123, Bar = 456}, clone;
                 using(var ms = new MemoryStream())
                 {
-                    model.Serialize(ms, orig, ctx);
+                    model.Serialize(ms, orig, context: ctx);
                     ms.Position = 0;
+#pragma warning disable CS0618
                     clone = (CanHazFactory) model.Deserialize(ms, null, typeof(CanHazFactory), ctx);
+#pragma warning restore CS0618
                 }
 
                 Assert.NotSame(orig, clone);

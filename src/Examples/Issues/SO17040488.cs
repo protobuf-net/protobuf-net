@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿#if FEAT_DYNAMIC_REF
+
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
@@ -31,7 +33,7 @@ namespace Examples.Issues
 
         public void Execute()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
 
             Execute(model, "Runtime");
@@ -60,3 +62,6 @@ namespace Examples.Issues
         }
     }
 }
+
+
+#endif

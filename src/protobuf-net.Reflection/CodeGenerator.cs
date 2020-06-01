@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -42,15 +43,14 @@ namespace ProtoBuf.Reflection
             var set = new FileDescriptorSet();
             foreach (var file in files)
             {
-                using (var reader = new StringReader(file.Text))
-                {
-                    Console.WriteLine($"Parsing {file.Name}...");
-                    set.Add(file.Name, true, reader);
-                }
+                using var reader = new StringReader(file.Text);
+#if DEBUG_COMPILE
+                Console.WriteLine($"Parsing {file.Name}...");
+#endif
+                set.Add(file.Name, true, reader);
             }
             set.Process();
             var results = new List<CodeFile>();
-            var newErrors = new List<Error>();
 
             try
             {
@@ -224,13 +224,16 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected virtual void WriteService(GeneratorContext ctx, ServiceDescriptorProto service)
         {
-            object state = null;
-            WriteServiceHeader(ctx, service, ref state);
-            foreach (var inner in service.Methods)
+            if (ctx.EmitServices)
             {
-                WriteServiceMethod(ctx, inner, ref state);
+                object state = null;
+                WriteServiceHeader(ctx, service, ref state);
+                foreach (var inner in service.Methods)
+                {
+                    WriteServiceMethod(ctx, inner, ref state);
+                }
+                WriteServiceFooter(ctx, service, ref state);
             }
-            WriteServiceFooter(ctx, service, ref state);
         }
         /// <summary>
         /// Emit code following a set of service methods
@@ -242,7 +245,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected virtual void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state) { }
         /// <summary>
-        /// Emit code following preceeding a set of service methods
+        /// Emit code preceeding a set of service methods
         /// </summary>
         protected virtual void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object state) { }
         /// <summary>
@@ -503,9 +506,22 @@ namespace ProtoBuf.Reflection
                 OneOfEnums = (File.Options?.GetOptions()?.EmitOneOfEnum ?? false) || (_options != null && _options.TryGetValue("oneof", out var oneof) && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase));
 
                 EmitListSetters = IsEnabled("listset");
+                EmitServices = IsEnabled("services");
             }
 
-            internal bool EmitListSetters { get; }
+            /// <summary>
+            /// Whether lists should be written with getters
+            /// </summary>
+            public bool EmitListSetters { get; }
+
+            /// <summary>
+            /// Whether services should be emitted
+            /// </summary>
+            public bool EmitServices { get; }
+
+            /// <summary>
+            /// Whether a custom option is enabled
+            /// </summary>
             internal bool IsEnabled(string key)
             {
                 var option = GetCustomOption(key);
