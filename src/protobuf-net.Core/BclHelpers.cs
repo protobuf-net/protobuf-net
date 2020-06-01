@@ -350,7 +350,14 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteGuidBytes(ref ProtoWriter.State state, Guid value)
-            => new GuidBytes(value).Write(ref state);
+            => GuidHelper.Write(ref state, in value, asBytes: true);
+
+        /// <summary>
+        /// Writes a Guid to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteGuidString(ref ProtoWriter.State state, Guid value)
+            => GuidHelper.Write(ref state, in value, asBytes: false);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
@@ -374,7 +381,14 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuidBytes(ref ProtoReader.State state)
-            => GuidBytes.Read(ref state);
+            => GuidHelper.Read(ref state); // note that this is forgiving and handles 16/32/36 formats
+
+        /// <summary>
+        /// Parses a Guid from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static Guid ReadGuidString(ref ProtoReader.State state)
+            => GuidHelper.Read(ref state); // note that this is forgiving and handles 16/32/36 formats
 
 #if FEAT_DYNAMIC_REF
         private const int

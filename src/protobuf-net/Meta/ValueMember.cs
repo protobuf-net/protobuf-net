@@ -637,7 +637,7 @@ namespace ProtoBuf.Meta
                     return TimeSpanSerializer.Create(compatibilityLevel);
                 case ProtoTypeCode.Guid:
                     defaultWireType = (dataFormat == DataFormat.Group && compatibilityLevel < CompatibilityLevel.Level300) ? WireType.StartGroup : WireType.String;
-                    return GuidSerializer.Create(compatibilityLevel);
+                    return GuidSerializer.Create(compatibilityLevel, dataFormat);
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
                     return StringSerializer.Instance;

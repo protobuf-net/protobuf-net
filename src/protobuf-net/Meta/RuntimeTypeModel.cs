@@ -1718,9 +1718,12 @@ namespace ProtoBuf.Meta
                         }
                     case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
                     case ProtoTypeCode.Guid:
-                        if (compatibilityLevel >= CompatibilityLevel.Level300) return "bytes";
-                        imports |= CommonImports.Bcl;
-                        return ".bcl.Guid";
+                        if (compatibilityLevel < CompatibilityLevel.Level300)
+                        {
+                            imports |= CommonImports.Bcl;
+                            return ".bcl.Guid";
+                        }
+                        return dataFormat == DataFormat.FixedSize ? "bytes" : "string";
                     case ProtoTypeCode.Type: return "string";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }
