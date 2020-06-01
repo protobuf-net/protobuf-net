@@ -52,7 +52,7 @@ namespace ProtoBuf.Internal.Serializers
                 {
 
                     SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
-                    serializer = RepeatedDecorator.Create(repeated, i + 1, listFeatures);
+                    serializer = RepeatedDecorator.Create(repeated, i + 1, listFeatures, compatibilityLevel, DataFormat.Default);
                 }
                 tails[i] = serializer;
             }

@@ -34,7 +34,7 @@ namespace ProtoBuf.Internal.Serializers
             using var tmp = ctx.GetLocalWithValue(typeof(TChild), valueFrom);
             ctx.LoadState();
             ctx.LoadValue(tmp);
-            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>();
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>(default, default);
             ctx.EmitCall(s_WriteSubType[2].MakeGenericMethod(typeof(TChild)));
         }
 
@@ -46,7 +46,7 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadState();
             ctx.LoadValue(fieldNumber);
             ctx.LoadValue(tmp);
-            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>();
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>(default, default);
             ctx.EmitCall(s_WriteSubType[3].MakeGenericMethod(typeof(TChild)));
         }
 
@@ -63,7 +63,7 @@ namespace ProtoBuf.Internal.Serializers
             var type = typeof(SubTypeState<TParent>);
             ctx.LoadAddress(valueFrom, type);
             ctx.LoadState();
-            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>();
+            ctx.LoadSelfAsService<ISubTypeSerializer<TChild>, TChild>(default, default);
             ctx.EmitCall(type.GetMethod(nameof(SubTypeState<TParent>.ReadSubType)).MakeGenericMethod(typeof(TChild)));
         }
     }
@@ -299,7 +299,7 @@ namespace ProtoBuf.Internal.Serializers
             }
             else
             {
-                ctx.LoadSelfAsService<ISerializer<T>, T>();
+                ctx.LoadSelfAsService<ISerializer<T>, T>(default, default);
             }
         }
         public static void EmitReadMessage<T>(CompilerContext ctx, Local value = null, FieldInfo serializer = null

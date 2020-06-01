@@ -3,11 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.Test
 {
     public class CompatibilityLevelListsMaps
     {
+        private readonly ITestOutputHelper _log;
+        public CompatibilityLevelListsMaps(ITestOutputHelper log) => _log = log;
+        private void Log(string message) => _log?.WriteLine(message);
+
         [Fact]
         public void AssertVanillaListsSchema()
             => Assert.Equal(@"syntax = ""proto3"";
@@ -239,6 +244,171 @@ payload = 0A-04-08-02-10-01-12-04-08-02-10-01
                 = new Dictionary<TimeSpan, TimeSpan>();
         }
 #pragma warning restore CS0618
+
+
+
+        [ProtoContract]
+        public class HazGuids
+        {
+            [ProtoMember(1)]
+            public List<Guid> Guids { get; } = new List<Guid>();
+        }
+
+        [ProtoContract]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class HazGuids300
+        {
+            [ProtoMember(1)]
+            public List<Guid> Guids { get; } = new List<Guid>();
+        }
+
+        [ProtoContract]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class HazGuids300Fixed
+        {
+            [ProtoMember(1, DataFormat = DataFormat.FixedSize)]
+            public List<Guid> Guids { get; } = new List<Guid>();
+        }
+
+        [Fact]
+        public void VanillaHazGuidsSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
+
+message HazGuids {
+   repeated .bcl.Guid Guids = 1;
+}
+", Serializer.GetProto<HazGuids>(ProtoSyntax.Proto3), ignoreLineEndingDifferences: true);
+
+        [Fact]
+        public void Level300HazGuidsSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazGuids300 {
+   repeated string Guids = 1;
+}
+", Serializer.GetProto<HazGuids300>(ProtoSyntax.Proto3), ignoreLineEndingDifferences: true);
+
+        [Fact]
+        public void Level300FixedHazGuidsSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazGuids300Fixed {
+   repeated bytes Guids = 1;
+}
+", Serializer.GetProto<HazGuids300Fixed>(ProtoSyntax.Proto3), ignoreLineEndingDifferences: true);
+
+
+        private static readonly Guid s_KnownGuid = Guid.Parse("c416e4af-455e-414c-948c-f27873263547");
+
+        [Fact]
+        public void VanillaHazGuidsPayload() => AssertPayload(new HazGuids { Guids = { s_KnownGuid } }, "0A-12-09-AF-E4-16-C4-5E-45-4C-41-11-94-8C-F2-78-73-26-35-47");
+        /*
+0A = field 1, type String
+12 = length 18
+payload = 09-AF-E4-16-C4-5E-45-4C-41-11-94-8C-F2-78-73-26-35-47
+  09 = field 1, type Fixed64
+  payload = AF-E4-16-C4-5E-45-4C-41
+  11 = field 2, type Fixed64
+  payload = -8C-F2-78-73-26-35-47
+        */
+
+        [Fact]
+        public void Level300HazGuidsPayload() => AssertPayload(new HazGuids300 { Guids = { s_KnownGuid } }, "0A-24-63-34-31-36-65-34-61-66-2D-34-35-35-65-2D-34-31-34-63-2D-39-34-38-63-2D-66-32-37-38-37-33-32-36-33-35-34-37");
+        /*
+0A = field 1, type String
+24 = length 36
+payload = 63-34-31-36-65-34-61-66-2D-34-35-35-65-2D-34-31-34-63-2D-39-34-38-63-2D-66-32-37-38-37-33-32-36-33-35-34-37
+UTF8: c416e4af-455e-414c-948c-f27873263547
+        */
+
+        [Fact]
+        public void Level300FixedHazGuidsPayload() => AssertPayload(new HazGuids300Fixed { Guids = { s_KnownGuid } }, "0A-10-C4-16-E4-AF-45-5E-41-4C-94-8C-F2-78-73-26-35-47");
+        /*
+0A = field 1, type String
+10 = length 16
+payload = C4-16-E4-AF-45-5E-41-4C-94-8C-F2-78-73-26-35-47
+         */
+
+        void AssertPayload<T>(T message, string expectedHex)
+        {
+            var model = RuntimeTypeModel.Create(typeof(T).Name);
+            model.AutoCompile = false;
+            AssertImpl(model);
+            model.CompileInPlace();
+            AssertImpl(model);
+            AssertImpl(model.Compile());
+
+            void AssertImpl(TypeModel serializer)
+            {
+                using var ms = new MemoryStream();
+                serializer.Serialize(ms, message);
+                var actualHex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Log(actualHex);
+                Assert.Equal(expectedHex, actualHex);
+            }
+        }
+
+
+        [ProtoContract]
+        public class HazDecimals
+        {
+            [ProtoMember(1)]
+            public List<decimal> Values { get; } = new List<decimal>();
+        }
+
+        [ProtoContract]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class HazDecimals300
+        {
+            [ProtoMember(1)]
+            public List<decimal> Values { get; } = new List<decimal>();
+        }
+
+        [Fact]
+        public void VanillaHazDecimalsSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
+
+message HazDecimals {
+   repeated .bcl.Decimal Values = 1;
+}
+", Serializer.GetProto<HazDecimals>(ProtoSyntax.Proto3), ignoreLineEndingDifferences: true);
+
+        [Fact]
+        public void Level300HazDecimalsSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazDecimals300 {
+   repeated string Values = 1;
+}
+", Serializer.GetProto<HazDecimals300>(ProtoSyntax.Proto3), ignoreLineEndingDifferences: true);
+
+        [Fact]
+        public void VanillaHazDecimalsPayload() => AssertPayload(new HazDecimals { Values = { 12354.1451M } }, "0A-07-08-CB-AF-F4-3A-18-08");
+        /*
+0A = field 1, type String
+07 = length 7
+payload = 08-CB-AF-F4-3A-18-08
+  08 = field 1, type Variant
+  CB-AF-F4-3A = 123541451 (raw) or -61770726 (zigzag)
+  18 = field 3, type Variant
+  08 = 8 (raw) or 4 (zigzag)
+        */
+
+        [Fact]
+        public void Level300HazDecimalsPayload() => AssertPayload(new HazDecimals300 { Values = { 12354.1451M } }, "0A-0A-31-32-33-35-34-2E-31-34-35-31");
+        /*
+0A = field 1, type String
+0A = length 10
+payload = 31-32-33-35-34-2E-31-34-35-31
+UTF8: 12354.1451
+        */
     }
 
 

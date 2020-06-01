@@ -294,11 +294,23 @@ namespace ProtoBuf.Compiler
 
         public bool IsService => Scope.IsFullEmit && !IsStatic;
 
-        public void LoadSelfAsService<TService, T>() where TService : class
+        public void LoadSelfAsService<TService, T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat) where TService : class
         {
-            if (IsStatic || TypeModel.TryGetSerializer<T>(null) is object) // don't claim inbuilts
+            bool isInbuilt = TypeModel.GetInbuiltSerializer<T>(compatibilityLevel, dataFormat) is object;
+            if (IsStatic || isInbuilt) // don't claim inbuilts
             {
-                LoadNullRef();
+                if (isInbuilt && compatibilityLevel >= CompatibilityLevel.Level300 && typeof(TService) == typeof(ISerializer<T>))
+                {
+                    // we'll get the call-site to emit TypeModel.GetInbuiltSerializer<T>(compatibilityLevel, dataFormat)
+                    LoadValue((int)compatibilityLevel);
+                    LoadValue((int)dataFormat);
+                    EmitCall(s_GetInbuiltSerializer.MakeGenericMethod(typeof(T)));
+                }
+                else
+                {
+                    // no serializer (uses Level200 etc)
+                    LoadNullRef();
+                }
             }
             else
             {
@@ -313,6 +325,8 @@ namespace ProtoBuf.Compiler
                 }
             }
         }
+
+        private static readonly MethodInfo s_GetInbuiltSerializer = typeof(TypeModel).GetMethod(nameof(TypeModel.GetInbuiltSerializer), BindingFlags.Static | BindingFlags.Public);
 
         private readonly ILGenerator il;
 

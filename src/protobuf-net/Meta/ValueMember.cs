@@ -115,20 +115,22 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal CompatibilityLevel EffectiveCompatibilityLevel
+        private static CompatibilityLevel GetEffectiveCompatibilityLevel(CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
         {
-            get
+            if (compatibilityLevel <= CompatibilityLevel.Level200)
             {
-                var level = _compatibilityLevel;
-#pragma warning disable CS0618
-                if (level <= CompatibilityLevel.Level200 && DataFormat == DataFormat.WellKnown)
-#pragma warning restore CS0618
+                return dataFormat switch
                 {
-                    return CompatibilityLevel.Level240;
-                }
-                return level;
+#pragma warning disable CS0618
+                    DataFormat.WellKnown => CompatibilityLevel.Level240,
+#pragma warning restore CS0618
+                    _ => CompatibilityLevel.Level200,
+                };
             }
+            return compatibilityLevel;
         }
+
+        internal CompatibilityLevel EffectiveCompatibilityLevel => GetEffectiveCompatibilityLevel(_compatibilityLevel, DataFormat);
 
         private readonly RuntimeTypeModel model;
         /// <summary>
@@ -406,7 +408,8 @@ namespace ProtoBuf.Meta
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
-        internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat, CompatibilityLevel compatiblityLevel,
+        internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat,
+            CompatibilityLevel compatibilityLevel,
             DataFormat keyFormat, DataFormat valueFormat, bool asReference, bool dynamicType, bool isMap, bool overwriteList, int fieldNumber)
         {
             static Type FlattenRepeated(RuntimeTypeModel model, Type type)
@@ -416,9 +419,12 @@ namespace ProtoBuf.Meta
                 return repeated == null ? type : repeated.ItemType;
             }
 
+            var keyCompatibilityLevel = GetEffectiveCompatibilityLevel(compatibilityLevel, keyFormat);
+            var valueCompatibilityLevel = GetEffectiveCompatibilityLevel(compatibilityLevel, valueFormat);
+
             repeated.ResolveMapTypes(out var keyType, out var valueType);
-            _ = TryGetCoreSerializer(model, keyFormat, compatiblityLevel, FlattenRepeated(model, keyType), out var keyWireType, false, false, false, true);
-            _ = TryGetCoreSerializer(model, valueFormat, compatiblityLevel, FlattenRepeated(model, valueType), out var valueWireType, asReference, dynamicType, false, true);
+            _ = TryGetCoreSerializer(model, keyFormat, keyCompatibilityLevel, FlattenRepeated(model, keyType), out var keyWireType, false, false, false, true);
+            _ = TryGetCoreSerializer(model, valueFormat, valueCompatibilityLevel, FlattenRepeated(model, valueType), out var valueWireType, asReference, dynamicType, false, true);
 
             WireType rootWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
             SerializerFeatures features = rootWireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
@@ -426,7 +432,7 @@ namespace ProtoBuf.Meta
             if (overwriteList) features |= SerializerFeatures.OptionClearCollection;
 
             return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
-                keyWireType.AsFeatures(), valueWireType.AsFeatures());
+                keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueWireType.AsFeatures(), valueCompatibilityLevel, valueFormat);
         }
 
         private IRuntimeProtoSerializerNode BuildSerializer()
@@ -450,7 +456,7 @@ namespace ProtoBuf.Meta
                             AsReference = MetaType.GetAsReferenceDefault(valueType);
                         }
 #endif
-                        ser = CreateMap(repeated, model, DataFormat, EffectiveCompatibilityLevel, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
+                        ser = CreateMap(repeated, model, DataFormat, _compatibilityLevel, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
                     }
                     else
                     {
@@ -472,7 +478,7 @@ namespace ProtoBuf.Meta
 #if FEAT_NULL_LIST_ITEMS
                         if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
 #endif
-                        ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures);
+                        ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures, EffectiveCompatibilityLevel, DataFormat);
                     }
                 }
                 else
