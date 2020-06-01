@@ -1206,6 +1206,26 @@ namespace ProtoBuf.Meta
             ?? model?.GetSerializer<T>()
             ?? NoSerializer<T>(model);
 
+        /// <summary>
+        /// Gets the inbuilt serializer relevant to a specific <see cref="CompatibilityLevel"/> (and <see cref="DataFormat"/>).
+        /// Returns null if there is no defined inbuilt serializer.
+        /// </summary>
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat = DataFormat.Default)
+        {
+            if (compatibilityLevel >= CompatibilityLevel.Level300)
+            {
+                ISerializer<T> serializer;
+                if (dataFormat == DataFormat.FixedSize)
+                {
+                    serializer = SerializerCache<Level300FixedSerializer, T>.InstanceField;
+                    if (serializer is object) return serializer;
+                }
+                serializer = SerializerCache<Level300DefaultSerializer, T>.InstanceField;
+                if (serializer is object) return serializer;
+            }
+            return SerializerCache<PrimaryTypeProvider, T>.InstanceField;
+        }
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IRepeatedSerializer<T> GetRepeatedSerializer<T>(TypeModel model)
         {

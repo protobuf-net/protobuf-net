@@ -2,7 +2,9 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Test.TestCompatibilityLevel;
 using System;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -310,7 +312,7 @@ message AllDefaultWithModuleLevel {
         [Fact]
         public void AllKnownLevelsAreValid()
         {
-            foreach(CompatibilityLevel level in Enum.GetValues(typeof(CompatibilityLevel)))
+            foreach (CompatibilityLevel level in Enum.GetValues(typeof(CompatibilityLevel)))
             {
                 CompatibilityLevelAttribute.AssertValid(level);
             }
@@ -513,6 +515,47 @@ message HazDecimal {
         {
             [ProtoMember(1)]
             public string Value { get; set; }
+        }
+
+
+        [Theory]
+        [InlineData(typeof(int), CompatibilityLevel.Level200, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(DateTime), CompatibilityLevel.Level200, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(TimeSpan), CompatibilityLevel.Level200, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(Guid), CompatibilityLevel.Level200, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(decimal), CompatibilityLevel.Level200, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(CultureInfo), CompatibilityLevel.Level200, DataFormat.Default, null)]
+
+        [InlineData(typeof(int), CompatibilityLevel.Level300, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(DateTime), CompatibilityLevel.Level300, DataFormat.Default, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(TimeSpan), CompatibilityLevel.Level300, DataFormat.Default, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(Guid), CompatibilityLevel.Level300, DataFormat.Default, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(decimal), CompatibilityLevel.Level300, DataFormat.Default, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(CultureInfo), CompatibilityLevel.Level300, DataFormat.Default, null)]
+
+        [InlineData(typeof(int), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(DateTime), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(TimeSpan), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(Guid), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(Level300FixedSerializer))]
+        [InlineData(typeof(decimal), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(CultureInfo), CompatibilityLevel.Level300, DataFormat.FixedSize, null)]
+        public void ResolveInbuiltSerializerType(Type type, CompatibilityLevel compatibilityLevel, DataFormat dataFormat, Type expectedType)
+            => s_Generic.MakeGenericMethod(type).Invoke(null, new object[] { compatibilityLevel, dataFormat, expectedType });
+
+
+        private static readonly MethodInfo s_Generic = typeof(CompatibilityLevelTests).GetMethod(nameof(ResolveInbuiltSerializerTypeImpl), BindingFlags.Static | BindingFlags.NonPublic);
+
+        private static void ResolveInbuiltSerializerTypeImpl<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat, Type expectedType)
+        {
+            var serializer = TypeModel.GetInbuiltSerializer<T>(compatibilityLevel, dataFormat);
+            if (expectedType is null)
+            {
+                Assert.Null(serializer);
+            }
+            else
+            {
+                Assert.IsType(expectedType, serializer);
+            }
         }
     }
 }
