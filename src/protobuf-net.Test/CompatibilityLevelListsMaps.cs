@@ -32,18 +32,16 @@ message HazLists {
             var obj = new HazLists
             {
                 DateTimes =
-            {
-                new DateTime(2020,05,31,0,0,0,DateTimeKind.Utc),
-            },
+                {
+                    new DateTime(2020,05,31,0,0,0,DateTimeKind.Utc),
+                },
                 TimeSpans =
-            {
-                TimeSpan.FromMinutes(60)
-            }
+                {
+                    TimeSpan.FromMinutes(60)
+                }
             };
-            using var ms = new MemoryStream();
-            Serializer.Serialize(ms, obj);
-            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-            Assert.Equal("0A-06-08-80-E7-CB-F6-05-12-03-08-90-1C", hex, ignoreCase: true);
+
+            AssertPayload(obj, "0A-06-08-80-E7-CB-F6-05-12-03-08-90-1C");
         }
 
         // note: v2.4 actually gets this schema very wrong; it claims bcl.proto throughout
@@ -99,11 +97,8 @@ message KeyValuePair_TimeSpan_TimeSpan {
                 TimeSpanMapMarkedViaMap = { { "b", time } },
                 TimeSpanNotValidMapButMarked = { { time, time } },
             };
-            using var ms = new MemoryStream();
-            Serializer.Serialize(ms, obj);
-            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
 
-            Assert.Equal("0A-08-08-01-12-04-08-DA-9F-02-12-0A-08-02-12-06-08-80-E7-CB-F6-05-1A-0C-0A-04-08-DA-9F-02-12-04-08-DA-9F-02-22-09-0A-01-61-12-04-08-02-10-01-2A-08-0A-01-62-12-03-08-90-1C-32-0C-0A-04-08-02-10-01-12-04-08-02-10-01", hex, ignoreCase: true);
+            AssertPayload(obj, "0A-08-08-01-12-04-08-DA-9F-02-12-0A-08-02-12-06-08-80-E7-CB-F6-05-1A-0C-0A-04-08-DA-9F-02-12-04-08-DA-9F-02-22-09-0A-01-61-12-04-08-02-10-01-2A-08-0A-01-62-12-03-08-90-1C-32-0C-0A-04-08-02-10-01-12-04-08-02-10-01");
             /*
 notes:
 .bcl.DateTime is days by default, so: 18413
@@ -348,7 +343,7 @@ payload = C4-16-E4-AF-45-5E-41-4C-94-8C-F2-78-73-26-35-47
                 serializer.Serialize(ms, message);
                 var actualHex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
                 Log(actualHex);
-                Assert.Equal(expectedHex, actualHex);
+                Assert.Equal(expectedHex, actualHex, ignoreCase: true);
             }
         }
 

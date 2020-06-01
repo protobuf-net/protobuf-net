@@ -1212,9 +1212,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat = DataFormat.Default)
         {
+            ISerializer<T> serializer;
             if (compatibilityLevel >= CompatibilityLevel.Level300)
             {
-                ISerializer<T> serializer;
                 if (dataFormat == DataFormat.FixedSize)
                 {
                     serializer = SerializerCache<Level300FixedSerializer, T>.InstanceField;
@@ -1223,6 +1223,12 @@ namespace ProtoBuf.Meta
                 serializer = SerializerCache<Level300DefaultSerializer, T>.InstanceField;
                 if (serializer is object) return serializer;
             }
+            else if (compatibilityLevel >= CompatibilityLevel.Level240)
+            {
+                serializer = SerializerCache<Level240DefaultSerializer, T>.InstanceField;
+                if (serializer is object) return serializer;
+            }
+
             return SerializerCache<PrimaryTypeProvider, T>.InstanceField;
         }
 

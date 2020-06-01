@@ -526,6 +526,22 @@ message HazDecimal {
         [InlineData(typeof(decimal), CompatibilityLevel.Level200, DataFormat.Default, typeof(PrimaryTypeProvider))]
         [InlineData(typeof(CultureInfo), CompatibilityLevel.Level200, DataFormat.Default, null)]
 
+#pragma warning disable CS0618
+        [InlineData(typeof(int), CompatibilityLevel.Level200, DataFormat.WellKnown, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(DateTime), CompatibilityLevel.Level200, DataFormat.WellKnown, typeof(Level240DefaultSerializer))]
+        [InlineData(typeof(TimeSpan), CompatibilityLevel.Level200, DataFormat.WellKnown, typeof(Level240DefaultSerializer))]
+        [InlineData(typeof(Guid), CompatibilityLevel.Level200, DataFormat.WellKnown, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(decimal), CompatibilityLevel.Level200, DataFormat.WellKnown, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(CultureInfo), CompatibilityLevel.Level200, DataFormat.WellKnown, null)]
+#pragma warning restore CS0618
+
+        [InlineData(typeof(int), CompatibilityLevel.Level240, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(DateTime), CompatibilityLevel.Level240, DataFormat.Default, typeof(Level240DefaultSerializer))]
+        [InlineData(typeof(TimeSpan), CompatibilityLevel.Level240, DataFormat.Default, typeof(Level240DefaultSerializer))]
+        [InlineData(typeof(Guid), CompatibilityLevel.Level240, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(decimal), CompatibilityLevel.Level240, DataFormat.Default, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(CultureInfo), CompatibilityLevel.Level240, DataFormat.Default, null)]
+
         [InlineData(typeof(int), CompatibilityLevel.Level300, DataFormat.Default, typeof(PrimaryTypeProvider))]
         [InlineData(typeof(DateTime), CompatibilityLevel.Level300, DataFormat.Default, typeof(Level300DefaultSerializer))]
         [InlineData(typeof(TimeSpan), CompatibilityLevel.Level300, DataFormat.Default, typeof(Level300DefaultSerializer))]
@@ -539,9 +555,16 @@ message HazDecimal {
         [InlineData(typeof(Guid), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(Level300FixedSerializer))]
         [InlineData(typeof(decimal), CompatibilityLevel.Level300, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
         [InlineData(typeof(CultureInfo), CompatibilityLevel.Level300, DataFormat.FixedSize, null)]
-        public void ResolveInbuiltSerializerType(Type type, CompatibilityLevel compatibilityLevel, DataFormat dataFormat, Type expectedType)
-            => s_Generic.MakeGenericMethod(type).Invoke(null, new object[] { compatibilityLevel, dataFormat, expectedType });
 
+        [InlineData(typeof(int), OverHighLevel, DataFormat.FixedSize, typeof(PrimaryTypeProvider))]
+        [InlineData(typeof(DateTime), OverHighLevel, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(TimeSpan), OverHighLevel, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(Guid), OverHighLevel, DataFormat.FixedSize, typeof(Level300FixedSerializer))]
+        [InlineData(typeof(decimal), OverHighLevel, DataFormat.FixedSize, typeof(Level300DefaultSerializer))]
+        [InlineData(typeof(CultureInfo), OverHighLevel, DataFormat.FixedSize, null)]
+        public void ResolveInbuiltSerializerType(Type type, CompatibilityLevel compatibilityLevel, DataFormat dataFormat, Type expectedType)
+            => s_Generic.MakeGenericMethod(type).Invoke(null, new object[] { ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat), dataFormat, expectedType });
+        const CompatibilityLevel OverHighLevel = (CompatibilityLevel)21342345;
 
         private static readonly MethodInfo s_Generic = typeof(CompatibilityLevelTests).GetMethod(nameof(ResolveInbuiltSerializerTypeImpl), BindingFlags.Static | BindingFlags.NonPublic);
 

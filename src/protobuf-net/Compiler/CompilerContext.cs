@@ -296,10 +296,10 @@ namespace ProtoBuf.Compiler
 
         public void LoadSelfAsService<TService, T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat) where TService : class
         {
-            bool isInbuilt = TypeModel.GetInbuiltSerializer<T>(compatibilityLevel, dataFormat) is object;
-            if (IsStatic || isInbuilt) // don't claim inbuilts
+            var inbuilt = TypeModel.GetInbuiltSerializer<T>(compatibilityLevel, dataFormat);
+            if (IsStatic || inbuilt is object) // don't claim inbuilts
             {
-                if (isInbuilt && compatibilityLevel >= CompatibilityLevel.Level300 && typeof(TService) == typeof(ISerializer<T>))
+                if (inbuilt is object && typeof(TService) == typeof(ISerializer<T>) && !(inbuilt is PrimaryTypeProvider))
                 {
                     // we'll get the call-site to emit TypeModel.GetInbuiltSerializer<T>(compatibilityLevel, dataFormat)
                     LoadValue((int)compatibilityLevel);

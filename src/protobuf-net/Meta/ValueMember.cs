@@ -115,7 +115,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static CompatibilityLevel GetEffectiveCompatibilityLevel(CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
+        internal static CompatibilityLevel GetEffectiveCompatibilityLevel(CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
         {
             if (compatibilityLevel <= CompatibilityLevel.Level200)
             {
