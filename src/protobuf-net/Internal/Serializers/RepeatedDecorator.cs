@@ -45,7 +45,7 @@ namespace ProtoBuf.Internal.Serializers
             _stub = stub;
             _fieldNumber = fieldNumber;
             _features = features;
-            _compatibilityLevel = compatibilityLevel;
+            _compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             _dataFormat = dataFormat;
         }
 

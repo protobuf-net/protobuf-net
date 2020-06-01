@@ -11,7 +11,11 @@ namespace ProtoBuf.Test
     {
         private readonly ITestOutputHelper _log;
         public CompatibilityLevelListsMaps(ITestOutputHelper log) => _log = log;
-        private void Log(string message) => _log?.WriteLine(message);
+        private string Log(string message)
+        {
+            _log?.WriteLine(message);
+            return message;
+        }
 
         [Fact]
         public void AssertVanillaListsSchema()
@@ -70,7 +74,7 @@ message KeyValuePair_TimeSpan_TimeSpan {
    .bcl.TimeSpan Key = 1;
    .bcl.TimeSpan Value = 2;
 }
-", Serializer.GetProto<HazMaps>(ProtoSyntax.Proto3), ignoreLineEndingDifferences: true);
+", Log(Serializer.GetProto<HazMaps>(ProtoSyntax.Proto3)), ignoreLineEndingDifferences: true);
 
         [Fact]
         public void AssertExpectedDateTimeValues()

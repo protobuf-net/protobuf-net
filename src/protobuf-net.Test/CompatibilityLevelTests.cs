@@ -42,7 +42,7 @@ namespace ProtoBuf.Test
                 Assert.Equal(fieldNumber, field.FieldNumber);
                 Assert.Equal(name, field.Name);
                 Assert.Equal(typeof(TField), field.MemberType);
-                Assert.Equal(expected, field.EffectiveCompatibilityLevel);
+                Assert.Equal(expected, ValueMember.GetEffectiveCompatibilityLevel(field.CompatibilityLevel, field.DataFormat));
             }
         }
 

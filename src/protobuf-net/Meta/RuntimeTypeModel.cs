@@ -1614,6 +1614,7 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
         {
             altName = null;
+            compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
             if (effectiveType == typeof(byte[])) return "bytes";
