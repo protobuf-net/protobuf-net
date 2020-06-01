@@ -322,7 +322,8 @@ namespace ProtoBuf
         {
             var ptr = stackalloc byte[MAX_DECIMAL_BYTES];
             var available = state.ReadBytes(new Span<byte>(ptr, MAX_DECIMAL_BYTES));
-            if (!(Utf8Parser.TryParse(available, out decimal value, out int bytesConsumed, 'G') && bytesConsumed == available.Length))
+            if (!(Utf8Parser.TryParse(available, out decimal value, out int bytesConsumed) // default acts like 'G'/'E' - accomodating
+                && bytesConsumed == available.Length))
                 ThrowHelper.ThrowInvalidOperationException($"Unable to parse decimal: '{Encoding.UTF8.GetString(ptr, available.Length)}'");
             return value;
         }
@@ -353,7 +354,7 @@ namespace ProtoBuf
             var arr = ArrayPool<byte>.Shared.Rent(MAX_DECIMAL_BYTES);
             try
             {
-                if (!Utf8Formatter.TryFormat(value, arr, out int bytesWritten, 'G'))
+                if (!Utf8Formatter.TryFormat(value, arr, out int bytesWritten)) // format 'G' is implicit/default
                     ThrowHelper.ThrowInvalidOperationException($"Unable to format decimal: '{value}'");
                 state.WriteBytes(new ReadOnlyMemory<byte>(arr, 0, bytesWritten));
             }
