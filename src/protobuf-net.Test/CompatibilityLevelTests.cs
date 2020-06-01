@@ -259,7 +259,6 @@ message InheritedBaseDetermines {
             CompatibilityLevel.Level300, CompatibilityLevel.Level300, CompatibilityLevel.Level300, @"
 syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
 
@@ -268,7 +267,7 @@ message InheritedDerivedDetermines {
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
    string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
-   .bcl.Decimal Decimal = 5;
+   string Decimal = 5;
 }");
 
         [CompatibilityLevel(CompatibilityLevel.Level240)]
@@ -297,7 +296,6 @@ message InheritedDerivedDetermines {
             CompatibilityLevel.Level300, CompatibilityLevel.Level300, CompatibilityLevel.Level300, @"
 syntax = ""proto3"";
 package ProtoBuf.Test.TestCompatibilityLevel;
-import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
 
@@ -306,23 +304,7 @@ message AllDefaultWithModuleLevel {
    .google.protobuf.Timestamp DateTime = 2;
    .google.protobuf.Duration TimeSpan = 3;
    string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
-   .bcl.Decimal Decimal = 5;
-}");
-
-        [Fact]
-        public void TestAllDefaultWithModuleLevel_Clean() => Test<AllDefaultWithModuleLevel_Clean>(
-    CompatibilityLevel.Level300, CompatibilityLevel.Level300, CompatibilityLevel.Level300,
-    CompatibilityLevel.Level300, default, default, @"
-syntax = ""proto3"";
-package ProtoBuf.Test.TestCompatibilityLevel;
-import ""google/protobuf/timestamp.proto"";
-import ""google/protobuf/duration.proto"";
-
-message AllDefaultWithModuleLevel_Clean {
-   int32 Int32 = 1;
-   .google.protobuf.Timestamp DateTime = 2;
-   .google.protobuf.Duration TimeSpan = 3;
-   string Guid = 4; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   string Decimal = 5;
 }");
 
         [Fact]
@@ -416,7 +398,7 @@ message HazGuid {
         }
 
         [Fact]
-        public void CheckExpectedHex()
+        public void CheckExpectedGuidHex()
         {
             using var ms = new MemoryStream();
             Serializer.Serialize(ms, new HazGuidRaw {
@@ -455,6 +437,82 @@ message HazGuid {
             public string String { get; set; }
             [ProtoMember(2)]
             public byte[] Bytes { get; set; }
+        }
+
+
+        [Fact]
+        public void RoundTripDecimal300()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add<HazDecimal>();
+
+            Check(model);
+            model.CompileInPlace();
+            Check(model);
+            Check(model.Compile());
+
+            static void Check(TypeModel model)
+            {
+                var obj = new HazDecimal { Value = 123.450M };
+                using var ms = new MemoryStream();
+                model.Serialize(ms, obj);
+                var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Assert.Equal("0A-07-31-32-33-2E-34-35-30", hex);
+                ms.Position = 0;
+                var clone = model.Deserialize<HazDecimal>(ms);
+                Assert.Equal(123.450M, clone.Value);
+            }
+        }
+
+
+        [Fact]
+        public void Decimal300Schema()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add<HazDecimal>();
+            var schema = model.GetSchema(typeof(HazDecimal), ProtoSyntax.Proto3);
+            Log(schema);
+            Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazDecimal {
+   string Value = 1;
+}
+", schema, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void CheckExpectedDecimalHex()
+        {
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, new HazDecimalRaw
+            {
+                Value = "123.450"
+            });
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Log(hex);
+            Assert.Equal("0A-07-31-32-33-2E-34-35-30", hex);
+            /*
+            0A = field 1, type String
+            07 = length 7
+            payload = 31-32-33-2E-34-35-30
+            UTF8: 123.450
+            */
+        }
+
+        [ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class HazDecimal
+        {
+            [ProtoMember(1)]
+            public decimal Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazDecimalRaw
+        {
+            [ProtoMember(1)]
+            public string Value { get; set; }
         }
     }
 }

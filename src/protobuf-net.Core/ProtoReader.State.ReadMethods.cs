@@ -378,12 +378,12 @@ namespace ProtoBuf
             }
 
             /// <summary>
-            /// Tries to read a string-like type directly into a span; if successful, the span is
-            /// resized to indicate the returned amount of data; if unsuccessful, an exception
+            /// Tries to read a string-like type directly into a span; if successful, the span
+            /// returned indicates the available amount of data; if unsuccessful, an exception
             /// is thrown; this should only be used when there is confidence that the length
             /// is bounded.
             /// </summary>
-            public void ReadBytes(ref Span<byte> destination)
+            public Span<byte> ReadBytes(Span<byte> destination)
             {
                 switch (_reader.WireType)
                 {
@@ -394,10 +394,10 @@ namespace ProtoBuf
                         _reader.WireType = WireType.None;
                         destination = destination.Slice(0, len);
                         _reader.ImplReadBytes(ref this, destination);
-                        return;
+                        return destination;
                     default:
                         ThrowWireTypeException();
-                        break;
+                        return default;
                 }
             }
 

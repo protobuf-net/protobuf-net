@@ -1716,7 +1716,13 @@ namespace ProtoBuf.Meta
                                     return ".bcl.TimeSpan";
                                 }
                         }
-                    case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
+                    case ProtoTypeCode.Decimal:
+                        if (compatibilityLevel < CompatibilityLevel.Level300)
+                        {
+                            imports |= CommonImports.Bcl;
+                            return ".bcl.Decimal";
+                        }
+                        return "string";
                     case ProtoTypeCode.Guid:
                         if (compatibilityLevel < CompatibilityLevel.Level300)
                         {

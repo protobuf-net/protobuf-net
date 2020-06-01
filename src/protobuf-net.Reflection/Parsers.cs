@@ -906,7 +906,7 @@ namespace Google.Protobuf.Reflection
 
         private string[] GetDescendingPackagePrefixes()
         // if the package is Foo.Bar.Blap, then this gives ".Foo.Bar.Blap.", ".Foo.Bar.", ".Foo.", "."
-            => _packagePrefixes ?? (_packagePrefixes = CalculateDescendingPackagePrefixes(Package));
+            => _packagePrefixes ??= CalculateDescendingPackagePrefixes(Package);
 
         private string[] _packagePrefixes;
         private static readonly string[] s_defaultPackagePrefixes = new[] { "." };
@@ -1203,7 +1203,7 @@ namespace Google.Protobuf.Reflection
                         Dependencies.Add(import.Path);
                     if (import.IsPublic)
                     {
-                        (publicDependencies ?? (publicDependencies = new HashSet<string>())).Add(import.Path);
+                        (publicDependencies ??= new HashSet<string>()).Add(import.Path);
                     }
                     if (IncludeInOutput && !import.Used)
                     {

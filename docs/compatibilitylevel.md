@@ -24,11 +24,9 @@ for the highest `NNN` defined at the time. This means you'll be using all the cu
 
 At the current time, the levels defined are:
 
-- `200` - uses `bcl.proto` for `DateTime`, `TimeSpan`, `Guid` and `Decimal`
-- `240` - like `200`, but uses [`.google.protobuf.Timestamp`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/timestamp.proto) for `DateTime` and [`.google.protobuf.Duration`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/duration.proto) for `TimeSpan`
-- `300` - like `240`, but uses `bytes` for `Guid` (always in big-endian UUID format, 16 bytes, similar to the common text representation)
-
-There will probably be another tier added when there is a well-known decimal type, as per [this discussion](https://github.com/protocolbuffers/protobuf/pull/7039).
+- `200` - uses `bcl.proto` for `DateTime`, `TimeSpan`, `Guid` and `Decimal`.
+- `240` - like `200`, but uses [`.google.protobuf.Timestamp`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/timestamp.proto) for `DateTime` and [`.google.protobuf.Duration`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/duration.proto) for `TimeSpan`.
+- `300` - like `240`, but uses `string` for `Guid` (in big-endian hyphenated UUID text format, 36 bytes; a 16-byte `bytes` variant is also available by additionally specifying `DataFormat.FixedSize`) and `Decimal` (invariant "general" format).
 
 ## Can I change levels?
 
@@ -64,5 +62,6 @@ If a member resolves as level `200` **and** is annotated to use `DataFormat.Well
 ## Why is this even necessary?
 
 The recommeded options change over time because *new conventions* evolve over time. When `bcl.proto` was created, there *was* no `timestamp.proto` or
-`duration.proto`. Likewise, decimals. As for guids... frankly, `bcl.proto` just made a bad choice there - not least because of the unusual endianness
-that is used. It is a lot easier to exchange guids as strings.
+`duration.proto`. Likewise, decimals. For guids... frankly, `bcl.proto` just made a bad choice there - not least because of the unusual endianness
+that is used. It is a lot easier to exchange guids as strings. Decimal is also awkward, and is complicated by [this possible future option](https://github.com/protocolbuffers/protobuf/pull/7039),
+but for now: using a regular string is a far more reasonable option than `bcl.proto` presents.

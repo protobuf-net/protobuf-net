@@ -525,7 +525,7 @@ namespace ProtoBuf
         public E PrivateAssignable { get; private set; }
 
         [ProtoMember(3)]
-        public E NonAssignable => _nonAssignable ?? (_nonAssignable = new E());
+        public E NonAssignable => _nonAssignable ??= new E();
         private E _nonAssignable;
 
         [ProtoMember(4)]
@@ -535,7 +535,7 @@ namespace ProtoBuf
         public List<E> PrivateAssignableList { get; private set; }
 
         [ProtoMember(6)]
-        public List<E> NonAssignableList => _nonAssignableList ?? (_nonAssignableList = new List<E>());
+        public List<E> NonAssignableList => _nonAssignableList ??= new List<E>();
         public List<E> _nonAssignableList;
         
         [ProtoMember(7)]

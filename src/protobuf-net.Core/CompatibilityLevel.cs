@@ -32,11 +32,10 @@ namespace ProtoBuf
         /// </summary>
         Level240 = 240,
         /// <summary>
-        /// Like <see cref="Level240"/>, but uses 'bytes' for <see cref="Guid"/> (always big-endian format, regardless of guid-variant).
+        /// Like <see cref="Level240"/>, but uses 'string' for <see cref="Guid"/> (big-endian hyphenated UUID format; a shorter 'bytes' variant is also available via <see cref="DataFormat.FixedSize"/>)
+        /// and <see cref="decimal"/> (invariant "general" format).
         /// </summary>
         Level300 = 300,
-
-        // next likely addition: Decimal, tracking https://github.com/protocolbuffers/protobuf/pull/7039
     }
 
     /// <summary>

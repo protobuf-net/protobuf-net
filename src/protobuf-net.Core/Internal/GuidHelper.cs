@@ -44,12 +44,10 @@ namespace ProtoBuf.Internal
             // state, which is a ref-local (and can store spans), not to store it; since we *don't*
             // do that, we can be evil
             byte* ptr = stackalloc byte[MAX_LENGTH];
-            var full = new Span<byte>(ptr, MAX_LENGTH);
-            var partial = full;
-            state.ReadBytes(ref partial);
+            var available = state.ReadBytes(new Span<byte>(ptr, MAX_LENGTH));
 
             char standardFormat;
-            switch (partial.Length)
+            switch (available.Length)
             {
                 case 0:
                     return Guid.Empty;
@@ -62,7 +60,7 @@ namespace ProtoBuf.Internal
                         ptr[--write] = ToHex(val & 0b1111);
                         ptr[--write] = ToHex((val >> 4) & 0b1111);
                     }
-                    partial = full.Slice(0, 32);
+                    available = new Span<byte>(ptr, 32);
                     standardFormat = 'N';
                     break;
                 case 32: // no hyphens
@@ -72,12 +70,12 @@ namespace ProtoBuf.Internal
                     standardFormat = 'D';
                     break;
                 default:
-                    ThrowHelper.Format($"Unexpected Guid length: {partial.Length}");
+                    ThrowHelper.Format($"Unexpected Guid length: {available.Length}");
                     return default;
             }
 
-            if (!(Utf8Parser.TryParse(partial, out Guid guid, out int bytes, standardFormat) && bytes == partial.Length))
-                ThrowHelper.Format($"Failed to read Guid: '{Encoding.UTF8.GetString(ptr, partial.Length)}'");
+            if (!(Utf8Parser.TryParse(available, out Guid guid, out int bytes, standardFormat) && bytes == available.Length))
+                ThrowHelper.Format($"Failed to read Guid: '{Encoding.UTF8.GetString(ptr, available.Length)}'");
 
             return guid;
             static byte ToHex(int value) => (byte)"0123456789abcdef"[value];
