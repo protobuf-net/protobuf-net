@@ -1210,7 +1210,11 @@ namespace ProtoBuf.Meta
         /// Gets the inbuilt serializer relevant to a specific <see cref="CompatibilityLevel"/> (and <see cref="DataFormat"/>).
         /// Returns null if there is no defined inbuilt serializer.
         /// </summary>
-        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat = DataFormat.Default)
+#if DEBUG   // I always want these explicitly specified in the library code; so: enforce that
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
+#else
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel = default, DataFormat dataFormat = DataFormat.Default)
+#endif
         {
             ISerializer<T> serializer;
             if (compatibilityLevel >= CompatibilityLevel.Level300)

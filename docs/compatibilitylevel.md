@@ -77,4 +77,4 @@ There are multiple ways of configuring compatibility levels if you are configuri
 3. the `RuntimeTypeModel.Add` method (for declaring new types) now optionally takes a compatibility level for new types; if specified, and a type already exists, it is *checked* - if it does not match, an exception is thrown
 4. the `ValueMember.CompatibilityLevel` instance property can be specified to explicitly control individual data fields
 
-If you are using the `ISerializer<T>` API, there is a new `TypeModel.GetInbuiltSerializer<int>(...)` API that takes a `CompatibilityLevel` and `DataFormat`, and returns the appropriate serializer, if one exists for `T` - or `null` otherwise.
+If you are using the `ISerializer<T>` API, there is a new `TypeModel.GetInbuiltSerializer<int>(...)` API that optionally takes a `CompatibilityLevel` and `DataFormat`, and returns the appropriate serializer, if one exists for `T` - or `null` otherwise.
