@@ -7,36 +7,27 @@ namespace ProtoBuf.Internal
     internal static class TypeCompatibilityHelper
     {
         private static readonly Dictionary<Module, CompatibilityLevel> s_ByModule = new Dictionary<Module, CompatibilityLevel>();
-        internal static CompatibilityLevel GetTypeCompatibilityLevel(Type type, CompatibilityLevel defaultLevel)
-        {   // we don't expect to call this lots of times per type, so don't cache that; only cache per module (which also handles assembly)
-            if (Attribute.GetCustomAttribute(type, typeof(CompatibilityLevelAttribute), true) is CompatibilityLevelAttribute defined
-                && defined.Level > CompatibilityLevel.NotSpecified)
-            {
-                return defined.Level;
-            }
 
-            var module = type.Module;
-            if (module is object)
+        internal static CompatibilityLevel GetModuleCompatibilityLevel(Module module)
+        {
+            if (module is null) return CompatibilityLevel.NotSpecified;
+            lock (s_ByModule)
             {
-                lock (s_ByModule)
+                if (s_ByModule.TryGetValue(module, out var alreadyKnown))
                 {
-                    if (s_ByModule.TryGetValue(module, out var alreadyKnown))
-                    {
-                        return alreadyKnown;
-                    }
+                    return alreadyKnown;
                 }
-                // I'd rather calculate it twice *outside* the lock than have a single lock
-                // that could be blocking multiple paths; so: use indexer-set instead of Add
-                var calculated = CalculateFor(module);
-                lock (s_ByModule)
-                {
-                    s_ByModule[module] = calculated;
-                }
-                return calculated;
             }
-            return defaultLevel < CompatibilityLevel.Level200 ? CompatibilityLevel.Level200 : defaultLevel;
+            // I'd rather calculate it twice *outside* the lock than have a single lock
+            // that could be blocking multiple paths; so: use indexer-set instead of Add
+            var calculated = Calculate(module);
+            lock (s_ByModule)
+            {
+                s_ByModule[module] = calculated;
+            }
+            return calculated;
 
-            static CompatibilityLevel CalculateFor(Module module)
+            static CompatibilityLevel Calculate(Module module)
             {
                 if (Attribute.GetCustomAttribute(module, typeof(CompatibilityLevelAttribute), true) is CompatibilityLevelAttribute forModule
                     && forModule.Level > CompatibilityLevel.NotSpecified)
@@ -54,8 +45,22 @@ namespace ProtoBuf.Internal
                     }
                 }
 
-                return CompatibilityLevel.Level200;
+                return CompatibilityLevel.NotSpecified;
             }
+        }
+
+        internal static CompatibilityLevel GetTypeCompatibilityLevel(Type type, CompatibilityLevel defaultLevel)
+        {   // we don't expect to call this lots of times per type, so don't cache that; only cache per module (which also handles assembly)
+            if (Attribute.GetCustomAttribute(type, typeof(CompatibilityLevelAttribute), true) is CompatibilityLevelAttribute defined
+                && defined.Level > CompatibilityLevel.NotSpecified)
+            {
+                return defined.Level;
+            }
+
+            var fromModule = GetModuleCompatibilityLevel(type.Module);
+            if (fromModule > CompatibilityLevel.NotSpecified) return fromModule;
+
+            return defaultLevel < CompatibilityLevel.Level200 ? CompatibilityLevel.Level200 : defaultLevel;
         }
 
         internal static CompatibilityLevel GetMemberCompatibilityLevel(MemberInfo member, CompatibilityLevel typeLevel)
