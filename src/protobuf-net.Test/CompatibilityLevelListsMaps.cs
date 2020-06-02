@@ -88,6 +88,72 @@ message KeyValuePair_TimeSpan_TimeSpan {
         }
 
         [Fact]
+        public void AssertVanillaMapsPayload_DateTimeMapMarkedPropertyLevel()
+        {
+            var date = new DateTime(2020, 05, 31, 0, 0, 0, DateTimeKind.Utc);
+            var obj = new HazMaps
+            {
+                DateTimeMapMarkedPropertyLevel = { { 1, date } },
+            };
+            AssertPayload(obj, "0A-08-08-01-12-04-08-DA-9F-02");
+        }
+
+        [Fact]
+        public void AssertVanillaMapsPayload_DateTimeMapMarkedViaMap()
+        {
+            var date = new DateTime(2020, 05, 31, 0, 0, 0, DateTimeKind.Utc);
+            var obj = new HazMaps
+            {
+                DateTimeMapMarkedViaMap = { { 2, date } },
+            };
+            AssertPayload(obj, "12-0A-08-02-12-06-08-80-E7-CB-F6-05");
+        }
+
+        [Fact]
+        public void AssertVanillaMapsPayload_DateTimeNotValidMapButMarked()
+        {
+            var date = new DateTime(2020, 05, 31, 0, 0, 0, DateTimeKind.Utc);
+            var obj = new HazMaps
+            {
+                DateTimeNotValidMapButMarked = { { date, date } },
+            };
+            AssertPayload(obj, "1A-0C-0A-04-08-DA-9F-02-12-04-08-DA-9F-02");
+        }
+
+        [Fact]
+        public void AssertVanillaMapsPayload_TimeSpanMapMarkedPropertyLevel()
+        {
+            var time = TimeSpan.FromMinutes(60);
+            var obj = new HazMaps
+            {
+                TimeSpanMapMarkedPropertyLevel = { { "a", time } },
+            };
+            AssertPayload(obj, "22-09-0A-01-61-12-04-08-02-10-01");
+        }
+
+        [Fact]
+        public void AssertVanillaMapsPayload_TimeSpanMapMarkedViaMap()
+        {
+            var time = TimeSpan.FromMinutes(60);
+            var obj = new HazMaps
+            {
+                TimeSpanMapMarkedViaMap = { { "b", time } },
+            };
+            AssertPayload(obj, "2A-08-0A-01-62-12-03-08-90-1C");
+        }
+
+        [Fact]
+        public void AssertVanillaMapsPayload_TimeSpanNotValidMapButMarked()
+        {
+            var time = TimeSpan.FromMinutes(60);
+            var obj = new HazMaps
+            {
+                TimeSpanNotValidMapButMarked = { { time, time } },
+            };
+            AssertPayload(obj, "32-0C-0A-04-08-02-10-01-12-04-08-02-10-01");
+        }
+
+        [Fact]
         public void AssertVanillaMapsPayload() // from 2.4 binary
         {
             var date = new DateTime(2020, 05, 31, 0, 0, 0, DateTimeKind.Utc);

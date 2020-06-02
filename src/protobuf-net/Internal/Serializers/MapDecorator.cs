@@ -60,7 +60,9 @@ namespace ProtoBuf.Internal.Serializers
                 TypeModel.GetInbuiltSerializer<TValue>(_valueCompatibilityLevel, _valueDataFormat));
 
         public void Write(ref ProtoWriter.State state, object value)
-            => Serializer.WriteMap(ref state, _fieldNumber, _features, (TCollection)value, _keyFeatures, _valueFeatures);
+            => Serializer.WriteMap(ref state, _fieldNumber, _features, (TCollection)value, _keyFeatures, _valueFeatures,
+                TypeModel.GetInbuiltSerializer<TKey>(_keyCompatibilityLevel, _keyDataFormat),
+                TypeModel.GetInbuiltSerializer<TValue>(_valueCompatibilityLevel, _valueDataFormat));
 
         public void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
