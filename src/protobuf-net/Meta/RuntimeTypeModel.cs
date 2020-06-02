@@ -173,6 +173,28 @@ namespace ProtoBuf.Meta
         public IEnumerable GetTypes() => types;
 
         /// <summary>
+        /// Gets or sets the default <see cref="CompatibilityLevel"/> for this model.
+        /// </summary>
+        public CompatibilityLevel DefaultCompatibilityLevel
+        {
+            get => _defaultCompatibilityLevel;
+            set
+            {
+                if (value != _defaultCompatibilityLevel)
+                {
+                    CompatibilityLevelAttribute.AssertValid(value);
+                    ThrowIfFrozen();
+                    if (GetOption(RuntimeTypeModelOptions.IsDefaultModel)) ThrowHelper.ThrowInvalidOperationException("The default compatibility level of the default model cannot be changed");
+                    if (types.Any()) ThrowHelper.ThrowInvalidOperationException("The default compatibility level of cannot be changed once types have been added");
+                    _defaultCompatibilityLevel = value;
+                }
+            }
+        }
+
+        private CompatibilityLevel _defaultCompatibilityLevel = CompatibilityLevel.Level200;
+
+
+        /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
@@ -184,7 +206,6 @@ namespace ProtoBuf.Meta
             var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;
-            CompatibilityLevel compatibilityLevel = CompatibilityLevel.NotSpecified;
             if (type == null)
             { // generate for the entire model
                 foreach (MetaType meta in types)
@@ -202,7 +223,7 @@ namespace ProtoBuf.Meta
                 Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
 
-                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, compatibilityLevel, type, out var _, false, false, false, false) != null);
+                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, DefaultCompatibilityLevel, type, out var _, false, false, false, false) != null);
                 if (!isInbuiltType)
                 {
                     //Agenerate just relative to the supplied type
@@ -211,7 +232,6 @@ namespace ProtoBuf.Meta
 
                     // get the required types
                     primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
-                    compatibilityLevel = primaryType.CompatibilityLevel;
                     requiredTypes.Add(primaryType);
                     CascadeDependents(requiredTypes, primaryType);
                 }
@@ -282,7 +302,7 @@ namespace ProtoBuf.Meta
             if (isInbuiltType)
             {
                 bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, compatibilityLevel, false, false, ref imports))
+                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports))
                     .Append(" value = 1;").AppendLine().Append('}');
             }
             else
@@ -541,7 +561,7 @@ namespace ProtoBuf.Meta
 
                 MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
                 IRuntimeProtoSerializerNode ser = family == MetaType.AttributeFamily.None
-                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default,  CompatibilityLevel.NotSpecified, type, out _, false, false, false, false)
+                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, CompatibilityLevel.NotSpecified, type, out _, false, false, false, false)
                     : null;
 
                 if (ser != null) basicTypes.Add(new BasicType(type, ser));
@@ -665,8 +685,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Like the non-generic Add(Type); for convenience
         /// </summary>
-        public MetaType Add<T>(bool applyDefaultBehaviour = true)
-            => Add(typeof(T), applyDefaultBehaviour);
+        public MetaType Add<T>(bool applyDefaultBehaviour = true, CompatibilityLevel compatibilityLevel = default)
+            => Add(typeof(T), applyDefaultBehaviour, compatibilityLevel);
 
         /// <summary>
         /// Adds support for an additional type in this model, optionally
@@ -686,14 +706,42 @@ namespace ProtoBuf.Meta
         /// just add the type with no additional configuration (the type must then be manually configured).</param>
         /// <returns>The MetaType representing this type, allowing
         /// further configuration.</returns>
-        public MetaType Add(Type type, bool applyDefaultBehaviour = true)
+        public MetaType Add(Type type, bool applyDefaultBehaviour)
+            => Add(type, applyDefaultBehaviour, default);
+
+        /// <summary>
+        /// Adds support for an additional type in this model, optionally
+        /// applying inbuilt patterns. If the type is already known to the
+        /// model, the existing type is returned **without** applying
+        /// any additional behaviour.
+        /// </summary>
+        /// <remarks>Inbuilt patterns include:
+        /// [ProtoContract]/[ProtoMember(n)]
+        /// [DataContract]/[DataMember(Order=n)]
+        /// [XmlType]/[XmlElement(Order=n)]
+        /// [On{Des|S}erializ{ing|ed}]
+        /// ShouldSerialize*/*Specified
+        /// </remarks>
+        /// <param name="type">The type to be supported</param>
+        /// <param name="applyDefaultBehaviour">Whether to apply the inbuilt configuration patterns (via attributes etc), or
+        /// just add the type with no additional configuration (the type must then be manually configured).</param>
+        /// <returns>The MetaType representing this type, allowing
+        /// further configuration.</returns>
+        public MetaType Add(Type type, bool applyDefaultBehaviour = true, CompatibilityLevel compatibilityLevel = default)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (type == typeof(object))
                 throw new ArgumentException("You cannot reconfigure " + type.FullName);
             type = DynamicStub.GetEffectiveType(type);
             MetaType newType = FindWithoutAdd(type);
-            if (newType != null) return newType; // return existing
+            if (newType != null)
+            {
+                if (compatibilityLevel != default)
+                {
+                    newType.Assert(compatibilityLevel);
+                }
+                return newType; // return existing
+            }
             int opaqueToken = 0;
 
             try
@@ -711,6 +759,7 @@ namespace ProtoBuf.Meta
                     applyDefaultBehaviour = false;
                 }
                 if (newType == null) newType = Create(type);
+                newType.CompatibilityLevel = compatibilityLevel; // usually this will be setting it to "unspecified", which is fine
                 newType.Pending = true;
                 TakeLock(ref opaqueToken);
                 // double checked

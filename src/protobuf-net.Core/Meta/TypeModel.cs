@@ -1223,7 +1223,9 @@ namespace ProtoBuf.Meta
                 serializer = SerializerCache<Level300DefaultSerializer, T>.InstanceField;
                 if (serializer is object) return serializer;
             }
-            else if (compatibilityLevel >= CompatibilityLevel.Level240)
+#pragma warning disable CS0618
+            else if (compatibilityLevel >= CompatibilityLevel.Level240 || dataFormat == DataFormat.WellKnown)
+#pragma warning restore CS0618
             {
                 serializer = SerializerCache<Level240DefaultSerializer, T>.InstanceField;
                 if (serializer is object) return serializer;

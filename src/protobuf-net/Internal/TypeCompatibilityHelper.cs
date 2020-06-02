@@ -7,7 +7,7 @@ namespace ProtoBuf.Internal
     internal static class TypeCompatibilityHelper
     {
         private static readonly Dictionary<Module, CompatibilityLevel> s_ByModule = new Dictionary<Module, CompatibilityLevel>();
-        internal static CompatibilityLevel GetLevel(Type type)
+        internal static CompatibilityLevel GetTypeCompatibilityLevel(Type type, CompatibilityLevel defaultLevel)
         {   // we don't expect to call this lots of times per type, so don't cache that; only cache per module (which also handles assembly)
             if (Attribute.GetCustomAttribute(type, typeof(CompatibilityLevelAttribute), true) is CompatibilityLevelAttribute defined
                 && defined.Level > CompatibilityLevel.NotSpecified)
@@ -34,7 +34,7 @@ namespace ProtoBuf.Internal
                 }
                 return calculated;
             }
-            return CompatibilityLevel.Level200;
+            return defaultLevel < CompatibilityLevel.Level200 ? CompatibilityLevel.Level200 : defaultLevel;
 
             static CompatibilityLevel CalculateFor(Module module)
             {
@@ -58,7 +58,7 @@ namespace ProtoBuf.Internal
             }
         }
 
-        internal static CompatibilityLevel GetLevel(MemberInfo member, CompatibilityLevel typeLevel)
+        internal static CompatibilityLevel GetMemberCompatibilityLevel(MemberInfo member, CompatibilityLevel typeLevel)
             => Attribute.GetCustomAttribute(member, typeof(CompatibilityLevelAttribute), true) is CompatibilityLevelAttribute forMember
                 && forMember.Level > CompatibilityLevel.NotSpecified ? forMember.Level : typeLevel;
     }

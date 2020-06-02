@@ -21,7 +21,7 @@ namespace ProtoBuf.Test
             CompatibilityLevel Guid, CompatibilityLevel Decimal,
             string expectedSchema)
         {
-            Assert.Equal(type, TypeCompatibilityHelper.GetLevel(typeof(T)));
+            Assert.Equal(type, TypeCompatibilityHelper.GetTypeCompatibilityLevel(typeof(T), default));
 
             var tm = RuntimeTypeModel.Create();
             var metaType = tm.Add<T>();

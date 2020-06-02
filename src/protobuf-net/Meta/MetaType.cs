@@ -55,7 +55,7 @@ namespace ProtoBuf.Meta
 
         private CompatibilityLevel _compatibilityLevel;
         /// <summary>
-        /// Gets or sets the <see cref="CompatibilityLevel"/> for this instance
+        /// Gets or sets the <see cref="MetaType.CompatibilityLevel"/> for this instance
         /// </summary>
         public CompatibilityLevel CompatibilityLevel
         {
@@ -595,7 +595,9 @@ namespace ProtoBuf.Meta
         private void ApplyDefaultBehaviourImpl()
         {
             if (CompatibilityLevel == CompatibilityLevel.NotSpecified)
-                CompatibilityLevel = TypeCompatibilityHelper.GetLevel(Type);
+            {
+                CompatibilityLevel = TypeCompatibilityHelper.GetTypeCompatibilityLevel(Type, Model.DefaultCompatibilityLevel);
+            }
 
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
@@ -822,6 +824,14 @@ namespace ProtoBuf.Meta
                 SetCallbacks(Coalesce(callbacks, 0, 4), Coalesce(callbacks, 1, 5),
                     Coalesce(callbacks, 2, 6), Coalesce(callbacks, 3, 7));
             }
+        }
+
+        internal void Assert(CompatibilityLevel expected)
+        {
+            var actual = CompatibilityLevel;
+            if (actual == expected) return;
+
+            ThrowHelper.ThrowInvalidOperationException($"The expected ('{expected}') and actual ('{actual}') compatibility level of '{Type.NormalizeName()}' did not match; the same type cannot be used with different compatibility levels in the same model; this is most commonly an issue with tuple-like types in different contexts");
         }
 
         private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, List<AttributeMap>partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
@@ -1163,7 +1173,7 @@ namespace ProtoBuf.Meta
                     : null;
             if (vm != null)
             {
-                vm.CompatibilityLevel = TypeCompatibilityHelper.GetLevel(member, CompatibilityLevel);
+                vm.CompatibilityLevel = TypeCompatibilityHelper.GetMemberCompatibilityLevel(member, CompatibilityLevel);
                 vm.BackingMember = normalizedAttribute.BackingMember;
                 Type finalType = Type;
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);
@@ -1806,15 +1816,15 @@ namespace ProtoBuf.Meta
                     repeated.ResolveMapTypes(out var key, out var value);
 
                     NewLine(builder, indent + 1).Append("map<")
-                        .Append(model.GetSchemaTypeName(callstack, key, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, key, DataFormat.Default, CompatibilityLevel, false, false, ref imports))
                         .Append(", ")
-                        .Append(model.GetSchemaTypeName(callstack, value, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, value, DataFormat.Default, CompatibilityLevel, false, false, ref imports))
                         .Append("> items = 1;");
                 }
                 else
                 {
                     NewLine(builder, indent + 1).Append("repeated ")
-                        .Append(model.GetSchemaTypeName(callstack, repeated.ItemType, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports))
+                        .Append(model.GetSchemaTypeName(callstack, repeated.ItemType, DataFormat.Default, CompatibilityLevel, false, false, ref imports))
                         .Append(" items = 1;");
                 }
                 NewLine(builder, indent).Append('}');
@@ -1839,7 +1849,8 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
-                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, CompatibilityLevel.NotSpecified, false, false, ref imports).Replace('.', '_'))
+                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "")
+                            .Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, CompatibilityLevel, false, false, ref imports))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
                     NewLine(builder, indent).Append('}');
