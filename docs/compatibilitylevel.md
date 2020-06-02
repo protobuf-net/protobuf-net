@@ -37,7 +37,7 @@ migrating the data too. You aren't stuck *entirely* at this level, though; the c
 - at the module
 - at the individual type being serialized (noting that it *is* inherited)
 - at the individual field/property
-- at the `MetaType` and `ValueMember`, if you are building runtime-models
+- at the `RuntimeTypeModel`, `MetaType` and `ValueMember`, if you are building runtime-models - see below
 
 This gives you lots of options for configuring an evolving system - exploting new conventions when available, but without breaking old data. For example:
 
@@ -65,3 +65,16 @@ The recommeded options change over time because *new conventions* evolve over ti
 `duration.proto`. Likewise, decimals. For guids... frankly, `bcl.proto` just made a bad choice there - not least because of the unusual endianness
 that is used. It is a lot easier to exchange guids as strings. Decimal is also awkward, and is complicated by [this possible future option](https://github.com/protocolbuffers/protobuf/pull/7039),
 but for now: using a regular string is a far more reasonable option than `bcl.proto` presents.
+
+## Configuring compatibility in custom models
+
+Note: these are all advanced topics that do not impact most users.
+
+There are multiple ways of configuring compatibility levels if you are configuring models at runtime:
+
+1. the `RuntimeTypeModel.DefaultCompatibilityLevel` instance property can be specified; this is used when a type or module don't define a level via attributes etc; this can only be done before types are added to the model
+2. the `MetaType.CompatibilityLevel` instance property can be specified to explicitly control a particular type; this can only be done before fields are added to the type, so the `RuntimeTypeModel.BeforeApplyDefaultBehaviour` event is a good place to do this
+3. the `RuntimeTypeModel.Add` method (for declaring new types) now optionally takes a compatibility level for new types; if specified, and a type already exists, it is *checked* - if it does not match, an exception is thrown
+4. the `ValueMember.CompatibilityLevel` instance property can be specified to explicitly control individual data fields
+
+If you are using the `ISerializer<T>` API, there is a new `TypeModel.GetInbuiltSerializer<int>(...)` API that takes a `CompatibilityLevel` and `DataFormat`, and returns the appropriate serializer, if one exists for `T` - or `null` otherwise.
