@@ -408,6 +408,48 @@ payload = 08-CB-AF-F4-3A-18-08
 payload = 31-32-33-35-34-2E-31-34-35-31
 UTF8: 12354.1451
         */
+
+        [Fact]
+        public void HazSingleSignedPayload()
+            => AssertPayload(new HazSingleSigned { Value = -42 }, "08-53");
+
+        [Fact]
+        public void HazSingleSignedSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazSingleSigned {
+   sint32 Value = 1;
+}
+", Log(Serializer.GetProto<HazSingleSigned>(ProtoSyntax.Proto3)), ignoreLineEndingDifferences: true);
+
+        [ProtoContract]
+        public class HazSingleSigned
+        {
+            [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
+            public int Value { get; set; }
+        }
+
+        [Fact]
+        public void HazMultipleSignedPayload()
+            => AssertPayload(new HazMultipleSigned { Values = { -42 } }, "08-53");
+
+        [Fact]
+        public void HazMultipleSignedSchema()
+            => Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message HazMultipleSigned {
+   repeated sint32 Values = 1;
+}
+", Log(Serializer.GetProto<HazMultipleSigned>(ProtoSyntax.Proto3)), ignoreLineEndingDifferences: true);
+
+        [ProtoContract]
+        public class HazMultipleSigned
+        {
+            [ProtoMember(1, DataFormat = DataFormat.ZigZag, IsPacked = true)]
+            public List<int> Values { get; } = new List<int>();
+        }
     }
 
 
