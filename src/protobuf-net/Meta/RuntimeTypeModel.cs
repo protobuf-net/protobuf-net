@@ -344,20 +344,20 @@ namespace ProtoBuf.Meta
             Protogen = 8
         }
 
-        private void CascadeRepeated(List<MetaType> list, RepeatedSerializerStub provider)
+        private void CascadeRepeated(List<MetaType> list, RepeatedSerializerStub provider, CompatibilityLevel ambient, DataFormat keyFormat)
         {
             if (provider.IsMap)
             {
                 provider.ResolveMapTypes(out var key, out var value);
-                TryGetCoreSerializer(list, key);
-                TryGetCoreSerializer(list, value);
+                TryGetCoreSerializer(list, key, ambient);
+                TryGetCoreSerializer(list, value, ambient);
 
-                if (!provider.IsValidProtobufMap(this)) // add the KVP
-                    TryGetCoreSerializer(list, provider.ItemType);
+                if (!provider.IsValidProtobufMap(this, ambient, keyFormat)) // add the KVP
+                    TryGetCoreSerializer(list, provider.ItemType, ambient);
             }
             else
             {
-                TryGetCoreSerializer(list, provider.ItemType);
+                TryGetCoreSerializer(list, provider.ItemType, ambient);
             }
         }
         private void CascadeDependents(List<MetaType> list, MetaType metaType)
@@ -366,7 +366,7 @@ namespace ProtoBuf.Meta
             var repeated = TryGetRepeatedProvider(metaType.Type);
             if (repeated != null)
             {
-                CascadeRepeated(list, repeated);
+                CascadeRepeated(list, repeated, metaType.CompatibilityLevel, DataFormat.Default);
             }
             else
             {
@@ -379,7 +379,7 @@ namespace ProtoBuf.Meta
                             Type type = null;
                             if (mapping[i] is PropertyInfo propertyInfo) type = propertyInfo.PropertyType;
                             else if (mapping[i] is FieldInfo fieldInfo) type = fieldInfo.FieldType;
-                            TryGetCoreSerializer(list, type);
+                            TryGetCoreSerializer(list, type, metaType.CompatibilityLevel);
                         }
                     }
                 }
@@ -390,13 +390,13 @@ namespace ProtoBuf.Meta
                         repeated = TryGetRepeatedProvider(member.MemberType);
                         if (repeated != null)
                         {
-                            CascadeRepeated(list, repeated);
+                            CascadeRepeated(list, repeated, member.CompatibilityLevel, member.MapKeyFormat);
                             if (repeated.IsMap && !member.IsMap) // include the KVP, then
-                                TryGetCoreSerializer(list, repeated.ItemType);
+                                TryGetCoreSerializer(list, repeated.ItemType, member.CompatibilityLevel);
                         }
                         else
                         {
-                            TryGetCoreSerializer(list, member.MemberType);
+                            TryGetCoreSerializer(list, member.MemberType, member.CompatibilityLevel);
                         }
                     }
                 }
@@ -405,11 +405,11 @@ namespace ProtoBuf.Meta
                     repeated = TryGetRepeatedProvider(genericArgument);
                     if (repeated != null)
                     {
-                        CascadeRepeated(list, repeated);
+                        CascadeRepeated(list, repeated, metaType.CompatibilityLevel, DataFormat.Default);
                     }
                     else
                     {
-                        TryGetCoreSerializer(list, genericArgument);
+                        TryGetCoreSerializer(list, genericArgument, metaType.CompatibilityLevel);
                     }
                 }
                 if (metaType.HasSubtypes)
@@ -434,14 +434,14 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void TryGetCoreSerializer(List<MetaType> list, Type itemType)
+        private void TryGetCoreSerializer(List<MetaType> list, Type itemType, CompatibilityLevel ambient)
         {
             var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, CompatibilityLevel.NotSpecified, itemType, out _, false, false, false, false);
             if (coreSerializer != null)
             {
                 return;
             }
-            int index = FindOrAddAuto(itemType, false, false, false);
+            int index = FindOrAddAuto(itemType, false, false, false, ambient);
             if (index < 0)
             {
                 return;
@@ -497,6 +497,16 @@ namespace ProtoBuf.Meta
         /// allowing additional configuration.
         /// </summary>
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false)]; } }
+
+        internal MetaType FindWithAmbientCompatibility(Type type, CompatibilityLevel ambient)
+        {
+            var found = (MetaType)types[FindOrAddAuto(type, true, false, false, ambient)];
+            if (found is object && found.IsAutoTuple && found.CompatibilityLevel != ambient)
+            {
+                throw new InvalidOperationException($"The tuple-like type {type.NormalizeName()} must use a single compatiblity level, but '{ambient}' and '{found.CompatibilityLevel}' are both observed; this usually means it is being used in different contexts in the same model.");
+            }
+            return found;
+        }
 
         internal MetaType FindWithoutAdd(Type type)
         {
@@ -569,7 +579,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
+        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled, CompatibilityLevel ambient = default)
         {
             type = DynamicStub.GetEffectiveType(type);
             int key = types.IndexOf(MetaTypeFinder, type);
@@ -640,7 +650,7 @@ namespace ProtoBuf.Meta
                     }
                     if (weAdded)
                     {
-                        metaType.ApplyDefaultBehaviour();
+                        metaType.ApplyDefaultBehaviour(ambient);
                         metaType.Pending = false;
                     }
                 }
@@ -767,7 +777,7 @@ namespace ProtoBuf.Meta
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", nameof(type));
                 ThrowIfFrozen();
                 types.Add(newType);
-                if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
+                if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(default); }
                 newType.Pending = false;
             }
             finally

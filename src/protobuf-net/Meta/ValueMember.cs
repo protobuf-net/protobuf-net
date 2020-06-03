@@ -1,12 +1,10 @@
-﻿using System;
-
-using ProtoBuf.Serializers;
-using System.Globalization;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Diagnostics;
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Internal.Serializers;
+using ProtoBuf.Serializers;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
 
 namespace ProtoBuf.Meta
 {
@@ -150,8 +148,8 @@ namespace ProtoBuf.Meta
             }
             _defaultValue = defaultValue;
 
-            MetaType type = model.FindWithoutAdd(memberType);
 #if FEAT_DYNAMIC_REF
+            MetaType type = model.FindWithoutAdd(memberType);
             if (type != null)
             {
                 AsReference = type.AsReferenceDefault;
@@ -443,7 +441,7 @@ namespace ProtoBuf.Meta
                 IRuntimeProtoSerializerNode ser;
 
                 var repeated = model.TryGetRepeatedProvider(MemberType);
-                
+
                 if (repeated != null)
                 {
                     if (repeated.IsMap)
@@ -664,7 +662,8 @@ namespace ProtoBuf.Meta
                 MetaType meta = null;
                 if (model.IsDefined(type))
                 {
-                    meta = model[type];
+                    meta = model.FindWithAmbientCompatibility(type, compatibilityLevel);
+
                     if (dataFormat == DataFormat.Default && meta.IsGroup)
                     {
                         dataFormat = DataFormat.Group;

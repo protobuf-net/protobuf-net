@@ -54,6 +54,7 @@ namespace ProtoBuf.Meta
         internal RuntimeTypeModel Model => model;
 
         private CompatibilityLevel _compatibilityLevel;
+
         /// <summary>
         /// Gets or sets the <see cref="MetaType.CompatibilityLevel"/> for this instance
         /// </summary>
@@ -585,20 +586,16 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        internal void ApplyDefaultBehaviour()
+        internal void ApplyDefaultBehaviour(CompatibilityLevel ambient)
         {
             TypeAddedEventArgs args = null; // allows us to share the event-args between events
             RuntimeTypeModel.OnBeforeApplyDefaultBehaviour(this, ref args);
-            if (args == null || args.ApplyDefaultBehaviour) ApplyDefaultBehaviourImpl();
+            if (args == null || args.ApplyDefaultBehaviour) ApplyDefaultBehaviourImpl(ambient);
             RuntimeTypeModel.OnAfterApplyDefaultBehaviour(this, ref args);
         }
-        private void ApplyDefaultBehaviourImpl()
-        {
-            if (CompatibilityLevel == CompatibilityLevel.NotSpecified)
-            {
-                CompatibilityLevel = TypeCompatibilityHelper.GetTypeCompatibilityLevel(Type, Model.DefaultCompatibilityLevel);
-            }
 
+        private void ApplyDefaultBehaviourImpl(CompatibilityLevel ambient)
+        {
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
                 && GetContractFamily(model, baseType, null) != MetaType.AttributeFamily.None)
@@ -611,6 +608,17 @@ namespace ProtoBuf.Meta
             if (family == AttributeFamily.AutoTuple)
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
+            }
+            // note this needs to happen *after* the auto-tuple check, for call-site semantics
+            var compatLevel = CompatibilityLevel;
+            if (compatLevel <= CompatibilityLevel.NotSpecified)
+            {
+                if (IsAutoTuple)
+                {
+                    compatLevel = ambient;
+                }
+                if (compatLevel <= CompatibilityLevel.NotSpecified) compatLevel = Model.DefaultCompatibilityLevel;
+                CompatibilityLevel = TypeCompatibilityHelper.GetTypeCompatibilityLevel(Type, compatLevel);
             }
             bool isEnum = Type.IsEnum;
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
@@ -1203,20 +1211,27 @@ namespace ProtoBuf.Meta
                 vm.DynamicType = normalizedAttribute.DynamicType;
 #endif
 
-                vm.IsMap = repeated != null && repeated.IsValidProtobufMap(model);
-                if (vm.IsMap) // is it even *allowed* to be a map?
+                if (repeated != null)
                 {
+                    DataFormat keyFormat = DataFormat.Default, valueFormat = DataFormat.Default;
+                    bool mapEnabled = true;
                     if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
                     {
                         if (attrib.TryGet(nameof(ProtoMapAttribute.DisableMap), out object tmp) && (bool)tmp)
                         {
-                            vm.IsMap = false;
+                            mapEnabled = false;
                         }
                         else
                         {
-                            if (attrib.TryGet(nameof(ProtoMapAttribute.KeyFormat), out tmp)) vm.MapKeyFormat = (DataFormat)tmp;
-                            if (attrib.TryGet(nameof(ProtoMapAttribute.ValueFormat), out tmp)) vm.MapValueFormat = (DataFormat)tmp;
+                            if (attrib.TryGet(nameof(ProtoMapAttribute.KeyFormat), out tmp)) keyFormat = (DataFormat)tmp;
+                            if (attrib.TryGet(nameof(ProtoMapAttribute.ValueFormat), out tmp)) valueFormat = (DataFormat)tmp;
                         }
+                    }
+                    if (mapEnabled && repeated.IsValidProtobufMap(model, vm.CompatibilityLevel, keyFormat))
+                    {
+                        vm.MapKeyFormat = keyFormat;
+                        vm.MapValueFormat = valueFormat;
+                        vm.IsMap = true;
                     }
                 }
             }
@@ -1811,7 +1826,7 @@ namespace ProtoBuf.Meta
                 
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
 
-                if (repeated.IsValidProtobufMap(model))
+                if (repeated.IsValidProtobufMap(model, CompatibilityLevel, DataFormat.Default))
                 {
                     repeated.ResolveMapTypes(out var key, out var value);
 
