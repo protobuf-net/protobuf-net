@@ -145,6 +145,10 @@ namespace ProtoBuf.Reflection
                 tw.Write(AdditionalSuppressionCodes);
             }
             tw.WriteLine();
+            if (ctx.Supports(CSharp8))
+            {
+                tw.WriteLine("#nullable disable");
+            }
 
             var @namespace = ctx.NameNormalizer.GetName(file);
 
@@ -628,7 +632,8 @@ namespace ProtoBuf.Reflection
             CSharp3 = new Version(3, 0),
             CSharp4 = new Version(4, 0),
             CSharp6 = new Version(6, 0),
-            CSharp7_1 = new Version(7, 1);
+            CSharp7_1 = new Version(7, 1),
+            CSharp8 = new Version(8, 0);
 
         /// <summary>
         /// Starts an extgensions block
