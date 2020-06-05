@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using ProtoBuf.Internal;
 using ProtoBuf.Internal.Serializers;
+using System.Linq;
 
 namespace ProtoBuf.Meta
 {
@@ -278,7 +279,7 @@ namespace ProtoBuf.Meta
                         MetaType mt;
                         if (isKnown && (mt = model[tmp]) != null)
                         {
-                            sb.Append(mt.GetSchemaTypeName(callstack));
+                            sb.Append(LastPart(mt.GetSchemaTypeName(callstack)));
                         }
                         else if (tmp.IsArray)
                         {
@@ -313,6 +314,13 @@ namespace ProtoBuf.Meta
             finally
             {
                 callstack.Remove(Type);
+            }
+
+            static string LastPart(string value)
+            {
+                if (string.IsNullOrWhiteSpace(value)) return value;
+                var idx = value.LastIndexOf('.');
+                return idx < 0 ? value : value.Substring(idx + 1);
             }
         }
 
@@ -600,7 +608,7 @@ namespace ProtoBuf.Meta
             if (baseType != null && model.FindWithoutAdd(baseType) == null
                 && GetContractFamily(model, baseType, null) != MetaType.AttributeFamily.None)
             {
-                model.FindOrAddAuto(baseType, true, false, false);
+                model.FindOrAddAuto(baseType, true, false, false, ambient);
             }
 
             AttributeMap[] typeAttribs = AttributeMap.Create(Type, false);
@@ -1144,7 +1152,8 @@ namespace ProtoBuf.Meta
             Type effectiveType = Helpers.GetMemberType(member);
 
             // check for list types
-            var repeated = model.TryGetRepeatedProvider(effectiveType);
+            var memberCompatibility = TypeCompatibilityHelper.GetMemberCompatibilityLevel(member, CompatibilityLevel);
+            var repeated = model.TryGetRepeatedProvider(effectiveType, memberCompatibility);
             
             AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
@@ -1181,7 +1190,7 @@ namespace ProtoBuf.Meta
                     : null;
             if (vm != null)
             {
-                vm.CompatibilityLevel = TypeCompatibilityHelper.GetMemberCompatibilityLevel(member, CompatibilityLevel);
+                vm.CompatibilityLevel = memberCompatibility;
                 vm.BackingMember = normalizedAttribute.BackingMember;
                 Type finalType = Type;
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);

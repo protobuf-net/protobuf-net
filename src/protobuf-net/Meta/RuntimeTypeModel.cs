@@ -2,6 +2,7 @@
 using ProtoBuf.Internal;
 using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Serializers;
+using ProtoBuf.WellKnownTypes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -227,7 +228,7 @@ namespace ProtoBuf.Meta
                 if (!isInbuiltType)
                 {
                     //Agenerate just relative to the supplied type
-                    int index = FindOrAddAuto(type, false, false, false);
+                    int index = FindOrAddAuto(type, false, false, false, DefaultCompatibilityLevel);
                     if (index < 0) throw new ArgumentException("The type specified is not a contract-type", nameof(type));
 
                     // get the required types
@@ -496,7 +497,7 @@ namespace ProtoBuf.Meta
         /// Obtains the MetaType associated with a given Type for the current model,
         /// allowing additional configuration.
         /// </summary>
-        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false)]; } }
+        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false, DefaultCompatibilityLevel)]; } }
 
         internal MetaType FindWithAmbientCompatibility(Type type, CompatibilityLevel ambient)
         {
@@ -579,7 +580,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled, CompatibilityLevel ambient = default)
+        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled, CompatibilityLevel ambient)
         {
             type = DynamicStub.GetEffectiveType(type);
             int key = types.IndexOf(MetaTypeFinder, type);
@@ -861,18 +862,21 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override ISerializer<T> GetSerializer<T>()
-            => GetServices<T>() as ISerializer<T>;
+        protected override ISerializer<T> GetSerializer<T>()
+            => GetServices<T>(default) as ISerializer<T>;
+
+        internal override ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
+            => GetServices<T>(ambient) as ISerializer<T>;
 
         /// <summary>Indicates whether a type is known to the model</summary>
-        internal override bool IsKnownType<T>() // the point of this override is to avoid loops
+        internal override bool IsKnownType<T>(CompatibilityLevel ambient) // the point of this override is to avoid loops
                                                 // when trying to *build* a model; we don't actually need the service (which may not exist yet);
                                                 // we just need to know whether we should *expect one*
-            => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false) >= 0;
+            => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false, ambient) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object GetServices<T>()
-            => (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T)));
+        private object GetServices<T>(CompatibilityLevel ambient)
+            => (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T), ambient));
 
 
         private readonly Hashtable _serviceCache = new Hashtable();
@@ -887,7 +891,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private object GetServicesSlow(Type type)
+        private object GetServicesSlow(Type type, CompatibilityLevel ambient)
         {
             if (type == null) return null; // GIGO
             object service;
@@ -917,7 +921,7 @@ namespace ProtoBuf.Meta
                 var repeated = TryGetRepeatedProvider(type); // this handles ignores, etc
                 if (repeated != null) return repeated.Serializer;
 
-                int typeIndex = FindOrAddAuto(type, false, true, false);
+                int typeIndex = FindOrAddAuto(type, false, true, false, ambient);
                 if (typeIndex >= 0)
                 {
                     var mt = (MetaType)types[typeIndex];
@@ -973,7 +977,7 @@ namespace ProtoBuf.Meta
                 // the primary purpose of this is to force the creation of the Serializer
                 MetaType mt = (MetaType)types[i];
                 
-                if (GetServicesSlow(mt.Type) == null) // respects enums, repeated, etc
+                if (GetServicesSlow(mt.Type, mt.CompatibilityLevel) == null) // respects enums, repeated, etc
                     throw new InvalidOperationException("No serializer available for " + mt.Type.NormalizeName());
             }
         }
@@ -1346,14 +1350,14 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal RepeatedSerializerStub TryGetRepeatedProvider(Type type)
+        internal RepeatedSerializerStub TryGetRepeatedProvider(Type type, CompatibilityLevel ambient = default)
         {
             if (type == null) return null;
             var repeated = RepeatedSerializers.TryGetRepeatedProvider(type);
             // but take it back if it is explicitly excluded
             if (repeated != null)
             { // looks like a list, but double check for IgnoreListHandling
-                int idx = this.FindOrAddAuto(type, false, true, false);
+                int idx = this.FindOrAddAuto(type, false, true, false, ambient);
                 if (idx >= 0 && ((MetaType)types[idx]).IgnoreListHandling)
                 {
                     return null;
@@ -1677,7 +1681,20 @@ namespace ProtoBuf.Meta
             compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
-            if (effectiveType == typeof(byte[])) return "bytes";
+            if (effectiveType == typeof(byte[]))
+            {
+                return "bytes";
+            }
+            else if (effectiveType == typeof(Timestamp))
+            {
+                imports |= CommonImports.Timestamp;
+                return ".google.protobuf.Timestamp";
+            }
+            else if (effectiveType == typeof(Duration))
+            {
+                imports |= CommonImports.Duration;
+                return ".google.protobuf.Duration";
+            }
 
             IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out var _, false, false, false, false);
             if (ser == null)

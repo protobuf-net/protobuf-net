@@ -1,6 +1,8 @@
-﻿using ProtoBuf.Meta;
+﻿using Google.Protobuf.WellKnownTypes;
+using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -89,6 +91,95 @@ message ValueTuple_Guid_Decimal {
 
             [ProtoMember(3)]
             public Dictionary<Guid, (DateTime, decimal)> Map { get; } = new Dictionary<Guid, (DateTime, decimal)>();
+        }
+
+        [Fact]
+        public void Level300Payload_CheckActual()
+        {
+
+            var date = new DateTime(2020, 6, 5, 21, 06, 31, DateTimeKind.Utc);
+            var time = TimeSpan.FromSeconds(4156);
+            var guid = Guid.Parse("5a0960eb-ab45-4d0b-98fd-aaebd9129430");
+            var price = 123.45M;
+            var equivObj = new Level300
+            {
+                Value = (date, time),
+                List = { (guid, price) },
+                Map = { { guid, (date, price) } },
+            };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, equivObj);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            ms.SetLength(0);
+            Log(hex);
+            Assert.Equal("0A-0D-0A-06-08-D7-E7-EA-F6-05-12-03-08-BC-20-12-2E-0A-24-35-61-30-39-36-30-65-62-2D-"
+                       + "61-62-34-35-2D-34-64-30-62-2D-39-38-66-64-2D-61-61-65-62-64-39-31-32-39-34-33-30-12-"
+                       + "06-31-32-33-2E-34-35-1A-38-0A-24-35-61-30-39-36-30-65-62-2D-61-62-34-35-2D-34-64-30-"
+                       + "62-2D-39-38-66-64-2D-61-61-65-62-64-39-31-32-39-34-33-30-12-10-0A-06-08-D7-E7-EA-F6-"
+                       + "05-12-06-31-32-33-2E-34-35", hex);
+        }
+
+        [Fact]
+        public void Level300Payload_CheckExpected()
+        {
+
+            WellKnownTypes.Timestamp date = new DateTime(2020, 6, 5, 21, 06, 31, DateTimeKind.Utc);
+            WellKnownTypes.Duration time = TimeSpan.FromSeconds(4156);
+            string guid = "5a0960eb-ab45-4d0b-98fd-aaebd9129430", price = "123.45";
+            var equivObj = new Level300_Equivalent
+            {
+                Value = (date, time),
+                List = { (guid, price)},
+                Map = { { guid, (date, price) } },
+            };
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, equivObj);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            ms.SetLength(0);
+            Log(hex);
+            Assert.Equal("0A-0D-0A-06-08-D7-E7-EA-F6-05-12-03-08-BC-20-12-2E-0A-24-35-61-30-39-36-30-65-62-2D-"
+                       + "61-62-34-35-2D-34-64-30-62-2D-39-38-66-64-2D-61-61-65-62-64-39-31-32-39-34-33-30-12-"
+                       + "06-31-32-33-2E-34-35-1A-38-0A-24-35-61-30-39-36-30-65-62-2D-61-62-34-35-2D-34-64-30-"
+                       + "62-2D-39-38-66-64-2D-61-61-65-62-64-39-31-32-39-34-33-30-12-10-0A-06-08-D7-E7-EA-F6-"
+                       + "05-12-06-31-32-33-2E-34-35", hex);
+        }
+
+        [Fact]
+        public void Level300Payload_EquivSchema() => AssertSchema<Level300_Equivalent>(@"
+syntax = ""proto3"";
+import ""google/protobuf/timestamp.proto"";
+import ""google/protobuf/duration.proto"";
+
+message Level300_Equivalent {
+   ValueTuple_Timestamp_Duration Value = 1;
+   repeated ValueTuple_String_String List = 2;
+   map<string,ValueTuple_Timestamp_String> Map = 3;
+}
+message ValueTuple_String_String {
+   string Item1 = 1;
+   string Item2 = 2;
+}
+message ValueTuple_Timestamp_Duration {
+   .google.protobuf.Timestamp Item1 = 1;
+   .google.protobuf.Duration Item2 = 2;
+}
+message ValueTuple_Timestamp_String {
+   .google.protobuf.Timestamp Item1 = 1;
+   string Item2 = 2;
+}");
+
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        [ProtoContract]
+        public class Level300_Equivalent
+        {
+            [ProtoMember(1)]
+            public (WellKnownTypes.Timestamp, WellKnownTypes.Duration) Value { get; set; }
+
+            [ProtoMember(2)]
+            public List<(string, string)> List { get; } = new List<(string, string)>();
+
+            [ProtoMember(3)]
+            public Dictionary<string, (WellKnownTypes.Timestamp, string)> Map { get; } = new Dictionary<string, (WellKnownTypes.Timestamp, string)>();
         }
 
         private void AssertSchema<T>(string expected)

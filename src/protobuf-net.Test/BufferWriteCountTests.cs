@@ -29,7 +29,7 @@ namespace ProtoBuf.Test
             public static MyTypeModel Instance { get; } = new MyTypeModel();
             private MyTypeModel() { }
 
-            protected internal override ISerializer<T> GetSerializer<T>()
+            protected override ISerializer<T> GetSerializer<T>()
                 => GetSerializer<MyServices, T>();
 
             class MyServices : ISerializer<MyMessage>

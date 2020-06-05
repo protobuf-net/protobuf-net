@@ -660,7 +660,7 @@ namespace ProtoBuf.Meta
             if (allowComplexTypes && model != null)
             {
                 MetaType meta = null;
-                if (model.IsDefined(type))
+                if (model.IsDefined(type, compatibilityLevel))
                 {
                     meta = model.FindWithAmbientCompatibility(type, compatibilityLevel);
 

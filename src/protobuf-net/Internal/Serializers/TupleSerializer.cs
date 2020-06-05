@@ -29,7 +29,7 @@ namespace ProtoBuf.Internal.Serializers
                 Type tmp = repeated?.ItemType ?? finalType;
 
                 bool asReference = false;
-                int typeIndex = model.FindOrAddAuto(tmp, false, true, false);
+                int typeIndex = model.FindOrAddAuto(tmp, false, true, false, compatibilityLevel);
                 if (typeIndex >= 0)
                 {
                     asReference = model[tmp].AsReferenceDefault;

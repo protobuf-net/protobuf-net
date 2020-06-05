@@ -53,7 +53,7 @@ namespace ProtoBuf.Serializers
     {
         [MethodImpl(ProtoReader.HotPath)]
         internal static IMemoryConverter<TStorage, T> GetFor<TStorage>(TypeModel model)
-            => model?.GetSerializer<TStorage>() as IMemoryConverter<TStorage, T>
+            => model?.GetSerializerCore<TStorage>(default) as IMemoryConverter<TStorage, T>
             ?? Instance as IMemoryConverter<TStorage, T> ?? NotSupported<TStorage>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]

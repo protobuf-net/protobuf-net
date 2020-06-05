@@ -68,11 +68,11 @@ namespace ProtoBuf.Meta
             => ForAssembly(type).GetSchema(type, syntax);
 
         /// <summary>See TypeModel.GetSerializer</summary>
-        protected internal override ISerializer<T> GetSerializer<T>()
-            => ForAssembly(typeof(T)).GetSerializer<T>();
+        protected override ISerializer<T> GetSerializer<T>()
+            => ForAssembly(typeof(T)).GetSerializerCore<T>(default);
 
-        internal override bool IsKnownType<T>()
-            => ForAssembly(typeof(T)).IsKnownType<T>();
+        internal override bool IsKnownType<T>(CompatibilityLevel ambient)
+            => ForAssembly(typeof(T)).IsKnownType<T>(ambient);
 
 
         private static TypeModel CreateForAssemblyImpl(Assembly assembly, CompilerOptions options)
