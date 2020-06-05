@@ -2,6 +2,7 @@
 using ProtoBuf.Internal;
 using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Serializers;
+using ProtoBuf.WellKnownTypes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -173,6 +174,28 @@ namespace ProtoBuf.Meta
         public IEnumerable GetTypes() => types;
 
         /// <summary>
+        /// Gets or sets the default <see cref="CompatibilityLevel"/> for this model.
+        /// </summary>
+        public CompatibilityLevel DefaultCompatibilityLevel
+        {
+            get => _defaultCompatibilityLevel;
+            set
+            {
+                if (value != _defaultCompatibilityLevel)
+                {
+                    CompatibilityLevelAttribute.AssertValid(value);
+                    ThrowIfFrozen();
+                    if (GetOption(RuntimeTypeModelOptions.IsDefaultModel)) ThrowHelper.ThrowInvalidOperationException("The default compatibility level of the default model cannot be changed");
+                    if (types.Any()) ThrowHelper.ThrowInvalidOperationException("The default compatibility level of cannot be changed once types have been added");
+                    _defaultCompatibilityLevel = value;
+                }
+            }
+        }
+
+        private CompatibilityLevel _defaultCompatibilityLevel = CompatibilityLevel.Level200;
+
+
+        /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
@@ -201,11 +224,11 @@ namespace ProtoBuf.Meta
                 Type tmp = Nullable.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
 
-                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out var _, false, false, false, false) != null);
+                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, DefaultCompatibilityLevel, type, out var _, false, false, false, false) != null);
                 if (!isInbuiltType)
                 {
                     //Agenerate just relative to the supplied type
-                    int index = FindOrAddAuto(type, false, false, false);
+                    int index = FindOrAddAuto(type, false, false, false, DefaultCompatibilityLevel);
                     if (index < 0) throw new ArgumentException("The type specified is not a contract-type", nameof(type));
 
                     // get the required types
@@ -280,7 +303,7 @@ namespace ProtoBuf.Meta
             if (isInbuiltType)
             {
                 bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, false, false, ref imports))
+                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports))
                     .Append(" value = 1;").AppendLine().Append('}');
             }
             else
@@ -322,20 +345,20 @@ namespace ProtoBuf.Meta
             Protogen = 8
         }
 
-        private void CascadeRepeated(List<MetaType> list, RepeatedSerializerStub provider)
+        private void CascadeRepeated(List<MetaType> list, RepeatedSerializerStub provider, CompatibilityLevel ambient, DataFormat keyFormat)
         {
             if (provider.IsMap)
             {
                 provider.ResolveMapTypes(out var key, out var value);
-                TryGetCoreSerializer(list, key);
-                TryGetCoreSerializer(list, value);
+                TryGetCoreSerializer(list, key, ambient);
+                TryGetCoreSerializer(list, value, ambient);
 
-                if (!provider.IsValidProtobufMap(this)) // add the KVP
-                    TryGetCoreSerializer(list, provider.ItemType);
+                if (!provider.IsValidProtobufMap(this, ambient, keyFormat)) // add the KVP
+                    TryGetCoreSerializer(list, provider.ItemType, ambient);
             }
             else
             {
-                TryGetCoreSerializer(list, provider.ItemType);
+                TryGetCoreSerializer(list, provider.ItemType, ambient);
             }
         }
         private void CascadeDependents(List<MetaType> list, MetaType metaType)
@@ -344,7 +367,7 @@ namespace ProtoBuf.Meta
             var repeated = TryGetRepeatedProvider(metaType.Type);
             if (repeated != null)
             {
-                CascadeRepeated(list, repeated);
+                CascadeRepeated(list, repeated, metaType.CompatibilityLevel, DataFormat.Default);
             }
             else
             {
@@ -355,9 +378,9 @@ namespace ProtoBuf.Meta
                         for (int i = 0; i < mapping.Length; i++)
                         {
                             Type type = null;
-                            if (mapping[i] is PropertyInfo) type = ((PropertyInfo)mapping[i]).PropertyType;
-                            else if (mapping[i] is FieldInfo) type = ((FieldInfo)mapping[i]).FieldType;
-                            TryGetCoreSerializer(list, type);
+                            if (mapping[i] is PropertyInfo propertyInfo) type = propertyInfo.PropertyType;
+                            else if (mapping[i] is FieldInfo fieldInfo) type = fieldInfo.FieldType;
+                            TryGetCoreSerializer(list, type, metaType.CompatibilityLevel);
                         }
                     }
                 }
@@ -368,13 +391,13 @@ namespace ProtoBuf.Meta
                         repeated = TryGetRepeatedProvider(member.MemberType);
                         if (repeated != null)
                         {
-                            CascadeRepeated(list, repeated);
+                            CascadeRepeated(list, repeated, member.CompatibilityLevel, member.MapKeyFormat);
                             if (repeated.IsMap && !member.IsMap) // include the KVP, then
-                                TryGetCoreSerializer(list, repeated.ItemType);
+                                TryGetCoreSerializer(list, repeated.ItemType, member.CompatibilityLevel);
                         }
                         else
                         {
-                            TryGetCoreSerializer(list, member.MemberType);
+                            TryGetCoreSerializer(list, member.MemberType, member.CompatibilityLevel);
                         }
                     }
                 }
@@ -383,11 +406,11 @@ namespace ProtoBuf.Meta
                     repeated = TryGetRepeatedProvider(genericArgument);
                     if (repeated != null)
                     {
-                        CascadeRepeated(list, repeated);
+                        CascadeRepeated(list, repeated, metaType.CompatibilityLevel, DataFormat.Default);
                     }
                     else
                     {
-                        TryGetCoreSerializer(list, genericArgument);
+                        TryGetCoreSerializer(list, genericArgument, metaType.CompatibilityLevel);
                     }
                 }
                 if (metaType.HasSubtypes)
@@ -412,14 +435,14 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void TryGetCoreSerializer(List<MetaType> list, Type itemType)
+        private void TryGetCoreSerializer(List<MetaType> list, Type itemType, CompatibilityLevel ambient)
         {
-            var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out _, false, false, false, false);
+            var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, CompatibilityLevel.NotSpecified, itemType, out _, false, false, false, false);
             if (coreSerializer != null)
             {
                 return;
             }
-            int index = FindOrAddAuto(itemType, false, false, false);
+            int index = FindOrAddAuto(itemType, false, false, false, ambient);
             if (index < 0)
             {
                 return;
@@ -474,7 +497,17 @@ namespace ProtoBuf.Meta
         /// Obtains the MetaType associated with a given Type for the current model,
         /// allowing additional configuration.
         /// </summary>
-        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false)]; } }
+        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false, DefaultCompatibilityLevel)]; } }
+
+        internal MetaType FindWithAmbientCompatibility(Type type, CompatibilityLevel ambient)
+        {
+            var found = (MetaType)types[FindOrAddAuto(type, true, false, false, ambient)];
+            if (found is object && found.IsAutoTuple && found.CompatibilityLevel != ambient)
+            {
+                throw new InvalidOperationException($"The tuple-like type {type.NormalizeName()} must use a single compatiblity level, but '{ambient}' and '{found.CompatibilityLevel}' are both observed; this usually means it is being used in different contexts in the same model.");
+            }
+            return found;
+        }
 
         internal MetaType FindWithoutAdd(Type type)
         {
@@ -539,7 +572,7 @@ namespace ProtoBuf.Meta
 
                 MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
                 IRuntimeProtoSerializerNode ser = family == MetaType.AttributeFamily.None
-                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out _, false, false, false, false)
+                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, CompatibilityLevel.NotSpecified, type, out _, false, false, false, false)
                     : null;
 
                 if (ser != null) basicTypes.Add(new BasicType(type, ser));
@@ -547,7 +580,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
+        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled, CompatibilityLevel ambient)
         {
             type = DynamicStub.GetEffectiveType(type);
             int key = types.IndexOf(MetaTypeFinder, type);
@@ -618,7 +651,7 @@ namespace ProtoBuf.Meta
                     }
                     if (weAdded)
                     {
-                        metaType.ApplyDefaultBehaviour();
+                        metaType.ApplyDefaultBehaviour(ambient);
                         metaType.Pending = false;
                     }
                 }
@@ -663,8 +696,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Like the non-generic Add(Type); for convenience
         /// </summary>
-        public MetaType Add<T>(bool applyDefaultBehaviour = true)
-            => Add(typeof(T), applyDefaultBehaviour);
+        public MetaType Add<T>(bool applyDefaultBehaviour = true, CompatibilityLevel compatibilityLevel = default)
+            => Add(typeof(T), applyDefaultBehaviour, compatibilityLevel);
 
         /// <summary>
         /// Adds support for an additional type in this model, optionally
@@ -684,14 +717,43 @@ namespace ProtoBuf.Meta
         /// just add the type with no additional configuration (the type must then be manually configured).</param>
         /// <returns>The MetaType representing this type, allowing
         /// further configuration.</returns>
-        public MetaType Add(Type type, bool applyDefaultBehaviour = true)
+        public MetaType Add(Type type, bool applyDefaultBehaviour)
+            => Add(type, applyDefaultBehaviour, default);
+
+        /// <summary>
+        /// Adds support for an additional type in this model, optionally
+        /// applying inbuilt patterns. If the type is already known to the
+        /// model, the existing type is returned **without** applying
+        /// any additional behaviour.
+        /// </summary>
+        /// <remarks>Inbuilt patterns include:
+        /// [ProtoContract]/[ProtoMember(n)]
+        /// [DataContract]/[DataMember(Order=n)]
+        /// [XmlType]/[XmlElement(Order=n)]
+        /// [On{Des|S}erializ{ing|ed}]
+        /// ShouldSerialize*/*Specified
+        /// </remarks>
+        /// <param name="type">The type to be supported</param>
+        /// <param name="applyDefaultBehaviour">Whether to apply the inbuilt configuration patterns (via attributes etc), or
+        /// just add the type with no additional configuration (the type must then be manually configured).</param>
+        /// <param name="compatibilityLevel">The <see cref="CompatibilityLevel"/> to assume for this type; this should usually be omitted</param>
+        /// <returns>The MetaType representing this type, allowing
+        /// further configuration.</returns>
+        public MetaType Add(Type type, bool applyDefaultBehaviour = true, CompatibilityLevel compatibilityLevel = default)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (type == typeof(object))
                 throw new ArgumentException("You cannot reconfigure " + type.FullName);
             type = DynamicStub.GetEffectiveType(type);
             MetaType newType = FindWithoutAdd(type);
-            if (newType != null) return newType; // return existing
+            if (newType != null)
+            {
+                if (compatibilityLevel != default)
+                {
+                    newType.Assert(compatibilityLevel);
+                }
+                return newType; // return existing
+            }
             int opaqueToken = 0;
 
             try
@@ -709,13 +771,14 @@ namespace ProtoBuf.Meta
                     applyDefaultBehaviour = false;
                 }
                 if (newType == null) newType = Create(type);
+                newType.CompatibilityLevel = compatibilityLevel; // usually this will be setting it to "unspecified", which is fine
                 newType.Pending = true;
                 TakeLock(ref opaqueToken);
                 // double checked
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", nameof(type));
                 ThrowIfFrozen();
                 types.Add(newType);
-                if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
+                if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(default); }
                 newType.Pending = false;
             }
             finally
@@ -799,18 +862,21 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override ISerializer<T> GetSerializer<T>()
-            => GetServices<T>() as ISerializer<T>;
+        protected override ISerializer<T> GetSerializer<T>()
+            => GetServices<T>(default) as ISerializer<T>;
+
+        internal override ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
+            => GetServices<T>(ambient) as ISerializer<T>;
 
         /// <summary>Indicates whether a type is known to the model</summary>
-        internal override bool IsKnownType<T>() // the point of this override is to avoid loops
+        internal override bool IsKnownType<T>(CompatibilityLevel ambient) // the point of this override is to avoid loops
                                                 // when trying to *build* a model; we don't actually need the service (which may not exist yet);
                                                 // we just need to know whether we should *expect one*
-            => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false) >= 0;
+            => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false, ambient) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object GetServices<T>()
-            => (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T)));
+        private object GetServices<T>(CompatibilityLevel ambient)
+            => (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T), ambient));
 
 
         private readonly Hashtable _serviceCache = new Hashtable();
@@ -825,7 +891,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private object GetServicesSlow(Type type)
+        private object GetServicesSlow(Type type, CompatibilityLevel ambient)
         {
             if (type == null) return null; // GIGO
             object service;
@@ -855,7 +921,7 @@ namespace ProtoBuf.Meta
                 var repeated = TryGetRepeatedProvider(type); // this handles ignores, etc
                 if (repeated != null) return repeated.Serializer;
 
-                int typeIndex = FindOrAddAuto(type, false, true, false);
+                int typeIndex = FindOrAddAuto(type, false, true, false, ambient);
                 if (typeIndex >= 0)
                 {
                     var mt = (MetaType)types[typeIndex];
@@ -911,7 +977,7 @@ namespace ProtoBuf.Meta
                 // the primary purpose of this is to force the creation of the Serializer
                 MetaType mt = (MetaType)types[i];
                 
-                if (GetServicesSlow(mt.Type) == null) // respects enums, repeated, etc
+                if (GetServicesSlow(mt.Type, mt.CompatibilityLevel) == null) // respects enums, repeated, etc
                     throw new InvalidOperationException("No serializer available for " + mt.Type.NormalizeName());
             }
         }
@@ -1078,7 +1144,7 @@ namespace ProtoBuf.Meta
             internal bool OnIncludeType(Type type)
             {
                 var evt = IncludeType;
-                return evt == null ? true : evt(type);
+                return evt is null || evt(type);
             }
         }
 
@@ -1284,14 +1350,14 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal RepeatedSerializerStub TryGetRepeatedProvider(Type type)
+        internal RepeatedSerializerStub TryGetRepeatedProvider(Type type, CompatibilityLevel ambient = default)
         {
             if (type == null) return null;
             var repeated = RepeatedSerializers.TryGetRepeatedProvider(type);
             // but take it back if it is explicitly excluded
             if (repeated != null)
             { // looks like a list, but double check for IgnoreListHandling
-                int idx = this.FindOrAddAuto(type, false, true, false);
+                int idx = this.FindOrAddAuto(type, false, true, false, ambient);
                 if (idx >= 0 && ((MetaType)types[idx]).IgnoreListHandling)
                 {
                     return null;
@@ -1607,16 +1673,30 @@ namespace ProtoBuf.Meta
         public event LockContentedEventHandler LockContended;
 #pragma warning restore RCS1159 // Use EventHandler<T>.
 
-        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
-            => GetSchemaTypeName(callstack, effectiveType, dataFormat, asReference, dynamicType, ref imports, out _);
-        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports)
+            => GetSchemaTypeName(callstack, effectiveType, dataFormat, compatibilityLevel, asReference, dynamicType, ref imports, out _);
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
         {
             altName = null;
+            compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
-            if (effectiveType == typeof(byte[])) return "bytes";
+            if (effectiveType == typeof(byte[]))
+            {
+                return "bytes";
+            }
+            else if (effectiveType == typeof(Timestamp))
+            {
+                imports |= CommonImports.Timestamp;
+                return ".google.protobuf.Timestamp";
+            }
+            else if (effectiveType == typeof(Duration))
+            {
+                imports |= CommonImports.Duration;
+                return ".google.protobuf.Duration";
+            }
 
-            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out var _, false, false, false, false);
+            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out var _, false, false, false, false);
             if (ser == null)
             {   // model type
                 if (asReference || dynamicType)
@@ -1631,7 +1711,7 @@ namespace ProtoBuf.Meta
                 if (mt.Type.IsEnum && !mt.IsValidEnum())
                 {
                     altName = actual;
-                    actual = GetSchemaTypeName(callstack, Enum.GetUnderlyingType(mt.Type), dataFormat, asReference, dynamicType, ref imports);
+                    actual = GetSchemaTypeName(callstack, Enum.GetUnderlyingType(mt.Type), dataFormat, CompatibilityLevel.NotSpecified, asReference, dynamicType, ref imports);
                 }
                 return actual;
             }
@@ -1686,26 +1766,48 @@ namespace ProtoBuf.Meta
                         switch (dataFormat)
                         {
                             case DataFormat.FixedSize: return "sint64";
-                            case DataFormat.WellKnown:
-                                imports |= CommonImports.Timestamp;
-                                return ".google.protobuf.Timestamp";
                             default:
-                                imports |= CommonImports.Bcl;
-                                return ".bcl.DateTime";
+                                if (compatibilityLevel >= CompatibilityLevel.Level240)
+                                {
+                                    imports |= CommonImports.Timestamp;
+                                    return ".google.protobuf.Timestamp";
+                                }
+                                else
+                                {
+                                    imports |= CommonImports.Bcl;
+                                    return ".bcl.DateTime";
+                                }
                         }
                     case ProtoTypeCode.TimeSpan:
                         switch (dataFormat)
                         {
                             case DataFormat.FixedSize: return "sint64";
-                            case DataFormat.WellKnown:
-                                imports |= CommonImports.Duration;
-                                return ".google.protobuf.Duration";
                             default:
-                                imports |= CommonImports.Bcl;
-                                return ".bcl.TimeSpan";
+                                if (compatibilityLevel >= CompatibilityLevel.Level240)
+                                {
+                                    imports |= CommonImports.Duration;
+                                    return ".google.protobuf.Duration";
+                                }
+                                else
+                                {
+                                    imports |= CommonImports.Bcl;
+                                    return ".bcl.TimeSpan";
+                                }
                         }
-                    case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
-                    case ProtoTypeCode.Guid: imports |= CommonImports.Bcl; return ".bcl.Guid";
+                    case ProtoTypeCode.Decimal:
+                        if (compatibilityLevel < CompatibilityLevel.Level300)
+                        {
+                            imports |= CommonImports.Bcl;
+                            return ".bcl.Decimal";
+                        }
+                        return "string";
+                    case ProtoTypeCode.Guid:
+                        if (compatibilityLevel < CompatibilityLevel.Level300)
+                        {
+                            imports |= CommonImports.Bcl;
+                            return ".bcl.Guid";
+                        }
+                        return dataFormat == DataFormat.FixedSize ? "bytes" : "string";
                     case ProtoTypeCode.Type: return "string";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }

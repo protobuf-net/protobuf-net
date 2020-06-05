@@ -239,7 +239,7 @@ namespace ProtoBuf
                     case WireType.Fixed64:
                         if ((bytes % 8) != 0) ThrowHelper.ThrowInvalidOperationException("packed length should be multiple of 8");
                         count = bytes / 8;
-                        ReadFixedQuantity:
+                    ReadFixedQuantity:
                         // boost the List<T> capacity if we can, as long as it is within reason (i.e. don't let
                         // a small message lie and claim to have a huge payload)
 
@@ -371,6 +371,30 @@ namespace ProtoBuf
                         return value;
                     //case WireType.Varint:
                     //    return new byte[0];
+                    default:
+                        ThrowWireTypeException();
+                        return default;
+                }
+            }
+
+            /// <summary>
+            /// Tries to read a string-like type directly into a span; if successful, the span
+            /// returned indicates the available amount of data; if unsuccessful, an exception
+            /// is thrown; this should only be used when there is confidence that the length
+            /// is bounded.
+            /// </summary>
+            public Span<byte> ReadBytes(Span<byte> destination)
+            {
+                switch (_reader.WireType)
+                {
+                    case WireType.String:
+                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        if (len > destination.Length)
+                            ThrowHelper.ThrowInvalidOperationException($"Insufficient space in the target span to read a string/bytes value; {destination.Length} vs {len} bytes");
+                        _reader.WireType = WireType.None;
+                        destination = destination.Slice(0, len);
+                        _reader.ImplReadBytes(ref this, destination);
+                        return destination;
                     default:
                         ThrowWireTypeException();
                         return default;

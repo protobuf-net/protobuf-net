@@ -3,7 +3,10 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Buffers;
+using System.Buffers.Text;
 using System.Runtime.CompilerServices;
+using System.Text;
 using static ProtoBuf.Internal.PrimaryTypeProvider;
 
 namespace ProtoBuf
@@ -303,12 +306,27 @@ namespace ProtoBuf
             ProtoReader.State state = reader.DefaultState();
             return ReadDecimal(ref state);
         }
+
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static decimal ReadDecimal(ref ProtoReader.State state)
             => state.ReadMessage<decimal>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+
+        /// <summary>
+        /// Parses a decimal from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static unsafe decimal ReadDecimalString(ref ProtoReader.State state)
+        {
+            var ptr = stackalloc byte[MAX_DECIMAL_BYTES];
+            var available = state.ReadBytes(new Span<byte>(ptr, MAX_DECIMAL_BYTES));
+            if (!(Utf8Parser.TryParse(available, out decimal value, out int bytesConsumed) // default acts like 'G'/'E' - accomodating
+                && bytesConsumed == available.Length))
+                ThrowHelper.ThrowInvalidOperationException($"Unable to parse decimal: '{Encoding.UTF8.GetString(ptr, available.Length)}'");
+            return value;
+        }
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
@@ -320,13 +338,33 @@ namespace ProtoBuf
             WriteDecimal(ref state, value);
         }
 
-
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDecimal(ref ProtoWriter.State state, decimal value)
             => state.WriteMessage<decimal>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
+
+        /// <summary>
+        /// Writes a decimal to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDecimalString(ref ProtoWriter.State state, decimal value)
+        {
+            var arr = ArrayPool<byte>.Shared.Rent(MAX_DECIMAL_BYTES);
+            try
+            {
+                if (!Utf8Formatter.TryFormat(value, arr, out int bytesWritten)) // format 'G' is implicit/default
+                    ThrowHelper.ThrowInvalidOperationException($"Unable to format decimal: '{value}'");
+                state.WriteBytes(new ReadOnlyMemory<byte>(arr, 0, bytesWritten));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(arr);
+            }
+        }
+
+        private const int MAX_DECIMAL_BYTES = 32; // CoreLib uses 31; we'll round up (cheaper to wipe)
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
@@ -346,6 +384,20 @@ namespace ProtoBuf
             => state.WriteMessage<Guid>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
 
         /// <summary>
+        /// Writes a Guid to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteGuidBytes(ref ProtoWriter.State state, Guid value)
+            => GuidHelper.Write(ref state, in value, asBytes: true);
+
+        /// <summary>
+        /// Writes a Guid to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteGuidString(ref ProtoWriter.State state, Guid value)
+            => GuidHelper.Write(ref state, in value, asBytes: false);
+
+        /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -361,6 +413,20 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static Guid ReadGuid(ref ProtoReader.State state)
             => state.ReadMessage<Guid>(default, default, serializer: SerializerCache<PrimaryTypeProvider>.InstanceField);
+
+        /// <summary>
+        /// Parses a Guid from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static Guid ReadGuidBytes(ref ProtoReader.State state)
+            => GuidHelper.Read(ref state); // note that this is forgiving and handles 16/32/36 formats
+
+        /// <summary>
+        /// Parses a Guid from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static Guid ReadGuidString(ref ProtoReader.State state)
+            => GuidHelper.Read(ref state); // note that this is forgiving and handles 16/32/36 formats
 
 #if FEAT_DYNAMIC_REF
         private const int

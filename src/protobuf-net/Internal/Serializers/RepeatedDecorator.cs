@@ -8,12 +8,12 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal static class RepeatedDecorator
     {
-        public static IRuntimeProtoSerializerNode Create(RepeatedSerializerStub stub, int fieldNumber, SerializerFeatures features)
+        public static IRuntimeProtoSerializerNode Create(RepeatedSerializerStub stub, int fieldNumber, SerializerFeatures features, CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
         {
             if (stub == null) ThrowHelper.ThrowArgumentNullException(nameof(stub), $"No suitable repeated serializer resolved for {stub.ForType.NormalizeName()}");
             _ = stub.Serializer; // primes and validates
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(typeof(RepeatedDecorator<,>).MakeGenericType(stub.ForType, stub.ItemType),
-                new object[] { fieldNumber, features, stub });
+                new object[] { fieldNumber, features, compatibilityLevel, dataFormat, stub });
         }
         internal static IRepeatedSerializer<T> GetSerializer<T>(MemberInfo original)
         {
@@ -33,16 +33,20 @@ namespace ProtoBuf.Internal.Serializers
     {
         private readonly int _fieldNumber;
         private readonly SerializerFeatures _features;
+        private readonly CompatibilityLevel _compatibilityLevel;
+        private readonly DataFormat _dataFormat;
 
         private readonly RepeatedSerializerStub _stub;
         private RepeatedSerializer<TCollection, T> Serializer => (RepeatedSerializer<TCollection, T>)_stub.Serializer;
  
 
-        public RepeatedDecorator(int fieldNumber, SerializerFeatures features, RepeatedSerializerStub stub)
+        public RepeatedDecorator(int fieldNumber, SerializerFeatures features, CompatibilityLevel compatibilityLevel, DataFormat dataFormat, RepeatedSerializerStub stub)
         {
             _stub = stub;
             _fieldNumber = fieldNumber;
             _features = features;
+            _compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
+            _dataFormat = dataFormat;
         }
 
         public Type ExpectedType => typeof(TCollection);
@@ -50,7 +54,7 @@ namespace ProtoBuf.Internal.Serializers
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public object Read(ref ProtoReader.State state, object value)
-            => Serializer.ReadRepeated(ref state, _features, (TCollection)value);
+            => Serializer.ReadRepeated(ref state, _features, (TCollection)value, TypeModel.GetInbuiltSerializer<T>(_compatibilityLevel, _dataFormat));
 
         public void EmitRead(CompilerContext ctx, Local valueFrom)
         {
@@ -62,12 +66,12 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadState();
             ctx.LoadValue((int)_features);
             ctx.LoadValue(loc);
-            ctx.LoadSelfAsService<ISerializer<T>, T>();
+            ctx.LoadSelfAsService<ISerializer<T>, T>(_compatibilityLevel, _dataFormat);
             ctx.EmitCall(method);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
-            => Serializer.WriteRepeated(ref state, _fieldNumber, _features, (TCollection)value);
+            => Serializer.WriteRepeated(ref state, _fieldNumber, _features, (TCollection)value, TypeModel.GetInbuiltSerializer<T>(_compatibilityLevel, _dataFormat));
 
         public void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
@@ -79,7 +83,7 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadValue(_fieldNumber);
             ctx.LoadValue((int)_features);
             ctx.LoadValue(loc);
-            ctx.LoadSelfAsService<ISerializer<T>, T>();
+            ctx.LoadSelfAsService<ISerializer<T>, T>(_compatibilityLevel, _dataFormat);
             ctx.EmitCall(method);
         }
     }

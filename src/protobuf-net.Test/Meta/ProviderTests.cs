@@ -33,15 +33,15 @@ namespace ProtoBuf.Meta
             Assert.IsType<ProxySerializer>(TypeModel.TryGetSerializer<Proxied>(model));
 
             // now let's look just via the model
-            serType = model.GetSerializer<A>()?.GetType();
+            serType = model.GetSerializerCore<A>(default)?.GetType();
             Assert.Equal(typeof(EnumSerializerInt32<A>), serType);
             Assert.Equal(typeof(A), serType.GetGenericArguments().Single());
 
             // B *should not* work when accessed directly
-            Assert.Null(model.GetSerializer<B>());
-            Assert.IsType<MyProvider>(model.GetSerializer<Haz>());
-            Assert.Null(model.GetSerializer<HazNot>());
-            Assert.IsType<ProxySerializer>(model.GetSerializer<Proxied>());
+            Assert.Null(model.GetSerializerCore<B>(default));
+            Assert.IsType<MyProvider>(model.GetSerializerCore<Haz>(default));
+            Assert.Null(model.GetSerializerCore<HazNot>(default));
+            Assert.IsType<ProxySerializer>(model.GetSerializerCore<Proxied>(default));
         }
 
         [Fact]
@@ -53,15 +53,15 @@ namespace ProtoBuf.Meta
             Assert.False(model.IsDefined(typeof(B)));
             Assert.False(model.IsDefined(typeof(B?)));
 
-            Assert.NotNull(model.GetSerializer<A>());
-            Assert.NotNull(model.GetSerializer<A?>());
-            Assert.Null(model.GetSerializer<B>());
-            Assert.Null(model.GetSerializer<B?>());
+            Assert.NotNull(model.GetSerializerCore<A>(default));
+            Assert.NotNull(model.GetSerializerCore<A?>(default));
+            Assert.Null(model.GetSerializerCore<B>(default));
+            Assert.Null(model.GetSerializerCore<B?>(default));
         }
 
         class MyModel : TypeModel
         {
-            protected internal override ISerializer<T> GetSerializer<T>()
+            protected override ISerializer<T> GetSerializer<T>()
                 => GetSerializer<MyProvider, T>();
         }
         class MyProvider : ISerializer<Haz>, ISerializerProxy<A>, ISerializerProxy<A?>, ISerializerProxy<Proxied>

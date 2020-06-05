@@ -7,23 +7,29 @@ namespace ProtoBuf.Internal.Serializers
     internal sealed class DateTimeSerializer : IRuntimeProtoSerializerNode
     {
         private static readonly Type expectedType = typeof(DateTime);
+        private static DateTimeSerializer s_Timestamp;
 
         public Type ExpectedType => expectedType;
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        private readonly bool includeKind, wellKnown;
+        private readonly bool _includeKind, _useTimestamp;
 
-        public DateTimeSerializer(DataFormat dataFormat, TypeModel model)
+        public static DateTimeSerializer Create(CompatibilityLevel compatibilityLevel, TypeModel model)
+            =>  compatibilityLevel >= CompatibilityLevel.Level240
+                ? s_Timestamp ??= new DateTimeSerializer(true, false)
+                : new DateTimeSerializer(false, model.HasOption(TypeModel.TypeModelOptions.IncludeDateTimeKind));
+
+        private DateTimeSerializer(bool useTimestamp, bool includeKind)
         {
-            wellKnown = dataFormat == DataFormat.WellKnown;
-            includeKind = model.HasOption(TypeModel.TypeModelOptions.IncludeDateTimeKind);
+            _useTimestamp = useTimestamp;
+            _includeKind = includeKind;
         }
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            if (wellKnown)
+            if (_useTimestamp)
             {
                 return BclHelpers.ReadTimestamp(ref state);
             }
@@ -36,9 +42,9 @@ namespace ProtoBuf.Internal.Serializers
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            if (wellKnown)
+            if (_useTimestamp)
                 BclHelpers.WriteTimestamp(ref state, (DateTime)value);
-            else if (includeKind)
+            else if (_includeKind)
                 BclHelpers.WriteDateTimeWithKind(ref state, (DateTime)value);
             else
                 BclHelpers.WriteDateTime(ref state, (DateTime)value);
@@ -47,15 +53,15 @@ namespace ProtoBuf.Internal.Serializers
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitStateBasedWrite(
-                wellKnown ? nameof(BclHelpers.WriteTimestamp)
-                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, typeof(BclHelpers));
+                _useTimestamp ? nameof(BclHelpers.WriteTimestamp)
+                : _includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, typeof(BclHelpers));
         }
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            if (wellKnown) ctx.LoadValue(entity);
+            if (_useTimestamp) ctx.LoadValue(entity);
             ctx.EmitStateBasedRead(typeof(BclHelpers),
-                wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
+                _useTimestamp ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
         }
     }

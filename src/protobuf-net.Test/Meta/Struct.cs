@@ -56,7 +56,7 @@ namespace ProtoBuf.unittest.Meta
 
         static void TestEnumModel(TypeModel model)
         {
-            var obj = model.GetSerializer<Foo>();
+            var obj = model.GetSerializerCore<Foo>(default);
             Assert.NotNull(obj);
 
             Assert.True(obj.Features.GetCategory() == SerializerFeatures.CategoryScalar, "should be a scalar serializer; is " + obj.GetType().NormalizeName());

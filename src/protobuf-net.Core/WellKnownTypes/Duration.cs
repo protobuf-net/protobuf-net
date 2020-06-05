@@ -19,7 +19,7 @@ namespace ProtoBuf.Internal
         Duration ISerializer<Duration>.Read(ref ProtoReader.State state, Duration value)
             => ReadDuration(ref state, value);
 
-        private static Duration ReadDuration(ref ProtoReader.State state, Duration value)
+        internal static Duration ReadDuration(ref ProtoReader.State state, Duration value)
         {
             if (state.WireType == WireType.String && state.RemainingInCurrent >= 20)
             {
@@ -80,6 +80,9 @@ namespace ProtoBuf.Internal
         }
 
         void ISerializer<Duration>.Write(ref ProtoWriter.State state, Duration value)
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, false);
+
+        internal static void WriteDuration(ref ProtoWriter.State state, Duration value)
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, false);
 
         internal static long ToDurationSeconds(TimeSpan value, out int nanos, bool isTimestamp)

@@ -133,9 +133,9 @@ namespace ProtoBuf.Meta
         }
         /// <summary>        /// Indicates whether a type is known to the model
         /// </summary>
-        internal virtual bool IsKnownType<T>()
+        internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
-            && GetSerializer<T>() != null;
+            && GetSerializerCore<T>(ambient) != null;
 
         internal const SerializerFeatures FromAux = (SerializerFeatures)(1 << 30);
 
@@ -1091,7 +1091,7 @@ namespace ProtoBuf.Meta
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 get => s_Singleton;
             }
-            protected internal override ISerializer<T> GetSerializer<T>() => null;
+            protected override ISerializer<T> GetSerializer<T>() => null;
         }
 
         /// <summary>
@@ -1142,13 +1142,21 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether the supplied type is explicitly modelled by the model
         /// </summary>
-        public bool IsDefined(Type type) => type != null && DynamicStub.IsKnownType(type, this);
+        public bool IsDefined(Type type) => IsDefined(type, default);
+
+        /// <summary>
+        /// Indicates whether the supplied type is explicitly modelled by the model
+        /// </summary>
+        internal bool IsDefined(Type type, CompatibilityLevel ambient) => type != null && DynamicStub.IsKnownType(type, this, ambient);
 
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual ISerializer<T> GetSerializer<T>()
+        protected virtual ISerializer<T> GetSerializer<T>()
             => this as ISerializer<T>;
+
+        internal virtual ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
+            => GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
@@ -1201,10 +1209,42 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISerializer<T> GetSerializer<T>(TypeModel model)
+        internal static ISerializer<T> GetSerializer<T>(TypeModel model, CompatibilityLevel ambient = default)
            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
-            ?? model?.GetSerializer<T>()
+            ?? model?.GetSerializerCore<T>(ambient)
             ?? NoSerializer<T>(model);
+
+        /// <summary>
+        /// Gets the inbuilt serializer relevant to a specific <see cref="CompatibilityLevel"/> (and <see cref="DataFormat"/>).
+        /// Returns null if there is no defined inbuilt serializer.
+        /// </summary>
+#if DEBUG   // I always want these explicitly specified in the library code; so: enforce that
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
+#else
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel = default, DataFormat dataFormat = DataFormat.Default)
+#endif
+        {
+            ISerializer<T> serializer;
+            if (compatibilityLevel >= CompatibilityLevel.Level300)
+            {
+                if (dataFormat == DataFormat.FixedSize)
+                {
+                    serializer = SerializerCache<Level300FixedSerializer, T>.InstanceField;
+                    if (serializer is object) return serializer;
+                }
+                serializer = SerializerCache<Level300DefaultSerializer, T>.InstanceField;
+                if (serializer is object) return serializer;
+            }
+#pragma warning disable CS0618
+            else if (compatibilityLevel >= CompatibilityLevel.Level240 || dataFormat == DataFormat.WellKnown)
+#pragma warning restore CS0618
+            {
+                serializer = SerializerCache<Level240DefaultSerializer, T>.InstanceField;
+                if (serializer is object) return serializer;
+            }
+
+            return SerializerCache<PrimaryTypeProvider, T>.InstanceField;
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IRepeatedSerializer<T> GetRepeatedSerializer<T>(TypeModel model)

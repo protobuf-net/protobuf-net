@@ -139,7 +139,7 @@ namespace ProtoBuf.Reflection
                .WriteLine("// </auto-generated>")
                .WriteLine()
                .WriteLine("#region Designer generated code")
-               .Write($"#pragma warning disable {prefix}0612, {prefix}1591, {prefix}3021");
+               .Write($"#pragma warning disable {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
                 tw.Write(AdditionalSuppressionCodes);
@@ -167,7 +167,7 @@ namespace ProtoBuf.Reflection
             {
                 ctx.Outdent().WriteLine("}").WriteLine();
             }
-            var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}1591, {prefix}3021");
+            var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
                 tw.Write(AdditionalSuppressionCodes);
@@ -975,8 +975,8 @@ namespace ProtoBuf.Reflection
                 if (!ReferenceEquals(target, declaring))
                 {
                     // special-case: if both are the package (file), and they have the same namespace: we're OK
-                    if (target is FileDescriptorProto && declaring is FileDescriptorProto
-                        && normalizer.GetName((FileDescriptorProto)declaring) == normalizer.GetName((FileDescriptorProto)target))
+                    if (target is FileDescriptorProto targetFDP && declaring is FileDescriptorProto declaringFDP
+                        && normalizer.GetName(declaringFDP) == normalizer.GetName(targetFDP))
                     {
                         // that's fine, keep going
                     }

@@ -13,7 +13,7 @@ namespace ProtoBuf.Internal.Serializers
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
         private readonly IRuntimeProtoSerializerNode[] tails;
-        public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members, SerializerFeatures features)
+        public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members, SerializerFeatures features, CompatibilityLevel compatibilityLevel)
         {
             this.ctor = ctor ?? throw new ArgumentNullException(nameof(ctor));
             this.members = members ?? throw new ArgumentNullException(nameof(members));
@@ -29,12 +29,12 @@ namespace ProtoBuf.Internal.Serializers
                 Type tmp = repeated?.ItemType ?? finalType;
 
                 bool asReference = false;
-                int typeIndex = model.FindOrAddAuto(tmp, false, true, false);
+                int typeIndex = model.FindOrAddAuto(tmp, false, true, false, compatibilityLevel);
                 if (typeIndex >= 0)
                 {
                     asReference = model[tmp].AsReferenceDefault;
                 }
-                IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out WireType wireType, asReference, false, false, true), serializer;
+                IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, compatibilityLevel, tmp, out WireType wireType, asReference, false, false, true), serializer;
                 if (tail == null)
                 {
                     throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
@@ -46,13 +46,13 @@ namespace ProtoBuf.Internal.Serializers
                 }
                 else if (repeated.IsMap)
                 {
-                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
+                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, compatibilityLevel, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
                 }
                 else
                 {
 
                     SerializerFeatures listFeatures = wireType.AsFeatures() | SerializerFeatures.OptionPackedDisabled;
-                    serializer = RepeatedDecorator.Create(repeated, i + 1, listFeatures);
+                    serializer = RepeatedDecorator.Create(repeated, i + 1, listFeatures, compatibilityLevel, DataFormat.Default);
                 }
                 tails[i] = serializer;
             }
@@ -149,13 +149,13 @@ namespace ProtoBuf.Internal.Serializers
             {
                 Type type = GetMemberType(i);
                 ctx.LoadAddress(loc, ExpectedType);
-                if (members[i] is FieldInfo)
+                if (members[i] is FieldInfo fieldInfo)
                 {
-                    ctx.LoadValue((FieldInfo)members[i]);
+                    ctx.LoadValue(fieldInfo);
                 }
-                else if (members[i] is PropertyInfo)
+                else if (members[i] is PropertyInfo propertyInfo)
                 {
-                    ctx.LoadValue((PropertyInfo)members[i]);
+                    ctx.LoadValue(propertyInfo);
                 }
                 ctx.WriteNullCheckedTail(type, tails[i], null);
             }
@@ -244,13 +244,13 @@ namespace ProtoBuf.Internal.Serializers
                 for (int i = 0; i < members.Length; i++)
                 {
                     ctx.LoadAddress(objValue, ExpectedType);
-                    if (members[i] is FieldInfo)
+                    if (members[i] is FieldInfo fieldInfo)
                     {
-                        ctx.LoadValue((FieldInfo)members[i]);
+                        ctx.LoadValue(fieldInfo);
                     }
-                    else if (members[i] is PropertyInfo)
+                    else if (members[i] is PropertyInfo propertyInfo)
                     {
-                        ctx.LoadValue((PropertyInfo)members[i]);
+                        ctx.LoadValue(propertyInfo);
                     }
                     ctx.StoreValue(locals[i]);
                 }

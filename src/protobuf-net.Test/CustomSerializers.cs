@@ -35,10 +35,10 @@ namespace ProtoBuf
 
             static void Test(TypeModel model)
             {
-                object obj = model.GetSerializer<HazCustomSerializer>();
+                object obj = model.GetSerializerCore<HazCustomSerializer>(default);
                 Assert.IsType<CustomSerializer>(obj);
 
-                obj = model.GetSerializer<HazIndirectCustomSerializer>();
+                obj = model.GetSerializerCore<HazIndirectCustomSerializer>(default);
                 Assert.IsType<IndirectSerializer>(obj);
             }
         }

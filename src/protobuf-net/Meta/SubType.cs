@@ -79,7 +79,7 @@ namespace ProtoBuf.Meta
 
         private IRuntimeProtoSerializerNode serializer;
 
-        internal IRuntimeProtoSerializerNode GetSerializer(Type parentType) => serializer ?? (serializer = BuildSerializer(parentType));
+        internal IRuntimeProtoSerializerNode GetSerializer(Type parentType) => serializer ??= BuildSerializer(parentType);
 
         private IRuntimeProtoSerializerNode BuildSerializer(Type parentType)
         {

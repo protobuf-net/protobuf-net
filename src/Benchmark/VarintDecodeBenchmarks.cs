@@ -1,6 +1,6 @@
 ﻿#if INTRINSICS
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -10,7 +10,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace Benchmark
 {
-    [CoreJob]
+    [SimpleJob(RuntimeMoniker.NetCoreApp30)]
     public class VarintDecodeBenchmarks
     {
         readonly byte[] _payload = new byte[16 * 1024];

@@ -14,13 +14,13 @@ namespace ProtoBuf.Serializers
 
         public MemberInfo Provider { get; }
         public bool IsMap { get; }
-        internal bool IsValidProtobufMap(RuntimeTypeModel model)
+        internal bool IsValidProtobufMap(RuntimeTypeModel model, CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
         {
             if (!IsMap) return false;
             ResolveMapTypes(out var key, out var value);
 
             // the key must an any integral or string type (not floating point or bytes)
-            if (!IsValidKey(key)) return false;
+            if (!IsValidKey(key, compatibilityLevel, dataFormat)) return false;
 
             // the value cannot be repeated (neither can key, but we ruled that out above)
             var repeated = model == null ? RepeatedSerializers.TryGetRepeatedProvider(value) : model.TryGetRepeatedProvider(value);
@@ -28,7 +28,7 @@ namespace ProtoBuf.Serializers
 
             return true;
 
-            static bool IsValidKey(Type type)
+            static bool IsValidKey(Type type, CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
             {
                 if (type == null) return false;
                 if (type.IsEnum) return true;
@@ -46,6 +46,10 @@ namespace ProtoBuf.Serializers
                     case TypeCode.UInt32:
                     case TypeCode.UInt64:
                         return true;
+                }
+                if (compatibilityLevel >= CompatibilityLevel.Level300)
+                {   // we'll allow guids as strings as keys
+                    if (type == typeof(Guid) && dataFormat != DataFormat.FixedSize) return true;
                 }
                 return false;
             }

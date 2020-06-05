@@ -68,11 +68,11 @@ namespace ProtoBuf.Meta
             => ForAssembly(type).GetSchema(type, syntax);
 
         /// <summary>See TypeModel.GetSerializer</summary>
-        protected internal override ISerializer<T> GetSerializer<T>()
-            => ForAssembly(typeof(T)).GetSerializer<T>();
+        protected override ISerializer<T> GetSerializer<T>()
+            => ForAssembly(typeof(T)).GetSerializerCore<T>(default);
 
-        internal override bool IsKnownType<T>()
-            => ForAssembly(typeof(T)).IsKnownType<T>();
+        internal override bool IsKnownType<T>(CompatibilityLevel ambient)
+            => ForAssembly(typeof(T)).IsKnownType<T>(ambient);
 
 
         private static TypeModel CreateForAssemblyImpl(Assembly assembly, CompilerOptions options)
@@ -92,7 +92,7 @@ namespace ProtoBuf.Meta
 
                     if (options != null && !options.OnIncludeType(type)) continue;
 
-                    (model ?? (model = RuntimeTypeModel.Create())).Add(type, true);
+                    (model ??= RuntimeTypeModel.Create()).Add(type, true);
                 }
                 if (model == null)
                     throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");

@@ -44,8 +44,8 @@ namespace ProtoBuf.Internal
             => Get(type).TryDeepClone(model, ref value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool IsKnownType(Type type, TypeModel model)
-            => Get(type).IsKnownType(model);
+        internal static bool IsKnownType(Type type, TypeModel model, CompatibilityLevel ambient)
+            => Get(type).IsKnownType(model, ambient);
 
         internal static bool CanSerialize(Type type, TypeModel model, out SerializerFeatures features)
             => Get(type).CanSerialize(model, out features);
@@ -136,7 +136,7 @@ namespace ProtoBuf.Internal
 
         protected abstract bool TryDeepClone(TypeModel model, ref object value);
 
-        protected abstract bool IsKnownType(TypeModel model);
+        protected abstract bool IsKnownType(TypeModel model, CompatibilityLevel ambient);
 
         protected abstract bool CanSerialize(TypeModel model, out SerializerFeatures features);
 
@@ -157,7 +157,7 @@ namespace ProtoBuf.Internal
             protected override bool TryDeepClone(TypeModel model, ref object value)
                 => false;
 
-            protected override bool IsKnownType(TypeModel model)
+            protected override bool IsKnownType(TypeModel model, CompatibilityLevel ambient)
                 => false;
 
             protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
@@ -212,7 +212,7 @@ namespace ProtoBuf.Internal
 
             // note: in IsKnownType and CanSerialize we want to avoid asking for the serializer from
             // the model unless we actually need it, as that can cause re-entrancy loops
-            protected override bool IsKnownType(TypeModel model) => model != null && model.IsKnownType<T>();
+            protected override bool IsKnownType(TypeModel model, CompatibilityLevel ambient) => model != null && model.IsKnownType<T>(ambient);
 
             protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
             {

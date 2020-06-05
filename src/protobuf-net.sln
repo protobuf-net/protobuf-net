@@ -15,13 +15,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		..\Build.csproj = ..\Build.csproj
 		Directory.build.props = Directory.build.props
 		..\global.json = ..\global.json
-		..\docs\index.md = ..\docs\index.md
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
-		..\docs\releasenotes.md = ..\docs\releasenotes.md
 		Shared.ruleset = Shared.ruleset
 		version.json = version.json
-		..\docs\version.md = ..\docs\version.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection", "protobuf-net.Reflection\protobuf-net.Reflection.csproj", "{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}"
@@ -53,6 +50,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection.Test", "protobuf-net.Reflection.Test\protobuf-net.Reflection.Test.csproj", "{7DB00F15-F7F6-4740-B97B-80A1798D7E38}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.MessagePipes", "protobuf-net.MessagePipes\protobuf-net.MessagePipes.csproj", "{07AD4B11-8385-4232-BAD3-3F5B3A28A008}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.TestCompatibilityLevel", "protobuf-net.TestCompatibilityLevel\protobuf-net.TestCompatibilityLevel.csproj", "{5573019D-19EA-4947-B84C-C5861D51C728}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0074CABB-8C07-483A-A439-8C7DEC2BE01C}"
+	ProjectSection(SolutionItems) = preProject
+		..\docs\compatibilitylevel.md = ..\docs\compatibilitylevel.md
+		..\docs\index.md = ..\docs\index.md
+		..\docs\releasenotes.md = ..\docs\releasenotes.md
+		..\docs\version.md = ..\docs\version.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -169,6 +176,12 @@ Global
 		{07AD4B11-8385-4232-BAD3-3F5B3A28A008}.Release|Any CPU.Build.0 = Release|Any CPU
 		{07AD4B11-8385-4232-BAD3-3F5B3A28A008}.VS|Any CPU.ActiveCfg = Release|Any CPU
 		{07AD4B11-8385-4232-BAD3-3F5B3A28A008}.VS|Any CPU.Build.0 = Release|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{5573019D-19EA-4947-B84C-C5861D51C728}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
