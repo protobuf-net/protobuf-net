@@ -243,7 +243,7 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
-        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
