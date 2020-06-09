@@ -2076,6 +2076,7 @@ namespace Google.Protobuf.Reflection
 
             if (tokens.Peek(out var token) && token.Is(TokenType.Symbol, "{"))
             {
+                method.Options ??= new MethodOptions(); // protoc always initializes this, even if none found
                 ctx.AbortState = AbortState.Object;
                 ctx.TryReadObjectImpl(method);
             }
@@ -2231,25 +2232,31 @@ namespace Google.Protobuf.Reflection
         {
             switch (key)
             {
-                case "optimize_for": OptimizeFor = ctx.Tokens.ConsumeEnum<OptimizeMode>(); return true;
-                case "cc_enable_arenas": CcEnableArenas = ctx.Tokens.ConsumeBoolean(); return true;
-                case "cc_generic_services": CcGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                // in field order
+                case "java_package": JavaPackage = ctx.Tokens.ConsumeString(); return true;
+                case "java_outer_classname": JavaOuterClassname = ctx.Tokens.ConsumeString(); return true;
+                case "java_multiple_files": JavaMultipleFiles = ctx.Tokens.ConsumeBoolean(); return true;
 #pragma warning disable 0612
                 case "java_generate_equals_and_hash": JavaGenerateEqualsAndHash = ctx.Tokens.ConsumeBoolean(); return true;
 #pragma warning restore 0612
-                case "java_generic_services": JavaGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
-                case "java_multiple_files": JavaMultipleFiles = ctx.Tokens.ConsumeBoolean(); return true;
                 case "java_string_check_utf8": JavaStringCheckUtf8 = ctx.Tokens.ConsumeBoolean(); return true;
-                case "py_generic_services": PyGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
-
-                case "csharp_namespace": CsharpNamespace = ctx.Tokens.ConsumeString(); return true;
+                case "optimize_for": OptimizeFor = ctx.Tokens.ConsumeEnum<OptimizeMode>(); return true;
                 case "go_package": GoPackage = ctx.Tokens.ConsumeString(); return true;
-                case "java_outer_classname": JavaOuterClassname = ctx.Tokens.ConsumeString(); return true;
-                case "java_package": JavaPackage = ctx.Tokens.ConsumeString(); return true;
+                case "cc_generic_services": CcGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "java_generic_services": JavaGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "py_generic_services": PyGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "php_generic_services": PhpGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "deprecated": Deprecated = ctx.Tokens.ConsumeBoolean(); return true;
+                case "cc_enable_arenas": CcEnableArenas = ctx.Tokens.ConsumeBoolean(); return true;
                 case "objc_class_prefix": ObjcClassPrefix = ctx.Tokens.ConsumeString(); return true;
-                case "php_class_prefix": PhpClassPrefix = ctx.Tokens.ConsumeString(); return true;
+                case "csharp_namespace": CsharpNamespace = ctx.Tokens.ConsumeString(); return true;
                 case "swift_prefix": SwiftPrefix = ctx.Tokens.ConsumeString(); return true;
+                case "php_class_prefix": PhpClassPrefix = ctx.Tokens.ConsumeString(); return true;
+                case "php_namespace":
+                    PhpNamespace = ctx.Tokens.ConsumeString(); return true;
 
+                case "php_metadata_namespace": PhpMetadataNamespace = ctx.Tokens.ConsumeString(); return true;
+                case "ruby_package": RubyPackage = ctx.Tokens.ConsumeString(); return true;
                 default: return false;
             }
         }

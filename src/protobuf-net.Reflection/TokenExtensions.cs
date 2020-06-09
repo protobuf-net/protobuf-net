@@ -222,12 +222,12 @@ namespace ProtoBuf.Reflection
                     if (!asBytes)
                     {
                         string s = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
-                        return s.Replace("\\", @"\\")
-                            .Replace("\'", @"\'")
-                            .Replace("\"", @"\""")
-                            .Replace("\r", @"\r")
-                            .Replace("\n", @"\n")
-                            .Replace("\t", @"\t");
+                        return s.Replace(@"\\", "\\")
+                            .Replace(@"\'", "\'")
+                            .Replace(@"\""", "\"")
+                            .Replace(@"\r", "\r")
+                            .Replace(@"\n", "\n")
+                            .Replace(@"\t", "\t");
                     }
 
                     var sb = new StringBuilder((int)ms.Length);
