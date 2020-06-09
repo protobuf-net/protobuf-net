@@ -758,6 +758,12 @@ namespace ProtoBuf.Reflection.Internal
                         value.OneofIndex = num2;
                         continue;
                     }
+                    if (num == 17)
+                    {
+                        num2 = state.ReadInt32();
+                        value.Proto3Optional = num2 != 0;
+                        continue;
+                    }
                     if (num != 10)
                     {
                         state.AppendExtensionData(value);
@@ -823,6 +829,11 @@ namespace ProtoBuf.Reflection.Internal
                 {
                     name = value.JsonName;
                     state.WriteString(10, name, null);
+                }
+                if (value.ShouldSerializeProto3Optional())
+                {
+                    number = value.Proto3Optional ? 1 : 0;
+                    state.WriteInt32Varint(17, number);
                 }
                 IExtensible instance = value;
                 state.AppendExtensionData(instance);

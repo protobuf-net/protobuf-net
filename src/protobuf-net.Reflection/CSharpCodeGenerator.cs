@@ -317,8 +317,8 @@ namespace ProtoBuf.Reflection
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
             var typeName = GetTypeName(ctx, field, out var dataFormat, out var isMap);
-            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
-            bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
+            OneOfStub oneOf = (!field.Proto3Optional && field.ShouldSerializeOneofIndex()) ? oneOfs?[field.OneofIndex] : null;
+            bool explicitValues = isOptional && oneOf == null && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional)
                     && field.type != FieldDescriptorProto.Type.TypeMessage
                     && field.type != FieldDescriptorProto.Type.TypeGroup;
 
@@ -440,12 +440,13 @@ namespace ProtoBuf.Reflection
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
+            OneOfStub oneOf = (!field.Proto3Optional && field.ShouldSerializeOneofIndex()) ? oneOfs?[field.OneofIndex] : null;
             if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
-            bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
+            bool explicitValues = isOptional && oneOf == null
+                && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional)
                 && field.type != FieldDescriptorProto.Type.TypeMessage
                 && field.type != FieldDescriptorProto.Type.TypeGroup;
 

@@ -5,7 +5,7 @@
 // </auto-generated>
 
 #region Designer generated code
-#pragma warning disable CS0612, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
+#pragma warning disable CS0612, CS0618, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 namespace Google.Protobuf.Reflection
 {
 
@@ -316,6 +316,16 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(8, Name = @"options")]
         public FieldOptions Options { get; set; }
+
+        [global::ProtoBuf.ProtoMember(17, Name = @"proto3_optional")]
+        public bool Proto3Optional
+        {
+            get { return __pbn__Proto3Optional.GetValueOrDefault(); }
+            set { __pbn__Proto3Optional = value; }
+        }
+        public bool ShouldSerializeProto3Optional() => __pbn__Proto3Optional != null;
+        public void ResetProto3Optional() => __pbn__Proto3Optional = null;
+        private bool? __pbn__Proto3Optional;
 
         [global::ProtoBuf.ProtoContract()]
         public enum Type
@@ -721,10 +731,10 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(31, Name = @"cc_enable_arenas")]
-        [global::System.ComponentModel.DefaultValue(false)]
+        [global::System.ComponentModel.DefaultValue(true)]
         public bool CcEnableArenas
         {
-            get { return __pbn__CcEnableArenas ?? false; }
+            get { return __pbn__CcEnableArenas ?? true; }
             set { __pbn__CcEnableArenas = value; }
         }
         public bool ShouldSerializeCcEnableArenas() => __pbn__CcEnableArenas != null;
@@ -1312,5 +1322,5 @@ namespace Google.Protobuf.Reflection
 
 }
 
-#pragma warning restore CS0612, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
+#pragma warning restore CS0612, CS0618, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 #endregion

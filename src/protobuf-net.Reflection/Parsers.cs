@@ -311,9 +311,26 @@ namespace Google.Protobuf.Reflection
             if (ctx.TryReadObject(out obj))
             {
                 obj.Name = name;
+                GenerateSyntheticOneOfs(obj);
                 return true;
             }
             return false;
+
+            static void GenerateSyntheticOneOfs(DescriptorProto obj)
+            {
+                foreach(var field in obj.Fields)
+                {
+                    if (field.Proto3Optional)
+                    {
+                        field.OneofIndex = obj.OneofDecls.Count;
+                        obj.OneofDecls.Add(new OneofDescriptorProto
+                        {
+                            Name = "_" + field.Name,
+                            Parent = obj,
+                        });
+                    }
+                }
+            }
         }
         void ISchemaObject.ReadOne(ParserContext ctx)
         {
@@ -1770,7 +1787,7 @@ namespace Google.Protobuf.Reflection
             var tokens = ctx.Tokens;
             ctx.AbortState = AbortState.Statement;
             Label label = Label.LabelOptional; // default
-
+            bool explicitOptional = false;
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "repeated"))
             {
                 if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfRepeated);
@@ -1785,8 +1802,9 @@ namespace Google.Protobuf.Reflection
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "optional"))
             {
                 if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfOptional);
-                else tokens.Previous.RequireProto2(ctx);
+                // proto3 now supports optional
                 label = Label.LabelOptional;
+                explicitOptional = true;
             }
             else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2 && !isOneOf)
             {
@@ -1880,6 +1898,10 @@ namespace Google.Protobuf.Reflection
                 label = label,
                 TypeToken = typeToken // internal property that helps give useful error messages
             };
+            if (field.label == Label.LabelOptional && explicitOptional && ctx.Syntax != FileDescriptorProto.SyntaxProto2)
+            {
+                field.Proto3Optional = true;
+            }
 
             if (!isGroup)
             {
