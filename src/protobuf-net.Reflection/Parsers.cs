@@ -2076,6 +2076,7 @@ namespace Google.Protobuf.Reflection
 
             if (tokens.Peek(out var token) && token.Is(TokenType.Symbol, "{"))
             {
+                method.Options ??= new MethodOptions(); // protoc always initializes this, even if none found
                 ctx.AbortState = AbortState.Object;
                 ctx.TryReadObjectImpl(method);
             }
