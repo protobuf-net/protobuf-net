@@ -44,7 +44,7 @@ message SampleMessage {
      string name2 = 5 [default="abc"];
      bool sub_message2 = 10 [deprecated=true];
   }
-  optional string bar_name = 12 [default="abc"];
+  optional string bar_name = 12 [default="abc\\def\"ghi\'jkl\rmno\npqr\tstu"];
 }
 
 ; // random semicolon
