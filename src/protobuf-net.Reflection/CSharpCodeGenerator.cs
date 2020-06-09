@@ -631,13 +631,13 @@ namespace ProtoBuf.Reflection
             CSharp7_1 = new Version(7, 1);
 
         /// <summary>
-        /// Starts an extgensions block
+        /// Starts an extensions block
         /// </summary>
         protected override void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
             var name = file?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
-            ctx.WriteLine($"{GetAccess(GetAccess(file))} static class {Escape(name)}").WriteLine("{").Indent();
+            ctx.WriteLine($"{GetAccess(GetAccess(file))} static partial class {Escape(name)}").WriteLine("{").Indent();
         }
         /// <summary>
         /// Ends an extgensions block
@@ -653,7 +653,7 @@ namespace ProtoBuf.Reflection
         {
             var name = message?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
-            ctx.WriteLine($"{GetAccess(GetAccess(message))} static class {Escape(name)}").WriteLine("{").Indent();
+            ctx.WriteLine($"{GetAccess(GetAccess(message))} static partial class {Escape(name)}").WriteLine("{").Indent();
         }
         /// <summary>
         /// Ends an extensions block
