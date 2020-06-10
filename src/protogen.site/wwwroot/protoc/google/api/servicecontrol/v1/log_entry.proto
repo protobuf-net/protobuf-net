@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc.
+// Copyright 2017 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ syntax = "proto3";
 
 package google.api.servicecontrol.v1;
 
-import "google/api/annotations.proto";
 import "google/logging/type/log_severity.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/struct.proto";
@@ -26,7 +25,6 @@ option go_package = "google.golang.org/genproto/googleapis/api/servicecontrol/v1
 option java_multiple_files = true;
 option java_outer_classname = "LogEntryProto";
 option java_package = "com.google.api.servicecontrol.v1";
-
 
 // An individual log entry.
 message LogEntry {
@@ -53,8 +51,8 @@ message LogEntry {
   // The log entry payload, which can be one of multiple types.
   oneof payload {
     // The log entry payload, represented as a protocol buffer that is
-    // expressed as a JSON object. You can only pass `protoPayload`
-    // values that belong to a set of approved types.
+    // expressed as a JSON object. The only accepted type currently is
+    // [AuditLog][google.cloud.audit.AuditLog].
     google.protobuf.Any proto_payload = 2;
 
     // The log entry payload, represented as a Unicode string (UTF-8).
