@@ -328,6 +328,9 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected abstract void WriteField(GeneratorContext ctx, FieldDescriptorProto field, ref object state, OneOfStub[] oneOfs);
 
+        /// <summary>
+        /// Indicates whether field presence tracking is suggested for this field
+        /// </summary>
         protected bool TrackFieldPresence(GeneratorContext ctx, FieldDescriptorProto field, OneOfStub[] oneOfs, out OneOfStub oneOf)
         {
             // get the oneof, ignoring 'synthetic' oneofs from proto3-optional
