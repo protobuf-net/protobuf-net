@@ -140,7 +140,7 @@ namespace protogen.site.Controllers
                 System.IO.File.WriteAllText(fullPath, schema);
 
                 var includeRoot = Path.Combine(host.WebRootPath, "protoc");
-                var args = $"--{tooling}_out=\"{session}\" --proto_path=\"{session}\" --proto_path=\"{includeRoot}\" \"{fullPath}\"";
+                var args = $"--experimental_allow_proto3_optional --{tooling}_out=\"{session}\" --proto_path=\"{session}\" --proto_path=\"{includeRoot}\" \"{fullPath}\"";
                 var exePath = Path.Combine(host.WebRootPath, "protoc\\protoc.exe");
                 if (!System.IO.File.Exists(exePath))
                 {
