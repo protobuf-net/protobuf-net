@@ -317,10 +317,7 @@ namespace ProtoBuf.Reflection
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
             var typeName = GetTypeName(ctx, field, out var dataFormat, out var isMap);
-            OneOfStub oneOf = (!field.Proto3Optional && field.ShouldSerializeOneofIndex()) ? oneOfs?[field.OneofIndex] : null;
-            bool explicitValues = isOptional && oneOf == null && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional)
-                    && field.type != FieldDescriptorProto.Type.TypeMessage
-                    && field.type != FieldDescriptorProto.Type.TypeGroup;
+            bool trackPresence = TrackFieldPresence(ctx, field, oneOfs, out _);
 
             string defaultValue = GetDefaultValue(ctx, field, typeName);
 
@@ -340,7 +337,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
             }
-            else if (oneOf == null && !explicitValues)
+            else if (!trackPresence)
             {
                 if (!string.IsNullOrWhiteSpace(defaultValue))
                 {
@@ -440,15 +437,7 @@ namespace ProtoBuf.Reflection
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-            OneOfStub oneOf = (!field.Proto3Optional && field.ShouldSerializeOneofIndex()) ? oneOfs?[field.OneofIndex] : null;
-            if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
-            {
-                oneOf = null; // not really a one-of, then!
-            }
-            bool explicitValues = isOptional && oneOf == null
-                && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional)
-                && field.type != FieldDescriptorProto.Type.TypeMessage
-                && field.type != FieldDescriptorProto.Type.TypeGroup;
+            bool trackPresence = TrackFieldPresence(ctx, field, oneOfs, out var oneOf);
 
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, field, out var dataFormat, out var isMap);
@@ -528,7 +517,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                 }
             }
-            else if (oneOf != null)
+            else if (oneOf is object)
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : defaultValue;
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
@@ -542,15 +531,15 @@ namespace ProtoBuf.Reflection
                     case FieldDescriptorProto.Type.TypeEnum:
                     case FieldDescriptorProto.Type.TypeBytes:
                     case FieldDescriptorProto.Type.TypeString:
-                        ctx.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? (({typeName}){fieldName}.{storage}) : {defValue}; }}");
+                        ctx.WriteLine($"{PropGetPrefix()}{fieldName}.Is({field.Number}) ? (({typeName}){fieldName}.{storage}) : {defValue};{PropSuffix()}");
                         break;
                     default:
-                        ctx.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue}; }}");
+                        ctx.WriteLine($"{PropGetPrefix()}{fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue};{PropSuffix()}");
                         break;
                 }
                 var unionType = oneOf.GetUnionType();
                 var cast = field.type == FieldDescriptorProto.Type.TypeEnum ? "(int)" : "";
-                ctx.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({field.Number}, {cast}value); }}")
+                ctx.WriteLine($"{PropSetPrefix()}{fieldName} = new global::ProtoBuf.{unionType}({field.Number}, {cast}value);{PropSuffix()}")
                     .Outdent().WriteLine("}");
 
                 if (ctx.Supports(CSharp6))
@@ -571,7 +560,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
                 }
             }
-            else if (explicitValues)
+            else if (trackPresence)
             {
                 string fieldName = FieldPrefix + name, fieldType;
                 bool isRef = false;
@@ -587,7 +576,8 @@ namespace ProtoBuf.Reflection
                         break;
                 }
                 ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)}").WriteLine("{").Indent();
-                tw = ctx.Write($"get {{ return {fieldName}");
+                tw = ctx.Write(PropGetPrefix());
+                tw.Write(fieldName);
                 if (!string.IsNullOrWhiteSpace(defaultValue))
                 {
                     tw.Write(" ?? ");
@@ -597,8 +587,10 @@ namespace ProtoBuf.Reflection
                 {
                     tw.Write(".GetValueOrDefault()");
                 }
-                tw.WriteLine("; }");
-                ctx.WriteLine($"set {{ {fieldName} = value; }}")
+                tw.Write(";");
+                tw.WriteLine(PropSuffix());
+
+                ctx.WriteLine($"{PropSetPrefix()}{fieldName} = value;{PropSuffix()}")
                     .Outdent().WriteLine("}");
                 if (ctx.Supports(CSharp6))
                 {
@@ -621,6 +613,10 @@ namespace ProtoBuf.Reflection
                 tw.WriteLine();
             }
             ctx.WriteLine();
+
+            string PropGetPrefix() => ctx.Supports(CSharp7_1) ? "get => " : "get { return ";
+            string PropSetPrefix() => ctx.Supports(CSharp7_1) ? "set => " : "set { ";
+            string PropSuffix() => ctx.Supports(CSharp7_1) ? "" : " }";
         }
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;

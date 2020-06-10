@@ -487,14 +487,7 @@ namespace ProtoBuf.Reflection
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
-            if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
-            {
-                oneOf = null; // not really a one-of, then!
-            }
-            bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
-                && field.type != FieldDescriptorProto.Type.TypeMessage
-                && field.type != FieldDescriptorProto.Type.TypeGroup;
+            bool trackPresence = TrackFieldPresence(ctx, field, oneOfs, out var oneOf);
 
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, field, out var dataFormat, out var isMap);
@@ -590,7 +583,7 @@ namespace ProtoBuf.Reflection
                     }
                 }
             }
-            else if (oneOf != null)
+            else if (oneOf is object)
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"CType(Nothing, {typeName})" : defaultValue;
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
@@ -630,7 +623,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine().WriteLine($"Private {fieldName} As Global.ProtoBuf.{unionType}");
                 }
             }
-            else if (explicitValues)
+            else if (trackPresence)
             {
                 string fieldName = FieldPrefix + name, fieldType;
                 bool isRef = false;

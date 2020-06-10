@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -320,7 +319,7 @@ namespace Google.Protobuf.Reflection
             {
                 foreach(var field in obj.Fields)
                 {
-                    if (field.Proto3Optional)
+                    if (field.Proto3Optional && !field.ShouldSerializeOneofIndex())
                     {
                         field.OneofIndex = obj.OneofDecls.Count;
                         obj.OneofDecls.Add(new OneofDescriptorProto
@@ -1767,6 +1766,7 @@ namespace Google.Protobuf.Reflection
 
             return syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type);
         }
+
         public override string ToString() => Name;
         internal const int DefaultMaxField = 536870911;
         internal const int FirstReservedField = 19000;
