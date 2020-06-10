@@ -1,20 +1,14 @@
-﻿using System;
+﻿using Google.Protobuf.Reflection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using ProtoBuf.Models;
+using ProtoBuf.Reflection;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using Google.Protobuf.Reflection;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using ProtoBuf;
-using ProtoBuf.Meta;
-using ProtoBuf.Models;
-using ProtoBuf.Reflection;
 
 namespace protogen.site.Controllers
 {
