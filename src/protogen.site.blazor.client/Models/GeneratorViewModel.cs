@@ -1,11 +1,10 @@
-﻿using System;
+﻿using ProtoBuf.Reflection;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using ProtoBuf.Reflection;
 
-namespace ProtoBuf.Models {
+namespace ProtoBuf.Models
+{
     public class GeneratorViewModel {
         private GeneratorLanguageEnum language;
 
@@ -15,7 +14,6 @@ namespace ProtoBuf.Models {
             VBNet,
             CPlusPlus,
             Java,
-            JavaNano,
             JS,
             Objc,
             PHP,
@@ -87,58 +85,34 @@ namespace ProtoBuf.Models {
             return Language == GeneratorLanguageEnum.CSharp ||
                 Language == GeneratorLanguageEnum.VBNet;
         }
-        public string GetMonacoLanguage () {
-            //taken from here https://github.com/microsoft/monaco-languages
-            switch (Language) {
-                case GeneratorLanguageEnum.VBNet:
-                    return "vb";
-                case GeneratorLanguageEnum.CSharp:
-                case GeneratorLanguageEnum.CSharpProtoc:
-                    return "csharp";
-                case GeneratorLanguageEnum.CPlusPlus:
-                    return "cpp";
-                case GeneratorLanguageEnum.JavaNano:
-                case GeneratorLanguageEnum.Java:
-                    return "java";
-                case GeneratorLanguageEnum.JS:
-                    return "js";
-                case GeneratorLanguageEnum.Objc:
-                    return "objective-c";
-                case GeneratorLanguageEnum.PHP:
-                    return "php";
-                case GeneratorLanguageEnum.Python:
-                    return "python";
-                case GeneratorLanguageEnum.Ruby:
-                    return "ruby";
-                default:
-                    throw new ArgumentOutOfRangeException ($"{Language} is not supported by protoc");
-            }
-        }
-        public string GetProtocTooling () {
 
-            switch (Language) {
-                case GeneratorLanguageEnum.CSharpProtoc:
-                    return "csharp";
-                case GeneratorLanguageEnum.CPlusPlus:
-                    return "cpp";
-                case GeneratorLanguageEnum.Java:
-                    return "java";
-                case GeneratorLanguageEnum.JavaNano:
-                    return "javanano";
-                case GeneratorLanguageEnum.JS:
-                    return "js";
-                case GeneratorLanguageEnum.Objc:
-                    return "objc";
-                case GeneratorLanguageEnum.PHP:
-                    return "php";
-                case GeneratorLanguageEnum.Python:
-                    return "python";
-                case GeneratorLanguageEnum.Ruby:
-                    return "ruby";
-                default:
-                    throw new ArgumentOutOfRangeException ($"{Language} is not supported by protoc");
-            }
-        }
+        public string GetMonacoLanguage() => Language switch
+        {   //taken from here https://github.com/microsoft/monaco-languages
+            GeneratorLanguageEnum.VBNet => "vb",
+            GeneratorLanguageEnum.CSharp => "csharp",
+            GeneratorLanguageEnum.CSharpProtoc => "csharp",
+            GeneratorLanguageEnum.CPlusPlus => "cpp",
+            GeneratorLanguageEnum.Java => "java",
+            GeneratorLanguageEnum.JS => "js",
+            GeneratorLanguageEnum.Objc => "objective-c",
+            GeneratorLanguageEnum.PHP => "php",
+            GeneratorLanguageEnum.Python => "python",
+            GeneratorLanguageEnum.Ruby => "ruby",
+            _ => throw new ArgumentOutOfRangeException($"{Language} is not supported by Monaco"),
+        };
+
+        public string GetProtocTooling() => Language switch
+        {
+            GeneratorLanguageEnum.CSharpProtoc => "csharp",
+            GeneratorLanguageEnum.CPlusPlus => "cpp",
+            GeneratorLanguageEnum.Java => "java",
+            GeneratorLanguageEnum.JS => "js",
+            GeneratorLanguageEnum.Objc => "objc",
+            GeneratorLanguageEnum.PHP => "php",
+            GeneratorLanguageEnum.Python => "python",
+            GeneratorLanguageEnum.Ruby => "ruby",
+            _ => throw new ArgumentOutOfRangeException($"{Language} is not supported by protoc"),
+        };
 
         [Required]
         public string ProtoContent { get; set; }
