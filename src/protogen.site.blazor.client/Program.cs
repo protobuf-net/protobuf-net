@@ -1,15 +1,18 @@
-﻿using Microsoft.AspNetCore.Blazor.Hosting;
+﻿
+using System.Net.Http;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Threading.Tasks;
 
 namespace ProtoBuf {
     public class Program {
-        public static void Main (string[] args) {
-            CreateHostBuilder (args).Build ().Run ();
-        }
+        public static async Task Main (string[] args) {
+            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            builder.RootComponents.Add<App>("app");
+            builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-#pragma warning disable IDE0060 // Remove unused parameter
-        public static IWebAssemblyHostBuilder CreateHostBuilder (string[] args) =>
-#pragma warning restore IDE0060 // Remove unused parameter
-            BlazorWebAssemblyHost.CreateDefaultBuilder ()
-            .UseBlazorStartup<Startup> ();
+            await builder.Build().RunAsync();
+        }
     }
 }

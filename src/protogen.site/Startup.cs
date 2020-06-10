@@ -34,13 +34,13 @@ namespace protogen.site
         public void Configure(IApplicationBuilder app)
         {
             app.UseResponseCompression();
-            app.UseStaticFiles();
-            app.UseClientSideBlazorFiles<ProtoBuf.Startup>();
+            app.UseBlazorFrameworkFiles();
+            app.UseStaticFiles(); 
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();
-                endpoints.MapFallbackToClientSideBlazor<ProtoBuf.Program>("index.html");
+                endpoints.MapFallbackToFile("index.html");
             });
         }
     }
