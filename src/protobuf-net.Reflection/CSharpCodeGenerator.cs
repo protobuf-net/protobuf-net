@@ -614,18 +614,19 @@ namespace ProtoBuf.Reflection
             }
             ctx.WriteLine();
 
-            string PropGetPrefix() => ctx.Supports(CSharp7_1) ? "get => " : "get { return ";
-            string PropSetPrefix() => ctx.Supports(CSharp7_1) ? "set => " : "set { ";
-            string PropSuffix() => ctx.Supports(CSharp7_1) ? "" : " }";
+            string PropGetPrefix() => ctx.Supports(CSharp7) ? "get => " : "get { return ";
+            string PropSetPrefix() => ctx.Supports(CSharp7) ? "set => " : "set { ";
+            string PropSuffix() => ctx.Supports(CSharp7) ? "" : " }";
         }
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
-        private static readonly Version
-            CSharp3 = new Version(3, 0),
-            CSharp4 = new Version(4, 0),
-            CSharp6 = new Version(6, 0),
-            CSharp7_1 = new Version(7, 1);
+        private static readonly Version // note: only mentioning features we use
+            CSharp3 = new Version(3, 0), // partial methods
+            CSharp4 = new Version(4, 0), // optional parameters
+            CSharp6 = new Version(6, 0), // pragma prefixes, method expressions, property initializers
+            CSharp7 = new Version(7, 0), // property expressions
+            CSharp7_1 = new Version(7, 1); // default literals
 
         /// <summary>
         /// Starts an extensions block
