@@ -7,7 +7,7 @@
     "semVer": 2
   },
   "publicReleaseRefSpec": [
-    "^refs/heads/master$",
+    "^refs/heads/main$",
     "^refs/tags/v\\d+\\.\\d+"
   ],
   "cloudBuild": {

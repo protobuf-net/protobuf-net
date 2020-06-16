@@ -238,22 +238,22 @@ namespace ProtoBuf
         internal int LengthHits => _hit;
         internal int LengthMisses => _miss;
 
-        internal void InitializeFrom(NetObjectCache master)
+        internal void InitializeFrom(NetObjectCache obj)
         {
-            if (master != null)
+            if (obj != null)
             {
                 _knownLengths.Clear();
-                foreach (var pair in master._knownLengths)
+                foreach (var pair in obj._knownLengths)
                     _knownLengths.Add(pair.Key, pair.Value);
             }
         }
 
-        internal void CopyBack(NetObjectCache master)
+        internal void CopyBack(NetObjectCache obj)
         {
-            if (master != null)
+            if (obj != null)
             {
-                master._hit += _hit;
-                master._miss += _miss;
+                obj._hit += _hit;
+                obj._miss += _miss;
             }
         }
     }

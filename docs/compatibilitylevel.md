@@ -8,7 +8,7 @@ compatibility.
 Because this knowledge has changed over time, protobuf-net can't blindly just use the "new shiny" - instead, *by default*
 it assumes that your code is legacy, and applies all the conventions that have been there since forever. Specifically,
 this means that `DateTime`, `TimeSpan`, `Guid` and `Decimal` follow legacy conventions as defined
-in [bcl.proto](https://github.com/protobuf-net/protobuf-net/blob/master/src/Tools/bcl.proto), that are awkward to
+in [bcl.proto](https://github.com/protobuf-net/protobuf-net/blob/main/src/Tools/bcl.proto), that are awkward to
 use from other platforms. Changing the conventions being used is a fundamentally breaking change, and protobuf-net wants
 to ensure that you can always deserialize the data you've stored, so it can't change this unilaterally.
 
@@ -25,7 +25,7 @@ for the highest `NNN` defined at the time. This means you'll be using all the cu
 At the current time, the levels defined are:
 
 - `200` - uses `bcl.proto` for `DateTime`, `TimeSpan`, `Guid` and `Decimal`.
-- `240` - like `200`, but uses [`.google.protobuf.Timestamp`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/timestamp.proto) for `DateTime` and [`.google.protobuf.Duration`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/duration.proto) for `TimeSpan`.
+- `240` - like `200`, but uses [`.google.protobuf.Timestamp`](https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto) for `DateTime` and [`.google.protobuf.Duration`](https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/duration.proto) for `TimeSpan`.
 - `300` - like `240`, but uses `string` for `Guid` (in big-endian hyphenated UUID text format, 36 bytes; a 16-byte `bytes` variant is also available by additionally specifying `DataFormat.FixedSize`) and `Decimal` (invariant "general" format).
 
 ## Can I change levels?

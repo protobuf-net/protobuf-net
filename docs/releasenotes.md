@@ -1,6 +1,6 @@
 # Release Notes
 
-Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/master/src)
+Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/main/src)
 
 ## Roadmap
 
