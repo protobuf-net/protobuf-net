@@ -25,7 +25,8 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
         /// <returns>The .proto definition as a string</returns>
-        public static string GetProto<T>() => GetProto<T>(ProtoSyntax.Default);
+        public static string GetProto<T>()
+            => GetProto<T>(SchemaGenerationOptions.Default);
 
         /// <summary>
         /// Suggest a .proto definition for the given type
@@ -33,9 +34,15 @@ namespace ProtoBuf
         /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
         /// <returns>The .proto definition as a string</returns>
         public static string GetProto<T>(ProtoSyntax syntax)
-        {
-            return RuntimeTypeModel.Default.GetSchema(typeof(T), syntax);
-        }
+            => RuntimeTypeModel.Default.GetSchema(typeof(T), syntax);
+
+        /// <summary>
+        /// Suggest a .proto definition for the given type
+        /// </summary>
+        /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
+        /// <returns>The .proto definition as a string</returns>
+        public static string GetProto<T>(SchemaGenerationOptions options)
+            => RuntimeTypeModel.Default.GetSchema(typeof(T), options);
 
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.

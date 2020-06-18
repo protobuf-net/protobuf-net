@@ -229,14 +229,18 @@ namespace ProtoBuf.Reflection
             {
                 ctx.WriteLine($"#Disable Warning BC40008, BC40055, IDE1006").WriteLine();
             }
+        }
 
-            var @namespace = ctx.NameNormalizer.GetName(file);
+        /// <inheritdoc/>
+        protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
+        {
+            ctx.WriteLine($"Namespace {@namespace}").Indent();
+        }
 
-            if (!string.IsNullOrWhiteSpace(@namespace))
-            {
-                state = @namespace;
-                ctx.WriteLine($"Namespace {@namespace}").Indent();
-            }
+        /// <inheritdoc/>
+        protected override void WriteNamespaceFooter(GeneratorContext ctx, string @namespace)
+        {
+            ctx.Outdent().WriteLine("End Namespace").WriteLine();
         }
 
         /// <summary>
@@ -244,11 +248,6 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
-            var @namespace = (string)state;
-            if (!string.IsNullOrWhiteSpace(@namespace))
-            {
-                ctx.Outdent().WriteLine("End Namespace").WriteLine();
-            }
             if (ctx.Supports(VB14))
             {
                 ctx.WriteLine($"#Enable Warning BC40008, BC40055, IDE1006").WriteLine();

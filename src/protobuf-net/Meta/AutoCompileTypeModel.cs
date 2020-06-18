@@ -64,8 +64,8 @@ namespace ProtoBuf.Meta
             => type == null ? NullModel.Singleton : CreateForAssembly(type.Assembly, null);
 
         /// <summary>See TypeModel.GetSchema</summary>
-        public override string GetSchema(Type type, ProtoSyntax syntax)
-            => ForAssembly(type).GetSchema(type, syntax);
+        public override string GetSchema(Type type, SchemaGenerationOptions options)
+            => ForAssembly(type).GetSchema(type, options);
 
         /// <summary>See TypeModel.GetSerializer</summary>
         protected override ISerializer<T> GetSerializer<T>()

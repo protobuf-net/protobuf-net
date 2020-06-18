@@ -2343,23 +2343,30 @@ namespace ProtoBuf.Reflection.Internal
                 }
                 while ((num = state.ReadFieldHeader()) > 0)
                 {
-                    if (num == 1)
+                    switch(num)
                     {
-                        string str = state.ReadString(null);
-                        if (str == null)
-                        {
-                            continue;
-                        }
-                        value.Name = str;
-                        continue;
+                        case 1:
+                            string str = state.ReadString(null);
+                            if (str != null)
+                            {
+                                value.Name = str;
+                            }
+                            break;
+                        case 2:
+                            Access access = (Access)state.ReadInt32();
+                            value.Access = access;
+                            break;
+                        case 3:
+                            str = state.ReadString(null);
+                            if (str != null)
+                            {
+                                value.Namespace = str;
+                            }
+                            break;
+                        default:
+                            state.AppendExtensionData(value);
+                            break;
                     }
-                    if (num != 2)
-                    {
-                        state.AppendExtensionData(value);
-                        continue;
-                    }
-                    Access access = (Access)state.ReadInt32();
-                    value.Access = access;
                 }
                 return value;
             }
@@ -2386,6 +2393,7 @@ namespace ProtoBuf.Reflection.Internal
                     int num = (int)access;
                     state.WriteInt32Varint(2, num);
                 }
+                state.WriteString(3, value.Namespace);
                 IExtensible instance = value;
                 state.AppendExtensionData(instance);
             }
@@ -2687,31 +2695,37 @@ namespace ProtoBuf.Reflection.Internal
                 while ((num = state.ReadFieldHeader()) > 0)
                 {
                     string str;
-                    if (num == 1)
+                    switch (num)
                     {
-                        str = state.ReadString(null);
-                        if (str == null)
-                        {
-                            continue;
-                        }
-                        value.Name = str;
-                        continue;
-                    }
-                    if (num == 2)
-                    {
-                        Access access = (Access)state.ReadInt32();
-                        value.Access = access;
-                        continue;
-                    }
-                    if (num != 3)
-                    {
-                        state.AppendExtensionData(value);
-                        continue;
-                    }
-                    str = state.ReadString(null);
-                    if (str != null)
-                    {
-                        value.ExtensionTypeName = str;
+                        case 1:
+                            str = state.ReadString(null);
+                            if (str == null)
+                            {
+                                continue;
+                            }
+                            value.Name = str;
+                            break;
+                        case 2:
+                            Access access = (Access)state.ReadInt32();
+                            value.Access = access;
+                            break;
+                        case 3:
+                            str = state.ReadString(null);
+                            if (str != null)
+                            {
+                                value.ExtensionTypeName = str;
+                            }
+                            break;
+                        case 4:
+                            str = state.ReadString(null);
+                            if (str != null)
+                            {
+                                value.Namespace = str;
+                            }
+                            break;
+                        default:
+                            state.AppendExtensionData(value);
+                            break;
                     }
                 }
                 return value;
@@ -2753,6 +2767,7 @@ namespace ProtoBuf.Reflection.Internal
                         state.WriteString(3, str, null);
                     }
                 }
+                state.WriteString(4, value.Namespace);
                 IExtensible instance = value;
                 state.AppendExtensionData(instance);
             }

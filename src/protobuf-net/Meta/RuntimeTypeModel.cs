@@ -195,15 +195,11 @@ namespace ProtoBuf.Meta
         private CompatibilityLevel _defaultCompatibilityLevel = CompatibilityLevel.Level200;
 
 
-        /// <summary>
-        /// Suggest a .proto definition for the given type
-        /// </summary>
-        /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
-        /// <returns>The .proto definition as a string</returns>
-        /// <param name="syntax">The .proto syntax to use</param>
-        public override string GetSchema(Type type, ProtoSyntax syntax)
+        /// <inheritdoc/>
+        public override string GetSchema(Type type, SchemaGenerationOptions options)
         {
-            syntax = Serializer.GlobalOptions.Normalize(syntax);
+            options ??= SchemaGenerationOptions.Default;
+            var syntax = Serializer.GlobalOptions.Normalize(options.Syntax);
             var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;
@@ -313,7 +309,7 @@ namespace ProtoBuf.Meta
                     MetaType tmp = metaTypesArr[i];
                     if (tmp.SerializerType is object) continue; // not our concern
                     if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
-                    tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax);
+                    tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax, package, options.MultipleNamespaceSupport);
                 }
             }
             if ((imports & CommonImports.Bcl) != 0)
