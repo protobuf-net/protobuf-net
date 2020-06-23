@@ -7,13 +7,15 @@ using System.Threading;
 
 namespace ProtoBuf.Internal.Serializers
 {
-    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, ISerializer<T>, ISubTypeSerializer<T>, IFactory<T>
+    internal sealed class InheritanceCompiledSerializer<TBase, T> : CompiledSerializer, ISerializer<T>, ISubTypeSerializer<T>, IFactory<T>, IObjectSerializer<T>
         where TBase : class
         where T : class, TBase
     {
         private readonly Compiler.ProtoSerializer<T> subTypeSerializer;
         private readonly Compiler.ProtoSubTypeDeserializer<T> subTypeDeserializer;
         private readonly Func<ISerializationContext, T> factory;
+
+        Type IObjectSerializer<T>.BaseType => typeof(TBase);
 
         T ISerializer<T>.Read(ref ProtoReader.State state, T value)
         {
@@ -73,11 +75,13 @@ namespace ProtoBuf.Internal.Serializers
     }
 
     internal class SimpleCompiledSerializer<T> : CompiledSerializer,
-        ISerializer<T>, IFactory<T>
+        ISerializer<T>, IFactory<T>, IObjectSerializer<T>
     {
         protected readonly Compiler.ProtoSerializer<T> serializer;
         protected readonly Compiler.ProtoDeserializer<T> deserializer;
         private readonly Func<ISerializationContext, T> factory;
+
+        Type IObjectSerializer<T>.BaseType => typeof(T);
 
         public SimpleCompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)

@@ -1456,6 +1456,13 @@ namespace ProtoBuf.Meta
                 var featuresGetter = serType.GetProperty(nameof(ISerializer<string>.Features)).GetGetMethod();
                 type.DefineMethodOverride(GetFeaturesMethod(serializer.Features), featuresGetter);
 
+                // always emit IObjectSerializer<T> (enabled length caching; base type is needed for rooting)
+                serType = typeof(IObjectSerializer<>).MakeGenericType(runtimeType);
+                type.AddInterfaceImplementation(serType);
+                il = CompilerContextScope.Implement(type, serType, "get_" + nameof(IObjectSerializer<string>.BaseType));
+                CompilerContext.LoadValue(il, inheritanceRoot ?? runtimeType);
+                il.Emit(OpCodes.Ret);
+
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)
                 {
