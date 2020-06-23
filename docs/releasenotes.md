@@ -11,6 +11,15 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+
+## 3.0.1
+
+- fix bug with pre-measured objects and non-root `<T>` ([gRPC #100](https://github.com/protobuf-net/protobuf-net.Grpc/issues/100))
+
+## 3.0
+
+- first deploy of v3; everything as below
+
 ## v3.0.0-alpha
 
 - **breaking change** if you are using `new ProtoReader(...)` - you must now use `ProtoReader.Create(...)`
