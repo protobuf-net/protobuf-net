@@ -1460,7 +1460,7 @@ namespace ProtoBuf.Meta
                 serType = typeof(IObjectSerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
                 il = CompilerContextScope.Implement(type, serType, "get_" + nameof(IObjectSerializer<string>.BaseType));
-                il.Emit(OpCodes.Ldtoken, inheritanceRoot ?? runtimeType);
+                CompilerContext.LoadValue(il, inheritanceRoot ?? runtimeType);
                 il.Emit(OpCodes.Ret);
 
                 // and we emit the sub-type serializer whenever inheritance is involved
