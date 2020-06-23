@@ -521,11 +521,12 @@ namespace ProtoBuf
         {
             long length;
             object obj = default;
-            if (TypeHelper<T>.IsReferenceType)
+            IObjectSerializer<T> objSerializer = default;
+            if (TypeHelper<T>.IsReferenceType && (objSerializer = serializer as IObjectSerializer<T>) is object)
             {
                 obj = value;
                 if (obj is null) return 0;
-                if (writer.netCache.TryGetKnownLength(obj, typeof(T), out length))
+                if (writer.netCache.TryGetKnownLength(obj, objSerializer.BaseType, out length))
                     return length;
             }
 
@@ -537,9 +538,9 @@ namespace ProtoBuf
             writer.SetWriteState(oldState); // make sure we leave it how we found it
 
             // cache it if we can
-            if (TypeHelper<T>.IsReferenceType)
+            if (TypeHelper<T>.IsReferenceType && objSerializer is object)
             {   // we know it isn't null; we'd have exited above
-                writer.netCache.SetKnownLength(obj, typeof(T), length);
+                writer.netCache.SetKnownLength(obj, objSerializer.BaseType, length);
             }
             return length;
         }

@@ -24,11 +24,13 @@ namespace ProtoBuf.Internal.Serializers
         abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, SerializerFeatures features);
     }
 
-    internal sealed class InheritanceTypeSerializer<TBase, T> : TypeSerializer<T>, ISubTypeSerializer<T>
+    internal sealed class InheritanceTypeSerializer<TBase, T> : TypeSerializer<T>, ISubTypeSerializer<T>, IObjectSerializer<T>
         where TBase : class
         where T : class, TBase
     {
         public override bool HasInheritance => true;
+
+        Type IObjectSerializer<T>.BaseType => typeof(TBase);
 
         internal override Type BaseType => typeof(TBase);
 
@@ -104,8 +106,10 @@ namespace ProtoBuf.Internal.Serializers
 
         public override bool IsSubType => true;
     }
-    internal class TypeSerializer<T> : TypeSerializer, ISerializer<T>, IFactory<T>, IProtoTypeSerializer
+    internal class TypeSerializer<T> : TypeSerializer, ISerializer<T>, IFactory<T>, IProtoTypeSerializer, IObjectSerializer<T>
     {
+        Type IObjectSerializer<T>.BaseType => typeof(T);
+
         public virtual bool HasInheritance => false;
         public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitRead(context, valueFrom);
