@@ -13,7 +13,7 @@ namespace ProtoBuf
         private readonly struct ObjectKey : IEquatable<ObjectKey>
         {
             private readonly object _obj;
-            private readonly Type _subTypeLevel;
+            private readonly Type _subTypeLevel; // null means "root type" (from the perspective of the serializer)
             [MethodImpl(ProtoReader.HotPath)]
             public ObjectKey(object obj, Type subTypeLevel)
             {
@@ -21,8 +21,9 @@ namespace ProtoBuf
                 _subTypeLevel = subTypeLevel;
             }
             public override string ToString() => $"{_subTypeLevel}/{_obj}";
+
             [MethodImpl(ProtoReader.HotPath)]
-            public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ _subTypeLevel.GetHashCode();
+            public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ (_subTypeLevel?.GetHashCode() ?? 0);
             [MethodImpl(ProtoReader.HotPath)]
             public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
             [MethodImpl(ProtoReader.HotPath)]

@@ -12,6 +12,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: build-time tooling from code-first (aka "generators")
 
 
+## 3.0.2
+
+- reworked fix from 3.0.1 (same behavior, different implementation)
+
 ## 3.0.1
 
 - fix bug with pre-measured objects and non-root `<T>` ([gRPC #100](https://github.com/protobuf-net/protobuf-net.Grpc/issues/100))

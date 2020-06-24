@@ -1,11 +1,8 @@
-﻿using ProtoBuf.Internal.Serializers;
-using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
+﻿using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -37,9 +34,6 @@ namespace ProtoBuf.Issues
         }
         private void MeasuredSerializeImpl(TypeModel model)
         {
-            var typed = TypeModel.GetSerializer<TestThingy>(model) as IObjectSerializer<TestThingy>;
-            Assert.Equal(typeof(TestBase), typed?.BaseType);
-
             var obj = GetTestInstance();
             var ms = new MemoryStream();
             model.Serialize(ms, obj); // regular serialize

@@ -255,6 +255,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// A serializer capable of representing complex objects that may warrant length caching
     /// </summary>
+    [Obsolete("This API is deprecated and is never used; it will be removed soon", true)]
     public interface IObjectSerializer<T> : ISerializer<T>
     {
         /// <summary>
