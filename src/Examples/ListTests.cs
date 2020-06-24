@@ -613,6 +613,7 @@ namespace Examples
                 return true;
             }
 
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0056:Use index operator", Justification = "Not on all TFMs")]
             bool IProducerConsumerCollection<Test3>.TryTake(out Test3 item)
             {
                 if (items.Count == 0)

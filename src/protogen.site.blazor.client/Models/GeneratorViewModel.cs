@@ -43,28 +43,24 @@ namespace ProtoBuf.Models
         public NamingConventionEnum NamingConvention { get; set; } = NamingConventionEnum.Auto;
 
         public NameNormalizer GetNameNormalizerForConvention () {
-            switch (NamingConvention) {
-                case NamingConventionEnum.Auto:
-                    return NameNormalizer.Default;
-                case NamingConventionEnum.Original:
-                    return NameNormalizer.Null;
-                default:
-                    throw new ArgumentOutOfRangeException (nameof (NamingConvention));
-            }
+            return NamingConvention switch
+            {
+                NamingConventionEnum.Auto => NameNormalizer.Default,
+                NamingConventionEnum.Original => NameNormalizer.Null,
+                _ => throw new ArgumentOutOfRangeException(nameof(NamingConvention)),
+            };
         }
 
         public CodeGenerator GetCodeGenerator () {
             if (!IsProtobugGen ()) {
                 throw new InvalidOperationException ("CodeGenerator are available only for language compatible with protobuf-net");
             }
-            switch (Language) {
-                case GeneratorLanguageEnum.CSharp:
-                    return CSharpCodeGenerator.Default;
-                case GeneratorLanguageEnum.VBNet:
-                    return VBCodeGenerator.Default;
-                default:
-                    throw new ArgumentOutOfRangeException ($"{Language} is not supported");
-            }
+            return Language switch
+            {
+                GeneratorLanguageEnum.CSharp => CSharpCodeGenerator.Default,
+                GeneratorLanguageEnum.VBNet => VBCodeGenerator.Default,
+                _ => throw new ArgumentOutOfRangeException($"{Language} is not supported"),
+            };
         }
 
         public Dictionary<string, string> GetOptions () {

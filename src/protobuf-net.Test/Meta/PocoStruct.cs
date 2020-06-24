@@ -59,7 +59,7 @@ namespace ProtoBuf.unittest.Meta
         public struct Company
         {
             private List<Employee> employees;
-            public List<Employee> Employees { get { return employees ?? (employees = new List<Employee>()); } }
+            public List<Employee> Employees => employees ??= new List<Employee>();
         }
 
         public struct Employee
