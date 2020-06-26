@@ -285,6 +285,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets the extension data associated with an object, as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static byte[] GetExtensionData(IExtensible obj)
@@ -319,6 +320,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Sets the extension data associated with an object, as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetExtensionData(IExtensible obj, byte[] data)
@@ -686,6 +688,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -733,6 +736,14 @@ namespace Google.Protobuf.Reflection
         /// Indicates whether this file is intended as part of the output set of the parse operation.
         /// </summary>
         public bool IncludeInOutput { get; internal set; }
+
+        /// <summary>
+        /// Controls external serialization
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ShouldSerializeIncludeInOutput() => false;
+
         internal string DefaultPackage { get; set; }
 
         /// <summary>
@@ -2279,6 +2290,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -2305,6 +2317,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -2325,6 +2338,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -2378,6 +2392,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -2398,6 +2413,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -2429,6 +2445,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
@@ -2480,6 +2497,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Gets or sets the extension data as a byte-array
         /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
