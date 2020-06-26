@@ -447,7 +447,7 @@ namespace ProtoBuf.Reflection
             {
                 tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
             }
-            if (field.IsPacked(ctx.Syntax))
+            if (field.IsPackedField(ctx.Syntax))
             {
                 tw.Write($", IsPacked = true");
             }
