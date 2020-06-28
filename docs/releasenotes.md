@@ -23,6 +23,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 ## 3.0
 
 - first deploy of v3; everything as below
+- [additional release notes](https://github.com/protobuf-net/protobuf-net/blob/main/docs/3_0.md)
 
 ## v3.0.0-alpha
 
