@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.0;net472</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <NoWarn>CS1591</NoWarn>
     <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
-    <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.0'">$(DefineConstants);INTRINSICS</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.1'">$(DefineConstants);INTRINSICS</DefineConstants>
     <RootNamespace>Benchmark</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
