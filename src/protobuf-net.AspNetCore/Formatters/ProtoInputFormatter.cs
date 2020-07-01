@@ -38,6 +38,9 @@ namespace ProtoBuf.Formatters
         /// <inheritdoc/>
         public override Task<InputFormatterResult> ReadRequestBodyAsync(InputFormatterContext context)
         {
+            // note: *today*, protobuf-net lacks fully async read, so this buffers in the pipe until
+            // we get the Content-Length that was advertised by the caller
+
             if (context is null) throw new ArgumentNullException(nameof(context));
             var request = context.HttpContext.Request;
             var length = request.ContentLength ?? -1;
