@@ -62,6 +62,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0074CABB-8
 		..\docs\version.md = ..\docs\version.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.AspNetCore", "protobuf-net.AspNetCore\protobuf-net.AspNetCore.csproj", "{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.TestWeb", "protobuf-net.TestWeb\protobuf-net.TestWeb.csproj", "{C837FE74-2596-402E-907C-9891A94CFB37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.TestWebConsole", "protobuf-net.TestWebConsole\protobuf-net.TestWebConsole.csproj", "{AA328345-72B9-4116-8ADE-8E0C822B83CC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -183,6 +189,24 @@ Global
 		{5573019D-19EA-4947-B84C-C5861D51C728}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5573019D-19EA-4947-B84C-C5861D51C728}.VS|Any CPU.ActiveCfg = Debug|Any CPU
 		{5573019D-19EA-4947-B84C-C5861D51C728}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{698DE2CF-8DD8-4788-B17D-6007D8CDA9C5}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{C837FE74-2596-402E-907C-9891A94CFB37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C837FE74-2596-402E-907C-9891A94CFB37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C837FE74-2596-402E-907C-9891A94CFB37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C837FE74-2596-402E-907C-9891A94CFB37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C837FE74-2596-402E-907C-9891A94CFB37}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{C837FE74-2596-402E-907C-9891A94CFB37}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{AA328345-72B9-4116-8ADE-8E0C822B83CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA328345-72B9-4116-8ADE-8E0C822B83CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA328345-72B9-4116-8ADE-8E0C822B83CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA328345-72B9-4116-8ADE-8E0C822B83CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA328345-72B9-4116-8ADE-8E0C822B83CC}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA328345-72B9-4116-8ADE-8E0C822B83CC}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
