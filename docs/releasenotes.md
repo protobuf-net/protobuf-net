@@ -15,6 +15,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 ## (unreleased)
 
 - add support for deserializing directly from `ReadOnlySpan<byte>`
+- allow using open generic surrogates (#446 via ocoanet)
 
 ## 3.0.2
 
