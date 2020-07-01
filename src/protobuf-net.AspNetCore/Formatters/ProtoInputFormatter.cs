@@ -92,14 +92,13 @@ namespace ProtoBuf.Formatters
         private bool ParseIfComplete(Type type, ref ReadOnlySequence<byte> buffer, long expectedLength, out object payload)
         {
             long availableLength = buffer.Length;
-            if (availableLength == expectedLength) { }
-            else if (availableLength < expectedLength)
-            {
+            if (availableLength < expectedLength)
+            {   // not enough (yet, we can retry later)
                 payload = default;
                 return false;
             }
             else if (availableLength > expectedLength)
-            {
+            {   // too much; cut it down to size
                 buffer = buffer.Slice(0, expectedLength);
             }
 
