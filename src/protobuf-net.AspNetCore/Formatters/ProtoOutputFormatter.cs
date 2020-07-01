@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ProtoBuf.Formatters
 {
     /// <summary>
-    /// Implements a protobuf-net based input formatter
+    /// Implements a protobuf-net based output formatter
     /// </summary>
     public sealed class ProtoOutputFormatter : OutputFormatter
     {
