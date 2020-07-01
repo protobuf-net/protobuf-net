@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc.Formatters;
-using Microsoft.Net.Http.Headers;
 using ProtoBuf.Meta;
 using System;
 using System.IO.Pipelines;
