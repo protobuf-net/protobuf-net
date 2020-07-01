@@ -12,6 +12,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: build-time tooling from code-first (aka "generators")
 
 
+## (unreleased)
+
+- add support for deserializing directly from `ReadOnlySpan<byte>`
+
 ## 3.0.2
 
 - reworked fix from 3.0.1 (same behavior, different implementation)

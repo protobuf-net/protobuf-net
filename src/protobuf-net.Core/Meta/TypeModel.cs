@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace ProtoBuf.Meta
@@ -748,6 +749,40 @@ namespace ProtoBuf.Meta
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public unsafe T Deserialize<T>(ReadOnlySpan<byte> source, T value = default, object userState = null)
+        {
+            // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
+            // means we need to be able to persist the span as a memory; the only way to do this
+            // *safely and reliably* is to pint the span for the duration of the deserialize, and throw the
+            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocs)
+            fixed (byte* ptr = source)
+            {
+                FixedMemoryManager wrapper = null;
+                ProtoReader.State state = default;
+                try
+                {
+                    wrapper = Pool<FixedMemoryManager>.TryGet() ?? new FixedMemoryManager();
+                    state = ProtoReader.State.Create(wrapper.Init(ptr, source.Length), this, userState);
+                    return state.DeserializeRootImpl<T>(value);
+                }
+                finally
+                {
+                    state.Dispose();
+                    Pool<FixedMemoryManager>.Put(wrapper);
+                }
+            }
         }
 
         /// <summary>
