@@ -1370,6 +1370,20 @@ namespace ProtoBuf.Meta
 
                 if ((BaseType != null && BaseType != this) || (_subTypes?.Count ?? 0) > 0)
                     ThrowSubTypeWithSurrogate(Type);
+
+                if (surrogateType.IsGenericTypeDefinition)
+                {
+                    if (!Type.IsGenericType)
+                    {
+                        ThrowHelper.ThrowArgumentException("Cannot use an open generic type as a surrogate for a non generic type");
+                    }
+                    var genericArguments = Type.GetGenericArguments();
+                    if (genericArguments.Length != surrogateType.GetGenericArguments().Length)
+                    {
+                        ThrowHelper.ThrowArgumentException("The generic type parameters of the surrogate must match the generic arguments of the target type");
+                    }
+                    surrogateType = surrogateType.MakeGenericType(genericArguments);
+                }
             }
             ThrowIfFrozen();
 
