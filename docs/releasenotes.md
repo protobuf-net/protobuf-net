@@ -16,6 +16,8 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 - add support for deserializing directly from `ReadOnlySpan<byte>`
 - allow using open generic surrogates (#446 via ocoanet)
+- add netcoreapp3.1 target (#670 via iamcarbon)
+- add new `protobuf-net.AspNetCore` package with input/output formatter support
 
 ## 3.0.2
 
