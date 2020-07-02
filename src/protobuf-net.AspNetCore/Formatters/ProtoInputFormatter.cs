@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.WebUtilities;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProtoBuf.Formatters
@@ -13,14 +15,20 @@ namespace ProtoBuf.Formatters
     public sealed class ProtoInputFormatter : InputFormatter
     {
         private readonly TypeModel _model;
+        private readonly int _memoryBufferThreshold;
+
+        // influened directly by https://github.com/dotnet/aspnetcore/blob/master/src/Mvc/Mvc.NewtonsoftJson/src/MvcNewtonsoftJsonOptions.cs
+        internal const int DefaultMemoryBufferThreshold = 1024 * 30;
 
         /// <summary>
         /// Create a new <see cref="ProtoInputFormatter"/> instance
         /// </summary>
         /// <param name="model">The type-model to use for deserialization</param>
-        public ProtoInputFormatter(TypeModel model = null)
+        /// <param name="memoryBufferThreshold">The amount of memory to use for in-memory buffering if needed</param>
+        public ProtoInputFormatter(TypeModel model = null, int memoryBufferThreshold = DefaultMemoryBufferThreshold)
         {
             _model = model ?? RuntimeTypeModel.Default;
+            _memoryBufferThreshold = memoryBufferThreshold;
         }
 
         /// <inheritdoc/>
@@ -43,8 +51,15 @@ namespace ProtoBuf.Formatters
 
             if (context is null) throw new ArgumentNullException(nameof(context));
             var request = context.HttpContext.Request;
+
             var length = request.ContentLength ?? -1;
-            if (length < 0) throw new InvalidOperationException("Invalid or missing content-length");
+            if (length < 0 || length > _memoryBufferThreshold)
+            {
+                // use Stream-based buffered read - either chunked or oversized
+                return StreamBufferedAsync(context);
+            }
+
+            // otherwise, we can use the Pipe itself for in-memory buffering
             var reader = request.BodyReader;
             var type = context.ModelType;
 
@@ -54,6 +69,16 @@ namespace ProtoBuf.Formatters
                 return InputFormatterResult.SuccessAsync(payload);
             }
             return ReadRequestBodyAsyncSlow(type, reader, length);
+        }
+
+        private async Task<InputFormatterResult> StreamBufferedAsync(InputFormatterContext context)
+        {
+            var request = context.HttpContext.Request;
+            using var readStream = new FileBufferingReadStream(request.Body, _memoryBufferThreshold);
+            await readStream.DrainAsync(CancellationToken.None);
+            readStream.Position = 0;
+            var payload = _model.Deserialize(readStream, value: null, type: context.ModelType);
+            return InputFormatterResult.Success(payload);
         }
 
         private bool ProcessReadBuffer(Type type, PipeReader reader, long length, in ReadResult readResult, out object payload)

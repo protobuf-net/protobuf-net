@@ -16,7 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection // guidance is to use this na
         /// <summary>
         /// Register protobuf-net formatters with a <see cref="IMvcCoreBuilder"/> with all common content-types
         /// </summary>
-        public static IMvcCoreBuilder AddProtoBufNet(this IMvcCoreBuilder builder, Action<MvcProtoBufNetOptionsSetup> setupAction = null)
+        public static IMvcCoreBuilder AddProtoBufNet(this IMvcCoreBuilder builder, Action<MvcProtoBufNetOptions> setupAction = null)
         {
             if (builder == null)
             {
@@ -31,7 +31,7 @@ namespace Microsoft.Extensions.DependencyInjection // guidance is to use this na
         /// <summary>
         /// Register protobuf-net formatters with a <see cref="IMvcBuilder"/> with all common content-types
         /// </summary>
-        public static IMvcBuilder AddProtoBufNet(this IMvcBuilder builder, Action<MvcProtoBufNetOptionsSetup> setupAction = null)
+        public static IMvcBuilder AddProtoBufNet(this IMvcBuilder builder, Action<MvcProtoBufNetOptions> setupAction = null)
         {
             if (builder == null)
             {
@@ -47,7 +47,7 @@ namespace Microsoft.Extensions.DependencyInjection // guidance is to use this na
     /// <summary>
     /// Options for configuring protobuf-net usage inside ASP.NET Core
     /// </summary>
-    public sealed class MvcProtoBufNetOptionsSetup : IConfigureOptions<MvcOptions>
+    public sealed class MvcProtoBufNetOptions
     {
         /// <summary>
         /// The type-model to use for serialization and deserialization; if omitted, the default model is assumed
@@ -57,17 +57,30 @@ namespace Microsoft.Extensions.DependencyInjection // guidance is to use this na
         /// <summary>
         /// The maximum length of payloads to write; no limit by default
         /// </summary>
-        public long MaxWriteLength { get; set; } = -1;
+        public long WriteMaxLength { get; set; } = ProtoOutputFormatter.DefaultMaxLength;
+
+        /// <summary>
+        /// The amount of memory to use for in-memory buffering if needed
+        /// </summary>
+        public int ReadMemoryBufferThreshold { get; set; } = ProtoInputFormatter.DefaultMemoryBufferThreshold;
+    }
+
+
+    internal sealed class MvcProtoBufNetOptionsSetup : IConfigureOptions<MvcOptions>
+    {
+        private readonly MvcProtoBufNetOptions _options;
+        public MvcProtoBufNetOptionsSetup(IOptions<MvcProtoBufNetOptions> options)
+            => _options = options.Value;
 
         void IConfigureOptions<MvcOptions>.Configure(MvcOptions options)
         {
-            var model = Model ?? RuntimeTypeModel.Default;
+            var model = _options.Model ?? RuntimeTypeModel.Default;
 
-            var output = new ProtoOutputFormatter(model, MaxWriteLength);
+            var output = new ProtoOutputFormatter(model, _options.WriteMaxLength);
             AddMediaTypes(output.SupportedMediaTypes);
             options.OutputFormatters.Add(output);
 
-            var input = new ProtoInputFormatter(model);
+            var input = new ProtoInputFormatter(model, _options.ReadMemoryBufferThreshold);
             AddMediaTypes(input.SupportedMediaTypes);
             options.InputFormatters.Add(input);
 
