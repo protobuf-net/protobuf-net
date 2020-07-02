@@ -45,10 +45,7 @@ namespace ProtoBuf.Formatters
 
             // flush etc
             var flush = response.BodyWriter.FlushAsync();
-            return flush.IsCompletedSuccessfully ? Task.CompletedTask : Awaited(flush);
-
-            static async Task Awaited(ValueTask<FlushResult> pending)
-                => await pending.ConfigureAwait(false);
+            return flush.IsCompletedSuccessfully ? Task.CompletedTask : flush.AsTask();
         }
     }
 }

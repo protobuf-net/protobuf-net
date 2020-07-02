@@ -81,7 +81,7 @@ namespace ProtoBuf.Formatters
             {
                 if (!reader.TryRead(out var readResult))
                 {
-                    readResult = await reader.ReadAsync().ConfigureAwait(false);
+                    readResult = await reader.ReadAsync();
                 }
                 if (ProcessReadBuffer(type, reader, length, readResult, out var payload))
                 {
