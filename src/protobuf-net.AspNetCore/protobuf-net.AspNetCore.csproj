@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>ProtoBuf</RootNamespace>
+    <RootNamespace>ProtoBuf.AspNetCore</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.AspNetCore</AssemblyName>
     <Title>protobuf-net.AspNetCore</Title>

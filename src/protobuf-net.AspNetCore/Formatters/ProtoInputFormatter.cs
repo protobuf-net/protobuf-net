@@ -7,7 +7,7 @@ using System.IO.Pipelines;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ProtoBuf.Formatters
+namespace ProtoBuf.AspNetCore.Formatters
 {
     /// <summary>
     /// Implements a protobuf-net based input formatter
@@ -17,18 +17,13 @@ namespace ProtoBuf.Formatters
         private readonly TypeModel _model;
         private readonly int _memoryBufferThreshold;
 
-        // influened directly by https://github.com/dotnet/aspnetcore/blob/master/src/Mvc/Mvc.NewtonsoftJson/src/MvcNewtonsoftJsonOptions.cs
-        internal const int DefaultMemoryBufferThreshold = 1024 * 30;
-
         /// <summary>
         /// Create a new <see cref="ProtoInputFormatter"/> instance
         /// </summary>
-        /// <param name="model">The type-model to use for deserialization</param>
-        /// <param name="memoryBufferThreshold">The amount of memory to use for in-memory buffering if needed</param>
-        public ProtoInputFormatter(TypeModel model = null, int memoryBufferThreshold = DefaultMemoryBufferThreshold)
+        public ProtoInputFormatter(MvcProtoBufNetOptions options)
         {
-            _model = model ?? RuntimeTypeModel.Default;
-            _memoryBufferThreshold = memoryBufferThreshold;
+            _model = options.Model ?? RuntimeTypeModel.Default;
+            _memoryBufferThreshold = options.ReadMemoryBufferThreshold;
         }
 
         /// <inheritdoc/>

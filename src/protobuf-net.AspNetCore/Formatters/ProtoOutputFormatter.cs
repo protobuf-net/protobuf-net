@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.Formatters;
 using ProtoBuf.Meta;
 using System;
-using System.IO.Pipelines;
 using System.Threading.Tasks;
 
-namespace ProtoBuf.Formatters
+namespace ProtoBuf.AspNetCore.Formatters
 {
     /// <summary>
     /// Implements a protobuf-net based output formatter
@@ -13,17 +12,14 @@ namespace ProtoBuf.Formatters
     {
         private readonly TypeModel _model;
         private readonly long _maxLength;
-        internal const long DefaultMaxLength = -1;
 
         /// <summary>
         /// Create a new <see cref="ProtoOutputFormatter"/> instance
         /// </summary>
-        /// <param name="model">The type-model to use for serialization</param>
-        /// <param name="maxLength">The maximum supported payload length to encode (no limit by default)</param>
-        public ProtoOutputFormatter(TypeModel model = null, long maxLength = DefaultMaxLength)
+        public ProtoOutputFormatter(MvcProtoBufNetOptions options)
         {
-            _model = model ?? RuntimeTypeModel.Default;
-            _maxLength = maxLength;
+            _model = options.Model ?? RuntimeTypeModel.Default;
+            _maxLength = options.WriteMaxLength;
         }
 
         /// <inheritdoc/>
