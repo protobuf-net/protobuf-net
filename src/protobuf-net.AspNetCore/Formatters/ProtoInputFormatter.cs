@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.WebUtilities;
 using ProtoBuf.Meta;
 using System;
@@ -16,14 +17,16 @@ namespace ProtoBuf.AspNetCore.Formatters
     {
         private readonly TypeModel _model;
         private readonly int _memoryBufferThreshold;
+        private readonly bool _suppressBuffering;
 
         /// <summary>
         /// Create a new <see cref="ProtoInputFormatter"/> instance
         /// </summary>
-        public ProtoInputFormatter(MvcProtoBufNetOptions options)
+        public ProtoInputFormatter(MvcProtoBufNetOptions options, MvcOptions mvcOptions)
         {
             _model = options.Model ?? RuntimeTypeModel.Default;
             _memoryBufferThreshold = options.ReadMemoryBufferThreshold;
+            _suppressBuffering = mvcOptions.SuppressInputFormatterBuffering;
         }
 
         /// <inheritdoc/>
@@ -51,7 +54,7 @@ namespace ProtoBuf.AspNetCore.Formatters
             if (length < 0 || length > _memoryBufferThreshold)
             {
                 // use Stream-based buffered read - either chunked or oversized
-                return StreamBufferedAsync(context);
+                return _suppressBuffering ? NonBufferedStreamAsync(context) : BufferedStreamAsync(context);
             }
 
             // otherwise, we can use the Pipe itself for in-memory buffering
@@ -65,10 +68,14 @@ namespace ProtoBuf.AspNetCore.Formatters
             return ReadRequestBodyAsyncSlow(context.ModelType, reader, length);
         }
 
-        private async Task<InputFormatterResult> StreamBufferedAsync(InputFormatterContext context)
+        private Task<InputFormatterResult> NonBufferedStreamAsync(InputFormatterContext context)
         {
-            var request = context.HttpContext.Request;
-            using var readStream = new FileBufferingReadStream(request.Body, _memoryBufferThreshold);
+            var payload = _model.Deserialize(context.HttpContext.Request.Body, value: null, type: context.ModelType);
+            return InputFormatterResult.SuccessAsync(payload);
+        }
+        private async Task<InputFormatterResult> BufferedStreamAsync(InputFormatterContext context)
+        {
+            using var readStream = new FileBufferingReadStream(context.HttpContext.Request.Body, _memoryBufferThreshold);
             await readStream.DrainAsync(CancellationToken.None);
             readStream.Position = 0;
             var payload = _model.Deserialize(readStream, value: null, type: context.ModelType);

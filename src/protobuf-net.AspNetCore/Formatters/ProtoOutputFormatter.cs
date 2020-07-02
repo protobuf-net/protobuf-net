@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Formatters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using ProtoBuf.Meta;
 using System;
 using System.Threading.Tasks;
@@ -12,14 +13,16 @@ namespace ProtoBuf.AspNetCore.Formatters
     {
         private readonly TypeModel _model;
         private readonly long _maxLength;
+        private readonly bool _suppressBuffering;
 
         /// <summary>
         /// Create a new <see cref="ProtoOutputFormatter"/> instance
         /// </summary>
-        public ProtoOutputFormatter(MvcProtoBufNetOptions options)
+        public ProtoOutputFormatter(MvcProtoBufNetOptions options, MvcOptions mvcOptions)
         {
             _model = options.Model ?? RuntimeTypeModel.Default;
             _maxLength = options.WriteMaxLength;
+            _suppressBuffering = mvcOptions.SuppressOutputFormatterBuffering;
         }
 
         /// <inheritdoc/>
@@ -35,12 +38,26 @@ namespace ProtoBuf.AspNetCore.Formatters
                 response.ContentLength = measureState.Length;
 
                 // do it for real (verified for variance automatically)
-                measureState.Serialize(response.BodyWriter);
+                if (_suppressBuffering)
+                {
+                    measureState.Serialize(response.Body);
+                }
+                else
+                {
+                    measureState.Serialize(response.BodyWriter);
+                }
             }
 
-            // flush etc
-            var flush = response.BodyWriter.FlushAsync();
-            return flush.IsCompletedSuccessfully ? Task.CompletedTask : flush.AsTask();
+            // and flush
+            if (_suppressBuffering)
+            {
+                return response.Body.FlushAsync();
+            }
+            else
+            {
+                var flush = response.BodyWriter.FlushAsync();
+                return flush.IsCompletedSuccessfully ? Task.CompletedTask : flush.AsTask();
+            }
         }
     }
 }

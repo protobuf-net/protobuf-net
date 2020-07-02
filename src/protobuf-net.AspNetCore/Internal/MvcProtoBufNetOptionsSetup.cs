@@ -13,11 +13,11 @@ namespace ProtoBuf.AspNetCore.Internal
 
         void IConfigureOptions<MvcOptions>.Configure(MvcOptions options)
         {
-            var output = new ProtoOutputFormatter(_options);
+            var output = new ProtoOutputFormatter(_options, options);
             AddMediaTypes(output.SupportedMediaTypes);
             options.OutputFormatters.Add(output);
 
-            var input = new ProtoInputFormatter(_options);
+            var input = new ProtoInputFormatter(_options, options);
             AddMediaTypes(input.SupportedMediaTypes);
             options.InputFormatters.Add(input);
 
