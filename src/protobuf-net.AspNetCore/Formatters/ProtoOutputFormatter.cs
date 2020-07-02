@@ -29,11 +29,10 @@ namespace ProtoBuf.AspNetCore.Formatters
         /// <inheritdoc/>
         public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context)
         {
-            long length;
             var response = context.HttpContext.Response;
             using (var measureState = _model.Measure<object>(context.Object, abortAfter: _maxLength))
             {
-                response.ContentLength = length = measureState.Length;
+                response.ContentLength = measureState.Length;
 
                 // do it for real (verified for variance automatically)
                 measureState.Serialize(response.BodyWriter);
