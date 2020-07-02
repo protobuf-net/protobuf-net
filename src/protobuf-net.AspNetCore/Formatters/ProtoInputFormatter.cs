@@ -61,14 +61,13 @@ namespace ProtoBuf.Formatters
 
             // otherwise, we can use the Pipe itself for in-memory buffering
             var reader = request.BodyReader;
-            var type = context.ModelType;
 
             // try and read synchronously
-            if (reader.TryRead(out var readResult) && ProcessReadBuffer(type, reader, length, readResult, out var payload))
+            if (reader.TryRead(out var readResult) && ProcessReadBuffer(context.ModelType, reader, length, readResult, out var payload))
             {
                 return InputFormatterResult.SuccessAsync(payload);
             }
-            return ReadRequestBodyAsyncSlow(type, reader, length);
+            return ReadRequestBodyAsyncSlow(context.ModelType, reader, length);
         }
 
         private async Task<InputFormatterResult> StreamBufferedAsync(InputFormatterContext context)
