@@ -53,8 +53,10 @@ namespace ProtoBuf.AspNetCore.Formatters
             var length = request.ContentLength ?? -1;
             if (length < 0 || length > _memoryBufferThreshold)
             {
-                // use Stream-based buffered read - either chunked or oversized
-                return _suppressBuffering ? NonBufferedStreamAsync(context) : BufferedStreamAsync(context);
+                // use Stream-based read - either chunked or oversized
+                // - if buffering is disabled, or if the caller has already buffered it fully (EnableRewind), go direct
+                // - otherwise uses FileBufferingReadStream based on _memoryBufferThreshold
+                return (_suppressBuffering || request.Body.CanSeek) ? DirectStreamAsync(context) : BufferedStreamAsync(context);
             }
 
             // otherwise, we can use the Pipe itself for in-memory buffering
@@ -68,7 +70,7 @@ namespace ProtoBuf.AspNetCore.Formatters
             return ReadRequestBodyAsyncSlow(context.ModelType, reader, length);
         }
 
-        private Task<InputFormatterResult> NonBufferedStreamAsync(InputFormatterContext context)
+        private Task<InputFormatterResult> DirectStreamAsync(InputFormatterContext context)
         {
             var payload = _model.Deserialize(context.HttpContext.Request.Body, value: null, type: context.ModelType);
             return InputFormatterResult.SuccessAsync(payload);
