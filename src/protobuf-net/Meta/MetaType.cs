@@ -324,11 +324,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal void WriteSchema(HashSet<Type> callstack, StringBuilder bodyBuilder, int v, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax, string package, object extendedNamespaces)
-        {
-            throw new NotImplementedException();
-        }
-
         private string name;
 
         /// <summary>
@@ -1829,10 +1824,11 @@ namespace ProtoBuf.Meta
         }
 
         internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax,
-            string package, bool multipleNamespaceSupport)
+            string package, SchemaGenerationFlags flags)
         {
             if (surrogate != null) return; // nothing to write
 
+            bool multipleNamespaceSupport = (flags & SchemaGenerationFlags.MultipleNamespaceSupport) != 0;
             var repeated = model.TryGetRepeatedProvider(Type);
 
             if (repeated != null)
@@ -2048,15 +2044,22 @@ namespace ProtoBuf.Meta
                     SubType[] subTypeArr = _subTypes.ToArray();
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
                     string[] fieldNames = new string[subTypeArr.Length];
-                    for(int i = 0; i < subTypeArr.Length;i++)
+                    for (int i = 0; i < subTypeArr.Length; i++)
                         fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName(callstack);
 
                     string fieldName = "subtype";
                     while (Array.IndexOf(fieldNames, fieldName) >= 0)
                         fieldName = "_" + fieldName;
 
+
                     NewLine(builder, indent + 1).Append("oneof ").Append(fieldName).Append(" {");
-                    for(int i = 0; i < subTypeArr.Length; i++)
+
+                    if ((flags & SchemaGenerationFlags.PreserveSubType) != 0)
+                    {
+                        imports |= RuntimeTypeModel.CommonImports.Protogen;
+                        NewLine(builder, indent + 2).Append("option (.protobuf_net.oneofopt).isSubType = true;");
+                    }
+                    for (int i = 0; i < subTypeArr.Length; i++)
                     {
                         var subTypeName = fieldNames[i];
                         NewLine(builder, indent + 2).Append(subTypeName)

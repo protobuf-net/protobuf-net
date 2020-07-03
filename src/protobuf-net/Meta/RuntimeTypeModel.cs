@@ -203,42 +203,66 @@ namespace ProtoBuf.Meta
             var requiredTypes = new List<MetaType>();
             MetaType primaryType = null;
             bool isInbuiltType = false;
-            if (type == null)
-            { // generate for the entire model
+
+            void AddType(Type toAdd)
+            {
+                // generate just relative to the supplied type
+                int index = FindOrAddAuto(toAdd, false, false, false, DefaultCompatibilityLevel);
+                if (index < 0) throw new ArgumentException("The type specified is not a contract-type", nameof(type));
+
+                // get the required types
+                primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
+                AddMetaType(primaryType);
+            }
+            void AddMetaType(MetaType toAdd)
+            {
+                if (!requiredTypes.Contains(toAdd))
+                { // ^^^ note that the type might have been added as a descendent
+                    requiredTypes.Add(toAdd);
+                    CascadeDependents(requiredTypes, toAdd);
+                }
+            }
+
+            if (type == null && !options.HasServices)
+            {
+                // generate for the entire model
                 foreach (MetaType meta in types)
                 {
                     MetaType tmp = meta.GetSurrogateOrBaseOrSelf(false);
-                    if (!requiredTypes.Contains(tmp))
-                    { // ^^^ note that the type might have been added as a descendent
-                        requiredTypes.Add(tmp);
-                        CascadeDependents(requiredTypes, tmp);
-                    }
+                    AddMetaType(tmp);
                 }
             }
             else
             {
-                Type tmp = Nullable.GetUnderlyingType(type);
-                if (tmp != null) type = tmp;
-
-                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, DefaultCompatibilityLevel, type, out var _, false, false, false, false) != null);
-                if (!isInbuiltType)
+                if (type is object)
                 {
-                    //Agenerate just relative to the supplied type
-                    int index = FindOrAddAuto(type, false, false, false, DefaultCompatibilityLevel);
-                    if (index < 0) throw new ArgumentException("The type specified is not a contract-type", nameof(type));
+                    Type tmp = Nullable.GetUnderlyingType(type);
+                    if (tmp != null) type = tmp;
 
-                    // get the required types
-                    primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
-                    requiredTypes.Add(primaryType);
-                    CascadeDependents(requiredTypes, primaryType);
+                    isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, DefaultCompatibilityLevel, type, out var _, false, false, false, false) != null);
+                    if (!isInbuiltType)
+                    {
+                        AddType(type);
+                    }
+                }
+                if (options.HasServices)
+                {
+                    foreach (var service in options.Services)
+                    {
+                        foreach (var method in service.Methods)
+                        {
+                            AddType(method.InputType);
+                            AddType(method.OutputType);
+                        }
+                    }
                 }
             }
 
             // use the provided type's namespace for the "package"
             StringBuilder headerBuilder = new StringBuilder();
-            string package = null;
+            string package = options.Package;
 
-            if (!isInbuiltType)
+            if (package is null && !isInbuiltType)
             {
                 IEnumerable<MetaType> typesForNamespace = primaryType == null ? types.Cast<MetaType>() : requiredTypes;
                 foreach (MetaType meta in typesForNamespace)
@@ -264,6 +288,7 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
+
             switch (syntax)
             {
                 case ProtoSyntax.Proto2:
@@ -307,11 +332,36 @@ namespace ProtoBuf.Meta
                 for (int i = 0; i < metaTypesArr.Length; i++)
                 {
                     MetaType tmp = metaTypesArr[i];
-                    if (tmp.SerializerType is object) continue; // not our concern
+                    if (tmp.SerializerType is object)
+                    {
+                        continue; // not our concern
+                    }
                     if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
-                    tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax, package, options.MultipleNamespaceSupport);
+                    tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax, package, options.Flags);
                 }
             }
+
+            // write the services
+            if (options.HasServices)
+            {
+                foreach (var service in options.Services)
+                {
+                    MetaType.NewLine(bodyBuilder, 0).Append("service ").Append(service.Name).Append(" {");
+                    foreach (var method in service.Methods)
+                    {
+                        var inputName = GetSchemaTypeName(callstack, method.InputType, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports);
+                        var replyName = GetSchemaTypeName(callstack, method.OutputType, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports);
+                        MetaType.NewLine(bodyBuilder, 1).Append("rpc ").Append(method.Name).Append(" (")
+                            .Append(method.ServerStreaming ? "stream " : "")
+                            .Append(replyName).Append(") returns (")
+                            .Append(method.ClientStreaming ? "stream " : "")
+                            .Append(inputName).Append(");");
+                    }
+                    MetaType.NewLine(bodyBuilder, 0).Append("}");
+                }
+            }
+
+
             if ((imports & CommonImports.Bcl) != 0)
             {
                 headerBuilder.Append("import \"protobuf-net/bcl.proto\"; // schema for protobuf-net's handling of core .NET types").AppendLine();
@@ -328,6 +378,10 @@ namespace ProtoBuf.Meta
             {
                 headerBuilder.Append("import \"google/protobuf/duration.proto\";").AppendLine();
             }
+            if ((imports & CommonImports.Empty) != 0)
+            {
+                headerBuilder.Append("import \"google/protobuf/empty.proto\";").AppendLine();
+            }
             return headerBuilder.Append(bodyBuilder).AppendLine().ToString();
         }
 
@@ -335,10 +389,11 @@ namespace ProtoBuf.Meta
         internal enum CommonImports
         {
             None = 0,
-            Bcl = 1,
-            Timestamp = 2,
-            Duration = 4,
-            Protogen = 8
+            Bcl = 1 << 0,
+            Timestamp = 1 << 1,
+            Duration = 1 << 2,
+            Protogen = 1 << 3,
+            Empty = 1 << 4,
         }
 
         private void CascadeRepeated(List<MetaType> list, RepeatedSerializerStub provider, CompatibilityLevel ambient, DataFormat keyFormat)
@@ -866,8 +921,8 @@ namespace ProtoBuf.Meta
 
         /// <summary>Indicates whether a type is known to the model</summary>
         internal override bool IsKnownType<T>(CompatibilityLevel ambient) // the point of this override is to avoid loops
-                                                // when trying to *build* a model; we don't actually need the service (which may not exist yet);
-                                                // we just need to know whether we should *expect one*
+                                                                          // when trying to *build* a model; we don't actually need the service (which may not exist yet);
+                                                                          // we just need to know whether we should *expect one*
             => _serviceCache[typeof(T)] is object || FindOrAddAuto(typeof(T), false, true, false, ambient) >= 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -899,9 +954,11 @@ namespace ProtoBuf.Meta
             service = GetServicesImpl();
             if (service != null)
             {
-                try {
+                try
+                {
                     _ = this[type]; // if possible, make sure that we've registered it, so we export a proxy if needed
-                } catch { }
+                }
+                catch { }
                 lock (_serviceCache)
                 {
                     _serviceCache[type] = service;
@@ -931,7 +988,7 @@ namespace ProtoBuf.Meta
 
                 return null;
             }
-            
+
         }
 
         /// <summary>
@@ -972,7 +1029,7 @@ namespace ProtoBuf.Meta
             {
                 // the primary purpose of this is to force the creation of the Serializer
                 MetaType mt = (MetaType)types[i];
-                
+
                 if (GetServicesSlow(mt.Type, mt.CompatibilityLevel) == null) // respects enums, repeated, etc
                     throw new InvalidOperationException("No serializer available for " + mt.Type.NormalizeName());
             }
@@ -1230,7 +1287,7 @@ namespace ProtoBuf.Meta
             WriteAssemblyAttributes(options, assemblyName, asm);
 
 
-            var serviceType = WriteBasicTypeModel("<Services>"+ typeName, module, typeof(object), true);
+            var serviceType = WriteBasicTypeModel("<Services>" + typeName, module, typeof(object), true);
             WriteSerializers(scope, serviceType);
             WriteEnumsAndProxies(serviceType);
 
@@ -1691,6 +1748,11 @@ namespace ProtoBuf.Meta
                 imports |= CommonImports.Duration;
                 return ".google.protobuf.Duration";
             }
+            else if (effectiveType == typeof(Empty))
+            {
+                imports |= CommonImports.Empty;
+                return ".google.protobuf.Empty";
+            }
 
             IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out var _, false, false, false, false);
             if (ser == null)
@@ -1856,7 +1918,7 @@ namespace ProtoBuf.Meta
                 if (type.IsGenericType)
                 {
                     var args = type.GetGenericArguments();
-                    foreach(var arg in args)
+                    foreach (var arg in args)
                     {
                         if (!IsFullyPublic(arg))
                         {

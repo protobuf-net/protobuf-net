@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 
 namespace ProtoBuf.Meta
 {
@@ -22,16 +23,28 @@ namespace ProtoBuf.Meta
         /// </summary>
         public SchemaGenerationFlags Flags { get; }
 
-        internal bool MultipleNamespaceSupport => (Flags & SchemaGenerationFlags.MultipleNamespaceSupport) != 0;
+        /// <summary>
+        /// The package to use for generation (<c>null</c> to try to infer)
+        /// </summary>
+        public string Package { get; }
+
+        /// <summary>
+        /// The services to consider as part of this operation.
+        /// </summary>
+        public ImmutableArray<Service> Services { get; }
 
         /// <summary>
         /// Create a new <see cref="SchemaGenerationOptions"/> instance
         /// </summary>
-        public SchemaGenerationOptions(ProtoSyntax syntax, SchemaGenerationFlags flags = default)
+        public SchemaGenerationOptions(ProtoSyntax syntax, SchemaGenerationFlags flags = default, string package = null, ImmutableArray<Service> services = default)
         {
             Syntax = syntax;
             Flags = flags;
+            Package = package;
+            Services = services.IsDefault ? ImmutableArray<Service>.Empty : services;
         }
+
+        internal bool HasServices => !Services.IsDefaultOrEmpty;
     }
 
     /// <summary>
@@ -49,6 +62,11 @@ namespace ProtoBuf.Meta
         /// Provide support for extended/multiple namespace details in schemas
         /// </summary>
         MultipleNamespaceSupport = 1 << 0,
+
+        /// <summary>
+        /// Record the sub-type relationship formally in schemas
+        /// </summary>
+        PreserveSubType = 1 << 1,
     }
 
 
