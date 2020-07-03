@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;

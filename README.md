@@ -1,13 +1,13 @@
 # protobuf-net
 protobuf-net is a contract based serializer for .NET code, that happens to write data in the "protocol buffers" serialization format engineered by Google. The API, however, is very different to Google's, and follows typical .NET patterns (it is broadly comparable, in usage, to `XmlSerializer`, `DataContractSerializer`, etc). It should work for most .NET languages that write standard types and can use attributes.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/1pj6gk7h37bjn200/branch/master?svg=true)](https://ci.appveyor.com/project/StackExchange/protobuf-net/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/1pj6gk7h37bjn200/branch/main?svg=true)](https://ci.appveyor.com/project/StackExchange/protobuf-net/branch/main)
 
 ## Release Notes
 
-[Change history and pending changes are here](https://protobuf-net.github.io/protobuf-net/releasenotes).
+[v3 is here!](https://protobuf-net.github.io/protobuf-net/3_0)
 
-To understand how protobuf-net relates to protobuf [see here](https://protobuf-net.github.io/protobuf-net/version).
+[Change history and pending changes are here](https://protobuf-net.github.io/protobuf-net/releasenotes).
 
 ---
 

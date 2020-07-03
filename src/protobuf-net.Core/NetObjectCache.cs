@@ -13,7 +13,7 @@ namespace ProtoBuf
         private readonly struct ObjectKey : IEquatable<ObjectKey>
         {
             private readonly object _obj;
-            private readonly Type _subTypeLevel;
+            private readonly Type _subTypeLevel; // null means "root type" (from the perspective of the serializer)
             [MethodImpl(ProtoReader.HotPath)]
             public ObjectKey(object obj, Type subTypeLevel)
             {
@@ -21,8 +21,9 @@ namespace ProtoBuf
                 _subTypeLevel = subTypeLevel;
             }
             public override string ToString() => $"{_subTypeLevel}/{_obj}";
+
             [MethodImpl(ProtoReader.HotPath)]
-            public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ _subTypeLevel.GetHashCode();
+            public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ (_subTypeLevel?.GetHashCode() ?? 0);
             [MethodImpl(ProtoReader.HotPath)]
             public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
             [MethodImpl(ProtoReader.HotPath)]
@@ -238,22 +239,22 @@ namespace ProtoBuf
         internal int LengthHits => _hit;
         internal int LengthMisses => _miss;
 
-        internal void InitializeFrom(NetObjectCache master)
+        internal void InitializeFrom(NetObjectCache obj)
         {
-            if (master != null)
+            if (obj != null)
             {
                 _knownLengths.Clear();
-                foreach (var pair in master._knownLengths)
+                foreach (var pair in obj._knownLengths)
                     _knownLengths.Add(pair.Key, pair.Value);
             }
         }
 
-        internal void CopyBack(NetObjectCache master)
+        internal void CopyBack(NetObjectCache obj)
         {
-            if (master != null)
+            if (obj != null)
             {
-                master._hit += _hit;
-                master._miss += _miss;
+                obj._hit += _hit;
+                obj._miss += _miss;
             }
         }
     }

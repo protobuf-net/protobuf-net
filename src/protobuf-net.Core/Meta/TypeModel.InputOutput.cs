@@ -24,18 +24,8 @@ namespace ProtoBuf.Meta
         T IProtoInput<byte[]>.Deserialize<T>(byte[] source, T value, object userState)
             => Deserialize<T>(new ReadOnlyMemory<byte>(source), value, userState);
 
-        T IProtoInput<ReadOnlyMemory<byte>>.Deserialize<T>(ReadOnlyMemory<byte> source, T value, object userState)
-            => Deserialize<T>(source, value, userState);
-
-        T IProtoInput<ReadOnlySequence<byte>>.Deserialize<T>(ReadOnlySequence<byte> source, T value, object userState)
-            => Deserialize<T>(source, value, userState);
-
-
-
-
         void IProtoOutput<Stream>.Serialize<T>(Stream destination, T value, object userState)
             => Serialize<T>(destination, value, userState);
-
 
         void IProtoOutput<IBufferWriter<byte>>.Serialize<T>(IBufferWriter<byte> destination, T value, object userState)
             => Serialize<T>(destination, value, userState);

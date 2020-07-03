@@ -30,6 +30,10 @@ namespace ProtoBuf.Internal
             => throw new ArgumentException(message, paramName);
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Format(string message)
+            => throw new FormatException(message);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException(string message)
             => throw new ArgumentException(message);
 

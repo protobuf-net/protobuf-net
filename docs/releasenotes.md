@@ -1,6 +1,6 @@
 # Release Notes
 
-Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/master/src)
+Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/main/src)
 
 ## Roadmap
 
@@ -10,6 +10,27 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.1: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
+
+
+## 3.0.13
+
+- add support for deserializing directly from `ReadOnlySpan<byte>`
+- allow using open generic surrogates (#446 via ocoanet)
+- add netcoreapp3.1 target (#670 via iamcarbon)
+- add new `protobuf-net.AspNetCore` package with input/output formatter support
+
+## 3.0.2
+
+- reworked fix from 3.0.1 (same behavior, different implementation)
+
+## 3.0.1
+
+- fix bug with pre-measured objects and non-root `<T>` ([gRPC #100](https://github.com/protobuf-net/protobuf-net.Grpc/issues/100))
+
+## 3.0
+
+- first deploy of v3; everything as below
+- [additional release notes](https://github.com/protobuf-net/protobuf-net/blob/main/docs/3_0.md)
 
 ## v3.0.0-alpha
 

@@ -1,0 +1,24 @@
+﻿syntax = "proto3";
+package example;
+
+message MyMessage {
+  // No presence:
+  int32 not_tracked = 1;
+
+  // Explicit presence:
+  optional int32 tracked = 2;
+
+    // No presence:
+  string s_not_tracked = 3;
+
+  // Explicit presence:
+  optional string s_tracked = 4;
+
+  oneof haz_oneof {
+    int32 x = 5;
+    string y = 6;
+  }
+  oneof haz_oneof_single {
+    int32 z = 7;
+  }
+}

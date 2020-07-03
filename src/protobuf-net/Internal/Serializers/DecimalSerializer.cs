@@ -5,8 +5,23 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class DecimalSerializer : IRuntimeProtoSerializerNode
     {
-        private DecimalSerializer() { }
-        internal static readonly DecimalSerializer Instance = new DecimalSerializer();
+        private enum Variant
+        {
+            BclDecimal,
+            String
+        }
+
+        private static DecimalSerializer s_BclDecimal, s_String;
+
+        public static DecimalSerializer Create(CompatibilityLevel compatibilityLevel)
+        {
+            if (compatibilityLevel < CompatibilityLevel.Level300)
+                return s_BclDecimal ??= new DecimalSerializer(Variant.BclDecimal);
+            return s_String ??= new DecimalSerializer(Variant.String);
+        }
+
+        private readonly Variant _variant;
+        private DecimalSerializer(Variant variant) => _variant = variant;
 
         private static readonly Type expectedType = typeof(decimal);
 
@@ -19,21 +34,41 @@ namespace ProtoBuf.Internal.Serializers
         public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value == null); // since replaces
-            return BclHelpers.ReadDecimal(ref state);
+            return _variant switch
+            {
+                Variant.String => BclHelpers.ReadDecimalString(ref state),
+                _ => BclHelpers.ReadDecimal(ref state),
+            };
         }
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteDecimal(ref state, (decimal)value);
+            switch (_variant)
+            {
+                case Variant.String:
+                    BclHelpers.WriteDecimalString(ref state, (decimal)value);
+                    break;
+                default:
+                    BclHelpers.WriteDecimal(ref state, (decimal)value);
+                    break;
+            }
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitStateBasedWrite(nameof(BclHelpers.WriteDecimal), valueFrom, typeof(BclHelpers));
+            ctx.EmitStateBasedWrite(_variant switch
+            {
+                Variant.String => nameof(BclHelpers.WriteDecimalString),
+                _ => nameof(BclHelpers.WriteDecimal),
+            }, valueFrom, typeof(BclHelpers));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitStateBasedRead(typeof(BclHelpers), nameof(BclHelpers.ReadDecimal), ExpectedType);
+            ctx.EmitStateBasedRead(typeof(BclHelpers), _variant switch
+            {
+                Variant.String => nameof(BclHelpers.ReadDecimalString),
+                _ => nameof(BclHelpers.ReadDecimal),
+            }, ExpectedType);
         }
     }
 }

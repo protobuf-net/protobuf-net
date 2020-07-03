@@ -293,7 +293,9 @@ namespace ProtoBuf.Schemas
     [ProtoContract]
     public class HasDateTime
     {
+#pragma warning disable CS0618
         [ProtoMember(1, DataFormat = DataFormat.WellKnown)]
+#pragma warning restore CS0618
         public DateTime? Value { get; set; }
     }
 
@@ -307,7 +309,9 @@ namespace ProtoBuf.Schemas
     [ProtoContract]
     public class HasTimeSpan
     {
+#pragma warning disable CS0618
         [ProtoMember(1, DataFormat = DataFormat.WellKnown)]
+#pragma warning restore CS0618
         public TimeSpan? Value { get; set; }
     }
 }

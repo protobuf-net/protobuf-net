@@ -525,7 +525,7 @@ namespace ProtoBuf
             {
                 obj = value;
                 if (obj is null) return 0;
-                if (writer.netCache.TryGetKnownLength(obj, typeof(T), out length))
+                if (writer.netCache.TryGetKnownLength(obj, null, out length))
                     return length;
             }
 
@@ -539,7 +539,7 @@ namespace ProtoBuf
             // cache it if we can
             if (TypeHelper<T>.IsReferenceType)
             {   // we know it isn't null; we'd have exited above
-                writer.netCache.SetKnownLength(obj, typeof(T), length);
+                writer.netCache.SetKnownLength(obj, null, length);
             }
             return length;
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Reflection.Internal;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -115,9 +116,9 @@ namespace ProtoBuf.Reflection
         internal static T ConsumeEnum<T>(this Peekable<Token> tokens) where T : struct
         {
             var token = tokens.Read();
-            _ = tokens.ConsumeString();
+            var value = tokens.ConsumeString();
 
-            if (!EnumCache<T>.TryGet(token.Value, out T val))
+            if (!EnumCache<T>.TryGet(value, out T val))
                 token.Throw(ErrorCode.InvalidEnum, "Unable to parse " + typeof(T).Name);
             return val;
         }
@@ -221,12 +222,12 @@ namespace ProtoBuf.Reflection
                     if (!asBytes)
                     {
                         string s = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
-                        return s.Replace("\\", @"\\")
-                            .Replace("\'", @"\'")
-                            .Replace("\"", @"\""")
-                            .Replace("\r", @"\r")
-                            .Replace("\n", @"\n")
-                            .Replace("\t", @"\t");
+                        return s.Replace(@"\\", "\\")
+                            .Replace(@"\'", "\'")
+                            .Replace(@"\""", "\"")
+                            .Replace(@"\r", "\r")
+                            .Replace(@"\n", "\n")
+                            .Replace(@"\t", "\t");
                     }
 
                     var sb = new StringBuilder((int)ms.Length);

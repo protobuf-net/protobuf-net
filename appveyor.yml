@@ -1,8 +1,5 @@
 image: Visual Studio 2019
 
-install:
-  - choco install dotnetcore-sdk --version 3.0.100
-
 skip_branch_with_pr: true
 skip_tags: true
 skip_commits:

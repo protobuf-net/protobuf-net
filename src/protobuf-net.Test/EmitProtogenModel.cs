@@ -63,8 +63,8 @@ namespace ProtoBuf
         {
             public byte[] ExtensionData
             {
-                get { return DescriptorProto.GetExtensionData(this); }
-                set { DescriptorProto.SetExtensionData(this, value); }
+                get { return DescriptorProto.GetRawExtensionData(this); }
+                set { DescriptorProto.SetRawExtensionData(this, value); }
             }
         }
     }

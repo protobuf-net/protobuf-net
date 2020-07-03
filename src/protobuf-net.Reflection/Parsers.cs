@@ -2,19 +2,18 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Google.Protobuf.Reflection
 {
-#pragma warning disable CS1591
-
     internal interface IType
     {
         IType Parent { get; }
@@ -44,16 +43,34 @@ namespace Google.Protobuf.Reflection
         string Name { get; }
     }
 
+    /// <summary>
+    /// The protocol compiler can output a FileDescriptorSet containing the .proto
+    /// files it parses.
+    /// </summary>
     public partial class FileDescriptorSet
     {
+        internal const string NotIntendedForPublicUse = "This method was not intended for public use, and it may be removed in a later version";
+
         internal const string Namespace = ".google.protobuf.";
+
+        /// <summary>
+        /// Provides a callback to allow/deny individual imports.
+        /// </summary>
         public Func<string, bool> ImportValidator { get; set; }
 
         internal List<string> importPaths = new List<string>();
+
+        /// <summary>
+        /// Adds a file system location for resolving imports
+        /// </summary>
         public void AddImportPath(string path)
         {
             importPaths.Add(path);
         }
+
+        /// <summary>
+        /// Gets the errors encountered when calling <see cref="Process"/>
+        /// </summary>
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
 
@@ -62,7 +79,10 @@ namespace Google.Protobuf.Reflection
         /// </summary>
         public bool AllowNameOnlyImport { get; set; }
 
-        public bool Add(string name, bool includeInOutput, TextReader source = null)
+        /// <summary>
+        /// Adds an input file to the set for processing
+        /// </summary>
+        public bool Add(string name, bool includeInOutput = true, TextReader source = null)
             => Add(name, includeInOutput, source, null);
         internal bool Add(string name, bool includeInOutput, TextReader source, FileDescriptorProto fromFile)
         {
@@ -88,7 +108,7 @@ namespace Google.Protobuf.Reflection
             };
             Files.Add(descriptor);
 
-            descriptor.Parse(reader, Errors, name);
+            descriptor.ParseSchema(reader, Errors, name);
             return true;
         }
         /// <summary>
@@ -190,6 +210,9 @@ namespace Google.Protobuf.Reflection
             } while (didSomething);
         }
 
+        /// <summary>
+        /// Process the added schemas; this resolves member types between schemas, and prepares the type hierarchy.
+        /// </summary>
         public void Process()
         {
             ApplyImports();
@@ -210,6 +233,9 @@ namespace Google.Protobuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Serializes this instance using the provided serializer (which does not need to be protobuf)
+        /// </summary>
         public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
         {
             T result;
@@ -228,6 +254,9 @@ namespace Google.Protobuf.Reflection
             return result;
         }
 
+        /// <summary>
+        /// Serializes this instance using the provided <see cref="TypeModel"/>
+        /// </summary>
         public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
             Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
@@ -241,11 +270,28 @@ namespace Google.Protobuf.Reflection
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
             => TryResolve(path, from, out var descriptor) ? descriptor : null;
     }
+    /// <summary>
+    /// Describes a message type.
+    /// </summary>
     public partial class DescriptorProto : ISchemaObject, IType, IMessage, IReserved<DescriptorProto.ReservedRange, FieldDescriptorProto>
     {
+        /// <summary>
+        /// Range of reserved tag numbers. Reserved tag numbers may not be used by
+        /// fields or extension ranges in the same message. Reserved ranges may
+        /// not overlap.
+        /// </summary>
         public partial class ReservedRange : IReservedRange { }
 
+        /// <summary>
+        /// Gets the extension data associated with an object, as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static byte[] GetExtensionData(IExtensible obj)
+            => GetRawExtensionData(obj);
+
+        internal static byte[] GetRawExtensionData(IExtensible obj)
         {
             var ext = obj?.GetExtensionObject(false);
             int len;
@@ -270,7 +316,17 @@ namespace Google.Protobuf.Reflection
                 ext.EndQuery(s);
             }
         }
+
+        /// <summary>
+        /// Sets the extension data associated with an object, as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetExtensionData(IExtensible obj, byte[] data)
+            => SetRawExtensionData(obj, data);
+
+        internal static void SetRawExtensionData(IExtensible obj, byte[] data)
         {
             if (obj == null || data == null || data.Length == 0) return;
             var ext = obj.GetExtensionObject(true);
@@ -288,6 +344,7 @@ namespace Google.Protobuf.Reflection
             }
         }
 
+        /// <inheritdoc/>
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         IType IType.Parent => Parent;
@@ -310,9 +367,26 @@ namespace Google.Protobuf.Reflection
             if (ctx.TryReadObject(out obj))
             {
                 obj.Name = name;
+                GenerateSyntheticOneOfs(obj);
                 return true;
             }
             return false;
+
+            static void GenerateSyntheticOneOfs(DescriptorProto obj)
+            {
+                foreach(var field in obj.Fields)
+                {
+                    if (field.Proto3Optional && !field.ShouldSerializeOneofIndex())
+                    {
+                        field.OneofIndex = obj.OneofDecls.Count;
+                        obj.OneofDecls.Add(new OneofDescriptorProto
+                        {
+                            Name = "_" + field.Name,
+                            Parent = obj,
+                        });
+                    }
+                }
+            }
         }
         void ISchemaObject.ReadOne(ParserContext ctx)
         {
@@ -567,6 +641,9 @@ namespace Google.Protobuf.Reflection
         }
     }
 
+    /// <summary>
+    /// Describes a oneof.
+    /// </summary>
     public partial class OneofDescriptorProto : ISchemaObject
     {
         internal DescriptorProto Parent { get; set; }
@@ -602,17 +679,30 @@ namespace Google.Protobuf.Reflection
             }
         }
     }
+    /// <summary>
+    /// Options relating to a oneof
+    /// </summary>
     public partial class OneofOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(OneofOptions);
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
         bool ISchemaOptions.Deprecated { get { return false; } set { } }
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
     }
+    /// <summary>
+    /// The protocol compiler can output a FileDescriptorSet containing the .proto
+    /// files it parses.
+    /// </summary>
     public partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
         internal static FileDescriptorProto GetFile(IType type)
@@ -629,6 +719,7 @@ namespace Google.Protobuf.Reflection
         List<FieldDescriptorProto> IMessage.Extensions => Extensions;
         List<DescriptorProto> IMessage.Types => MessageTypes;
 
+        /// <inheritdoc/>
         public override string ToString() => Name;
 
         string IType.FullyQualifiedName => null;
@@ -642,8 +733,23 @@ namespace Google.Protobuf.Reflection
         internal bool HasPendingImports { get; private set; }
         internal FileDescriptorSet Parent { get; private set; }
 
-        internal bool IncludeInOutput { get; set; }
+        /// <summary>
+        /// Indicates whether this file is intended as part of the output set of the parse operation.
+        /// </summary>
+        public bool IncludeInOutput { get; internal set; }
+
+        /// <summary>
+        /// Controls external serialization
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ShouldSerializeIncludeInOutput() => false;
+
         internal string DefaultPackage { get; set; }
+
+        /// <summary>
+        /// Indicates whether this file has imports
+        /// </summary>
         public bool HasImports() => _imports.Count != 0;
         internal IEnumerable<Import> GetImports(bool resetPendingFlag = false)
         {
@@ -742,7 +848,15 @@ namespace Google.Protobuf.Reflection
             } // else EOF
         }
 
+        /// <summary>
+        /// Processes an individual file contents, but does <em>not</em> perform type resolution.
+        /// </summary>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public void Parse(TextReader schema, List<Error> errors, string file)
+            => ParseSchema(schema, errors, file);
+
+        internal void ParseSchema(TextReader schema, List<Error> errors, string file)
         {
             Syntax = "";
             using var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors);
@@ -906,7 +1020,7 @@ namespace Google.Protobuf.Reflection
 
         private string[] GetDescendingPackagePrefixes()
         // if the package is Foo.Bar.Blap, then this gives ".Foo.Bar.Blap.", ".Foo.Bar.", ".Foo.", "."
-            => _packagePrefixes ?? (_packagePrefixes = CalculateDescendingPackagePrefixes(Package));
+            => _packagePrefixes ??= CalculateDescendingPackagePrefixes(Package);
 
         private string[] _packagePrefixes;
         private static readonly string[] s_defaultPackagePrefixes = new[] { "." };
@@ -1217,7 +1331,7 @@ namespace Google.Protobuf.Reflection
                         Dependencies.Add(import.Path);
                     if (import.IsPublic)
                     {
-                        (publicDependencies ?? (publicDependencies = new HashSet<string>())).Add(import.Path);
+                        (publicDependencies ??= new HashSet<string>()).Add(import.Path);
                     }
                     if (IncludeInOutput && !import.Used)
                     {
@@ -1709,10 +1823,22 @@ namespace Google.Protobuf.Reflection
         }
     }
 
+    /// <summary>
+    /// Describes an enum type.
+    /// </summary>
     public partial class EnumDescriptorProto : ISchemaObject, IType, IReserved<EnumDescriptorProto.EnumReservedRange, EnumValueDescriptorProto>
     {
+        /// <summary>
+        /// Range of reserved numeric values. Reserved values may not be used by
+        /// entries in the same enum. Reserved ranges may not overlap.
+        ///
+        /// Note that this is distinct from DescriptorProto.ReservedRange in that it
+        /// is inclusive such that it can appropriately represent the entire int32
+        /// domain.
+        /// </summary>
         public partial class EnumReservedRange : IReservedRange { }
 
+        /// <inheritdoc/>
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         string IType.FullyQualifiedName => FullyQualifiedName;
@@ -1753,9 +1879,22 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.None;
         }
     }
+
+    /// <summary>
+    /// Describes a field within a message.
+    /// </summary>
     public partial class FieldDescriptorProto : ISchemaObject, IField
     {
+
+        /// <summary>
+        /// Indicates whether this field is considered "packed" in the given schema
+        /// </summary>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsPacked(string syntax)
+            => IsPackedField(syntax);
+
+        internal bool IsPackedField(string syntax)
         {
             if (label != Label.LabelRepeated) return false;
 
@@ -1764,6 +1903,8 @@ namespace Google.Protobuf.Reflection
 
             return syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type);
         }
+
+        /// <inheritdoc/>
         public override string ToString() => Name;
         internal const int DefaultMaxField = 536870911;
         internal const int FirstReservedField = 19000;
@@ -1784,7 +1925,7 @@ namespace Google.Protobuf.Reflection
             var tokens = ctx.Tokens;
             ctx.AbortState = AbortState.Statement;
             Label label = Label.LabelOptional; // default
-
+            bool explicitOptional = false;
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "repeated"))
             {
                 if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfRepeated);
@@ -1799,8 +1940,9 @@ namespace Google.Protobuf.Reflection
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "optional"))
             {
                 if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfOptional);
-                else tokens.Previous.RequireProto2(ctx);
+                // proto3 now supports optional
                 label = Label.LabelOptional;
+                explicitOptional = true;
             }
             else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2 && !isOneOf)
             {
@@ -1894,6 +2036,10 @@ namespace Google.Protobuf.Reflection
                 label = label,
                 TypeToken = typeToken // internal property that helps give useful error messages
             };
+            if (field.label == Label.LabelOptional && explicitOptional && ctx.Syntax != FileDescriptorProto.SyntaxProto2)
+            {
+                field.Proto3Optional = true;
+            }
 
             if (!isGroup)
             {
@@ -2025,6 +2171,9 @@ namespace Google.Protobuf.Reflection
         List<FieldDescriptorProto> Fields { get; }
     }
 
+    /// <summary>
+    /// Describes a service.
+    /// </summary>
     public partial class ServiceDescriptorProto : ISchemaObject, IType
     {
         public override string ToString() => Name;
@@ -2063,6 +2212,9 @@ namespace Google.Protobuf.Reflection
         }
     }
 
+    /// <summary>
+    /// Describes a method of a service.
+    /// </summary>
     public partial class MethodDescriptorProto : ISchemaObject, IType
     {
         public override string ToString() => Name;
@@ -2105,6 +2257,7 @@ namespace Google.Protobuf.Reflection
 
             if (tokens.Peek(out var token) && token.Is(TokenType.Symbol, "{"))
             {
+                method.Options ??= new MethodOptions(); // protoc always initializes this, even if none found
                 ctx.AbortState = AbortState.Object;
                 ctx.TryReadObjectImpl(method);
             }
@@ -2122,6 +2275,9 @@ namespace Google.Protobuf.Reflection
         }
     }
 
+    /// <summary>
+    /// Describes a value within an enum.
+    /// </summary>
     public partial class EnumValueDescriptorProto : IField
     {
         internal static EnumValueDescriptorProto Parse(ParserContext ctx)
@@ -2141,6 +2297,10 @@ namespace Google.Protobuf.Reflection
         }
         internal EnumDescriptorProto Parent { get; set; }
     }
+
+    /// <summary>
+    /// Options relating to a message
+    /// </summary>
     public partial class MessageOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(MessageOptions);
@@ -2157,12 +2317,22 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
+
+    /// <summary>
+    /// Options relating to a method
+    /// </summary>
     public partial class MethodOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(MethodOptions);
@@ -2174,28 +2344,60 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
+
+    /// <summary>
+    /// Options relating to a service
+    /// </summary>
     public partial class ServiceOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(ServiceOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
 
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
 
+    /// <summary>
+    /// A message representing a option the parser does not recognize. This only
+    /// appears in options protos created by the compiler::Parser class.
+    /// DescriptorPool resolves these when building Descriptor objects. Therefore,
+    /// options protos in descriptor objects (e.g. returned by Descriptor::options(),
+    /// or produced by Descriptor::CopyTo()) will never have UninterpretedOptions
+    /// in them.
+    /// </summary>
     public partial class UninterpretedOption
     {
+        /// <summary>
+        /// The name of the uninterpreted option.  Each string represents a segment in
+        /// a dot-separated name.  is_extension is true iff a segment represents an
+        /// extension (denoted with parentheses in options specs in .proto files).
+        /// E.g.,{ ["foo", false], ["bar.baz", true], ["qux", false] } represents
+        /// "foo.(bar.baz).qux".
+        /// </summary>
         public partial class NamePart
         {
+            /// <inheritdoc/>
             public override string ToString() => IsExtension ? ("(" + name_part + ")") : name_part;
             internal Token Token { get; set; }
         }
@@ -2203,6 +2405,9 @@ namespace Google.Protobuf.Reflection
         internal Token Token { get; set; }
     }
 
+    /// <summary>
+    /// Options relating to an enum.
+    /// </summary>
     public partial class EnumOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumOptions);
@@ -2214,23 +2419,43 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
+
+    /// <summary>
+    /// Options relating to an enum value
+    /// </summary>
     public partial class EnumValueOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumValueOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
 
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
+
+    /// <summary>
+    /// Options relating to a field
+    /// </summary>
     public partial class FieldOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(FieldOptions);
@@ -2247,12 +2472,22 @@ namespace Google.Protobuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
+
+    /// <summary>
+    /// Options relating to a file
+    /// </summary>
     public partial class FileOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(FileOptions);
@@ -2260,36 +2495,47 @@ namespace Google.Protobuf.Reflection
         {
             switch (key)
             {
-                case "optimize_for": OptimizeFor = ctx.Tokens.ConsumeEnum<OptimizeMode>(); return true;
-                case "cc_enable_arenas": CcEnableArenas = ctx.Tokens.ConsumeBoolean(); return true;
-                case "cc_generic_services": CcGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                // in field order
+                case "java_package": JavaPackage = ctx.Tokens.ConsumeString(); return true;
+                case "java_outer_classname": JavaOuterClassname = ctx.Tokens.ConsumeString(); return true;
+                case "java_multiple_files": JavaMultipleFiles = ctx.Tokens.ConsumeBoolean(); return true;
 #pragma warning disable 0612
                 case "java_generate_equals_and_hash": JavaGenerateEqualsAndHash = ctx.Tokens.ConsumeBoolean(); return true;
 #pragma warning restore 0612
-                case "java_generic_services": JavaGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
-                case "java_multiple_files": JavaMultipleFiles = ctx.Tokens.ConsumeBoolean(); return true;
                 case "java_string_check_utf8": JavaStringCheckUtf8 = ctx.Tokens.ConsumeBoolean(); return true;
-                case "py_generic_services": PyGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
-
-                case "csharp_namespace": CsharpNamespace = ctx.Tokens.ConsumeString(); return true;
+                case "optimize_for": OptimizeFor = ctx.Tokens.ConsumeEnum<OptimizeMode>(); return true;
                 case "go_package": GoPackage = ctx.Tokens.ConsumeString(); return true;
-                case "java_outer_classname": JavaOuterClassname = ctx.Tokens.ConsumeString(); return true;
-                case "java_package": JavaPackage = ctx.Tokens.ConsumeString(); return true;
+                case "cc_generic_services": CcGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "java_generic_services": JavaGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "py_generic_services": PyGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "php_generic_services": PhpGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
+                case "deprecated": Deprecated = ctx.Tokens.ConsumeBoolean(); return true;
+                case "cc_enable_arenas": CcEnableArenas = ctx.Tokens.ConsumeBoolean(); return true;
                 case "objc_class_prefix": ObjcClassPrefix = ctx.Tokens.ConsumeString(); return true;
-                case "php_class_prefix": PhpClassPrefix = ctx.Tokens.ConsumeString(); return true;
+                case "csharp_namespace": CsharpNamespace = ctx.Tokens.ConsumeString(); return true;
                 case "swift_prefix": SwiftPrefix = ctx.Tokens.ConsumeString(); return true;
+                case "php_class_prefix": PhpClassPrefix = ctx.Tokens.ConsumeString(); return true;
+                case "php_namespace":
+                    PhpNamespace = ctx.Tokens.ConsumeString(); return true;
 
+                case "php_metadata_namespace": PhpMetadataNamespace = ctx.Tokens.ConsumeString(); return true;
+                case "ruby_package": RubyPackage = ctx.Tokens.ConsumeString(); return true;
                 default: return false;
             }
         }
+
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] ExtensionData
         {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
         }
     }
-
-#pragma warning restore CS1591
 }
 namespace ProtoBuf.Reflection
 {
@@ -2375,11 +2621,11 @@ namespace ProtoBuf.Reflection
             List<Error> errors = new List<Error>();
             using (var reader = new StringReader(stdout))
             {
-                Add(reader, errors, ProtoBuf.ErrorCode.ProtocError);
+                Add(reader, errors, ErrorCode.ProtocError);
             }
             using (var reader = new StringReader(stderr))
             {
-                Add(reader, errors, ProtoBuf.ErrorCode.ProtocError);
+                Add(reader, errors, ErrorCode.ProtocError);
             }
             return errors.ToArray();
         }

@@ -397,6 +397,7 @@ message HazTime {
 ", schema, ignoreLineEndingDifferences: true);
         }
 
+#pragma warning disable CS0618
         [ProtoContract]
         public class HazTime
         {
@@ -409,6 +410,8 @@ message HazTime {
             [ProtoMember(4, DataFormat = DataFormat.WellKnown)]
             public TimeSpan d { get; set; }
         }
+#pragma warning restore CS0618
+
         [Fact]
         public void TestPackNonPackedSchemas_Proto2()
         {

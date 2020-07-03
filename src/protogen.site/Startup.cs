@@ -28,19 +28,20 @@ namespace protogen.site
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                     new[] { "application/octet-stream" });
             });
+            services.AddApplicationInsightsTelemetry(Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"]);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app)
         {
             app.UseResponseCompression();
-            app.UseStaticFiles();
-            app.UseClientSideBlazorFiles<ProtoBuf.Startup>();
+            app.UseBlazorFrameworkFiles();
+            app.UseStaticFiles(); 
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();
-                endpoints.MapFallbackToClientSideBlazor<ProtoBuf.Program>("index.html");
+                endpoints.MapFallbackToFile("index.html");
             });
         }
     }

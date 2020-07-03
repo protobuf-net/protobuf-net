@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -43,7 +44,9 @@ namespace ProtoBuf.Reflection
             foreach (var file in files)
             {
                 using var reader = new StringReader(file.Text);
+#if DEBUG_COMPILE
                 Console.WriteLine($"Parsing {file.Name}...");
+#endif
                 set.Add(file.Name, true, reader);
             }
             set.Process();
@@ -324,6 +327,26 @@ namespace ProtoBuf.Reflection
         /// Emit code representing a message field
         /// </summary>
         protected abstract void WriteField(GeneratorContext ctx, FieldDescriptorProto field, ref object state, OneOfStub[] oneOfs);
+
+        /// <summary>
+        /// Indicates whether field presence tracking is suggested for this field
+        /// </summary>
+        protected bool TrackFieldPresence(GeneratorContext ctx, FieldDescriptorProto field, OneOfStub[] oneOfs, out OneOfStub oneOf)
+        {
+            // get the oneof, ignoring 'synthetic' oneofs from proto3-optional
+            // (the CountTotal check would *also* work for this, but: let's be explicit and intentional)
+            oneOf = (field.ShouldSerializeOneofIndex() && !field.Proto3Optional) ? oneOfs[field.OneofIndex] : null;
+            if (oneOf is object && !ctx.OneOfEnums && oneOf.CountTotal == 1)
+            {
+                oneOf = null; // not really a one-of, then!
+            }
+
+            return field.label == FieldDescriptorProto.Label.LabelOptional // must be optional
+                && oneOf is null // exclude "oneof" - tracked via the discriminator
+                && field.type != FieldDescriptorProto.Type.TypeMessage // handled via obj-ref
+                && field.type != FieldDescriptorProto.Type.TypeGroup // handled via obj-ref
+                && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional);
+        }
 
         /// <summary>
         /// Emit code following a set of message fields

@@ -253,6 +253,19 @@ namespace ProtoBuf.Serializers
     }
 
     /// <summary>
+    /// A serializer capable of representing complex objects that may warrant length caching
+    /// </summary>
+    [Obsolete("This API is deprecated and is never used; it will be removed soon", true)]
+    public interface IObjectSerializer<T> : ISerializer<T>
+    {
+        /// <summary>
+        /// The effective <see cref="BaseType"/> that this serializer represents; in the case of
+        /// an object hierarchy, this is the base-type.
+        /// </summary>
+        Type BaseType { get; }
+    }
+
+    /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy
     /// </summary>
     public interface ISubTypeSerializer<T> where T : class

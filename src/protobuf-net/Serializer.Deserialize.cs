@@ -58,18 +58,18 @@ namespace ProtoBuf
         /// Creates a new instance from a protocol-buffer stream
         /// </summary>
         public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
-        {
-            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState);
-            return state.DeserializeRootImpl<T>(value);
-        }
+            => RuntimeTypeModel.Default.Deserialize<T>(source, value, userState);
 
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream
         /// </summary>
         public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
-        {
-            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, userState);
-            return state.DeserializeRootImpl<T>(value);
-        }
+            => RuntimeTypeModel.Default.Deserialize<T>(source, value, userState);
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream
+        /// </summary>
+        public static T Deserialize<T>(ReadOnlySpan<byte> source, T value = default, object userState = null)
+            => RuntimeTypeModel.Default.Deserialize<T>(source, value, userState);
     }
 }

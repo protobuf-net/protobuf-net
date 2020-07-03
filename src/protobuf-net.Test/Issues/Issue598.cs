@@ -146,13 +146,11 @@ namespace ProtoBuf.Test.Issues
 
         private static TRead RoundTrip<TWrite, TRead>(TWrite instance)
         {
-            using (var memory = new MemoryStream())
-            {
-                ProtoBuf.Serializer.Serialize(memory, instance);
-                memory.Flush();
-                memory.Position = 0;
-                return ProtoBuf.Serializer.Deserialize<TRead>(memory);
-            }
+            using var memory = new MemoryStream();
+            ProtoBuf.Serializer.Serialize(memory, instance);
+            memory.Flush();
+            memory.Position = 0;
+            return ProtoBuf.Serializer.Deserialize<TRead>(memory);
         }
 
         [ProtoContract(Serializer = typeof(Serializer))]

@@ -38,7 +38,7 @@ namespace ProtoBuf.Compiler
         private readonly RuntimeTypeModel _model;
 
         private ModuleBuilder GetModule()
-            => _module ?? (_module = GetSharedModule());
+            => _module ??= GetSharedModule();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ModuleBuilder GetSharedModule() => SharedModule.Shared;
@@ -166,10 +166,10 @@ namespace ProtoBuf.Compiler
 
         }
 
-        internal bool ImplementsServiceFor<T>()
+        internal bool ImplementsServiceFor<T>(CompatibilityLevel ambient)
         {
             if (_model == null || typeof(T).IsEnum) return false;
-            if (!_model.IsKnownType<T>()) return false;
+            if (!_model.IsKnownType<T>(ambient)) return false;
 
             var mt = _model[typeof(T)];
             if (mt is null) return false;

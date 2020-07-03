@@ -235,7 +235,7 @@ namespace ProtoBuf.Schemas
             {
                 var psi = proc.StartInfo;
                 psi.FileName = "protoc";
-                psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
+                psi.Arguments = $"--experimental_allow_proto3_optional --descriptor_set_out={protocBinPath} {path}";
                 if (includeComments) psi.Arguments += " --include_source_info";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.CreateNoWindow = true;
@@ -284,7 +284,7 @@ namespace ProtoBuf.Schemas
                 using var proc = new Process();
                 var psi = proc.StartInfo;
                 psi.FileName = "protoc";
-                psi.Arguments = $"--csharp_out={Path.GetDirectoryName(protocBinPath)} {path}";
+                psi.Arguments = $"--experimental_allow_proto3_optional --csharp_out={Path.GetDirectoryName(protocBinPath)} {path}";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.CreateNoWindow = true;
                 psi.UseShellExecute = false;

@@ -191,5 +191,7 @@ namespace ProtoBuf.Internal
             }
             return outer;
         }
+
+        internal bool Any() => Count != 0;
     }
 }

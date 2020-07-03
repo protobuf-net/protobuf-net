@@ -56,3 +56,5 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(IProtoOutput<>))]
 [assembly: TypeForwardedTo(typeof(IMeasuredProtoOutput<>))]
 [assembly: TypeForwardedTo(typeof(MeasureState<>))]
+[assembly: TypeForwardedTo(typeof(CompatibilityLevel))]
+[assembly: TypeForwardedTo(typeof(CompatibilityLevelAttribute))]

@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +9,7 @@ using System.IO;
 #if NEW_API
 namespace Benchmark
 {
-    [ClrJob, CoreJob, MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp30), MemoryDiagnoser]
     public class SpanPerformance
     {
         private MemoryStream _ms;

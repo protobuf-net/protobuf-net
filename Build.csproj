@@ -6,6 +6,7 @@
     <ProjectReference Include="src\protobuf-net.MSBuild\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Protogen\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Reflection\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.AspNetCore\*.csproj" />
     <!--<ProjectReference Include="src\protobuf-net.MessagePipes\*.csproj" />-->
     <ProjectReference Include="src\protogen\*.csproj" />
   </ItemGroup>

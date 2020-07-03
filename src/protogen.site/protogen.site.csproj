@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
 
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Configurations>Debug;Release;VS</Configurations>
     <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
     <SignAssembly>false</SignAssembly>
+    <UserSecretsId>f7c4472d-ea58-47e2-9129-489edcd48abe</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,8 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Blazor.Server"  Version="3.0.0-preview9.19465.2" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.8.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.14.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
 
   <ItemGroup>

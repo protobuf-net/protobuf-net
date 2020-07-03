@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace ProtoBuf.Meta
@@ -133,9 +134,9 @@ namespace ProtoBuf.Meta
         }
         /// <summary>        /// Indicates whether a type is known to the model
         /// </summary>
-        internal virtual bool IsKnownType<T>()
+        internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
-            && GetSerializer<T>() != null;
+            && GetSerializerCore<T>(ambient) != null;
 
         internal const SerializerFeatures FromAux = (SerializerFeatures)(1 << 30);
 
@@ -232,6 +233,25 @@ namespace ProtoBuf.Meta
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
             var state = ProtoWriter.State.Create(dest, this, context);
+            try
+            {
+                SerializeRootFallback(ref state, value);
+            }
+            finally
+            {
+                state.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination stream to write to.</param>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public void Serialize(IBufferWriter<byte> dest, object value, object userState = default)
+        {
+            var state = ProtoWriter.State.Create(dest, this, userState);
             try
             {
                 SerializeRootFallback(ref state, value);
@@ -741,6 +761,40 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        public unsafe T Deserialize<T>(ReadOnlySpan<byte> source, T value = default, object userState = null)
+        {
+            // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
+            // means we need to be able to persist the span as a memory; the only way to do this
+            // *safely and reliably* is to pint the span for the duration of the deserialize, and throw the
+            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocs)
+            fixed (byte* ptr = source)
+            {
+                FixedMemoryManager wrapper = null;
+                ProtoReader.State state = default;
+                try
+                {
+                    wrapper = Pool<FixedMemoryManager>.TryGet() ?? new FixedMemoryManager();
+                    state = ProtoReader.State.Create(wrapper.Init(ptr, source.Length), this, userState);
+                    return state.DeserializeRootImpl<T>(value);
+                }
+                finally
+                {
+                    state.Dispose();
+                    Pool<FixedMemoryManager>.Put(wrapper);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
         public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
@@ -823,6 +877,62 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
             var state = ProtoReader.State.Create(source, this, context, length);
+            try
+            {
+                bool autoCreate = PrepareDeserialize(value, ref type);
+                if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value, autoCreate))
+                {
+                    value = state.DeserializeRootFallback(value, type);
+                }
+                return value;
+            }
+            finally
+            {
+                state.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary payload  to apply to the instance.</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public object Deserialize(ReadOnlyMemory<byte> source, Type type, object value = default, object userState = default)
+        {
+            var state = ProtoReader.State.Create(source, this, userState);
+            try
+            {
+                bool autoCreate = PrepareDeserialize(value, ref type);
+                if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value, autoCreate))
+                {
+                    value = state.DeserializeRootFallback(value, type);
+                }
+                return value;
+            }
+            finally
+            {
+                state.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary payload  to apply to the instance.</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        public object Deserialize(ReadOnlySequence<byte> source, Type type, object value = default, object userState = default)
+        {
+            var state = ProtoReader.State.Create(source, this, userState);
             try
             {
                 bool autoCreate = PrepareDeserialize(value, ref type);
@@ -1091,7 +1201,7 @@ namespace ProtoBuf.Meta
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 get => s_Singleton;
             }
-            protected internal override ISerializer<T> GetSerializer<T>() => null;
+            protected override ISerializer<T> GetSerializer<T>() => null;
         }
 
         /// <summary>
@@ -1142,13 +1252,21 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether the supplied type is explicitly modelled by the model
         /// </summary>
-        public bool IsDefined(Type type) => type != null && DynamicStub.IsKnownType(type, this);
+        public bool IsDefined(Type type) => IsDefined(type, default);
+
+        /// <summary>
+        /// Indicates whether the supplied type is explicitly modelled by the model
+        /// </summary>
+        internal bool IsDefined(Type type, CompatibilityLevel ambient) => type != null && DynamicStub.IsKnownType(type, this, ambient);
 
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual ISerializer<T> GetSerializer<T>()
+        protected virtual ISerializer<T> GetSerializer<T>()
             => this as ISerializer<T>;
+
+        internal virtual ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
+            => GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static ISerializer<T> NoSerializer<T>(TypeModel model)
@@ -1201,10 +1319,42 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISerializer<T> GetSerializer<T>(TypeModel model)
+        internal static ISerializer<T> GetSerializer<T>(TypeModel model, CompatibilityLevel ambient = default)
            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
-            ?? model?.GetSerializer<T>()
+            ?? model?.GetSerializerCore<T>(ambient)
             ?? NoSerializer<T>(model);
+
+        /// <summary>
+        /// Gets the inbuilt serializer relevant to a specific <see cref="CompatibilityLevel"/> (and <see cref="DataFormat"/>).
+        /// Returns null if there is no defined inbuilt serializer.
+        /// </summary>
+#if DEBUG   // I always want these explicitly specified in the library code; so: enforce that
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
+#else
+        public static ISerializer<T> GetInbuiltSerializer<T>(CompatibilityLevel compatibilityLevel = default, DataFormat dataFormat = DataFormat.Default)
+#endif
+        {
+            ISerializer<T> serializer;
+            if (compatibilityLevel >= CompatibilityLevel.Level300)
+            {
+                if (dataFormat == DataFormat.FixedSize)
+                {
+                    serializer = SerializerCache<Level300FixedSerializer, T>.InstanceField;
+                    if (serializer is object) return serializer;
+                }
+                serializer = SerializerCache<Level300DefaultSerializer, T>.InstanceField;
+                if (serializer is object) return serializer;
+            }
+#pragma warning disable CS0618
+            else if (compatibilityLevel >= CompatibilityLevel.Level240 || dataFormat == DataFormat.WellKnown)
+#pragma warning restore CS0618
+            {
+                serializer = SerializerCache<Level240DefaultSerializer, T>.InstanceField;
+                if (serializer is object) return serializer;
+            }
+
+            return SerializerCache<PrimaryTypeProvider, T>.InstanceField;
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IRepeatedSerializer<T> GetRepeatedSerializer<T>(TypeModel model)

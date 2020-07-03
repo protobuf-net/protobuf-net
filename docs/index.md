@@ -4,7 +4,7 @@ protobuf-net
 # What is protobuf-net?
 
 protobuf-net is a .NET library that implements the Protocol Buffers wire format, providing high performance binary reliable cross-platform serialization. It primarily targets a "code first" approach, which contrasts to the schema-first approach more common to Protocol Buffers,
-but which makes it really easy to work with idiomatic .NET types, including pre-existing types.
+but which makes it really easy to work with idiomatic .NET types, including pre-existing types. protobuf-net now also integrates with protobuf-net.Grpc, to offer a code-first gRPC experience similar to WCF.
 
 ## Release Notes
 
@@ -12,8 +12,8 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 
 ## Donate
 
-If you feel like supporting my efforts, I won't stop you:
+protobuf-net is maintained purely out of my own time - it is not sponsored on an ongoing basis, but if you want to contribute towards the ongoing support, options include:
 
-<a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
-
-If you can't, that's fine too.
+- [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/marcgravell)
+- [GitHub Sponsors](https://github.com/sponsors/mgravell)
+- something else in mind? please contact me!

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "name": "Default-Web-NorthEurope",
+      "location": "northeurope",
+      "apiVersion": "2019-10-01"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "[concat('Default-Web-NorthEuropeDeployment', uniqueString(subscription().subscriptionId))]",
+      "resourceGroup": "Default-Web-NorthEurope",
+      "apiVersion": "2019-10-01",
+      "dependsOn": [
+        "Default-Web-NorthEurope"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "resources": [
+            {
+              "name": "protogensite",
+              "type": "microsoft.insights/components",
+              "location": "westeurope",
+              "kind": "web",
+              "properties": {},
+              "apiVersion": "2015-05-01"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

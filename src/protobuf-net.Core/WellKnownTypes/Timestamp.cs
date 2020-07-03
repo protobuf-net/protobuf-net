@@ -16,7 +16,18 @@ namespace ProtoBuf.Internal
             duration = ReadDuration(ref state, duration);
             return new Timestamp(duration.Seconds, duration.Nanoseconds);
         }
+
+        internal static Timestamp ReadTimestamp(ref ProtoReader.State state, Timestamp value)
+        {
+            var duration = new Duration(value.Seconds, value.Nanoseconds);
+            duration = ReadDuration(ref state, duration);
+            return new Timestamp(duration.Seconds, duration.Nanoseconds);
+        }
+
         void ISerializer<Timestamp>.Write(ref ProtoWriter.State state, Timestamp value)
+            => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, true);
+
+        internal static void WriteTimestamp(ref ProtoWriter.State state, Timestamp value)
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, true);
 
         Timestamp? ISerializer<Timestamp?>.Read(ref ProtoReader.State state, Timestamp? value)
