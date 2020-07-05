@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
 
 namespace ProtoBuf.Meta
 {
@@ -10,20 +10,11 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The name of the service.
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The methods available on the service.
         /// </summary>
-        public ImmutableArray<ServiceMethod> Methods { get; }
-
-        /// <summary>
-        /// Creates a new <see cref="Service"/> instance.
-        /// </summary>
-        public Service(string name, ImmutableArray<ServiceMethod> methods)
-        {
-            Name = name;
-            Methods = methods.IsEmpty ? ImmutableArray<ServiceMethod>.Empty : methods;
-        }
+        public List<ServiceMethod> Methods { get; } = new List<ServiceMethod>();
     }
 }

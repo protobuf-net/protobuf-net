@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.WellKnownTypes;
+using System;
 namespace ProtoBuf.Meta
 {
     /// <summary>
@@ -9,65 +10,26 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The name of the method.
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The type sent by the client.
         /// </summary>
-        public Type InputType { get; }
+        public Type InputType { get; set; } = typeof(Empty);
 
         /// <summary>
         /// The type returned from the server.
         /// </summary>
-        public Type OutputType { get; }
+        public Type OutputType { get; set; } = typeof(Empty);
 
         /// <summary>
-        /// The shape of the API in terms of the arity of the input/output vales.
+        /// Identifies if server streams multiple server messages.
         /// </summary>
-        public MethodType MethodType { get; }
-
-        internal bool ServerStreaming => MethodType switch {
-            MethodType.ServerStreaming => true,
-            MethodType.DuplexStreaming => true,
-            _ => false
-        };
-        internal bool ClientStreaming => MethodType switch
-        {
-            MethodType.ClientStreaming => true,
-            MethodType.DuplexStreaming => true,
-            _ => false
-        };
+        public bool ServerStreaming { get; set; }
 
         /// <summary>
-        /// Create a mew <see cref="ServiceMethod"/> instance.
+        /// Identifies if client streams multiple client messages.
         /// </summary>
-        public ServiceMethod(string name, Type inputType, Type outputType, MethodType type)
-        {
-            Name = name;
-            InputType = inputType;
-            OutputType = outputType;
-            MethodType = type;
-        }
-    }
-
-    public enum MethodType
-    {
-        //
-        // Summary:
-        //     Single request sent from client, single response received from server.
-        Unary = 0,
-        //
-        // Summary:
-        //     Stream of request sent from client, single response received from server.
-        ClientStreaming = 1,
-        //
-        // Summary:
-        //     Single request sent from client, stream of responses received from server.
-        ServerStreaming = 2,
-        //
-        // Summary:
-        //     Both server and client can stream arbitrary number of requests and responses
-        //     simultaneously.
-        DuplexStreaming = 3
+        public bool ClientStreaming { get; set; }
     }
 }

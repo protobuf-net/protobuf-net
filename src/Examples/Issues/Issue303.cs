@@ -119,7 +119,7 @@ message vegetable {
         {
             var model = (RuntimeTypeModel)GetModel();
             model.Add(typeof (Examples.Issues.CompletelyUnrelated.Mineral), true);
-            var actual = model.GetSchema(null, new SchemaGenerationOptions(ProtoSyntax.Proto2, flags));
+            var actual = model.GetSchema(new SchemaGenerationOptions { Syntax = ProtoSyntax.Proto2, Flags = flags });
             Log(actual);
             Assert.Equal(expected, actual, ignoreLineEndingDifferences: true);
         }

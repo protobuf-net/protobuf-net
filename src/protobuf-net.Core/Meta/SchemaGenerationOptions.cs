@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Meta
 {
@@ -8,43 +8,38 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class SchemaGenerationOptions
     {
-        /// <summary>
-        /// Default options
-        /// </summary>
-        public static SchemaGenerationOptions Default { get; } = new SchemaGenerationOptions(ProtoSyntax.Default);
+        internal static readonly SchemaGenerationOptions Default = new SchemaGenerationOptions();
 
         /// <summary>
         /// Indiate the variant of the protobuf .proto DSL syntax to use
         /// </summary>
-        public ProtoSyntax Syntax { get; }
+        public ProtoSyntax Syntax { get; set; } = ProtoSyntax.Default;
 
         /// <summary>
         /// Additional flags to control schema generation
         /// </summary>
-        public SchemaGenerationFlags Flags { get; }
+        public SchemaGenerationFlags Flags { get; set; }
 
         /// <summary>
         /// The package to use for generation (<c>null</c> to try to infer)
         /// </summary>
-        public string Package { get; }
+        public string Package { get; set; }
 
         /// <summary>
         /// The services to consider as part of this operation.
         /// </summary>
-        public ImmutableArray<Service> Services { get; }
+        public List<Service> Services => _services ??= new List<Service>();
 
         /// <summary>
-        /// Create a new <see cref="SchemaGenerationOptions"/> instance
+        /// The types to consider as part of this operation.
         /// </summary>
-        public SchemaGenerationOptions(ProtoSyntax syntax, SchemaGenerationFlags flags = default, string package = null, ImmutableArray<Service> services = default)
-        {
-            Syntax = syntax;
-            Flags = flags;
-            Package = package;
-            Services = services.IsDefault ? ImmutableArray<Service>.Empty : services;
-        }
+        public List<Type> Types => _types ??= new List<Type>();
 
-        internal bool HasServices => !Services.IsDefaultOrEmpty;
+        private List<Service> _services;
+        private List<Type> _types;
+
+        internal bool HasServices => (_services?.Count ?? 0) != 0;
+        internal bool HasTypes => (_types?.Count ?? 0) != 0;
     }
 
     /// <summary>

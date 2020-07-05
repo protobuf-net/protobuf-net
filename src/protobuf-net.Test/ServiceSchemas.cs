@@ -15,18 +15,27 @@ namespace ProtoBuf.Test
         [Fact]
         public void GenerateServiceSchema()
         {
-            var methodsBuilder = ImmutableArray<ServiceMethod>.Empty.ToBuilder();
-            methodsBuilder.Add(new ServiceMethod("unary", typeof(Empty), typeof(Timestamp), MethodType.Unary));
-            methodsBuilder.Add(new ServiceMethod("clientStreaming", typeof(Foo), typeof(Foo), MethodType.ClientStreaming));
-            methodsBuilder.Add(new ServiceMethod("serverStreaming", typeof(Duration), typeof(Foo), MethodType.ServerStreaming));
-            methodsBuilder.Add(new ServiceMethod("fullDuplex", typeof(Foo), typeof(Foo), MethodType.DuplexStreaming));
+            var service = new Service
+            {
+                Name = "myService",
+                Methods =
+                {
+                    new ServiceMethod { Name = "unary", InputType = typeof(Empty), OutputType = typeof(Timestamp) },
+                    new ServiceMethod {Name = "clientStreaming", InputType = typeof(Foo), OutputType =typeof(Foo), ClientStreaming = true },
+                    new ServiceMethod {Name = "serverStreaming", InputType = typeof(Duration), OutputType =typeof(Foo), ServerStreaming = true },
+                    new ServiceMethod { Name = "fullDuplex", InputType = typeof(Foo), OutputType = typeof(Foo), ClientStreaming = true, ServerStreaming = true },
+                }
+            };
 
-            var servicesBuilder = ImmutableArray<Service>.Empty.ToBuilder();
-            servicesBuilder.Add(new Service("myService", methodsBuilder.ToImmutable()));
-
-            var schema = RuntimeTypeModel.Default.GetSchema(null,
-                new SchemaGenerationOptions(ProtoSyntax.Proto3, flags: SchemaGenerationFlags.PreserveSubType,
-                package: "mypackage", services: servicesBuilder.ToImmutable()));
+            var schema = RuntimeTypeModel.Default.GetSchema(
+                new SchemaGenerationOptions
+                {
+                    Syntax = ProtoSyntax.Proto3,
+                    Flags = SchemaGenerationFlags.PreserveSubType,
+                    Package = "mypackage",
+                    Services = { service }
+                }
+            );
             Log(schema);
             Assert.Equal(@"syntax = ""proto3"";
 package mypackage;

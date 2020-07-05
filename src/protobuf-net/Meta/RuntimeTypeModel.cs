@@ -196,23 +196,25 @@ namespace ProtoBuf.Meta
 
 
         /// <inheritdoc/>
-        public override string GetSchema(Type type, SchemaGenerationOptions options)
+        public override string GetSchema(SchemaGenerationOptions options)
         {
-            options ??= SchemaGenerationOptions.Default;
+            if (options is null) throw new ArgumentNullException(nameof(options));
             var syntax = Serializer.GlobalOptions.Normalize(options.Syntax);
             var requiredTypes = new List<MetaType>();
-            MetaType primaryType = null;
-            bool isInbuiltType = false;
+            List<Type> inbuiltTypes = default;
 
-            void AddType(Type toAdd)
+            MetaType primaryType = null;
+
+            MetaType AddType(Type type)
             {
                 // generate just relative to the supplied type
-                int index = FindOrAddAuto(toAdd, false, false, false, DefaultCompatibilityLevel);
-                if (index < 0) throw new ArgumentException("The type specified is not a contract-type", nameof(type));
+                int index = FindOrAddAuto(type, false, false, false, DefaultCompatibilityLevel);
+                if (index < 0) throw new ArgumentException($"The type specified is not a contract-type: '{type.NormalizeName()}'", nameof(type));
 
                 // get the required types
-                primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
-                AddMetaType(primaryType);
+                var mt = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
+                AddMetaType(mt);
+                return mt;
             }
             void AddMetaType(MetaType toAdd)
             {
@@ -223,7 +225,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (type == null && !options.HasServices)
+            if (!options.HasTypes && !options.HasServices)
             {
                 // generate for the entire model
                 foreach (MetaType meta in types)
@@ -234,15 +236,25 @@ namespace ProtoBuf.Meta
             }
             else
             {
-                if (type is object)
+                if (options.HasTypes)
                 {
-                    Type tmp = Nullable.GetUnderlyingType(type);
-                    if (tmp != null) type = tmp;
-
-                    isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, DefaultCompatibilityLevel, type, out var _, false, false, false, false) != null);
-                    if (!isInbuiltType)
+                    foreach (var type in options.Types)
                     {
-                        AddType(type);
+                        Type effectiveType = Nullable.GetUnderlyingType(type) ?? type;
+
+                        var isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, DefaultCompatibilityLevel, effectiveType, out var _, false, false, false, false) != null);
+                        if (isInbuiltType)
+                        {
+                            (inbuiltTypes ??= new List<Type>()).Add(effectiveType);
+                        }
+                        else
+                        {
+                            var mt = AddType(effectiveType);
+                            if (options.Types.Count == 1)
+                            {
+                                primaryType = mt;
+                            }
+                        }
                     }
                 }
                 if (options.HasServices)
@@ -262,9 +274,9 @@ namespace ProtoBuf.Meta
             StringBuilder headerBuilder = new StringBuilder();
             string package = options.Package;
 
-            if (package is null && !isInbuiltType)
+            if (package is null)
             {
-                IEnumerable<MetaType> typesForNamespace = primaryType == null ? types.Cast<MetaType>() : requiredTypes;
+                IEnumerable<MetaType> typesForNamespace = (options.HasTypes || options.HasServices) ? requiredTypes : types.Cast<MetaType>();
                 foreach (MetaType meta in typesForNamespace)
                 {
                     if (TryGetRepeatedProvider(meta.Type) != null) continue;
@@ -321,24 +333,24 @@ namespace ProtoBuf.Meta
             Array.Sort(metaTypesArr, new MetaType.Comparer(callstack));
 
             // write the messages
-            if (isInbuiltType)
+            if (inbuiltTypes is object)
             {
-                bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports))
-                    .Append(" value = 1;").AppendLine().Append('}');
-            }
-            else
-            {
-                for (int i = 0; i < metaTypesArr.Length; i++)
+                foreach (var type in inbuiltTypes)
                 {
-                    MetaType tmp = metaTypesArr[i];
-                    if (tmp.SerializerType is object)
-                    {
-                        continue; // not our concern
-                    }
-                    if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
-                    tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax, package, options.Flags);
+                    bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
+                    MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports))
+                        .Append(" value = 1;").AppendLine().Append('}');
                 }
+            }
+            for (int i = 0; i < metaTypesArr.Length; i++)
+            {
+                MetaType tmp = metaTypesArr[i];
+                if (tmp.SerializerType is object)
+                {
+                    continue; // not our concern
+                }
+                if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
+                tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax, package, options.Flags);
             }
 
             // write the services

@@ -33,7 +33,7 @@ message FooClass {
         [Fact]
         public void ProtoIncludesNamespaces()
         {
-            var proto = Serializer.GetProto<Issue647Types.Foo.FooClass>(new SchemaGenerationOptions(ProtoSyntax.Proto3, SchemaGenerationFlags.MultipleNamespaceSupport));
+            var proto = Serializer.GetProto(new SchemaGenerationOptions { Types = { typeof(Issue647Types.Foo.FooClass) }, Syntax = ProtoSyntax.Proto3, Flags = SchemaGenerationFlags.MultipleNamespaceSupport });
             Log(proto);
             Assert.Equal(ExpectedProto, proto, ignoreLineEndingDifferences: true);
         }

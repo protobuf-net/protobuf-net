@@ -39,7 +39,7 @@ namespace ProtoBuf.Test
             model.Add<HazRegularString>();
             model.Add<HazBlobish>();
             model.Add<HazMemoryBlobish>();
-            var schema = model.GetSchema(null);
+            var schema = model.GetSchema(null, ProtoSyntax.Default);
             _log?.WriteLine(schema);
             Assert.Equal(@"syntax = ""proto3"";
 package ProtoBuf.Test;
