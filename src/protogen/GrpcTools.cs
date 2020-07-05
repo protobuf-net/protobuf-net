@@ -100,6 +100,12 @@ namespace ProtoBuf
                         Console.WriteLine($"gRPC descriptors fetched: {set?.Files?.Count ?? 0}");
                         if (set is object)
                         {
+                            set.Process();
+                            foreach (var error in set.GetErrors())
+                            {
+                                errorCount++;
+                                Console.WriteLine($"{(error.IsError ? "error" : "warning")} {error.ErrorNumber}: {error.Message}");
+                            }
                             Program.WriteFiles(codegen.Generate(set, options: options), outPath);
                         }
                         break;
