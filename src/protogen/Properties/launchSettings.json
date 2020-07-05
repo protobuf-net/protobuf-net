@@ -2,7 +2,7 @@
   "profiles": {
     "protogen": {
       "commandName": "Project",
-      "commandLineArgs": "--proto_path=c:\\code\\test *.proto --csharp_out=c:\\code\\test",
+      "commandLineArgs": "--grpc get http://localhost:10042 grpc.reflection.v1alpha.ServerReflection --csharp_out=c:\\Code\\Dump +services=yes",
       "workingDirectory": "c:\\Code"
     }
   }
