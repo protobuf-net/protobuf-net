@@ -12,6 +12,11 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: build-time tooling from code-first (aka "generators")
 
 
+## 3.0.18
+
+- add new `SchemaGenerationOptions` API for schema generation; this allows service generation
+- tweaks to reflection services for gRPC (#617 via mholo65)
+
 ## 3.0.13
 
 - add support for deserializing directly from `ReadOnlySpan<byte>`
