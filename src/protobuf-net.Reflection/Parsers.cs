@@ -2812,7 +2812,7 @@ namespace ProtoBuf.Reflection
                 }
             }
         }
-        private static readonly char[] Period = { '.' };
+        internal static readonly char[] Period = { '.' };
         private void ReadOption<T>(ref T obj, ISchemaObject parent, List<UninterpretedOption.NamePart> existingNameParts = null) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
