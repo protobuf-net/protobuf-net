@@ -1687,7 +1687,28 @@ namespace ProtoBuf.Meta
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
         /// <param name="syntax">The .proto syntax to use for the operation</param>
-        public virtual string GetSchema(Type type, ProtoSyntax syntax)
+        public string GetSchema(Type type, ProtoSyntax syntax)
+        {
+            SchemaGenerationOptions options;
+            if (type is null && syntax == ProtoSyntax.Default)
+            {
+                options = SchemaGenerationOptions.Default;
+            }
+            else
+            {
+                options = new SchemaGenerationOptions { Syntax = syntax };
+                if (type is object) options.Types.Add(type);
+            }
+            return GetSchema(options);
+        }
+
+
+        /// <summary>
+        /// Suggest a .proto definition for the given configuration
+        /// </summary>
+        /// <returns>The .proto definition as a string</returns>
+        /// <param name="options">Options for schema generation</param>
+        public virtual string GetSchema(SchemaGenerationOptions options)
         {
             ThrowHelper.ThrowNotSupportedException();
             return default;

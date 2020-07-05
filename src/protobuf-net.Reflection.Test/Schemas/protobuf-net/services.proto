@@ -1,0 +1,24 @@
+﻿syntax = "proto3";
+package mypackage;
+import "protobuf-net/protogen.proto"; // custom protobuf-net options
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+message Bar {
+   string Value = 1;
+}
+message Foo {
+   .google.protobuf.Timestamp When = 1;
+   string Id = 2; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   oneof subtype {
+      option (.protobuf_net.oneofopt).isSubType = true;
+      Bar Bar = 42;
+   }
+}
+service myService {
+   rpc unary (.google.protobuf.Timestamp) returns (.google.protobuf.Empty);
+   rpc clientStreaming (Foo) returns (stream Foo);
+   rpc serverStreaming (stream Foo) returns (.google.protobuf.Duration);
+   rpc fullDuplex (stream Foo) returns (stream Foo);
+}

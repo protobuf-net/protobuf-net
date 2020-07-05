@@ -54,4 +54,9 @@
   <ItemGroup>
     <None Include="..\Tools\nwind.proto.bin" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Issues\Issue647.Generated.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
 </Project>

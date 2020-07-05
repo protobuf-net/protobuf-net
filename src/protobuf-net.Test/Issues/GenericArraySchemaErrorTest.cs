@@ -18,7 +18,7 @@ namespace ProtoBuf.Issues
 
             // Will throw System.ArgumentException in v3.0.0-alpha.43
             // "Data of this type has inbuilt behaviour, and cannot be added to a model in this way: SciTech.Rpc.BaseClass[]"
-            string schema = typeModel.GetSchema(null);
+            string schema = typeModel.GetSchema(null, ProtoSyntax.Default);
 
             Assert.NotEmpty(schema);
         }
@@ -71,7 +71,7 @@ namespace ProtoBuf.Issues
             typeModel.Add(genericArrayType, true);
 
             // Will throw System.ArgumentException in v3.0.0-alpha.43 (except for byte[])
-            string schema = typeModel.GetSchema(null);
+            string schema = typeModel.GetSchema(null, ProtoSyntax.Default);
 
             // Validate schema. Can be significantly improved, but should suffice for this 
             // bug fix I think.
@@ -99,11 +99,11 @@ namespace ProtoBuf.Issues
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for byte arrays
             var typeModel = RuntimeTypeModel.Create();
-            var schema = typeModel.GetSchema(null);
+            var schema = typeModel.GetSchema(null, ProtoSyntax.Default);
             Assert.Throws<NotSupportedException>( ()=>
             {
                 typeModel.Add(genericArrayType, true);
-                schema = typeModel.GetSchema(null);
+                schema = typeModel.GetSchema(null, ProtoSyntax.Default);
             });
         }
     }

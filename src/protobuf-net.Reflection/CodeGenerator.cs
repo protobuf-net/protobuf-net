@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace ProtoBuf.Reflection
 {
@@ -167,6 +168,17 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        static string GetNamespace(DescriptorProto message, string defaultNamespace)
+        {
+            var ns = message.Options?.GetOptions()?.Namespace;
+            return string.IsNullOrWhiteSpace(ns) ? defaultNamespace : ns;
+        }
+        static string GetNamespace(EnumDescriptorProto @enum, string defaultNamespace)
+        {
+            var ns = @enum.Options?.GetOptions()?.Namespace;
+            return string.IsNullOrWhiteSpace(ns) ? defaultNamespace : ns;
+        }
+
         /// <summary>
         /// Emits the code for a file in a descriptor-set
         /// </summary>
@@ -175,14 +187,29 @@ namespace ProtoBuf.Reflection
             object state = null;
             WriteFileHeader(ctx, file, ref state);
 
-            foreach (var inner in file.MessageTypes)
+            var @namespace = ctx.NameNormalizer.GetName(file) ?? "";
+
+            if (!string.IsNullOrWhiteSpace(@namespace))
+                WriteNamespaceHeader(ctx, @namespace);
+
+            var messagesByNamespace = file.MessageTypes.ToLookup(x => GetNamespace(x, @namespace));
+            var enumsByNamespace = file.EnumTypes.ToLookup(x => GetNamespace(x, @namespace));
+            var namespaces = messagesByNamespace.Select(x => x.Key).Union(enumsByNamespace.Select(x => x.Key));
+
+            void WriteMessagesAndEnums(string grp)
             {
-                WriteMessage(ctx, inner);
+                foreach (var inner in messagesByNamespace[grp])
+                {
+                    WriteMessage(ctx, inner);
+                }
+                foreach (var inner in enumsByNamespace[grp])
+                {
+                    WriteEnum(ctx, inner);
+                }
             }
-            foreach (var inner in file.EnumTypes)
-            {
-                WriteEnum(ctx, inner);
-            }
+
+            WriteMessagesAndEnums(@namespace);
+
             foreach (var inner in file.Services)
             {
                 WriteService(ctx, inner);
@@ -197,8 +224,31 @@ namespace ProtoBuf.Reflection
                 }
                 WriteExtensionsFooter(ctx, file, ref extState);
             }
+
+            if (!string.IsNullOrWhiteSpace(@namespace))
+                WriteNamespaceFooter(ctx, @namespace);
+
+
+            foreach (var altNs in namespaces)
+            {
+                if (altNs == @namespace) continue;
+                WriteNamespaceHeader(ctx, altNs);
+                WriteMessagesAndEnums(altNs);
+                WriteNamespaceFooter(ctx, altNs);
+            }
+
             WriteFileFooter(ctx, file, ref state);
         }
+
+        /// <summary>
+        /// Opens the stated namespace
+        /// </summary>
+        protected abstract void WriteNamespaceHeader(GeneratorContext ctx, string @namespace);
+        /// <summary>
+        /// Closes the stated namespace
+        /// </summary>
+        protected abstract void WriteNamespaceFooter(GeneratorContext ctx, string @namespace);
+
         /// <summary>
         /// Emit code representing an extension field
         /// </summary>

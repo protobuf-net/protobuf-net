@@ -2,6 +2,7 @@
 using ProtoBuf.Serializers;
 using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using static ProtoBuf.Meta.RuntimeTypeModel;
@@ -63,11 +64,11 @@ namespace ProtoBuf.Meta
         private TypeModel ForAssembly(Type type)
             => type == null ? NullModel.Singleton : CreateForAssembly(type.Assembly, null);
 
-        /// <summary>See TypeModel.GetSchema</summary>
-        public override string GetSchema(Type type, ProtoSyntax syntax)
-            => ForAssembly(type).GetSchema(type, syntax);
+        /// <inheritdoc/>
+        public override string GetSchema(SchemaGenerationOptions options)
+            => ForAssembly(options.HasTypes ? options.Types.First() : null).GetSchema(options);
 
-        /// <summary>See TypeModel.GetSerializer</summary>
+        /// <inheritdoc/>
         protected override ISerializer<T> GetSerializer<T>()
             => ForAssembly(typeof(T)).GetSerializerCore<T>(default);
 

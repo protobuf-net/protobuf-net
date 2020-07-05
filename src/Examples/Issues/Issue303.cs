@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using Xunit.Abstractions;
 
 namespace Examples.Issues
 {
@@ -69,13 +70,13 @@ message vegetable {
 
 );
         }
-        [Fact]
-        public void TestEntireModelWithMultipleNamespaces()
-        {
-            var model = (RuntimeTypeModel)GetModel();
-            model.Add(typeof (Examples.Issues.CompletelyUnrelated.Mineral), true);
-            Assert.Equal(
-                @"syntax = ""proto2"";
+
+        public Issue303(ITestOutputHelper log) => _log = log;
+        private readonly ITestOutputHelper _log;
+        private void Log(string message) => _log?.WriteLine(message);
+
+        [Theory]
+        [InlineData(SchemaGenerationFlags.None, @"syntax = ""proto2"";
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
@@ -91,12 +92,38 @@ message mineral {
 message vegetable {
    optional int32 size = 1 [default = 0];
 }
-",
+")]
+        [InlineData(SchemaGenerationFlags.MultipleNamespaceSupport, @"syntax = ""proto2"";
+import ""protobuf-net/protogen.proto""; // custom protobuf-net options
 
- model.GetSchema(null, ProtoSyntax.Proto2)
-
-);
+message animal {
+   option (.protobuf_net.msgopt).namespace = ""Examples.Issues"";
+   optional int32 numberOfLegs = 1 [default = 4];
+   oneof subtype {
+      cat cat = 4;
+   }
+}
+message cat {
+   option (.protobuf_net.msgopt).namespace = ""Examples.Issues"";
+   repeated animal animalsHunted = 1;
+}
+message mineral {
+   option (.protobuf_net.msgopt).namespace = ""Examples.Issues.CompletelyUnrelated"";
+}
+message vegetable {
+   option (.protobuf_net.msgopt).namespace = ""Examples.Issues"";
+   optional int32 size = 1 [default = 0];
+}
+")]
+        public void TestEntireModelWithMultipleNamespaces(SchemaGenerationFlags flags, string expected)
+        {
+            var model = (RuntimeTypeModel)GetModel();
+            model.Add(typeof (Examples.Issues.CompletelyUnrelated.Mineral), true);
+            var actual = model.GetSchema(new SchemaGenerationOptions { Syntax = ProtoSyntax.Proto2, Flags = flags });
+            Log(actual);
+            Assert.Equal(expected, actual, ignoreLineEndingDifferences: true);
         }
+
         [Fact]
         public void TestInheritanceStartingWithBaseType()
         {

@@ -40,6 +40,7 @@ message ProtogenMessageOptions {
   string name = 1;
   Access access = 2;
   string extensions = 3 [(.protobuf_net.fieldopt).name	= "ExtensionTypeName"];
+  string namespace = 4; // optional namespace, otherwise the order is: ProtogenFileOptions.namespace, global csharp_namespace, package
 }
 message ProtogenFieldOptions {
   string name = 1;

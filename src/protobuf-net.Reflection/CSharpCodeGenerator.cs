@@ -145,15 +145,19 @@ namespace ProtoBuf.Reflection
                 tw.Write(AdditionalSuppressionCodes);
             }
             tw.WriteLine();
+        }
 
-            var @namespace = ctx.NameNormalizer.GetName(file);
+        /// <inheritdoc/>
+        protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
+        {
+            ctx.WriteLine($"namespace {@namespace}");
+            ctx.WriteLine("{").Indent().WriteLine();
+        }
 
-            if (!string.IsNullOrWhiteSpace(@namespace))
-            {
-                state = @namespace;
-                ctx.WriteLine($"namespace {@namespace}");
-                ctx.WriteLine("{").Indent().WriteLine();
-            }
+        /// <inheritdoc/>
+        protected override void WriteNamespaceFooter(GeneratorContext ctx, string @namespace)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
         }
 
         /// <summary>
@@ -161,12 +165,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
-            var @namespace = (string)state;
             var prefix = ctx.Supports(CSharp6) ? "CS" : "";
-            if (!string.IsNullOrWhiteSpace(@namespace))
-            {
-                ctx.Outdent().WriteLine("}").WriteLine();
-            }
             var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
@@ -910,9 +909,24 @@ namespace ProtoBuf.Reflection
             }
         }
 
+
         private string MakeRelativeName(FieldDescriptorProto field, IType target, NameNormalizer normalizer)
         {
             if (target == null) return Escape(field.TypeName); // the only thing we know
+
+            switch(target)
+            {
+                case DescriptorProto message:
+                    var overrideNs = message.Options?.GetOptions()?.Namespace;
+                    if (!string.IsNullOrWhiteSpace(overrideNs))
+                        return "global::" + overrideNs + "." + Escape(normalizer.GetName(message));
+                    break;
+                case EnumDescriptorProto @enum:
+                    overrideNs = @enum.Options?.GetOptions()?.Namespace;
+                    if (!string.IsNullOrWhiteSpace(overrideNs))
+                        return "global::" + overrideNs + "." + Escape(normalizer.GetName(@enum));
+                    break;
+            };
 
             var declaringType = field.Parent;
 

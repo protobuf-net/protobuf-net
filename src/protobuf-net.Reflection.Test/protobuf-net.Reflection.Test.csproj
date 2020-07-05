@@ -49,7 +49,7 @@
     <None Update="protoc.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Schemas\issues\issue594.proto">
+    <None Update="Schemas\issues\**\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Schemas\google\**\*.proto">

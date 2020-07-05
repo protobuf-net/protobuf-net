@@ -1,4 +1,6 @@
-﻿namespace ProtoBuf.Meta
+﻿using System;
+
+namespace ProtoBuf.Meta
 {
     /// <summary>
     /// Indiate the variant of the protobuf .proto DSL syntax to use

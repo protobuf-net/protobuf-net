@@ -1,0 +1,14 @@
+﻿syntax = "proto3";
+import "protobuf-net/protogen.proto"; // custom protobuf-net options
+
+message BarClass {
+   option (.protobuf_net.msgopt).namespace = "ProtoBuf.Issues.Issue647Types.Bar";
+}
+message BazClass {
+   option (.protobuf_net.msgopt).namespace = "ProtoBuf.Issues.Issue647Types.Baz";
+}
+message FooClass {
+   option (.protobuf_net.msgopt).namespace = "ProtoBuf.Issues.Issue647Types.Foo";
+   BarClass BarMember = 1;
+   BazClass BazMember = 2;
+}

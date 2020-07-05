@@ -324,7 +324,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-
         private string name;
 
         /// <summary>
@@ -1838,15 +1837,16 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_IsGroup, value, true); }
         }
 
-        internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
+        internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax,
+            string package, SchemaGenerationFlags flags)
         {
             if (surrogate != null) return; // nothing to write
 
+            bool multipleNamespaceSupport = (flags & SchemaGenerationFlags.MultipleNamespaceSupport) != 0;
             var repeated = model.TryGetRepeatedProvider(Type);
 
             if (repeated != null)
             {
-                
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
 
                 if (repeated.IsValidProtobufMap(model, CompatibilityLevel, DataFormat.Default))
@@ -1872,6 +1872,8 @@ namespace ProtoBuf.Meta
                 if (ResolveTupleConstructor(Type, out MemberInfo[] mapping) != null)
                 {
                     NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
+                    AddNamespace(ref imports);
+
                     for (int i = 0; i < mapping.Length; i++)
                     {
                         Type effectiveType;
@@ -1902,6 +1904,7 @@ namespace ProtoBuf.Meta
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
+                AddNamespace(ref imports);
 
                 if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
@@ -1964,6 +1967,7 @@ namespace ProtoBuf.Meta
             {
                 ValueMember[] fieldsArr = GetFields();
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
+                AddNamespace(ref imports);
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
@@ -2054,15 +2058,22 @@ namespace ProtoBuf.Meta
                     SubType[] subTypeArr = _subTypes.ToArray();
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
                     string[] fieldNames = new string[subTypeArr.Length];
-                    for(int i = 0; i < subTypeArr.Length;i++)
+                    for (int i = 0; i < subTypeArr.Length; i++)
                         fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName(callstack);
 
                     string fieldName = "subtype";
                     while (Array.IndexOf(fieldNames, fieldName) >= 0)
                         fieldName = "_" + fieldName;
 
+
                     NewLine(builder, indent + 1).Append("oneof ").Append(fieldName).Append(" {");
-                    for(int i = 0; i < subTypeArr.Length; i++)
+
+                    if ((flags & SchemaGenerationFlags.PreserveSubType) != 0)
+                    {
+                        imports |= RuntimeTypeModel.CommonImports.Protogen;
+                        NewLine(builder, indent + 2).Append("option (.protobuf_net.oneofopt).isSubType = true;");
+                    }
+                    for (int i = 0; i < subTypeArr.Length; i++)
                     {
                         var subTypeName = fieldNames[i];
                         NewLine(builder, indent + 2).Append(subTypeName)
@@ -2074,6 +2085,24 @@ namespace ProtoBuf.Meta
                 NewLine(builder, indent).Append('}');
             }
 
+            void AddNamespace(ref RuntimeTypeModel.CommonImports commonImports)
+            {
+                if (!multipleNamespaceSupport || IsAutoTuple || string.IsNullOrWhiteSpace(Type.Namespace) || Type.Namespace == package)
+                    return;
+
+                commonImports |= RuntimeTypeModel.CommonImports.Protogen;
+                NewLine(builder, indent + 1).Append("option (.protobuf_net.");
+                if (Type.IsEnum)
+                {
+                    builder.Append("enumopt");
+                }
+                else
+                {
+                    builder.Append("msgopt");
+                }
+                builder.Append(").namespace = \"" + Type.Namespace + "\";");
+
+            }
             void AppendReservations()
             {
                 foreach (var reservation in _reservations)
