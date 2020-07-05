@@ -2,7 +2,7 @@
   "profiles": {
     "protogen": {
       "commandName": "Project",
-      "commandLineArgs": "--proto_path=c:\\code\\test *.proto --csharp_out=c:\\code\\test",
+      "commandLineArgs": "--grpc get http://localhost:10042 Shared_CS.Calculator --csharp_out=.",
       "workingDirectory": "c:\\Code"
     }
   }

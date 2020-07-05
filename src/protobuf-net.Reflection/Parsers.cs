@@ -736,7 +736,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Indicates whether this file is intended as part of the output set of the parse operation.
         /// </summary>
-        public bool IncludeInOutput { get; internal set; }
+        public bool IncludeInOutput { get; set; }
 
         /// <summary>
         /// Controls external serialization

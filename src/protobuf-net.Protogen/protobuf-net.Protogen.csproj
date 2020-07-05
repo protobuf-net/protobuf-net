@@ -9,12 +9,19 @@
     <ToolCommandName>protogen</ToolCommandName>
     <PackageId>protobuf-net.Protogen</PackageId>
     <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
+    <GrpcTools>false</GrpcTools>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
+    <GrpcTools>true</GrpcTools>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GrpcTools)'=='true'">
+    <DefineConstants>$(DefineConstants);GRPC_TOOLS</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\protogen\**\*.cs" Exclude="..\protogen\obj\**\*" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="../protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <PackageReference Include="protobuf-net.Grpc.Reflection" Version="1.0.110" Condition="'$(GrpcTools)'=='true'" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.29.0" Condition="'$(GrpcTools)'=='true'"/>
   </ItemGroup>
 </Project>
