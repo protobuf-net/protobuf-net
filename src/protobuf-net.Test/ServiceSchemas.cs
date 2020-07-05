@@ -21,8 +21,8 @@ namespace ProtoBuf.Test
                 Methods =
                 {
                     new ServiceMethod { Name = "unary", InputType = typeof(Empty), OutputType = typeof(Timestamp) },
-                    new ServiceMethod {Name = "clientStreaming", InputType = typeof(Foo), OutputType =typeof(Foo), ClientStreaming = true },
-                    new ServiceMethod {Name = "serverStreaming", InputType = typeof(Duration), OutputType =typeof(Foo), ServerStreaming = true },
+                    new ServiceMethod { Name = "clientStreaming", InputType = typeof(Foo), OutputType =typeof(Foo), ClientStreaming = true },
+                    new ServiceMethod { Name = "serverStreaming", InputType = typeof(Duration), OutputType =typeof(Foo), ServerStreaming = true },
                     new ServiceMethod { Name = "fullDuplex", InputType = typeof(Foo), OutputType = typeof(Foo), ClientStreaming = true, ServerStreaming = true },
                 }
             };
@@ -56,9 +56,9 @@ message Foo {
    }
 }
 service myService {
-   rpc unary (.google.protobuf.Timestamp) returns (.google.protobuf.Empty);
+   rpc unary (.google.protobuf.Empty) returns (.google.protobuf.Timestamp);
    rpc clientStreaming (Foo) returns (stream Foo);
-   rpc serverStreaming (stream Foo) returns (.google.protobuf.Duration);
+   rpc serverStreaming (stream .google.protobuf.Duration) returns (Foo);
    rpc fullDuplex (stream Foo) returns (stream Foo);
 }
 ", schema, ignoreLineEndingDifferences: true);

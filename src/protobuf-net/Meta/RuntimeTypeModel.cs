@@ -365,9 +365,9 @@ namespace ProtoBuf.Meta
                         var replyName = GetSchemaTypeName(callstack, method.OutputType, DataFormat.Default, DefaultCompatibilityLevel, false, false, ref imports);
                         MetaType.NewLine(bodyBuilder, 1).Append("rpc ").Append(method.Name).Append(" (")
                             .Append(method.ServerStreaming ? "stream " : "")
-                            .Append(replyName).Append(") returns (")
+                            .Append(inputName).Append(") returns (")
                             .Append(method.ClientStreaming ? "stream " : "")
-                            .Append(inputName).Append(");");
+                            .Append(replyName).Append(");");
                     }
                     MetaType.NewLine(bodyBuilder, 0).Append("}");
                 }

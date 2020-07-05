@@ -12,6 +12,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: build-time tooling from code-first (aka "generators")
 
 
+## 3.0.20
+
+- fix bug in `SchemaGenerationOptions` (inverted input/output)
 ## 3.0.18
 
 - add new `SchemaGenerationOptions` API for schema generation; this allows service generation
