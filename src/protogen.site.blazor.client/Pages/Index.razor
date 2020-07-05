@@ -43,18 +43,24 @@
                             </div>
                         }
                         <div class="form-group form-check ml-2">
+                            <input class="form-check-input" type="checkbox" @bind="model.Services" id="services" />
+                            <label class="form-check-label" for="services">
+                                generate services
+                            </label>
+                        </div>
+                        <div class="form-group form-check ml-2">
                             <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
                             <label class="form-check-label" for="oneof">
                                 <code>oneof</code> should use enum
                             </label>
                         </div>
-                        <div class="form-group form-check ">
+                        <div class="form-group form-check ml-2">
                             <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
                             <label class="form-check-label" for="repeated_accessors">
                                 <code>repeated</code> should emit <code>set</code> accessors
                             </label>
                         </div>
-                        <div class="form-group ">
+                        <div class="form-group">
                             <label for="namingConvention">Naming convention</label>
                             <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control">
                                 @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
@@ -67,7 +73,7 @@
                         </div>
                         <div class="form-group">
 
-                            <button  type="button" class="btn btn-sm btn-secondary" @onclick="LoadProtoWithOptions">
+                            <button type="button" class="btn btn-sm btn-secondary" @onclick="LoadProtoWithOptions">
                                 Load proto with options
                             </button>
                         </div>

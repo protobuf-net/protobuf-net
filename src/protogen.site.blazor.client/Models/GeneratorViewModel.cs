@@ -29,13 +29,17 @@ namespace ProtoBuf.Models
         };
 
         [Required]
-        public GeneratorLanguageEnum Language {
+        public GeneratorLanguageEnum Language
+        {
             get => language;
-            set {
+            set
+            {
                 language = value;
                 LanguageVersion = null;
             }
         }
+
+        public bool? Services { get; set; } = true;
         public bool? OneOfEnum { get; set; } = false;
         public bool? RepeatedEmitSetAccessors { get; set; } = false;
 
@@ -70,6 +74,10 @@ namespace ProtoBuf.Models
             }
             if (OneOfEnum.GetValueOrDefault (false)) {
                 res.Add ("oneof", "enum");
+            }
+            if (Services.GetValueOrDefault(false))
+            {
+                res.Add("services", "yes");
             }
             if (RepeatedEmitSetAccessors.GetValueOrDefault (false)) {
                 res.Add ("listset", "yes");
