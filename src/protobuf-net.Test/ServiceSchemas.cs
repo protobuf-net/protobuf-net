@@ -57,8 +57,8 @@ message Foo {
 }
 service myService {
    rpc unary (.google.protobuf.Empty) returns (.google.protobuf.Timestamp);
-   rpc clientStreaming (Foo) returns (stream Foo);
-   rpc serverStreaming (stream .google.protobuf.Duration) returns (Foo);
+   rpc clientStreaming (stream Foo) returns (Foo);
+   rpc serverStreaming (.google.protobuf.Duration) returns (stream Foo);
    rpc fullDuplex (stream Foo) returns (stream Foo);
 }
 ", schema, ignoreLineEndingDifferences: true);
