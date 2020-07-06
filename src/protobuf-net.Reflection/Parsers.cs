@@ -2176,6 +2176,7 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class ServiceDescriptorProto : ISchemaObject, IType
     {
+        /// <inheritdoc/>
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         string IType.FullyQualifiedName => FullyQualifiedName;
@@ -2217,6 +2218,7 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class MethodDescriptorProto : ISchemaObject, IType
     {
+        /// <inheritdoc/>
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         string IType.FullyQualifiedName => FullyQualifiedName;

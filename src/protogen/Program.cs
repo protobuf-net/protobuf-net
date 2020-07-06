@@ -145,6 +145,7 @@ namespace protogen
                     return await GrpcTools.ExecuteAsync(grpcMode, grpcUrl, grpcService, codegen, outPath, options);
 #else
                     Console.Error.Write("gRPC tools are not available on this platform");
+                    await Task.Yield(); // this is just to make the compiler happy, and doesn't really matter
                     return 1;
 #endif
                 }
