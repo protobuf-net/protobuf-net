@@ -1,7 +1,10 @@
 ﻿using ProtoBuf.Meta;
 using ProtoBuf.WellKnownTypes;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.Serialization;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -81,6 +84,55 @@ service myService {
         {
             [ProtoMember(1)]
             public decimal Value { get; set; }
+        }
+
+
+        [Fact]
+        public void IEnumerableServiceSchema()
+        {
+            var service = new Service
+            {
+                Name = "ConferencesService",
+                Methods =
+                {
+                    new ServiceMethod { Name = "ListConferencesEnumerable", InputType = typeof(Empty), OutputType = typeof(IEnumerable<ConferenceOverview>) },
+                }
+            };
+
+            var schema = RuntimeTypeModel.Default.GetSchema(
+                new SchemaGenerationOptions
+                {
+                    Syntax = ProtoSyntax.Proto3,
+                    Package = "protobuf_net.Grpc.Reflection.Test",
+                    Services = { service }
+                }
+            );
+            Log(schema);
+            Assert.Equal(@"syntax = ""proto3"";
+package protobuf_net.Grpc.Reflection.Test;
+import ""google/protobuf/empty.proto"";
+
+message ConferenceOverview {
+   string ID = 1; // default value could not be applied: 00000000-0000-0000-0000-000000000000
+   string Title = 2;
+}
+message IEnumerable_ConferenceOverview {
+   repeated ConferenceOverview items = 1;
+}
+service ConferencesService {
+   rpc ListConferencesEnumerable (.google.protobuf.Empty) returns (IEnumerable_ConferenceOverview);
+}
+", schema, ignoreLineEndingDifferences: true);
+        }
+
+        [DataContract, CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class ConferenceOverview
+        {
+            [DataMember(Order = 1)]
+            public Guid ID { get; set; }
+
+            [DataMember(Order = 2)]
+            public string Title { get; set; }
         }
     }
 }

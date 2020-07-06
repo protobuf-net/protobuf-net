@@ -202,11 +202,13 @@ namespace ProtoBuf.Meta
             var syntax = Serializer.GlobalOptions.Normalize(options.Syntax);
             var requiredTypes = new List<MetaType>();
             List<Type> inbuiltTypes = default;
+            HashSet<Type> forceGenerationTypes = null;
+            bool IsOutputForcedFor(Type type)
+                => forceGenerationTypes?.Contains(type) ?? false;
 
-            MetaType primaryType = null;
-
-            MetaType AddType(Type type)
+            MetaType AddType(Type type, bool forceOutput)
             {
+                if (forceOutput && type is object) (forceGenerationTypes ??= new HashSet<Type>()).Add(type);
                 // generate just relative to the supplied type
                 int index = FindOrAddAuto(type, false, false, false, DefaultCompatibilityLevel);
                 if (index < 0) throw new ArgumentException($"The type specified is not a contract-type: '{type.NormalizeName()}'", nameof(type));
@@ -249,11 +251,7 @@ namespace ProtoBuf.Meta
                         }
                         else
                         {
-                            var mt = AddType(effectiveType);
-                            if (options.Types.Count == 1)
-                            {
-                                primaryType = mt;
-                            }
+                            var mt = AddType(effectiveType, options.Types.Count == 1);
                         }
                     }
                 }
@@ -263,8 +261,8 @@ namespace ProtoBuf.Meta
                     {
                         foreach (var method in service.Methods)
                         {
-                            AddType(method.InputType);
-                            AddType(method.OutputType);
+                            AddType(method.InputType, true);
+                            AddType(method.OutputType, true);
                         }
                     }
                 }
@@ -349,7 +347,7 @@ namespace ProtoBuf.Meta
                 {
                     continue; // not our concern
                 }
-                if (tmp != primaryType && TryGetRepeatedProvider(tmp.Type) != null) continue;
+                if (!IsOutputForcedFor(tmp.Type) && TryGetRepeatedProvider(tmp.Type) != null) continue;
                 tmp.WriteSchema(callstack, bodyBuilder, 0, ref imports, syntax, package, options.Flags);
             }
 
