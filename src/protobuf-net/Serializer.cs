@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -316,15 +317,37 @@ namespace ProtoBuf
             /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
             /// <returns>A new, initialized instance.</returns>
             public static object Deserialize(Type type, Stream source)
-            {
-                using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
-                return state.DeserializeRootFallback(null, type);
-            }
+                => RuntimeTypeModel.Default.Deserialize(type, source);
+
+            /// <summary>
+            /// Creates a new instance from a protocol-buffer stream
+            /// </summary>
+            public static object Deserialize(Type type, Stream source, object instance = null, object userState = null, long length = ProtoReader.TO_EOF)
+                => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState, length);
+
+            /// <summary>
+            /// Creates a new instance from a protocol-buffer stream
+            /// </summary>
+            public static object Deserialize(Type type, ReadOnlyMemory<byte> source, object instance = null, object userState = null)
+                => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState);
+
+            /// <summary>
+            /// Creates a new instance from a protocol-buffer stream
+            /// </summary>
+            public static object Deserialize(Type type, ReadOnlySequence<byte> source, object instance = null, object userState = null)
+                => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState);
+
+            /// <summary>
+            /// Creates a new instance from a protocol-buffer stream
+            /// </summary>
+            public static object Deserialize(Type type, ReadOnlySpan<byte> source, object instance = null, object userState = null)
+                => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState);
 
             /// <summary>Applies a protocol-buffer stream to an existing instance.</summary>
             /// <param name="instance">The existing instance to be modified (cannot be null).</param>
             /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
             /// <returns>The updated instance</returns>
+            [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
             public static object Merge(Stream source, object instance)
             {
                 if (instance == null) throw new ArgumentNullException(nameof(instance));

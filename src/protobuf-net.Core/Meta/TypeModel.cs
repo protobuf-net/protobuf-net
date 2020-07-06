@@ -5,6 +5,7 @@ using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -697,6 +698,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Deserialize(Stream source, object value, Type type)
         {
             using var state = ProtoReader.State.Create(source, this, null, ProtoReader.TO_EOF);
@@ -713,6 +715,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Deserialize(Stream source, object value, Type type, SerializationContext context)
         {
             using var state = ProtoReader.State.Create(source, this, context, ProtoReader.TO_EOF);
@@ -801,6 +804,88 @@ namespace ProtoBuf.Meta
             return state.DeserializeRootImpl<T>(value);
         }
 
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public object Deserialize(Type type, Stream source, object value = default, object userState = null, long length = ProtoReader.TO_EOF)
+        {
+            using var state = ProtoReader.State.Create(source, this, userState, length);
+            return state.DeserializeRootFallback(value, type);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public object Deserialize(Type type, ReadOnlyMemory<byte> source, object value = default, object userState = null)
+        {
+            using var state = ProtoReader.State.Create(source, this, userState);
+            return state.DeserializeRootFallback(value, type);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public unsafe object Deserialize(Type type, ReadOnlySpan<byte> source, object value = default, object userState = null)
+        {
+            // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
+            // means we need to be able to persist the span as a memory; the only way to do this
+            // *safely and reliably* is to pint the span for the duration of the deserialize, and throw the
+            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocs)
+            fixed (byte* ptr = source)
+            {
+                FixedMemoryManager wrapper = null;
+                ProtoReader.State state = default;
+                try
+                {
+                    wrapper = Pool<FixedMemoryManager>.TryGet() ?? new FixedMemoryManager();
+                    state = ProtoReader.State.Create(wrapper.Init(ptr, source.Length), this, userState);
+                    return state.DeserializeRootFallback(value, type);
+                }
+                finally
+                {
+                    state.Dispose();
+                    Pool<FixedMemoryManager>.Put(wrapper);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="userState">Additional information about this serialization operation.</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public object Deserialize(Type type, ReadOnlySequence<byte> source, object value = default, object userState = null)
+        {
+            using var state = ProtoReader.State.Create(source, this, userState);
+            return state.DeserializeRootFallback(value, type);
+        }
+
         internal static bool PrepareDeserialize(object value, ref Type type)
         {
             if (type == null || type == typeof(object))
@@ -833,6 +918,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Deserialize(Stream source, object value, System.Type type, int length)
             => Deserialize(source, value, type, length, null);
 
@@ -846,6 +932,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Deserialize(Stream source, object value, System.Type type, long length)
             => Deserialize(source, value, type, length, null);
 
@@ -860,6 +947,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
             => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)length, context);
 
@@ -874,6 +962,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
             var state = ProtoReader.State.Create(source, this, context, length);

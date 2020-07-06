@@ -68,6 +68,14 @@ namespace ProtoBuf.Test
             Check(obj);
         }
 
+        [Fact]
+        public void ReadSpanNonGeneric()
+        {
+            ReadOnlySpan<byte> span = payload;
+            var obj = Assert.IsType<HazMaps>(RuntimeTypeModel.Default.Deserialize(typeof(HazMaps), span));
+            Check(obj);
+        }
+
         private void CheckVia<T>(T value)
         {
             var api = Assert.IsAssignableFrom<IProtoInput<T>>(RuntimeTypeModel.Default);
