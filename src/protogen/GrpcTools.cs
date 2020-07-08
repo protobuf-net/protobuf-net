@@ -33,7 +33,8 @@ namespace ProtoBuf
                 Console.Error.WriteLine($"Unknown gRPC mode: '{modeString}'");
                 return 1;
             }
-            if (string.IsNullOrWhiteSpace(outPath))
+            if (string.IsNullOrWhiteSpace(outPath) &&
+                mode == GrpcMode.Get)
             {
                 Console.Error.WriteLine($"Missing output directive; please specify --csharp_out etc");
                 return 1;
