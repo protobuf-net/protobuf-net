@@ -91,7 +91,7 @@ using (var file = File.OpenRead("person.bin")) {
 
 ### Inheritance
 
-Inheritance must be explicitly declared, in a similar way that if must for XmlSerializer and DataContractSerializer. This is done via [ProtoInclude(...)] on each type with known sub-types: 
+Inheritance must be explicitly declared, in a similar way that it must for XmlSerializer and DataContractSerializer. This is done via [ProtoInclude(...)] on each type with known sub-types: 
 
 ```csharp
 [ProtoContract]
