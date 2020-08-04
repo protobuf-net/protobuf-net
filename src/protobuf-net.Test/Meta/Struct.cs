@@ -85,7 +85,7 @@ namespace ProtoBuf.unittest.Meta
                 new IRuntimeProtoSerializerNode[] {
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty(nameof(CustomerStruct.Id)), new TagDecorator(1, WireType.Varint, false, Int32Serializer.Instance)),
                     new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField(nameof(CustomerStruct.Name)), new TagDecorator(2, WireType.String, false, StringSerializer.Instance))
-                }, null, false, true, null, null, null, null, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
+                }, null, false, true, true, null, null, null, null, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
 
             var state = ProtoReader.State.Create(Stream.Null, null, null);
@@ -121,7 +121,7 @@ namespace ProtoBuf.unittest.Meta
                 new IRuntimeProtoSerializerNode[] {
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty(nameof(CustomerStruct.Id)), new TagDecorator(1, WireType.Varint,false, Int32Serializer.Instance)),
                     new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField(nameof(CustomerStruct.Name)), new TagDecorator(2, WireType.String,false, StringSerializer.Instance))
-                }, null, false, true, null, null, null, null, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
+                }, null, false, true, true, null, null, null, null, SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage);
             var ser = CompilerContext.BuildSerializer<CustomerStruct>(model.Scope, head, model);
             var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };

@@ -492,7 +492,8 @@ namespace ProtoBuf.Meta
                 {
                     CompatibilityLevel = CompatibilityLevel
                 };
-                return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
+                return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer },
+                    null, true, true, !IgnoreUnknownSubTypes, null,
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
 
@@ -565,7 +566,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor,
+            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, !IgnoreUnknownSubTypes,
                 callbacks, constructType, factory, GetInheritanceRoot(), GetFeatures());
         }
 
@@ -713,6 +714,7 @@ namespace ProtoBuf.Meta
 #endif
                         if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int)tmp > 0) implicitFirstTag = (int)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.IgnoreUnknownSubTypes), out tmp)) IgnoreUnknownSubTypes = (bool)tmp;
 
                         if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp)) SetSurrogate((Type)tmp);
                         if (item.TryGet(nameof(ProtoContractAttribute.Serializer), out tmp)) SerializerType = (Type)tmp;
@@ -1737,6 +1739,15 @@ namespace ProtoBuf.Meta
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether unknown sub-types should cause serialization failure
+        /// </summary>
+        public bool IgnoreUnknownSubTypes
+        {
+            get => HasFlag(TypeOptions.IgnoreUnknownSubTypes);
+            set => SetFlag(TypeOptions.IgnoreUnknownSubTypes, value, true);
+        }
+
         internal bool Pending
         {
             get { return HasFlag(TypeOptions.Pending); }
@@ -1757,7 +1768,7 @@ namespace ProtoBuf.Meta
             AutoTuple = 64,
             IgnoreListHandling = 128,
             IsGroup = 256,
-            IgnoreUnknownSubType = 512,
+            IgnoreUnknownSubTypes = 512,
         }
 
         private volatile TypeOptions flags;
