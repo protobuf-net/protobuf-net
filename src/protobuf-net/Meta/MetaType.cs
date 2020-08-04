@@ -79,8 +79,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IncludeSerializerMethod
         {   // negated to minimize common-case / initializer
-            get { return !HasFlag(OPTIONS_PrivateOnApi); }
-            set { SetFlag(OPTIONS_PrivateOnApi, !value, true); }
+            get { return !HasFlag(TypeOptions.PrivateOnApi); }
+            set { SetFlag(TypeOptions.PrivateOnApi, !value, true); }
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ namespace ProtoBuf.Meta
             {
                 // we'all allow add, to allow proxy generation, but
                 // don't play with it too much!
-                SetFlag(OPTIONS_Frozen, true, false);
+                SetFlag(TypeOptions.Frozen, true, false);
             }
             this.model = model;
         }
@@ -402,7 +402,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         internal void ThrowIfFrozen()
         {
-            if ((flags & OPTIONS_Frozen) != 0) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + Type.FullName);
+            if ((flags & TypeOptions.Frozen) != 0) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + Type.FullName);
         }
 
         // internal void Freeze() { flags |= OPTIONS_Frozen; }
@@ -426,7 +426,7 @@ namespace ProtoBuf.Meta
                         if (_serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
-                            SetFlag(OPTIONS_Frozen, true, false);
+                            SetFlag(TypeOptions.Frozen, true, false);
                             _serializer = BuildSerializer();
 
                             if (model.AutoCompile) CompileInPlace();
@@ -614,7 +614,7 @@ namespace ProtoBuf.Meta
             AttributeFamily family = GetContractFamily(model, Type, typeAttribs);
             if (family == AttributeFamily.AutoTuple)
             {
-                SetFlag(OPTIONS_AutoTuple, true, true);
+                SetFlag(TypeOptions.AutoTuple, true, true);
             }
             // note this needs to happen *after* the auto-tuple check, for call-site semantics
             var compatLevel = CompatibilityLevel;
@@ -1322,8 +1322,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool UseConstructor
         { // negated to have defaults as flat zero
-            get { return !HasFlag(OPTIONS_SkipConstructor); }
-            set { SetFlag(OPTIONS_SkipConstructor, !value, true); }
+            get { return !HasFlag(TypeOptions.SkipConstructor); }
+            set { SetFlag(TypeOptions.SkipConstructor, !value, true); }
         }
 
         /// <summary>
@@ -1729,36 +1729,40 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IgnoreListHandling
         {
-            get { return HasFlag(OPTIONS_IgnoreListHandling); }
+            get { return HasFlag(TypeOptions.IgnoreListHandling); }
             set
             {
-                SetFlag(OPTIONS_IgnoreListHandling, value, true);
+                SetFlag(TypeOptions.IgnoreListHandling, value, true);
                 model.ResetServiceCache(Type); // changes how collections are handled
             }
         }
 
         internal bool Pending
         {
-            get { return HasFlag(OPTIONS_Pending); }
-            set { SetFlag(OPTIONS_Pending, value, false); }
+            get { return HasFlag(TypeOptions.Pending); }
+            set { SetFlag(TypeOptions.Pending, value, false); }
         }
 
-        private const ushort
-            OPTIONS_Pending = 1,
-            // OPTIONS_EnumPassThru = 2,
-            OPTIONS_Frozen = 4,
-            OPTIONS_PrivateOnApi = 8,
-            OPTIONS_SkipConstructor = 16,
+        private enum TypeOptions : ushort
+        {
+            None = 0,
+            Pending = 1,
+            // EnumPassThru = 2,
+            Frozen = 4,
+            PrivateOnApi = 8,
+            SkipConstructor = 16,
 #if FEAT_DYNAMIC_REF
-            OPTIONS_AsReferenceDefault = 32,
+            AsReferenceDefault = 32,
 #endif
-            OPTIONS_AutoTuple = 64,
-            OPTIONS_IgnoreListHandling = 128,
-            OPTIONS_IsGroup = 256;
+            AutoTuple = 64,
+            IgnoreListHandling = 128,
+            IsGroup = 256,
+            IgnoreUnknownSubType = 512,
+        }
 
-        private volatile ushort flags;
-        private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
-        private void SetFlag(ushort flag, bool value, bool throwIfFrozen)
+        private volatile TypeOptions flags;
+        private bool HasFlag(TypeOptions flag) { return (flags & flag) == flag; }
+        private void SetFlag(TypeOptions flag, bool value, bool throwIfFrozen)
         {
             if (throwIfFrozen && HasFlag(flag) != value)
             {
@@ -1767,7 +1771,7 @@ namespace ProtoBuf.Meta
             if (value)
                 flags |= flag;
             else
-                flags = (ushort)(flags & ~flag);
+                flags &= ~flag;
         }
 
         private Type _serializerType;
@@ -1826,15 +1830,15 @@ namespace ProtoBuf.Meta
             return builder.AppendLine().Append(' ', indent * 3);
         }
 
-        internal bool IsAutoTuple => HasFlag(OPTIONS_AutoTuple);
+        internal bool IsAutoTuple => HasFlag(TypeOptions.AutoTuple);
 
         /// <summary>
         /// Indicates whether this type should always be treated as a "group" (rather than a string-prefixed sub-message)
         /// </summary>
         public bool IsGroup
         {
-            get { return HasFlag(OPTIONS_IsGroup); }
-            set { SetFlag(OPTIONS_IsGroup, value, true); }
+            get { return HasFlag(TypeOptions.IsGroup); }
+            set { SetFlag(TypeOptions.IsGroup, value, true); }
         }
 
         internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax,
