@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 
 namespace ProtoBuf.Meta
@@ -17,8 +19,9 @@ namespace ProtoBuf.Meta
         public abstract Type AttributeType { get; }
         public static AttributeMap[] Create(Type type, bool inherit)
         {
-
             object[] all = type.GetCustomAttributes(inherit);
+            // add attributes by `TypeDescriptor.AddAttributes()` at runtime.
+            all = all.Concat(TypeDescriptor.GetAttributes(type).OfType<Attribute>()).ToArray();
             AttributeMap[] result = new AttributeMap[all.Length];
             for(int i = 0 ; i < all.Length ; i++)
             {
