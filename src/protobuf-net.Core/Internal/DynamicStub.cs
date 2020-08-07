@@ -48,7 +48,18 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySerializeAny(int fieldNumber, SerializerFeatures features, Type type, TypeModel model, ref ProtoWriter.State state, object value)
-            => Get(type).TrySerializeAny(fieldNumber, features, model, ref state, value);
+        {
+            do
+            {
+                if (Get(type).TrySerializeAny(fieldNumber, features, model, ref state, value))
+                {
+                    return true;
+                }
+                // since we might be ignoring sub-types, we need to walk upwards and check all
+                type = type.BaseType;
+            } while (type is object && type != typeof(object));
+            return false;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeepClone(Type type, TypeModel model, ref object value)
