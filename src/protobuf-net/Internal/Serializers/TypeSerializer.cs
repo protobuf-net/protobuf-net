@@ -136,6 +136,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
+            if (!isRootType) return false;
             if (callbacks != null && callbacks[callbackType] != null) return true;
             for (int i = 0; i < serializers.Length; i++)
             {
