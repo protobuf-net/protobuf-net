@@ -74,7 +74,7 @@ namespace Examples.Issues
             Program.ExpectFailure<InvalidOperationException>(() =>
             {
                 Serializer.Deserialize<ChildA>(Stream.Null);
-            }, "Unexpected sub-type: Examples.Issues.SO6505590+ChildA");
+            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+ChildA");
         }
 
 
