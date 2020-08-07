@@ -87,13 +87,11 @@ namespace ProtoBuf.Meta
         [Obsolete]
         protected internal Type MapType(Type type) => type;
 
-#pragma warning disable RCS1163 // Unused parameter.
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
         [Obsolete]
         protected internal Type MapType(Type type, bool demand) => type;
-#pragma warning restore RCS1163 // Unused parameter.
 
         internal static WireType GetWireType(TypeModel model, DataFormat format, Type type)
         {
@@ -807,10 +805,11 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
-        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="type">The type (including inheritance) to consider.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="length">The number of bytes to consider (no limit if omitted).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
@@ -823,7 +822,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
-        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="type">The type (including inheritance) to consider.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
@@ -839,7 +838,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
-        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="type">The type (including inheritance) to consider.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
@@ -873,7 +872,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
-        /// <typeparam name="T">The type (including inheritance) to consider.</typeparam>
+        /// <param name="type">The type (including inheritance) to consider.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
@@ -1222,9 +1221,7 @@ namespace ProtoBuf.Meta
             {
                 // for convenience (re complex exit conditions), additional exit test here:
                 // if we've got the value, are only looking for one, and we aren't a list - then exit
-#pragma warning disable RCS1218 // Simplify code branching.
                 if (found && asListItem) break;
-#pragma warning restore RCS1218 // Simplify code branching.
 
                 // read the next item
                 int fieldNumber = state.ReadFieldHeader();
@@ -1803,13 +1800,11 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-#pragma warning disable RCS1159 // Use EventHandler<T>.
         /// <summary>
         /// Used to provide custom services for writing and parsing type names when using dynamic types. Both parsing and formatting
         /// are provided on a single API as it is essential that both are mapped identically at all times.
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
-#pragma warning restore RCS1159 // Use EventHandler<T>.
 
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
