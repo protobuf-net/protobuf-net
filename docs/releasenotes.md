@@ -14,6 +14,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 ## unreleased
 
 - new `IgnoreUnknownSubTypes` API on `[ProtoContract(...)]` and `MetaType`; serializes the types it *does* understand, and silently ignores the unknown sub-types
+- fix #695 (JIT error when serialization callbacks declared at types other than the inheritance root)
 
 ## 3.0.24
 
