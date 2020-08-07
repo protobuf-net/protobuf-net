@@ -49,9 +49,7 @@ namespace ProtoBuf
 #endif
 
 
-#pragma warning disable CS0618 // Type or member is obsolete
                 var reader = ProtoReader.Create(source, model, userState, length);
-#pragma warning restore CS0618 // Type or member is obsolete
                 return new State(reader);
             }
         }

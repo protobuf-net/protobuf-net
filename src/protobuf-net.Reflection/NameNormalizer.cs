@@ -6,9 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace ProtoBuf.Reflection
 {
-#pragma warning disable RCS1194 // Implement exception constructors.
     internal class ParserException : Exception
-#pragma warning restore RCS1194 // Implement exception constructors.
     {
         public int ColumnNumber { get; }
         public int LineNumber { get; }

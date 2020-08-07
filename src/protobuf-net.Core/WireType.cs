@@ -64,9 +64,7 @@ namespace ProtoBuf
         /// denotes a varint that should be interpreted using
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
-#pragma warning disable RCS1130 // Bitwise operation on enum without Flags attribute.
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         SignedVarint = Varint | (1 << 3),
-#pragma warning restore RCS1130 // Bitwise operation on enum without Flags attribute.
     }
 }

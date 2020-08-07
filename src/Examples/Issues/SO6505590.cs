@@ -66,7 +66,7 @@ namespace Examples.Issues
             {
                 var obj = new ChildA();
                 Serializer.Serialize(Stream.Null, obj);
-            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+ChildA");
+            }, "Unexpected sub-type: Examples.Issues.SO6505590+ChildA");
         }
         [Fact]
         public void DeserializeUnmarkedChildShouldFail()

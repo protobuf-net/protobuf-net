@@ -36,8 +36,8 @@ namespace ProtoBuf
         /// </summary>
         public bool UseProtoMembersOnly
         {
-            get { return HasFlag(OPTIONS_UseProtoMembersOnly); }
-            set { SetFlag(OPTIONS_UseProtoMembersOnly, value); }
+            get { return HasFlag(TypeOptions.UseProtoMembersOnly); }
+            set { SetFlag(TypeOptions.UseProtoMembersOnly, value); }
         }
 
         /// <summary>
@@ -45,8 +45,8 @@ namespace ProtoBuf
         /// </summary>
         public bool IgnoreListHandling
         {
-            get { return HasFlag(OPTIONS_IgnoreListHandling); }
-            set { SetFlag(OPTIONS_IgnoreListHandling, value); }
+            get { return HasFlag(TypeOptions.IgnoreListHandling); }
+            set { SetFlag(TypeOptions.IgnoreListHandling, value); }
         }
 
         /// <summary>
@@ -67,11 +67,11 @@ namespace ProtoBuf
         /// <remarks>If not explicitly specified, the default is assumed from Serializer.GlobalOptions.InferTagFromName.</remarks>
         public bool InferTagFromName
         {
-            get { return HasFlag(OPTIONS_InferTagFromName); }
+            get { return HasFlag(TypeOptions.InferTagFromName); }
             set
             {
-                SetFlag(OPTIONS_InferTagFromName, value);
-                SetFlag(OPTIONS_InferTagFromNameHasValue, true);
+                SetFlag(TypeOptions.InferTagFromName, value);
+                SetFlag(TypeOptions.InferTagFromNameHasValue, true);
             }
         }
 
@@ -80,7 +80,7 @@ namespace ProtoBuf
         /// </summary>
         internal bool InferTagFromNameHasValue
         { // note that this property is accessed via reflection and should not be removed
-            get { return HasFlag(OPTIONS_InferTagFromNameHasValue); }
+            get { return HasFlag(TypeOptions.InferTagFromNameHasValue); }
         }
 
         /// <summary>
@@ -98,8 +98,8 @@ namespace ProtoBuf
         /// </summary>
         public bool SkipConstructor
         {
-            get { return HasFlag(OPTIONS_SkipConstructor); }
-            set { SetFlag(OPTIONS_SkipConstructor, value); }
+            get { return HasFlag(TypeOptions.SkipConstructor); }
+            set { SetFlag(TypeOptions.SkipConstructor, value); }
         }
 
         /// <summary>
@@ -123,34 +123,47 @@ namespace ProtoBuf
         /// </summary>
         public bool IsGroup
         {
-            get { return HasFlag(OPTIONS_IsGroup); }
+            get { return HasFlag(TypeOptions.IsGroup); }
             set
             {
-                SetFlag(OPTIONS_IsGroup, value);
+                SetFlag(TypeOptions.IsGroup, value);
             }
         }
 
-        private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
-        private void SetFlag(ushort flag, bool value)
+        /// <summary>
+        /// Gets or sets a value indicating whether unknown sub-types should cause serialization failure
+        /// </summary>
+        public bool IgnoreUnknownSubTypes
         {
-            if (value) flags |= flag;
-            else flags = (ushort)(flags & ~flag);
+            get => HasFlag(TypeOptions.IgnoreUnknownSubTypes);
+            set => SetFlag(TypeOptions.IgnoreUnknownSubTypes, value);
         }
 
-        private ushort flags;
+        private bool HasFlag(TypeOptions flag) { return (flags & flag) == flag; }
+        private void SetFlag(TypeOptions flag, bool value)
+        {
+            if (value) flags |= flag;
+            else flags &= ~flag;
+        }
 
-        private const ushort
-            OPTIONS_InferTagFromName = 1,
-            OPTIONS_InferTagFromNameHasValue = 2,
-            OPTIONS_UseProtoMembersOnly = 4,
-            OPTIONS_SkipConstructor = 8,
-            OPTIONS_IgnoreListHandling = 16,
+        private TypeOptions flags;
+
+        [Flags]
+        private enum TypeOptions : ushort
+        {
+            InferTagFromName = 1,
+            InferTagFromNameHasValue = 2,
+            UseProtoMembersOnly = 4,
+            SkipConstructor = 8,
+            IgnoreListHandling = 16,
 #if FEAT_DYNAMIC_REF
-            OPTIONS_AsReferenceDefault = 32,
+            AsReferenceDefault = 32,
 #endif
-            //OPTIONS_EnumPassthru = 64,
-            //OPTIONS_EnumPassthruHasValue = 128,
-            OPTIONS_IsGroup = 256;
+            //EnumPassthru = 64,
+            //EnumPassthruHasValue = 128,
+            IsGroup = 256,
+            IgnoreUnknownSubTypes = 512,
+        }
 
         /// <summary>
         /// Applies only to enums (not to DTO classes themselves); gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather

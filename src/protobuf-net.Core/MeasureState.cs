@@ -17,10 +17,7 @@ namespace ProtoBuf
         private readonly TypeModel _model;
         private readonly T _value;
         private readonly object _userState;
-
-#pragma warning disable IDE0069 // "not disposed" yes it is - see Dispose (it just isn't a trivial case)
         private ProtoWriter _writer;
-#pragma warning restore IDE0069
 
         internal MeasureState(TypeModel model, in T value, object userState, long abortAfter)
         {

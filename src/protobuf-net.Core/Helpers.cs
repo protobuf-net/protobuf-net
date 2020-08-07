@@ -5,7 +5,6 @@ using System.Text;
 using System.Reflection;
 using ProtoBuf.Internal;
 
-#pragma warning disable RCS1163
 namespace ProtoBuf
 {
     /// <summary>
@@ -181,4 +180,3 @@ namespace ProtoBuf
         Type = 104
     }
 }
-#pragma warning restore RCS1163

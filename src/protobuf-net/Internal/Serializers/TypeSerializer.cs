@@ -12,16 +12,16 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal abstract class TypeSerializer
     {
-        public static IProtoTypeSerializer Create(Type forType, int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, Type rootType, SerializerFeatures features)
+        public static IProtoTypeSerializer Create(Type forType, int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, bool assertKnownType, CallbackSet callbacks, Type constructType, MethodInfo factory, Type rootType, SerializerFeatures features)
         {
             var obj = (TypeSerializer)(rootType != null
                 ? Activator.CreateInstance(typeof(InheritanceTypeSerializer<,>).MakeGenericType(rootType, forType), nonPublic: true)
                 : Activator.CreateInstance(typeof(TypeSerializer<>).MakeGenericType(forType), nonPublic: true));
             
-            obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, callbacks, constructType, factory, features);
+            obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, assertKnownType, callbacks, constructType, factory, features);
             return (IProtoTypeSerializer)obj;
         }
-        abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, SerializerFeatures features);
+        abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, bool assertKnownType, CallbackSet callbacks, Type constructType, MethodInfo factory, SerializerFeatures features);
     }
 
     internal sealed class InheritanceTypeSerializer<TBase, T> : TypeSerializer<T>, ISubTypeSerializer<T>
@@ -151,14 +151,16 @@ namespace ProtoBuf.Internal.Serializers
         Type IProtoTypeSerializer.BaseType => BaseType;
         private IRuntimeProtoSerializerNode[] serializers;
         private int[] fieldNumbers;
-        private bool isRootType, useConstructor, isExtensible, hasConstructor;
+        private bool isRootType, useConstructor, isExtensible, hasConstructor, assertKnownType;
         private CallbackSet callbacks;
         private MethodInfo[] baseCtorCallbacks;
         private MethodInfo factory;
 
         public SerializerFeatures Features { get; private set; }
 
-        internal override void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory, SerializerFeatures features)
+        internal override void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks,
+            bool isRootType, bool useConstructor, bool assertKnownType,
+            CallbackSet callbacks, Type constructType, MethodInfo factory, SerializerFeatures features)
         {
             Debug.Assert(fieldNumbers != null);
             Debug.Assert(serializers != null);
@@ -199,6 +201,7 @@ namespace ProtoBuf.Internal.Serializers
             this.callbacks = callbacks;
             this.isRootType = isRootType;
             this.useConstructor = useConstructor;
+            this.assertKnownType = assertKnownType;
 
             if (baseCtorCallbacks != null)
             {
@@ -285,7 +288,10 @@ namespace ProtoBuf.Internal.Serializers
                 }
             }
             if (actualType == constructType) return null; // needs to be last in case the default concrete type is also a known sub-type
-            TypeModel.ThrowUnexpectedSubtype(ExpectedType, actualType); // might throw (if not a proxy)
+            if (assertKnownType)
+            {
+                TypeModel.ThrowUnexpectedSubtype(ExpectedType, actualType); // might throw (if not a proxy)
+            }
             return null;
         }
 
@@ -550,17 +556,20 @@ namespace ProtoBuf.Internal.Serializers
                     }
                 }
 
-                MethodInfo method;
-                if (constructType != null && constructType != ExpectedType)
+                if (assertKnownType)
                 {
-                    method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[2].MakeGenericMethod(ExpectedType, constructType);
+                    MethodInfo method;
+                    if (constructType != null && constructType != ExpectedType)
+                    {
+                        method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[2].MakeGenericMethod(ExpectedType, constructType);
+                    }
+                    else
+                    {
+                        method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[1].MakeGenericMethod(ExpectedType);
+                    }
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(method);
                 }
-                else
-                {
-                    method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[1].MakeGenericMethod(ExpectedType);
-                }
-                ctx.LoadValue(loc);
-                ctx.EmitCall(method);
             }
             // fields
 

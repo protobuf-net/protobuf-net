@@ -40,10 +40,7 @@ namespace ProtoBuf
             model ??= TypeModel.DefaultModel;
             if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag));
-#pragma warning disable RCS1227 // Validate arguments correctly.
             IExtension extn = instance.GetExtensionObject(false);
-#pragma warning restore RCS1227 // Validate arguments correctly.
-
             if (extn == null)
             {
                 yield break;
@@ -113,9 +110,8 @@ namespace ProtoBuf
                 {
                     state.Dispose();
                 }
-#pragma warning disable IDE0059 // Unnecessary assignment of a value - the rule is wrong; this matters
+
                 commit = true;
-#pragma warning restore IDE0059
             }
             finally
             {
