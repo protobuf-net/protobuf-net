@@ -50,9 +50,7 @@ namespace ProtoBuf.Compiler
         }
 #endif
         [System.Diagnostics.Conditional("DEBUG_COMPILE")]
-#pragma warning disable RCS1163 // Unused parameter.
         private void TraceCompile(string value)
-#pragma warning restore RCS1163 // Unused parameter.
         {
 #if DEBUG_COMPILE
             if (!string.IsNullOrWhiteSpace(value))
@@ -241,11 +239,9 @@ namespace ProtoBuf.Compiler
         private readonly OpCode _state;
         private readonly byte _inputArg;
 
-#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         private static void GetOpCodes(SignatureType signature, bool isStatic, out OpCode state, out byte inputArg)
-#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
-            switch(signature)
+            switch (signature)
             {
                 case SignatureType.ReaderScope_Input:
                 case SignatureType.WriterScope_Input:
@@ -805,9 +801,7 @@ namespace ProtoBuf.Compiler
             {
                 if (member is FieldInfo && (member.Name.StartsWith("<", StringComparison.Ordinal) & member.Name.EndsWith(">k__BackingField", StringComparison.Ordinal)))
                 {
-#pragma warning disable IDE0057 // sibstring can be simplified
                     var propName = member.Name.Substring(1, member.Name.Length - 17);
-#pragma warning restore IDE0057 // sibstring can be simplified
                     var prop = member.DeclaringType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
                     if (prop != null) member = prop;
                 }

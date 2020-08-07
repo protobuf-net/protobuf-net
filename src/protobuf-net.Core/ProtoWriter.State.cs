@@ -33,9 +33,7 @@ namespace ProtoBuf
                 _writer = writer;
             }
 
-#pragma warning disable IDE0044, IDE0052 // make readonly, remove unused
             private ProtoWriter _writer;
-#pragma warning restore IDE0044, IDE0052 // make readonly, remove unused
 
             internal Span<byte> Remaining
             {

@@ -869,9 +869,7 @@ namespace ProtoBuf
             /// </summary>
             public void ThrowEnumException(object enumValue)
             {
-#pragma warning disable RCS1097 // Remove redundant 'ToString' call.
                 string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
-#pragma warning restore RCS1097 // Remove redundant 'ToString' call.
                 ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
             }
         }

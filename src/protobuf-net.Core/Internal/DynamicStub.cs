@@ -29,7 +29,18 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TrySerializeRoot(Type type, TypeModel model, ref ProtoWriter.State state, object value)
-            => Get(type).TrySerializeRoot(model, ref state, value);
+        {
+            do
+            {
+                if (Get(type).TrySerializeRoot(model, ref state, value))
+                {
+                    return true;
+                }
+                // since we might be ignoring sub-types, we need to walk upwards and check all
+                type = type.BaseType;
+            } while (type is object && type != typeof(object));
+            return false;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeserialize(ObjectScope scope, Type type, TypeModel model, ref ProtoReader.State state, ref object value)
@@ -41,7 +52,19 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeepClone(Type type, TypeModel model, ref object value)
-            => Get(type).TryDeepClone(model, ref value);
+        {
+            do
+            {
+                if (Get(type).TryDeepClone(model, ref value))
+                {
+                    return true;
+                }
+                // since we might be ignoring sub-types, we need to walk upwards and check all
+                type = type.BaseType;
+            }
+            while (type is object && type != typeof(object));
+            return false;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool IsKnownType(Type type, TypeModel model, CompatibilityLevel ambient)
@@ -273,6 +296,9 @@ namespace ProtoBuf.Internal
 
             protected override bool TryDeepClone(TypeModel model, ref object value)
             {
+                // check feasability first (required because of sub-type skipping)
+                if (TypeModel.TryGetSerializer<T>(model) is null) return false;
+
                 value = model.DeepClone<T>(TypeHelper<T>.FromObject(value));
                 return true;
             }

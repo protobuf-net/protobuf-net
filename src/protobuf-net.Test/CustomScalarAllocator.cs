@@ -11,8 +11,6 @@ using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 
-#pragma warning disable IDE0019
-
 namespace ProtoBuf.Test
 {
     public class CustomScalarAllocator

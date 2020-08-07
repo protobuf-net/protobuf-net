@@ -105,10 +105,7 @@ namespace ProtoBuf
         public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
-#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
             if (instance == null) throw new ArgumentNullException(nameof(instance));
-#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
-
             const int LEN = 4096;
             byte[] buffer = new byte[LEN];
             int read;
@@ -284,9 +281,7 @@ namespace ProtoBuf
             /// </summary>
             public static object DeepClone(object instance)
             {
-#pragma warning disable CS0618
                 return instance == null ? null : RuntimeTypeModel.Default.DeepClone(instance);
-#pragma warning restore CS0618
             }
 
             /// <summary>
@@ -395,9 +390,7 @@ namespace ProtoBuf
             /// <summary>
             /// Precompiles the serializer for a given type.
             /// </summary>
-#pragma warning disable RCS1163
             public static void PrepareSerializer(Type type)
-#pragma warning restore RCS1163
             {
                 RuntimeTypeModel.Default[type].CompileInPlace();
             }

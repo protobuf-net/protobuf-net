@@ -748,9 +748,7 @@ namespace ProtoBuf
             /// a Variant may be updated to SignedVariant. If the hinted wire-type is unrelated then no change is made.
             /// </summary>
             [MethodImpl(HotPath)]
-#pragma warning disable CS0618
             public void Hint(WireType wireType) => _reader.Hint(wireType);
-#pragma warning restore CS0618
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowWireTypeException()
@@ -858,9 +856,8 @@ namespace ProtoBuf
                     {
                         writeState.Dispose();
                     }
-#pragma warning disable IDE0059 // Unnecessary assignment of a value - the rule is wrong; this matters
+
                     commit = true;
-#pragma warning restore IDE0059
                 }
                 finally { extn.EndAppend(dest, commit); }
             }

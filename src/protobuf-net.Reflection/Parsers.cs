@@ -871,9 +871,8 @@ namespace Google.Protobuf.Reflection
             {
                 ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
             }
-#pragma warning disable RCS1156 // Use string.Length instead of comparison with empty string.
+
             if (Syntax == "" || Syntax == SyntaxProto2)
-#pragma warning restore RCS1156 // Use string.Length instead of comparison with empty string.
             {
                 Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
             }

@@ -11,6 +11,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## unreleased
+
+- new `IgnoreUnknownSubTypes` API on `[ProtoContract(...)]` and `MetaType`; serializes the types it *does* understand, and silently ignores the unknown sub-types
 
 ## 3.0.24
 

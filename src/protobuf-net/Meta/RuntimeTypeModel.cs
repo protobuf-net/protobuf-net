@@ -16,6 +16,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
+#pragma warning disable IDE0079 // sorry IDE, you're wrong
+
 namespace ProtoBuf.Meta
 {
     /// <summary>

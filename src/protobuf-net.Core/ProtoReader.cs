@@ -338,14 +338,12 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public void Hint(WireType wireType)
         {
-#pragma warning disable RCS1218 // Simplify code branching.
             if (WireType == wireType) { }  // fine; everything as we expect
             else if (((int)wireType & 7) == (int)this.WireType)
             {   // the underling type is a match; we're customising it with an extension
                 WireType = wireType;
             }
             // note no error here; we're OK about using alternative data
-#pragma warning restore RCS1218 // Simplify code branching.
         }
 
         /// <summary>
