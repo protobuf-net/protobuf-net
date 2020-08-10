@@ -418,6 +418,8 @@ namespace ProtoBuf
                     _dataRemaining64 -= count;
                 }
 
+                // not all available locally; need to jump data in the stream
+                if (_source is null) state.ThrowEoF();
                 ProtoReader.Seek(_source, count, _ioBuffer);
             }
         }
