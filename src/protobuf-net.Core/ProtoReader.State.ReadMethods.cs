@@ -501,7 +501,7 @@ namespace ProtoBuf
                 switch (reader.WireType)
                 {
                     case WireType.EndGroup:
-                        if (value64 >= 0) ThrowArgumentException(nameof(token));
+                        if (value64 >= 0) ThrowProtoException("A length-based message was terminated via end-group; this indicates data corruption");
                         if (-(int)value64 != reader._fieldNumber) ThrowProtoException("Wrong group was ended"); // wrong group ended!
                         reader.WireType = WireType.None; // this releases ReadFieldHeader
                         reader._depth--;
