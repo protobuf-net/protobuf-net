@@ -64,6 +64,7 @@ namespace ProtoBuf.Issues
             using var ms = new MemoryStream(bytes);
             var ex = Assert.Throws<ProtoException>(() => Serializer.Deserialize<TestContract>(ms));
             Assert.Equal("A length-based message was terminated via end-group; this indicates data corruption", ex.Message);
+            Assert.Equal("tag=820; wire-type=EndGroup; offset=6; depth=1", ex.Data["protoSource"]);
         }
     }
 }
