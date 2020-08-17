@@ -35,13 +35,13 @@ namespace ProtoBuf.Test
             var model = CreateModel();
 
             TestRoundTrip(model); // runtime only
-            //model.CompileInPlace();
+            model.CompileInPlace();
             TestRoundTrip(model); // locally compiled
 
             TestRoundTrip(model.Compile()); // fully compiled in-proc
 
 #if !PLAT_NO_EMITDLL
-            TestRoundTrip(model.Compile(nameof(CanRoundTripValueWithDuration), nameof(CanRoundTripValueWithDuration) + ".dll")); // fully compiled in-proc
+            TestRoundTrip(model.CompileAndVerify()); // fully compiled on disk
 #endif
             static void TestRoundTrip(TypeModel model)
             {
