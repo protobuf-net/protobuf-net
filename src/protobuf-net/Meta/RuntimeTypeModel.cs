@@ -2069,7 +2069,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Treat all values of <typeparamref name="TUnderlying"/> (non-serializable)
         /// as though they were the surrogate <typeparamref name="TSurrogate"/> (serializable);
-        /// if custom conversion operators are provided, they are used in place of operators.
+        /// if custom conversion operators are provided, they are used in place of implicit
+        /// or explicit conversion operators.
         /// </summary>
         /// <typeparam name="TUnderlying">The non-serializable type to provide custom support for</typeparam>
         /// <typeparam name="TSurrogate">The serializable type that should be used instead</typeparam>
