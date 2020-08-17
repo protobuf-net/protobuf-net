@@ -1010,6 +1010,12 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Gets the serializer associated with a specific type
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public ISerializer<T> GetSerializer<T>() => TypeModel.GetSerializer<T>(Model);
+
+            /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]

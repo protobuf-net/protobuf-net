@@ -1740,30 +1740,44 @@ namespace ProtoBuf.Meta
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports)
             => GetSchemaTypeName(callstack, effectiveType, dataFormat, compatibilityLevel, asReference, dynamicType, ref imports, out _);
+
+        static bool IsWellKnownType(Type type, out string name, ref CommonImports imports)
+        {
+            if (type == typeof(byte[]))
+            {
+                name = "bytes";
+                return true;
+            }
+            else if (type == typeof(Timestamp))
+            {
+                imports |= CommonImports.Timestamp;
+                name = ".google.protobuf.Timestamp";
+                return true;
+            }
+            else if (type == typeof(Duration))
+            {
+                imports |= CommonImports.Duration;
+                name = ".google.protobuf.Duration";
+                return true;
+            }
+            else if (type == typeof(Empty))
+            {
+                imports |= CommonImports.Empty;
+                name = ".google.protobuf.Empty";
+                return true;
+            }
+            name = default;
+            return false;
+        }
         internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, ref CommonImports imports, out string altName)
         {
             altName = null;
             compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
-            if (effectiveType == typeof(byte[]))
+            if (IsWellKnownType(effectiveType, out var wellKnownName, ref imports))
             {
-                return "bytes";
-            }
-            else if (effectiveType == typeof(Timestamp))
-            {
-                imports |= CommonImports.Timestamp;
-                return ".google.protobuf.Timestamp";
-            }
-            else if (effectiveType == typeof(Duration))
-            {
-                imports |= CommonImports.Duration;
-                return ".google.protobuf.Duration";
-            }
-            else if (effectiveType == typeof(Empty))
-            {
-                imports |= CommonImports.Empty;
-                return ".google.protobuf.Empty";
+                return wellKnownName;
             }
 
             IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out var _, false, false, false, false);
@@ -1777,7 +1791,13 @@ namespace ProtoBuf.Meta
 
                 var mt = this[effectiveType];
 
-                var actual = mt.GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName(callstack);
+                var actualMeta = mt.GetSurrogateOrBaseOrSelf(true);
+                if (IsWellKnownType(actualMeta.Type, out wellKnownName, ref imports))
+                {
+                    return wellKnownName;
+                }
+                var actual = actualMeta.GetSchemaTypeName(callstack);
+
                 if (mt.Type.IsEnum && !mt.IsValidEnum())
                 {
                     altName = actual;
