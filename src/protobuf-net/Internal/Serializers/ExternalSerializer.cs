@@ -2,6 +2,8 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Linq;
+using System.Reflection;
 
 namespace ProtoBuf.Internal.Serializers
 {
@@ -73,10 +75,40 @@ namespace ProtoBuf.Internal.Serializers
             => ThrowHelper.ThrowNotSupportedException();
 
         void IRuntimeProtoSerializerNode.EmitWrite(CompilerContext ctx, Local valueFrom)
-            => ThrowHelper.ThrowNotSupportedException();
+        {
+            AssertCanEmit();
+            using var loc = ctx.GetLocalWithValue(typeof(T), valueFrom);
+            ctx.LoadState();
+            ctx.LoadValue((int)Serializer.Features); // features
+            ctx.LoadValue(loc); // value
+            ctx.LoadNullRef(); // serializer
+            ctx.EmitCall(typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .Single(m => m.Name == nameof(ProtoWriter.State.WriteMessage) && m.IsGenericMethodDefinition
+                && m.GetParameters().Length == 3)
+                .MakeGenericMethod(typeof(T)));
+        }
 
         void IRuntimeProtoSerializerNode.EmitRead(CompilerContext ctx, Local entity)
-            => ThrowHelper.ThrowNotSupportedException();
+        {
+            AssertCanEmit();
+            using var loc = ctx.GetLocalWithValue(typeof(T), entity);
+            ctx.LoadState();
+            ctx.LoadValue((int)Serializer.Features); // features
+            ctx.LoadValue(loc); // value
+            ctx.LoadNullRef(); // serializer
+            ctx.EmitCall(typeof(ProtoReader.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .Single(m => m.Name == nameof(ProtoReader.State.ReadMessage) && m.IsGenericMethodDefinition
+                && m.GetParameters().Length == 3)
+                .MakeGenericMethod(typeof(T)));
+            ctx.StoreValue(entity);
+        }
 
+        void AssertCanEmit()
+        {
+            if (Serializer.Features.GetCategory() != SerializerFeatures.CategoryMessage)
+            {
+                throw new NotSupportedException("Only message types are supported for Emit");
+            }
+        }
     }
 }

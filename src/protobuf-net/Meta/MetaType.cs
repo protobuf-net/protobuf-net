@@ -507,7 +507,7 @@ namespace ProtoBuf.Meta
                     mt = mtBase;
                 }
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
-                    args: new object[] { surrogate, mt.Serializer });
+                    args: new object[] { surrogate, underlyingToSurrogate, surrogateToUnderlying, mt.Serializer });
             }
             if (IsAutoTuple)
             {
@@ -1353,12 +1353,16 @@ namespace ProtoBuf.Meta
         }
 
         private Type surrogate;
+        private MethodInfo underlyingToSurrogate, surrogateToUnderlying;
         /// <summary>
         /// Performs serialization of this type via a surrogate; all
         /// other serialization options are ignored and handled
         /// by the surrogate's configuration.
         /// </summary>
         public void SetSurrogate(Type surrogateType)
+            => SetSurrogate(surrogateType, null, null);
+
+        internal void SetSurrogate(Type surrogateType, MethodInfo underlyingToSurrogate, MethodInfo surrogateToUnderlying)
         {
             if (surrogateType == Type) surrogateType = null;
             if (surrogateType != null)
@@ -1389,6 +1393,8 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
 
             this.surrogate = surrogateType;
+            this.underlyingToSurrogate = underlyingToSurrogate; // note: treated as trusted/verified
+            this.surrogateToUnderlying = surrogateToUnderlying; // note: treated as trusted/verified
             // no point in offering chaining; no options are respected
         }
 

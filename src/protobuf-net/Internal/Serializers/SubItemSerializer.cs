@@ -289,7 +289,7 @@ namespace ProtoBuf.Internal.Serializers
 
         private static void LoadSerializer<T>(CompilerContext ctx, FieldInfo serializer, Type serializerType)
         {
-            if (serializerType is object)
+            if (serializerType is object && serializerType.IsPublic)
             {
                 EmitLoadCustomSerializer(ctx, serializerType, typeof(T));
             }

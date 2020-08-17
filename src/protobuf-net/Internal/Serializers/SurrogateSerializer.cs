@@ -37,17 +37,17 @@ namespace ProtoBuf.Internal.Serializers
         private readonly MethodInfo toTail, fromTail;
         private readonly IProtoTypeSerializer rootTail;
 
-        public SurrogateSerializer(Type declaredType, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IProtoTypeSerializer rootTail)
         {
             Debug.Assert(declaredType != null, "declaredType");
             Debug.Assert(rootTail != null, "rootTail");
             Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
-            Debug.Assert(!rootTail.ReturnsValue, "ReturnsValue");
+            // Debug.Assert(!rootTail.ReturnsValue, $"ReturnsValue:{rootTail.GetType().NormalizeName()}");
             Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
             this.declaredType = declaredType;
             this.rootTail = rootTail;
-            toTail = GetConversion(true);
-            fromTail = GetConversion(false);
+            this.toTail = toTail ?? GetConversion(true);
+            this.fromTail = fromTail ?? GetConversion(false);
         }
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {

@@ -31,7 +31,7 @@ namespace ProtoBuf.Internal.Serializers
         /// </summary>
         bool RequiresOldValue { get; }
         /// <summary>
-        /// Now all Read operations return a value (although most do); if false no
+        /// Not all Read operations return a value (although most do); if false no
         /// value should be expected.
         /// </summary>
         bool ReturnsValue { get; }

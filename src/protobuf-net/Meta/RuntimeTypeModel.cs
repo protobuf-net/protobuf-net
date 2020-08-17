@@ -1371,7 +1371,7 @@ namespace ProtoBuf.Meta
                     var member = EnumSerializers.GetProvider(runtimeType);
                     AddProxy(type, runtimeType, member, true);
                 }
-                else if (metaType.SerializerType != null)
+                else if (metaType.SerializerType != null && metaType.SerializerType.IsPublic)
                 {
                     AddProxy(type, runtimeType, metaType.SerializerType, false);
                 }
@@ -2035,6 +2035,35 @@ namespace ProtoBuf.Meta
                     SetDefaultModel(model);
                 }
                 return model;
+            }
+        }
+
+        /// <summary>
+        /// Treat all values of <typeparamref name="TUnderlying"/> (non-serializable)
+        /// as though they were the surrogate <typeparamref name="TSurrogate"/> (serializable);
+        /// if custom conversion operators are provided, they are used in place of operators.
+        /// </summary>
+        /// <typeparam name="TUnderlying">The non-serializable type to provide custom support for</typeparam>
+        /// <typeparam name="TSurrogate">The serializable type that should be used instead</typeparam>
+        /// <param name="underlyingToSurrogate">Custom conversion operation</param>
+        /// <param name="surrogateToUnderlying">Custom conversion operation</param>
+        /// <returns>The original model (for chaining).</returns>
+        public RuntimeTypeModel SetSurrogate<TUnderlying, TSurrogate>(
+            Func<TUnderlying, TSurrogate> underlyingToSurrogate = null, Func<TSurrogate, TUnderlying> surrogateToUnderlying = null)
+        {
+            Add(typeof(TUnderlying), false).SetSurrogate(typeof(TSurrogate),
+                GetMethod(underlyingToSurrogate, nameof(underlyingToSurrogate)),
+                GetMethod(surrogateToUnderlying, nameof(surrogateToUnderlying)));
+            return this;
+
+            static MethodInfo GetMethod(Delegate value, string paramName)
+            {
+                if (value is null) return null;
+                var handlers = value.GetInvocationList();
+                if (handlers.Length != 1) ThrowHelper.ThrowArgumentException("A unicast delegate was expected", paramName);
+                value = handlers[0];
+                if (value.Target is object) ThrowHelper.ThrowArgumentException("A delegate to a static method was expected", paramName);
+                return value.Method;
             }
         }
     }
