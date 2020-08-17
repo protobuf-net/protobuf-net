@@ -86,6 +86,8 @@ message HazNodaTimeDuration {
             var obj = new HazTimeSpanDuration { Id = 42, Name = "abc", Time = duration };
             using var ms = new MemoryStream();
             Serializer.Serialize(ms, obj);
+
+            // this is the same output as noted in TestExpectedBinaryOutput
             Assert.Equal("08-2A-12-0B-08-F4-DE-DD-01-10-C0-ED-86-D7-01-1A-03-61-62-63", Log(BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length)));
         }
 

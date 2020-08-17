@@ -1,0 +1,8 @@
+﻿syntax = "proto3";
+import "google/protobuf/duration.proto";
+
+message HazNodaTimeDuration {
+   int32 Id = 1;
+   .google.protobuf.Duration Time = 2;
+   string Name = 3;
+}
