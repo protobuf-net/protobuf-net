@@ -82,7 +82,7 @@ namespace ProtoBuf.Internal.Serializers
             using var loc = ctx.GetLocalWithValue(typeof(T), valueFrom);
 
             // get the serializer
-            if (ctx.NonPublic || typeof(TProvider).IsPublic)
+            if (ctx.NonPublic || RuntimeTypeModel.IsFullyPublic(typeof(TProvider)))
             {
                 ctx.EmitCall(typeof(SerializerCache).GetMethod(nameof(SerializerCache.Get)).MakeGenericMethod(typeof(TProvider), typeof(T)));
             }
@@ -106,7 +106,7 @@ namespace ProtoBuf.Internal.Serializers
             using var loc = ctx.GetLocalWithValue(typeof(T), entity);
 
             // get the serializer
-            if (ctx.NonPublic || typeof(TProvider).IsPublic)
+            if (ctx.NonPublic || RuntimeTypeModel.IsFullyPublic(typeof(TProvider)))
             {
                 ctx.EmitCall(typeof(SerializerCache).GetMethod(nameof(SerializerCache.Get)).MakeGenericMethod(typeof(TProvider), typeof(T)));
             }

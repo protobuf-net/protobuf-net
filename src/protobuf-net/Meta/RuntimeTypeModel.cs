@@ -1371,7 +1371,7 @@ namespace ProtoBuf.Meta
                     var member = EnumSerializers.GetProvider(runtimeType);
                     AddProxy(type, runtimeType, member, true);
                 }
-                else if (metaType.SerializerType != null && metaType.SerializerType.IsPublic)
+                else if (ShouldEmitCustomSerializerProxy(metaType.SerializerType))
                 {
                     AddProxy(type, runtimeType, metaType.SerializerType, false);
                 }
@@ -1379,6 +1379,14 @@ namespace ProtoBuf.Meta
                 {
                     AddProxy(type, runtimeType, repeated.Provider, false);
                 }
+            }
+            static bool ShouldEmitCustomSerializerProxy(Type serializerType)
+            {
+                if (serializerType is null) return false; // nothing to do
+                if (IsFullyPublic(serializerType)) return true; // fine, just do it
+
+                // so: non-public; don't emit for anything inbuilt
+                return serializerType.Assembly != typeof(PrimaryTypeProvider).Assembly;
             }
         }
 
