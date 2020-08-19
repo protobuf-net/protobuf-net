@@ -101,7 +101,7 @@ namespace ProtoBuf.Test.Issues
         {
             var model = RuntimeTypeModel.Create();
             var ex = Assert.Throws<ArgumentException>(() => model.SetSurrogate<CustomerID, int>(x => x.Value, x => new CustomerID(x)));
-            Assert.StartsWith("A delegate to a static method was expected. The conversion 'ProtoBuf.Test.Issues.Issue536+<>c.<DetectInstanceLambda>b__4_1' is compiler-generated (possibly a lambda); an explicit static method should be used instead.", ex.Message);
+            Assert.StartsWith("A delegate to a static method was expected. The conversion 'ProtoBuf.Test.Issues.Issue536+<>c.<DetectInstanceLambda>b__5_1' is compiler-generated (possibly a lambda); an explicit static method should be used instead.", ex.Message);
         }
 
         [ProtoContract]
