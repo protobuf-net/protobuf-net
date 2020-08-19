@@ -23,6 +23,12 @@ namespace ProtoBuf.MSBuild
 
         public string Services { get; set; }
 
+        public string Names { get; set; }
+
+        public string OneOf { get; set; }
+
+        public string ListSet { get; set; }
+
         [Output]
         public ITaskItem[] ProtoCodeFile { get; set; }
 
@@ -108,6 +114,10 @@ namespace ProtoBuf.MSBuild
                 ["services"] = Services
             };
 
+            SetIfNotAssigned("names", Names);
+            SetIfNotAssigned("oneof", OneOf);
+            SetIfNotAssigned("listset", ListSet);
+
             var codeFiles = new List<ITaskItem>();
             var files = codegen.Generate(set, options: options);
             foreach (var file in files)
@@ -122,6 +132,15 @@ namespace ProtoBuf.MSBuild
             this.ProtoCodeFile = codeFiles.Cast<ITaskItem>().ToArray();
 
             return true;
+
+            void SetIfNotAssigned(string key, string value)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    options[key] = value;
+                }
+            }
+
         }
     }
 }
