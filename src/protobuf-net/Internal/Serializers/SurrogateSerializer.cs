@@ -7,7 +7,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
-        public SerializerFeatures Features => rootTail.Features;
+        public SerializerFeatures Features => features;
         bool IProtoTypeSerializer.IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
@@ -35,9 +35,10 @@ namespace ProtoBuf.Internal.Serializers
 
         private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
-        private readonly IProtoTypeSerializer rootTail;
+        private readonly IRuntimeProtoSerializerNode rootTail;
+        private readonly SerializerFeatures features;
 
-        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IRuntimeProtoSerializerNode rootTail, SerializerFeatures features)
         {
             Debug.Assert(declaredType is object, "declaredType");
             Debug.Assert(rootTail is object, "rootTail");
@@ -46,6 +47,7 @@ namespace ProtoBuf.Internal.Serializers
             this.rootTail = rootTail;
             this.toTail = toTail ?? GetConversion(true);
             this.fromTail = fromTail ?? GetConversion(false);
+            this.features = features;
         }
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
@@ -114,8 +116,17 @@ namespace ProtoBuf.Internal.Serializers
         public object Read(ref ProtoReader.State state, object value)
         {
             // convert the incoming value
-            object[] args = { value };
-            value = toTail.Invoke(null, args);
+            object[] args = new object[1];
+            
+            if (rootTail.RequiresOldValue)
+            {
+                args[0] = value;
+                value = toTail.Invoke(null, args);
+            }
+            else
+            {
+                value = null;
+            }
 
             // invoke the tail and convert the outgoing value
             args[0] = rootTail.Read(ref state, value);
@@ -133,11 +144,14 @@ namespace ProtoBuf.Internal.Serializers
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             // Debug.Assert(valueFrom != null, "surrogate value on stack-head"); // don't support stack-head for this
-            using Compiler.Local converted = new Compiler.Local(ctx, declaredType);
-            ctx.LoadValue(valueFrom); // load primary onto stack
-            ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
-            ctx.StoreValue(converted); // store into surrogate local
+            using Compiler.Local converted = rootTail.RequiresOldValue ? new Compiler.Local(ctx, declaredType) : null;
 
+            if (rootTail.RequiresOldValue)
+            {
+                ctx.LoadValue(valueFrom); // load primary onto stack
+                ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
+                ctx.StoreValue(converted); // store into surrogate local
+            }
             rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
             ctx.LoadValue(converted); // load from surrogate local

@@ -503,12 +503,14 @@ namespace ProtoBuf.Meta
             {
                 if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
 
-                IProtoTypeSerializer serializer;
-                if (ValueMember.TryGetCoreSerializer(Model, surrogateDataFormat, CompatibilityLevel, surrogateType, out _, false, false, false, false) is object)
+                SerializerFeatures features;
+                // check to see if we can handle that directly without using GetSerializer<surrogateType>()
+                var serializer = ValueMember.TryGetCoreSerializer(Model, surrogateDataFormat, CompatibilityLevel, surrogateType, out _, false, false, false, false);
+                if (serializer is object)
                 {
                     try
                     {
-                        serializer = ExternalSerializer.Create(surrogateType, typeof(PrimaryTypeProvider));
+                        features = ExternalSerializer.Create(surrogateType, typeof(PrimaryTypeProvider)).Features;
                     }
                     catch (Exception ex)
                     {
@@ -523,10 +525,12 @@ namespace ProtoBuf.Meta
                         if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
                         mt = mtBase;
                     }
-                    serializer = mt.Serializer;
+                    var ser = mt.Serializer;
+                    features = ser.Features;
+                    serializer = ser;
                 }
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
-                    args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer });
+                    args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer, features });
             }
             if (IsAutoTuple)
             {
