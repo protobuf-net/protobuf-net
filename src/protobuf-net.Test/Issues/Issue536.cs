@@ -65,6 +65,34 @@ namespace ProtoBuf.Test.Issues
             }
         }
 
+        [Fact]
+        public void CanUseSurrogateForScalarPassThruViaDecoratedOperators()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+
+            Execute(model); // runtime-only
+            model.CompileInPlace();
+            Execute(model); // in-place compile
+            Execute(model.Compile()); // in-proc compile
+            Execute(PEVerify.CompileAndVerify(model, deleteOnSuccess: false)); // on-disk compile
+
+            static void Execute(TypeModel model)
+            {
+                var ms = new MemoryStream();
+                model.Serialize(ms, new I64_Message_DecoratedOperators { CustomerID = 42, ID = 16 });
+                ms.Position = 0;
+                var clone = model.Deserialize<I64_Message_DecoratedOperators>(ms);
+                Assert.Equal(16, clone.ID);
+                Assert.Equal<int>(42, clone.CustomerID);
+
+                ms.Position = 0;
+                var compat = model.Deserialize<I64_Message_Compat_Base128>(ms); // checks against expectation
+                Assert.Equal(16, compat.ID);
+                Assert.Equal(42, compat.CustomerID);
+            }
+        }
+
         public static int ToInt32(CustomerID value) => value.Value;
         public static CustomerID ToCustomerID(int value) => new CustomerID(value);
 
@@ -102,6 +130,14 @@ namespace ProtoBuf.Test.Issues
             [ProtoMember(10, DataFormat = DataFormat.ZigZag)] public int CustomerID;
         }
 
+        [ProtoContract]
+        public sealed class I64_Message_Compat_Base128 // no zig-zag in this test
+        {
+            [ProtoMember(1)] public long ID;
+
+            [ProtoMember(10)] public int CustomerID;
+        }
+
         public readonly struct CustomerID
         {
             public int Value { get; }
@@ -115,6 +151,24 @@ namespace ProtoBuf.Test.Issues
 
             public static implicit operator int(CustomerIDWithOperators value) => value.Value;
             public static implicit operator CustomerIDWithOperators(int value) => new CustomerIDWithOperators(value);
+        }
+
+        [ProtoContract(Surrogate = typeof(int))]
+        public readonly struct DecoratedCustomerIDWithOperators
+        {
+            public int Value { get; }
+            public DecoratedCustomerIDWithOperators(int value) => Value = value;
+
+            public static implicit operator int(DecoratedCustomerIDWithOperators value) => value.Value;
+            public static implicit operator DecoratedCustomerIDWithOperators(int value) => new DecoratedCustomerIDWithOperators(value);
+        }
+
+        [ProtoContract]
+        public sealed class I64_Message_DecoratedOperators
+        {
+            [ProtoMember(1)] public long ID { get; set; }
+
+            [ProtoMember(10)] public DecoratedCustomerIDWithOperators CustomerID { get; set; }
         }
     }
 }
