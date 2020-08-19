@@ -2,8 +2,6 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
-using System.Linq;
-using System.Reflection;
 
 namespace ProtoBuf.Internal.Serializers
 {

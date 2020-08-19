@@ -50,7 +50,7 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = CreateEnumModel();
             var compiled = model.Compile("TestEnumTopLevel_CompileFull", "TestEnumTopLevel_CompileFull.dll");
-            PEVerify.Verify("TestEnumTopLevel_CompileFull.dll", deleteOnSuccess: false);
+            PEVerify.Verify("TestEnumTopLevel_CompileFull.dll");
             TestEnumModel(compiled);
         }
 

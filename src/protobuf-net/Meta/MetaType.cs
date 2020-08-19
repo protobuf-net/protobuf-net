@@ -147,8 +147,8 @@ namespace ProtoBuf.Meta
                 {
                     ThrowTupleTypeWithInheritance(derivedType);
                 }
-                if (surrogate != null) ThrowSubTypeWithSurrogate(Type);
-                if (derivedMeta.surrogate != null) ThrowSubTypeWithSurrogate(derivedType);
+                if (surrogateType != null) ThrowSubTypeWithSurrogate(Type);
+                if (derivedMeta.surrogateType != null) ThrowSubTypeWithSurrogate(derivedType);
 
                 SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
                 ThrowIfFrozen();
@@ -256,9 +256,9 @@ namespace ProtoBuf.Meta
 
             try
             {
-                if (surrogate != null && !callstack.Contains(surrogate))
+                if (surrogateType != null && !callstack.Contains(surrogateType))
                 {
-                    return model[surrogate].GetSchemaTypeName(callstack);
+                    return model[surrogateType].GetSchemaTypeName(callstack);
                 }
 
                 if (!string.IsNullOrEmpty(name)) return name;
@@ -370,9 +370,10 @@ namespace ProtoBuf.Meta
 
         private readonly RuntimeTypeModel model;
 
-        internal static Exception InbuiltType(Type type)
+        internal static Exception InbuiltType(Type type, Exception innerException = null)
         {
-            return new ArgumentException("Data of this type has inbuilt behaviour, and cannot be added to a model in this way: " + type.FullName);
+            var msg = "Data of this type has inbuilt behaviour, and cannot be added to a model in this way: " + type.FullName;
+            return innerException is null ? new ArgumentException(msg) : new ArgumentException(msg, innerException);
         }
 
         internal MetaType(RuntimeTypeModel model, Type type, MethodInfo factory)
@@ -479,7 +480,7 @@ namespace ProtoBuf.Meta
 
             if (repeated != null)
             {
-                if (surrogate != null)
+                if (surrogateType != null)
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
                 }
@@ -498,16 +499,34 @@ namespace ProtoBuf.Meta
             }
 
             bool involvedInInheritance = HasRealInheritance();
-            if (surrogate != null)
+            if (surrogateType != null)
             {
                 if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
-                MetaType mt = model[surrogate], mtBase;
-                while ((mtBase = mt.baseType) != null) {
-                    if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
-                    mt = mtBase;
+
+                IProtoTypeSerializer serializer;
+                if (ValueMember.TryGetCoreSerializer(Model, surrogateDataFormat, CompatibilityLevel, surrogateType, out _, false, false, false, false) is object)
+                {
+                    try
+                    {
+                        serializer = ExternalSerializer.Create(surrogateType, typeof(PrimaryTypeProvider));
+                    }
+                    catch (Exception ex)
+                    {
+                        throw InbuiltType(surrogateType, ex);
+                    }
+                }
+                else
+                {
+                    MetaType mt = model[surrogateType], mtBase;
+                    while ((mtBase = mt.baseType) != null)
+                    {
+                        if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
+                        mt = mtBase;
+                    }
+                    serializer = mt.Serializer;
                 }
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
-                    args: new object[] { surrogate, underlyingToSurrogate, surrogateToUnderlying, mt.Serializer });
+                    args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer });
             }
             if (IsAutoTuple)
             {
@@ -1352,17 +1371,19 @@ namespace ProtoBuf.Meta
             return this;
         }
 
-        private Type surrogate;
+        internal Type surrogateType;
+        internal DataFormat surrogateDataFormat;
         private MethodInfo underlyingToSurrogate, surrogateToUnderlying;
+
         /// <summary>
         /// Performs serialization of this type via a surrogate; all
         /// other serialization options are ignored and handled
         /// by the surrogate's configuration.
         /// </summary>
         public void SetSurrogate(Type surrogateType)
-            => SetSurrogate(surrogateType, null, null);
+            => SetSurrogate(surrogateType, null, null, DataFormat.Default);
 
-        internal void SetSurrogate(Type surrogateType, MethodInfo underlyingToSurrogate, MethodInfo surrogateToUnderlying)
+        internal void SetSurrogate(Type surrogateType, MethodInfo underlyingToSurrogate, MethodInfo surrogateToUnderlying, DataFormat dataFormat)
         {
             if (surrogateType == Type) surrogateType = null;
             if (surrogateType != null)
@@ -1390,31 +1411,45 @@ namespace ProtoBuf.Meta
                     surrogateType = surrogateType.MakeGenericType(genericArguments);
                 }
             }
-            ThrowIfFrozen();
 
-            this.surrogate = surrogateType;
-            this.underlyingToSurrogate = underlyingToSurrogate; // note: treated as trusted/verified
-            this.surrogateToUnderlying = surrogateToUnderlying; // note: treated as trusted/verified
-            // no point in offering chaining; no options are respected
+            int opaqueToken = default;
+            try
+            {
+                model.TakeLock(ref opaqueToken);
+                ThrowIfFrozen();
+
+                this.surrogateType = surrogateType;
+                this.underlyingToSurrogate = underlyingToSurrogate; // note: treated as trusted/verified
+                this.surrogateToUnderlying = surrogateToUnderlying; // note: treated as trusted/verified
+                this.surrogateDataFormat = dataFormat;
+                SetFlag(TypeOptions.AutoTuple, false, false); // no longer an auto-tuple
+
+                // no point in offering chaining; no other options are respected
+            }
+            finally
+            {
+                model.ReleaseLock(opaqueToken);
+            }
+            
         }
 
         internal bool HasSurrogate
         {
             get
             {
-                return surrogate != null;
+                return surrogateType != null;
             }
         }
 
         internal MetaType GetSurrogateOrSelf()
         {
-            if (surrogate != null) return model[surrogate];
+            if (surrogateType != null) return model[surrogateType];
             return this;
         }
 
         internal MetaType GetSurrogateOrBaseOrSelf(bool deep)
         {
-            if (surrogate != null) return model[surrogate];
+            if (surrogateType != null) return model[surrogateType];
             MetaType snapshot = this.baseType;
             if (snapshot != null)
             {
@@ -1469,7 +1504,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds a member (by name) to the MetaType
-        /// </summary>        
+        /// </summary>
         public MetaType Add(int fieldNumber, string memberName, object defaultValue)
         {
             AddField(fieldNumber, memberName, null, null, defaultValue);
@@ -1861,7 +1896,7 @@ namespace ProtoBuf.Meta
         internal void WriteSchema(HashSet<Type> callstack, StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax,
             string package, SchemaGenerationFlags flags)
         {
-            if (surrogate != null) return; // nothing to write
+            if (surrogateType != null) return; // nothing to write
 
             bool multipleNamespaceSupport = (flags & SchemaGenerationFlags.MultipleNamespaceSupport) != 0;
             var repeated = model.TryGetRepeatedProvider(Type);

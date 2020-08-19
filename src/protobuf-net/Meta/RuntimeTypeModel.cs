@@ -2078,20 +2078,29 @@ namespace ProtoBuf.Meta
         /// <param name="surrogateToUnderlying">Custom conversion operation</param>
         /// <returns>The original model (for chaining).</returns>
         public RuntimeTypeModel SetSurrogate<TUnderlying, TSurrogate>(
-            Func<TUnderlying, TSurrogate> underlyingToSurrogate = null, Func<TSurrogate, TUnderlying> surrogateToUnderlying = null)
+            Func<TUnderlying, TSurrogate> underlyingToSurrogate = null, Func<TSurrogate, TUnderlying> surrogateToUnderlying = null,
+            DataFormat dataFormat = DataFormat.Default, CompatibilityLevel compatibilityLevel = CompatibilityLevel.NotSpecified)
         {
-            Add(typeof(TUnderlying), false).SetSurrogate(typeof(TSurrogate),
+            Add<TUnderlying>(compatibilityLevel: compatibilityLevel).SetSurrogate(typeof(TSurrogate),
                 GetMethod(underlyingToSurrogate, nameof(underlyingToSurrogate)),
-                GetMethod(surrogateToUnderlying, nameof(surrogateToUnderlying)));
+                GetMethod(surrogateToUnderlying, nameof(surrogateToUnderlying)), dataFormat);
             return this;
 
             static MethodInfo GetMethod(Delegate value, string paramName)
             {
                 if (value is null) return null;
                 var handlers = value.GetInvocationList();
-                if (handlers.Length != 1) ThrowHelper.ThrowArgumentException("A unicast delegate was expected", paramName);
+                if (handlers.Length != 1) ThrowHelper.ThrowArgumentException("A unicast delegate was expected.", paramName);
                 value = handlers[0];
-                if (value.Target is object) ThrowHelper.ThrowArgumentException("A delegate to a static method was expected", paramName);
+                if (value.Target is object target)
+                {
+                    var msg = "A delegate to a static method was expected.";
+                    if (target.GetType().IsDefined(typeof(CompilerGeneratedAttribute)))
+                    {
+                        msg += $" The conversion '{target.GetType().NormalizeName()}.{value.Method.Name}' is compiler-generated (possibly a lambda); an explicit static method should be used instead.";
+                    }
+                    ThrowHelper.ThrowArgumentException(msg, paramName);
+                }
                 return value.Method;
             }
         }

@@ -21,7 +21,7 @@ namespace ProtoBuf.Issues
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(Item));
-            model.CompileAndVerify(deleteOnSuccess: false);
+            model.CompileAndVerify();
         }
 
         [Fact]

@@ -23,7 +23,7 @@ namespace ProtoBuf.Test
             model.Add<HazRegularString>();
             //model.Add<HazBlobish>();
             model.Add<HazMemoryBlobish>();
-            model.CompileAndVerify(deleteOnSuccess: false);
+            model.CompileAndVerify();
         }
 
         private readonly ITestOutputHelper _log;

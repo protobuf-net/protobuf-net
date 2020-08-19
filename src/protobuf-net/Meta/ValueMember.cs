@@ -707,7 +707,21 @@ namespace ProtoBuf.Meta
                 }
                 if (meta != null)
                 {
-                    return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
+                    IProtoTypeSerializer serializer;
+                    if (meta.HasSurrogate && (serializer = meta.Serializer).Features.GetCategory() == SerializerFeatures.CategoryScalar)
+                    {
+                        dataFormat = meta.surrogateDataFormat;
+                        // this checks for an overriding wire-type/data-format combo
+                        if (TryGetCoreSerializer(model, dataFormat, meta.CompatibilityLevel, meta.surrogateType, out defaultWireType, false, false, false, false) is null)
+                        {   // otherwise, defer to the serializer
+                            defaultWireType = serializer.Features.GetWireType();
+                        }
+                        return serializer;
+                    }
+                    else
+                    {
+                        return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
+                    }
                 }
             }
             defaultWireType = WireType.None;

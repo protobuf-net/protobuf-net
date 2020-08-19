@@ -26,9 +26,9 @@ namespace ProtoBuf.Internal.Serializers
         void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
             => Write(ref state, value);
 
-        public bool ReturnsValue => false;
+        public bool ReturnsValue => rootTail.ReturnsValue;
 
-        public bool RequiresOldValue => true;
+        public bool RequiresOldValue => rootTail.RequiresOldValue;
 
         public Type ExpectedType => typeof(T);
         Type IProtoTypeSerializer.BaseType => ExpectedType;
@@ -39,11 +39,9 @@ namespace ProtoBuf.Internal.Serializers
 
         public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IProtoTypeSerializer rootTail)
         {
-            Debug.Assert(declaredType != null, "declaredType");
-            Debug.Assert(rootTail != null, "rootTail");
-            Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
-            // Debug.Assert(!rootTail.ReturnsValue, $"ReturnsValue:{rootTail.GetType().NormalizeName()}");
-            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
+            Debug.Assert(declaredType is object, "declaredType");
+            Debug.Assert(rootTail is object, "rootTail");
+            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType), "surrogate type mismatch");
             this.declaredType = declaredType;
             this.rootTail = rootTail;
             this.toTail = toTail ?? GetConversion(true);
@@ -134,7 +132,7 @@ namespace ProtoBuf.Internal.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            Debug.Assert(valueFrom != null); // don't support stack-head for this
+            // Debug.Assert(valueFrom != null, "surrogate value on stack-head"); // don't support stack-head for this
             using Compiler.Local converted = new Compiler.Local(ctx, declaredType);
             ctx.LoadValue(valueFrom); // load primary onto stack
             ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
