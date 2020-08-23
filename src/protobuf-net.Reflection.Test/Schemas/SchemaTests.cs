@@ -78,9 +78,10 @@ namespace ProtoBuf.Schemas
 
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
-        [Fact]
+        [SkippableFact]
         public void EverythingProtoLangver3()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "everything.proto";
 
@@ -122,9 +123,10 @@ namespace ProtoBuf.Schemas
             catch (PlatformNotSupportedException) { }
         }
 
-        [Fact]
+        [SkippableFact()]
         public void DescriptorProtoVB()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "descriptor.proto";
 
