@@ -183,7 +183,10 @@ namespace Examples.Issues
             Assert.False(model.CanSerialize(typeof(DateTime[][])));
             Assert.False(model.CanSerialize(typeof(DateTime?[][])));
 #if !COREFX
-            AvoidJit(model);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                AvoidJit(model);
+            }
             static void AvoidJit(TypeModel model)
             {
                 Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color[][])));
@@ -205,7 +208,14 @@ namespace Examples.Issues
             Assert.False(model.CanSerialize(typeof(DateTime[,])));
             Assert.False(model.CanSerialize(typeof(DateTime?[,])));
 #if !COREFX
-            Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color[,])));
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                AvoidJit(model);
+            }
+            static void AvoidJit(TypeModel model)
+            {
+                Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color[,])));
+            }
 #endif
             Assert.False(model.CanSerialize(typeof(DateTimeOffset[,])));
             Assert.False(model.CanSerialize(typeof(Action[,])));
