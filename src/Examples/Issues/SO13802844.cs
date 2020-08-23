@@ -29,7 +29,7 @@ enum AnimationCode {
    AnimationCode_None = 0;
    Idle = 1;
 }
-", s);
+", s, ignoreLineEndingDifferences: true);
         }
     }
 }

@@ -105,7 +105,7 @@ enum E {
    V1 = 1;
    V2 = 2;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -133,7 +133,7 @@ enum E {
 message List_E {
    repeated E items = 1;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         private static void TestArray(TypeModel model)

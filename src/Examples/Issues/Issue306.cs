@@ -25,7 +25,7 @@ package Examples.Issues;
 message Foo {
    map<int32,string> Lookup = 1;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract]
