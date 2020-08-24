@@ -6,6 +6,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Date.cs" />
+    <Compile Remove="Dayofweek.cs" />
+    <Compile Remove="Duration.cs" />
+    <Compile Remove="Timeofday.cs" />
+    <Compile Remove="Timestamp.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Date.cs" />
+    <None Include="Dayofweek.cs" />
+    <None Include="Duration.cs" />
+    <None Include="Timeofday.cs" />
+    <None Include="Timestamp.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.13.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="NodaTime" Version="3.0.0" />
