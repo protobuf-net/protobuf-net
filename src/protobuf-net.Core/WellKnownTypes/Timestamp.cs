@@ -45,7 +45,7 @@ namespace ProtoBuf.WellKnownTypes
     /// January 1, 1970, in the proleptic Gregorian calendar which extends the
     /// Gregorian calendar backwards to year one.
     /// </summary>
-    [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(PrimaryTypeProvider))]
+    [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(PrimaryTypeProvider), Origin = "google/protobuf/timestamp.proto")]
     [StructLayout(LayoutKind.Auto)]
     public readonly struct Timestamp
     {

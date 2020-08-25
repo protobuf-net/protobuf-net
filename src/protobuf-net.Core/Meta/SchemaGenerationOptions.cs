@@ -40,6 +40,12 @@ namespace ProtoBuf.Meta
 
         internal bool HasServices => (_services?.Count ?? 0) != 0;
         internal bool HasTypes => (_types?.Count ?? 0) != 0;
+
+        /// <summary>
+        /// The file that defines this type (as used with <c>import</c> in .proto); when non-empty, only
+        /// types in the same <c>Origin</c> are included; this option is inferred if <c>null</c>.
+        /// </summary>
+        public string Origin { get; set; }
     }
 
     /// <summary>

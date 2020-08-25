@@ -147,9 +147,9 @@ message ExplicitLevel200 {
             CompatibilityLevel.Level240, CompatibilityLevel.Level240, CompatibilityLevel.Level240, @"
 syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message DataFormatWellKnown {
    int32 Int32 = 1;
@@ -220,9 +220,9 @@ message InheritedAllDefault {
             CompatibilityLevel.Level240, CompatibilityLevel.Level240, CompatibilityLevel.Level240, @"
 syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message BaseBaseDetermines {
    oneof subtype {
@@ -261,8 +261,8 @@ message InheritedBaseDetermines {
             CompatibilityLevel.Level300, CompatibilityLevel.Level300, CompatibilityLevel.Level300, @"
 syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
 
 message InheritedDerivedDetermines {
    int32 Int32 = 1;
@@ -298,8 +298,8 @@ message InheritedDerivedDetermines {
             CompatibilityLevel.Level300, CompatibilityLevel.Level300, CompatibilityLevel.Level300, @"
 syntax = ""proto3"";
 package ProtoBuf.Test.TestCompatibilityLevel;
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
 
 message AllDefaultWithModuleLevel {
    int32 Int32 = 1;

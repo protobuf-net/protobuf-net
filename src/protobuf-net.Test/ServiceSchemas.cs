@@ -42,10 +42,10 @@ namespace ProtoBuf.Test
             Log(schema);
             Assert.Equal(@"syntax = ""proto3"";
 package mypackage;
-import ""protobuf-net/protogen.proto""; // custom protobuf-net options
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
 import ""google/protobuf/empty.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""protobuf-net/protogen.proto""; // custom protobuf-net options
 
 message Bar {
    string Value = 1;

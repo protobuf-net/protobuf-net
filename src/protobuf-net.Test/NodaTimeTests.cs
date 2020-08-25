@@ -41,6 +41,7 @@ namespace ProtoBuf.Test
             var model = CreateModel();
             var schema = model.GetSchema(typeof(HazNodaTimeDuration), ProtoSyntax.Proto3);
             Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
 import ""google/protobuf/duration.proto"";
 
 message HazNodaTimeDuration {
@@ -58,6 +59,7 @@ message HazNodaTimeDuration {
             var model = CreateModel();
             var schema = model.GetSchema(typeof(HazNodaTimeInstant), ProtoSyntax.Proto3);
             Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
 import ""google/protobuf/timestamp.proto"";
 
 message HazNodaTimeInstant {
@@ -204,6 +206,84 @@ message HazNodaTimeInstant {
 
             [ProtoMember(3)]
             public string Name { get; set; }
+        }
+
+
+        [Fact]
+        public void AllCommonTypesSupported()
+        {
+            var model = CreateModel();
+            model.Add<MakeMeOneWithEverything>();
+            Test(this, model);
+            model.CompileInPlace();
+            Test(this, model);
+            Test(this, model.Compile());
+            Test(this, model.CompileAndVerify());
+
+            static void Test(NodaTimeTests test, TypeModel model)
+            {
+                var obj = new MakeMeOneWithEverything
+                {
+                    Duration = NodaTime.Duration.FromTimeSpan(new TimeSpan(42, 1, 10, 12, 451)),
+                    Instant = NodaTime.Instant.FromDateTimeUtc(new DateTime(2020, 8, 23, 8, 51, 12, 451, DateTimeKind.Utc)),
+                    LocalDate = new NodaTime.LocalDate(2020, 8, 25),
+                    LocalTime = new NodaTime.LocalTime(11, 15, 43).PlusNanoseconds(43256),
+                    IsoDayOfWeek = NodaTime.IsoDayOfWeek.Thursday,
+                };
+                using var ms = new MemoryStream();
+                model.Serialize(ms, obj);
+                var hex = test.Log(BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+                Assert.Equal("0A-0B-08-F4-DE-DD-01-10-C0-ED-86-D7-01-12-0C-08-80-DC-88-FA-05-10-C0-ED-86-D7-01-1A-07-08-E4-0F-10-08-18-19-22-0A-08-0B-10-0F-18-2B-20-F8-D1-02-28-04", hex);
+                ms.Position = 0;
+                var clone = model.Deserialize<MakeMeOneWithEverything>(ms);
+                Assert.NotSame(obj, clone);
+
+                Assert.Equal(obj.Duration, clone.Duration);
+                Assert.Equal(obj.Instant, clone.Instant);
+                Assert.Equal(obj.LocalDate, clone.LocalDate);
+                Assert.Equal(obj.LocalTime, clone.LocalTime);
+                Assert.Equal(obj.IsoDayOfWeek, clone.IsoDayOfWeek);
+                Assert.Equal(NodaTime.IsoDayOfWeek.Thursday, clone.IsoDayOfWeek);
+            }
+        }
+
+        [Fact]
+        public void AllCommonTypesSchema()
+        {
+            var model = CreateModel();
+            model.Add<MakeMeOneWithEverything>();
+            var schema = Log(model.GetSchema(typeof(MakeMeOneWithEverything)));
+            Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test;
+import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""google/type/date.proto"";
+import ""google/type/dayofweek.proto"";
+import ""google/type/timeofday.proto"";
+
+message MakeMeOneWithEverything {
+   .google.protobuf.Duration Duration = 1;
+   .google.protobuf.Timestamp Instant = 2;
+   .google.type.Date LocalDate = 3;
+   .google.type.TimeOfDay LocalTime = 4;
+   .google.type.DayOfWeek IsoDayOfWeek = 5;
+}
+", schema, ignoreLineEndingDifferences: true);
+        }
+
+        [ProtoContract]
+        public class MakeMeOneWithEverything
+        {
+            [ProtoMember(1)]
+            public NodaTime.Duration Duration { get; set; }
+            [ProtoMember(2)]
+            public NodaTime.Instant Instant { get; set; }
+            [ProtoMember(3)]
+            public NodaTime.LocalDate LocalDate { get; set; }
+            [ProtoMember(4)]
+            public NodaTime.LocalTime LocalTime { get; set; }
+            [ProtoMember(5)]
+            public NodaTime.IsoDayOfWeek IsoDayOfWeek { get; set; }
         }
     }
 }

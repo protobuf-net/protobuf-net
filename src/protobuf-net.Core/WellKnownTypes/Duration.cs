@@ -170,7 +170,7 @@ namespace ProtoBuf.WellKnownTypes
     /// two Timestamp values is a Duration and it can be added or subtracted
     /// from a Timestamp. 
     /// </summary>
-    [ProtoContract(Name = ".google.protobuf.Duration", Serializer = typeof(PrimaryTypeProvider))]
+    [ProtoContract(Name = ".google.protobuf.Duration", Serializer = typeof(PrimaryTypeProvider), Origin = "google/protobuf/duration.proto")]
     [StructLayout(LayoutKind.Auto)]
     public readonly struct Duration
     {

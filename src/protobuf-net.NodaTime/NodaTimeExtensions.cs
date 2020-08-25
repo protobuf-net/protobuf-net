@@ -9,16 +9,35 @@ namespace ProtoBuf.Meta // note: choice of API is deliberate; ProtoBuf.Meta caus
     {
         // influenced by NodaTime.Serialization.Protobuf/NodaExtensions.cs ToProtobufDuration etc
         // and NodaTime.Serialization.Protobuf/ProtobufExtensions.cs ToNodaDuration etc
-        
+
         /// <summary>
         /// Registers protobuf-net serialization surrogates for all supported NodaTime primitives.
         /// </summary>
         /// <param name="model">The model to extend (<see cref="RuntimeTypeModel.Default"/> is assumed if it is <c>null</c>)</param>.
         /// <returns>The model instance.</returns>
         public static RuntimeTypeModel AddNodaTimeSurrogates(this RuntimeTypeModel model)
-            => (model ?? RuntimeTypeModel.Default)
-                .SetSurrogate<NodaTime.Duration, WellKnownTypes.Duration>(ToProtoBufDuration, ToNodaTimeDuration)
+        {
+            model ??= RuntimeTypeModel.Default;
+            // use surrogates for Duration and Instant - we already have good support for these
+            model.SetSurrogate<NodaTime.Duration, WellKnownTypes.Duration>(ToProtoBufDuration, ToNodaTimeDuration)
                 .SetSurrogate<NodaTime.Instant, WellKnownTypes.Timestamp>(ToProtoBufTimestamp, ToNodaTimeInstant);
+
+            // the enum has matching values; can just configure the names
+            Add(model, typeof(NodaTime.IsoDayOfWeek), ".google.type.DayOfWeek", "google/type/dayofweek.proto", null);
+
+            // use custom serializer for LocalTime/LocalDate
+            Add(model, typeof(NodaTime.LocalDate), ".google.type.Date", "google/type/date.proto", typeof(NodaTimeSerializers));
+            Add(model, typeof(NodaTime.LocalTime), ".google.type.TimeOfDay", "google/type/timeofday.proto", typeof(NodaTimeSerializers));
+            return model;
+
+            static void Add(RuntimeTypeModel model, Type type, string name, string origin, Type serializerType)
+            {
+                var mt = model.Add(type, true);
+                if (name is object) mt.Name = name;
+                if (origin is object) mt.Origin = origin;
+                if (serializerType is object) mt.SerializerType = serializerType;
+            }
+        }
 
         /// <summary>
         /// Converts a NodaTime <see cref="NodaTime.Duration"/> to a protobuf-net <see cref="WellKnownTypes.Duration"/>.
