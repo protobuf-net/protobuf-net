@@ -13,7 +13,7 @@ namespace ProtoBuf.Test
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
-            return model.AddNodaTimeSurrogates();
+            return model.AddNodaTime();
         }
         [Theory]
         [InlineData(typeof(NodaTime.Duration), typeof(WellKnownTypes.Duration))]

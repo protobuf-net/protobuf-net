@@ -15,7 +15,7 @@ namespace ProtoBuf.Meta // note: choice of API is deliberate; ProtoBuf.Meta caus
         /// </summary>
         /// <param name="model">The model to extend (<see cref="RuntimeTypeModel.Default"/> is assumed if it is <c>null</c>)</param>.
         /// <returns>The model instance.</returns>
-        public static RuntimeTypeModel AddNodaTimeSurrogates(this RuntimeTypeModel model)
+        public static RuntimeTypeModel AddNodaTime(this RuntimeTypeModel model)
         {
             model ??= RuntimeTypeModel.Default;
             // use surrogates for Duration and Instant - we already have good support for these
