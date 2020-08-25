@@ -2096,6 +2096,8 @@ namespace ProtoBuf.Meta
         /// <typeparam name="TSurrogate">The serializable type that should be used instead</typeparam>
         /// <param name="underlyingToSurrogate">Custom conversion operation</param>
         /// <param name="surrogateToUnderlying">Custom conversion operation</param>
+        /// <param name="dataFormat">The <see cref="DataFormat"/> to use</param>
+        /// <param name="compatibilityLevel">The <see cref="CompatibilityLevel"/> to assume for this type</param>
         /// <returns>The original model (for chaining).</returns>
         public RuntimeTypeModel SetSurrogate<TUnderlying, TSurrogate>(
             Func<TUnderlying, TSurrogate> underlyingToSurrogate = null, Func<TSurrogate, TUnderlying> surrogateToUnderlying = null,
