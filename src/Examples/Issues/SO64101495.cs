@@ -29,6 +29,13 @@ message Example {
    string ExampleDescription = 3;
 }
 ", schema);
+
+            var obj = new Example { Date = DateTime.Today, Ip = IPAddress.Parse("114.43.32.145"), ExampleDescription = "foo" };
+            var clone = model.DeepClone(obj);
+            Assert.NotSame(obj, clone);
+            Assert.Equal(obj.Date, clone.Date);
+            Assert.Equal(obj.Ip, clone.Ip);
+            Assert.Equal(obj.ExampleDescription, clone.ExampleDescription);
         }
 
         
