@@ -1414,7 +1414,7 @@ namespace ProtoBuf.Meta
             if (surrogateType != null)
             {
                 // note that BuildSerializer checks the **CURRENT TYPE** is OK to be surrogated
-                if (typeof(IEnumerable).IsAssignableFrom(surrogateType))
+                if (surrogateType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(surrogateType))
                 {
                     ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }

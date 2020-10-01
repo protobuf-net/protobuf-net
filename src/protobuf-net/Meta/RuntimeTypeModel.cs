@@ -516,7 +516,7 @@ namespace ProtoBuf.Meta
         private void TryGetCoreSerializer(List<MetaType> list, Type itemType, CompatibilityLevel ambient, HashSet<string> imports, string origin)
         {
             var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, CompatibilityLevel.NotSpecified, itemType, out _, false, false, false, false);
-            if (coreSerializer != null)
+            if (coreSerializer is object)
             {
                 return;
             }
@@ -525,7 +525,17 @@ namespace ProtoBuf.Meta
             {
                 return;
             }
-            var temp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
+
+            var mt = (MetaType)types[index];
+            if (mt.HasSurrogate)
+            {
+                coreSerializer = ValueMember.TryGetCoreSerializer(this, mt.surrogateDataFormat, mt.CompatibilityLevel, mt.surrogateType, out _, false, false, false, false);
+                if (coreSerializer is object)
+                {   // inbuilt basic surrogate
+                    return;
+                }
+            }
+            var temp = mt.GetSurrogateOrBaseOrSelf(false);
             if (!string.IsNullOrWhiteSpace(temp.Origin) && temp.Origin != origin)
             {
                 imports.Add(temp.Origin);
@@ -1808,7 +1818,7 @@ namespace ProtoBuf.Meta
                 return wellKnownName;
             }
 
-            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out var _, false, false, false, false);
+            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, compatibilityLevel, effectiveType, out _, false, false, false, false);
             if (ser == null)
             {   // model type
                 if (asReference || dynamicType)
@@ -1818,7 +1828,10 @@ namespace ProtoBuf.Meta
                 }
 
                 var mt = this[effectiveType];
-
+                if (mt.HasSurrogate && ValueMember.TryGetCoreSerializer(this, mt.surrogateDataFormat, mt.CompatibilityLevel, mt.surrogateType, out _, false, false, false ,false) is object)
+                {   // inbuilt basic surrogate
+                    return GetSchemaTypeName(callstack, mt.surrogateType, mt.surrogateDataFormat, mt.CompatibilityLevel, false, false, imports);
+                }
                 var actualMeta = mt.GetSurrogateOrBaseOrSelf(true);
                 if (IsWellKnownType(actualMeta.Type, out wellKnownName, imports))
                 {
