@@ -993,7 +993,7 @@ namespace ProtoBuf.Meta
                 service = _serviceCache[type];
                 if (service != null) return service;
             }
-            service = GetServicesImpl();
+            service = GetServicesImpl(this, type, ambient);
             if (service != null)
             {
                 try
@@ -1008,18 +1008,25 @@ namespace ProtoBuf.Meta
             }
             return service;
 
-            object GetServicesImpl()
+            static object GetServicesImpl(RuntimeTypeModel model, Type type, CompatibilityLevel ambient)
             {
                 if (type.IsEnum) return EnumSerializers.GetSerializer(type);
 
+                var nt = Nullable.GetUnderlyingType(type);
+                if (nt is object)
+                {
+                    // rely on the fact that we always do double-duty with nullables
+                    return model.GetServicesSlow(nt, ambient);
+                }
+
                 // rule out repeated (this has an internal cache etc)
-                var repeated = TryGetRepeatedProvider(type); // this handles ignores, etc
+                var repeated = model.TryGetRepeatedProvider(type); // this handles ignores, etc
                 if (repeated != null) return repeated.Serializer;
 
-                int typeIndex = FindOrAddAuto(type, false, true, false, ambient);
+                int typeIndex = model.FindOrAddAuto(type, false, true, false, ambient);
                 if (typeIndex >= 0)
                 {
-                    var mt = (MetaType)types[typeIndex];
+                    var mt = (MetaType)model.types[typeIndex];
                     var serializer = mt.Serializer;
                     if (serializer is IExternalSerializer external)
                     {

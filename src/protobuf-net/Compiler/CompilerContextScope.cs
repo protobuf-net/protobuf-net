@@ -168,7 +168,7 @@ namespace ProtoBuf.Compiler
 
         internal bool ImplementsServiceFor<T>(CompatibilityLevel ambient)
         {
-            if (_model == null || typeof(T).IsEnum) return false;
+            if (_model == null || typeof(T).IsEnum || Nullable.GetUnderlyingType(typeof(T)) is object) return false;
             if (!_model.IsKnownType<T>(ambient)) return false;
 
             var mt = _model[typeof(T)];

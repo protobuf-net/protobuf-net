@@ -157,7 +157,7 @@ namespace ProtoBuf.Serializers
             {
                 var value = values.Current;
                 if (TypeHelper<TItem>.CanBeNull && TypeHelper<TItem>.ValueChecker.IsNull(value))
-                    ThrowHelper.ThrowNullReferenceException<TItem>();
+                    ThrowHelper.ThrowNullRepeatedContents<TItem>();
 
                 state.WriteFieldHeader(fieldNumber, wireType);
                 switch (category)
