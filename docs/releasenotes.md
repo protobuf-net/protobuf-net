@@ -21,6 +21,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - fix #713 - work correctly with arrays (etc) of nullable enum types
 - fix #697 - improve error reporting for invalid end-group markers
 - fix #668 - additional non-generic APIs
+- fix problem with protogen website not allowing imports
 
 ## 3.0.24
 
