@@ -4,6 +4,7 @@
     <ProjectReference Include="src\protobuf-net\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Core\*.csproj" />
     <ProjectReference Include="src\protobuf-net.MSBuild\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.NodaTime\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Protogen\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Reflection\*.csproj" />
     <ProjectReference Include="src\protobuf-net.AspNetCore\*.csproj" />
