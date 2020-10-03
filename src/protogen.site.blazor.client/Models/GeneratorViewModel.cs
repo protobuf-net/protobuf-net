@@ -56,7 +56,7 @@ namespace ProtoBuf.Models
         }
 
         public CodeGenerator GetCodeGenerator () {
-            if (!IsProtobugGen ()) {
+            if (!IsProtogen ()) {
                 throw new InvalidOperationException ("CodeGenerator are available only for language compatible with protobuf-net");
             }
             return Language switch
@@ -85,7 +85,7 @@ namespace ProtoBuf.Models
             return res;
         }
 
-        public bool IsProtobugGen () {
+        public bool IsProtogen () {
             return Language == GeneratorLanguageEnum.CSharp ||
                 Language == GeneratorLanguageEnum.VBNet;
         }
