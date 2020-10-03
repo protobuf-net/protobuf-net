@@ -1,10 +1,10 @@
-﻿using Microsoft.Build.Evaluation;
+﻿#if DEBUG
+using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Locator;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
