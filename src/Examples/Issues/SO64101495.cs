@@ -41,7 +41,7 @@ message Example {
    string Ip = 2;
    string ExampleDescription = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
 
             var obj = new Example { Date = When, Ip = IPAddress.Parse(TestIPAddress), ExampleDescription = "foo" };
             Assert.Equal(ExpectedHex, GetHex(model, obj));
@@ -69,7 +69,7 @@ message Example {
    string Ip = 2;
    string ExampleDescription = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
 
             var obj = new Example { Date = When, Ip = IPAddress.Parse(TestIPAddress), ExampleDescription = "foo" };
             Assert.Equal(ExpectedHex, GetHex(model, obj));
@@ -102,7 +102,7 @@ message Example {
    string Ip = 2;
    string ExampleDescription = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
 
             var obj = new Example { Date = When, Ip = IPAddress.Parse(TestIPAddress), ExampleDescription = "foo" };
             Assert.Equal(ExpectedHex, GetHex(model, obj));
@@ -128,7 +128,7 @@ message Example {
    string Ip = 2;
    string ExampleDescription = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
 
             var obj = new EffectiveExample { Date = When, Ip = TestIPAddress, ExampleDescription = "foo" };
             var hex = GetHex(model, obj);
