@@ -11,7 +11,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## unreleased
+## 3.0.52
 
 - add new protobuf-net.NodaTime package that adds direct support for NodaTime primitives (note: this may be relocated to a NodaTime library)
 - fix #700 - new APIs to allow surrogates to be defined externally, and to be implemented over primitive backing types
