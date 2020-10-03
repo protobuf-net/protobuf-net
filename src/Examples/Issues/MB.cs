@@ -213,10 +213,10 @@ namespace TestMediaBrowser
             Assert.Null(other.TVDBSeriesId);
         }*/
 
-//#pragma warning disable xUnit1004 // Test methods should not be skipped
-//        [Fact(Skip = "This works differently by design; perhaps reverse order?")]
-//#pragma warning restore xUnit1004 // Test methods should not be skipped
-        private void TestMerging()
+#pragma warning disable xUnit1004 // Test methods should not be skipped
+        [Fact(Skip = "This works differently by design; perhaps reverse order?")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
+        public void TestMerging()
         {
             var source = new MisterNullable(11)
             {
