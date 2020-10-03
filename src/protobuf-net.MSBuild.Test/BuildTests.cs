@@ -124,3 +124,4 @@ namespace ProtoBuf.Build
         }
     }
 }
+#endif
