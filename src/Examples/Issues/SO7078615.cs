@@ -116,10 +116,10 @@ namespace Examples.Issues
             Assert.Equal(orig.NameOfDog, typed.NameOfDog);
         }
 
-#pragma warning disable xUnit1004 // Test methods should not be skipped
-        [Fact(Skip = "Long running")]
-#pragma warning restore xUnit1004 // Test methods should not be skipped
-        public void TestPerf()
+//#pragma warning disable xUnit1004 // Test methods should not be skipped
+//        [Fact(Skip = "Long running")]
+//#pragma warning restore xUnit1004 // Test methods should not be skipped
+        private void TestPerf()
         {
             int[] values = new int[100000000];
             var watch = Stopwatch.StartNew();

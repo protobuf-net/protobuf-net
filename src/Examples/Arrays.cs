@@ -248,10 +248,10 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
-#pragma warning disable xUnit1004 // Test methods should not be skipped
-        [Fact(Skip = "known variation")]
-#pragma warning restore xUnit1004 // Test methods should not be skipped
-        public void TestEmptyArray()
+//#pragma warning disable xUnit1004 // Test methods should not be skipped
+//        [Fact(Skip = "known variation")]
+//#pragma warning restore xUnit1004 // Test methods should not be skipped
+        private void TestEmptyArray()
         {
             Node node = new Node
             {
