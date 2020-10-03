@@ -72,7 +72,7 @@ enum blah {
    A = -1;
    C = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
 
@@ -96,7 +96,7 @@ enum blah {
    A = -1;
    C = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -132,7 +132,7 @@ enum OutOfRangeEnum {
    // F = -2147483649; // note: enums should be valid 32-bit integers
 }
 */
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         public enum InRangeEnum : long
@@ -181,7 +181,7 @@ enum blah {
    A = -1;
    C = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]

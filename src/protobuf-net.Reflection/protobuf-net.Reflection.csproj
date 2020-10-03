@@ -17,4 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="google\type\" />
+  </ItemGroup>
 </Project>

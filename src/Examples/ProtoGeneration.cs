@@ -45,7 +45,7 @@ message abc {
    required uint32 ghi = 2;
    required bytes def = 3;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [DataContract(Name="abc")]
@@ -69,7 +69,7 @@ message abc {
 message MyClass {
    optional string TestString = 1 [default = ""Test Test TEst""];
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -104,7 +104,7 @@ message Type2 {
    optional string Value3 = 1;
    optional string Value4 = 2;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -121,7 +121,7 @@ message EvilGeneric_EvilParent {
 message EvilParent {
    optional EvilGeneric_EvilParent X = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -136,7 +136,7 @@ message List_MySurrogate {
 }
 message MySurrogate {
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -151,7 +151,7 @@ message List_MySurrogate {
 }
 message MySurrogate {
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -163,7 +163,7 @@ message MySurrogate {
 message List_Int32 {
    repeated int32 items = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -175,7 +175,7 @@ message List_Int32 {
 message Int32 {
    optional int32 value = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ProtoForNullablePrimitiveShouldGenerateSchema()
@@ -186,7 +186,7 @@ message Int32 {
 message Int32 {
    optional int32 value = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ProtoForDictionaryShouldGenerateSchema()
@@ -197,7 +197,7 @@ message Int32 {
 message Dictionary_String_Int32 {
    map<string, int32> items = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void ProtoForDictionaryShouldIncludeSchemasForContainedTypes()
@@ -211,7 +211,7 @@ message Dictionary_String_MySurrogate {
 }
 message MySurrogate {
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -231,7 +231,7 @@ message Cat {
 message Dictionary_String_Cat {
    map<string, Animal> items = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract, ProtoInclude(1, typeof(Cat))] public class Animal {}
@@ -263,7 +263,7 @@ import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core
 message HasPrimitives {
    optional .bcl.DateTime When = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         static TypeModel GetSurrogateModel() {
@@ -288,7 +288,7 @@ package Examples;
 
 message MySurrogate {
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void SchemaNameForNonSurrogateShouldBeSane()
@@ -300,7 +300,7 @@ package Examples;
 
 message MySurrogate {
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void SchemaNameForTypeUsingSurrogatesShouldBeSane()
@@ -316,7 +316,7 @@ message UsesSurrogates {
    optional MySurrogate A = 1;
    optional MySurrogate B = 2;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [Fact]
         public void EntireSchemaShouldNotIncludeNonSurrogates()
@@ -332,7 +332,7 @@ message UsesSurrogates {
    optional MySurrogate A = 1;
    optional MySurrogate B = 2;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
 
@@ -429,7 +429,7 @@ message C {
 message TestCase {
    optional A Data = 10;
 }
-", s);
+", s, ignoreLineEndingDifferences: true);
         }
     }
 }

@@ -22,7 +22,7 @@
 
                     <h3>Code generation options</h3>
 
-                    @if (model.IsProtobugGen())
+                    @if (model.IsProtogen())
                     {
 
                         @if (model.HasLanguageVersion())
@@ -223,7 +223,7 @@
                     return;
                 }
 
-                if (model.IsProtobugGen() && !model.ProtoContent.Contains("import"))
+                if (model.IsProtogen() && !model.ProtoContent.Contains("import"))
                 {
                     ProtobufnetGenerate(set);
                 }
@@ -276,7 +276,6 @@
     }
     private void ProtobufnetGenerate(FileDescriptorSet set)
     {
-        
         var generateResult = model.GetCodeGenerator()
             .Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions())
             .ToList();

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <NoWarn>CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Date.cs" />
+    <Compile Remove="Dayofweek.cs" />
+    <Compile Remove="Duration.cs" />
+    <Compile Remove="Timeofday.cs" />
+    <Compile Remove="Timestamp.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Date.cs" />
+    <None Include="Dayofweek.cs" />
+    <None Include="Duration.cs" />
+    <None Include="Timeofday.cs" />
+    <None Include="Timestamp.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="NodaTime" Version="3.0.0" />
+    <PackageReference Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+  </ItemGroup>
+
+</Project>

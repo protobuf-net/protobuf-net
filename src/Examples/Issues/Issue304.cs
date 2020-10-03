@@ -19,7 +19,7 @@ message Foo {
 }
 ",
 
-        Serializer.GetProto<Foo>(ProtoSyntax.Proto2)
+        Serializer.GetProto<Foo>(ProtoSyntax.Proto2), ignoreLineEndingDifferences: true
 
         );
         }

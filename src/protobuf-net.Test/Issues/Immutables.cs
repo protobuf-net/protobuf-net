@@ -18,7 +18,7 @@ namespace ProtoBuf.Issues
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(ImmutableArrayTestClass));
-            model.CompileAndVerify(deleteOnSuccess: false);
+            model.CompileAndVerify();
         }
 
         [Theory]

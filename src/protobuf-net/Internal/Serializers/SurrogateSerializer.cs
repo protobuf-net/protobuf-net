@@ -7,7 +7,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
-        public SerializerFeatures Features => rootTail.Features;
+        public SerializerFeatures Features => features;
         bool IProtoTypeSerializer.IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
@@ -26,28 +26,28 @@ namespace ProtoBuf.Internal.Serializers
         void ISerializer<T>.Write(ref ProtoWriter.State state, T value)
             => Write(ref state, value);
 
-        public bool ReturnsValue => false;
+        public bool ReturnsValue => rootTail.ReturnsValue;
 
-        public bool RequiresOldValue => true;
+        public bool RequiresOldValue => rootTail.RequiresOldValue;
 
         public Type ExpectedType => typeof(T);
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
-        private readonly IProtoTypeSerializer rootTail;
+        private readonly IRuntimeProtoSerializerNode rootTail;
+        private readonly SerializerFeatures features;
 
-        public SurrogateSerializer(Type declaredType, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IRuntimeProtoSerializerNode rootTail, SerializerFeatures features)
         {
-            Debug.Assert(declaredType != null, "declaredType");
-            Debug.Assert(rootTail != null, "rootTail");
-            Debug.Assert(rootTail.RequiresOldValue, "RequiresOldValue");
-            Debug.Assert(!rootTail.ReturnsValue, "ReturnsValue");
-            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
+            Debug.Assert(declaredType is object, "declaredType");
+            Debug.Assert(rootTail is object, "rootTail");
+            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType), "surrogate type mismatch");
             this.declaredType = declaredType;
             this.rootTail = rootTail;
-            toTail = GetConversion(true);
-            fromTail = GetConversion(false);
+            this.toTail = toTail ?? GetConversion(true);
+            this.fromTail = fromTail ?? GetConversion(false);
+            this.features = features;
         }
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
@@ -116,8 +116,17 @@ namespace ProtoBuf.Internal.Serializers
         public object Read(ref ProtoReader.State state, object value)
         {
             // convert the incoming value
-            object[] args = { value };
-            value = toTail.Invoke(null, args);
+            object[] args = new object[1];
+            
+            if (rootTail.RequiresOldValue)
+            {
+                args[0] = value;
+                value = toTail.Invoke(null, args);
+            }
+            else
+            {
+                value = null;
+            }
 
             // invoke the tail and convert the outgoing value
             args[0] = rootTail.Read(ref state, value);
@@ -134,12 +143,15 @@ namespace ProtoBuf.Internal.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            Debug.Assert(valueFrom != null); // don't support stack-head for this
-            using Compiler.Local converted = new Compiler.Local(ctx, declaredType);
-            ctx.LoadValue(valueFrom); // load primary onto stack
-            ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
-            ctx.StoreValue(converted); // store into surrogate local
+            // Debug.Assert(valueFrom != null, "surrogate value on stack-head"); // don't support stack-head for this
+            using Compiler.Local converted = rootTail.RequiresOldValue ? new Compiler.Local(ctx, declaredType) : null;
 
+            if (rootTail.RequiresOldValue)
+            {
+                ctx.LoadValue(valueFrom); // load primary onto stack
+                ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
+                ctx.StoreValue(converted); // store into surrogate local
+            }
             rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
             ctx.LoadValue(converted); // load from surrogate local

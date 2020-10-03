@@ -10,6 +10,12 @@
   <ItemGroup>
     <None Remove="basic.proto" />
     <None Remove="basic_service.proto" />
+    <None Update="windows\protoc.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="macosx\protoc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +37,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.CodeDom" Version="4.7.0" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="basic.proto" />
@@ -46,9 +54,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Update="protoc.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Schemas\issues\**\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -70,5 +75,8 @@
     <None Update="Schemas\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="macosx" />
   </ItemGroup>
 </Project>

@@ -412,6 +412,12 @@ namespace ProtoBuf
 
             internal TypeModel Model => _writer?.Model;
 
+            /// <summary>
+            /// Gets the serializer associated with a specific type
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public ISerializer<T> GetSerializer<T>() => TypeModel.GetSerializer<T>(Model);
+
             internal WireType WireType
             {
                 get => _writer.WireType;

@@ -12,9 +12,14 @@ namespace ProtoBuf
     {
         internal const string ReferenceDynamicDisabled = "Reference-tracking and dynamic-type are not currently implemented in this build; they may be reinstated later; this is partly due to doubts over whether the features are adviseable, and partly over confidence in testing all the scenarios (it takes time; that time hasn't get happened); feedback is invited";
         /// <summary>
-        /// Gets or sets the defined name of the type.
+        /// Gets or sets the defined name of the type. This can be fully qualified , for example <c>.foo.bar.someType</c> if required.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the file that defines this type (as used with <c>import</c> in .proto)
+        /// </summary>
+        public string Origin { get; set; }
 
         /// <summary>
         /// Gets or sets the fist offset to use with implicit field tags;

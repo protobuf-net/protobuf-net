@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
@@ -77,9 +78,10 @@ namespace ProtoBuf.Schemas
 
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
-        [Fact]
+        [SkippableFact]
         public void EverythingProtoLangver3()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "everything.proto";
 
@@ -121,9 +123,10 @@ namespace ProtoBuf.Schemas
             catch (PlatformNotSupportedException) { }
         }
 
-        [Fact]
+        [SkippableFact()]
         public void DescriptorProtoVB()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "descriptor.proto";
 
@@ -231,10 +234,15 @@ namespace ProtoBuf.Schemas
 
             var protocBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.bin"));
             int exitCode;
+            string protocExe = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"windows\protoc" :
+                RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? @"macosx/protoc" : "";
+            if (string.IsNullOrWhiteSpace(protocExe))
+                throw new PlatformNotSupportedException(RuntimeInformation.OSDescription);
             using (var proc = new Process())
             {
                 var psi = proc.StartInfo;
-                psi.FileName = "protoc";
+                psi.FileName = protocExe;
+
                 psi.Arguments = $"--experimental_allow_proto3_optional --descriptor_set_out={protocBinPath} {path}";
                 if (includeComments) psi.Arguments += " --include_source_info";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
@@ -283,7 +291,7 @@ namespace ProtoBuf.Schemas
             {
                 using var proc = new Process();
                 var psi = proc.StartInfo;
-                psi.FileName = "protoc";
+                psi.FileName = protocExe;
                 psi.Arguments = $"--experimental_allow_proto3_optional --csharp_out={Path.GetDirectoryName(protocBinPath)} {path}";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.CreateNoWindow = true;

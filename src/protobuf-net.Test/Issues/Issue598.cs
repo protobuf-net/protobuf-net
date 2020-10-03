@@ -31,7 +31,7 @@ namespace ProtoBuf.Test.Issues
             var model = RuntimeTypeModel.Create();
             model.Add<NewHtmlString>();
             model.Add<Item>();
-            PEVerify.CompileAndVerify(model, "NewHtmlStringModel", deleteOnSuccess: false);
+            PEVerify.CompileAndVerify(model, "NewHtmlStringModel");
         }
 
         [Fact]

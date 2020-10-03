@@ -53,7 +53,7 @@ namespace ProtoBuf.Test.Issues
             model.Add<Tuple<Dictionary<string, double>, Dictionary<string, double>>>();
             Test(model);
 
-            var dll = model.CompileAndVerify(deleteOnSuccess: false);
+            var dll = model.CompileAndVerify();
 
             model.CompileInPlace();
             Test(model);

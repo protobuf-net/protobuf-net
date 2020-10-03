@@ -21,8 +21,8 @@ namespace ProtoBuf.Test
         public void AssertVanillaListsSchema()
             => Assert.Equal(@"syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
 
 message HazLists {
    repeated .google.protobuf.Timestamp DateTimes = 1;
@@ -54,9 +54,9 @@ message HazLists {
         public void AssertVanillaMapsSchema()
             => Assert.Equal(@"syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message HazMaps {
    map<int32,.bcl.DateTime> DateTimeMapMarkedPropertyLevel = 1;

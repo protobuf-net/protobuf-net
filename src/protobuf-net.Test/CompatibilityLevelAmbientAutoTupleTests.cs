@@ -58,8 +58,8 @@ message Vanilla {
         [Fact]
         public void Level300Schema() => AssertSchema<Level300>(@"
 syntax = ""proto3"";
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
 
 message Level300 {
    ValueTuple_DateTime_TimeSpan Value = 1;
@@ -147,8 +147,8 @@ message ValueTuple_Guid_Decimal {
         [Fact]
         public void Level300Payload_EquivSchema() => AssertSchema<Level300_Equivalent>(@"
 syntax = ""proto3"";
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
 
 message Level300_Equivalent {
    ValueTuple_Timestamp_Duration Value = 1;
@@ -226,8 +226,8 @@ message ValueTuple_Timestamp_String {
         [Fact]
         public void HybridValidModelSchema() => AssertSchema<HybridValidModel>(@"
 syntax = ""proto3"";
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
 
 message HybridValidModel {
    ValueTuple_DateTime_TimeSpan Value = 1;

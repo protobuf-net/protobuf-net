@@ -442,6 +442,10 @@ namespace ProtoBuf.Compiler
                 il.Emit(OpCodes.Starg_S, _inputArg);
                 TraceCompile(OpCodes.Starg_S + ": $" + _inputArg);
             }
+            else if (local is null)
+            {
+                // just leave it on the top of the stack
+            }
             else
             {
                 switch (local.Value.LocalIndex)

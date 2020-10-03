@@ -384,9 +384,9 @@ message HasRefDynamic {
             var schema = Serializer.GetProto<HazTime>(ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
 package ProtoBuf.Serializers;
-import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
-import ""google/protobuf/timestamp.proto"";
 import ""google/protobuf/duration.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message HazTime {
    optional .bcl.DateTime a = 1;

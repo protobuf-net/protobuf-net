@@ -51,7 +51,7 @@ message FooClass {
             }).Single().Text;
             Log(actualCsharp);
 
-            var expectedCsharp = File.ReadAllText(@"Issues\Issue647.Generated.cs");
+            var expectedCsharp = File.ReadAllText(@"Issues/Issue647.Generated.cs");
             Assert.Equal(expectedCsharp, actualCsharp, ignoreLineEndingDifferences: true);
         }
     }

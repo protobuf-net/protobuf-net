@@ -707,7 +707,21 @@ namespace ProtoBuf.Meta
                 }
                 if (meta != null)
                 {
-                    return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
+                    IProtoTypeSerializer serializer;
+                    if (meta.HasSurrogate && (serializer = meta.Serializer).Features.GetCategory() == SerializerFeatures.CategoryScalar)
+                    {
+                        dataFormat = meta.surrogateDataFormat;
+                        // this checks for an overriding wire-type/data-format combo
+                        if (TryGetCoreSerializer(model, dataFormat, meta.CompatibilityLevel, meta.surrogateType, out defaultWireType, false, false, false, false) is null)
+                        {   // otherwise, defer to the serializer
+                            defaultWireType = serializer.Features.GetWireType();
+                        }
+                        return serializer;
+                    }
+                    else
+                    {
+                        return SubItemSerializer.Create(type, meta, ref dataFormat, out defaultWireType);
+                    }
                 }
             }
             defaultWireType = WireType.None;
@@ -780,10 +794,10 @@ namespace ProtoBuf.Meta
         internal const string SupportNullNotImplemented = "Nullable list elements are not currently implemented";
 #endif
 
-        internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports, out string altName)
+        internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
         {
             Type effectiveType = ItemType ?? MemberType;
-            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, CompatibilityLevel, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports, out altName);
+            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, CompatibilityLevel, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, imports, out altName);
         }
 
         internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>

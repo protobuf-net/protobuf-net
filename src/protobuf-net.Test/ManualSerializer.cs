@@ -24,7 +24,7 @@ namespace ProtoBuf
             model.Add(typeof(D));
             model.Add(typeof(E));
             model.Add(typeof(F));
-            model.CompileAndVerify(deleteOnSuccess: false);
+            model.CompileAndVerify();
         }
 #endif
 

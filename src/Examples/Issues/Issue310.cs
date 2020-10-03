@@ -33,7 +33,7 @@ message Cat {
 message Dog {
    optional string OwnerName = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract]

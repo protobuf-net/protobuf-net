@@ -40,7 +40,7 @@ message vegetable {
 }
 ",
 
- model.GetSchema(null, ProtoSyntax.Proto2)
+ model.GetSchema(null, ProtoSyntax.Proto2), ignoreLineEndingDifferences: true
 
 );
         }
@@ -66,7 +66,7 @@ message vegetable {
 }
 ",
 
- model.GetSchema(null, ProtoSyntax.Proto3)
+ model.GetSchema(null, ProtoSyntax.Proto3), ignoreLineEndingDifferences: true
 
 );
         }
@@ -143,7 +143,7 @@ message cat {
 }
 ",
 
-                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2)
+                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2), ignoreLineEndingDifferences: true
 
                 );
         }
@@ -166,7 +166,7 @@ message cat {
 }
 ",
 
-                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2)
+                model.GetSchema(typeof(Animal), ProtoSyntax.Proto2), ignoreLineEndingDifferences: true
 
                 );
         }
