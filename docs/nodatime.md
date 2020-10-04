@@ -11,6 +11,7 @@ For example, say we have a type that we want to serialize, which makes use of `N
 - calling `RuntimeTypeModel.Default.AddNodaTime();` as part of application startup
 - annotate the member with protobuf-net attributes as usual, for example:
 
+    ``` c#
     [ProtoContract]
     public class MyType {
         // ...
@@ -20,6 +21,7 @@ For example, say we have a type that we want to serialize, which makes use of `N
 
         // ...
     }
+    ```
 
 and: that's it. The library will now handle any of:
 
