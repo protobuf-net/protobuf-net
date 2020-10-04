@@ -36,3 +36,7 @@ the [Google.Protobuf](https://www.nuget.org/packages/Google.Protobuf/) library),
 
 Additionally, any usage of `GetSchema()`/`GetProto<T>()` will give appropriate output indicating the native protobuf types being represented.
 
+---
+
+Note: [protobuf-net.NodaTime](https://www.nuget.org/packages/protobuf-net.NodaTime/) makes use of new extension APIs in protobuf-net v3, and therefore will not work
+with earlier versions of protobuf-net.

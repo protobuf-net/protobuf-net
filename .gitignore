@@ -28,3 +28,4 @@ src/VBTest/*
 src/Benchmark/DalSerializer.dll
 .nupkgs/*
 .idea/
+profile.arm.json
