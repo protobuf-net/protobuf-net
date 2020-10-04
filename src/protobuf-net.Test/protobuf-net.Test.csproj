@@ -1,16 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>netcoreapp3.1;net462</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net462;net5</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <WithSpans>true</WithSpans>
-    <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004</NoWarn>
+    <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004;SYSLIB0011</NoWarn>
     <RootNamespace>ProtoBuf.Test</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
     <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER</DefineConstants>
+    <LibImport>core</LibImport>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework)=='net5'">
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER;PLAT_INIT_ONLY</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">

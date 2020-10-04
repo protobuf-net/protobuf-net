@@ -1,0 +1,38 @@
+﻿#if PLAT_INIT_ONLY
+using ProtoBuf.Meta;
+using Xunit;
+
+namespace ProtoBuf.Test
+{
+    public class InitOnlyPropertyTests
+    {
+        [Fact]
+        public void CanRoundTripInitOnlyProperties()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+
+            Test(model); // reflection
+            model.CompileInPlace();
+            Test(model); // in-place compile by method
+            Test(model.Compile()); // full compile to in-memory assembly
+            // (note: no point trying full disk compile unless new modreq exist in netfx)
+
+            static void Test(TypeModel model)
+            {
+                var obj = new HazInitOnly { Id = 42 };
+                var clone = model.DeepClone(obj);
+                Assert.NotSame(obj, clone);
+                Assert.Equal(42, clone.Id);
+            }
+        }
+
+        [ProtoContract]
+        public class HazInitOnly
+        {
+            [ProtoMember(1)]
+            public int Id { get; init; }
+        }
+    }
+}
+#endif
