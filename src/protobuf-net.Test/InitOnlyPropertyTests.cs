@@ -27,6 +27,25 @@ namespace ProtoBuf.Test
             }
         }
 
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ReflectionViaGetSetMethod(bool nonPublic)
+        {
+            var obj = new HazInitOnly { Id = 42 };
+            obj.GetType().GetProperty(nameof(obj.Id)).GetSetMethod(nonPublic).Invoke(obj, new object[] { 13 });
+            Assert.Equal(13, obj.Id);
+        }
+
+        [Fact]
+        public void ReflectionViaGetSetValue()
+        {
+            var obj = new HazInitOnly { Id = 42 };
+            obj.GetType().GetProperty(nameof(obj.Id)).SetValue(obj, 13);
+            Assert.Equal(13, obj.Id);
+        }
+
+
         [ProtoContract]
         public class HazInitOnly
         {
