@@ -10,6 +10,11 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 
 [Change history and pending changes are here](http://protobuf-net.github.io/protobuf-net/releasenotes)
 
+## Other topics
+
+- [Using protobuf-net with Noda Time](http://protobuf-net.github.io/protobuf-net/nodatime)
+- [`CompatibilityLevel`](http://protobuf-net.github.io/protobuf-net/compatibilitylevel)
+
 ## Donate
 
 protobuf-net is maintained purely out of my own time - it is not sponsored on an ongoing basis, but if you want to contribute towards the ongoing support, options include:
