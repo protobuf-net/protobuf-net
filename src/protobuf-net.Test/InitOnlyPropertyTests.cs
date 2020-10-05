@@ -1,6 +1,16 @@
-﻿#if PLAT_INIT_ONLY
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
+using System.ComponentModel;
 using Xunit;
+
+#if !PLAT_INIT_ONLY
+namespace System.Runtime.CompilerServices
+{
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static class IsExternalInit // yeah, don't do this!
+    {
+    }
+}
+#endif
 
 namespace ProtoBuf.Test
 {
@@ -54,4 +64,3 @@ namespace ProtoBuf.Test
         }
     }
 }
-#endif
