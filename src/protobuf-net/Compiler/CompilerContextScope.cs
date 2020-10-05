@@ -98,7 +98,7 @@ namespace ProtoBuf.Compiler
                 }
 
                 var fieldName = "s_" + callback.Name;
-                var fieldAttribs = FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly;
+                var fieldAttribs = FieldAttributes.Assembly | FieldAttributes.Static;
                 if (IsFullEmit) fieldAttribs |= FieldAttributes.InitOnly;
                 var field = type.DefineField(fieldName, delegateType, fieldAttribs);
 
