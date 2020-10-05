@@ -24,7 +24,7 @@
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net5'">
-    <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL;PLAT_SKIP_LOCALS_INIT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModelConfiguration)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>

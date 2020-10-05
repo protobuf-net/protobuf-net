@@ -194,7 +194,7 @@ namespace ProtoBuf
                     if (s.RemainingInCurrent != 0)
                     {
                         int take = Math.Min(s.RemainingInCurrent, target.Length);
-                        reader.Peek(ref s, take).CopyTo(target);
+                        Peek(ref s, take).CopyTo(target);
                         target = target.Slice(take);
                         available += take;
                     }
@@ -319,7 +319,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ReadOnlySpan<byte> Peek(ref State state, int bytes)
+            private static ReadOnlySpan<byte> Peek(ref State state, int bytes)
                 => state.Span.Slice(state.OffsetInCurrent, bytes);
 
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)

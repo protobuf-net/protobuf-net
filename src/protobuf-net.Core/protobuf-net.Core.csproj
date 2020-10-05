@@ -27,7 +27,7 @@
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='net5'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR;PLAT_SKIP_LOCALS_INIT</DefineConstants>
   </PropertyGroup>
 
 <!--
@@ -39,6 +39,7 @@ PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropr
 FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
 FEAT_NULL_LIST_ITEMS      : whether we support retaining nulls in lists
 PLAT_CONCURRENT_CLEAR     : whether the concurrent collections have the necessary Clear method
+PLAT_SKIP_LOCALS_INIT     : whether we can avoid ".locals init"
 TRACK_USAGE               : count writer activity to check disposal/re-use is correct
 -->
 </Project>

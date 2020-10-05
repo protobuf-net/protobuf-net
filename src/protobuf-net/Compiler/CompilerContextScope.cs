@@ -52,7 +52,7 @@ namespace ProtoBuf.Compiler
         internal static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name, bool @explicit = true)
         {
             var decl = interfaceType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
-            if (decl == null) throw new ArgumentException(nameof(name));
+            if (decl == null) throw new ArgumentException($"Declaration not found for '{name}'", nameof(name));
             var args = decl.GetParameters();
             string implName = name; // name.StartsWith("get_") ? name.Substring(4) : name;
             var attribs = (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final;
@@ -98,7 +98,7 @@ namespace ProtoBuf.Compiler
                 }
 
                 var fieldName = "s_" + callback.Name;
-                var fieldAttribs = FieldAttributes.Assembly | FieldAttributes.Static | FieldAttributes.InitOnly;
+                var fieldAttribs = FieldAttributes.Assembly | FieldAttributes.Static;
                 if (IsFullEmit) fieldAttribs |= FieldAttributes.InitOnly;
                 var field = type.DefineField(fieldName, delegateType, fieldAttribs);
 

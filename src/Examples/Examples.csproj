@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp3.1;net5</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
     <DefineConstants Condition="$(CI) != 'true'">$(DefineConstants);LONG_RUNNING</DefineConstants>
     <NoWarn>$(NoWarn);IDE0060;IDE0051;IDE0044;IDE0063;IDE0028;IDE0034;IDE1006;IDE0017;IDE0052;xUnit1004</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
+  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net5'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">
@@ -47,7 +47,7 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1'">
+  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net5'">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />

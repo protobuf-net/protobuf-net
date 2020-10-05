@@ -28,3 +28,7 @@ using System.Runtime.CompilerServices;
     + "dba67bd4c830f93f0317504a76ba6a48243c36d2590695991164592767a7bbc4453b34694e31e2"
     + "0815a096e4483605139a32a76ec2fef196507487329c12047bf6a68bca8ee9354155f4d01daf6e"
     + "ec5ff6bc")]
+
+#if PLAT_SKIP_LOCALS_INIT
+[module: SkipLocalsInit]
+#endif
