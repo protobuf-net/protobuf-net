@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Benchmark
 {
-    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp30), SimpleJob(RuntimeMoniker.NetCoreApp31), MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp31), SimpleJob(RuntimeMoniker.NetCoreApp50), MemoryDiagnoser]
     public class PoolBenchmarks // investigating #668/#669
     {
         [Params(1, 5, 20)]
