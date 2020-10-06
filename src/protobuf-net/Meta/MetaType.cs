@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Text;
-using ProtoBuf.Serializers;
-using System.Reflection;
-using System.Collections.Generic;
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Internal.Serializers;
-using System.Linq;
+using ProtoBuf.Serializers;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
 
 namespace ProtoBuf.Meta
 {
@@ -955,7 +954,7 @@ namespace ProtoBuf.Meta
             }
             if (family == AttributeFamily.None)
             { // check for obvious tuples
-                if (ResolveTupleConstructor(type, out MemberInfo[] _) is object)
+                if (ResolveTupleConstructor(type, out _) is object)
                 {
                     family |= AttributeFamily.AutoTuple;
                 }
@@ -983,8 +982,23 @@ namespace ProtoBuf.Meta
                 if (fieldsPropsUnfiltered[i] is PropertyInfo prop)
                 {
                     if (!prop.CanRead) return null; // no use if can't read
-                    if (demandReadOnly && prop.CanWrite && Helpers.GetSetMethod(prop, false, false) is object) return null; // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
+                    if (demandReadOnly && prop.CanWrite && IsPublicSetter(Helpers.GetSetMethod(prop, false, false)))
+                    {
+                        // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
+                        // (unless it is an "init-only" set)
+                        return null;
+                    }
                     memberList.Add(prop);
+
+                    static bool IsPublicSetter(MethodInfo method)
+                    {
+                        if (method is null) return false;
+                        foreach (Type modreq in method.ReturnParameter?.GetRequiredCustomModifiers() ?? Type.EmptyTypes)
+                        {
+                            if (modreq?.FullName == "System.Runtime.CompilerServices.IsExternalInit") return false;
+                        }
+                        return true;
+                    }
                 }
                 else
                 {
