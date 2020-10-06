@@ -23,18 +23,18 @@ namespace ProtoBuf.Serializers
             if (!IsValidKey(key, compatibilityLevel, dataFormat)) return false;
 
             // the value cannot be repeated (neither can key, but we ruled that out above)
-            var repeated = model == null ? RepeatedSerializers.TryGetRepeatedProvider(value) : model.TryGetRepeatedProvider(value);
-            if (repeated != null) return false;
+            var repeated = model is null ? RepeatedSerializers.TryGetRepeatedProvider(value) : model.TryGetRepeatedProvider(value);
+            if (repeated is object) return false;
 
             return true;
 
             static bool IsValidKey(Type type, CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
             {
-                if (type == null) return false;
+                if (type is null) return false;
                 if (type.IsEnum) return true;
                 if (type == typeof(string)) return true;
                 if (!type.IsValueType) return false;
-                if (Nullable.GetUnderlyingType(type) != null) return false;
+                if (Nullable.GetUnderlyingType(type) is object) return false;
                 switch (Type.GetTypeCode(type))
                 {
                     case TypeCode.SByte:
@@ -54,7 +54,7 @@ namespace ProtoBuf.Serializers
                 return false;
             }
         }
-        public bool IsEmpty => Provider == null;
+        public bool IsEmpty => Provider is null;
         public object Serializer => _serializer ?? CreateSerializer();
         public Type ForType { get; }
         public Type ItemType { get; }
@@ -72,7 +72,7 @@ namespace ProtoBuf.Serializers
                 };
                 return _serializer;
             }
-            catch(TargetInvocationException tie) when (tie.InnerException != null)
+            catch(TargetInvocationException tie) when (tie.InnerException is object)
             {
                 throw tie.InnerException;
             }
@@ -86,7 +86,7 @@ namespace ProtoBuf.Serializers
         }
 
         public static RepeatedSerializerStub Create(Type forType, MemberInfo provider)
-            => provider == null ? Empty : new RepeatedSerializerStub(forType, provider);
+            => provider is null ? Empty : new RepeatedSerializerStub(forType, provider);
 
         private RepeatedSerializerStub(Type forType, MemberInfo provider)
         {
@@ -105,7 +105,7 @@ namespace ProtoBuf.Serializers
                 Type t => t,
                 _ => null,
             };
-            while (type != null && type != typeof(object))
+            while (type is object && type != typeof(object))
             {
                 if (type.IsGenericType)
                 {

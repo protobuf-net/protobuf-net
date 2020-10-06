@@ -53,7 +53,7 @@ namespace ProtoBuf.Meta
 
         internal TypeFormatEventArgs(Type type)
         {
-            if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             this.type = type;
             typeFixed = true;
         }

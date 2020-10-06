@@ -114,7 +114,7 @@ namespace ProtoBuf.Serializers
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(newValues);
         protected override ImmutableList<T> Clear(ImmutableList<T> values, ISerializationContext context)
             => values.Clear();
-        protected override int TryGetCount(ImmutableList<T> values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(ImmutableList<T> values) => values is null ? 0 : values.Count;
 
         internal override long Measure(ImmutableList<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -188,7 +188,7 @@ namespace ProtoBuf.Serializers
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.Union(newValues);
         protected override ImmutableHashSet<T> Clear(ImmutableHashSet<T> values, ISerializationContext context)
             => values.Clear();
-        protected override int TryGetCount(ImmutableHashSet<T> values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(ImmutableHashSet<T> values) => values is null ? 0 : values.Count;
 
         internal override long Measure(ImmutableHashSet<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -214,7 +214,7 @@ namespace ProtoBuf.Serializers
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.Union(newValues);
         protected override ImmutableSortedSet<T> Clear(ImmutableSortedSet<T> values, ISerializationContext context)
             => values.Clear();
-        protected override int TryGetCount(ImmutableSortedSet<T> values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(ImmutableSortedSet<T> values) => values is null ? 0 : values.Count;
 
         internal override long Measure(ImmutableSortedSet<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -296,7 +296,7 @@ namespace ProtoBuf.Serializers
 
         protected override ImmutableStack<T> Clear(ImmutableStack<T> values, ISerializationContext context)
             => values.Clear();
-        protected override int TryGetCount(ImmutableStack<T> values) => (values == null || values.IsEmpty) ? 0 : -1;
+        protected override int TryGetCount(ImmutableStack<T> values) => (values is null || values.IsEmpty) ? 0 : -1;
 
         internal override long Measure(ImmutableStack<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -349,7 +349,7 @@ namespace ProtoBuf.Serializers
         {
             try
             {
-                return values == null || values.IsEmpty ? 0 : -1;
+                return values is null || values.IsEmpty ? 0 : -1;
             }
             catch
             {
@@ -409,7 +409,7 @@ namespace ProtoBuf.Serializers
 
         protected override ImmutableQueue<T> Clear(ImmutableQueue<T> values, ISerializationContext context)
             => values.Clear();
-        protected override int TryGetCount(ImmutableQueue<T> values) => values == null || values.IsEmpty ? 0 : -1;
+        protected override int TryGetCount(ImmutableQueue<T> values) => values is null || values.IsEmpty ? 0 : -1;
 
         internal override long Measure(ImmutableQueue<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -461,7 +461,7 @@ namespace ProtoBuf.Serializers
         {
             try
             {
-                return values == null || values.IsEmpty ? 0 : -1;
+                return values is null || values.IsEmpty ? 0 : -1;
             }
             catch
             {

@@ -32,8 +32,8 @@ namespace ProtoBuf.ServiceModel
         /// <returns>A new serializer instance if the type is recognised by the model; null otherwise</returns>
         public static XmlProtoSerializer TryCreate(TypeModel model, Type type)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (model is null) throw new ArgumentNullException(nameof(model));
+            if (type is null) throw new ArgumentNullException(nameof(type));
 
             if (IsKnownType(model, type, out bool isList))
             {
@@ -47,8 +47,8 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public XmlProtoSerializer(TypeModel model, Type type)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (model is null) throw new ArgumentNullException(nameof(model));
+            if (type is null) throw new ArgumentNullException(nameof(type));
 
             bool known = IsKnownType(model, type, out _);
             if (!known) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
@@ -59,7 +59,7 @@ namespace ProtoBuf.ServiceModel
 
         private static bool IsKnownType(TypeModel model, Type type, out bool isList)
         {
-            if (model != null && type != null)
+            if (model is object && type is object)
             {
                 if (model.CanSerialize(type, true, true, true, out var category))
                 {
@@ -77,7 +77,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteEndObject(XmlDictionaryWriter writer)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            if (writer is null) throw new ArgumentNullException(nameof(writer));
             writer.WriteEndElement();
         }
 
@@ -86,7 +86,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteStartObject(XmlDictionaryWriter writer, object graph)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            if (writer is null) throw new ArgumentNullException(nameof(writer));
             writer.WriteStartElement(PROTO_ELEMENT);
         }
 
@@ -97,8 +97,8 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteObjectContent(XmlDictionaryWriter writer, object graph)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
-            if (graph == null)
+            if (writer is null) throw new ArgumentNullException(nameof(writer));
+            if (graph is null)
             {
                 writer.WriteAttributeString("nil", "true");
             }
@@ -132,7 +132,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override bool IsStartObject(XmlDictionaryReader reader)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader is null) throw new ArgumentNullException(nameof(reader));
             reader.MoveToContent();
             return reader.NodeType == XmlNodeType.Element && reader.Name == PROTO_ELEMENT;
         }
@@ -142,7 +142,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override object ReadObject(XmlDictionaryReader reader, bool verifyObjectName)
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (reader is null) throw new ArgumentNullException(nameof(reader));
             reader.MoveToContent();
             bool isSelfClosed = reader.IsEmptyElement, isNil = reader.GetAttribute("nil") == "true";
             reader.ReadStartElement(PROTO_ELEMENT);

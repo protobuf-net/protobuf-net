@@ -11,7 +11,7 @@ namespace ProtoBuf.Internal
         internal static T TryGet()
         {
             var tmp = ts_local;
-            if (tmp != null)
+            if (tmp is object)
             {
                 ts_local = null;
                 return tmp;
@@ -20,9 +20,9 @@ namespace ProtoBuf.Internal
         }
         internal static void Put(T obj)
         {
-            if (obj != null)
+            if (obj is object)
             {
-                if (ts_local == null)
+                if (ts_local is null)
                 {
                     ts_local = obj;
                     return;

@@ -18,7 +18,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value == null); // since replaces
+            Debug.Assert(value is null); // since replaces
             return state.ReadSingle();
         }
 

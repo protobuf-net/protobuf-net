@@ -123,7 +123,7 @@ namespace ProtoBuf.Internal.Serializers
         }
 
         T IFactory<T>.Create(ISerializationContext context)
-            => factory == null ? default : factory.Invoke(context);
+            => factory is null ? default : factory.Invoke(context);
     }
 
     interface ICompiledSerializer { Type ExpectedType { get; } } // just means "nothing more to do here" in terms of auto-compile

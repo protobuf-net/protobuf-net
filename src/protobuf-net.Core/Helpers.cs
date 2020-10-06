@@ -24,7 +24,7 @@ namespace ProtoBuf
 
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {
-            if (types == null) types = Type.EmptyTypes;
+            if (types is null) types = Type.EmptyTypes;
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                 null, types, null);
         }
@@ -66,12 +66,12 @@ namespace ProtoBuf
 
         internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
-            if (property == null) return null;
+            if (property is null) return null;
             MethodInfo method = property.GetGetMethod(nonPublic);
-            if (method == null && !nonPublic && allowInternal)
+            if (method is null && !nonPublic && allowInternal)
             { // could be "internal" or "protected internal"; look for a non-public, then back-check
                 method = property.GetGetMethod(true);
-                if (method == null && !(method.IsAssembly || method.IsFamilyOrAssembly))
+                if (method is null && !(method.IsAssembly || method.IsFamilyOrAssembly))
                 {
                     method = null;
                 }
@@ -81,13 +81,13 @@ namespace ProtoBuf
 
         internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
-            if (property == null) return null;
+            if (property is null) return null;
 
             MethodInfo method = property.GetSetMethod(nonPublic);
-            if (method == null && !nonPublic && allowInternal)
+            if (method is null && !nonPublic && allowInternal)
             { // could be "internal" or "protected internal"; look for a non-public, then back-check
                 method = property.GetGetMethod(true);
-                if (method == null && !(method.IsAssembly || method.IsFamilyOrAssembly))
+                if (method is null && !(method.IsAssembly || method.IsFamilyOrAssembly))
                 {
                     method = null;
                 }
@@ -111,7 +111,7 @@ namespace ProtoBuf
 
         internal static void GetBuffer(MemoryStream stream, out ArraySegment<byte> segment)
         {
-            if (stream == null || !stream.TryGetBuffer(out segment))
+            if (stream is null || !stream.TryGetBuffer(out segment))
             {
                 ThrowHelper.ThrowInvalidOperationException("Unable to obtain buffer from MemoryStream");
                 segment = default;

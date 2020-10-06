@@ -32,7 +32,7 @@ namespace ProtoBuf.Internal
         public T[] ToArray(T[] prepend)
         {
             // nothing to prepend?
-            int oldLen = prepend == null ? 0 : prepend.Length;
+            int oldLen = prepend is null ? 0 : prepend.Length;
             if (oldLen == 0) return ToArray();
 
             // nothing to append?
@@ -79,7 +79,7 @@ namespace ProtoBuf.Internal
 
         private static void Recyle(ref T[] array)
         {
-            if (array != null)
+            if (array is object)
             {
 #if PLAT_ISREF
                         bool clearArray = System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>();

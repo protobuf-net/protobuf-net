@@ -21,7 +21,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value == null); // not expecting incoming
+            Debug.Assert(value is null); // not expecting incoming
             string s = (string)Tail.Read(ref state, null);
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }

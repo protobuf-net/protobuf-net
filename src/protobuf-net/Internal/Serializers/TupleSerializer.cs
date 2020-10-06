@@ -35,12 +35,12 @@ namespace ProtoBuf.Internal.Serializers
                     asReference = model[tmp].AsReferenceDefault;
                 }
                 IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, compatibilityLevel, tmp, out WireType wireType, asReference, false, false, true), serializer;
-                if (tail == null)
+                if (tail is null)
                 {
                     throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
                 }
 
-                if (repeated == null)
+                if (repeated is null)
                 {
                     serializer = new TagDecorator(i + 1, wireType, false, tail);
                 }
@@ -72,13 +72,13 @@ namespace ProtoBuf.Internal.Serializers
         {
             if (members[index] is PropertyInfo prop)
             {
-                if (obj == null)
+                if (obj is null)
                     return prop.PropertyType.IsValueType ? Activator.CreateInstance(prop.PropertyType, nonPublic: true) : null;
                 return prop.GetValue(obj, null);
             }
             else if (members[index] is FieldInfo field)
             {
-                if (obj == null)
+                if (obj is null)
                     return field.FieldType.IsValueType ? Activator.CreateInstance(field.FieldType, nonPublic: true) : null;
                 return field.GetValue(obj);
             }
@@ -98,7 +98,7 @@ namespace ProtoBuf.Internal.Serializers
         {
             object[] values = new object[members.Length];
             bool invokeCtor = false;
-            if (value == null)
+            if (value is null)
             {
                 invokeCtor = true;
             }
@@ -126,7 +126,7 @@ namespace ProtoBuf.Internal.Serializers
             for (int i = 0; i < tails.Length; i++)
             {
                 object val = GetValue(value, i);
-                if (val != null) tails[i].Write(ref state, val);
+                if (val is object) tails[i].Write(ref state, val);
             }
         }
 
@@ -139,7 +139,7 @@ namespace ProtoBuf.Internal.Serializers
         private Type GetMemberType(int index)
         {
             Type result = Helpers.GetMemberType(members[index]);
-            if (result == null) throw new InvalidOperationException();
+            if (result is null) throw new InvalidOperationException();
             return result;
         }
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -330,7 +330,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 for (int i = 0; i < locals.Length; i++)
                 {
-                    if (locals[i] != null)
+                    if (locals[i] is object)
                         locals[i].Dispose(); // release for re-use
                 }
             }

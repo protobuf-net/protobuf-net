@@ -95,8 +95,8 @@ namespace ProtoBuf.Internal
 
             internal Node(object[] data, int length)
             {
-                Debug.Assert((data == null && length == 0) ||
-                    (data != null && length > 0 && length <= data.Length));
+                Debug.Assert((data is null && length == 0) ||
+                    (data is object && length > 0 && length <= data.Length));
                 this.data = data;
 
                 this.Length = length;
@@ -106,7 +106,7 @@ namespace ProtoBuf.Internal
             {
                 object[] newData;
                 int newLength = Length + 1;
-                if (data == null)
+                if (data is null)
                 {
                     newData = new object[10];
                 }
@@ -174,8 +174,8 @@ namespace ProtoBuf.Internal
 
         internal static List<Group<T>> GetContiguousGroups<T>(int[] keys, T[] values)
         {
-            if (keys == null) throw new ArgumentNullException(nameof(keys));
-            if (values == null) throw new ArgumentNullException(nameof(values));
+            if (keys is null) throw new ArgumentNullException(nameof(keys));
+            if (values is null) throw new ArgumentNullException(nameof(values));
             if (values.Length < keys.Length) throw new ArgumentException("Not all keys are covered by values", nameof(values));
             var outer = new List<Group<T>>();
             Group<T> group = default;

@@ -16,7 +16,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteString(int fieldNumber, string value, StringMap map = null)
             {
-                if (value != null)
+                if (value is object)
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
                     WriteStringWithLengthPrefix(value, map);
@@ -534,7 +534,7 @@ namespace ProtoBuf
                     serializer ??= TypeModel.GetSerializer<T>(Model);
                     long before = GetPosition();
 #if FEAT_DYNAMIC_REF
-                    if (TypeHelper<T>.IsReferenceType && value != null)
+                    if (TypeHelper<T>.IsReferenceType && value is object)
                         SetRootObject(value);
 #endif
                     WriteAsRoot<T>(value, serializer);
@@ -641,11 +641,11 @@ namespace ProtoBuf
             public void WriteObject(object value, Type type)
             {
                 var model = Model;
-                if (model == null)
+                if (model is null)
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
-                if (type == null) type = value.GetType();
+                if (type is null) type = value.GetType();
 
                 
                 if (model.CanSerialize(type)
@@ -675,11 +675,11 @@ namespace ProtoBuf
             internal void WriteObject(object value, Type type, PrefixStyle style, int fieldNumber)
             {
                 var model = Model;
-                if (model == null)
+                if (model is null)
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
-                if (type == null) type = value.GetType();
+                if (type is null) type = value.GetType();
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();
 
                 switch (style)
@@ -756,7 +756,7 @@ namespace ProtoBuf
                         goto case WireType.String;
                     case WireType.String:
 #if DEBUG
-                        if (Model != null && Model.ForwardsOnly)
+                        if (Model is object && Model.ForwardsOnly)
                         {
                             ThrowHelper.ThrowProtoException("Should not be buffering data: " + instance ?? "(null)");
                         }
@@ -807,13 +807,13 @@ namespace ProtoBuf
             /// </summary>
             public void AppendExtensionData(IExtensible instance)
             {
-                if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
                 // we expect the writer to be raw here; the extension data will have the
                 // header detail, so we'll copy it implicitly
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();
 
                 IExtension extn = instance.GetExtensionObject(false);
-                if (extn != null)
+                if (extn is object)
                 {
                     // unusually we *don't* want "using" here; the "finally" does that, with
                     // the extension object being responsible for disposal etc
@@ -838,7 +838,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidSerializationOperation()
             {
-                if (_writer == null) ThrowHelper.ThrowProtoException("No underlying writer");
+                if (_writer is null) ThrowHelper.ThrowProtoException("No underlying writer");
                 ThrowHelper.ThrowProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}, depth {Depth}");
             }
 
@@ -875,7 +875,7 @@ namespace ProtoBuf
             /// </summary>
             public void ThrowEnumException(object enumValue)
             {
-                string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
+                string rhs = enumValue is null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
                 ThrowHelper.ThrowProtoException($"No wire-value is mapped to the enum {rhs} at position {GetPosition()}");
             }
         }

@@ -68,7 +68,7 @@ namespace ProtoBuf
             try
             {
                 var writer = _writer;
-                if (writer == null) throw new ObjectDisposedException(nameof(MeasureState<T>));
+                if (writer is null) throw new ObjectDisposedException(nameof(MeasureState<T>));
 
                 var targetWriter = state.GetWriter();
                 targetWriter.InitializeFrom(writer);

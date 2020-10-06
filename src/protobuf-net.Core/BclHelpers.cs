@@ -505,7 +505,7 @@ namespace ProtoBuf
                     case FieldTypeName:
                         string typeName = state.ReadString();
                         type = state.DeserializeType(typeName);
-                        if (type == null)
+                        if (type is null)
                         {
                             ThrowHelper.ThrowProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
                         }
@@ -514,19 +514,19 @@ namespace ProtoBuf
                         else
                         {
                             var model = state.Model;
-                            var known = model != null && model.IsDefined(type);
+                            var known = model is object && model.IsDefined(type);
                             if (!known)
                                 ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                         }
                         break;
                     case FieldObject:
                         bool isString = type == typeof(string);
-                        bool wasNull = value == null;
+                        bool wasNull = value is null;
                         bool lateSet = wasNull && (isString || ((options & NetObjectOptions.LateSet) != 0));
 
                         if (newObjectKey >= 0 && !lateSet)
                         {
-                            if (value == null)
+                            if (value is null)
                             {
                                 state.TrapNextObject(newObjectKey);
                             }
@@ -623,7 +623,7 @@ namespace ProtoBuf
                     if (!(value is string))
                     {
                         var model = state.Model;
-                        var known = model != null && model.IsDefined(type);
+                        var known = model is object && model.IsDefined(type);
                         if (!known)
                             ThrowHelper.ThrowInvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }

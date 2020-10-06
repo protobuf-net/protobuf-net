@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp3.1;net472;net5</TargetFrameworks>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>CS1591;IDE0079</NoWarn>
     <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.1' or '$(TargetFramework)'=='net5'">$(DefineConstants);INTRINSICS</DefineConstants>
