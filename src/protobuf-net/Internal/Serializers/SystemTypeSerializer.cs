@@ -19,7 +19,7 @@ namespace ProtoBuf.Internal.Serializers
 
         object IRuntimeProtoSerializerNode.Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value == null); // since replaces
+            Debug.Assert(value is null); // since replaces
             return state.ReadType();
         }
 

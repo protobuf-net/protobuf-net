@@ -24,7 +24,7 @@ namespace ProtoBuf.Internal.Serializers
                 TypeCode.UInt64 => UInt64Serializer.Instance,
                 _ => default,
             };
-            if (_tail == null) ThrowHelper.ThrowInvalidOperationException("Unable to resolve underlying enum type for " + enumType.NormalizeName());
+            if (_tail is null) ThrowHelper.ThrowInvalidOperationException("Unable to resolve underlying enum type for " + enumType.NormalizeName());
 
         }
 

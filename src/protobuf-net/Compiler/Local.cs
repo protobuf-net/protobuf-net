@@ -19,7 +19,7 @@ namespace ProtoBuf.Compiler
         internal Local(CompilerContext ctx, Type type)
         {
             this.ctx = ctx;
-            if (ctx != null) { value = ctx.GetFromPool(type); }
+            if (ctx is object) { value = ctx.GetFromPool(type); }
             this.type = type;
         }
 
@@ -29,13 +29,13 @@ namespace ProtoBuf.Compiler
 
         public Local AsCopy()
         {
-            if (ctx == null) return this; // can re-use if context-free
+            if (ctx is null) return this; // can re-use if context-free
             return new Local(value, this.type);
         }
         
         public void Dispose()
         {
-            if (ctx != null)
+            if (ctx is object)
             {
                 // only *actually* dispose if this is context-bound; note that non-bound
                 // objects are cheekily re-used, and *must* be left intact agter a "using" etc
@@ -50,7 +50,7 @@ namespace ProtoBuf.Compiler
             if((object)this == (object)other) return true;
 
             object ourVal = value; // use prop to ensure obj-disposed etc
-            return other != null && ourVal == (object)(other.value); 
+            return other is object && ourVal == (object)(other.value); 
         }
     }
 }

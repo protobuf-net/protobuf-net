@@ -223,7 +223,7 @@ namespace ProtoBuf.Compiler
             this.il = il ?? throw new ArgumentNullException(nameof(il));
             // NonPublic = false; <== implicit
             this.Model = model ?? throw new ArgumentNullException(nameof(model));
-            if (inputType != null) InputValue = new Local(null, inputType);
+            if (inputType is object) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
             _traceName = traceName;
             IsStatic = isStatic;
@@ -282,7 +282,7 @@ namespace ProtoBuf.Compiler
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(CultureInfo.InvariantCulture), returnType ?? typeof(void), paramTypes,
                 associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
-            if (inputType != null) InputValue = new Local(null, inputType);
+            if (inputType is object) InputValue = new Local(null, inputType);
             TraceCompile(">> " + method.Name);
             _traceName = method.Name;
             IsStatic = isStatic;
@@ -334,7 +334,7 @@ namespace ProtoBuf.Compiler
 
         public void LoadValue(string value)
         {
-            if (value == null)
+            if (value is null)
             {
                 LoadNullRef();
             }
@@ -407,7 +407,7 @@ namespace ProtoBuf.Compiler
             for (int i = 0; i < count; i++)
             {
                 LocalBuilder item = locals[i];
-                if (item != null && item.LocalType == type)
+                if (item is object && item.LocalType == type)
                 {
                     locals[i] = null; // remove from pool
                     return item;
@@ -424,7 +424,7 @@ namespace ProtoBuf.Compiler
             int count = locals.Count;
             for (int i = 0; i < count; i++)
             {
-                if (locals[i] == null)
+                if (locals[i] is null)
                 {
                     locals[i] = value; // released into existing slot
                     return;
@@ -465,7 +465,7 @@ namespace ProtoBuf.Compiler
 
         public void LoadValue(Local local)
         {
-            if (local == null) { /* nothing to do; top of stack */}
+            if (local is null) { /* nothing to do; top of stack */}
             else if (local == this.InputValue)
             {
                 switch(_inputArg)
@@ -501,12 +501,12 @@ namespace ProtoBuf.Compiler
 
         public Local GetLocalWithValue(Type type, Compiler.Local fromValue)
         {
-            if (fromValue != null)
+            if (fromValue is object)
             {
                 if (fromValue.Type == type) return fromValue.AsCopy();
                 // otherwise, load onto the stack and let the default handling (below) deal with it
                 LoadValue(fromValue);
-                if (!type.IsValueType && (fromValue.Type == null || !type.IsAssignableFrom(fromValue.Type)))
+                if (!type.IsValueType && (fromValue.Type is null || !type.IsAssignableFrom(fromValue.Type)))
                 { // need to cast
                     Cast(type);
                 }
@@ -575,7 +575,7 @@ namespace ProtoBuf.Compiler
         internal void EmitStateBasedWrite(string methodName, Local fromValue, Type type = null, Type argType = null)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            if (type == null) type = typeof(ProtoWriter.State);
+            if (type is null) type = typeof(ProtoWriter.State);
 
             Type foundType;
             MethodInfo foundMethod;
@@ -588,7 +588,7 @@ namespace ProtoBuf.Compiler
                          where args.Length == (method.IsStatic ? 2 : 1)
                          && (!method.IsStatic || args[0].ParameterType == WriterUtil.ByRefStateType)
                          let paramType = args[method.IsStatic ? 1 : 0].ParameterType
-                         where argType == null || argType == paramType // if argType specified: must match
+                         where argType is null || argType == paramType // if argType specified: must match
                          select new { Method = method, Type = paramType }).Single();
                 foundType = found.Type;
                 foundMethod = found.Method;
@@ -618,13 +618,13 @@ namespace ProtoBuf.Compiler
             else
             {
                 opcode = OpCodes.Callvirt;
-                if (targetType != null && targetType.IsValueType && !method.DeclaringType.IsValueType)
+                if (targetType is object && targetType.IsValueType && !method.DeclaringType.IsValueType)
                 {
                     Constrain(targetType);
                 }
             }
             il.EmitCall(opcode, method, null);
-            TraceCompile(opcode + ": " + method + " on " + method.DeclaringType + (targetType == null ? "" : (" via " + targetType)));
+            TraceCompile(opcode + ": " + method + " on " + method.DeclaringType + (targetType is null ? "" : (" via " + targetType)));
         }
 
         /// <summary>
@@ -649,7 +649,7 @@ namespace ProtoBuf.Compiler
             {
                 Type underlyingType = Nullable.GetUnderlyingType(type);
 
-                if (underlyingType == null)
+                if (underlyingType is null)
                 { // not a nullable T; can invoke directly
                     tail.EmitWrite(this, valueFrom);
                 }
@@ -684,7 +684,7 @@ namespace ProtoBuf.Compiler
         {
             Type underlyingType;
 
-            if (type.IsValueType && (underlyingType = Nullable.GetUnderlyingType(type)) != null)
+            if (type.IsValueType && (underlyingType = Nullable.GetUnderlyingType(type)) is object)
             {
                 if (tail.RequiresOldValue)
                 {
@@ -695,7 +695,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    Debug.Assert(valueFrom == null); // not expecting a valueFrom in this case
+                    Debug.Assert(valueFrom is null); // not expecting a valueFrom in this case
                 }
                 tail.EmitRead(this, null); // either unwrapped on the stack or not provided
                 if (tail.ReturnsValue)
@@ -719,7 +719,7 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(ConstructorInfo ctor)
         {
-            if (ctor == null) throw new ArgumentNullException(nameof(ctor));
+            if (ctor is null) throw new ArgumentNullException(nameof(ctor));
             MemberInfo ctorMember = ctor;
             CheckAccessibility(ref ctorMember);
             il.Emit(OpCodes.Newobj, ctor);
@@ -737,8 +737,8 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
-            Debug.Assert(type != null);
-            Debug.Assert(parameterTypes != null);
+            Debug.Assert(type is object);
+            Debug.Assert(parameterTypes is object);
             if (type.IsValueType && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
@@ -747,7 +747,7 @@ namespace ProtoBuf.Compiler
             else
             {
                 ConstructorInfo ctor = Helpers.GetConstructor(type, parameterTypes, true);
-                if (ctor == null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
+                if (ctor is null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
                 EmitCtor(ctor);
             }
         }
@@ -757,14 +757,14 @@ namespace ProtoBuf.Compiler
         private bool InternalsVisible(Assembly assembly)
         {
             if (string.IsNullOrEmpty(Scope.AssemblyName)) return false;
-            if (knownTrustedAssemblies != null)
+            if (knownTrustedAssemblies is object)
             {
                 if (knownTrustedAssemblies.IndexOf(assembly) >= 0)
                 {
                     return true;
                 }
             }
-            if (knownUntrustedAssemblies != null)
+            if (knownUntrustedAssemblies is object)
             {
                 if (knownUntrustedAssemblies.IndexOf(assembly) >= 0)
                 {
@@ -773,7 +773,7 @@ namespace ProtoBuf.Compiler
             }
             bool isTrusted = false;
             Type attributeType = typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute);
-            if (attributeType == null) return false;
+            if (attributeType is null) return false;
             foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
             {
                 if (attrib.AssemblyName == Scope.AssemblyName || attrib.AssemblyName.StartsWith(Scope.AssemblyName + ",", StringComparison.Ordinal))
@@ -796,7 +796,7 @@ namespace ProtoBuf.Compiler
 
         internal void CheckAccessibility(ref MemberInfo member)
         {
-            if (member == null)
+            if (member is null)
             {
                 throw new ArgumentNullException(nameof(member));
             }
@@ -807,7 +807,7 @@ namespace ProtoBuf.Compiler
                 {
                     var propName = member.Name.Substring(1, member.Name.Length - 17);
                     var prop = member.DeclaringType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-                    if (prop != null) member = prop;
+                    if (prop is object) member = prop;
                 }
                 bool isPublic;
                 MemberTypes memberType = member.MemberType;
@@ -822,8 +822,8 @@ namespace ProtoBuf.Compiler
                         type = (Type)member;
                         do
                         {
-                            isPublic = type.IsNestedPublic || type.IsPublic || ((type.DeclaringType == null || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
-                        } while (isPublic && (type = type.DeclaringType) != null); // ^^^ !type.IsNested, but not all runtimes have that
+                            isPublic = type.IsNestedPublic || type.IsPublic || ((type.DeclaringType is null || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
+                        } while (isPublic && (type = type.DeclaringType) is object); // ^^^ !type.IsNested, but not all runtimes have that
                         break;
                     case MemberTypes.Field:
                         FieldInfo field = ((FieldInfo)member);
@@ -966,7 +966,7 @@ namespace ProtoBuf.Compiler
         {
             if (evenIfClass || type.IsValueType)
             {
-                if (local == null)
+                if (local is null)
                 {
                     throw new InvalidOperationException("Cannot load the address of the head of the stack");
                 }
@@ -1190,7 +1190,7 @@ namespace ProtoBuf.Compiler
             /// </summary>
             public UsingBlock(CompilerContext ctx, Local local)
             {
-                if (local == null) throw new ArgumentNullException(nameof(local));
+                if (local is null) throw new ArgumentNullException(nameof(local));
 
                 Type type = local.Type;
                 // check if **never** disposable
@@ -1207,7 +1207,7 @@ namespace ProtoBuf.Compiler
             }
             public void Dispose()
             {
-                if (local == null || ctx == null) return;
+                if (local is null || ctx is null) return;
 
                 ctx.EndTry(label, false);
                 ctx.BeginFinally();
@@ -1294,7 +1294,7 @@ namespace ProtoBuf.Compiler
             Type type = arr.Type;
             Debug.Assert(type.IsArray && arr.Type.GetArrayRank() == 1);
             type = type.GetElementType();
-            Debug.Assert(type != null, "Not an array: " + arr.Type.FullName);
+            Debug.Assert(type is object, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
             switch (Helpers.GetTypeCode(type))

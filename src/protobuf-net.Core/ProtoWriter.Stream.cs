@@ -49,9 +49,9 @@ namespace ProtoBuf
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
                 obj.Init(model, userState, true);
-                if (dest == null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
+                if (dest is null) ThrowHelper.ThrowArgumentNullException(nameof(dest));
                 if (!dest.CanWrite) ThrowHelper.ThrowArgumentException("Cannot write to stream", nameof(dest));
-                //if (model == null) ThrowHelper.ThrowArgumentNullException("model");
+                //if (model is null) ThrowHelper.ThrowArgumentNullException("model");
                 obj.dest = dest;
                 obj.ioBuffer = BufferPool.GetBuffer();
                 return obj;
@@ -89,7 +89,7 @@ namespace ProtoBuf
             private protected override bool TryFlush(ref State state)
             {
                 if (flushLock != 0) return false;
-                if (ioIndex != 0 && dest != null)
+                if (ioIndex != 0 && dest is object)
                 {
                     dest.Write(ioBuffer, 0, ioIndex);
                     ioIndex = 0;

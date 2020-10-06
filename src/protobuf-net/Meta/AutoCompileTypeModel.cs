@@ -27,7 +27,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static new TypeModel CreateForAssembly(Type type)
         {
-            if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             return CreateForAssembly(type.Assembly, null);
         }
 
@@ -42,11 +42,11 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static TypeModel CreateForAssembly(Assembly assembly, CompilerOptions options)
         {
-            if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
-            if (options == null)
+            if (assembly is null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
+            if (options is null)
             {
                 var obj = (TypeModel)s_assemblyModels[assembly];
-                if (obj != null) return obj;
+                if (obj is object) return obj;
             }
             return CreateForAssemblyImpl(assembly, options);
         }
@@ -62,7 +62,7 @@ namespace ProtoBuf.Meta
 
         [MethodImpl(ProtoReader.HotPath)]
         private TypeModel ForAssembly(Type type)
-            => type == null ? NullModel.Singleton : CreateForAssembly(type.Assembly, null);
+            => type is null ? NullModel.Singleton : CreateForAssembly(type.Assembly, null);
 
         /// <inheritdoc/>
         public override string GetSchema(SchemaGenerationOptions options)
@@ -78,11 +78,11 @@ namespace ProtoBuf.Meta
 
         private static TypeModel CreateForAssemblyImpl(Assembly assembly, CompilerOptions options)
         {
-            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            if (assembly is null) throw new ArgumentNullException(nameof(assembly));
             lock (assembly)
             {
                 var found = (TypeModel)s_assemblyModels[assembly];
-                if (found != null) return found;
+                if (found is object) return found;
 
                 RuntimeTypeModel model = null;
                 foreach (var type in assembly.GetTypes())
@@ -91,11 +91,11 @@ namespace ProtoBuf.Meta
                     if (!IsFullyPublic(type)) continue;
                     if (!type.IsDefined(typeof(ProtoContractAttribute), true)) continue;
 
-                    if (options != null && !options.OnIncludeType(type)) continue;
+                    if (options is object && !options.OnIncludeType(type)) continue;
 
                     (model ??= RuntimeTypeModel.Create()).Add(type, true);
                 }
-                if (model == null)
+                if (model is null)
                     throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
                 var compiled = model.Compile(options);
                 s_assemblyModels[assembly] = compiled;

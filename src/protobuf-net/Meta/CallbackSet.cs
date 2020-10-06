@@ -46,7 +46,7 @@ namespace ProtoBuf.Meta
         private MethodInfo SanityCheckCallback(MethodInfo callback)
         {
             metaType.ThrowIfFrozen();
-            if (callback == null) return callback; // fine
+            if (callback is null) return callback; // fine
             if (callback.IsStatic) throw new ArgumentException("Callbacks cannot be static", nameof(callback));
             if (callback.ReturnType != typeof(void)
                 || !CheckCallbackParameters(callback))
@@ -98,8 +98,8 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                return beforeSerialize != null || beforeDeserialize != null
-                    || afterSerialize != null || afterDeserialize != null;
+                return beforeSerialize is object || beforeDeserialize is object
+                    || afterSerialize is object || afterDeserialize is object;
             }
         }
     }

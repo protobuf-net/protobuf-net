@@ -62,10 +62,10 @@ namespace ProtoBuf.Internal.Serializers
                 paramTypes = m.GetParameters();
                 if (paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
                 {
-                    if (convertAttributeType == null)
+                    if (convertAttributeType is null)
                     {
                         convertAttributeType = typeof(ProtoConverterAttribute);
-                        if (convertAttributeType == null)
+                        if (convertAttributeType is null)
                         { // attribute isn't defined in the source assembly: stop looking
                             break;
                         }
@@ -143,7 +143,7 @@ namespace ProtoBuf.Internal.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            // Debug.Assert(valueFrom != null, "surrogate value on stack-head"); // don't support stack-head for this
+            // Debug.Assert(valueFrom is object, "surrogate value on stack-head"); // don't support stack-head for this
             using Compiler.Local converted = rootTail.RequiresOldValue ? new Compiler.Local(ctx, declaredType) : null;
 
             if (rootTail.RequiresOldValue)

@@ -24,7 +24,7 @@ namespace ProtoBuf
         {
             internal static State CreateBufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, object userState)
             {
-                if (writer == null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
+                if (writer is null) ThrowHelper.ThrowArgumentNullException(nameof(writer));
                 var obj = Pool<BufferWriterProtoWriter>.TryGet() ?? new BufferWriterProtoWriter();
                 obj.Init(model, userState, true);
                 obj._writer = writer;
@@ -232,7 +232,7 @@ namespace ProtoBuf
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style)
             {
-                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
+                if (serializer is null) serializer = TypeModel.GetSerializer<T>(Model);
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
 
                 switch (style)
@@ -271,7 +271,7 @@ namespace ProtoBuf
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
                 where T : class
             {
-                if (serializer == null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
+                if (serializer is null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
                 
                 // we'll always use varint here

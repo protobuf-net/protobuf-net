@@ -15,7 +15,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public DefaultValueDecorator(object defaultValue, IRuntimeProtoSerializerNode tail) : base(tail)
         {
-            if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
+            if (defaultValue is null) throw new ArgumentNullException(nameof(defaultValue));
             Type type = defaultValue.GetType();
             if (type != tail.ExpectedType)
             {
@@ -69,7 +69,7 @@ namespace ProtoBuf.Internal.Serializers
                 default:
                     MethodInfo method = type.GetMethod("op_Equality", BindingFlags.Public | BindingFlags.Static,
                         null, new Type[] { type, type }, null);
-                    if (method == null || method.ReturnType != typeof(bool))
+                    if (method is null || method.ReturnType != typeof(bool))
                     {
                         throw new InvalidOperationException("No suitable equality operator found for default-values of type: " + type.FullName);
                     }

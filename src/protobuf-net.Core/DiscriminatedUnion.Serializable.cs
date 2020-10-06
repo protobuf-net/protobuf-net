@@ -36,7 +36,7 @@ namespace ProtoBuf
             if (_discriminator != default) info.AddValue("d", _discriminator);
             if (_lo != default) info.AddValue("l", _lo);
             if (_hi != default) info.AddValue("h", _hi);
-            if (Object != null) info.AddValue("o", Object);
+            if (Object is object) info.AddValue("o", Object);
         }
         private DiscriminatedUnion128Object(SerializationInfo info, StreamingContext context)
         {

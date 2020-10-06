@@ -58,7 +58,7 @@ namespace ProtoBuf
             s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
         {
-            if (s_origin != null && s_buffer != null)
+            if (s_origin is object && s_buffer is object)
             {
                 try
                 {
@@ -142,7 +142,7 @@ namespace ProtoBuf
             internal void Init(Stream source, TypeModel model, object userState, long length)
             {
                 base.Init(model, userState);
-                if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+                if (source is null) ThrowHelper.ThrowArgumentNullException(nameof(source));
                 if (!source.CanRead) ThrowHelper.ThrowArgumentException("Cannot read from stream", nameof(source));
 
                 if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
@@ -172,7 +172,7 @@ namespace ProtoBuf
             {
                 // importantly, this does **not** own the stream, and does not dispose 
                 base.Dispose();
-                if (_source != null)
+                if (_source is object)
                 {
                     _source = null;
                     // make sure we don't pool this if it came from a MemoryStream
@@ -357,7 +357,7 @@ namespace ProtoBuf
             private void Ensure(ref State state, int count, bool strict)
             {
                 Debug.Assert(_available <= count, "Asking for data without checking first");
-                if (_source != null)
+                if (_source is object)
                 {
                     if (count > _ioBuffer.Length)
                     {

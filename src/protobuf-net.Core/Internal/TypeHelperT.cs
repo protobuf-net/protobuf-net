@@ -12,11 +12,11 @@ namespace ProtoBuf.Internal
         internal static string NormalizeName(this Type type)
         {
             return type?.ToString();
-            //if (type == null) return null;
+            //if (type is null) return null;
             //if (type.IsEnum) return type.Name;
 
             //var nullable = Nullable.GetUnderlyingType(type);
-            //if (nullable != null) return CSName(nullable) + "?";
+            //if (nullable is object) return CSName(nullable) + "?";
 
             //if (!type.IsGenericType)
             //{
@@ -92,7 +92,7 @@ namespace ProtoBuf.Internal
                 return false;
             }
 
-            if (type == null
+            if (type is null
                 || type == typeof(string) || type == typeof(byte[]) || type == typeof(object))
             {
                 t = null; // don't need that kind of confusion
@@ -151,7 +151,7 @@ namespace ProtoBuf.Internal
     {
         public static readonly bool IsReferenceType = !typeof(T).IsValueType;
 
-        public static readonly bool CanBeNull = default(T) == null;
+        public static readonly bool CanBeNull = default(T) is null;
 
         public static readonly IValueChecker<T> ValueChecker =
             SerializerCache<PrimaryTypeProvider>.InstanceField as IValueChecker<T>
@@ -164,7 +164,7 @@ namespace ProtoBuf.Internal
 
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]
-        public static T FromObject(object value) => value == null ? default : (T)value;
+        public static T FromObject(object value) => value is null ? default : (T)value;
 
         public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
     }
@@ -182,11 +182,11 @@ namespace ProtoBuf.Internal
         /// <summary>
         /// Indicates whether a value is non-null and needs serialization (non-zero, not an empty string, etc)
         /// </summary>
-        bool IValueChecker<object>.HasNonTrivialValue(object value) => value != null;
+        bool IValueChecker<object>.HasNonTrivialValue(object value) => value is object;
         /// <summary>
         /// Indicates whether a value is null
         /// </summary>
-        bool IValueChecker<object>.IsNull(object value) => value == null;
+        bool IValueChecker<object>.IsNull(object value) => value is null;
     }
     internal sealed class StructValueChecker<T> : IValueChecker<T?>, IValueChecker<T>
         where T : struct

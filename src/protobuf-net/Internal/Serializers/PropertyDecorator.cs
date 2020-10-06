@@ -16,9 +16,9 @@ namespace ProtoBuf.Internal.Serializers
 
         public PropertyDecorator(Type forType, PropertyInfo property, IRuntimeProtoSerializerNode tail) : base(tail)
         {
-            if (tail == null) ThrowHelper.ThrowArgumentNullException(nameof(tail));
-            if (property == null) ThrowHelper.ThrowArgumentNullException(nameof(property));
-            if (forType == null) ThrowHelper.ThrowArgumentNullException(nameof(forType));
+            if (tail is null) ThrowHelper.ThrowArgumentNullException(nameof(tail));
+            if (property is null) ThrowHelper.ThrowArgumentNullException(nameof(property));
+            if (forType is null) ThrowHelper.ThrowArgumentNullException(nameof(forType));
             ExpectedType = forType;
             this.property = property;
             SanityCheck(property, tail, out readOptionsWriteValue, true, true);
@@ -27,10 +27,10 @@ namespace ProtoBuf.Internal.Serializers
 
         private static void SanityCheck(PropertyInfo property, IRuntimeProtoSerializerNode tail, out bool writeValue, bool nonPublic, bool allowInternal)
         {
-            if (property == null) throw new ArgumentNullException(nameof(property));
+            if (property is null) throw new ArgumentNullException(nameof(property));
 
-            writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) != null));
-            if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) == null)
+            writeValue = tail.ReturnsValue && (GetShadowSetter(property) is object || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) is object));
+            if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) is null)
             {
                 throw new InvalidOperationException($"Cannot serialize property without an accessible get accessor: {property.DeclaringType.FullName}.{property.Name}");
             }
@@ -45,26 +45,26 @@ namespace ProtoBuf.Internal.Serializers
             Type reflectedType = property.ReflectedType;
             MethodInfo method = Helpers.GetInstanceMethod(reflectedType, "Set" + property.Name, new Type[] { property.PropertyType });
 
-            if (method == null || !method.IsPublic || method.ReturnType != typeof(void)) return null;
+            if (method is null || !method.IsPublic || method.ReturnType != typeof(void)) return null;
             return method;
         }
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            Debug.Assert(value != null);
+            Debug.Assert(value is object);
             value = property.GetValue(value, null);
-            if (value != null) Tail.Write(ref state, value);
+            if (value is object) Tail.Write(ref state, value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value != null);
+            Debug.Assert(value is object);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
             object newVal = Tail.Read(ref state, oldVal);
-            if (readOptionsWriteValue && newVal != null) // if the tail returns a null, intepret that as *no assign*
+            if (readOptionsWriteValue && newVal is object) // if the tail returns a null, intepret that as *no assign*
             {
-                if (shadowSetter == null)
+                if (shadowSetter is null)
                 {
                     property.SetValue(value, newVal, null);
                 }
@@ -100,7 +100,7 @@ namespace ProtoBuf.Internal.Serializers
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             SanityCheck(property, Tail, out bool writeValue, ctx.NonPublic, ctx.AllowInternal(property));
-            if (ExpectedType.IsValueType && valueFrom == null)
+            if (ExpectedType.IsValueType && valueFrom is null)
             {
                 throw new InvalidOperationException("Attempt to mutate struct on the head of the stack; changes would be lost");
             }
@@ -140,7 +140,7 @@ namespace ProtoBuf.Internal.Serializers
                     ctx.Cast(property.PropertyType);
                 }
 
-                if (shadowSetter == null)
+                if (shadowSetter is null)
                 {
                     ctx.StoreValue(property); // empty
                 }

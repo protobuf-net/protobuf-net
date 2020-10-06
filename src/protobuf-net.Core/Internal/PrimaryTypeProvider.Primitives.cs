@@ -301,10 +301,10 @@ namespace ProtoBuf.Internal
             };
 
 
-        bool IValueChecker<string>.HasNonTrivialValue(string value) => value != null; //  note: we write "" (when found), for compat
-        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => value?.OriginalString != null; //  note: we write "" (when found), for compat
-        bool IValueChecker<Type>.HasNonTrivialValue(Type value) => value != null;
-        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value != null;  //  note: we write [] (when found), for compat
+        bool IValueChecker<string>.HasNonTrivialValue(string value) => value is object; //  note: we write "" (when found), for compat
+        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => value?.OriginalString is object; //  note: we write "" (when found), for compat
+        bool IValueChecker<Type>.HasNonTrivialValue(Type value) => value is object;
+        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value is object;  //  note: we write [] (when found), for compat
         bool IValueChecker<sbyte>.HasNonTrivialValue(sbyte value) => value != 0;
         bool IValueChecker<short>.HasNonTrivialValue(short value) => value != 0;
         bool IValueChecker<int>.HasNonTrivialValue(int value) => value != 0;
@@ -329,9 +329,9 @@ namespace ProtoBuf.Internal
         bool IValueChecker<bool>.IsNull(bool value) => false;
         bool IValueChecker<float>.IsNull(float value) => false;
         bool IValueChecker<double>.IsNull(double value) => false;
-        bool IValueChecker<string>.IsNull(string value) => value == null;
-        bool IValueChecker<byte[]>.IsNull(byte[] value) => value == null;
-        bool IValueChecker<Uri>.IsNull(Uri value) => value == null;
-        bool IValueChecker<Type>.IsNull(Type value) => value == null;
+        bool IValueChecker<string>.IsNull(string value) => value is null;
+        bool IValueChecker<byte[]>.IsNull(byte[] value) => value is null;
+        bool IValueChecker<Uri>.IsNull(Uri value) => value is null;
+        bool IValueChecker<Type>.IsNull(Type value) => value is null;
     }
 }

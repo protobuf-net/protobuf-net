@@ -65,7 +65,7 @@ namespace ProtoBuf
         {
             if (key-- == Root)
             {
-                if (rootObject == null) ThrowHelper.ThrowProtoException("No root object assigned");
+                if (rootObject is null) ThrowHelper.ThrowProtoException("No root object assigned");
                 return rootObject;
             }
             var list = List;
@@ -77,7 +77,7 @@ namespace ProtoBuf
             }
 
             object tmp = list[key];
-            if (tmp == null)
+            if (tmp is null)
             {
                 ThrowHelper.ThrowProtoException("A deferred key does not have a value yet");
             }
@@ -88,8 +88,8 @@ namespace ProtoBuf
         {
             if (key-- == Root)
             {
-                if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
-                if (rootObject != null && ((object)rootObject != (object)value)) ThrowHelper.ThrowProtoException("The root object cannot be reassigned");
+                if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+                if (rootObject is object && ((object)rootObject != (object)value)) ThrowHelper.ThrowProtoException("The root object cannot be reassigned");
                 rootObject = value;
             }
             else
@@ -102,7 +102,7 @@ namespace ProtoBuf
                 else if (key < list.Count)
                 {
                     object oldVal = list[key];
-                    if (oldVal == null)
+                    if (oldVal is null)
                     {
                         list[key] = value;
                     }
@@ -121,7 +121,7 @@ namespace ProtoBuf
         private object rootObject;
         internal int AddObjectKey(object value, out bool existing)
         {
-            if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+            if (value is null) ThrowHelper.ThrowArgumentNullException(nameof(value));
 
             if ((object)value == (object)rootObject) // (object) here is no-op, but should be
             {                                        // preserved even if this was typed - needs ref-check
@@ -133,9 +133,9 @@ namespace ProtoBuf
             var list = List;
             int index;
 
-            if (s == null)
+            if (s is null)
             {
-                if (objectKeys == null)
+                if (objectKeys is null)
                 {
                     objectKeys = new Dictionary<object, int>(ReferenceComparer.Default);
                     index = -1;
@@ -147,7 +147,7 @@ namespace ProtoBuf
             }
             else
             {
-                if (stringKeys == null)
+                if (stringKeys is null)
                 {
                     stringKeys = new Dictionary<string, int>();
                     index = -1;
@@ -162,7 +162,7 @@ namespace ProtoBuf
             {
                 index = list.Count;
                 list.Add(value);
-                if (s == null)
+                if (s is null)
                 {
                     objectKeys.Add(value, index);
                 }
@@ -179,13 +179,13 @@ namespace ProtoBuf
 
         internal void RegisterTrappedObject(object value)
         {
-            if (rootObject == null)
+            if (rootObject is null)
             {
                 rootObject = value;
             }
             else
             {
-                if (underlyingList != null)
+                if (underlyingList is object)
                 {
                     for (int i = trapStartIndex; i < underlyingList.Count; i++)
                     {
@@ -193,7 +193,7 @@ namespace ProtoBuf
                                                 // not the next item is null, it will never
                                                 // need to be checked again
 
-                        if (underlyingList[i] == null)
+                        if (underlyingList[i] is null)
                         {
                             underlyingList[i] = value;
                             break;
@@ -228,9 +228,9 @@ namespace ProtoBuf
 #if FEAT_DYNAMIC_REF
             trapStartIndex = 0;
             rootObject = null;
-            if (underlyingList != null) underlyingList.Clear();
-            if (stringKeys != null) stringKeys.Clear();
-            if (objectKeys != null) objectKeys.Clear();
+            if (underlyingList is object) underlyingList.Clear();
+            if (stringKeys is object) stringKeys.Clear();
+            if (objectKeys is object) objectKeys.Clear();
 #endif
             _knownLengths.Clear();
             _hit = _miss = 0;
@@ -241,7 +241,7 @@ namespace ProtoBuf
 
         internal void InitializeFrom(NetObjectCache obj)
         {
-            if (obj != null)
+            if (obj is object)
             {
                 _knownLengths.Clear();
                 foreach (var pair in obj._knownLengths)
@@ -251,7 +251,7 @@ namespace ProtoBuf
 
         internal void CopyBack(NetObjectCache obj)
         {
-            if (obj != null)
+            if (obj is object)
             {
                 obj._hit += _hit;
                 obj._miss += _miss;

@@ -100,7 +100,7 @@ namespace ProtoBuf.Internal.Serializers
         private SerializerFeatures GetCategory()
         {
             var custom = CustomSerializer;
-            return custom == null ? SerializerFeatures.CategoryMessage : custom.Features.GetCategory();
+            return custom is null ? SerializerFeatures.CategoryMessage : custom.Features.GetCategory();
         }
 
         public override object Read(ref ProtoReader.State state, object value)
@@ -122,7 +122,7 @@ namespace ProtoBuf.Internal.Serializers
         protected override WireType GetDefaultWireType(ref DataFormat dataFormat)
         {
             var ser = CustomSerializer;
-            if (ser != null)
+            if (ser is object)
             {
                 var features = ser.Features;
                 if (features.GetCategory() == SerializerFeatures.CategoryScalar)
@@ -308,7 +308,7 @@ namespace ProtoBuf.Internal.Serializers
             // state.ReadMessage<T>(default, value, serializer);
             ctx.LoadState();
             ctx.LoadValue(0); // features
-            if (value == null)
+            if (value is null)
             {
                 if (TypeHelper<T>.IsReferenceType)
                 {

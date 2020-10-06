@@ -135,14 +135,14 @@ namespace ProtoBuf.Meta
         public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat, object defaultValue)
             : this(model, fieldNumber, memberType, itemType, defaultType, dataFormat)
         {
-            if (parentType == null) throw new ArgumentNullException(nameof(parentType));
+            if (parentType is null) throw new ArgumentNullException(nameof(parentType));
             if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
 
             Member = member ?? throw new ArgumentNullException(nameof(member));
             ParentType = parentType;
             if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             
-            if (defaultValue != null && (defaultValue.GetType() != memberType))
+            if (defaultValue is object && (defaultValue.GetType() != memberType))
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
             }
@@ -150,7 +150,7 @@ namespace ProtoBuf.Meta
 
 #if FEAT_DYNAMIC_REF
             MetaType type = model.FindWithoutAdd(memberType);
-            if (type != null)
+            if (type is object)
             {
                 AsReference = type.AsReferenceDefault;
             }
@@ -168,7 +168,7 @@ namespace ProtoBuf.Meta
             FieldNumber = fieldNumber;
             MemberType = memberType ?? throw new ArgumentNullException(nameof(memberType));
             ItemType = itemType;
-            if (defaultType == null && itemType != null)
+            if (defaultType is null && itemType is object)
             {   // reasonable default
                 defaultType = memberType;
             }
@@ -185,7 +185,7 @@ namespace ProtoBuf.Meta
         {
             {
                 Type tmp = Nullable.GetUnderlyingType(type);
-                if (tmp != null) type = tmp;
+                if (tmp is object) type = tmp;
             }
             if (value is string s)
             {
@@ -372,7 +372,7 @@ namespace ProtoBuf.Meta
         {
             if (this.getSpecified != getSpecified || this.setSpecified != setSpecified)
             {
-                if (getSpecified != null)
+                if (getSpecified is object)
                 {
                     if (getSpecified.ReturnType != typeof(bool)
                         || getSpecified.IsStatic
@@ -381,7 +381,7 @@ namespace ProtoBuf.Meta
                         throw new ArgumentException("Invalid pattern for checking member-specified", nameof(getSpecified));
                     }
                 }
-                if (setSpecified != null)
+                if (setSpecified is object)
                 {
                     ParameterInfo[] args;
                     if (setSpecified.ReturnType != typeof(void)
@@ -401,7 +401,7 @@ namespace ProtoBuf.Meta
 
         private void ThrowIfFrozen()
         {
-            if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
+            if (serializer is object) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
 
         internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat,
@@ -410,9 +410,9 @@ namespace ProtoBuf.Meta
         {
             static Type FlattenRepeated(RuntimeTypeModel model, Type type)
             {   // for the purposes of choosing features, we want to look inside things like arrays/lists/etc
-                if (type == null) return type;
-                var repeated = model == null ? RepeatedSerializers.TryGetRepeatedProvider(type) : model.TryGetRepeatedProvider(type);
-                return repeated == null ? type : repeated.ItemType;
+                if (type is null) return type;
+                var repeated = model is null ? RepeatedSerializers.TryGetRepeatedProvider(type) : model.TryGetRepeatedProvider(type);
+                return repeated is null ? type : repeated.ItemType;
             }
 
             var keyCompatibilityLevel = GetEffectiveCompatibilityLevel(compatibilityLevel, keyFormat);
@@ -442,7 +442,7 @@ namespace ProtoBuf.Meta
 
                 var repeated = model.TryGetRepeatedProvider(MemberType);
 
-                if (repeated != null)
+                if (repeated is object)
                 {
                     if (repeated.IsMap)
                     {
@@ -480,7 +480,7 @@ namespace ProtoBuf.Meta
                 else
                 {
                     ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-                    if (ser == null)
+                    if (ser is null)
                     {
                         throw new InvalidOperationException("No serializer defined for type: " + MemberType.ToString());
                     }
@@ -491,7 +491,7 @@ namespace ProtoBuf.Meta
                     {
                         ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
 
-                        if (_defaultValue != null && !IsRequired && getSpecified == null)
+                        if (_defaultValue is object && !IsRequired && getSpecified is null)
                         {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
                             // as does "IsRequired"
                             ser = new DefaultValueDecorator(_defaultValue, ser);
@@ -502,7 +502,7 @@ namespace ProtoBuf.Meta
                         ser = new UriDecorator(ser);
                     }
                 }
-                if (member != null)
+                if (member is object)
                 {
                     if (member is PropertyInfo prop)
                     {
@@ -517,7 +517,7 @@ namespace ProtoBuf.Meta
                         throw new InvalidOperationException();
                     }
 
-                    if (getSpecified != null || setSpecified != null)
+                    if (getSpecified is object || setSpecified is object)
                     {
                         ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
                     }
@@ -566,7 +566,7 @@ namespace ProtoBuf.Meta
             type = DynamicStub.GetEffectiveType(type);
             if (type.IsEnum)
             {
-                if (allowComplexTypes && model != null)
+                if (allowComplexTypes && model is object)
                 {
                     // need to do this before checking the typecode; an int enum will report Int32 etc
                     defaultWireType = WireType.Varint;
@@ -652,12 +652,12 @@ namespace ProtoBuf.Meta
                     return SystemTypeSerializer.Instance;
             }
             IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
-            if (parseable != null)
+            if (parseable is object)
             {
                 defaultWireType = WireType.String;
                 return parseable;
             }
-            if (allowComplexTypes && model != null)
+            if (allowComplexTypes && model is object)
             {
                 MetaType meta = null;
                 if (model.IsDefined(type, compatibilityLevel))
@@ -677,7 +677,7 @@ namespace ProtoBuf.Meta
                     if (asReference) options |= BclHelpers.NetObjectOptions.AsReference;
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;
 
-                    if (meta != null)
+                    if (meta is object)
                     { // exists
                         if (asReference && type.IsValueType)
                         {
@@ -705,7 +705,7 @@ namespace ProtoBuf.Meta
                     return default;
 #endif
                 }
-                if (meta != null)
+                if (meta is object)
                 {
                     IProtoTypeSerializer serializer;
                     if (meta.HasSurrogate && (serializer = meta.Serializer).Features.GetCategory() == SerializerFeatures.CategoryScalar)
@@ -812,8 +812,8 @@ namespace ProtoBuf.Meta
             public int Compare(ValueMember x, ValueMember y)
             {
                 if (ReferenceEquals(x, y)) return 0;
-                if (x == null) return -1;
-                if (y == null) return 1;
+                if (x is null) return -1;
+                if (y is null) return 1;
 
                 return x.FieldNumber.CompareTo(y.FieldNumber);
             }
