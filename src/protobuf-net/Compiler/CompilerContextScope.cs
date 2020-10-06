@@ -52,7 +52,7 @@ namespace ProtoBuf.Compiler
         internal static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name, bool @explicit = true)
         {
             var decl = interfaceType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
-            if (decl == null) throw new ArgumentException(nameof(name));
+            if (decl is null) throw new ArgumentException(nameof(name));
             var args = decl.GetParameters();
             string implName = name; // name.StartsWith("get_") ? name.Substring(4) : name;
             var attribs = (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final;
@@ -168,14 +168,14 @@ namespace ProtoBuf.Compiler
 
         internal bool ImplementsServiceFor<T>(CompatibilityLevel ambient)
         {
-            if (_model == null || typeof(T).IsEnum || Nullable.GetUnderlyingType(typeof(T)) is object) return false;
+            if (_model is null || typeof(T).IsEnum || Nullable.GetUnderlyingType(typeof(T)) is object) return false;
             if (!_model.IsKnownType<T>(ambient)) return false;
 
             var mt = _model[typeof(T)];
             if (mt is null) return false;
             if (mt.SerializerType is object) return false;
 
-            if (_model.TryGetRepeatedProvider(mt.Type) != null) return false;
+            if (_model.TryGetRepeatedProvider(mt.Type) is object) return false;
             return true;
         }
     }

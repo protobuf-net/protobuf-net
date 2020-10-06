@@ -15,14 +15,14 @@ namespace ProtoBuf.Internal.Serializers
         public MemberSpecifiedDecorator(MethodInfo getSpecified, MethodInfo setSpecified, IRuntimeProtoSerializerNode tail)
             : base(tail)
         {
-            if (getSpecified == null && setSpecified == null) throw new InvalidOperationException();
+            if (getSpecified is null && setSpecified is null) throw new InvalidOperationException();
             this.getSpecified = getSpecified;
             this.setSpecified = setSpecified;
         }
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            if (getSpecified == null || (bool)getSpecified.Invoke(value, null))
+            if (getSpecified is null || (bool)getSpecified.Invoke(value, null))
             {
                 Tail.Write(ref state, value);
             }
@@ -31,13 +31,13 @@ namespace ProtoBuf.Internal.Serializers
         public override object Read(ref ProtoReader.State state, object value)
         {
             object result = Tail.Read(ref state, value);
-            if (setSpecified != null) setSpecified.Invoke(value, new object[] { true });
+            if (setSpecified is object) setSpecified.Invoke(value, new object[] { true });
             return result;
         }
 
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            if (getSpecified == null)
+            if (getSpecified is null)
             {
                 Tail.EmitWrite(ctx, valueFrom);
                 return;
@@ -52,7 +52,7 @@ namespace ProtoBuf.Internal.Serializers
         }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            if (setSpecified == null)
+            if (setSpecified is null)
             {
                 Tail.EmitRead(ctx, valueFrom);
                 return;

@@ -12,7 +12,7 @@ namespace ProtoBuf.Internal.Serializers
             SerializerFeatures keyFeatures, CompatibilityLevel keyCompatibilityLevel, DataFormat keyDataFormat,
             SerializerFeatures valueFeatures, CompatibilityLevel valueCompatibilityLevel, DataFormat valueDataFormat)
         {
-            if (provider == null) ThrowHelper.ThrowArgumentNullException(nameof(provider));
+            if (provider is null) ThrowHelper.ThrowArgumentNullException(nameof(provider));
             _ = provider.Serializer; // primes and validates
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(
                 typeof(MapDecorator<,,>).MakeGenericType(provider.ForType, keyType, valueType),

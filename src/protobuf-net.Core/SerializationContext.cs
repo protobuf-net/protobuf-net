@@ -42,7 +42,7 @@ namespace ProtoBuf
         /// </summary>
         public static implicit operator StreamingContext(SerializationContext ctx)
         {
-            if (ctx == null) return new StreamingContext(StreamingContextStates.Persistence);
+            if (ctx is null) return new StreamingContext(StreamingContextStates.Persistence);
             return new StreamingContext(ctx.state, ctx.context);
         }
         /// <summary>

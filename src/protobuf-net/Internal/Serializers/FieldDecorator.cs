@@ -15,25 +15,25 @@ namespace ProtoBuf.Internal.Serializers
         public override bool ReturnsValue => false;
         public FieldDecorator(Type forType, FieldInfo field, IRuntimeProtoSerializerNode tail) : base(tail)
         {
-            if (tail == null) ThrowHelper.ThrowArgumentNullException(nameof(tail));
-            if (field == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
-            if (forType == null) ThrowHelper.ThrowArgumentNullException(nameof(forType));
+            if (tail is null) ThrowHelper.ThrowArgumentNullException(nameof(tail));
+            if (field is null) ThrowHelper.ThrowArgumentNullException(nameof(field));
+            if (forType is null) ThrowHelper.ThrowArgumentNullException(nameof(forType));
             ExpectedType = forType;
             this.field = field;
         }
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            Debug.Assert(value != null);
+            Debug.Assert(value is object);
             value = field.GetValue(value);
-            if (value != null) Tail.Write(ref state, value);
+            if (value is object) Tail.Write(ref state, value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value != null);
+            Debug.Assert(value is object);
             object newValue = Tail.Read(ref state, Tail.RequiresOldValue ? field.GetValue(value) : null);
-            if (newValue != null) field.SetValue(value, newValue);
+            if (newValue is object) field.SetValue(value, newValue);
             return null;
         }
 

@@ -25,7 +25,7 @@ namespace ProtoBuf
 
         internal static void ResizeAndFlushLeft(ref byte[] buffer, int toFitAtLeastBytes, int copyFromIndex, int copyBytes)
         {
-            Debug.Assert(buffer != null);
+            Debug.Assert(buffer is object);
             Debug.Assert(toFitAtLeastBytes > buffer.Length);
             Debug.Assert(copyFromIndex >= 0);
             Debug.Assert(copyBytes >= 0);
@@ -58,7 +58,7 @@ namespace ProtoBuf
         {
             var tmp = buffer;
             buffer = null;
-            if (tmp != null) _pool.Return(tmp);
+            if (tmp is object) _pool.Return(tmp);
         }
     }
 }

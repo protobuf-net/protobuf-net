@@ -77,8 +77,8 @@ namespace ProtoBuf
         public static void Serialize<T>(System.Runtime.Serialization.SerializationInfo info, StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
-            if (info == null) throw new ArgumentNullException(nameof(info));
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (info is null) throw new ArgumentNullException(nameof(info));
+            if (instance is null) throw new ArgumentNullException(nameof(instance));
             if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
             using MemoryStream ms = new MemoryStream();
             RuntimeTypeModel.Default.Serialize<T>(ms, instance, context.Context);
@@ -93,8 +93,8 @@ namespace ProtoBuf
         /// <param name="writer">The destination XmlWriter to write to.</param>
         public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (writer is null) throw new ArgumentNullException(nameof(writer));
+            if (instance is null) throw new ArgumentNullException(nameof(instance));
             using MemoryStream ms = new MemoryStream();
             Serializer.Serialize<T>(ms, instance);
             Helpers.GetBuffer(ms, out var segment);

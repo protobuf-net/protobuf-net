@@ -47,12 +47,12 @@ namespace ProtoBuf.Internal
         {
             if (string.IsNullOrWhiteSpace(message))
             {
-                if (innerException == null) throw new InvalidOperationException();
+                if (innerException is null) throw new InvalidOperationException();
                 throw new InvalidOperationException(innerException.Message, innerException);
             }
             else
             {
-                if (innerException == null) throw new InvalidOperationException(message);
+                if (innerException is null) throw new InvalidOperationException(message);
                 throw new InvalidOperationException(message, innerException);
             }
         }
@@ -67,7 +67,7 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowProtoException(string message, Exception inner = null)
-            => throw (inner == null ? new ProtoException(message) : new ProtoException(message, inner));
+            => throw (inner is null ? new ProtoException(message) : new ProtoException(message, inner));
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowOverflowException()

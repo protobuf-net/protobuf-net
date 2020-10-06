@@ -78,7 +78,7 @@ namespace ProtoBuf
 
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
             {
-                if (serializer == null) serializer = TypeModel.GetSerializer<T>(Model);
+                if (serializer is null) serializer = TypeModel.GetSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
                 AdvanceSubMessage(ref state, len, style);
             }
@@ -122,7 +122,7 @@ namespace ProtoBuf
             }
             protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
             {
-                if (serializer == null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
+                if (serializer is null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
                 AdvanceSubMessage(ref state, len, PrefixStyle.Base128);
             }

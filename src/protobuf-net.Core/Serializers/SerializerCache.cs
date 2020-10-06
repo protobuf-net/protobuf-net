@@ -71,7 +71,7 @@ namespace ProtoBuf.Serializers
         // check a few things that should be true for valid serializers
         internal static ISerializer<T> Verify<T>(ISerializer<T> serializer)
         {
-            if (serializer == null) return null;
+            if (serializer is null) return null;
 
             try
             {
@@ -160,7 +160,7 @@ namespace ProtoBuf.Serializers
         //    where T : class
         //{
         //    Type nullableUnderlyingType;
-        //    if (type.IsValueType && (nullableUnderlyingType = Nullable.GetUnderlyingType(type)) != null)
+        //    if (type.IsValueType && (nullableUnderlyingType = Nullable.GetUnderlyingType(type)) is object)
         //    {
         //        var parent = GetInstance(providerType, nullableUnderlyingType);
         //        if (parent is T direct) return direct; // implements both T and T? - that'll work fine

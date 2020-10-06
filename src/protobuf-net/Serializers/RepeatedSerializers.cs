@@ -22,7 +22,7 @@ namespace ProtoBuf.Serializers
         {
             targs ??= Type.EmptyTypes;
             var methods = (MethodTuple[])s_methodsPerDeclaringType[declaringType];
-            if (methods == null)
+            if (methods is null)
             {
                 var declared = declaringType.GetMethods(BindingFlags.Static | BindingFlags.Public);
                 methods = Array.ConvertAll(declared, m => new MethodTuple(m));
@@ -102,7 +102,7 @@ namespace ProtoBuf.Serializers
 
         public static void Add(Type type, Func<Type, Type, Type[], MemberInfo> implementation, bool exactOnly = true)
         {
-            if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             lock (s_providers)
             {
                 var reg = new Registration(s_providers.Count + 1, implementation, exactOnly);
@@ -116,10 +116,10 @@ namespace ProtoBuf.Serializers
 
         internal static RepeatedSerializerStub TryGetRepeatedProvider(Type type)
         {
-            if (type == null || type == typeof(string)) return null;
+            if (type is null || type == typeof(string)) return null;
 
             var known = (RepeatedSerializerStub)s_knownTypes[type];
-            if (known == null)
+            if (known is null)
             {
                 Type genDef;
                 if (type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
@@ -133,7 +133,7 @@ namespace ProtoBuf.Serializers
                 else
                 {
                     var rawProvider = GetProviderForType(type);
-                    if (rawProvider == null)
+                    if (rawProvider is null)
                     {
                         if (type.IsArray && type != typeof(byte[]))
                         {
@@ -187,18 +187,18 @@ namespace ProtoBuf.Serializers
 
         private static bool TestIfNestedNotSupported(RepeatedSerializerStub repeated)
         {
-            if (repeated?.ItemType == null) return false; // fine
+            if (repeated?.ItemType is null) return false; // fine
 
             if (!repeated.IsMap) // we allow nesting on dictionaries, just not on arrays/lists etc
             {
-                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) != null) return true;
+                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) is object) return true;
             }
             return false;
         }
 
         private static MemberInfo GetProviderForType(Type type)
         {
-            if (type == null) return null;
+            if (type is null) return null;
 
             if (type.IsArray)
             {
@@ -228,7 +228,7 @@ namespace ProtoBuf.Serializers
             }
 
             Type current = type;
-            while (current != null && current != typeof(object))
+            while (current is object && current != typeof(object))
             {
                 if (TryGetProvider(type, current, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
                 current = current.BaseType;
@@ -245,12 +245,12 @@ namespace ProtoBuf.Serializers
         private static bool TryGetProvider(Type root, Type current, int bestMatchPriority, out MemberInfo member, out int priority)
         {
             var found = (Registration)s_providers[current];
-            if (found == null && current.IsGenericType)
+            if (found is null && current.IsGenericType)
             {
                 found = (Registration)s_providers[current.GetGenericTypeDefinition()];
             }
 
-            if (found == null
+            if (found is null
                 || (found.Priority > bestMatchPriority)
                 || (found.ExactOnly && root != current))
             {

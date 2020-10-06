@@ -9,16 +9,16 @@ namespace ProtoBuf.Internal.Serializers
         private readonly MethodInfo parse;
         public static ParseableSerializer TryCreate(Type type)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (type is null) throw new ArgumentNullException(nameof(type));
             MethodInfo method = type.GetMethod(nameof(int.Parse),
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
                 null, new Type[] { typeof(string) }, null);
-            if (method != null && method.ReturnType == type)
+            if (method is object && method.ReturnType == type)
             {
                 if (type.IsValueType)
                 {
                     MethodInfo toString = GetCustomToString(type);
-                    if (toString == null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
+                    if (toString is null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
                 }
                 return new ParseableSerializer(method);
             }
@@ -42,7 +42,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value == null); // since replaces
+            Debug.Assert(value is null); // since replaces
             return parse.Invoke(null, new object[] { state.ReadString() });
         }
 

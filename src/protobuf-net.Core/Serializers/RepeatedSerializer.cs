@@ -308,7 +308,7 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override int TryGetCount(TCollection values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(TCollection values) => values is null ? 0 : values.Count;
 
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
@@ -359,7 +359,7 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override int TryGetCount(TList values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(TList values) => values is null ? 0 : values.Count;
 
         internal override long Measure(TList values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
@@ -522,7 +522,7 @@ namespace ProtoBuf.Serializers
             return values;
         }
 
-        protected override int TryGetCount(TCollection values) => values == null ? 0 : values.Count;
+        protected override int TryGetCount(TCollection values) => values is null ? 0 : values.Count;
 
         protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
         {

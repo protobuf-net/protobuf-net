@@ -52,7 +52,7 @@ namespace ProtoBuf
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         public static IExtension GetExtensionObject(ref IExtension extensionObject, bool createIfMissing)
         {
-            if (createIfMissing && extensionObject == null)
+            if (createIfMissing && extensionObject is null)
             {
                 extensionObject = new BufferExtension();
             }

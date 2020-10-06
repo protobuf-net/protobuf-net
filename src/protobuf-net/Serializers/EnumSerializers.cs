@@ -15,7 +15,7 @@ namespace ProtoBuf.Serializers
             };
         internal static MemberInfo GetProvider(Type type)
         {
-            if (type == null) return null;
+            if (type is null) return null;
             type = Nullable.GetUnderlyingType(type) ?? type;
             if (!type.IsEnum) return null;
             string name = Type.GetTypeCode(type) switch
@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
                 TypeCode.UInt64 => nameof(EnumSerializer.CreateUInt64),
                 _ => null,
             };
-            if (name == null) return null;
+            if (name is null) return null;
             return typeof(EnumSerializer).GetMethod(name, BindingFlags.Static | BindingFlags.Public)
                 .MakeGenericMethod(type);
         }

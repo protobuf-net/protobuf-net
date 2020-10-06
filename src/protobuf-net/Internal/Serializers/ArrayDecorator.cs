@@ -60,7 +60,7 @@
 //            using var loc = RequiresOldValue ? ctx.GetLocalWithValue(typeof(T[]), valueFrom) : default;
 //            ctx.LoadState();
 //            ctx.LoadValue((int)_features);
-//            if (loc == null)
+//            if (loc is null)
 //                ctx.LoadNullRef();
 //            else
 //                ctx.LoadValue(loc);

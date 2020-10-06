@@ -418,7 +418,7 @@ namespace ProtoBuf
 
             //            ReadOnlySequence<byte> newData;
             //            int newLength = checked((int)(value.Length + len));
-            //            if (allocator == null)
+            //            if (allocator is null)
             //            {
             //                newData = new ReadOnlySequence<byte>(new byte[newLength]);
             //            }
@@ -533,14 +533,14 @@ namespace ProtoBuf
             internal object ReadTypedObject(object value, Type type)
             {
                 var model = Model;
-                if (model == null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
+                if (model is null) ThrowInvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
 
                 if (DynamicStub.TryDeserialize(ObjectScope.WrappedMessage, type, model, ref this, ref value))
                     return value;
 
 
                 SubItemToken token = StartSubItem();
-                if (type != null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
+                if (type is object && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
                 {
                     // handled it the easy way
                 }
@@ -753,7 +753,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowWireTypeException()
             {
-                var message = _reader == null ? "(no reader)" : $"Invalid wire-type ({_reader.WireType}); this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354";
+                var message = _reader is null ? "(no reader)" : $"Invalid wire-type ({_reader.WireType}); this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354";
                 ThrowProtoException(message);
             }
 
@@ -790,7 +790,7 @@ namespace ProtoBuf
 
             internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
             {
-                if (exception != null && source != null && !exception.Data.Contains("protoSource"))
+                if (exception is object && source is object && !exception.Data.Contains("protoSource"))
                 {
                     exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                         source.FieldNumber, source.WireType, state.GetPosition(), source._depth));
@@ -822,7 +822,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void ThrowEnumException(Type type, int value)
             {
-                string desc = type == null ? "<null>" : type.FullName;
+                string desc = type is null ? "<null>" : type.FullName;
                 throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), _reader, ref this);
             }
 
@@ -832,7 +832,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             public void AppendExtensionData(IExtensible instance)
             {
-                if (instance == null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
                 IExtension extn = instance.GetExtensionObject(true);
                 bool commit = false;
                 // unusually we *don't* want "using" here; the "finally" does that, with
@@ -1049,7 +1049,7 @@ namespace ProtoBuf
                         return ReadFieldOne(ref this, features, value, serializer);
                     case SerializerFeatures.CategoryMessage:
 #if FEAT_DYNAMIC_REF
-                    if (TypeHelper<T>.IsReferenceType && value != null)
+                    if (TypeHelper<T>.IsReferenceType && value is object)
                         SetRootObject(value);
 #endif
                         return serializer.Read(ref this, value);
@@ -1140,7 +1140,7 @@ namespace ProtoBuf
             {
                 bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
 #if FEAT_DYNAMIC_REF
-                if (value != null) _reader.SetRootObject(value);
+                if (value is object) _reader.SetRootObject(value);
 #endif
                 object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);
                 CheckFullyConsumed();
@@ -1151,7 +1151,7 @@ namespace ProtoBuf
             internal T DeserializeRootImpl<T>(T value = default)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(Model);
-                if (serializer == null)
+                if (serializer is null)
                 {
                     return (T)DeserializeRootFallback(value, typeof(T));
                 }

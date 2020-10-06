@@ -104,8 +104,8 @@ namespace ProtoBuf
         /// <param name="reader">The XmlReader containing the data to apply to the instance (cannot be null).</param>
         public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (reader is null) throw new ArgumentNullException(nameof(reader));
+            if (instance is null) throw new ArgumentNullException(nameof(instance));
             const int LEN = 4096;
             byte[] buffer = new byte[LEN];
             int read;
@@ -149,8 +149,8 @@ namespace ProtoBuf
             where T : class, ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
-            if (info == null) throw new ArgumentNullException(nameof(info));
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (info is null) throw new ArgumentNullException(nameof(info));
+            if (instance is null) throw new ArgumentNullException(nameof(instance));
             if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
 
             byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
@@ -281,7 +281,7 @@ namespace ProtoBuf
             /// </summary>
             public static object DeepClone(object instance)
             {
-                return instance == null ? null : RuntimeTypeModel.Default.DeepClone(instance);
+                return instance is null ? null : RuntimeTypeModel.Default.DeepClone(instance);
             }
 
             /// <summary>
@@ -291,7 +291,7 @@ namespace ProtoBuf
             /// <param name="dest">The destination stream to write to.</param>
             public static void Serialize(Stream dest, object instance)
             {
-                if (instance != null)
+                if (instance is object)
                 {
                     var state = ProtoWriter.State.Create(dest, RuntimeTypeModel.Default);
                     try
@@ -345,7 +345,7 @@ namespace ProtoBuf
             [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
             public static object Merge(Stream source, object instance)
             {
-                if (instance == null) throw new ArgumentNullException(nameof(instance));
+                if (instance is null) throw new ArgumentNullException(nameof(instance));
                 using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
                 return state.DeserializeRootFallback(instance, instance.GetType());
             }
@@ -362,7 +362,7 @@ namespace ProtoBuf
             /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
             public static void SerializeWithLengthPrefix(Stream destination, object instance, PrefixStyle style, int fieldNumber)
             {
-                if (instance == null) throw new ArgumentNullException(nameof(instance));
+                if (instance is null) throw new ArgumentNullException(nameof(instance));
                 RuntimeTypeModel.Default.SerializeWithLengthPrefix(destination, instance, instance.GetType(), style, fieldNumber);
             }
             /// <summary>
@@ -379,7 +379,7 @@ namespace ProtoBuf
             public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, ProtoBuf.TypeResolver resolver, out object value)
             {
                 value = RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, null, style, 0, resolver);
-                return value != null;
+                return value is object;
             }
 
             /// <summary>

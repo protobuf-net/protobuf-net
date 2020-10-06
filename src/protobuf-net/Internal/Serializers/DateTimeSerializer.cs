@@ -35,7 +35,7 @@ namespace ProtoBuf.Internal.Serializers
             }
             else
             {
-                Debug.Assert(value == null); // since replaces
+                Debug.Assert(value is null); // since replaces
                 return BclHelpers.ReadDateTime(ref state);
             }
         }

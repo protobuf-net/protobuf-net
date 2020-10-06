@@ -73,13 +73,13 @@ namespace ProtoBuf.Serializers
         private DefaultMemoryConverter() { }
 
         T[] IMemoryConverter<T[], T>.NonNull(in T[] value) => value ?? Array.Empty<T>();
-        int IMemoryConverter<T[], T>.GetLength(in T[] value) => value == null ? 0 : value.Length;
+        int IMemoryConverter<T[], T>.GetLength(in T[] value) => value is null ? 0 : value.Length;
 
         Memory<T> IMemoryConverter<T[], T>.GetMemory(in T[] value) => new Memory<T>(value);
 
         Memory<T> IMemoryConverter<T[], T>.Expand(ISerializationContext context, ref T[] value, int additionalCapacity)
         {
-            int oldCapacity = value == null ? 0 : value.Length;
+            int oldCapacity = value is null ? 0 : value.Length;
             Array.Resize<T>(ref value, oldCapacity + additionalCapacity);
             return new Memory<T>(value, oldCapacity, additionalCapacity);
         }
