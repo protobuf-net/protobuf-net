@@ -4,6 +4,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -938,14 +939,14 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadMessage<T>(T value = default)
+            public T ReadMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
                 => ReadMessage<T>(default, value, null);
 
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            public T ReadMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
                 => ReadMessage<ISerializer<T>, T>(features, value, serializer ?? TypeModel.GetSerializer<T>(Model));
 
 #pragma warning disable IDE0060 // unused (yet!) features arg
@@ -953,7 +954,7 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal T ReadMessage<TSerializer, T>(SerializerFeatures features, T value, in TSerializer serializer)
+            internal T ReadMessage<TSerializer, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, in TSerializer serializer)
                 where TSerializer : ISerializer<T>
 #pragma warning restore IDE0060
             {
@@ -974,14 +975,14 @@ namespace ProtoBuf
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<T>(T value = default)
+            public T ReadAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
                 => ReadAny<T>(default, value, null);
 
             /// <summary>
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            public T ReadAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
@@ -1013,13 +1014,13 @@ namespace ProtoBuf
             /// Gets the serializer associated with a specific type
             /// </summary>
             [MethodImpl(HotPath)]
-            public ISerializer<T> GetSerializer<T>() => TypeModel.GetSerializer<T>(Model);
+            public ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>() => TypeModel.GetSerializer<T>(Model);
 
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T ReadBaseType<TBaseType, T>(T value = null, ISubTypeSerializer<TBaseType> serializer = null)
+            public T ReadBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TBaseType, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = null, ISubTypeSerializer<TBaseType> serializer = null)
                 where TBaseType : class
                 where T : class, TBaseType
             {
@@ -1030,14 +1031,14 @@ namespace ProtoBuf
             /// Deserialize an instance of the provided type
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T DeserializeRoot<T>(T value = default, ISerializer<T> serializer = null)
+            public T DeserializeRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default, ISerializer<T> serializer = null)
             {
                 value = ReadAsRoot<T>(value, serializer ?? TypeModel.GetSerializer<T>(Model));
                 CheckFullyConsumed();
                 return value;
             }
 
-            internal T ReadAsRoot<T>(T value, ISerializer<T> serializer)
+            internal T ReadAsRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISerializer<T> serializer)
             {
                 var features = serializer.Features;
                 var category = features.GetCategory();
@@ -1111,7 +1112,7 @@ namespace ProtoBuf
             /// Create an instance of the provided type, respecting any custom factory rules
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public T CreateInstance<T>(ISerializer<T> serializer = null)
+            public T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ISerializer<T> serializer = null)
             {
                 var obj = TypeModel.CreateInstance<T>(Context, serializer);
 #if FEAT_DYNAMIC_REF

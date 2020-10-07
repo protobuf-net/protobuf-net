@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -15,7 +16,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
-        public static void Serialize<T>(Stream destination, T instance)
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream destination, T instance)
             => Serialize<T>(destination, instance, userState: null);
 
         /// <summary>
@@ -24,7 +25,7 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
         /// <param name="userState">Additional state for this serialization operation</param>
-        public static void Serialize<T>(Stream destination, T instance, object userState)
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream destination, T instance, object userState)
         {
             var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default, userState);
             try
@@ -44,7 +45,7 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
         /// <param name="userState">Additional serialization context</param>
-        public static void Serialize<T>(IBufferWriter<byte> destination, T instance, object userState = null)
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(IBufferWriter<byte> destination, T instance, object userState = null)
         {
             var state = ProtoWriter.State.Create(destination, RuntimeTypeModel.Default, userState);
             try
@@ -63,7 +64,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
-        public static void Serialize<T>(SerializationInfo info, T instance) where T : class, ISerializable
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
             Serialize<T>(info, new StreamingContext(StreamingContextStates.Persistence), instance);
         }
@@ -74,7 +75,7 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public static void Serialize<T>(System.Runtime.Serialization.SerializationInfo info, StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(System.Runtime.Serialization.SerializationInfo info, StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info is null) throw new ArgumentNullException(nameof(info));
@@ -91,7 +92,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="writer">The destination XmlWriter to write to.</param>
-        public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : System.Xml.Serialization.IXmlSerializable
+        public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(System.Xml.XmlWriter writer, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
             if (writer is null) throw new ArgumentNullException(nameof(writer));
             if (instance is null) throw new ArgumentNullException(nameof(instance));
@@ -111,7 +112,7 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="style">How to encode the length prefix.</param>
         /// <param name="destination">The destination stream to write to.</param>
-        public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style)
+        public static void SerializeWithLengthPrefix<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream destination, T instance, PrefixStyle style)
         {
             SerializeWithLengthPrefix<T>(destination, instance, style, 0);
         }
@@ -127,7 +128,7 @@ namespace ProtoBuf
         /// <param name="style">How to encode the length prefix.</param>
         /// <param name="destination">The destination stream to write to.</param>
         /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
-        public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style, int fieldNumber)
+        public static void SerializeWithLengthPrefix<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream destination, T instance, PrefixStyle style, int fieldNumber)
         {
             RuntimeTypeModel.Default.SerializeWithLengthPrefix(destination, instance, typeof(T), style, fieldNumber);
         }

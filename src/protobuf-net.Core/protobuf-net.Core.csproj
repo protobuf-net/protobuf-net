@@ -36,6 +36,7 @@ PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropr
 FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
 FEAT_NULL_LIST_ITEMS      : whether we support retaining nulls in lists
 PLAT_CONCURRENT_CLEAR     : whether the concurrent collections have the necessary Clear method
+PLAT_DYNAMIC_ACCESS_ATTR  : whether the runtime defines DynamicallyAccessedMembersAttribute et al
 TRACK_USAGE               : count writer activity to check disposal/re-use is correct
 -->
 </Project>

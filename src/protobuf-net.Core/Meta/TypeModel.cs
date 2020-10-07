@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -42,7 +43,7 @@ namespace ProtoBuf.Meta
         /// Gets a cached serializer for a type, as offered by a given provider
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
-        protected static ISerializer<T> GetSerializer<TProvider, T>()
+        protected static ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.Serializer)] TProvider, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             where TProvider : class
             => SerializerCache<TProvider, T>.InstanceField;
 
@@ -291,7 +292,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public long Serialize<T>(Stream dest, T value, object userState = null)
+        public long Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream dest, T value, object userState = null)
         {
             var state = ProtoWriter.State.Create(dest, this, userState);
             try
@@ -310,7 +311,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public long Serialize<T>(IBufferWriter<byte> dest, T value, object userState = null)
+        public long Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(IBufferWriter<byte> dest, T value, object userState = null)
         {
             var state = ProtoWriter.State.Create(dest, this, userState);
             try
@@ -326,7 +327,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public MeasureState<T> Measure<T>(T value, object userState = null, long abortAfter = -1)
+        public MeasureState<T> Measure<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object userState = null, long abortAfter = -1)
             => new MeasureState<T>(this, value, userState, abortAfter);
 
         /// <summary>
@@ -371,7 +372,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int fieldNumber)
+        public object DeserializeWithLengthPrefix(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int fieldNumber)
             => DeserializeWithLengthPrefix(source, value, type, style, fieldNumber, null, out long _);
 
         /// <summary>
@@ -387,7 +388,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, TypeResolver resolver)
+        public object DeserializeWithLengthPrefix(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int expectedField, TypeResolver resolver)
             => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long _);
 
         /// <summary>
@@ -404,7 +405,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, TypeResolver resolver, out int bytesRead)
+        public object DeserializeWithLengthPrefix(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int expectedField, TypeResolver resolver, out int bytesRead)
         {
             object result = DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long bytesRead64, out bool _, null);
             bytesRead = checked((int)bytesRead64);
@@ -425,9 +426,9 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, TypeResolver resolver, out long bytesRead) => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out bool _, null);
+        public object DeserializeWithLengthPrefix(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int expectedField, TypeResolver resolver, out long bytesRead) => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out bool _, null);
 
-        private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, TypeResolver resolver, out long bytesRead, out bool haveObject, SerializationContext context)
+        private object DeserializeWithLengthPrefix(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int expectedField, TypeResolver resolver, out long bytesRead, out bool haveObject, SerializationContext context)
         {
             haveObject = false;
             bool skip;
@@ -508,7 +509,7 @@ namespace ProtoBuf.Meta
         /// <param name="resolver">On a field-by-field basis, the type of object to deserialize (can be null if "type" is specified). </param>
         /// <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
         /// <returns>The sequence of deserialized objects.</returns>
-        public IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, TypeResolver resolver)
+        public IEnumerable DeserializeItems(System.IO.Stream source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int expectedField, TypeResolver resolver)
         {
             return DeserializeItems(source, type, style, expectedField, resolver, null);
         }
@@ -529,7 +530,7 @@ namespace ProtoBuf.Meta
         /// <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
         /// <returns>The sequence of deserialized objects.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, TypeResolver resolver, SerializationContext context)
+        public IEnumerable DeserializeItems(System.IO.Stream source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int expectedField, TypeResolver resolver, SerializationContext context)
         {
             return new DeserializeItemsIterator(this, source, type, style, expectedField, resolver, context);
         }
@@ -549,7 +550,7 @@ namespace ProtoBuf.Meta
         /// <param name="expectedField">The tag of records to return (if non-positive, then no tag is
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
-        public IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField)
+        public IEnumerable<T> DeserializeItems<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style, int expectedField)
         {
             return DeserializeItems<T>(source, style, expectedField, null);
         }
@@ -569,7 +570,7 @@ namespace ProtoBuf.Meta
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField, SerializationContext context)
+        public IEnumerable<T> DeserializeItems<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style, int expectedField, SerializationContext context)
         {
             return new DeserializeItemsIterator<T>(this, source, style, expectedField, context);
         }
@@ -631,7 +632,7 @@ namespace ProtoBuf.Meta
         /// <param name="style">How to encode the length prefix.</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
-        public void SerializeWithLengthPrefix(Stream dest, object value, Type type, PrefixStyle style, int fieldNumber)
+        public void SerializeWithLengthPrefix(Stream dest, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int fieldNumber)
         {
             SerializeWithLengthPrefix(dest, value, type, style, fieldNumber, null);
         }
@@ -648,7 +649,7 @@ namespace ProtoBuf.Meta
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public void SerializeWithLengthPrefix(Stream dest, object value, Type type, PrefixStyle style, int fieldNumber, SerializationContext context)
+        public void SerializeWithLengthPrefix(Stream dest, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int fieldNumber, SerializationContext context)
         {
             if (type is null)
             {
@@ -697,7 +698,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Deserialize(Stream source, object value, Type type)
+        public object Deserialize(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
         {
             using var state = ProtoReader.State.Create(source, this, null, ProtoReader.TO_EOF);
             return state.DeserializeRootFallback(value, type);
@@ -714,7 +715,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Deserialize(Stream source, object value, Type type, SerializationContext context)
+        public object Deserialize(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, SerializationContext context)
         {
             using var state = ProtoReader.State.Create(source, this, context, ProtoReader.TO_EOF);
             return state.DeserializeRootFallback(value, type);
@@ -730,7 +731,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(Stream source, T value = default, object userState = null)
+        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, T value = default, object userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
@@ -746,7 +747,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
+        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlyMemory<byte> source, T value = default, object userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
@@ -762,7 +763,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public unsafe T Deserialize<T>(ReadOnlySpan<byte> source, T value = default, object userState = null)
+        public unsafe T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlySpan<byte> source, T value = default, object userState = null)
         {
             // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
             // means we need to be able to persist the span as a memory; the only way to do this
@@ -796,7 +797,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
+        public T Deserialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ReadOnlySequence<byte> source, T value = default, object userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootImpl<T>(value);
@@ -813,7 +814,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(Type type, Stream source, object value = default, object userState = null, long length = ProtoReader.TO_EOF)
+        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source, object value = default, object userState = null, long length = ProtoReader.TO_EOF)
         {
             using var state = ProtoReader.State.Create(source, this, userState, length);
             return state.DeserializeRootFallback(value, type);
@@ -829,7 +830,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(Type type, ReadOnlyMemory<byte> source, object value = default, object userState = null)
+        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlyMemory<byte> source, object value = default, object userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootFallback(value, type);
@@ -845,7 +846,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public unsafe object Deserialize(Type type, ReadOnlySpan<byte> source, object value = default, object userState = null)
+        public unsafe object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySpan<byte> source, object value = default, object userState = null)
         {
             // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
             // means we need to be able to persist the span as a memory; the only way to do this
@@ -879,7 +880,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(Type type, ReadOnlySequence<byte> source, object value = default, object userState = null)
+        public object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySequence<byte> source, object value = default, object userState = null)
         {
             using var state = ProtoReader.State.Create(source, this, userState);
             return state.DeserializeRootFallback(value, type);
@@ -918,7 +919,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Deserialize(Stream source, object value, System.Type type, int length)
+        public object Deserialize(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, int length)
             => Deserialize(source, value, type, length, null);
 
         /// <summary>
@@ -932,7 +933,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Deserialize(Stream source, object value, System.Type type, long length)
+        public object Deserialize(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, long length)
             => Deserialize(source, value, type, length, null);
 
         /// <summary>
@@ -947,7 +948,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
+        public object Deserialize(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, int length, SerializationContext context)
             => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)length, context);
 
         /// <summary>
@@ -962,7 +963,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
+        public object Deserialize(Stream source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, long length, SerializationContext context)
         {
             var state = ProtoReader.State.Create(source, this, context, length);
             try
@@ -990,7 +991,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public object Deserialize(ReadOnlyMemory<byte> source, Type type, object value = default, object userState = default)
+        public object Deserialize(ReadOnlyMemory<byte> source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object value = default, object userState = default)
         {
             var state = ProtoReader.State.Create(source, this, userState);
             try
@@ -1018,7 +1019,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="userState">Additional information about this serialization operation.</param>
-        public object Deserialize(ReadOnlySequence<byte> source, Type type, object value = default, object userState = default)
+        public object Deserialize(ReadOnlySequence<byte> source, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object value = default, object userState = default)
         {
             var state = ProtoReader.State.Create(source, this, userState);
             try
@@ -1046,10 +1047,10 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         [Obsolete(ProtoReader.PreferStateAPI, false)]
-        public object Deserialize(ProtoReader source, object value, Type type)
+        public object Deserialize(ProtoReader source, object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
             => source.DefaultState().DeserializeRootFallbackWithModel(value, type, this);
 
-        internal object DeserializeRootAny(ref ProtoReader.State state, Type type, object value, bool autoCreate)
+        internal object DeserializeRootAny(ref ProtoReader.State state, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, object value, bool autoCreate)
         {
             if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value, autoCreate))
             {
@@ -1348,7 +1349,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected virtual ISerializer<T> GetSerializer<T>()
+        protected virtual ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => this as ISerializer<T>;
 
         internal virtual ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
@@ -1405,7 +1406,7 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISerializer<T> GetSerializer<T>(TypeModel model, CompatibilityLevel ambient = default)
+        internal static ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model, CompatibilityLevel ambient = default)
            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializerCore<T>(ambient)
             ?? NoSerializer<T>(model);
@@ -1506,7 +1507,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public T DeepClone<T>(T value, object userState = null)
+        public T DeepClone<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object userState = null)
         {
 #if PLAT_ISREF
             if (!System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -1597,7 +1598,7 @@ namespace ProtoBuf.Meta
         /// specified in that hierarchy and cannot be processed.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ThrowUnexpectedSubtype<T>(T value) where T : class
+        public static void ThrowUnexpectedSubtype<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value) where T : class
         {
             if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T), value.GetType());
         }
@@ -1765,7 +1766,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
-        public string GetSchema(Type type) => GetSchema(type, ProtoSyntax.Default);
+        public string GetSchema([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type) => GetSchema(type, ProtoSyntax.Default);
 
         /// <summary>
         /// Suggest a .proto definition for the given type
@@ -1773,7 +1774,7 @@ namespace ProtoBuf.Meta
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
         /// <param name="syntax">The .proto syntax to use for the operation</param>
-        public string GetSchema(Type type, ProtoSyntax syntax)
+        public string GetSchema([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ProtoSyntax syntax)
         {
             SchemaGenerationOptions options;
             if (type is null && syntax == ProtoSyntax.Default)
@@ -1811,7 +1812,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <returns>A new IFormatter to be used during [de]serialization.</returns>
         /// <param name="type">The type of object to be [de]deserialized by the formatter.</param>
-        public System.Runtime.Serialization.IFormatter CreateFormatter(Type type)
+        public System.Runtime.Serialization.IFormatter CreateFormatter([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
         {
             return new Formatter(this, type);
         }

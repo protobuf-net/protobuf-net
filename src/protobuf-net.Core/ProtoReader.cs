@@ -4,6 +4,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -272,7 +273,7 @@ namespace ProtoBuf
         /// parsing the message in accordance with the model associated with the reader
         /// </summary>
         [MethodImpl(HotPath)]
-        public static object ReadObject(object value, Type type, ProtoReader reader)
+        public static object ReadObject(object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ProtoReader reader)
             => reader.DefaultState().ReadObject(value, type);
 
         /// <summary>
