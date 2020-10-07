@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -47,19 +48,19 @@ namespace ProtoBuf
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public static T DeepClone<T>(T instance, SerializationContext context)
+        public static T DeepClone<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T instance, SerializationContext context)
             => RuntimeTypeModel.Default.DeepClone<T>(instance, context);
 
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
-        public static T DeepClone<T>(T instance, object userState = null)
+        public static T DeepClone<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T instance, object userState = null)
             => RuntimeTypeModel.Default.DeepClone<T>(instance, userState);
 
         /// <summary>
         /// Calculates the length of a protocol-buffer payload for an item
         /// </summary>
-        public static MeasureState<T> Measure<T>(T value, object userState = null, long abortAfter = -1)
+        public static MeasureState<T> Measure<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, object userState = null, long abortAfter = -1)
             => RuntimeTypeModel.Default.Measure<T>(value, userState, abortAfter);
 
         /// <summary>
@@ -71,7 +72,7 @@ namespace ProtoBuf
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public static T Merge<T>(Stream source, T instance)
+        public static T Merge<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, T instance)
         {
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default);
             return state.DeserializeRootImpl<T>(instance);
@@ -88,7 +89,7 @@ namespace ProtoBuf
         /// <typeparam name="TTo">The type of the new object to be created.</typeparam>
         /// <param name="instance">The existing instance to use as a template.</param>
         /// <returns>A new instane of type TNewType, with the data from TOldType.</returns>
-        public static TTo ChangeType<TFrom, TTo>(TFrom instance)
+        public static TTo ChangeType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TFrom, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TTo>(TFrom instance)
         {
             using var ms = new MemoryStream();
             Serialize<TFrom>(ms, instance);
@@ -102,7 +103,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="reader">The XmlReader containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : System.Xml.Serialization.IXmlSerializable
+        public static void Merge<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(System.Xml.XmlReader reader, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
             if (reader is null) throw new ArgumentNullException(nameof(reader));
             if (instance is null) throw new ArgumentNullException(nameof(instance));
@@ -134,7 +135,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(SerializationInfo info, T instance) where T : class, ISerializable
+        public static void Merge<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
             Merge<T>(info, new StreamingContext(StreamingContextStates.Persistence), instance);
         }
@@ -145,7 +146,7 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public static void Merge<T>(SerializationInfo info, StreamingContext context, T instance)
+        public static void Merge<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializationInfo info, StreamingContext context, T instance)
             where T : class, ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
@@ -165,7 +166,7 @@ namespace ProtoBuf
         /// <summary>
         /// Precompiles the serializer for a given type.
         /// </summary>
-        public static void PrepareSerializer<T>()
+        public static void PrepareSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => RuntimeTypeModel.Default[typeof(T)].CompileInPlace();
 
         /// <summary>
@@ -173,7 +174,7 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type of object to be [de]deserialized by the formatter.</typeparam>
         /// <returns>A new IFormatter to be used during [de]serialization.</returns>
-        public static System.Runtime.Serialization.IFormatter CreateFormatter<T>()
+        public static System.Runtime.Serialization.IFormatter CreateFormatter<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
         {
             return RuntimeTypeModel.Default.CreateFormatter(typeof(T));
         }
@@ -193,7 +194,7 @@ namespace ProtoBuf
         /// <param name="fieldNumber">The tag of records to return (if non-positive, then no tag is
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
-        public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int fieldNumber)
+        public static IEnumerable<T> DeserializeItems<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style, int fieldNumber)
         {
             return RuntimeTypeModel.Default.DeserializeItems<T>(source, style, fieldNumber);
         }
@@ -206,7 +207,7 @@ namespace ProtoBuf
         /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
         /// <param name="style">How to encode the length prefix.</param>
         /// <returns>A new, initialized instance.</returns>
-        public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style)
+        public static T DeserializeWithLengthPrefix<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style)
         {
             return DeserializeWithLengthPrefix<T>(source, style, 0);
         }
@@ -220,7 +221,7 @@ namespace ProtoBuf
         /// <param name="style">How to encode the length prefix.</param>
         /// <param name="fieldNumber">The expected tag of the item (only used with base-128 prefix style).</param>
         /// <returns>A new, initialized instance.</returns>
-        public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int fieldNumber)
+        public static T DeserializeWithLengthPrefix<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, PrefixStyle style, int fieldNumber)
         {
             return (T)RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, typeof(T), style, fieldNumber);
         }
@@ -236,7 +237,7 @@ namespace ProtoBuf
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public static T MergeWithLengthPrefix<T>(Stream source, T instance, PrefixStyle style)
+        public static T MergeWithLengthPrefix<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(Stream source, T instance, PrefixStyle style)
         {
             return (T)RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, instance, typeof(T), style, 0);
         }
@@ -311,31 +312,31 @@ namespace ProtoBuf
             /// <param name="type">The type to be created.</param>
             /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
             /// <returns>A new, initialized instance.</returns>
-            public static object Deserialize(Type type, Stream source)
+            public static object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source)
                 => RuntimeTypeModel.Default.Deserialize(type, source);
 
             /// <summary>
             /// Creates a new instance from a protocol-buffer stream
             /// </summary>
-            public static object Deserialize(Type type, Stream source, object instance = null, object userState = null, long length = ProtoReader.TO_EOF)
+            public static object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source, object instance = null, object userState = null, long length = ProtoReader.TO_EOF)
                 => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState, length);
 
             /// <summary>
             /// Creates a new instance from a protocol-buffer stream
             /// </summary>
-            public static object Deserialize(Type type, ReadOnlyMemory<byte> source, object instance = null, object userState = null)
+            public static object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlyMemory<byte> source, object instance = null, object userState = null)
                 => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState);
 
             /// <summary>
             /// Creates a new instance from a protocol-buffer stream
             /// </summary>
-            public static object Deserialize(Type type, ReadOnlySequence<byte> source, object instance = null, object userState = null)
+            public static object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySequence<byte> source, object instance = null, object userState = null)
                 => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState);
 
             /// <summary>
             /// Creates a new instance from a protocol-buffer stream
             /// </summary>
-            public static object Deserialize(Type type, ReadOnlySpan<byte> source, object instance = null, object userState = null)
+            public static object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ReadOnlySpan<byte> source, object instance = null, object userState = null)
                 => RuntimeTypeModel.Default.Deserialize(type, source, instance, userState);
 
             /// <summary>Applies a protocol-buffer stream to an existing instance.</summary>
@@ -390,7 +391,7 @@ namespace ProtoBuf
             /// <summary>
             /// Precompiles the serializer for a given type.
             /// </summary>
-            public static void PrepareSerializer(Type type)
+            public static void PrepareSerializer([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
             {
                 RuntimeTypeModel.Default[type].CompileInPlace();
             }

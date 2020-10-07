@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
@@ -11,25 +12,25 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateConcurrentBag<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T> CreateConcurrentBag<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             where TCollection : ConcurrentBag<T>
             => SerializerCache<ConcurrentBagSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateConcurrentStack<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T> CreateConcurrentStack<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             where TCollection : ConcurrentStack<T>
             => SerializerCache<ConcurrentStackSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateConcurrentQueue<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T> CreateConcurrentQueue<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             where TCollection : ConcurrentQueue<T>
             => SerializerCache<ConcurrentQueueSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateIProducerConsumerCollection<TCollection, T>()
+        public static RepeatedSerializer<TCollection, T> CreateIProducerConsumerCollection<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             where TCollection : class, IProducerConsumerCollection<T>
             => SerializerCache<ProducerConsumerSerializer<TCollection, T>>.InstanceField;
     }

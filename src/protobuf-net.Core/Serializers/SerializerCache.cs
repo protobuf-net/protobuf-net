@@ -1,15 +1,16 @@
 ﻿using ProtoBuf.Internal;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
 {
-    internal static class SerializerCache<TProvider>
+    internal static class SerializerCache<[DynamicallyAccessedMembers(DynamicAccess.Serializer)] TProvider>
              where TProvider : class
     {
         internal static readonly TProvider InstanceField = (TProvider)Activator.CreateInstance(typeof(TProvider), nonPublic: true);
-        public static ISerializer<T> GetSerializer<T>()
+        public static ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => SerializerCache<TProvider, T>.InstanceField;
     }
 
@@ -19,7 +20,7 @@ namespace ProtoBuf.Serializers
     //    public static readonly TSerializer InstanceField = new TSerializer();
     //}
 
-    internal static class SerializerCache<TProvider, T>
+    internal static class SerializerCache<[DynamicallyAccessedMembers(DynamicAccess.Serializer)] TProvider, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
          where TProvider : class
     {
         internal static readonly ISerializer<T> InstanceField

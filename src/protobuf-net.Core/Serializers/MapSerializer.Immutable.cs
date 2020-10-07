@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
@@ -11,17 +12,17 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<TKey, TValue>()
+        public static MapSerializer<ImmutableDictionary<TKey, TValue>, TKey, TValue> CreateImmutableDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             => SerializerCache<ImmutableDictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<TKey, TValue>()
+        public static MapSerializer<ImmutableSortedDictionary<TKey, TValue>, TKey, TValue> CreateImmutableSortedDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             => SerializerCache<ImmutableSortedDictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on immutable dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<TKey, TValue>()
+        public static MapSerializer<IImmutableDictionary<TKey, TValue>, TKey, TValue> CreateIImmutableDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             => SerializerCache<ImmutableIDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 

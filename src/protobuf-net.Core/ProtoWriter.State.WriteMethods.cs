@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -318,14 +319,14 @@ namespace ProtoBuf
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
                 => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
@@ -337,7 +338,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteGroup<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
@@ -349,7 +350,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T> serializer = null)
+            public void WriteAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, T value, ISerializer<T> serializer = null)
             {
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
@@ -358,7 +359,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
@@ -390,7 +391,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
-            public void WriteSubType<T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
+            public void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
             {
                 _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
             }
@@ -398,7 +399,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-type to the input writer
             /// </summary>
-            public void WriteSubType<T>(int fieldNumber, T value, ISubTypeSerializer<T> serializer = null) where T : class
+            public void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, T value, ISubTypeSerializer<T> serializer = null) where T : class
             {
                 WriteFieldHeader(fieldNumber, WireType.String);
                 _writer.WriteSubType<T>(ref this, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(Model));
@@ -407,7 +408,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a base-type to the input writer
             /// </summary>
-            public void WriteBaseType<T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
+            public void WriteBaseType<T>([DynamicallyAccessedMembers(DynamicAccess.ContractType)] T value, ISubTypeSerializer<T> serializer = null) where T : class
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(ref this, value);
 
             internal TypeModel Model => _writer?.Model;
@@ -416,7 +417,7 @@ namespace ProtoBuf
             /// Gets the serializer associated with a specific type
             /// </summary>
             [MethodImpl(HotPath)]
-            public ISerializer<T> GetSerializer<T>() => TypeModel.GetSerializer<T>(Model);
+            public ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>() => TypeModel.GetSerializer<T>(Model);
 
             internal WireType WireType
             {
@@ -526,7 +527,7 @@ namespace ProtoBuf
             /// object is determined to be a scalar, it is written as though it were
             /// part of a message with field-number 1
             /// </summary>
-            public long SerializeRoot<T>(T value, ISerializer<T> serializer = null)
+            public long SerializeRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISerializer<T> serializer = null)
             {
                 try
                 {
@@ -549,7 +550,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal void WriteAsRoot<T>(T value, ISerializer<T> serializer)
+            internal void WriteAsRoot<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISerializer<T> serializer)
             {
                 var features = serializer.Features;
                 var category = features.GetCategory();
@@ -672,7 +673,7 @@ namespace ProtoBuf
             }
 #endif
 
-            internal void WriteObject(object value, Type type, PrefixStyle style, int fieldNumber)
+            internal void WriteObject(object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, PrefixStyle style, int fieldNumber)
             {
                 var model = Model;
                 if (model is null)

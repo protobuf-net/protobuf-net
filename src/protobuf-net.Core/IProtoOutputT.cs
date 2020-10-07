@@ -1,9 +1,12 @@
-﻿namespace ProtoBuf
+﻿using ProtoBuf.Internal;
+using System.Diagnostics.CodeAnalysis;
+
+namespace ProtoBuf
 {
     /// <summary>
     /// Represents the ability to serialize values to an output of type <typeparamref name="TOutput"/>
     /// </summary>
-    public interface IProtoOutput<TOutput>
+    public interface IProtoOutput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TOutput>
     {
         /// <summary>
         /// Serialize the provided value
@@ -15,7 +18,7 @@
     /// Represents the ability to serialize values to an output of type <typeparamref name="TOutput"/>
     /// with pre-computation of the length
     /// </summary>
-    public interface IMeasuredProtoOutput<TOutput> : IProtoOutput<TOutput>
+    public interface IMeasuredProtoOutput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TOutput> : IProtoOutput<TOutput>
     {
         /// <summary>
         /// Measure the length of a value in advance of serialization

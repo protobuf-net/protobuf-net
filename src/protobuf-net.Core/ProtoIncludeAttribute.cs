@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
@@ -19,7 +20,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
         /// <param name="knownType">The additional type to serialize/deserialize.</param>
-        public ProtoIncludeAttribute(int tag, Type knownType)
+        public ProtoIncludeAttribute(int tag, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type knownType)
             : this(tag, knownType is null ? "" : knownType.AssemblyQualifiedName) { }
 
         /// <summary>
@@ -27,7 +28,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
         /// <param name="knownTypeName">The additional type to serialize/deserialize.</param>
-        public ProtoIncludeAttribute(int tag, string knownTypeName)
+        public ProtoIncludeAttribute(int tag, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] string knownTypeName)
         {
             if (tag <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(tag), "Tags must be positive integers");
             if (string.IsNullOrEmpty(knownTypeName)) ThrowHelper.ThrowArgumentNullException(nameof(knownTypeName), "Known type cannot be blank");
@@ -43,11 +44,13 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
+        [DynamicallyAccessedMembers(DynamicAccess.ContractType)]
         public string KnownTypeName { get; }
 
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
+        [DynamicallyAccessedMembers(DynamicAccess.ContractType)]
         public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
 
         /// <summary>

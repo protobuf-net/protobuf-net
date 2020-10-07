@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Serializers
@@ -13,12 +14,12 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<TKey, TValue>()
+        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             => SerializerCache<DictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, TKey, TValue>()
+        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             where TCollection : IDictionary<TKey, TValue>
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
     }
@@ -26,7 +27,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Base class for dictionary-like collection serializers
     /// </summary>
-    public abstract class MapSerializer<TCollection, TKey, TValue> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
+    public abstract class MapSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
 
