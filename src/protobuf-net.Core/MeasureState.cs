@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace ProtoBuf
@@ -12,7 +13,7 @@ namespace ProtoBuf
     /// this instance can re-use the previously calculated lengths. If the object state changes between the
     /// measure and serialize operations, the behavior is undefined.
     /// </summary>
-    public struct MeasureState<T> : IDisposable
+    public struct MeasureState<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : IDisposable
     {
         private readonly TypeModel _model;
         private readonly T _value;

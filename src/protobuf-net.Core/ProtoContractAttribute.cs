@@ -1,5 +1,6 @@
 using ProtoBuf.Internal;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ProtoBuf
 {
@@ -189,6 +190,7 @@ namespace ProtoBuf
         /// <summary>
         /// Defines a serializer to use for this type; the serializer must implement ISerializer-T for this type
         /// </summary>
+        [DynamicallyAccessedMembers(DynamicAccess.Serializer)]
         public Type Serializer { get; set; }
     }
 }

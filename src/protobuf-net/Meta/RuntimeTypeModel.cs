@@ -1337,6 +1337,8 @@ namespace ProtoBuf.Meta
 
 
             var serviceType = WriteBasicTypeModel("<Services>" + typeName, module, typeof(object), true);
+            // note: the service could benefit from [DynamicallyAccessedMembers(DynamicAccess.Serializer)], but: that only exists
+            // (on the public API) in net5+, and those platforms don't allow full dll emit (which is when the linker matters)
             WriteSerializers(scope, serviceType);
             WriteEnumsAndProxies(serviceType);
 

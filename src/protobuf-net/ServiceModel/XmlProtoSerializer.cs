@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
@@ -30,7 +31,7 @@ namespace ProtoBuf.ServiceModel
         /// Attempt to create a new serializer for the given model and type
         /// </summary>
         /// <returns>A new serializer instance if the type is recognised by the model; null otherwise</returns>
-        public static XmlProtoSerializer TryCreate(TypeModel model, Type type)
+        public static XmlProtoSerializer TryCreate(TypeModel model, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
         {
             if (model is null) throw new ArgumentNullException(nameof(model));
             if (type is null) throw new ArgumentNullException(nameof(type));
@@ -45,7 +46,7 @@ namespace ProtoBuf.ServiceModel
         /// <summary>
         /// Creates a new serializer for the given model and type
         /// </summary>
-        public XmlProtoSerializer(TypeModel model, Type type)
+        public XmlProtoSerializer(TypeModel model, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type)
         {
             if (model is null) throw new ArgumentNullException(nameof(model));
             if (type is null) throw new ArgumentNullException(nameof(type));
