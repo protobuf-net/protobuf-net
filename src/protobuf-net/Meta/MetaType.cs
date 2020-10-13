@@ -2103,6 +2103,21 @@ namespace ProtoBuf.Meta
                             }
                             else
                             {
+                                object effectiveValue = member.DefaultValue;
+                                if (effectiveValue is Enum &&effectiveValue.GetType() == member.MemberType
+                                    && model.IsDefined(member.MemberType, member.CompatibilityLevel))
+                                {
+                                    // lookup the enum name
+                                    var enumType = model[member.MemberType];
+                                    foreach (var val in enumType.Enums)
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(val.Name) && effectiveValue.Equals(val.Value))
+                                        {
+                                            effectiveValue = val.Name;
+                                            break;
+                                        }
+                                    }
+                                }
                                 AddOption(builder, ref hasOption).Append("default = ").Append(member.DefaultValue);
                             }
                         }
