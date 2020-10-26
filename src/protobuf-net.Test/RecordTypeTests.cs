@@ -5,7 +5,7 @@ namespace ProtoBuf.Test
 {
     public class RecordTypeTests
     {
-        public record PositionalRecord(string FirstName, string LastName, int Count);
+        public partial record PositionalRecord(string FirstName, string LastName, int Count);
 
         [Fact]
         public void PositionalRecordTypeCtorResolve()
