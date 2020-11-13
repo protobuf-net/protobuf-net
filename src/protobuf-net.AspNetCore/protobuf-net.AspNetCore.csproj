@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />
+    <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
   </ItemGroup>
 </Project>

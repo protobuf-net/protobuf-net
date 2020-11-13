@@ -35,7 +35,7 @@
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net462'">
-    <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+    <PackageReference Include="NHibernate" Version="[4.1.1.4000]" />
     <PackageReference Include="Iesi.Collections" Version="4.0.4" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)' == 'net'">
@@ -66,6 +66,6 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(WithSpans)'=='true'">
     <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 </Project>
