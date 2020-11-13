@@ -21,7 +21,7 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Include="Google.Protobuf" Version="3.13.0" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.1.16" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
     <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
   </ItemGroup>
