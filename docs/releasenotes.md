@@ -11,6 +11,15 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## 3.0.62
+
+- add .NET 5 TFM and support for related features such as record-types
+- split `protobuf-net.ServiceModel` into a separate package to reduce the dependency tree for most users
+- fix .proto schema generation when an enum name is overridden
+- attempt to declare dynamically-accessed members for linker compatibility
+- fix init-only fields in IL-generation
+
+
 ## 3.0.52
 
 - add new protobuf-net.NodaTime package that adds direct support for NodaTime primitives (note: this may be relocated to a NodaTime library)
