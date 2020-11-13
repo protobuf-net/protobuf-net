@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <RootNamespace>ProtoBuf</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -13,11 +13,10 @@
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net461' or '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.4" />
-    <PackageReference Include="System.Buffers" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net461' or '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
@@ -25,6 +24,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net5.0'">
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR;PLAT_SKIP_LOCALS_INIT;PLAT_UTF8_STRING;PLAT_DYNAMIC_ACCESS_ATTR</DefineConstants>
   </PropertyGroup>
 
 <!--
@@ -36,6 +38,7 @@ PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropr
 FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
 FEAT_NULL_LIST_ITEMS      : whether we support retaining nulls in lists
 PLAT_CONCURRENT_CLEAR     : whether the concurrent collections have the necessary Clear method
+PLAT_SKIP_LOCALS_INIT     : whether we can avoid ".locals init"
 PLAT_DYNAMIC_ACCESS_ATTR  : whether the runtime defines DynamicallyAccessedMembersAttribute et al
 TRACK_USAGE               : count writer activity to check disposal/re-use is correct
 -->

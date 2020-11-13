@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>netcoreapp3.1;net462</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net462;net5.0</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <WithSpans>true</WithSpans>
-    <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004</NoWarn>
+    <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004;SYSLIB0011</NoWarn>
     <RootNamespace>ProtoBuf.Test</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -13,25 +13,29 @@
     <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework)=='net5.0'">
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER;PLAT_INIT_ONLY</DefineConstants>
+    <LibImport>core</LibImport>
+  </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">
     <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.1.16" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net462'">
-    <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+    <PackageReference Include="NHibernate" Version="[4.1.1.4000]" />
     <PackageReference Include="Iesi.Collections" Version="4.0.4" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)' == 'net'">
@@ -61,7 +65,7 @@
     <DefineConstants>$(DefineConstants);PLAT_SPANS</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(WithSpans)'=='true'">
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.1.16" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 </Project>

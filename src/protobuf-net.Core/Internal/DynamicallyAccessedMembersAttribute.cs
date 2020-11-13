@@ -1,4 +1,12 @@
-﻿namespace ProtoBuf.Internal
+﻿#if PLAT_DYNAMIC_ACCESS_ATTR
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+// forwards, just to make it explicit that we mean the same
+[assembly: TypeForwardedTo(typeof(DynamicallyAccessedMembersAttribute))]
+[assembly: TypeForwardedTo(typeof(DynamicallyAccessedMemberTypes))]
+#endif
+
+namespace ProtoBuf.Internal
 {
     using System.Diagnostics.CodeAnalysis;
     internal sealed class DynamicAccess
@@ -14,9 +22,7 @@
     }
 }
 
-#if PLAT_DYNAMIC_ACCESS_ATTR
-// type forward on net5?
-#else
+#if !PLAT_DYNAMIC_ACCESS_ATTR
 // internalized version of https://github.com/dotnet/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/DynamicallyAccessedMembersAttribute.cs
 // and https://github.com/dotnet/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/DynamicallyAccessedMemberTypes.cs
 

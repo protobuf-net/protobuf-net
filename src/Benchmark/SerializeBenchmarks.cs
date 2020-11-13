@@ -9,7 +9,7 @@ using System.IO;
 
 namespace Benchmark
 {
-    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp30), MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp31), SimpleJob(RuntimeMoniker.NetCoreApp50), MemoryDiagnoser]
     public partial class SerializeBenchmarks
     {
 

@@ -8,7 +8,7 @@ using System.Numerics;
 namespace Benchmark
 {
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp30)]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp31), SimpleJob(RuntimeMoniker.NetCoreApp50)]
     public class VarintEncodeBenchmarks
     {
         const int LOOP_SIZE = 2048;

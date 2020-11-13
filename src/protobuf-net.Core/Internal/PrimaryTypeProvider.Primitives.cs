@@ -66,7 +66,6 @@ namespace ProtoBuf.Internal
                 WireType.String => ProtoWriter.UTF8.GetByteCount(value),
                 _ => -1,
             };
-            
 
         int ISerializer<int>.Read(ref ProtoReader.State state, int value) => state.ReadInt32();
         void ISerializer<int>.Write(ref ProtoWriter.State state, int value) => state.WriteInt32(value);

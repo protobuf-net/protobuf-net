@@ -7,6 +7,9 @@ skip_commits:
     - '**/*.md'
     - docs/*
 
+install:	
+  - choco install dotnet-sdk --version 5.0.100
+
 environment:
   Appveyor: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
