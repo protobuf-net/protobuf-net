@@ -79,6 +79,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.NodaTime", "pr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NativeGoogleTests", "NativeGoogleTests\NativeGoogleTests.csproj", "{D03DBA87-BC2A-4B69-A28D-B011DCC869F3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.ServiceModel", "protobuf-net.ServiceModel\protobuf-net.ServiceModel.csproj", "{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -230,6 +232,12 @@ Global
 		{D03DBA87-BC2A-4B69-A28D-B011DCC869F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D03DBA87-BC2A-4B69-A28D-B011DCC869F3}.VS|Any CPU.ActiveCfg = Debug|Any CPU
 		{D03DBA87-BC2A-4B69-A28D-B011DCC869F3}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -260,6 +268,7 @@ Global
 		{AA328345-72B9-4116-8ADE-8E0C822B83CC} = {0D637072-686D-4DC7-91E4-87913E5154B4}
 		{D88F4C5A-39EC-431E-A68D-79ACB994C65B} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 		{D03DBA87-BC2A-4B69-A28D-B011DCC869F3} = {0D637072-686D-4DC7-91E4-87913E5154B4}
+		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFE3C0D9-B865-48B9-9CC8-8AEA71EB5C16}

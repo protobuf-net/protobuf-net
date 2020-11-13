@@ -3,6 +3,7 @@
     <!-- After moving files around, this can be src\**\*.csroj -->
     <ProjectReference Include="src\protobuf-net\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Core\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.ServiceModel\*.csproj" />
     <ProjectReference Include="src\protobuf-net.MSBuild\*.csproj" />
     <ProjectReference Include="src\protobuf-net.NodaTime\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Protogen\*.csproj" />
