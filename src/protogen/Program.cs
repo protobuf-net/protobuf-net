@@ -276,11 +276,15 @@ namespace protogen
         // with thanks to "Dave": https://stackoverflow.com/a/340454/23354
         public static string MakeRelativePath(string fromPath, string toPath)
         {
-#if NETCOREAPP2_0 || NETCOREAPP2_1
+#if !NETFRAMEWORK
             return Path.GetRelativePath(fromPath, toPath);
 #else
             if (String.IsNullOrEmpty(fromPath)) throw new ArgumentNullException(nameof(fromPath));
             if (String.IsNullOrEmpty(toPath)) throw new ArgumentNullException(nameof(toPath));
+            // make sure there is a trailing '/', else Uri.MakeRelativeUri won't work as expected
+            char lastChar = fromPath[fromPath.Length - 1];
+            if (lastChar != Path.DirectorySeparatorChar && lastChar != Path.AltDirectorySeparatorChar)
+                fromPath += Path.DirectorySeparatorChar;
 
             Uri fromUri = new Uri(fromPath, UriKind.RelativeOrAbsolute);
             if (!fromUri.IsAbsoluteUri)
