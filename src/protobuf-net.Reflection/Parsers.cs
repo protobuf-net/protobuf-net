@@ -3138,7 +3138,7 @@ namespace ProtoBuf.Reflection
         public void Dispose() { Tokens?.Dispose(); }
 
         internal void CheckNames(IHazNames parent, string name, Token token
-#if DEBUG && NETSTANDARD1_3
+#if DEBUG && !NETFRAMEWORK
             , [System.Runtime.CompilerServices.CallerMemberName] string caller = null
 #endif
             )
@@ -3146,7 +3146,7 @@ namespace ProtoBuf.Reflection
             if (parent != null && parent.GetNames().Contains(name))
             {
                 Errors.Error(token, $"name '{name}' is already in use"
-#if DEBUG && NETSTANDARD1_3
+#if DEBUG && !NETFRAMEWORK
              + $" ({caller})"
 #endif
                      , ErrorCode.FieldDuplicatedName);

@@ -88,10 +88,8 @@ namespace protogen
                             break;
                         case "--pwd":
                             Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
-#if NETCOREAPP2_1 || NETSTANDARD2_0
                             Console.WriteLine($"Program: {typeof(Program).Assembly.Location}");
                             Console.WriteLine($"CodeGenerator: {typeof(CodeGenerator).Assembly.Location}");
-#endif
                             break;
                         case "--grpc":
                             if (++i < args.Length)
@@ -314,12 +312,9 @@ namespace protogen
         private static string GetVersion<T>() => GetVersion(typeof(T));
         private static string GetVersion(Type type)
         {
-#if NETCOREAPP1_1
-            var attrib = type.GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-#else
             var attribs = type.Assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
             var attrib = attribs.Length == 0 ? null : attribs[0] as AssemblyInformationalVersionAttribute;
-#endif
+
             return attrib?.InformationalVersion ?? "(unknown)";
         }
 

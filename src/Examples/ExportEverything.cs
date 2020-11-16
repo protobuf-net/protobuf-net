@@ -36,7 +36,7 @@ namespace ProtoBuf
                 typeof(ProtoGeneration.UsesSurrogates),
                 typeof(StupidlyComplexModel.SimpleModel),
                 typeof(AssortedGoLiveRegressions.HasBytes),
-#if !(NETCOREAPP3_1 || NET5_0)
+#if NETFRAMEWORK
                 typeof(Issue124.TypeWithColor),
 #endif
                 typeof(Issue184.A),
