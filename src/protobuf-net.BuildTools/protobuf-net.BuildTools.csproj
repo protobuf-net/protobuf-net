@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
+    <AssemblyName>protobuf-net.BuildTools</AssemblyName>
+    
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+    <!-- runtime deps for the consumer -->
+    <PackageReference Include="protobuf-net" Version="3.0.62" />
+
+    <!-- build time deps -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" Pack="false" PrivateAssets="all" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <PackageReference Include="protobuf-net.Reflection" Version="3.0.62" PrivateAssets="all" GeneratePathProperty="true" />
+    <PackageReference Include="protobuf-net.Core" Version="3.0.62" PrivateAssets="all" GeneratePathProperty="true" />
+    <None Include="$(PKGprotobuf-net_Reflection)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PKGprotobuf-net_Core)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+</Project>
