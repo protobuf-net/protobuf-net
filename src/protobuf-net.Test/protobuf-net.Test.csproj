@@ -57,8 +57,14 @@
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Schemas\nanopb_test.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="protobuf-net.Test.xunit.runner.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Schemas\nanopb\nanopb.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <PropertyGroup Condition="'$(WithSpans)'=='true'">
