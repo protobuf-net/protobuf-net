@@ -1,0 +1,15 @@
+﻿syntax = "proto3";
+
+//import "protobuf-net/protogen.proto";
+import "nanopb/nanopb.proto";
+
+//option (.protobuf_net.fileopt).csharp_langver = "3";
+//option (.protobuf_net.fileopt).vb_langver = "11";
+//option (.protobuf_net.fileopt).oneofEnum = true;
+
+message ExampleMessage {
+  oneof SomeGroup {
+    int32 foo = 1;
+    string bar = 3[(nanopb).max_size = 42];
+  }
+}
