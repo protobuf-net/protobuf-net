@@ -70,5 +70,22 @@ public class Foo
             Assert.Equal($"The specified field number {fieldNumber} is invalid; the valid range is 1-536870911, omitting 19000-19999.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
+        [Fact]
+        public async Task ReportsOnIllegalConst()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public class Foo
+{
+    private const int FieldNumber = -42;
+    [ProtoMember(FieldNumber)]
+    public int Bar {get;set;}
+}");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.InvalidFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The specified field number -42 is invalid; the valid range is 1-536870911, omitting 19000-19999.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
     }
 }
