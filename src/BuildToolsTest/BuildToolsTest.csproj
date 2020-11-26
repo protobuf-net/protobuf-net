@@ -18,4 +18,8 @@
     <!--<PackageReference Include="protobuf-net.BuildTools"  Version="3.0.65-gf16722e00c" />-->
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj" />
+  </ItemGroup>
+
 </Project>

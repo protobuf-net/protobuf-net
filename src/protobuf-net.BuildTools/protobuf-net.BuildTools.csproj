@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
     <AssemblyName>protobuf-net.BuildTools</AssemblyName>
-    
+    <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
@@ -15,7 +15,8 @@
     <PackageReference Include="protobuf-net" Version="3.0.62" />
 
     <!-- build time deps -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" Pack="false" PrivateAssets="all" />
+    
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <PackageReference Include="protobuf-net.Reflection" Version="3.0.62" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="protobuf-net.Core" Version="3.0.62" PrivateAssets="all" GeneratePathProperty="true" />
