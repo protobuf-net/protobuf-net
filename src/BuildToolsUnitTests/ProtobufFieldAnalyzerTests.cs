@@ -150,5 +150,59 @@ public class Foo
             Assert.Equal($"The specified field number -42 is invalid; the valid range is 1-536870911, omitting 19000-19999.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
+        [Fact]
+        public async Task ReportsDuplicateFieldBetweenFields()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)]
+    public int A {get;set;}
+
+    [ProtoMember(2)]
+    public int B {get;set;}
+
+    [ProtoMember(2)]
+    public int C {get;set;}
+
+    [ProtoMember(3)]
+    public int D {get;set;}
+}");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The specified field number 2 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsDuplicateFieldBetweenPartialsAndIncludes()
+        {
+            // note we don't need to test all combinations of fields vs partials vs includes; it is all one bucket - it
+            // is sufficient that it *finds the problem*
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(3, typeof(SuperFoo))]
+[ProtoPartialMember(3, ""C"")]
+public class Foo
+{
+    [ProtoMember(1)]
+    public int A {get;set;}
+
+    [ProtoMember(2)]
+    public int B {get;set;}
+
+    public int C {get;set;}
+}
+
+[ProtoContract]
+public class SuperFoo : Foo {}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The specified field number 3 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
     }
 }
