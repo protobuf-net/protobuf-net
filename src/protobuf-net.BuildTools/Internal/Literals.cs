@@ -2,6 +2,6 @@
 {
     internal static class Literals
     {
-        public const string CategorySerialization = "Serialization";
+        public const string CategoryUsage = "Usage";
     }
 }
