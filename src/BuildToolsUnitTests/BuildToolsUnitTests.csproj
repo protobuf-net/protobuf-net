@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
-    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
+    <ProjectReference Include="../protobuf-net.Core/protobuf-net.Core.csproj" />
   </ItemGroup>
 
 </Project>

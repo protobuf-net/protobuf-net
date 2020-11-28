@@ -29,3 +29,4 @@ src/Benchmark/DalSerializer.dll
 .nupkgs/*
 .idea/
 profile.arm.json
+.DS_Store

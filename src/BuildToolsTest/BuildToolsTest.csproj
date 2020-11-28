@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" />
   </ItemGroup>
 
 </Project>
