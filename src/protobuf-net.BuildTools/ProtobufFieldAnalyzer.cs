@@ -69,11 +69,13 @@ namespace ProtoBuf.BuildTools
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = Utils.GetDeclared(typeof(ProtobufFieldAnalyzer));
 
+        private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
+            ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
         public override void Initialize(AnalysisContext ctx)
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.PropertyDeclaration, SyntaxKind.FieldDeclaration, SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
+            ctx.RegisterSyntaxNodeAction(AnalyzeSyntax, s_syntaxKinds);
         }
 
         private enum FieldCheckMode
@@ -98,58 +100,48 @@ namespace ProtoBuf.BuildTools
 
         private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
         {
-            if (context.ContainingSymbol is null) return;
+            if (!(context.ContainingSymbol is ITypeSymbol type)) return;
+            
+            var attribs = type.GetAttributes();
 
-            var attribs = context.ContainingSymbol.GetAttributes();
-            switch (context.ContainingSymbol)
+            if (!IsProtoContract(ref context, type, ref attribs))
+                return;
+
+            var typeContext = new TypeContext();
+
+            CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeReservations, typeContext, context.ContainingSymbol, null);
+            CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeIncludes, typeContext, context.ContainingSymbol, null);
+            CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypePartialMembers, typeContext, context.ContainingSymbol, null);
+
+            var pma = context.SemanticModel.Compilation.GetTypeByMetadataName("ProtoBuf.ProtoMemberAttribute");
+            if (pma is not null)
             {
-                case IFieldSymbol field:
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.Member, default, context.ContainingSymbol, field.Name);
-                    break;
-                case IPropertySymbol prop:
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.Member, default, context.ContainingSymbol, prop.Name);
-                    break;
-                case ITypeSymbol type:
-                    bool isProtoContract = IsProtoContract(ref context, type, ref attribs);
-
-                    var typeContext = isProtoContract ? new TypeContext() : null;
-
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeReservations, typeContext, context.ContainingSymbol, null);
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeIncludes, typeContext, context.ContainingSymbol, null);
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypePartialMembers, typeContext, context.ContainingSymbol, null);
-
-                    if (isProtoContract)
+                foreach (var member in type.GetMembers())
+                {
+                    // also check the fields underneath, for duplicate field numbers
+                    switch (member)
                     {
-                        var pma = context.SemanticModel.Compilation.GetTypeByMetadataName("ProtoBuf.ProtoMemberAttribute");
-                        if (pma is object)
-                        {
-                            foreach (var member in type.GetMembers())
+                        case IPropertySymbol:
+                        case IFieldSymbol:
+                            var memberAttribs = member.GetAttributes();
+                            foreach (var attrib in memberAttribs)
                             {
-                                // also check the fields underneath, for duplicate field numbers
-                                switch (member)
+                                if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, pma))
                                 {
-                                    case IPropertySymbol:
-                                    case IFieldSymbol:
-                                        foreach (var attrib in member.GetAttributes())
-                                        {
-                                            if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, pma))
-                                            {
-                                                var args = attrib.ConstructorArguments;
-                                                if (!args.IsEmpty && TryReadFieldNumber(args[0], out int fieldNumber))
-                                                {
-                                                    var fieldName = TryGetNonEmptyNamedString(attrib, nameof(ProtoMemberAttribute.Name)) ?? member.Name;
-                                                    AssertLegalField(ref context, fieldName, fieldNumber, typeContext, FieldCheckMode.TypeMembers, member);
-                                                }
-                                            }
-                                        }
-                                        break;
+                                    CheckValidFieldNumbersAndNames(ref context, ref memberAttribs, FieldCheckMode.Member, typeContext, member, member.Name);
+                                    var args = attrib.ConstructorArguments;
+                                    if (!args.IsEmpty && TryReadFieldNumber(args[0], out int fieldNumber))
+                                    {
+                                        var fieldName = TryGetNonEmptyNamedString(attrib, nameof(ProtoMemberAttribute.Name)) ?? member.Name;
+                                        AssertLegalField(ref context, fieldName, fieldNumber, typeContext, FieldCheckMode.TypeMembers, member);
+                                    }
                                 }
                             }
-                        }
+                            break;
                     }
-                    break;
-            }
-
+                }
+            } 
+            
             static string? TryGetNonEmptyNamedString(AttributeData attributeData, string name)
             {
                 foreach (var namedArg in attributeData.NamedArguments)
