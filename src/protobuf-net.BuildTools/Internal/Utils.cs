@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -23,6 +24,12 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
             return builder.ToImmutable();
+        }
+
+        internal static Location PickLocation(ref SyntaxNodeAnalysisContext context, ISymbol? preferred)
+        {
+            if (preferred is null || preferred.Locations.IsEmpty) return context.Node.GetLocation();
+            return preferred.Locations[0];
         }
     }
 }

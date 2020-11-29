@@ -51,6 +51,22 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor DuplicateFieldName = new DiagnosticDescriptor(
+            id: "PBN0006",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(DuplicateFieldName),
+            messageFormat: "The specified field name '{0}' is duplicated; field names should be unique between all declared members on a single type.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DuplicateReservation = new DiagnosticDescriptor(
+            id: "PBN0007",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(DuplicateReservation),
+            messageFormat: "The reservations {0} and {1} overlap each-other.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = Utils.GetDeclared(typeof(ProtobufFieldAnalyzer));
 
         public override void Initialize(AnalysisContext ctx)
@@ -76,19 +92,9 @@ namespace ProtoBuf.BuildTools
             Multiple
         }
 
-        private readonly struct FieldReservation
-        {
-            public int From { get; }
-            public int To { get; }
-            public FieldReservation(int from)
-                => From = To = from;
+        
 
-            public FieldReservation(int from, int to)
-            {
-                From = from;
-                To = to;
-            }
-        }
+        
 
         private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
         {
@@ -97,24 +103,20 @@ namespace ProtoBuf.BuildTools
             var attribs = context.ContainingSymbol.GetAttributes();
             switch (context.ContainingSymbol)
             {
-                case IFieldSymbol:
-                case IPropertySymbol:
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.Member, default, default);
+                case IFieldSymbol field:
+                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.Member, default, context.ContainingSymbol, field.Name);
+                    break;
+                case IPropertySymbol prop:
+                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.Member, default, context.ContainingSymbol, prop.Name);
                     break;
                 case ITypeSymbol type:
                     bool isProtoContract = IsProtoContract(ref context, type, ref attribs);
-                    HashSet<int>? knownFields = default;
-                    List<FieldReservation>? reservations = default;
 
-                    if (isProtoContract)
-                    {
-                        knownFields = new HashSet<int>();
-                        reservations = new List<FieldReservation>();
-                    }
+                    var typeContext = isProtoContract ? new TypeContext() : null;
 
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeReservations, knownFields, reservations);
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeIncludes, knownFields, reservations);
-                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypePartialMembers, knownFields, reservations);
+                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeReservations, typeContext, context.ContainingSymbol, null);
+                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeIncludes, typeContext, context.ContainingSymbol, null);
+                    CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypePartialMembers, typeContext, context.ContainingSymbol, null);
 
                     if (isProtoContract)
                     {
@@ -135,7 +137,8 @@ namespace ProtoBuf.BuildTools
                                                 var args = attrib.ConstructorArguments;
                                                 if (!args.IsEmpty && TryReadFieldNumber(args[0], out int fieldNumber))
                                                 {
-                                                    AssertLegalFieldNumber(ref context, fieldNumber, knownFields, reservations, FieldCheckMode.TypeMembers, member);
+                                                    var fieldName = TryGetNonEmptyNamedString(attrib, nameof(ProtoMemberAttribute.Name)) ?? member.Name;
+                                                    AssertLegalField(ref context, fieldName, fieldNumber, typeContext, FieldCheckMode.TypeMembers, member);
                                                 }
                                             }
                                         }
@@ -147,7 +150,19 @@ namespace ProtoBuf.BuildTools
                     break;
             }
 
-            static void AssertLegalFieldNumber(ref SyntaxNodeAnalysisContext context, int fieldNumber, HashSet<int>? knownFields, List<FieldReservation>? reservations, FieldCheckMode mode, ISymbol? symbol)
+            static string? TryGetNonEmptyNamedString(AttributeData attributeData, string name)
+            {
+                foreach (var namedArg in attributeData.NamedArguments)
+                {
+                    if (namedArg.Key == name && namedArg.Value.Kind == TypedConstantKind.Primitive && namedArg.Value.Value is string s && s.Length != 0)
+                    {
+                        return s;
+                    }
+                }
+                return null;
+            }
+
+            static void AssertLegalField(ref SyntaxNodeAnalysisContext context, string? name, int fieldNumber, TypeContext? typeContext, FieldCheckMode mode, ISymbol? symbol)
             {
                 if (mode != FieldCheckMode.TypeMembers)
                 {   // we'll check this bit on the member itself
@@ -161,7 +176,7 @@ namespace ProtoBuf.BuildTools
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                                     descriptor: InvalidFieldNumber,
-                                    location: PickLocation(ref context, symbol),
+                                    location: Utils.PickLocation(ref context, symbol),
                                     effectiveSeverity: severity,
                                     messageArgs: new object[] { fieldNumber },
                                     additionalLocations: null,
@@ -170,35 +185,54 @@ namespace ProtoBuf.BuildTools
                     }
                 }
 
-                if (mode != FieldCheckMode.TypeReservations)
+                if (typeContext is not null && mode != FieldCheckMode.TypeReservations)
                 {   // reservations don't add to the set of known fields, nor do they need to be tested against reservations
-                    if (knownFields is not null && !knownFields.Add(fieldNumber))
+
+                    if (typeContext.OverlapsField(fieldNumber))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             descriptor: DuplicateFieldNumber,
-                            location: PickLocation(ref context, symbol),
+                            location: Utils.PickLocation(ref context, symbol),
                             messageArgs: new object[] { fieldNumber },
                             additionalLocations: null,
                             properties: null
                         ));
                     }
-
-                    if (reservations is not null)
+                    if (typeContext.OverlapsReservation(fieldNumber, out var reservation))
                     {
-                        foreach (var reservation in reservations)
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            descriptor: ReservedFieldNumber,
+                            location: Utils.PickLocation(ref context, symbol),
+                            messageArgs: new object[] { reservation },
+                            additionalLocations: null,
+                            properties: null
+                        ));
+                    }
+                    if (name is not null)
+                    {
+                        if (typeContext.OverlapsField(name))
                         {
-                            if (reservation.From <= fieldNumber && reservation.To >= fieldNumber)
-                            {
-                                context.ReportDiagnostic(Diagnostic.Create(
-                                    descriptor: ReservedFieldNumber,
-                                    location: PickLocation(ref context, symbol),
-                                    messageArgs: new object[] { fieldNumber },
-                                    additionalLocations: null,
-                                    properties: null
-                                ));
-                            }
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                descriptor: DuplicateFieldName,
+                                location: Utils.PickLocation(ref context, symbol),
+                                messageArgs: new object[] { name },
+                                additionalLocations: null,
+                                properties: null
+                            ));
+                        }
+
+                        if (typeContext.OverlapsReservation(name, out reservation))
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                descriptor: ReservedFieldName,
+                                location: Utils.PickLocation(ref context, symbol),
+                                messageArgs: new object[] { reservation },
+                                additionalLocations: null,
+                                properties: null
+                            ));
                         }
                     }
+                    typeContext.AddKnownField(name, fieldNumber);
                 }
             }
 
@@ -218,7 +252,7 @@ namespace ProtoBuf.BuildTools
             }
 
             static void CheckValidFieldNumbersAndNames(ref SyntaxNodeAnalysisContext context, ref ImmutableArray<AttributeData> attribs, FieldCheckMode mode,
-                HashSet<int>? knownFields, List<FieldReservation>? reservations)
+                TypeContext? typeContext, ISymbol? symbol, string? ambientName)
             {
                 string? attributeName = mode switch
                 {
@@ -242,20 +276,24 @@ namespace ProtoBuf.BuildTools
                         if (mode == FieldCheckMode.TypeReservations && args[0].Value is string reservedName
                             && type is not null)
                         {
-                            if (GetMemberMultiplicity(type, reservedName, out var found) != Multiplicity.Zero)
-                            {
-                                context.ReportDiagnostic(Diagnostic.Create(
-                                           descriptor: ReservedFieldName,
-                                           location: PickLocation(ref context, found),
-                                           messageArgs: new object[] { reservedName },
-                                           additionalLocations: null,
-                                           properties: null
-                                       ));
-                            }
+                            typeContext?.AddReservation(ref context, new FieldReservation(reservedName), symbol);
                         }
                         else if (TryReadFieldNumber(args[0], out var fieldNumber))
                         {
-                            AssertLegalFieldNumber(ref context, fieldNumber, knownFields, reservations, mode, default);
+                            string? name = null;
+                            switch(mode)
+                            {
+                                case FieldCheckMode.Member:
+                                    name = TryGetNonEmptyNamedString(attrib, nameof(ProtoMemberAttribute.Name)) ?? ambientName;
+                                    break;
+                                case FieldCheckMode.TypePartialMembers:
+                                    if (args.Length > 1 && args[1].Kind == TypedConstantKind.Primitive && args[1].Value is string assumedName)
+                                    {
+                                        name = assumedName;
+                                    }
+                                    break;
+                            }
+                            AssertLegalField(ref context, name, fieldNumber, typeContext, mode, symbol);
 
                             switch (mode)
                             {
@@ -267,7 +305,7 @@ namespace ProtoBuf.BuildTools
                                     {
                                         context.ReportDiagnostic(Diagnostic.Create(
                                            descriptor: MemberNotFound,
-                                           location: PickLocation(ref context, found),
+                                           location: Utils.PickLocation(ref context, found),
                                            messageArgs: new object[] { memberName },
                                            additionalLocations: null,
                                            properties: null
@@ -277,12 +315,12 @@ namespace ProtoBuf.BuildTools
                                 case FieldCheckMode.TypeReservations
                                 when args.Length > 1 && args[1].Kind == TypedConstantKind.Primitive && args[1].Value is not string
                                     && TryReadFieldNumber(args[1], out var endFieldNumber):
-                                    AssertLegalFieldNumber(ref context, endFieldNumber, knownFields , reservations, mode, default);
-                                    reservations?.Add(new FieldReservation(fieldNumber, endFieldNumber));
+                                    AssertLegalField(ref context, default, endFieldNumber, typeContext, mode, default);
+                                    typeContext?.AddReservation(ref context, new FieldReservation(fieldNumber, endFieldNumber), symbol);
                                     break;
                                 case FieldCheckMode.TypeReservations:
                                     // single field reservations
-                                    reservations?.Add(new FieldReservation(fieldNumber));
+                                    typeContext?.AddReservation(ref context, new FieldReservation(fieldNumber), symbol);
                                     break;
                             }
                         }
@@ -302,12 +340,6 @@ namespace ProtoBuf.BuildTools
                     }
                     return found is not null ? Multiplicity.One : Multiplicity.Zero;
                 }
-            }
-
-            static Location PickLocation(ref SyntaxNodeAnalysisContext context, ISymbol? preferred)
-            {
-                if (preferred is null || preferred.Locations.IsEmpty) return context.Node.GetLocation();
-                return preferred.Locations[0];
             }
 
             static bool IsProtoContract(ref SyntaxNodeAnalysisContext context, ITypeSymbol type, ref ImmutableArray<AttributeData> attribs)
