@@ -2,8 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace ProtoBuf.BuildTools
@@ -67,6 +65,63 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor DuplicateMemberName = new DiagnosticDescriptor(
+            id: "PBN0008",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(DuplicateMemberName),
+            messageFormat: "The underlying member '{0}' is described multiple times.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new DiagnosticDescriptor(
+            id: "PBN0009",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(ShouldBeProtoContract),
+            messageFormat: "The type is not marked as a proto-contract; additional annotations will be ignored.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new DiagnosticDescriptor(
+            id: "PBN0010",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(DeclaredAndIgnored),
+            messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DuplicateInclude = new DiagnosticDescriptor(
+            id: "PBN0011",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(DuplicateInclude),
+            messageFormat: "The type '{0}' is declared as an include multiple times.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor IncludeNonDerived = new DiagnosticDescriptor(
+            id: "PBN0012",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(IncludeNonDerived),
+            messageFormat: "The type '{0}' is declared as an include, but is not a direct sub-type.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+
+        internal static readonly DiagnosticDescriptor IncludeNotDeclared = new DiagnosticDescriptor(
+            id: "PBN0013",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(IncludeNotDeclared),
+            messageFormat: "The base-type '{0}' is a proto-contract, but no include is declared for '{1}'.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor SubTypeShouldBeProtoContract = new DiagnosticDescriptor(
+            id: "PBN0014",
+            title: nameof(ProtobufFieldAnalyzer) + "." + nameof(SubTypeShouldBeProtoContract),
+            messageFormat: "The base-type '{0}' is a proto-contract; '{1}' should also be a proto-contract.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = Utils.GetDeclared(typeof(ProtobufFieldAnalyzer));
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
@@ -75,274 +130,120 @@ namespace ProtoBuf.BuildTools
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(AnalyzeSyntax, s_syntaxKinds);
+            ctx.RegisterSyntaxNodeAction(ConsiderPossibleProtoBufType, s_syntaxKinds);
         }
 
-        private enum FieldCheckMode
-        {
-            Member,
-            TypeReservations,
-            TypeIncludes,
-            TypePartialMembers,
-            TypeMembers,
-        }
-
-        private enum Multiplicity
-        {
-            Zero,
-            One,
-            Multiple
-        }
-
-        
-
-        
-
-        private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
+        private static void ConsiderPossibleProtoBufType(SyntaxNodeAnalysisContext context)
         {
             if (!(context.ContainingSymbol is ITypeSymbol type)) return;
             
             var attribs = type.GetAttributes();
 
-            if (!IsProtoContract(ref context, type, ref attribs))
-                return;
+            TypeContext? typeContext = null;
+            TypeContext Context() => typeContext ??= new TypeContext();
 
-            var typeContext = new TypeContext();
-
-            CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeReservations, typeContext, context.ContainingSymbol, null);
-            CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypeIncludes, typeContext, context.ContainingSymbol, null);
-            CheckValidFieldNumbersAndNames(ref context, ref attribs, FieldCheckMode.TypePartialMembers, typeContext, context.ContainingSymbol, null);
-
-            var pma = context.SemanticModel.Compilation.GetTypeByMetadataName("ProtoBuf.ProtoMemberAttribute");
-            if (pma is not null)
+            foreach (var attrib in type.GetAttributes())
             {
-                foreach (var member in type.GetMembers())
+                var ac = attrib.AttributeClass;
+                if (ac is null) continue;
+                switch (ac.Name)
                 {
-                    // also check the fields underneath, for duplicate field numbers
-                    switch (member)
-                    {
-                        case IPropertySymbol:
-                        case IFieldSymbol:
-                            var memberAttribs = member.GetAttributes();
-                            foreach (var attrib in memberAttribs)
+                    case nameof(ProtoContractAttribute) when ac.InProtoBufNamespace():
+                        Context().SetContract(type, attrib);
+                        break;
+                    case nameof(ProtoIncludeAttribute) when ac.InProtoBufNamespace():
+                        Context().AddInclude(type, attrib);
+                        break;
+                    case nameof(ProtoReservedAttribute) when ac.InProtoBufNamespace():
+                        Context().AddReserved(type, attrib);
+                        break;
+                    case nameof(ProtoPartialMemberAttribute) when ac.InProtoBufNamespace():
+                        Context().AddMember(type, attrib, null);
+                        break;
+                    case nameof(ProtoPartialIgnoreAttribute) when ac.InProtoBufNamespace():
+                        Context().AddIgnore(type, attrib, null);
+                        break;
+                    case nameof(CompatibilityLevelAttribute) when ac.InProtoBufNamespace():
+                        break;
+                }
+            }
+
+            foreach (var member in type.GetMembers())
+            {
+                switch (member)
+                {
+                    case IPropertySymbol:
+                    case IFieldSymbol:
+                        var memberAttribs = member.GetAttributes();
+                        foreach (var attrib in memberAttribs)
+                        {
+                            var ac = attrib.AttributeClass;
+                            if (ac is null) continue;
+
+                            switch (ac.Name)
                             {
-                                if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, pma))
-                                {
-                                    CheckValidFieldNumbersAndNames(ref context, ref memberAttribs, FieldCheckMode.Member, typeContext, member, member.Name);
-                                    var args = attrib.ConstructorArguments;
-                                    if (!args.IsEmpty && TryReadFieldNumber(args[0], out int fieldNumber))
-                                    {
-                                        var fieldName = TryGetNonEmptyNamedString(attrib, nameof(ProtoMemberAttribute.Name)) ?? member.Name;
-                                        AssertLegalField(ref context, fieldName, fieldNumber, typeContext, FieldCheckMode.TypeMembers, member);
-                                    }
-                                }
+                                case nameof(ProtoMemberAttribute) when ac.InProtoBufNamespace():
+                                    Context().AddMember(member, attrib, member.Name);
+                                    break;
+                                case nameof(ProtoIgnoreAttribute) when ac.InProtoBufNamespace():
+                                    Context().AddIgnore(member, attrib, member.Name);
+                                    break;
+                                case nameof(ProtoMapAttribute) when ac.InProtoBufNamespace():
+                                    break;
+                                case nameof(CompatibilityLevelAttribute) when ac.InProtoBufNamespace():
+                                    break;
+                            }
+                        }
+                        break;
+                }
+            }
+            typeContext?.ReportProblems(context, type);
+
+            if (type.BaseType is not null)
+            {
+                bool baseIsContract = false, currentTypeIsDeclared = false;
+                foreach (var attrib in type.BaseType.GetAttributes())
+                {
+                    var ac = attrib.AttributeClass;
+                    if (ac is null) continue;
+                    switch (ac.Name)
+                    {
+                        case nameof(ProtoContractAttribute) when ac.InProtoBufNamespace():
+                            baseIsContract = true;
+                            break;
+                        case nameof(ProtoIncludeAttribute) when ac.InProtoBufNamespace():
+                            if (attrib.TryGetTypeByName(nameof(ProtoIncludeAttribute.KnownType), out var knownType) &&
+                                SymbolEqualityComparer.Default.Equals(knownType, type))
+                            {
+                                currentTypeIsDeclared = true;
                             }
                             break;
                     }
                 }
-            } 
-            
-            static string? TryGetNonEmptyNamedString(AttributeData attributeData, string name)
-            {
-                foreach (var namedArg in attributeData.NamedArguments)
+                if (baseIsContract)
                 {
-                    if (namedArg.Key == name && namedArg.Value.Kind == TypedConstantKind.Primitive && namedArg.Value.Value is string s && s.Length != 0)
-                    {
-                        return s;
-                    }
-                }
-                return null;
-            }
-
-            static void AssertLegalField(ref SyntaxNodeAnalysisContext context, string? name, int fieldNumber, TypeContext? typeContext, FieldCheckMode mode, ISymbol? symbol)
-            {
-                if (mode != FieldCheckMode.TypeMembers)
-                {   // we'll check this bit on the member itself
-                    var severity = fieldNumber switch
-                    {
-                        < 1 or > 536870911 => DiagnosticSeverity.Error, // legal range
-                        >= 19000 and <= 19999 => DiagnosticSeverity.Warning, // reserved range; it'll work, but is a bad idea
-                        _ => DiagnosticSeverity.Hidden,
-                    };
-                    if (severity != DiagnosticSeverity.Hidden)
+                    if (typeContext is null || !typeContext.IsContract)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                                    descriptor: InvalidFieldNumber,
-                                    location: Utils.PickLocation(ref context, symbol),
-                                    effectiveSeverity: severity,
-                                    messageArgs: new object[] { fieldNumber },
-                                    additionalLocations: null,
-                                    properties: null
-                                ));
-                    }
-                }
-
-                if (typeContext is not null && mode != FieldCheckMode.TypeReservations)
-                {   // reservations don't add to the set of known fields, nor do they need to be tested against reservations
-
-                    if (typeContext.OverlapsField(fieldNumber))
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            descriptor: DuplicateFieldNumber,
-                            location: Utils.PickLocation(ref context, symbol),
-                            messageArgs: new object[] { fieldNumber },
+                            descriptor: ProtobufFieldAnalyzer.SubTypeShouldBeProtoContract,
+                            location: Utils.PickLocation(ref context, type),
+                            messageArgs: new object[] { type.BaseType.ToDisplayString(), type.ToDisplayString() },
                             additionalLocations: null,
                             properties: null
                         ));
                     }
-                    if (typeContext.OverlapsReservation(fieldNumber, out var reservation))
+                    if (!currentTypeIsDeclared)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            descriptor: ReservedFieldNumber,
-                            location: Utils.PickLocation(ref context, symbol),
-                            messageArgs: new object[] { reservation },
+                            descriptor: ProtobufFieldAnalyzer.IncludeNotDeclared,
+                            location: Utils.PickLocation(ref context, type),
+                            messageArgs: new object[] { type.BaseType.ToDisplayString(), type.ToDisplayString() },
                             additionalLocations: null,
                             properties: null
                         ));
                     }
-                    if (name is not null)
-                    {
-                        if (typeContext.OverlapsField(name))
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: DuplicateFieldName,
-                                location: Utils.PickLocation(ref context, symbol),
-                                messageArgs: new object[] { name },
-                                additionalLocations: null,
-                                properties: null
-                            ));
-                        }
 
-                        if (typeContext.OverlapsReservation(name, out reservation))
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: ReservedFieldName,
-                                location: Utils.PickLocation(ref context, symbol),
-                                messageArgs: new object[] { reservation },
-                                additionalLocations: null,
-                                properties: null
-                            ));
-                        }
-                    }
-                    typeContext.AddKnownField(name, fieldNumber);
                 }
-            }
-
-            static bool TryReadFieldNumber(TypedConstant value, out int fieldNumber)
-            {
-                try
-                {
-                    if (value.Kind == TypedConstantKind.Primitive)
-                    {
-                        fieldNumber = Convert.ToInt32(value.Value);
-                        return true;
-                    }
-                }
-                catch { }
-                fieldNumber = default;
-                return false;
-            }
-
-            static void CheckValidFieldNumbersAndNames(ref SyntaxNodeAnalysisContext context, ref ImmutableArray<AttributeData> attribs, FieldCheckMode mode,
-                TypeContext? typeContext, ISymbol? symbol, string? ambientName)
-            {
-                string? attributeName = mode switch
-                {
-                    FieldCheckMode.Member => "ProtoBuf.ProtoMemberAttribute",
-                    FieldCheckMode.TypeReservations => "ProtoBuf.ProtoReservedAttribute",
-                    FieldCheckMode.TypeIncludes => "ProtoBuf.ProtoIncludeAttribute",
-                    FieldCheckMode.TypePartialMembers => "ProtoBuf.ProtoPartialMemberAttribute",
-                    _ => default,
-                };
-                var lookForAttrib = attributeName is null ? default : context.SemanticModel.Compilation.GetTypeByMetadataName(attributeName);
-                if (lookForAttrib is null) return;
-
-                var type = context.ContainingSymbol as ITypeSymbol;
-                foreach (var attrib in attribs)
-                {
-                    if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, lookForAttrib))
-                    {
-                        var args = attrib.ConstructorArguments;
-                        if (args.IsEmpty) continue;
-
-                        if (mode == FieldCheckMode.TypeReservations && args[0].Value is string reservedName
-                            && type is not null)
-                        {
-                            typeContext?.AddReservation(ref context, new FieldReservation(reservedName), symbol);
-                        }
-                        else if (TryReadFieldNumber(args[0], out var fieldNumber))
-                        {
-                            string? name = null;
-                            switch(mode)
-                            {
-                                case FieldCheckMode.Member:
-                                    name = TryGetNonEmptyNamedString(attrib, nameof(ProtoMemberAttribute.Name)) ?? ambientName;
-                                    break;
-                                case FieldCheckMode.TypePartialMembers:
-                                    if (args.Length > 1 && args[1].Kind == TypedConstantKind.Primitive && args[1].Value is string assumedName)
-                                    {
-                                        name = assumedName;
-                                    }
-                                    break;
-                            }
-                            AssertLegalField(ref context, name, fieldNumber, typeContext, mode, symbol);
-
-                            switch (mode)
-                            {
-                                case FieldCheckMode.TypePartialMembers
-                                when args.Length > 1 && args[1].Kind == TypedConstantKind.Primitive && args[1].Value is string memberName
-                                    && type is not null:
-
-                                    if (GetMemberMultiplicity(type, memberName, out var found) != Multiplicity.One)
-                                    {
-                                        context.ReportDiagnostic(Diagnostic.Create(
-                                           descriptor: MemberNotFound,
-                                           location: Utils.PickLocation(ref context, found),
-                                           messageArgs: new object[] { memberName },
-                                           additionalLocations: null,
-                                           properties: null
-                                       ));
-                                    }
-                                    break;
-                                case FieldCheckMode.TypeReservations
-                                when args.Length > 1 && args[1].Kind == TypedConstantKind.Primitive && args[1].Value is not string
-                                    && TryReadFieldNumber(args[1], out var endFieldNumber):
-                                    AssertLegalField(ref context, default, endFieldNumber, typeContext, mode, default);
-                                    typeContext?.AddReservation(ref context, new FieldReservation(fieldNumber, endFieldNumber), symbol);
-                                    break;
-                                case FieldCheckMode.TypeReservations:
-                                    // single field reservations
-                                    typeContext?.AddReservation(ref context, new FieldReservation(fieldNumber), symbol);
-                                    break;
-                            }
-                        }
-                    }
-                }
-
-                static Multiplicity GetMemberMultiplicity(ITypeSymbol type, string memberName, out ISymbol? found)
-                {
-                    found = null;
-                    foreach (var member in type.GetMembers())
-                    {
-                        if (member.Name == memberName)
-                        {
-                            if (found is not null) return Multiplicity.Multiple;
-                            found = member;
-                        }
-                    }
-                    return found is not null ? Multiplicity.One : Multiplicity.Zero;
-                }
-            }
-
-            static bool IsProtoContract(ref SyntaxNodeAnalysisContext context, ITypeSymbol type, ref ImmutableArray<AttributeData> attribs)
-            {
-                var lookForAttrib = context.SemanticModel.Compilation.GetTypeByMetadataName("ProtoBuf.ProtoContractAttribute");
-                if (lookForAttrib is null) return false;
-                foreach (var attrib in attribs)
-                {
-                    if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, lookForAttrib)) return true;
-                }
-                return false;
             }
         }
     }

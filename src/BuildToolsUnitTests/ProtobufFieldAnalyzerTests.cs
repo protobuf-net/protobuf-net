@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using ProtoBuf;
 using ProtoBuf.BuildTools;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -203,5 +204,237 @@ public class SuperFoo : Foo {}
             Assert.Equal($"The specified field number 3 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
+        [Fact]
+        public async Task ReportsShouldBeContract_Member()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+public class Foo
+{
+    [ProtoMember(1)]
+    public int A {get;set;}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ShouldBeProtoContract);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The type is not marked as a proto-contract; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsShouldBeContract_Include()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoInclude(typeof(SuperFoo))]
+public class Foo
+{
+    [ProtoMember(1)]
+    public int A {get;set;}
+}
+[ProtoContract]
+public class SuperFoo : Foo {}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ShouldBeProtoContract);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The type is not marked as a proto-contract; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsShouldBeContract_Reservation()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoReserved(123)]
+public class Foo
+{
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ShouldBeProtoContract);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The type is not marked as a proto-contract; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsBothDeclaredAndIgnored()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoPartialIgnore(""A"")]
+public class Foo
+{
+    [ProtoMember(1)]
+    public int A {get;set;}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DeclaredAndIgnored);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The member 'A' is marked to be ignored; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsReservedField_Number()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, ProtoReserved(42)]
+public class Foo
+{
+    [ProtoMember(42)]
+    public int A {get;set;}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ReservedFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Equal($"The specified field number 42 is explicitly reserved.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsReservedField_Number_Range()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, ProtoReserved(40,50)]
+public class Foo
+{
+    [ProtoMember(42)]
+    public int A {get;set;}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ReservedFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Equal($"The specified field number [40-50] is explicitly reserved.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsReservedField_Name()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, ProtoReserved(""A"")]
+public class Foo
+{
+    [ProtoMember(42)]
+    public int A {get;set;}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ReservedFieldName);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Equal($"The specified field name 'A' is explicitly reserved.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsDuplicateName()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1, Name = ""C"")]
+    public int A {get;set;}
+    [ProtoMember(2, Name = ""C"")]
+    public int B {get;set;}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateFieldName);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Equal($"The specified field name 'C' is duplicated; field names should be unique between all declared members on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsDuplicateReservationName()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, ProtoReserved(""A""), ProtoReserved(""A"")]
+public class Foo
+{
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateReservation);
+            Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
+            Assert.Equal($"The reservations 'A' and 'A' overlap each-other.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsDuplicateReservationNumbers()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, ProtoReserved(10, 25), ProtoReserved(20, 30)]
+public class Foo
+{
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateReservation);
+            Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
+            Assert.Equal($"The reservations [20-30] and [10-25] overlap each-other.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsDuplicateInclude()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(SuperFoo))]
+[ProtoInclude(2, typeof(SuperFoo))]
+public class Foo
+{
+}
+[ProtoContract]
+public class SuperFoo : Foo {}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateInclude);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The type 'SuperFoo' is declared as an include multiple times.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsNonDerivedInclude()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(SuperFoo))]
+public class Foo
+{
+}
+[ProtoContract]
+public class SuperFoo {}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.IncludeNonDerived);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"The type 'SuperFoo' is declared as an include, but is not a direct sub-type.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsMissingIncludeDeclaration()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public class Foo {}
+[ProtoContract]
+public class SuperFoo : Foo {}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.IncludeNotDeclared);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Equal($"The base-type 'Foo' is a proto-contract, but no include is declared for 'SuperFoo'.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsIncludeNotContract()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, ProtoInclude(3, typeof(SuperFoo))]
+public class Foo {}
+public class SuperFoo : Foo {}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.SubTypeShouldBeProtoContract);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Equal($"The base-type 'Foo' is a proto-contract; 'SuperFoo' should also be a proto-contract.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
     }
 }
