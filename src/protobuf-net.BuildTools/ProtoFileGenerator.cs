@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.Reflection;
+﻿#if GENERATORS
+using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.Reflection;
@@ -78,3 +79,4 @@ namespace ProtoBuf.BuildTools
         }
     }
 }
+#endif
