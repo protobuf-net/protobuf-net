@@ -119,11 +119,13 @@ namespace ProtoBuf.BuildTools.Internal
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     descriptor: ProtoBufFieldAnalyzer.ShouldBeProtoContract,
-                    location: Utils.PickLocation(ref context, type),
+                    location: _members.FirstBlame() ?? _includes.FirstBlame()
+                        ?? _reservations.FirstBlame() ?? _ignores.FirstBlame()
+                        ?? Utils.PickLocation(ref context, type),
                     messageArgs: null,
                     additionalLocations: null,
                     properties: null
-                ));
+                ));;
             }
 
             if (_reservations is not null)

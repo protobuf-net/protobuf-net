@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -42,7 +44,19 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
             => symbol.ContainingNamespace.Name == ProtoBufNamespace;
-
+        
+        internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame
+        {
+            if (source is not null)
+            {
+                foreach (var item in source)
+                {
+                    var blame = item?.Blame;
+                    if (blame is not null) return blame;
+                }
+            }
+            return null;
+        }
         internal static bool TryGetByName(this AttributeData attributeData, string name, out TypedConstant value)
         {
             // because named args happen *after* the .ctor, they take precedence - check them first
