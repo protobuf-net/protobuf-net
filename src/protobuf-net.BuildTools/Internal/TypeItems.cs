@@ -4,14 +4,14 @@ namespace ProtoBuf.BuildTools.Internal
 {
     public readonly struct Member
     {
-        public Member (ISymbol blame, int fieldNumber, string memberName, string name)
+        public Member (Location? blame, int fieldNumber, string memberName, string name)
         {
             Blame = blame;
             FieldNumber = fieldNumber;
             MemberName = memberName;
             Name  = name;
         }
-        public ISymbol Blame { get; }
+        public Location? Blame { get; }
         public int FieldNumber { get; }
         public string MemberName { get; }
         public string Name { get; }
@@ -19,37 +19,37 @@ namespace ProtoBuf.BuildTools.Internal
 
     public readonly struct Ignore
     {
-        public Ignore(ISymbol blame, string memberName)
+        public Ignore(Location? blame, string memberName)
         {
             Blame = blame;
             MemberName = memberName;
         }
 
-        public ISymbol Blame { get; }
+        public Location? Blame { get; }
         public string MemberName { get; }
     }
 
     public readonly struct Include
     {
-        public Include(ISymbol blame, int fieldNumber, ITypeSymbol type)
+        public Include(Location? blame, int fieldNumber, ITypeSymbol type)
         {
             Blame = blame;
             FieldNumber = fieldNumber;
             Type = type;
         }
-        public ISymbol Blame { get; }
+        public Location? Blame { get; }
         public int FieldNumber { get; }
         public ITypeSymbol Type { get; }
     }
 
     internal readonly struct Reservation
     {
-        public readonly ISymbol Blame { get; }
+        public readonly Location? Blame { get; }
         public string? Name { get; }
         public int From { get; }
         public int To { get; }
 
-        public Reservation(ISymbol blame, int from, int to)
+        public Reservation(Location? blame, int from, int to)
         {
             Blame = blame;
             From = from;
@@ -57,7 +57,7 @@ namespace ProtoBuf.BuildTools.Internal
             Name = null;
         }
 
-        public Reservation(ISymbol blame, string name)
+        public Reservation(Location? blame, string name)
         {
             Blame = blame;
             From = To = default;

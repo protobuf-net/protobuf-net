@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -24,10 +25,17 @@ namespace ProtoBuf.BuildTools.Internal
             return builder.ToImmutable();
         }
 
+        internal static Location PickLocation(ref SyntaxNodeAnalysisContext context, Location? preferred)
+            => preferred ?? context.Node.GetLocation();
+
         internal static Location PickLocation(ref SyntaxNodeAnalysisContext context, ISymbol? preferred)
         {
-            if (preferred is null || preferred.Locations.IsEmpty) return context.Node.GetLocation();
-            return preferred.Locations[0];
+            if (preferred is not null)
+            {
+                var locs = preferred.Locations;
+                if (!locs.IsEmpty) return locs[0];
+            }
+            return context.Node.GetLocation();
         }
 
         private const string ProtoBufNamespace = "ProtoBuf";
@@ -91,6 +99,17 @@ namespace ProtoBuf.BuildTools.Internal
             return false;
         }
 
+        internal static bool TryGetBooleanByName(this AttributeData attributeData, string name, out bool value)
+        {
+            if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is bool b)
+            {
+                value = b;
+                return true;
+            }
+            value = false;
+            return false;
+        }
+
         internal static bool TryGetTypeByName(this AttributeData attributeData, string name, out ITypeSymbol value)
         {
             if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Type && raw.Value is ITypeSymbol ts)
@@ -100,6 +119,18 @@ namespace ProtoBuf.BuildTools.Internal
             }
             value = default!;
             return false;
+        }
+
+        internal static Location? GetLocation(this AttributeData attribute, ISymbol? fallback)
+        {
+            var syntax = attribute.ApplicationSyntaxReference;
+            if (syntax == null)
+            {
+                if (fallback is null) return null;
+                var locs = fallback.Locations;
+                return locs.IsEmpty ? null : locs[0];
+            }
+            return syntax.SyntaxTree.GetLocation(syntax.Span);
         }
     }
 }

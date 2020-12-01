@@ -11,22 +11,22 @@ namespace ProtoBuf.BuildTools.Internal
         private List<Member>? _members;
         private List<Reservation>? _reservations;
         private List<Include>? _includes;
-        private bool _isContract;
+        private TypeContextFlags _flags;
 
         internal void AddReserved(ISymbol blame, AttributeData attrib)
         {
             Reservation reservation;
             if (attrib.TryGetInt32ByName(nameof(ProtoReservedAttribute.From), out var from) && attrib.TryGetInt32ByName(nameof(ProtoReservedAttribute.To), out var to))
             {
-                reservation = new Reservation(blame, from, to);
+                reservation = new Reservation(attrib.GetLocation(blame), from, to);
             }
             else if (attrib.TryGetInt32ByName("field", out from))
             {
-                reservation = new Reservation(blame, from, from);
+                reservation = new Reservation(attrib.GetLocation(blame), from, from);
             }
             else if (attrib.TryGetStringByName("field", out string name))
             {
-                reservation = new Reservation(blame, name);
+                reservation = new Reservation(attrib.GetLocation(blame), name);
             }
             else
             {
@@ -35,7 +35,7 @@ namespace ProtoBuf.BuildTools.Internal
             (_reservations ??= new List<Reservation>()).Add(reservation);
         }
 
-        static bool AssertLegalFieldNumber(ref SyntaxNodeAnalysisContext context, int fieldNumber, ISymbol blame)
+        static bool AssertLegalFieldNumber(ref SyntaxNodeAnalysisContext context, int fieldNumber, Location? blame)
         {
             var severity = fieldNumber switch
             {
@@ -46,7 +46,7 @@ namespace ProtoBuf.BuildTools.Internal
             if (severity != DiagnosticSeverity.Hidden)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
-                    descriptor: ProtobufFieldAnalyzer.InvalidFieldNumber,
+                    descriptor: ProtoBufFieldAnalyzer.InvalidFieldNumber,
                     location: Utils.PickLocation(ref context, blame),
                     effectiveSeverity: severity,
                     messageArgs: new object[] { fieldNumber },
@@ -64,13 +64,13 @@ namespace ProtoBuf.BuildTools.Internal
             HashSet<string>? uniqueFieldNames = null;
             HashSet<string>? coveredMemberNames = null;
 
-            void AssertAvailableNumber(int fieldNumber, ISymbol blame)
+            void AssertAvailableNumber(int fieldNumber, Location? blame)
             {
                 uniqueFieldNumbers ??= new HashSet<int>();
                 if (!uniqueFieldNumbers.Add(fieldNumber))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        descriptor: ProtobufFieldAnalyzer.DuplicateFieldNumber,
+                        descriptor: ProtoBufFieldAnalyzer.DuplicateFieldNumber,
                         location: Utils.PickLocation(ref context, blame),
                         messageArgs: new object[] { fieldNumber },
                         additionalLocations: null,
@@ -80,7 +80,7 @@ namespace ProtoBuf.BuildTools.Internal
                 if (OverlapsReservation(fieldNumber, out var reservation))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        descriptor: ProtobufFieldAnalyzer.ReservedFieldNumber,
+                        descriptor: ProtoBufFieldAnalyzer.ReservedFieldNumber,
                         location: Utils.PickLocation(ref context, blame),
                         messageArgs: new object[] { reservation },
                         additionalLocations: null,
@@ -89,13 +89,13 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
 
-            void AssertAvailableName(string name, ISymbol blame)
+            void AssertAvailableName(string name, Location? blame)
             {
                 uniqueFieldNames ??= new HashSet<string>();
                 if (!uniqueFieldNames.Add(name))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        descriptor: ProtobufFieldAnalyzer.DuplicateFieldName,
+                        descriptor: ProtoBufFieldAnalyzer.DuplicateFieldName,
                         location: Utils.PickLocation(ref context, blame),
                         messageArgs: new object[] { name },
                         additionalLocations: null,
@@ -105,7 +105,7 @@ namespace ProtoBuf.BuildTools.Internal
                 if (OverlapsReservation(name, out var reservation))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        descriptor: ProtobufFieldAnalyzer.ReservedFieldName,
+                        descriptor: ProtoBufFieldAnalyzer.ReservedFieldName,
                         location: Utils.PickLocation(ref context, blame),
                         messageArgs: new object[] { name },
                         additionalLocations: null,
@@ -116,10 +116,10 @@ namespace ProtoBuf.BuildTools.Internal
 
             if (!(_members is not null || _includes is not null || _reservations is not null || _ignores is not null)) return;
 
-            if (!_isContract)
+            if (!HasFlag(TypeContextFlags.IsProtoContract))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
-                    descriptor: ProtobufFieldAnalyzer.ShouldBeProtoContract,
+                    descriptor: ProtoBufFieldAnalyzer.ShouldBeProtoContract,
                     location: Utils.PickLocation(ref context, type),
                     messageArgs: null,
                     additionalLocations: null,
@@ -144,7 +144,7 @@ namespace ProtoBuf.BuildTools.Internal
                         if (reservation.Overlaps(_reservations[i]))
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: ProtobufFieldAnalyzer.DuplicateReservation,
+                                descriptor: ProtoBufFieldAnalyzer.DuplicateReservation,
                                 location: Utils.PickLocation(ref context, reservation.Blame),
                                 messageArgs: new object[] { reservation, _reservations[i] },
                                 additionalLocations: null,
@@ -170,7 +170,7 @@ namespace ProtoBuf.BuildTools.Internal
                     if (!SymbolEqualityComparer.Default.Equals(include.Type.BaseType, type))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            descriptor: ProtobufFieldAnalyzer.IncludeNonDerived,
+                            descriptor: ProtoBufFieldAnalyzer.IncludeNonDerived,
                             location: Utils.PickLocation(ref context, include.Blame),
                             messageArgs: new object[] { include.Type.ToDisplayString() },
                             additionalLocations: null,
@@ -183,7 +183,7 @@ namespace ProtoBuf.BuildTools.Internal
                         if (SymbolEqualityComparer.Default.Equals(include.Type, _includes[i].Type))
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: ProtobufFieldAnalyzer.DuplicateInclude,
+                                descriptor: ProtoBufFieldAnalyzer.DuplicateInclude,
                                 location: Utils.PickLocation(ref context, include.Blame),
                                 messageArgs: new object[] { include.Type.ToDisplayString() },
                                 additionalLocations: null,
@@ -212,7 +212,7 @@ namespace ProtoBuf.BuildTools.Internal
                         if (!coveredMemberNames.Add(member.MemberName))
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: ProtobufFieldAnalyzer.DuplicateMemberName,
+                                descriptor: ProtoBufFieldAnalyzer.DuplicateMemberName,
                                 location: Utils.PickLocation(ref context, member.Blame),
                                 messageArgs: new object[] { member.MemberName },
                                 additionalLocations: null,
@@ -222,7 +222,7 @@ namespace ProtoBuf.BuildTools.Internal
                         if (ShouldIgnore(member.MemberName))
                         {
                             context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: ProtobufFieldAnalyzer.DeclaredAndIgnored,
+                                descriptor: ProtoBufFieldAnalyzer.DeclaredAndIgnored,
                                 location: Utils.PickLocation(ref context, member.Blame),
                                 messageArgs: new object[] { member.MemberName },
                                 additionalLocations: null,
@@ -233,7 +233,7 @@ namespace ProtoBuf.BuildTools.Internal
                     else
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            descriptor: ProtobufFieldAnalyzer.MemberNotFound,
+                            descriptor: ProtoBufFieldAnalyzer.MemberNotFound,
                             location: Utils.PickLocation(ref context, member.Blame),
                             messageArgs: new object[] { member.MemberName },
                             additionalLocations: null,
@@ -261,10 +261,15 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal void SetContract(ISymbol blame, AttributeData attrib)
         {
-            _isContract = true;
+            _flags |= TypeContextFlags.IsProtoContract;
+            if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.SkipConstructor), out var val) && val)
+                _flags |= TypeContextFlags.SkipConstructor;
+            if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreUnknownSubTypes), out val) && val)
+                _flags |= TypeContextFlags.IgnoreUnknownSubTypes;
         }
 
-        public bool IsContract => _isContract;
+        public bool HasFlag(TypeContextFlags flag)
+            => (_flags & flag) != 0;
 
 
         private bool ShouldIgnore(string memberName)
@@ -286,7 +291,7 @@ namespace ProtoBuf.BuildTools.Internal
                 || !attrib.TryGetTypeByName(nameof(ProtoIncludeAttribute.KnownType), out var type))
                 return;
 
-            (_includes ??= new List<Include>()).Add(new Include(blame, tag, type));
+            (_includes ??= new List<Include>()).Add(new Include(attrib.GetLocation(blame), tag, type));
         }
 
         internal void AddIgnore(ISymbol blame, AttributeData attrib, string? memberName)
@@ -296,7 +301,7 @@ namespace ProtoBuf.BuildTools.Internal
                 if (!(attrib.TryGetStringByName(nameof(ProtoPartialIgnoreAttribute.MemberName), out memberName)))
                     return;
             }
-            (_ignores ??= new List<Ignore>()).Add(new Ignore(blame, memberName));
+            (_ignores ??= new List<Ignore>()).Add(new Ignore(attrib.GetLocation(blame), memberName));
         }
 
         internal void AddMember(ISymbol blame, AttributeData attrib, string? memberName)
@@ -313,7 +318,7 @@ namespace ProtoBuf.BuildTools.Internal
             if (!(attrib.TryGetStringByName(nameof(ProtoPartialMemberAttribute.Name), out var name)))
                 name = memberName;
 
-            (_members ??= new List<Member>()).Add(new Member(blame, tag, memberName, name));
+            (_members ??= new List<Member>()).Add(new Member(attrib.GetLocation(blame), tag, memberName, name));
         }
 
         public bool OverlapsReservation(string name, out Reservation overlap)

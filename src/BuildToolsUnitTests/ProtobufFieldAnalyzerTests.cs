@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf;
 using ProtoBuf.BuildTools;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -8,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests
 {
-    public class ProtobufFieldAnalyzerTests : AnalyzerTestBase<ProtobufFieldAnalyzer>
+    public class ProtobufFieldAnalyzerTests : AnalyzerTestBase<ProtoBufFieldAnalyzer>
     {
         public ProtobufFieldAnalyzerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
 
@@ -86,7 +85,7 @@ public class Foo
     [ProtoMember({fieldNumber})]
     public int Bar {{get;set;}}
 }}");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.InvalidFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.InvalidFieldNumber);
             Assert.Equal(warningOnly ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The specified field number {fieldNumber} is invalid; the valid range is 1-536870911, omitting 19000-19999.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -102,7 +101,7 @@ public class Foo
 {{
     public int Blap {{get;set;}}
 }}");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.MemberNotFound);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.MemberNotFound);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal("The specified type member 'Bar' could not be resolved.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -128,7 +127,7 @@ public class Foo
 {{
     public int Bar {{get;set;}}
 }}");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.InvalidFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.InvalidFieldNumber);
             Assert.Equal(warningOnly ? DiagnosticSeverity.Warning : DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The specified field number {fieldNumber} is invalid; the valid range is 1-536870911, omitting 19000-19999.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -145,7 +144,7 @@ public class Foo
     [ProtoMember(FieldNumber)]
     public int Bar {get;set;}
 }");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.InvalidFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.InvalidFieldNumber);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The specified field number -42 is invalid; the valid range is 1-536870911, omitting 19000-19999.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -170,7 +169,7 @@ public class Foo
     [ProtoMember(3)]
     public int D {get;set;}
 }");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DuplicateFieldNumber);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The specified field number 2 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -199,7 +198,7 @@ public class Foo
 [ProtoContract]
 public class SuperFoo : Foo {}
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DuplicateFieldNumber);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The specified field number 3 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -215,7 +214,7 @@ public class Foo
     public int A {get;set;}
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ShouldBeProtoContract);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ShouldBeProtoContract);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The type is not marked as a proto-contract; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -234,7 +233,7 @@ public class Foo
 [ProtoContract]
 public class SuperFoo : Foo {}
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ShouldBeProtoContract);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ShouldBeProtoContract);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The type is not marked as a proto-contract; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -249,7 +248,7 @@ public class Foo
 {
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ShouldBeProtoContract);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ShouldBeProtoContract);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The type is not marked as a proto-contract; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -266,7 +265,7 @@ public class Foo
     public int A {get;set;}
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DeclaredAndIgnored);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DeclaredAndIgnored);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The member 'A' is marked to be ignored; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -283,7 +282,7 @@ public class Foo
     public int A {get;set;}
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ReservedFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ReservedFieldNumber);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             Assert.Equal($"The specified field number 42 is explicitly reserved.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -300,7 +299,7 @@ public class Foo
     public int A {get;set;}
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ReservedFieldNumber);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ReservedFieldNumber);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             Assert.Equal($"The specified field number [40-50] is explicitly reserved.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -317,7 +316,7 @@ public class Foo
     public int A {get;set;}
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.ReservedFieldName);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ReservedFieldName);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             Assert.Equal($"The specified field name 'A' is explicitly reserved.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -336,7 +335,7 @@ public class Foo
     public int B {get;set;}
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateFieldName);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DuplicateFieldName);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             Assert.Equal($"The specified field name 'C' is duplicated; field names should be unique between all declared members on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -351,7 +350,7 @@ public class Foo
 {
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateReservation);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DuplicateReservation);
             Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
             Assert.Equal($"The reservations 'A' and 'A' overlap each-other.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -366,7 +365,7 @@ public class Foo
 {
 }
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateReservation);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DuplicateReservation);
             Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
             Assert.Equal($"The reservations [20-30] and [10-25] overlap each-other.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -385,7 +384,7 @@ public class Foo
 [ProtoContract]
 public class SuperFoo : Foo {}
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.DuplicateInclude);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.DuplicateInclude);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The type 'SuperFoo' is declared as an include multiple times.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -403,7 +402,7 @@ public class Foo
 [ProtoContract]
 public class SuperFoo {}
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.IncludeNonDerived);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.IncludeNonDerived);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal($"The type 'SuperFoo' is declared as an include, but is not a direct sub-type.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
@@ -418,9 +417,21 @@ public class Foo {}
 [ProtoContract]
 public class SuperFoo : Foo {}
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.IncludeNotDeclared);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.IncludeNotDeclared);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
-            Assert.Equal($"The base-type 'Foo' is a proto-contract, but no include is declared for 'SuperFoo'.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal($"The base-type 'Foo' is a proto-contract, but no include is declared for 'SuperFoo' and the IgnoreUnknownSubTypes flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task DoesNotReportMissingIncludeDeclarationWhenIgnoreSubTypesSpecified()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract(IgnoreUnknownSubTypes = true)]
+public class Foo {}
+public class SuperFoo : Foo {}
+");
+            Assert.Empty(diagnostics);
         }
 
         [Fact]
@@ -432,9 +443,52 @@ using ProtoBuf;
 public class Foo {}
 public class SuperFoo : Foo {}
 ");
-            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtobufFieldAnalyzer.SubTypeShouldBeProtoContract);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.SubTypeShouldBeProtoContract);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
-            Assert.Equal($"The base-type 'Foo' is a proto-contract; 'SuperFoo' should also be a proto-contract.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal($"The base-type 'Foo' is a proto-contract and the IgnoreUnknownSubTypes flag is not set; 'SuperFoo' should also be a proto-contract.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsMissingConstructor()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public class Foo {
+    public Foo(string _) {}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ConstructorMissing);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"There is no suitable (parameterless) constructor available for the proto-contract, and the SkipConstructor flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsMissingConstructor_ExplicitNoSkip()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract(SkipConstructor = false)]
+public class Foo {
+    public Foo(string _) {}
+}
+");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.ConstructorMissing);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal($"There is no suitable (parameterless) constructor available for the proto-contract, and the SkipConstructor flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task DoesNotReportsMissingConstructor_ExplicitSkip()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract(SkipConstructor = true)]
+public class Foo {
+    public Foo(string _) {}
+}
+");
+            Assert.Empty(diagnostics);
         }
     }
 }
