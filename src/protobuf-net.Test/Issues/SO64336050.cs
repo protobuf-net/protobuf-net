@@ -48,6 +48,9 @@ enum MyEnum {
     {
         [DataMember]
         [ProtoMember(1)]
+#pragma warning disable CS0169, IDE0044, IDE0051
         private MyEnum m_myEnum;
+#pragma warning restore CS0169, IDE0044, IDE0051
+
     }
 }
