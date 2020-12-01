@@ -258,6 +258,7 @@ namespace ProtoBuf.BuildTools
                 }
             }
 
+            Location? ctorLocation = null;
             foreach (var member in type.GetMembers())
             {
                 switch (member)
@@ -289,20 +290,31 @@ namespace ProtoBuf.BuildTools
                         break;
                     case IMethodSymbol method when method.MethodKind == MethodKind.Constructor:
                         hasAnyConstructor = true;
-                        if (!method.Parameters.Any()) hasParameterlessConstructor = true;
+                        if (method.Parameters.Any())
+                        {
+                            if (ctorLocation is null && method.Locations.Length != 0)
+                            {
+                                ctorLocation = method.Locations[0];
+                            }
+                        }
+                        else
+                        {
+                            hasParameterlessConstructor = true;
+                        }
                         break;
                 }
             }
             if (typeContext is not null)
             {
-                if (hasAnyConstructor && !hasParameterlessConstructor
+                if (!type.IsAbstract // the library won't be directly creating it, so: N/A
+                    && hasAnyConstructor && !hasParameterlessConstructor
                     && typeContext.HasFlag(TypeContextFlags.IsProtoContract)
                     && !typeContext.HasFlag(TypeContextFlags.SkipConstructor)
                 )
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         descriptor: ProtoBufFieldAnalyzer.ConstructorMissing,
-                        location: Utils.PickLocation(ref context, type),
+                        location: ctorLocation ?? Utils.PickLocation(ref context, type),
                         messageArgs: null,
                         additionalLocations: null,
                         properties: null

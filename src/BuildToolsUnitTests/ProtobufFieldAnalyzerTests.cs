@@ -464,6 +464,19 @@ public class Foo {
         }
 
         [Fact]
+        public async Task DoesNotReportMissingConstructorOnAbstractType()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public abstract class Foo {
+    public Foo(string _) {}
+}
+");
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
         public async Task ReportsMissingConstructor_ExplicitNoSkip()
         {
             var diagnostics = await AnalyzeAsync(@"
