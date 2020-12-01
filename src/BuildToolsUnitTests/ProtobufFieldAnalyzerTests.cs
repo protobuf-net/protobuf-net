@@ -501,7 +501,7 @@ public class Foo {}
 ", ignoreCompatibilityLevelAdvice: false);
             var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.MissingCompatibilityLevel);
             Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
-            Assert.Equal($"It is recommended to declare a module or assembly level CompatibilityLevel (or declare it for each type); new projects should use the highest currently available - old projects should use Level200 unless fully considered.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal($"It is recommended to declare a module or assembly level CompatibilityLevel (or declare it for each contract type); new projects should use the highest currently available - old projects should use Level200 unless fully considered.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
         [Fact]
