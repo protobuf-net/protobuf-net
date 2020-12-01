@@ -10,6 +10,9 @@ using System.Text;
 
 namespace ProtoBuf.BuildTools
 {
+    /// <summary>
+    /// Generates protobuf-net types from .proto schemas
+    /// </summary>
     // [Generator] (not ready for prime time)
     public sealed class ProtoFileGenerator : ISourceGenerator
     {

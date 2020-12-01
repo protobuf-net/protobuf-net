@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);RS2007</NoWarn> <!-- because I have no clue what to do with that-->
   </PropertyGroup>
 
   <ItemGroup>

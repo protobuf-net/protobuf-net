@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.BuildTools.Internal
 {
-    public readonly struct Member
+    internal readonly struct Member
     {
         public Member (Location? blame, int fieldNumber, string memberName, string name)
         {
@@ -17,7 +17,7 @@ namespace ProtoBuf.BuildTools.Internal
         public string Name { get; }
     }
 
-    public readonly struct Ignore
+    internal readonly struct Ignore
     {
         public Ignore(Location? blame, string memberName)
         {
@@ -29,7 +29,7 @@ namespace ProtoBuf.BuildTools.Internal
         public string MemberName { get; }
     }
 
-    public readonly struct Include
+    internal readonly struct Include
     {
         public Include(Location? blame, int fieldNumber, ITypeSymbol type)
         {

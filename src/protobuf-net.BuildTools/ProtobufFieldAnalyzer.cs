@@ -1,14 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
-using System;
 using System.Collections.Immutable;
 using System.Linq;
 
 namespace ProtoBuf.BuildTools
 {
+    /// <summary>
+    /// Reports common usage errors in code that uses protobuf-net
+    /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ProtoBufFieldAnalyzer : DiagnosticAnalyzer
     {
@@ -142,10 +143,13 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
+        /// <inheritdoc/>
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = Utils.GetDeclared(typeof(ProtoBufFieldAnalyzer));
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
             ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
+
+        /// <inheritdoc/>
         public override void Initialize(AnalysisContext ctx)
         {
             ctx.EnableConcurrentExecution();
