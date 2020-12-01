@@ -490,5 +490,62 @@ public class Foo {
 ");
             Assert.Empty(diagnostics);
         }
+
+        [Fact]
+        public async Task SuggestsCompatibilityLevelWhenNonMarkedContracts()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public class Foo {}
+", ignoreCompatibilityLevelAdvice: false);
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == ProtoBufFieldAnalyzer.MissingCompatibilityLevel);
+            Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
+            Assert.Equal($"It is recommended to declare a module or assembly level CompatibilityLevel (or declare it for each type); new projects should use the highest currently available - old projects should use Level200 unless fully considered.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task DoesNotSuggestCompatibilityLevelWhenNoContracts()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+public class Foo {}
+", ignoreCompatibilityLevelAdvice: false);
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoesNotSuggestCompatibilityLevelWhenNoNonMarkedContracts()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
+public class Foo {}
+", ignoreCompatibilityLevelAdvice: false);
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoesNotSuggestCompatibilityLevelWhenDeclaredAtModule()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[module:CompatibilityLevel(CompatibilityLevel.Level300)]
+[ProtoContract]
+public class Foo {}
+", ignoreCompatibilityLevelAdvice: false);
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoesNotSuggestCompatibilityLevelWhenDeclaredAtAssembly()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[assembly:CompatibilityLevel(CompatibilityLevel.Level300)]
+[ProtoContract]
+public class Foo {}
+", ignoreCompatibilityLevelAdvice: false);
+            Assert.Empty(diagnostics);
+        }
     }
 }

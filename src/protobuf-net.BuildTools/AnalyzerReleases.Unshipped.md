@@ -17,3 +17,4 @@ PBN0012  | Usage    | Error    | Include of non-derived type
 PBN0013  | Usage    | Warning  | Include not declared
 PBN0014  | Usage    | Warning  | Sub-type not marked as proto-contract
 PBN0015  | Usage    | Error    | No suitable constructor
+PBN0016  | Usage    | Info     | Missing compatibility-level

@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using ProtoBuf.BuildTools;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace BuildToolsUnitTests
     {
         // utility anaylzer data, with thanks to Samo Prelog
         private readonly ITestOutputHelper? _testOutputHelper;
-        protected AnalyzerTestBase(ITestOutputHelper? testOutputHelper) => _testOutputHelper = testOutputHelper;
+        protected AnalyzerTestBase(ITestOutputHelper? testOutputHelper = null) => _testOutputHelper = testOutputHelper;
 
         protected static TAnalyzer AnalyzerSingleton { get; } = Activator.CreateInstance<TAnalyzer>();
         protected virtual TAnalyzer Analyzer { get; } = AnalyzerSingleton;
@@ -25,15 +26,19 @@ namespace BuildToolsUnitTests
 
         protected virtual Project SetupProject(Project project) => project;
 
-        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string callerMemberName = null) =>
-            AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName);
+        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true) =>
+            AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName, ignoreCompatibilityLevelAdvice);
 
-        protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null)
+        protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true)
         {
             var (project, compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
             var analyzers = project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)).ToImmutableArray();
             var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, project.AnalyzerOptions);
             var diagnostics = await compilationWithAnalyzers.GetAllDiagnosticsAsync();
+            if (ignoreCompatibilityLevelAdvice)
+            {
+                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == ProtoBufFieldAnalyzer.MissingCompatibilityLevel);
+            }
             if (_testOutputHelper is object)
             {
                 foreach (var d in diagnostics)

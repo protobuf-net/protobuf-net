@@ -38,7 +38,7 @@ namespace ProtoBuf.BuildTools.Internal
             return context.Node.GetLocation();
         }
 
-        private const string ProtoBufNamespace = "ProtoBuf";
+        internal const string ProtoBufNamespace = "ProtoBuf";
 
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
             => symbol.ContainingNamespace.Name == ProtoBufNamespace;

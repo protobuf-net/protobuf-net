@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -132,6 +133,15 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor MissingCompatibilityLevel = new DiagnosticDescriptor(
+            id: "PBN0016",
+            title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(MissingCompatibilityLevel),
+            messageFormat: "It is recommended to declare a module or assembly level " + nameof(CompatibilityLevel) + " (or declare it for each contract type); new projects should use the highest currently available - old projects should use " + nameof(CompatibilityLevel.Level200) + " unless fully considered.",
+            helpLinkUri: "https://protobuf-net.github.io/protobuf-net/compatibilitylevel.html",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = Utils.GetDeclared(typeof(ProtoBufFieldAnalyzer));
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
@@ -140,7 +150,72 @@ namespace ProtoBuf.BuildTools
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(ConsiderPossibleProtoBufType, s_syntaxKinds);
+            ctx.RegisterSyntaxNodeAction(context => ConsiderPossibleProtoBufType(context), s_syntaxKinds);
+            ctx.RegisterCompilationAction(context => ConsiderCompilation(context));
+        }
+
+        private void ConsiderCompilation(CompilationAnalysisContext context)
+        {
+            var attribType = context.Compilation.GetTypeByMetadataName(Utils.ProtoBufNamespace + "." + nameof(CompatibilityLevelAttribute));
+            if (attribType is not null && !IsDeclaredAtModuleOrAssembly(context.Compilation, attribType)
+                && HasProtoContractsWithoutCompatibilityLevel(context.Compilation, attribType))
+            {
+                // so: it is available, but not used, and there are proto-contracts that do not declare it
+                context.ReportDiagnostic(Diagnostic.Create(
+                        descriptor: ProtoBufFieldAnalyzer.MissingCompatibilityLevel,
+                        location: null,
+                        messageArgs: null,
+                        additionalLocations: null,
+                        properties: null
+                    ));
+            }
+
+            static bool HasProtoContractsWithoutCompatibilityLevel(Compilation compilation, INamedTypeSymbol attribType)
+            {
+                foreach(var typeName in compilation.Assembly.TypeNames)
+                {
+                    var type = compilation.Assembly.GetTypeByMetadataName(typeName);
+                    if (type is not null)
+                    {
+                        bool hasCompatLevel = false, isProtoContract = false;
+                        foreach (var attrib in type.GetAttributes())
+                        {
+                            var ac = attrib.AttributeClass;
+                            if (ac == null) continue;
+                            if (SymbolEqualityComparer.Default.Equals(ac, attribType))
+                            {
+                                hasCompatLevel = true;
+                                break; // we don't need more
+                            }
+                            if (ac.Name == nameof(ProtoContractAttribute) && ac.InProtoBufNamespace())
+                            {
+                                isProtoContract = true;
+                            }
+                        }
+                        if (isProtoContract && !hasCompatLevel) return true;
+                    }
+                }
+                return false;
+            }
+
+            static bool IsDeclaredAtModuleOrAssembly(Compilation compilation, INamedTypeSymbol attribType)
+            {
+                foreach (var attrib in compilation.SourceModule.GetAttributes())
+                {
+                    if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, attribType))
+                    {
+                        return true;
+                    }
+                }
+                foreach (var attrib in compilation.Assembly.GetAttributes())
+                {
+                    if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, attribType))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
 
         private static void ConsiderPossibleProtoBufType(SyntaxNodeAnalysisContext context)
@@ -174,6 +249,7 @@ namespace ProtoBuf.BuildTools
                         Context().AddIgnore(type, attrib, null);
                         break;
                     case nameof(CompatibilityLevelAttribute) when ac.InProtoBufNamespace():
+                        Context();
                         break;
                 }
             }
@@ -199,8 +275,10 @@ namespace ProtoBuf.BuildTools
                                     Context().AddIgnore(member, attrib, member.Name);
                                     break;
                                 case nameof(ProtoMapAttribute) when ac.InProtoBufNamespace():
+                                    Context();
                                     break;
                                 case nameof(CompatibilityLevelAttribute) when ac.InProtoBufNamespace():
+                                    Context();
                                     break;
                             }
                         }
