@@ -10,7 +10,7 @@ using System.Text;
 
 namespace ProtoBuf.BuildTools
 {
-    [Generator]
+    // [Generator] (not ready for prime time)
     public sealed class ProtoFileGenerator : ISourceGenerator
     {
         void ISourceGenerator.Initialize(GeneratorInitializationContext context) { }
