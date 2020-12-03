@@ -109,7 +109,7 @@ namespace ProtoBuf.BuildTools
                     var level = error.IsError ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
                     context.ReportDiagnostic(Diagnostic.Create($"PBN1{error.ErrorNumber.ToString("000", CultureInfo.InvariantCulture)}",
                         "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
-                        location: Location.Create(schema.Path, default, new LinePositionSpan(position, position))));
+                        location: Location.Create(schema.Path, default, span)));
                 }
             }
             log?.Write($"Files generated: {set.Files.Count}");
