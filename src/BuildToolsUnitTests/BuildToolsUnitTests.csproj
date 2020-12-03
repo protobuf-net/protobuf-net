@@ -17,7 +17,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
   </ItemGroup>
 
   <ItemGroup>
