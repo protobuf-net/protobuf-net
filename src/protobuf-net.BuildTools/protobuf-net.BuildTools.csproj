@@ -33,4 +33,10 @@
     <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
   </ItemGroup>
 
+  <ItemGroup>
+    <CompilerVisibleProperty Include="ProtoBufNet_DebugLog" />
+    <CompilerVisibleProperty Include="ProtoBufNet_GenerateServices" />
+    <CompilerVisibleProperty Include="ProtoBufNet_UseOneOf" />
+  </ItemGroup>
+
 </Project>

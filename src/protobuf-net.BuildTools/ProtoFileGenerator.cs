@@ -27,14 +27,14 @@ namespace ProtoBuf.BuildTools
             public void Write(string message)
                 => _context.ReportDiagnostic(Diagnostic.Create("PBN9999", "Debug", message, DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, -1));
         }
+        static bool TryReadBoolSetting(in GeneratorExecutionContext context, string key, bool defaultValue = false)
+            => context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(key, out var s)
+                && s is not null && bool.TryParse(s, out bool b) ? b : defaultValue;
+
         void ISourceGenerator.Execute(GeneratorExecutionContext context)
         {
-            bool debugLog = false;
-            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("pbn_debug_log", out var s)
-                && s is not null && bool.TryParse(s, out bool b))
-            {
-                debugLog = b;
-            }
+            bool debugLog = TryReadBoolSetting(context, "pbn_debug_log") || TryReadBoolSetting(context, "build_property.ProtoBufNet_DebugLog");
+
             Logger? log = debugLog ? new Logger(context) : default;
 
             log?.Write($"Execute with debug log enabled");
@@ -107,8 +107,8 @@ namespace ProtoBuf.BuildTools
             {
                 var options = new Dictionary<string, string>
                 {
-                    {"services", "yes" },
-                    {"oneof", "yes" },
+                    {"services", TryReadBoolSetting(context, "build_property.ProtoBufNet_GenerateServices", true) ? "yes" : "no" },
+                    {"oneof", TryReadBoolSetting(context, "build_property.ProtoBufNet_UseOneOf", true) ? "yes" : "no" },
                 };
                 if (langver is string) options.Add("langver", langver);
                 var files = generator.Generate(set, options: options);
