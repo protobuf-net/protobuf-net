@@ -22,7 +22,7 @@ namespace BuildToolsUnitTests
         protected static TAnalyzer AnalyzerSingleton { get; } = Activator.CreateInstance<TAnalyzer>();
         protected virtual TAnalyzer Analyzer { get; } = AnalyzerSingleton;
 
-        protected virtual bool ReferenceProtoBuf { get; } = true;
+        protected virtual bool ReferenceProtoBuf => true;
 
         protected virtual Project SetupProject(Project project) => project;
 
