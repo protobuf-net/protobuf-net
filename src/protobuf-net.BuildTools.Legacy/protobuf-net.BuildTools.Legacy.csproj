@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../protobuf-net.BuildTools/ProtobufFieldAnalyzer.cs" Link="ProtobufFieldAnalyzer.cs" />
-    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="ProtobufFieldAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/ProtobufFieldAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" />
   </ItemGroup>
 </Project>

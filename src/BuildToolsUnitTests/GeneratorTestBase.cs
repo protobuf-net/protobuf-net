@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Immutable;
@@ -14,7 +13,6 @@ namespace BuildToolsUnitTests
 {
     public abstract class GeneratorTestBase<TGenerator> where TGenerator : ISourceGenerator
     {
-
         protected static AdditionalText[] Text(string path, string content) => new[] { new InMemoryAdditionalText(path, content) };
         protected static AdditionalText[] Texts(params (string path, string content)[] pairs) => pairs.Select(pair => new InMemoryAdditionalText(pair.path, pair.content)).ToArray();
 
@@ -30,6 +28,11 @@ namespace BuildToolsUnitTests
         protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
             Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null, bool debugLog = true)
         {
+            if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
+            {
+                throw new InvalidOperationException($"Type is not marked [Generator]: {typeof(TGenerator)}");
+            }
+
             var parseOptions = new CSharpParseOptions(kind: SourceCodeKind.Regular, documentationMode: DocumentationMode.Parse);
 
             if (globalOptions is null) globalOptions = ImmutableDictionary<string, string>.Empty;
