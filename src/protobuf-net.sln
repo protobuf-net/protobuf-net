@@ -15,11 +15,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		..\Build.csproj = ..\Build.csproj
 		Directory.build.props = Directory.build.props
 		..\global.json = ..\global.json
+		NuGet.Config = NuGet.Config
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
 		Shared.ruleset = Shared.ruleset
 		version.json = version.json
-		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection", "protobuf-net.Reflection\protobuf-net.Reflection.csproj", "{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}"
@@ -85,6 +85,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.BuildTools", "protobuf-net.BuildTools\protobuf-net.BuildTools.csproj", "{6A13934A-418A-4732-8567-0C5DE8F52234}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildToolsUnitTests", "BuildToolsUnitTests\BuildToolsUnitTests.csproj", "{9376B70C-ECE5-4D82-8290-2CA27F3761A3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.BuildTools.Legacy", "protobuf-net.BuildTools.Legacy\protobuf-net.BuildTools.Legacy.csproj", "{B09E5BE2-3DE5-410C-A852-17626F0AC48D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -255,6 +257,12 @@ Global
 		{9376B70C-ECE5-4D82-8290-2CA27F3761A3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9376B70C-ECE5-4D82-8290-2CA27F3761A3}.VS|Any CPU.ActiveCfg = Debug|Any CPU
 		{9376B70C-ECE5-4D82-8290-2CA27F3761A3}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -288,6 +296,7 @@ Global
 		{5BBB51AD-BB03-4053-98CF-81641E1B8AE8} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 		{6A13934A-418A-4732-8567-0C5DE8F52234} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 		{9376B70C-ECE5-4D82-8290-2CA27F3761A3} = {0D637072-686D-4DC7-91E4-87913E5154B4}
+		{B09E5BE2-3DE5-410C-A852-17626F0AC48D} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFE3C0D9-B865-48B9-9CC8-8AEA71EB5C16}
