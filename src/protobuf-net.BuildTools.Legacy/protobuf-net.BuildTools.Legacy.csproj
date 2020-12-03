@@ -1,20 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
-    <AssemblyName>protobuf-net.BuildTools</AssemblyName>
+    <AssemblyName>protobuf-net.BuildTools.Legacy</AssemblyName>
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <NoWarn>$(NoWarn);RS2007</NoWarn> <!-- because I have no clue what to do with that-->
-    <Description>Analyzer and Generator support for protobuf-net</Description>
+    <NoWarn>$(NoWarn);RS2007</NoWarn><!-- because I have no clue what to do with that-->
+    <Description>Analyzer and Generator support for protobuf-net, using SDK 3.3.1 (pre .NET 5)</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- build time deps -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" Pack="false" PrivateAssets="all" />
-    
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" Pack="false" PrivateAssets="all" />
+
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <!-- note: package ref here (rather than project ref) so we can ship BuildTools without shipping everything -->
     <PackageReference Include="protobuf-net.Reflection" Version="3.0.72" PrivateAssets="all" GeneratePathProperty="true" />
@@ -24,19 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="AnalyzerReleases.Shipped.md" />
-    <None Remove="AnalyzerReleases.Unshipped.md" />
+    <Compile Include="../protobuf-net.BuildTools/ProtobufFieldAnalyzer.cs" Link="ProtobufFieldAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="ProtobufFieldAnalyzer.cs" />
   </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
-    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <CompilerVisibleProperty Include="ProtoBufNet_DebugLog" />
-    <CompilerVisibleProperty Include="ProtoBufNet_GenerateServices" />
-    <CompilerVisibleProperty Include="ProtoBufNet_UseOneOf" />
-  </ItemGroup>
-
 </Project>

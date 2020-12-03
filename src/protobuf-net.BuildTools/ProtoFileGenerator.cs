@@ -1,9 +1,8 @@
-﻿#if GENERATORS
-using Google.Protobuf.Reflection;
+﻿using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.Reflection;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,41 +18,82 @@ namespace ProtoBuf.BuildTools
     {
         void ISourceGenerator.Initialize(GeneratorInitializationContext context) { }
 
+        private sealed class Logger
+        {
+            public Logger(GeneratorExecutionContext context)
+                => _context = context;
+            private readonly GeneratorExecutionContext _context;
+
+            public void Write(string message)
+                => _context.ReportDiagnostic(Diagnostic.Create("PBN9999", "Debug", message, DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, -1));
+        }
+        static bool TryReadBoolSetting(in GeneratorExecutionContext context, string key, bool defaultValue = false)
+            => context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(key, out var s)
+                && s is not null && bool.TryParse(s, out bool b) ? b : defaultValue;
+
         void ISourceGenerator.Execute(GeneratorExecutionContext context)
         {
-            File.WriteAllText(@"c:\Code\gen.txt", "I haz exist" + Environment.NewLine);
+            bool debugLog = TryReadBoolSetting(context, "pbn_debug_log") || TryReadBoolSetting(context, "build_property.ProtoBufNet_DebugLog");
+
+            Logger? log = debugLog ? new Logger(context) : default;
+
+            log?.Write($"Execute with debug log enabled");
+
             // find anything that matches our files
             CodeGenerator generator;
-            string langver;
-            
+            string? langver = null;
+
             switch (context.Compilation.Language)
             {
                 case "C#":
                     generator = CSharpCodeGenerator.Default;
-                    langver = "9.0"; // TODO: lookup from context
+                    if (context.ParseOptions is CSharpParseOptions cs)
+                    {
+                        langver = cs.LanguageVersion switch
+                        {
+                            LanguageVersion.CSharp1 => "1",
+                            LanguageVersion.CSharp2 => "2",
+                            LanguageVersion.CSharp3 => "3",
+                            LanguageVersion.CSharp4 => "4",
+                            LanguageVersion.CSharp5 => "5",
+                            LanguageVersion.CSharp6 => "6",
+                            LanguageVersion.CSharp7 => "7",
+                            LanguageVersion.CSharp7_1 => "7.1",
+                            LanguageVersion.CSharp7_2 => "7.2",
+                            LanguageVersion.CSharp7_3 => "7.3",
+                            LanguageVersion.CSharp8 => "8",
+                            LanguageVersion.CSharp9 => "9",
+                            _ => null
+                        };
+                    }
                     break;
-                case "VB":
-                    generator = VBCodeGenerator.Default;
-                    langver = "14.0"; // TODO: lookup from context
-                    break;
+                //case "VB": // completely untested, and pretty sure this isn't even a "thing"
+                //    generator = VBCodeGenerator.Default;
+                //    langver = "14.0"; // TODO: lookup from context
+                //    break;
                 default:
+                    log?.Write($"Unexpected language: {context.Compilation.Language}");
                     return; // nothing doing
             }
+            log?.Write($"Detected {generator.Name} v{langver}");
+
             var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto"));
             var set = new FileDescriptorSet();
             foreach (var schema in schemas)
             {
-                
                 var content = schema.GetText(context.CancellationToken);
                 if (content is null) continue;
 
-                using (var sr = new StringReader(content.ToString()))
+                var contentString = content.ToString();
+                log?.Write($"Processing '{schema.Path}' ({contentString.Length} characters)...");
+
+                using (var sr = new StringReader(contentString))
                 {
-                    File.AppendAllText(@"c:\Code\gen.txt", schema.Path + Environment.NewLine);
                     set.Add(Path.GetFileName(schema.Path), true, sr);
                 }
                 set.Process();
                 var errors = set.GetErrors();
+                log?.Write($"Parsed '{schema.Path}' with {errors.Length} errors/warnings");
                 foreach (var error in errors)
                 {
                     var position = new LinePosition(error.LineNumber, error.ColumnNumber);
@@ -62,21 +102,28 @@ namespace ProtoBuf.BuildTools
                         location: Location.Create(schema.Path, default, new LinePositionSpan(position, position))));
                 }
             }
+            log?.Write($"Files generated: {set.Files.Count}");
             if (set.Files.Any())
             {
                 var options = new Dictionary<string, string>
                 {
-                    {"services", "yes" },
-                    {"oneof", "yes" },
+                    {"services", TryReadBoolSetting(context, "build_property.ProtoBufNet_GenerateServices", true) ? "yes" : "no" },
+                    {"oneof", TryReadBoolSetting(context, "build_property.ProtoBufNet_UseOneOf", true) ? "yes" : "no" },
                 };
                 if (langver is string) options.Add("langver", langver);
                 var files = generator.Generate(set, options: options);
                 foreach (var file in files)
                 {
-                    context.AddSource(file.Name, SourceText.From(file.Text, Encoding.UTF8));
+                    var finalName = file.Name;
+                    var ext = Path.GetExtension(finalName);
+                    if (!ext.StartsWith(".generated."))
+                    {
+                        finalName = Path.ChangeExtension(finalName, "generated" + ext);
+                    }
+                    log?.Write($"Adding: '{finalName}' ({file.Text.Length} characters)");
+                    context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
                 }
             }
         }
     }
 }
-#endif
