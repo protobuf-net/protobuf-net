@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.Reflection;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -96,9 +97,18 @@ namespace ProtoBuf.BuildTools
                 log?.Write($"Parsed '{schema.Path}' with {errors.Length} errors/warnings");
                 foreach (var error in errors)
                 {
-                    var position = new LinePosition(error.LineNumber, error.ColumnNumber);
+                    var position = new LinePosition(error.LineNumber - 1, error.ColumnNumber - 1); // zero index on these positions
+                    var span = new LinePositionSpan(position, position);
+                    var txt = error.Text;
+                    if (txt.IndexOf('\r') < 0 && txt.IndexOf('\n') < 0)
+                    {
+                        // all on 1 line - we can use the length of txt to construct a span, rather than a single position
+                        span = new LinePositionSpan(position, new LinePosition(position.Line, position.Character + txt.Length));
+                    }
+
                     var level = error.IsError ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
-                    context.ReportDiagnostic(Diagnostic.Create($"PBN{error.ErrorNumber}", "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
+                    context.ReportDiagnostic(Diagnostic.Create($"PBN1{error.ErrorNumber.ToString("000", CultureInfo.InvariantCulture)}",
+                        "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
                         location: Location.Create(schema.Path, default, new LinePositionSpan(position, position))));
                 }
             }
