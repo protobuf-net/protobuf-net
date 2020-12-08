@@ -95,8 +95,10 @@ namespace ProtoBuf.BuildTools.Generators
                 var fileSystem = new AdditionalFilesFileSystem(log, schemas);
                 foreach (var schema in schemas)
                 {
-                    var set = new FileDescriptorSet();
-                    set.FileSystem = fileSystem;
+                    var set = new FileDescriptorSet
+                    {
+                        FileSystem = fileSystem
+                    };
 
                     var name = Path.GetFileName(schema.Value.Path);
                     var location = Path.GetDirectoryName(schema.Value.Path);
@@ -124,7 +126,8 @@ namespace ProtoBuf.BuildTools.Generators
                         }
 
                         var level = error.IsError ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
-                        context.ReportDiagnostic(Diagnostic.Create($"PBN1{error.ErrorNumber.ToString("000", CultureInfo.InvariantCulture)}",
+                        const int ErrorNumberOffset = 1000;
+                        context.ReportDiagnostic(Diagnostic.Create($"PBN{(error.ErrorNumber + ErrorNumberOffset).ToString("0000", CultureInfo.InvariantCulture)}",
                             "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
                             location: Location.Create(error.File, default, span)));
                     }
