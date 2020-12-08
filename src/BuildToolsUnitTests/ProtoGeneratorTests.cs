@@ -17,5 +17,29 @@ namespace BuildToolsUnitTests
             Assert.Empty(diagnostics);
             Assert.Single(result.GeneratedTrees);
         }
+
+        [Fact]
+        public async Task GenerateWithImport()
+        {
+            (var result, var diagnostics) = await GenerateAsync(
+                Texts(
+                    ("/code/x/y/foo.proto", @"
+syntax = ""proto3"";
+import ""import/bar.proto"";
+
+message Foo {
+    Bar bar = 1;
+}
+"),
+                    ("/code/x/y/import/bar.proto", @"
+syntax = ""proto3"";
+
+message Bar {
+    int32 i = 1;
+}")
+                ));
+            Assert.Empty(diagnostics);
+            Assert.Equal(2, result.GeneratedTrees.Length);
+        }
     }
 }

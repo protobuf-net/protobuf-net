@@ -3,7 +3,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.Reflection;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -34,105 +36,153 @@ namespace ProtoBuf.BuildTools
 
         void ISourceGenerator.Execute(GeneratorExecutionContext context)
         {
-            bool debugLog = TryReadBoolSetting(context, "pbn_debug_log") || TryReadBoolSetting(context, "build_property.ProtoBufNet_DebugLog");
-
-            Logger? log = debugLog ? new Logger(context) : default;
-
-            log?.Write($"Execute with debug log enabled");
-
-            // find anything that matches our files
-            CodeGenerator generator;
-            string? langver = null;
-
-            switch (context.Compilation.Language)
+            Logger? log = default;
+            try
             {
-                case "C#":
-                    generator = CSharpCodeGenerator.Default;
-                    if (context.ParseOptions is CSharpParseOptions cs)
-                    {
-                        langver = cs.LanguageVersion switch
+                bool debugLog = TryReadBoolSetting(context, "pbn_debug_log") || TryReadBoolSetting(context, "build_property.ProtoBufNet_DebugLog");
+                if (debugLog) log = new Logger(context);
+
+                log?.Write($"Execute with debug log enabled");
+
+                var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).ToImmutableArray();
+                if (schemas.IsDefaultOrEmpty)
+                {
+                    log?.Write("No .proto schemas found");
+                    return;
+                }
+
+                // find anything that matches our files
+                CodeGenerator generator;
+                string? langver = null;
+
+                switch (context.Compilation.Language)
+                {
+                    case "C#":
+                        generator = CSharpCodeGenerator.Default;
+                        if (context.ParseOptions is CSharpParseOptions cs)
                         {
-                            LanguageVersion.CSharp1 => "1",
-                            LanguageVersion.CSharp2 => "2",
-                            LanguageVersion.CSharp3 => "3",
-                            LanguageVersion.CSharp4 => "4",
-                            LanguageVersion.CSharp5 => "5",
-                            LanguageVersion.CSharp6 => "6",
-                            LanguageVersion.CSharp7 => "7",
-                            LanguageVersion.CSharp7_1 => "7.1",
-                            LanguageVersion.CSharp7_2 => "7.2",
-                            LanguageVersion.CSharp7_3 => "7.3",
-                            LanguageVersion.CSharp8 => "8",
-                            LanguageVersion.CSharp9 => "9",
-                            _ => null
-                        };
-                    }
-                    break;
-                //case "VB": // completely untested, and pretty sure this isn't even a "thing"
-                //    generator = VBCodeGenerator.Default;
-                //    langver = "14.0"; // TODO: lookup from context
-                //    break;
-                default:
-                    log?.Write($"Unexpected language: {context.Compilation.Language}");
-                    return; // nothing doing
-            }
-            log?.Write($"Detected {generator.Name} v{langver}");
-
-            var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto"));
-            var set = new FileDescriptorSet();
-            foreach (var schema in schemas)
-            {
-                var content = schema.GetText(context.CancellationToken);
-                if (content is null) continue;
-
-                var contentString = content.ToString();
-                log?.Write($"Processing '{schema.Path}' ({contentString.Length} characters)...");
-
-                using (var sr = new StringReader(contentString))
-                {
-                    set.Add(Path.GetFileName(schema.Path), true, sr);
+                            langver = cs.LanguageVersion switch
+                            {
+                                LanguageVersion.CSharp1 => "1",
+                                LanguageVersion.CSharp2 => "2",
+                                LanguageVersion.CSharp3 => "3",
+                                LanguageVersion.CSharp4 => "4",
+                                LanguageVersion.CSharp5 => "5",
+                                LanguageVersion.CSharp6 => "6",
+                                LanguageVersion.CSharp7 => "7",
+                                LanguageVersion.CSharp7_1 => "7.1",
+                                LanguageVersion.CSharp7_2 => "7.2",
+                                LanguageVersion.CSharp7_3 => "7.3",
+                                LanguageVersion.CSharp8 => "8",
+                                LanguageVersion.CSharp9 => "9",
+                                _ => null
+                            };
+                        }
+                        break;
+                    //case "VB": // completely untested, and pretty sure this isn't even a "thing"
+                    //    generator = VBCodeGenerator.Default;
+                    //    langver = "14.0"; // TODO: lookup from context
+                    //    break;
+                    default:
+                        log?.Write($"Unexpected language: {context.Compilation.Language}");
+                        return; // nothing doing
                 }
-                set.Process();
-                var errors = set.GetErrors();
-                log?.Write($"Parsed '{schema.Path}' with {errors.Length} errors/warnings");
-                foreach (var error in errors)
+                log?.Write($"Detected {generator.Name} v{langver}");
+
+                var fileSystem = new AdditionalFilesFileSystem(log, schemas);
+                foreach (var schema in schemas)
                 {
-                    var position = new LinePosition(error.LineNumber - 1, error.ColumnNumber - 1); // zero index on these positions
-                    var span = new LinePositionSpan(position, position);
-                    var txt = error.Text;
-                    if (txt.IndexOf('\r') < 0 && txt.IndexOf('\n') < 0)
+                    var set = new FileDescriptorSet();
+                    set.FileSystem = fileSystem;
+
+                    var name = Path.GetFileName(schema.Path);
+                    var location  = Path.GetDirectoryName(schema.Path);
+                    log?.Write($"Processing '{name}' relative to '{location}'");
+
+                    set.AddImportPath(location);
+                    set.Add(name);
+
+                    set.Process();
+                    var errors = set.GetErrors();
+                    log?.Write($"Parsed {schemas.Length} schemas with {errors.Count(x => x.IsError)} errors, {errors.Count(x => x.IsWarning)} warnings");
+                    foreach (var error in errors)
                     {
-                        // all on 1 line - we can use the length of txt to construct a span, rather than a single position
-                        span = new LinePositionSpan(position, new LinePosition(position.Line, position.Character + txt.Length));
-                    }
+                        var position = new LinePosition(error.LineNumber - 1, error.ColumnNumber - 1); // zero index on these positions
+                        var span = new LinePositionSpan(position, position);
+                        var txt = error.Text;
+                        if (txt.IndexOf('\r') < 0 && txt.IndexOf('\n') < 0)
+                        {
+                            // all on 1 line - we can use the length of txt to construct a span, rather than a single position
+                            span = new LinePositionSpan(position, new LinePosition(position.Line, position.Character + txt.Length));
+                        }
 
-                    var level = error.IsError ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
-                    context.ReportDiagnostic(Diagnostic.Create($"PBN1{error.ErrorNumber.ToString("000", CultureInfo.InvariantCulture)}",
-                        "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
-                        location: Location.Create(schema.Path, default, span)));
-                }
-            }
-            log?.Write($"Files generated: {set.Files.Count}");
-            if (set.Files.Any())
-            {
-                var options = new Dictionary<string, string>
+                        var level = error.IsError ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
+                        context.ReportDiagnostic(Diagnostic.Create($"PBN1{error.ErrorNumber.ToString("000", CultureInfo.InvariantCulture)}",
+                            "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
+                            location: Location.Create(error.File, default, span)));
+                    }
+                    log?.Write($"Files generated: {set.Files.Count}");
+                    if (set.Files.Any())
+                    {
+                        var options = new Dictionary<string, string>
                 {
                     {"services", TryReadBoolSetting(context, "build_property.ProtoBufNet_GenerateServices", true) ? "yes" : "no" },
                     {"oneof", TryReadBoolSetting(context, "build_property.ProtoBufNet_UseOneOf", true) ? "yes" : "no" },
                 };
-                if (langver is string) options.Add("langver", langver);
-                var files = generator.Generate(set, options: options);
-                foreach (var file in files)
-                {
-                    var finalName = file.Name;
-                    var ext = Path.GetExtension(finalName);
-                    if (!ext.StartsWith(".generated."))
-                    {
-                        finalName = Path.ChangeExtension(finalName, "generated" + ext);
+                        if (langver is string) options.Add("langver", langver);
+                        var files = generator.Generate(set, options: options);
+                        foreach (var file in files)
+                        {
+                            var finalName = Path.GetFileName(file.Name); // not allowed to use path qualifiers
+                            var ext = Path.GetExtension(finalName);
+                            if (!ext.StartsWith(".generated."))
+                            {
+                                finalName = Path.ChangeExtension(finalName, "generated" + ext);
+                            }
+                            log?.Write($"Adding: '{finalName}' ({file.Text.Length} characters)");
+                            context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
+                        }
                     }
-                    log?.Write($"Adding: '{finalName}' ({file.Text.Length} characters)");
-                    context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
                 }
+            }
+            catch (Exception ex)
+            {
+                if (log is null) throw;
+                log.Write($"Exception: '{ex.Message}' ({ex.GetType().Name})");
+                log.Write(ex.StackTrace);
+            }
+        }
+
+        private class AdditionalFilesFileSystem : IFileSystem
+        {
+            private readonly Logger? _log;
+            private readonly ImmutableArray<AdditionalText> _schemas;
+
+            public AdditionalFilesFileSystem(Logger? log, ImmutableArray<AdditionalText> schemas)
+            {
+                _log = log;
+                _schemas = schemas;
+            }
+
+            bool IFileSystem.Exists(string path)
+            {
+                var found = _schemas.Any(x => x.Path == path);
+                _log?.Write($"Checking for '{path}': {(found ? "found" : "not found")}");
+                return found;
+                
+            }
+
+            TextReader? IFileSystem.OpenText(string path)
+            {
+                var content = _schemas.FirstOrDefault(x => x.Path == path)?.GetText()?.ToString();
+                if (content is null)
+                {
+                    _log?.Write($"opening '{path}': not found");
+                    return null;
+                }
+
+                _log?.Write($"opening '{path}': {content.Length} characters");
+                return new StringReader(content);
             }
         }
     }
