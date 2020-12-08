@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
-    <Compile Include="../protobuf-net.Core/**/*.cs" />
+    <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core"/>
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     
     <!-- cross-reference the analyzer code -->
