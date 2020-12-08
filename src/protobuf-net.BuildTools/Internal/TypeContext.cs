@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using ProtoBuf.BuildTools.Analyzers;
 using System.Collections.Generic;
 
 namespace ProtoBuf.BuildTools.Internal

@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using ProtoBuf.BuildTools;
+using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;

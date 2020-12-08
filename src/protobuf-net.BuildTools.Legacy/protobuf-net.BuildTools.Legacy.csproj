@@ -3,7 +3,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
     <AssemblyName>protobuf-net.BuildTools.Legacy</AssemblyName>
-    <!--<Nullable>enable</Nullable>-->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
@@ -24,6 +23,6 @@
     
     <!-- cross-reference the analyzer code -->
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" />
-    <Compile Include="../protobuf-net.BuildTools/ProtobufFieldAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Analyzers/ProtobufFieldAnalyzer.cs" />
   </ItemGroup>
 </Project>

@@ -10,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProtoBuf.BuildTools
+namespace ProtoBuf.BuildTools.Generators
 {
     /// <summary>
     /// Generates protobuf-net types from .proto schemas

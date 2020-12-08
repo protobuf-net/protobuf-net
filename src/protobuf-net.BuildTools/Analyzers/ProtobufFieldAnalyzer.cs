@@ -6,7 +6,7 @@ using ProtoBuf.BuildTools.Internal;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ProtoBuf.BuildTools
+namespace ProtoBuf.BuildTools.Analyzers
 {
     /// <summary>
     /// Reports common usage errors in code that uses protobuf-net
