@@ -3,6 +3,7 @@ using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
@@ -18,19 +19,17 @@ namespace ProtoBuf.BuildTools.Generators
     /// Generates protobuf-net types from .proto schemas
     /// </summary>
     [Generator]
-    public sealed class ProtoFileGenerator : ISourceGenerator
+    public sealed class ProtoFileGenerator : ISourceGenerator, ILoggingAnalyzer
     {
+        private event Action<string>? Log;
+        event Action<string>? ILoggingAnalyzer.Log
+        {
+            add => this.Log += value;
+            remove => this.Log -= value;
+        }
+
         void ISourceGenerator.Initialize(GeneratorInitializationContext context) { }
 
-        private sealed class Logger
-        {
-            public Logger(GeneratorExecutionContext context)
-                => _context = context;
-            private readonly GeneratorExecutionContext _context;
-
-            public void Write(string message)
-                => _context.ReportDiagnostic(Diagnostic.Create("PBN9999", "Debug", message, DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, -1));
-        }
         static bool TryReadBoolSetting(in GeneratorExecutionContext context, string key, bool defaultValue = false)
             => context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(key, out var s)
                 && s is not null && bool.TryParse(s, out bool b) ? b : defaultValue;
@@ -39,18 +38,15 @@ namespace ProtoBuf.BuildTools.Generators
 
         void ISourceGenerator.Execute(GeneratorExecutionContext context)
         {
-            Logger? log = default;
             try
             {
-                bool debugLog = TryReadBoolSetting(context, "pbn_debug_log") || TryReadBoolSetting(context, "build_property.ProtoBufNet_DebugLog");
-                if (debugLog) log = new Logger(context);
-
-                log?.Write($"Execute with debug log enabled");
+                var log = Log;
+                log?.Invoke($"Execute with debug log enabled");
 
                 var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).Select(at => new NormalizedAdditionalText(at)).ToImmutableArray();
                 if (schemas.IsDefaultOrEmpty)
                 {
-                    log?.Write("No .proto schemas found");
+                    log?.Invoke("No .proto schemas found");
                     return;
                 }
 
@@ -87,10 +83,10 @@ namespace ProtoBuf.BuildTools.Generators
                     //    langver = "14.0"; // TODO: lookup from context
                     //    break;
                     default:
-                        log?.Write($"Unexpected language: {context.Compilation.Language}");
+                        log?.Invoke($"Unexpected language: {context.Compilation.Language}");
                         return; // nothing doing
                 }
-                log?.Write($"Detected {generator.Name} v{langver}");
+                log?.Invoke($"Detected {generator.Name} v{langver}");
 
                 var fileSystem = new AdditionalFilesFileSystem(log, schemas);
                 foreach (var schema in schemas)
@@ -102,18 +98,18 @@ namespace ProtoBuf.BuildTools.Generators
 
                     var name = Path.GetFileName(schema.Value.Path);
                     var location = Path.GetDirectoryName(schema.Value.Path);
-                    log?.Write($"Processing '{name}' relative to '{location}'");
+                    log?.Invoke($"Processing '{name}' relative to '{location}'");
 
                     set.AddImportPath(location);
                     if (!set.Add(name))
                     {
-                        log?.Write($"Failed to add '{name}'; skipping");
+                        log?.Invoke($"Failed to add '{name}'; skipping");
                         continue;
                     }
 
                     set.Process();
                     var errors = set.GetErrors();
-                    log?.Write($"Parsed {schemas.Length} schemas with {errors.Count(x => x.IsError)} errors, {errors.Count(x => x.IsWarning)} warnings");
+                    log?.Invoke($"Parsed {schemas.Length} schemas with {errors.Count(x => x.IsError)} errors, {errors.Count(x => x.IsWarning)} warnings");
                     foreach (var error in errors)
                     {
                         var position = new LinePosition(error.LineNumber - 1, error.ColumnNumber - 1); // zero index on these positions
@@ -131,7 +127,7 @@ namespace ProtoBuf.BuildTools.Generators
                             "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
                             location: Location.Create(error.File, default, span)));
                     }
-                    log?.Write($"Files generated: {set.Files.Count}");
+                    log?.Invoke($"Files generated: {set.Files.Count}");
                     if (set.Files.Any())
                     {
                         var options = new Dictionary<string, string>
@@ -149,7 +145,7 @@ namespace ProtoBuf.BuildTools.Generators
                             {
                                 finalName = Path.ChangeExtension(finalName, "generated" + ext);
                             }
-                            log?.Write($"Adding: '{finalName}' ({file.Text.Length} characters)");
+                            log?.Invoke($"Adding: '{finalName}' ({file.Text.Length} characters)");
                             context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
                         }
                     }
@@ -157,9 +153,9 @@ namespace ProtoBuf.BuildTools.Generators
             }
             catch (Exception ex)
             {
-                if (log is null) throw;
-                log.Write($"Exception: '{ex.Message}' ({ex.GetType().Name})");
-                log.Write(ex.StackTrace);
+                if (Log is null) throw;
+                Log.Invoke($"Exception: '{ex.Message}' ({ex.GetType().Name})");
+                Log.Invoke(ex.StackTrace);
             }
         }
 
@@ -179,10 +175,10 @@ namespace ProtoBuf.BuildTools.Generators
             public static string NormalizePath(string path)
                 => path?.Replace('/', '\\') ?? "";
 
-            private readonly Logger? _log;
+            private readonly Action<string>? _log;
             private readonly ImmutableArray<NormalizedAdditionalText> _schemas;
 
-            public AdditionalFilesFileSystem(Logger? log, ImmutableArray<NormalizedAdditionalText> schemas)
+            public AdditionalFilesFileSystem(Action<string>? log, ImmutableArray<NormalizedAdditionalText> schemas)
             {
                 _log = log;
                 _schemas = schemas;
@@ -191,7 +187,7 @@ namespace ProtoBuf.BuildTools.Generators
             bool IFileSystem.Exists(string path)
             {
                 var found = Find(path);
-                _log?.Write($"Checking for '{path}': {(found is not null ? "found" : "not found")}");
+                _log?.Invoke($"Checking for '{path}': {(found is not null ? "found" : "not found")}");
                 return found is not null;
                 
             }
@@ -212,11 +208,11 @@ namespace ProtoBuf.BuildTools.Generators
                 var content = Find(path)?.GetText()?.ToString();
                 if (content is null)
                 {
-                    _log?.Write($"opening '{path}': not found");
+                    _log?.Invoke($"opening '{path}': not found");
                     return null;
                 }
 
-                _log?.Write($"opening '{path}': {content.Length} characters");
+                _log?.Invoke($"opening '{path}': {content.Length} characters");
                 return new StringReader(content);
             }
         }

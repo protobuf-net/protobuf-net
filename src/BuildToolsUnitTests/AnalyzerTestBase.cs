@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -19,8 +20,18 @@ namespace BuildToolsUnitTests
         private readonly ITestOutputHelper? _testOutputHelper;
         protected AnalyzerTestBase(ITestOutputHelper? testOutputHelper = null) => _testOutputHelper = testOutputHelper;
 
-        protected static TAnalyzer AnalyzerSingleton { get; } = Activator.CreateInstance<TAnalyzer>();
-        protected virtual TAnalyzer Analyzer { get; } = AnalyzerSingleton;
+        protected virtual TAnalyzer Analyzer
+        {
+            get
+            {
+                var obj = Activator.CreateInstance<TAnalyzer>();
+                if (obj is ILoggingAnalyzer logging && _testOutputHelper is not null)
+                {
+                    logging.Log += s => _testOutputHelper.WriteLine(s);
+                }
+                return obj;
+            }
+        }
 
         protected virtual bool ReferenceProtoBuf => true;
 

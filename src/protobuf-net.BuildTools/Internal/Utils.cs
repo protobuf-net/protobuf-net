@@ -2,11 +2,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -44,7 +42,21 @@ namespace ProtoBuf.BuildTools.Internal
         internal const string ProtoBufNamespace = "ProtoBuf";
 
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
-            => symbol.ContainingNamespace.Name == ProtoBufNamespace;
+        {
+            var cs = symbol.ContainingNamespace;
+            return cs.Name == ProtoBufNamespace && cs.ContainingNamespace.IsGlobalNamespace;
+        }
+
+        internal static bool InProtoBufGrpcConfigurationNamespace(this INamedTypeSymbol symbol)
+        {
+            var ns = symbol.ContainingNamespace;
+            if (ns.Name != "Configuration") return false;
+            ns = ns.ContainingNamespace;
+            if (ns.Name != "Grpc") return false;
+            ns = ns.ContainingNamespace;
+            return ns.Name == ProtoBufNamespace && ns.ContainingNamespace.IsGlobalNamespace;
+
+        }
         
         internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame
         {

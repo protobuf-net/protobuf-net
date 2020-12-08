@@ -23,5 +23,6 @@
     <!-- cross-reference the analyzer code -->
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ProtobufFieldAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Analyzers/ProtobufServiceAnalyzer.cs" />
   </ItemGroup>
 </Project>
