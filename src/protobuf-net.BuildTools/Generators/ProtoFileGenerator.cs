@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.Reflection;
+﻿#nullable enable
+using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -9,7 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProtoBuf.BuildTools
+namespace ProtoBuf.BuildTools.Generators
 {
     /// <summary>
     /// Generates protobuf-net types from .proto schemas

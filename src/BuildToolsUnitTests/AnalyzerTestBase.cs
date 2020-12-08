@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using ProtoBuf.BuildTools;
+using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -31,6 +31,7 @@ namespace BuildToolsUnitTests
 
         protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true)
         {
+            _ = callerMemberName;
             var (project, compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
             var analyzers = project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)).ToImmutableArray();
             var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, project.AnalyzerOptions);
@@ -51,6 +52,7 @@ namespace BuildToolsUnitTests
 
         protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null)
         {
+            _ = callerMemberName;
             var workspace = new AdhocWorkspace();
             var project = workspace.AddProject("protobuf-net.BuildTools.AnalyzerTests", LanguageNames.CSharp);
             project = project
@@ -62,6 +64,7 @@ namespace BuildToolsUnitTests
             if (ReferenceProtoBuf)
             {
                 project = project
+                    .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location))
                     .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location))
                     .AddMetadataReference(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location));
             }

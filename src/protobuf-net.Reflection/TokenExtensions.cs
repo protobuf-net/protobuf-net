@@ -303,28 +303,18 @@ namespace ProtoBuf.Reflection
             }
             static void AppendEscaped(MemoryStream target, char c)
             {
-                uint codePoint;
-                switch (c)
+                uint codePoint = c switch
                 {
-                    // encoded as octal
-                    case 'a': codePoint = '\a'; break;
-                    case 'b': codePoint = '\b'; break;
-                    case 'f': codePoint = '\f'; break;
-                    case 'v': codePoint = '\v'; break;
-                    case 't': codePoint = '\t'; break;
-                    case 'n': codePoint = '\n'; break;
-                    case 'r': codePoint = '\r'; break;
-
-                    case '\\':
-                    case '?':
-                    case '\'':
-                    case '\"':
-                        codePoint = c;
-                        break;
-                    default:
-                        codePoint = '?';
-                        break;
-                }
+                    'a' => '\a',
+                    'b' => '\b',
+                    'f' => '\f',
+                    'v' => '\v',
+                    't' => '\t',
+                    'n' => '\n',
+                    'r' => '\r',
+                    '\\' or '?' or '\'' or '\"' => c,
+                    _ => '?',
+                };
                 int len = 1;
                 AppendNormalized(target, ref codePoint, ref len);
             }
@@ -464,14 +454,11 @@ namespace ProtoBuf.Reflection
             if (c == '"' || c == '\'') return TokenType.StringLiteral;
             if (char.IsWhiteSpace(c)) return TokenType.Whitespace;
             if (char.IsLetterOrDigit(c)) return TokenType.AlphaNumeric;
-            switch (c)
+            return c switch
             {
-                case '_':
-                case '.':
-                case '-':
-                    return TokenType.AlphaNumeric;
-            }
-            return TokenType.Symbol;
+                '_' or '.' or '-' => TokenType.AlphaNumeric,
+                _ => TokenType.Symbol,
+            };
         }
 
         public static IEnumerable<Token> RemoveCommentsAndWhitespace(this IEnumerable<Token> tokens)

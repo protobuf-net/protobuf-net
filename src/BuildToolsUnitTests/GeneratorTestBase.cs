@@ -30,7 +30,7 @@ namespace BuildToolsUnitTests
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
             {
-                throw new InvalidOperationException($"Type is not marked [Generator]: {typeof(TGenerator)}");
+                throw new InvalidOperationException($"Type is not marked [Generator]: {typeof(TGenerator)} in {callerMemberName}");
             }
 
             var parseOptions = new CSharpParseOptions(kind: SourceCodeKind.Regular, documentationMode: DocumentationMode.Parse);
@@ -56,8 +56,9 @@ namespace BuildToolsUnitTests
 
         protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null)
         {
+            _ = callerMemberName;
             var workspace = new AdhocWorkspace();
-            var project = workspace.AddProject("protobuf-net.BuildTools.AnalyzerTests", LanguageNames.CSharp);
+            var project = workspace.AddProject("protobuf-net.BuildTools.GeneratorTests", LanguageNames.CSharp);
             project = project
                 .WithCompilationOptions(project.CompilationOptions!.WithOutputKind(OutputKind.DynamicallyLinkedLibrary))
                 .AddMetadataReference(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
@@ -67,6 +68,7 @@ namespace BuildToolsUnitTests
             if (ReferenceProtoBuf)
             {
                 project = project
+                    .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location))
                     .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location))
                     .AddMetadataReference(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location));
             }

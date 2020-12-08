@@ -764,6 +764,7 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         private static bool UseArray(FieldDescriptorProto field)
         {
             switch (field.type)

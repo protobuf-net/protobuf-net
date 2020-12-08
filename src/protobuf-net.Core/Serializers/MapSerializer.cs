@@ -76,7 +76,7 @@ namespace ProtoBuf.Serializers
         internal abstract void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, TCollection values, in KeyValuePairSerializer<TKey, TValue> pairSerializer);
 
         [MethodImpl(ProtoReader.HotPath)]
-        internal void Write<TEnumerator>(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ref TEnumerator enumerator, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        internal static void Write<TEnumerator>(ref ProtoWriter.State state, int fieldNumber, WireType wireType, ref TEnumerator enumerator, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
             where TEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
             if (enumerator.MoveNext())

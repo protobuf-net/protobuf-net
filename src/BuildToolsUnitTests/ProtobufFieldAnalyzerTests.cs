@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.BuildTools;
+using ProtoBuf.BuildTools.Analyzers;
 using System.Globalization;
 using System.Threading.Tasks;
 using Xunit;

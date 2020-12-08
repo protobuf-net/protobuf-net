@@ -50,9 +50,8 @@ namespace ProtoBuf.Internal.Serializers
         bool IProtoTypeSerializer.CanCreateInstance() => Serializer is IFactory<T>;
 
         object IProtoTypeSerializer.CreateInstance(ISerializationContext context)
-        {
-            return !(Serializer is IFactory<T> factory) ? null : (object)factory.Create(context);
-        }
+            => Serializer is not IFactory<T> factory ? null : (object)factory.Create(context);
+
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context)
         { }
 

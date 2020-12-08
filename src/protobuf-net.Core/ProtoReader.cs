@@ -134,7 +134,9 @@ namespace ProtoBuf
         /// underlying stream; in many typical use-cases the stream is used for different
         /// processes, so it is assumed that the consumer will Dispose their stream separately.
         /// </summary>
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - no intention of supporting finalizers here
         public virtual void Dispose()
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
         {
             OnDispose();
             _model = null;

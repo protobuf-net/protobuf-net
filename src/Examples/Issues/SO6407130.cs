@@ -50,7 +50,9 @@ namespace Examples.Issues
         public class ASurrogate : ASurrogateBase
         {
             [ThreadStatic] // just in case...
+#pragma warning disable CA2211 // Non-constant fields should not be visible
             public static int HackyFlags;
+#pragma warning restore CA2211 // Non-constant fields should not be visible
             
             public override void OnDeserializing(StreamingContext context)
             {

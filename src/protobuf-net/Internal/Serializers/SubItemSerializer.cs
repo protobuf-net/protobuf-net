@@ -180,6 +180,7 @@ namespace ProtoBuf.Internal.Serializers
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType)
         {
             switch (GetCategory())

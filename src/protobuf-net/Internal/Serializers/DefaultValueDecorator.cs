@@ -48,7 +48,7 @@ namespace ProtoBuf.Internal.Serializers
             }
             ctx.MarkLabel(done);
         }
-        private void EmitBeq(Compiler.CompilerContext ctx, Compiler.CodeLabel label, Type type)
+        private static void EmitBeq(Compiler.CompilerContext ctx, Compiler.CodeLabel label, Type type)
         {
             switch (Helpers.GetTypeCode(type))
             {
