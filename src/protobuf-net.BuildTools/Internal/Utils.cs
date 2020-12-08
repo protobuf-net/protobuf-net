@@ -55,9 +55,28 @@ namespace ProtoBuf.BuildTools.Internal
             if (ns.Name != "Grpc") return false;
             ns = ns.ContainingNamespace;
             return ns.Name == ProtoBufNamespace && ns.ContainingNamespace.IsGlobalNamespace;
-
         }
-        
+
+        internal static bool InSystemThreadingTasksNamespace(this INamedTypeSymbol symbol)
+        {
+            var ns = symbol.ContainingNamespace;
+            if (ns.Name != "Tasks") return false;
+            ns = ns.ContainingNamespace;
+            if (ns.Name != "Threading") return false;
+            ns = ns.ContainingNamespace;
+            return ns.Name == "System" && ns.ContainingNamespace.IsGlobalNamespace;
+        }
+
+        internal static bool InSystemCollectionsGenericNamespace(this INamedTypeSymbol symbol)
+        {
+            var ns = symbol.ContainingNamespace;
+            if (ns.Name != "Generic") return false;
+            ns = ns.ContainingNamespace;
+            if (ns.Name != "Collections") return false;
+            ns = ns.ContainingNamespace;
+            return ns.Name == "System" && ns.ContainingNamespace.IsGlobalNamespace;
+        }
+
         internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame
         {
             if (source is not null)

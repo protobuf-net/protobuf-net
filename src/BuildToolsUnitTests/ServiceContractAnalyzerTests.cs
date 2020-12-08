@@ -55,6 +55,7 @@ namespace ProtoBuf.Grpc.Configuration
         {
             var diagnostics = await AnalyzeAsync(@"
 using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
 namespace SomeNamespace.Whatever
 {
     public static class ContainingType
@@ -62,8 +63,10 @@ namespace SomeNamespace.Whatever
         [Service]
         public interface IMyService
         {
-            int Property {get;}
+            Foo Property {get;}
         }
+        [ProtoContract]
+        public class Foo {}
     }
 }");
             var err = Assert.Single(diagnostics);
@@ -86,6 +89,112 @@ public interface IMyService
 }
 [ProtoContract]
 public class Foo {}");
+
+            Assert.Empty(diagnostics);
+        }
+
+        [Theory]
+        [InlineData("int")]
+        [InlineData("Task<int>")]
+        [InlineData("Task<Task<Foo>>")]
+        [InlineData("ValueTask<ValueTask<Foo>>")]
+        [InlineData("ValueTask<int>")]
+        [InlineData("IAsyncEnumerable<int>")]
+        public async Task DetectInvalidReturnTypes(string kind)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+#pragma warning disable CS8019
+using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+[Service]
+public interface IMyService
+{{
+    {kind} BasicMethod(Foo value);
+}}
+[ProtoContract]
+public class Foo {{}}");
+
+            var err = Assert.Single(diagnostics);
+            Assert.Equal(ServiceContractAnalyzer.InvalidReturnValue, err.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Error, err.Severity);
+            Assert.Equal("The return value must currently be Void, a reference-type data contract, or an task / async sequence of the same.", err.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Theory]
+        [InlineData("Foo foo")]
+        [InlineData("IAsyncEnumerable<Foo> foos")]
+        [InlineData("")]
+        public async Task DetectValidParameterKinds(string? kind)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+#pragma warning disable CS8019
+using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
+using System.Collections.Generic;
+
+[Service]
+public interface IMyService
+{{
+    Foo BasicMethod({kind});
+}}
+[ProtoContract]
+public class Foo {{}}");
+
+            Assert.Empty(diagnostics);
+        }
+
+        [Theory]
+        [InlineData("ValueTask pending")]
+        [InlineData("Task pending")]
+        [InlineData("int value")]
+        [InlineData("string value")]
+        public async Task DetectInvalidParameterKinds(string? kind)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+#pragma warning disable CS8019
+using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
+using System.Threading.Tasks;
+
+[Service]
+public interface IMyService
+{{
+    Foo BasicMethod({kind});
+}}
+[ProtoContract]
+public class Foo {{}}");
+
+            var err = Assert.Single(diagnostics);
+            Assert.Equal(ServiceContractAnalyzer.InvalidDataParameter, err.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Error, err.Severity);
+            Assert.Equal("The return value must currently be Void, a reference-type data contract, or an task / async sequence of the same.", err.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Theory]
+        [InlineData("Foo")]
+        [InlineData("IAsyncEnumerable<Foo>")]
+        [InlineData("void")]
+        [InlineData("Task")]
+        [InlineData("ValueTask")]
+        public async Task DetectValidReturnKinds(string? kind)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+#pragma warning disable CS8019
+using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+[Service]
+public interface IMyService
+{{
+    {kind} BasicMethod(Foo foo);
+}}
+[ProtoContract]
+public class Foo {{}}");
 
             Assert.Empty(diagnostics);
         }
