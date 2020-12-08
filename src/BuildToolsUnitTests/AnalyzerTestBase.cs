@@ -49,7 +49,7 @@ namespace BuildToolsUnitTests
             var diagnostics = await compilationWithAnalyzers.GetAllDiagnosticsAsync();
             if (ignoreCompatibilityLevelAdvice)
             {
-                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == ProtoBufFieldAnalyzer.MissingCompatibilityLevel);
+                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == DataContractAnalyzer.MissingCompatibilityLevel);
             }
             if (_testOutputHelper is object)
             {

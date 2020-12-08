@@ -159,5 +159,8 @@ namespace ProtoBuf.BuildTools.Internal
             }
             return syntax.SyntaxTree.GetLocation(syntax.Span);
         }
+
+        internal static string Qualified(this INamespaceSymbol ns, string type)
+            => (ns is null || ns.IsGlobalNamespace) ? type : (ns.ToDisplayString() + "." + type);
     }
 }

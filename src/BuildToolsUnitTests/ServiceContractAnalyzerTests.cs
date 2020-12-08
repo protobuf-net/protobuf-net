@@ -1,12 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
+using System.Globalization;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests
 {
-    public class ServiceAnalyzerTests : AnalyzerTestBase<ProtoBufServiceAnalyzer>
+    public class ServiceAnalyzerTests : AnalyzerTestBase<ServiceContractAnalyzer>
     {
         public ServiceAnalyzerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
 
@@ -48,16 +49,44 @@ namespace ProtoBuf.Grpc.Configuration
     }
 }").Project;
         }
+
         [Fact]
-        public async Task DetectInvalidParameter()
+        public async Task DetectInvalidMethodKind()
         {
             var diagnostics = await AnalyzeAsync(@"
 using ProtoBuf.Grpc.Configuration;
+namespace SomeNamespace.Whatever
+{
+    public static class ContainingType
+    {
+        [Service]
+        public interface IMyService
+        {
+            int Property {get;}
+        }
+    }
+}");
+            var err = Assert.Single(diagnostics);
+            Assert.Equal(ServiceContractAnalyzer.InvalidMemberKind, err.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Error, err.Severity);
+            Assert.Equal("The member 'Property' is not a method; only methods are supported for services.", err.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ValidMethodKindIsClean()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf.Grpc.Configuration;
+using ProtoBuf;
+
 [Service]
 public interface IMyService
 {
-    public void Bar();
-}");
+    Foo BasicMethod(Foo value);
+}
+[ProtoContract]
+public class Foo {}");
+
             Assert.Empty(diagnostics);
         }
     }
