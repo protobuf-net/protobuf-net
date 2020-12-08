@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 
 namespace ProtoBuf.BuildTools.Internal
 {

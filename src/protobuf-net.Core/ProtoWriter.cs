@@ -29,10 +29,9 @@ namespace ProtoBuf
         private TypeModel model;
         private int packedFieldNumber;
 
-        void IDisposable.Dispose()
-        {
-            Dispose();
-        }
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - no intention of supporting finalizers here
+        void IDisposable.Dispose() => Dispose();
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
 
 #if FEAT_DYNAMIC_REF
         /// <summary>

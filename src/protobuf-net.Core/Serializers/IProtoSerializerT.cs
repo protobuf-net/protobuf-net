@@ -48,7 +48,9 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Indicates that the wire-type has been explicitly specified
         /// </summary>
+#pragma warning disable CA1069 // Enums values should not be duplicated - consequence of zero
         WireTypeSpecified = 1 << 4,
+#pragma warning restore CA1069 // Enums values should not be duplicated
 
         /// <summary>
         /// Indicates that this data should be treated like a list/array

@@ -448,7 +448,7 @@ namespace ProtoBuf
         /// operations; simply: it can be used (optionally) to release the buffers for garbage collection (at the expense
         /// of having to re-allocate a new buffer for the next operation, rather than re-use prior buffers).
         /// </summary>
-        [Obsolete]
+        [Obsolete("This API is no longer required and may be removed in a future release")]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public static void FlushPool() { }
 

@@ -366,7 +366,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType SetFactory(MethodInfo factory)
         {
-            model.VerifyFactory(factory, Type);
+            RuntimeTypeModel.VerifyFactory(factory, Type);
             ThrowIfFrozen();
             this.factory = factory;
             return this;
@@ -2074,8 +2074,8 @@ namespace ProtoBuf.Meta
 
                         var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, CompatibilityLevel, false, false, imports);
                         schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapValueFormat, CompatibilityLevel, member.AsReference, member.DynamicType, imports);
-                        NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
-                            .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
+                        NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(',').Append(schemaTypeName).Append("> ")
+                            .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
                     }
                     else
                     {
@@ -2084,14 +2084,14 @@ namespace ProtoBuf.Meta
                         if (member.DataFormat == DataFormat.Group) builder.Append("group ");
 
                         schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out var altName);
-                        builder.Append(schemaTypeName).Append(" ")
+                        builder.Append(schemaTypeName).Append(' ')
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
                         if (syntax == ProtoSyntax.Proto2 && member.DefaultValue is object && !member.IsRequired)
                         {
                             if (member.DefaultValue is string)
                             {
-                                AddOption(builder, ref hasOption).Append("default = \"").Append(member.DefaultValue).Append("\"");
+                                AddOption(builder, ref hasOption).Append("default = \"").Append(member.DefaultValue).Append('\"');
                             }
                             else if (member.DefaultValue is TimeSpan)
                             {
@@ -2187,9 +2187,9 @@ namespace ProtoBuf.Meta
                     {
                         var subTypeName = fieldNames[i];
                         NewLine(builder, indent + 2).Append(subTypeName)
-                               .Append(" ").Append(subTypeName).Append(" = ").Append(subTypeArr[i].FieldNumber).Append(';');
+                               .Append(' ').Append(subTypeName).Append(" = ").Append(subTypeArr[i].FieldNumber).Append(';');
                     }
-                    NewLine(builder, indent + 1).Append("}");
+                    NewLine(builder, indent + 1).Append('}');
                 }
                 if (HasReservations) AppendReservations();
                 NewLine(builder, indent).Append('}');
@@ -2248,7 +2248,7 @@ namespace ProtoBuf.Meta
             if (hasOption)
             {
                 hasOption = false;
-                return builder.Append("]");
+                return builder.Append(']');
             }
             return builder;
         }
@@ -2282,6 +2282,7 @@ namespace ProtoBuf.Meta
             return false;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         private static bool CanPack(Type type)
         {
             if (type is null) return false;

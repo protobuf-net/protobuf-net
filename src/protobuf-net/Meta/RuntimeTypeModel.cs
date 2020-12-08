@@ -331,7 +331,9 @@ namespace ProtoBuf.Meta
                     headerBuilder.AppendLine(@"syntax = ""proto3"";");
                     break;
                 default:
+#pragma warning disable CA2208 // param name - for clarity
                     throw new ArgumentOutOfRangeException(nameof(syntax));
+#pragma warning restore CA2208 // param name - for clarity
             }
 
             if (!string.IsNullOrEmpty(package))
@@ -389,7 +391,7 @@ namespace ProtoBuf.Meta
                             .Append(method.ServerStreaming ? "stream " : "")
                             .Append(replyName).Append(");");
                     }
-                    MetaType.NewLine(bodyBuilder, 0).Append("}");
+                    MetaType.NewLine(bodyBuilder, 0).Append('}');
                 }
             }
 
@@ -756,9 +758,9 @@ namespace ProtoBuf.Meta
             return key;
         }
 
-#pragma warning disable RCS1163, IDE0060 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060, CA1822 // Unused parameter, static
         private MetaType RecogniseCommonTypes(Type type)
-#pragma warning restore RCS1163, IDE0060 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060, CA1822 // Unused parameter, static
         {
             //            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             //            {
@@ -1088,7 +1090,7 @@ namespace ProtoBuf.Meta
         {
             int IComparable.CompareTo(object obj)
             {
-                if (obj is null) throw new ArgumentException("obj");
+                if (obj is null) throw new ArgumentNullException(nameof(obj));
                 SerializerPair other = (SerializerPair)obj;
 
                 // we want to bunch all the items with the same base-type together, but we need the items with a
@@ -1304,7 +1306,9 @@ namespace ProtoBuf.Meta
             bool save = !string.IsNullOrEmpty(path);
             if (string.IsNullOrEmpty(typeName))
             {
+#pragma warning disable CA2208 // param name - for clarity
                 if (save) throw new ArgumentNullException("typeName");
+#pragma warning restore CA2208 // param name - for clarity
                 typeName = "CompiledModel_" + Guid.NewGuid().ToString();
             }
 
@@ -1478,7 +1482,7 @@ namespace ProtoBuf.Meta
             return repeated;
         }
 
-        private void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider, bool includeNullable)
+        private static void AddProxy(TypeBuilder building, Type proxying, MemberInfo provider, bool includeNullable)
         {
             provider = GetUnderlyingProvider(provider, proxying);
             if (provider is object)
@@ -1608,7 +1612,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private TypeBuilder WriteBasicTypeModel(string typeName, ModuleBuilder module,
+        private static TypeBuilder WriteBasicTypeModel(string typeName, ModuleBuilder module,
             Type baseType, bool @internal)
         {
             TypeAttributes typeAttributes = (baseType.Attributes & ~(TypeAttributes.Abstract | TypeAttributes.Serializable)) | TypeAttributes.Sealed;
@@ -1964,7 +1968,7 @@ namespace ProtoBuf.Meta
         }
         private MethodInfo defaultFactory;
 
-        internal void VerifyFactory(MethodInfo factory, Type type)
+        internal static void VerifyFactory(MethodInfo factory, Type type)
         {
             if (factory is object)
             {
@@ -2099,7 +2103,7 @@ namespace ProtoBuf.Meta
         {
             lock (s_ModelSyncLock)
             {
-                if (!(DefaultModel is RuntimeTypeModel model))
+                if (DefaultModel is not RuntimeTypeModel model)
                 {
                     model = new RuntimeTypeModel(true, "(default)");
                     SetDefaultModel(model);

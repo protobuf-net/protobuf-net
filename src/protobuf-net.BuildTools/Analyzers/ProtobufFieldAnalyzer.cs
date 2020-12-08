@@ -1,11 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace ProtoBuf.BuildTools
+namespace ProtoBuf.BuildTools.Analyzers
 {
     /// <summary>
     /// Reports common usage errors in code that uses protobuf-net
@@ -13,7 +14,7 @@ namespace ProtoBuf.BuildTools
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ProtoBufFieldAnalyzer : DiagnosticAnalyzer
     {
-        internal static readonly DiagnosticDescriptor InvalidFieldNumber = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor InvalidFieldNumber = new(
             id: "PBN0001",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(InvalidFieldNumber),
             messageFormat: "The specified field number {0} is invalid; the valid range is 1-536870911, omitting 19000-19999.",
@@ -21,7 +22,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor MemberNotFound = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor MemberNotFound = new(
             id: "PBN0002",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(MemberNotFound),
             messageFormat: "The specified type member '{0}' could not be resolved.",
@@ -29,7 +30,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateFieldNumber = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor DuplicateFieldNumber = new(
             id: "PBN0003",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(DuplicateFieldNumber),
             messageFormat: "The specified field number {0} is duplicated; field numbers must be unique between all declared members and includes on a single type.",
@@ -37,7 +38,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor ReservedFieldName = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor ReservedFieldName = new(
             id: "PBN0004",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(ReservedFieldName),
             messageFormat: "The specified field name '{0}' is explicitly reserved.",
@@ -45,7 +46,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor ReservedFieldNumber = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor ReservedFieldNumber = new(
             id: "PBN0005",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(ReservedFieldNumber),
             messageFormat: "The specified field number {0} is explicitly reserved.",
@@ -53,7 +54,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateFieldName = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor DuplicateFieldName = new(
             id: "PBN0006",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(DuplicateFieldName),
             messageFormat: "The specified field name '{0}' is duplicated; field names should be unique between all declared members on a single type.",
@@ -61,7 +62,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateReservation = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor DuplicateReservation = new(
             id: "PBN0007",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(DuplicateReservation),
             messageFormat: "The reservations {0} and {1} overlap each-other.",
@@ -69,7 +70,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateMemberName = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
             id: "PBN0008",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(DuplicateMemberName),
             messageFormat: "The underlying member '{0}' is described multiple times.",
@@ -77,7 +78,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new(
             id: "PBN0009",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(ShouldBeProtoContract),
             messageFormat: "The type is not marked as a proto-contract; additional annotations will be ignored.",
@@ -85,7 +86,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             id: "PBN0010",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(DeclaredAndIgnored),
             messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored.",
@@ -93,7 +94,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateInclude = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor DuplicateInclude = new(
             id: "PBN0011",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(DuplicateInclude),
             messageFormat: "The type '{0}' is declared as an include multiple times.",
@@ -101,7 +102,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor IncludeNonDerived = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor IncludeNonDerived = new(
             id: "PBN0012",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(IncludeNonDerived),
             messageFormat: "The type '{0}' is declared as an include, but is not a direct sub-type.",
@@ -110,7 +111,7 @@ namespace ProtoBuf.BuildTools
             isEnabledByDefault: true);
 
 
-        internal static readonly DiagnosticDescriptor IncludeNotDeclared = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor IncludeNotDeclared = new(
             id: "PBN0013",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(IncludeNotDeclared),
             messageFormat: "The base-type '{0}' is a proto-contract, but no include is declared for '{1}' and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set.",
@@ -118,7 +119,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor SubTypeShouldBeProtoContract = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor SubTypeShouldBeProtoContract = new(
             id: "PBN0014",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(SubTypeShouldBeProtoContract),
             messageFormat: "The base-type '{0}' is a proto-contract and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set; '{1}' should also be a proto-contract.",
@@ -126,7 +127,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor ConstructorMissing = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor ConstructorMissing = new(
             id: "PBN0015",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(ConstructorMissing),
             messageFormat: "There is no suitable (parameterless) constructor available for the proto-contract, and the " + nameof(ProtoContractAttribute.SkipConstructor) + " flag is not set.",
@@ -134,7 +135,7 @@ namespace ProtoBuf.BuildTools
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor MissingCompatibilityLevel = new DiagnosticDescriptor(
+        internal static readonly DiagnosticDescriptor MissingCompatibilityLevel = new(
             id: "PBN0016",
             title: nameof(ProtoBufFieldAnalyzer) + "." + nameof(MissingCompatibilityLevel),
             messageFormat: "It is recommended to declare a module or assembly level " + nameof(CompatibilityLevel) + " (or declare it for each contract type); new projects should use the highest currently available - old projects should use " + nameof(CompatibilityLevel.Level200) + " unless fully considered.",
@@ -224,7 +225,7 @@ namespace ProtoBuf.BuildTools
 
         private static void ConsiderPossibleProtoBufType(SyntaxNodeAnalysisContext context)
         {
-            if (!(context.ContainingSymbol is ITypeSymbol type)) return;
+            if (context.ContainingSymbol is not ITypeSymbol type) return;
             
             var attribs = type.GetAttributes();
 

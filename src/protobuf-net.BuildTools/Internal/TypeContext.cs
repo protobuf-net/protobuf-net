@@ -1,5 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using ProtoBuf.BuildTools.Analyzers;
 using System.Collections.Generic;
 
 namespace ProtoBuf.BuildTools.Internal
@@ -262,6 +264,7 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal void SetContract(ISymbol blame, AttributeData attrib)
         {
+            _ = blame;
             _flags |= TypeContextFlags.IsProtoContract;
             if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.SkipConstructor), out var val) && val)
                 _flags |= TypeContextFlags.SkipConstructor;

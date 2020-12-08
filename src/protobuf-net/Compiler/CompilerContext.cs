@@ -50,7 +50,9 @@ namespace ProtoBuf.Compiler
         }
 #endif
         [System.Diagnostics.Conditional("DEBUG_COMPILE")]
+#pragma warning disable CA1822 // Mark members as static - it uses state when it has content
         private void TraceCompile(string value)
+#pragma warning restore CA1822 // Mark members as static
         {
 #if DEBUG_COMPILE
             if (!string.IsNullOrWhiteSpace(value))
@@ -857,22 +859,19 @@ namespace ProtoBuf.Compiler
                 {
                     switch (member)
                     {
-                        case FieldBuilder _:
-                        case TypeBuilder _:
-                        case PropertyBuilder _:
+                        case FieldBuilder:
+                        case TypeBuilder:
+                        case PropertyBuilder:
                             // we're building them; 'tis fine
                             break;
                         default:
-                            switch (memberType)
+                            throw memberType switch
                             {
-                                case MemberTypes.TypeInfo:
-                                case MemberTypes.NestedType:
-                                    throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
-                                        ((Type)member).NormalizeName());
-                                default:
-                                    throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
-                                        member.DeclaringType.NormalizeName() + "." + member.Name);
-                            }
+                                MemberTypes.TypeInfo or MemberTypes.NestedType =>
+                                    new InvalidOperationException("Non-public type cannot be used with full dll compilation: " + ((Type)member).NormalizeName()),
+                                _ =>
+                                    new InvalidOperationException("Non-public member cannot be used with full dll compilation: " + member.DeclaringType.NormalizeName() + "." + member.Name),
+                            };
                     }
                 }
             }
@@ -957,10 +956,8 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private bool UseShortForm(Local local)
-        {
-            return local.Value.LocalIndex < 256;
-        }
+        private static bool UseShortForm(Local local)
+            => local.Value.LocalIndex < 256;
 
         internal void LoadAddress(Local local, Type type, bool evenIfClass = false)
         {

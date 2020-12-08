@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <SignAssembly>true</SignAssembly>
     <DelaySign>False</DelaySign>
-    <NoWarn>NU5105;CS1701;BC42016;IDE0057</NoWarn>
+    <NoWarn>NU5105;CS1701;BC42016;IDE0057;IDE0090;IDE0079</NoWarn>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
     <Copyright>See https://github.com/protobuf-net/protobuf-net</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

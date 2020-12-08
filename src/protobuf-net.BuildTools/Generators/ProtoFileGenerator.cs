@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.Reflection;
+﻿#nullable enable
+using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -11,7 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProtoBuf.BuildTools
+namespace ProtoBuf.BuildTools.Generators
 {
     /// <summary>
     /// Generates protobuf-net types from .proto schemas
@@ -34,6 +35,8 @@ namespace ProtoBuf.BuildTools
             => context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(key, out var s)
                 && s is not null && bool.TryParse(s, out bool b) ? b : defaultValue;
 
+
+
         void ISourceGenerator.Execute(GeneratorExecutionContext context)
         {
             Logger? log = default;
@@ -44,7 +47,7 @@ namespace ProtoBuf.BuildTools
 
                 log?.Write($"Execute with debug log enabled");
 
-                var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).ToImmutableArray();
+                var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).Select(at => new NormalizedAdditionalText(at)).ToImmutableArray();
                 if (schemas.IsDefaultOrEmpty)
                 {
                     log?.Write("No .proto schemas found");
@@ -95,12 +98,16 @@ namespace ProtoBuf.BuildTools
                     var set = new FileDescriptorSet();
                     set.FileSystem = fileSystem;
 
-                    var name = Path.GetFileName(schema.Path);
-                    var location  = Path.GetDirectoryName(schema.Path);
+                    var name = Path.GetFileName(schema.Value.Path);
+                    var location = Path.GetDirectoryName(schema.Value.Path);
                     log?.Write($"Processing '{name}' relative to '{location}'");
 
                     set.AddImportPath(location);
-                    set.Add(name);
+                    if (!set.Add(name))
+                    {
+                        log?.Write($"Failed to add '{name}'; skipping");
+                        continue;
+                    }
 
                     set.Process();
                     var errors = set.GetErrors();
@@ -153,12 +160,26 @@ namespace ProtoBuf.BuildTools
             }
         }
 
+        readonly struct NormalizedAdditionalText
+        {
+            public AdditionalText Value { get; }
+            public string NormalizedPath { get; }
+            public NormalizedAdditionalText(AdditionalText additionalText)
+            {
+                Value = additionalText;
+                NormalizedPath = AdditionalFilesFileSystem.NormalizePath(additionalText.Path);
+            }
+        }
+
         private class AdditionalFilesFileSystem : IFileSystem
         {
-            private readonly Logger? _log;
-            private readonly ImmutableArray<AdditionalText> _schemas;
+            public static string NormalizePath(string path)
+                => path?.Replace('/', '\\') ?? "";
 
-            public AdditionalFilesFileSystem(Logger? log, ImmutableArray<AdditionalText> schemas)
+            private readonly Logger? _log;
+            private readonly ImmutableArray<NormalizedAdditionalText> _schemas;
+
+            public AdditionalFilesFileSystem(Logger? log, ImmutableArray<NormalizedAdditionalText> schemas)
             {
                 _log = log;
                 _schemas = schemas;
@@ -166,15 +187,26 @@ namespace ProtoBuf.BuildTools
 
             bool IFileSystem.Exists(string path)
             {
-                var found = _schemas.Any(x => x.Path == path);
-                _log?.Write($"Checking for '{path}': {(found ? "found" : "not found")}");
-                return found;
+                var found = Find(path);
+                _log?.Write($"Checking for '{path}': {(found is not null ? "found" : "not found")}");
+                return found is not null;
                 
+            }
+
+            private AdditionalText? Find(string path)
+            {
+                path = NormalizePath(path);
+                foreach (var schema in _schemas)
+                {
+                    if (schema.NormalizedPath == path)
+                        return schema.Value;
+                }
+                return default;
             }
 
             TextReader? IFileSystem.OpenText(string path)
             {
-                var content = _schemas.FirstOrDefault(x => x.Path == path)?.GetText()?.ToString();
+                var content = Find(path)?.GetText()?.ToString();
                 if (content is null)
                 {
                     _log?.Write($"opening '{path}': not found");

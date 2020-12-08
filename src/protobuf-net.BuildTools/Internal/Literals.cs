@@ -1,4 +1,5 @@
-﻿namespace ProtoBuf.BuildTools.Internal
+﻿#nullable enable
+namespace ProtoBuf.BuildTools.Internal
 {
     internal static class Literals
     {

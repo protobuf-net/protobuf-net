@@ -143,7 +143,7 @@ message List_E {
             Program.CheckBytes(value, model, "08-00-08-01-08-02");
             var clone = (E[]) model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
-            value.SequenceEqual(clone);
+            Assert.True(value.SequenceEqual(clone));
         }
         private static void TestList(TypeModel model)
         {
@@ -152,7 +152,7 @@ message List_E {
             Program.CheckBytes(value, model, "08-00-08-01-08-02");
             var clone = (List<E>)model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
-            value.SequenceEqual(clone);
+            Assert.True(value.SequenceEqual(clone));
         }
     }
 }

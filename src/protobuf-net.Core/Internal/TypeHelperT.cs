@@ -55,6 +55,7 @@ namespace ProtoBuf.Internal
             //return sb.Append('>').ToString();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         internal static bool CanBePacked(Type type)
         {
             if (type.IsEnum) return true;

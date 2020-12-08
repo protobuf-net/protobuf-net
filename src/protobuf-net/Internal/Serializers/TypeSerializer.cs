@@ -219,7 +219,9 @@ namespace ProtoBuf.Internal.Serializers
 
             if (Nullable.GetUnderlyingType(forType) is object)
             {
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly - this is contextually fine
                 throw new ArgumentException("Cannot create a TypeSerializer for nullable types", nameof(forType));
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
             }
             if (iextensible.IsAssignableFrom(forType))
             {

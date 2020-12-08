@@ -31,6 +31,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Escapes language keywords
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         protected override string Escape(string identifier)
         {
             switch (identifier)
@@ -770,6 +771,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Indicate which types will commonly use arrays
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         protected virtual bool UseArray(FieldDescriptorProto field)
         {
             switch (field.type)

@@ -85,15 +85,16 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
-        [Obsolete]
+        [Obsolete("This API is no longer required and may be removed in a future release")]
         protected internal Type MapType(Type type) => type;
 
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
-        [Obsolete]
+        [Obsolete("This API is no longer required and may be removed in a future release")]
         protected internal Type MapType(Type type, bool demand) => type;
 
+        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         internal static WireType GetWireType(TypeModel model, DataFormat format, Type type)
         {
             if (type.IsEnum) return WireType.Varint;
@@ -1128,7 +1129,7 @@ namespace ProtoBuf.Meta
                 string fullName;
                 bool handled = false;
                 if (listType.IsInterface &&
-                    (fullName = listType.FullName) is object && fullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
+                    (fullName = listType.FullName) is object && fullName.Contains("Dictionary")) // have to try to be frugal here...
                 {
 
                     if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))

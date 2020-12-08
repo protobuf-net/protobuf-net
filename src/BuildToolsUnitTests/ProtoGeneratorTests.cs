@@ -1,4 +1,4 @@
-﻿using ProtoBuf.BuildTools;
+﻿using ProtoBuf.BuildTools.Generators;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -40,6 +40,19 @@ message Bar {
                 ));
             Assert.Empty(diagnostics);
             Assert.Equal(2, result.GeneratedTrees.Length);
+        }
+
+        [Fact]
+        public async Task EmbeddedImportWorks()
+        {
+            (var result, var diagnostics) = await GenerateAsync(Text("test.proto", @"
+syntax = ""proto3"";
+import ""google/protobuf/timestamp.proto"";
+message Foo {
+    .google.protobuf.Timestamp when = 1;
+}"));
+            Assert.Empty(diagnostics);
+            Assert.Single(result.GeneratedTrees);
         }
     }
 }

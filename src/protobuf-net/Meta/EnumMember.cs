@@ -83,17 +83,27 @@ namespace ProtoBuf.Meta
         public bool Equals<T>(T value) where T : unmanaged
             => Equals(Normalize(Value, typeof(T)), Normalize(value, typeof(T)));
 
-        /// <summary>See object.ToString</summary>
+        /// <inheritdoc/>
         public override string ToString() => $"{Name}={Value}";
 
-        /// <summary>See object.GetHashCode</summary>
+        /// <inheritdoc/>
         public override int GetHashCode() => (Name?.GetHashCode() ?? 0) ^ (Value?.GetHashCode() ?? 0);
 
-        /// <summary>See object.Equals</summary>
+        /// <inheritdoc/>
         public override bool Equals(object obj) => obj is EnumMember em && Equals(em);
 
         /// <summary>Compare two enum-member definitions</summary>
         public bool Equals(EnumMember other) => string.Equals(Name, other.Name) && object.Equals(Value, other.Value);
+
+        /// <summary>
+        /// Indicates whether two values are considered equal.
+        /// </summary>
+        public static bool operator ==(EnumMember x, EnumMember y) => x.Equals(y);
+
+        /// <summary>
+        /// Indicates whether two values are considered equal.
+        /// </summary>
+        public static bool operator !=(EnumMember x, EnumMember y) => !x.Equals(y);
 
         static object Normalize(object value, Type type)
             => Convert.ChangeType(value, type.IsEnum ? Enum.GetUnderlyingType(type) : type);

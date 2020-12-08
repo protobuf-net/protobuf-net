@@ -245,7 +245,7 @@ namespace TestMediaBrowser
             };
 
             var copy = Serializer.DeepClone(l);
-            Assert.Equal(2, copy.animals.Count());
+            Assert.Equal(2, copy.animals.Count);
             Assert.Equal(typeof(Dog), copy.animals[0].GetType());
         }
 
