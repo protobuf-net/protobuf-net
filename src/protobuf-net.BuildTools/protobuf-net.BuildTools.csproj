@@ -15,7 +15,7 @@
     <!-- build time deps -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" Pack="false" PrivateAssets="all" />
     
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
     <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
     <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core"/>
