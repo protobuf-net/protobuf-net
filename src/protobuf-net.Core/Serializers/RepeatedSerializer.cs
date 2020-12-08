@@ -136,7 +136,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private void WriteZeroLengthPackedHeader(ref ProtoWriter.State state, int fieldNumber)
+        private static void WriteZeroLengthPackedHeader(ref ProtoWriter.State state, int fieldNumber)
         {
             if (state.Model.OmitsOption(TypeModel.TypeModelOptions.SkipZeroLengthPackedArrays))
             {   // we only need to write these for exact v2 compatibility
@@ -150,7 +150,7 @@ namespace ProtoBuf.Serializers
 
         // this does *not* dispose the enumerator; if the caller cares: caller does
         [MethodImpl(ProtoReader.HotPath)]
-        internal void Write<TEnumerator>(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, ref TEnumerator values, ISerializer<TItem> serializer)
+        internal static void Write<TEnumerator>(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, ref TEnumerator values, ISerializer<TItem> serializer)
             where TEnumerator : IEnumerator<TItem>
         {
             var writer = state.GetWriter();
@@ -182,7 +182,7 @@ namespace ProtoBuf.Serializers
 
         // this does *not* dispose the enumerator; if the caller cares: caller does
         [MethodImpl(ProtoReader.HotPath)]
-        internal long Measure<TEnumerator>(ref TEnumerator values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType)
+        internal static long Measure<TEnumerator>(ref TEnumerator values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType)
             where TEnumerator : IEnumerator<TItem>
         {
             long length = 0;
@@ -197,7 +197,7 @@ namespace ProtoBuf.Serializers
 
         // this does *not* dispose the enumerator; if the caller cares: caller does
         [MethodImpl(ProtoReader.HotPath)]
-        internal void WritePacked<TEnumerator>(ref ProtoWriter.State state, ref TEnumerator values, IMeasuringSerializer<TItem> serializer, WireType wireType)
+        internal static void WritePacked<TEnumerator>(ref ProtoWriter.State state, ref TEnumerator values, IMeasuringSerializer<TItem> serializer, WireType wireType)
             where TEnumerator : IEnumerator<TItem>
         {
             while (values.MoveNext())

@@ -3,27 +3,27 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
     <AssemblyName>protobuf-net.BuildTools.Legacy</AssemblyName>
-    <Nullable>enable</Nullable>
+    <!--<Nullable>enable</Nullable>-->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <NoWarn>$(NoWarn);RS2007</NoWarn><!-- because I have no clue what to do with that-->
+    <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
     <Description>Analyzer and Generator support for protobuf-net, using SDK 3.3.1 (pre .NET 5)</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- build time deps -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" Pack="false" PrivateAssets="all" />
-
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <!-- note: package ref here (rather than project ref) so we can ship BuildTools without shipping everything -->
-    <PackageReference Include="protobuf-net.Reflection" Version="3.0.72" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="protobuf-net.Core" Version="3.0.72" PrivateAssets="all" GeneratePathProperty="true" />
-    <None Include="$(PKGprotobuf-net_Reflection)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PKGprotobuf-net_Core)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="..\protobuf-net.Core\obj\Release\netstandard2.1\protobuf-net.Core.Version.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../protobuf-net.BuildTools/ProtobufFieldAnalyzer.cs" />
+    <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
+    <Compile Include="../protobuf-net.Core/**/*.cs" />
+    <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
+    
+    <!-- cross-reference the analyzer code -->
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" />
+    <Compile Include="../protobuf-net.BuildTools/ProtobufFieldAnalyzer.cs" />
   </ItemGroup>
 </Project>

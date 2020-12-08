@@ -148,7 +148,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public static ICompiledSerializer Wrap(IProtoTypeSerializer head, RuntimeTypeModel model)
         {
-            if (!(head is ICompiledSerializer result))
+            if (head is not ICompiledSerializer result)
             {
                 ConstructorInfo ctor;
                 try

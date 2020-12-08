@@ -5,7 +5,7 @@
     <TargetFramework>net472</TargetFramework>
     <RootNamespace>ProtoBuf.Build</RootNamespace>
     <GenerateProgramFile>false</GenerateProgramFile>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>$(NOWARN);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -581,19 +581,19 @@ namespace Examples
 
             ImmutableHashSet<int> IImmutableCollectionWrapper.HashSet
             {
-                get { return HashSet.ToImmutableHashSet(); }
+                get { return HashSet; }
                 set { HashSet = value; }
             }
 
             ImmutableSortedSet<int> IImmutableCollectionWrapper.SortedSet
             {
-                get { return SortedSet.ToImmutableSortedSet(); }
+                get { return SortedSet; }
                 set { SortedSet = value; }
             }
 
             ImmutableSortedDictionary<int, string> IImmutableCollectionWrapper.SortedDictionary
             {
-                get { return SortedDictionary.ToImmutableSortedDictionary(); }
+                get { return SortedDictionary; }
                 set { SortedDictionary = value; }
             }
         }

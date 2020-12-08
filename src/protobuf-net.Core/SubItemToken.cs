@@ -9,7 +9,9 @@ namespace ProtoBuf
     /// give back the token you are given at the end of an object.
     /// </summary>
     [StructLayout(LayoutKind.Auto)]
+#pragma warning disable CA2231 // Overload operator equals on overriding value type Equals
     public readonly struct SubItemToken
+#pragma warning restore CA2231 // Overload operator equals on overriding value type Equals
     {
         /// <summary>
         /// See object.ToString()

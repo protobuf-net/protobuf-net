@@ -31,6 +31,7 @@ namespace BuildToolsUnitTests
 
         protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true)
         {
+            _ = callerMemberName;
             var (project, compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
             var analyzers = project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)).ToImmutableArray();
             var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, project.AnalyzerOptions);
@@ -51,6 +52,7 @@ namespace BuildToolsUnitTests
 
         protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null)
         {
+            _ = callerMemberName;
             var workspace = new AdhocWorkspace();
             var project = workspace.AddProject("protobuf-net.BuildTools.AnalyzerTests", LanguageNames.CSharp);
             project = project

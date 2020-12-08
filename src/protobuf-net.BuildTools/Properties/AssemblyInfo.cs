@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿#nullable enable
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("BuildToolsUnitTests, PublicKey="
     + "002400000480000094000000060200000024000052534131000400000100010009ed9caa457bfc"

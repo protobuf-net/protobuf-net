@@ -61,7 +61,7 @@ namespace ProtoBuf.Meta
         private AutoCompileTypeModel() { }
 
         [MethodImpl(ProtoReader.HotPath)]
-        private TypeModel ForAssembly(Type type)
+        private static TypeModel ForAssembly(Type type)
             => type is null ? NullModel.Singleton : CreateForAssembly(type.Assembly, null);
 
         /// <inheritdoc/>

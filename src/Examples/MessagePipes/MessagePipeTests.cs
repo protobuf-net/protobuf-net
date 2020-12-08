@@ -157,8 +157,8 @@ namespace ProtoBuf.MessagePipeTests
                     {
                         var ping = new Ping { Token = i };
                         Log($"[Client] sending ping {ping?.Token}...");
-                        var pongPending = send.UnaryAsync(ping);
-                        await WithTimeout(pongPending.AsTask(), TimeSpan.FromSeconds(5), "UnaryAsync");
+                        var pongPending = send.UnaryAsync(ping).AsTask();
+                        await WithTimeout(pongPending, TimeSpan.FromSeconds(5), "UnaryAsync");
                         var pong = await pongPending;
                         Log($"[Client] received pong {pong?.Token}...");
                         Assert.Equal(i, pong.Token);

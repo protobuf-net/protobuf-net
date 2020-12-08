@@ -1170,19 +1170,11 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        private static bool ShouldResolveType(FieldDescriptorProto.Type type)
+        private static bool ShouldResolveType(FieldDescriptorProto.Type type) => type switch
         {
-            switch (type)
-            {
-                case 0:
-                case FieldDescriptorProto.Type.TypeMessage:
-                case FieldDescriptorProto.Type.TypeEnum:
-                case FieldDescriptorProto.Type.TypeGroup:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            0 or FieldDescriptorProto.Type.TypeMessage or FieldDescriptorProto.Type.TypeEnum or FieldDescriptorProto.Type.TypeGroup => true,
+            _ => false,
+        };
         private void ResolveTypes(ParserContext ctx, List<FieldDescriptorProto> fields, IType parent, bool options)
         {
             foreach (var field in fields)
@@ -2056,6 +2048,7 @@ namespace Google.Protobuf.Reflection
         internal static string GetJsonName(string name)
             => Regex.Replace(name, "_+([0-9a-zA-Z])", match => match.Groups[1].Value.ToUpperInvariant()).TrimEnd(Underscores);
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         internal static bool CanPack(Type type)
         {
             switch (type)

@@ -1,4 +1,5 @@
-﻿using Google.Protobuf.Reflection;
+﻿#nullable enable
+using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;

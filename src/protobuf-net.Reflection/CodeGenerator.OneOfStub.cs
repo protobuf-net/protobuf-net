@@ -73,6 +73,7 @@ namespace ProtoBuf.Reflection
                         break;
                 }
             }
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
             internal string GetStorage(FieldDescriptorProto.Type type, string typeName)
             {
                 switch (type)
