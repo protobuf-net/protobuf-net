@@ -57,6 +57,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0074CABB-8C07-483A-A439-8C7DEC2BE01C}"
 	ProjectSection(SolutionItems) = preProject
 		..\docs\3_0.md = ..\docs\3_0.md
+		build_tools.md = build_tools.md
 		..\docs\compatibilitylevel.md = ..\docs\compatibilitylevel.md
 		..\docs\index.md = ..\docs\index.md
 		..\docs\nodatime.md = ..\docs\nodatime.md
@@ -86,7 +87,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.BuildTools", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildToolsUnitTests", "BuildToolsUnitTests\BuildToolsUnitTests.csproj", "{9376B70C-ECE5-4D82-8290-2CA27F3761A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.BuildTools.Legacy", "protobuf-net.BuildTools.Legacy\protobuf-net.BuildTools.Legacy.csproj", "{B09E5BE2-3DE5-410C-A852-17626F0AC48D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.BuildTools.Legacy", "protobuf-net.BuildTools.Legacy\protobuf-net.BuildTools.Legacy.csproj", "{B09E5BE2-3DE5-410C-A852-17626F0AC48D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

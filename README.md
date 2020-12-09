@@ -15,6 +15,10 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 - .NET Framework 4.6.1+
 - .NET Standard 2.0+
 
+## Build tools
+
+Build tools to help you use protobuf-net correctly are [available via `protobuf-net.BuildTools`](https://protobuf-net.github.io/protobuf-net/build_tools)
+
 ## Runtime Installation
 
 All stable and some pre-release packages are available on NuGet. CI Builds are available via MyGet (feed URL: `https://www.myget.org/F/protobuf-net/api/v3/index.json `).
