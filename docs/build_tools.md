@@ -57,7 +57,7 @@ public interface IMyService
 }
 ```
 
-The tool will spot these errors and many more. All diagnostics from the tool use the `PBN` prefix for there messages, and can be suppressed (if appropriate) in any of the usual ways.
+The tool will spot these errors and many more. All diagnostics from the tool use the `PBN` prefix for their messages, and can be suppressed (if appropriate) in any of the usual ways.
 
 ## Limitations
 
