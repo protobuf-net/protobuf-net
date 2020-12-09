@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Immutable;
@@ -22,8 +23,18 @@ namespace BuildToolsUnitTests
         private readonly ITestOutputHelper? _testOutputHelper;
         protected GeneratorTestBase(ITestOutputHelper? testOutputHelper = null) => _testOutputHelper = testOutputHelper;
 
-        protected static TGenerator GeneratorSingleton { get; } = Activator.CreateInstance<TGenerator>();
-        protected virtual TGenerator Generator { get; } = GeneratorSingleton;
+        protected virtual TGenerator Generator
+        {
+            get
+            {
+                var obj = Activator.CreateInstance<TGenerator>();
+                if (obj is ILoggingAnalyzer logging && _testOutputHelper is not null)
+                {
+                    logging.Log += s => _testOutputHelper.WriteLine(s);
+                }
+                return obj;
+            }
+        }
 
         protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
             Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null, bool debugLog = true)
@@ -49,7 +60,7 @@ namespace BuildToolsUnitTests
                     _testOutputHelper.WriteLine(d.ToString());
                 }
             }
-            return (result.GetRunResult(), diagnostics.RemoveAll(x => x.Id == "PBN9999" && x.Severity == DiagnosticSeverity.Info));
+            return (result.GetRunResult(), diagnostics);
         }
 
         protected virtual bool ReferenceProtoBuf => true;

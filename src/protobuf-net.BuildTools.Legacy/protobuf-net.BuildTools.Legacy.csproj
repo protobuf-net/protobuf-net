@@ -21,7 +21,8 @@
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     
     <!-- cross-reference the analyzer code -->
-    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" />
-    <Compile Include="../protobuf-net.BuildTools/Analyzers/ProtobufFieldAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal"/>
+    <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
   </ItemGroup>
 </Project>

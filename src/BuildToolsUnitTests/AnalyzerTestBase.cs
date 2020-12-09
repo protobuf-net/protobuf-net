@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -19,17 +20,27 @@ namespace BuildToolsUnitTests
         private readonly ITestOutputHelper? _testOutputHelper;
         protected AnalyzerTestBase(ITestOutputHelper? testOutputHelper = null) => _testOutputHelper = testOutputHelper;
 
-        protected static TAnalyzer AnalyzerSingleton { get; } = Activator.CreateInstance<TAnalyzer>();
-        protected virtual TAnalyzer Analyzer { get; } = AnalyzerSingleton;
+        protected virtual TAnalyzer Analyzer
+        {
+            get
+            {
+                var obj = Activator.CreateInstance<TAnalyzer>();
+                if (obj is ILoggingAnalyzer logging && _testOutputHelper is not null)
+                {
+                    logging.Log += s => _testOutputHelper.WriteLine(s);
+                }
+                return obj;
+            }
+        }
 
         protected virtual bool ReferenceProtoBuf => true;
 
         protected virtual Project SetupProject(Project project) => project;
 
-        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true) =>
-            AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName, ignoreCompatibilityLevelAdvice);
+        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true) =>
+            AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName, ignoreCompatibilityLevelAdvice, ignorePreferAsyncAdvice);
 
-        protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true)
+        protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true)
         {
             _ = callerMemberName;
             var (project, compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
@@ -38,7 +49,11 @@ namespace BuildToolsUnitTests
             var diagnostics = await compilationWithAnalyzers.GetAllDiagnosticsAsync();
             if (ignoreCompatibilityLevelAdvice)
             {
-                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == ProtoBufFieldAnalyzer.MissingCompatibilityLevel);
+                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == DataContractAnalyzer.MissingCompatibilityLevel);
+            }
+            if (ignorePreferAsyncAdvice)
+            {
+                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == ServiceContractAnalyzer.PreferAsync);
             }
             if (_testOutputHelper is object)
             {

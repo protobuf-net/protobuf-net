@@ -2,11 +2,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -44,8 +42,32 @@ namespace ProtoBuf.BuildTools.Internal
         internal const string ProtoBufNamespace = "ProtoBuf";
 
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
-            => symbol.ContainingNamespace.Name == ProtoBufNamespace;
-        
+            => InNamespace(symbol, ProtoBufNamespace);
+
+        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
+        {
+            var cs = symbol.ContainingNamespace;
+            return cs.Name == ns0 && cs.ContainingNamespace.IsGlobalNamespace;
+        }
+
+        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1)
+        {
+            var ns = symbol.ContainingNamespace;
+            if (ns.Name != ns1) return false;
+            ns = ns.ContainingNamespace;
+            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+        }
+
+        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1, string ns2)
+        {
+            var ns = symbol.ContainingNamespace;
+            if (ns.Name != ns2) return false;
+            ns = ns.ContainingNamespace;
+            if (ns.Name != ns1) return false;
+            ns = ns.ContainingNamespace;
+            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+        }
+
         internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame
         {
             if (source is not null)
@@ -147,5 +169,8 @@ namespace ProtoBuf.BuildTools.Internal
             }
             return syntax.SyntaxTree.GetLocation(syntax.Span);
         }
+
+        internal static string Qualified(this INamespaceSymbol ns, string type)
+            => (ns is null || ns.IsGlobalNamespace) ? type : (ns.ToDisplayString() + "." + type);
     }
 }

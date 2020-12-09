@@ -4,7 +4,7 @@ using System;
 namespace ProtoBuf.BuildTools.Internal
 {
     [Flags]
-    internal enum TypeContextFlags
+    internal enum DataContractContextFlags
     {
         None = 0,
         IsProtoContract = 1 << 0,
