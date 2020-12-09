@@ -49,7 +49,7 @@ public class Foo
 
 and the following is *not* a valid gRPC method signature for protobuf-net.Grpc:
 
-```
+``` c#
 [Service]
 public interface IMyService
 {
