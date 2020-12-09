@@ -15,13 +15,15 @@ To install `protobuf-net.BuildTools`, you would add - to your csproj:
 (note: this example correct at time of writing, but make sure to use the most recent version number here!)
 
 ``` xml
-<PackageReference Include="protobuf-net.BuildTools" Version="3.0.81" PrivateAssets="all" IncludeAssets="runtime;build;native;contentfiles;analyzers;buildtransitive" />
+<PackageReference Include="protobuf-net.BuildTools" Version="3.0.81" PrivateAssets="all"
+    IncludeAssets="runtime;build;native;contentfiles;analyzers;buildtransitive" />
 ```
 
 This tool uses the .NET 5 SDK; if you don't *have* the .NET 5 SDK, there is also a version available that targets the .NET 3.1 SDK:
 
 ``` xml
-<PackageReference Include="protobuf-net.BuildTools.Legacy" Version="3.0.81" PrivateAssets="all" IncludeAssets="runtime;build;native;contentfiles;analyzers;buildtransitive" />
+<PackageReference Include="protobuf-net.BuildTools.Legacy" Version="3.0.81" PrivateAssets="all"
+    IncludeAssets="runtime;build;native;contentfiles;analyzers;buildtransitive" />
 ```
 
 (the `protobuf-net.BuildTools.Legacy` package does not include "generator" support)

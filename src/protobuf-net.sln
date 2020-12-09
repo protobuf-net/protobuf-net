@@ -57,7 +57,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0074CABB-8C07-483A-A439-8C7DEC2BE01C}"
 	ProjectSection(SolutionItems) = preProject
 		..\docs\3_0.md = ..\docs\3_0.md
-		build_tools.md = build_tools.md
+		..\docs\build_tools.md = ..\docs\build_tools.md
 		..\docs\compatibilitylevel.md = ..\docs\compatibilitylevel.md
 		..\docs\index.md = ..\docs\index.md
 		..\docs\nodatime.md = ..\docs\nodatime.md

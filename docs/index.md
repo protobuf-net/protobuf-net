@@ -14,6 +14,7 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 
 - [Using protobuf-net with Noda Time](http://protobuf-net.github.io/protobuf-net/nodatime)
 - [`CompatibilityLevel`](http://protobuf-net.github.io/protobuf-net/compatibilitylevel)
+- [Build Tools for protobuf-net and protobuf-net.Grpc](https://protobuf-net.github.io/protobuf-net/build_tools)
 
 ## Donate
 
