@@ -42,39 +42,30 @@ namespace ProtoBuf.BuildTools.Internal
         internal const string ProtoBufNamespace = "ProtoBuf";
 
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
+            => InNamespace(symbol, ProtoBufNamespace);
+
+        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
         {
             var cs = symbol.ContainingNamespace;
-            return cs.Name == ProtoBufNamespace && cs.ContainingNamespace.IsGlobalNamespace;
+            return cs.Name == ns0 && cs.ContainingNamespace.IsGlobalNamespace;
         }
 
-        internal static bool InProtoBufGrpcConfigurationNamespace(this INamedTypeSymbol symbol)
+        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1)
         {
             var ns = symbol.ContainingNamespace;
-            if (ns.Name != "Configuration") return false;
+            if (ns.Name != ns1) return false;
             ns = ns.ContainingNamespace;
-            if (ns.Name != "Grpc") return false;
-            ns = ns.ContainingNamespace;
-            return ns.Name == ProtoBufNamespace && ns.ContainingNamespace.IsGlobalNamespace;
+            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
         }
 
-        internal static bool InSystemThreadingTasksNamespace(this INamedTypeSymbol symbol)
+        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1, string ns2)
         {
             var ns = symbol.ContainingNamespace;
-            if (ns.Name != "Tasks") return false;
+            if (ns.Name != ns2) return false;
             ns = ns.ContainingNamespace;
-            if (ns.Name != "Threading") return false;
+            if (ns.Name != ns1) return false;
             ns = ns.ContainingNamespace;
-            return ns.Name == "System" && ns.ContainingNamespace.IsGlobalNamespace;
-        }
-
-        internal static bool InSystemCollectionsGenericNamespace(this INamedTypeSymbol symbol)
-        {
-            var ns = symbol.ContainingNamespace;
-            if (ns.Name != "Generic") return false;
-            ns = ns.ContainingNamespace;
-            if (ns.Name != "Collections") return false;
-            ns = ns.ContainingNamespace;
-            return ns.Name == "System" && ns.ContainingNamespace.IsGlobalNamespace;
+            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
         }
 
         internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame

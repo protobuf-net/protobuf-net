@@ -37,10 +37,10 @@ namespace BuildToolsUnitTests
 
         protected virtual Project SetupProject(Project project) => project;
 
-        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true) =>
-            AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName, ignoreCompatibilityLevelAdvice);
+        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true) =>
+            AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName, ignoreCompatibilityLevelAdvice, ignorePreferAsyncAdvice);
 
-        protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true)
+        protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true)
         {
             _ = callerMemberName;
             var (project, compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
@@ -50,6 +50,10 @@ namespace BuildToolsUnitTests
             if (ignoreCompatibilityLevelAdvice)
             {
                 diagnostics = diagnostics.RemoveAll(x => x.Descriptor == DataContractAnalyzer.MissingCompatibilityLevel);
+            }
+            if (ignorePreferAsyncAdvice)
+            {
+                diagnostics = diagnostics.RemoveAll(x => x.Descriptor == ServiceContractAnalyzer.PreferAsync);
             }
             if (_testOutputHelper is object)
             {

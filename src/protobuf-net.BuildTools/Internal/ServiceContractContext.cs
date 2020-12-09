@@ -1,8 +1,8 @@
 ﻿#nullable enable
 namespace ProtoBuf.Internal
 {
-    internal sealed class ServiceContractContext
-    {
+    //internal sealed class ServiceContractContext
+    //{
 
-    }
+    //}
 }
