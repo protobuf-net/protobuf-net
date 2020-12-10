@@ -1108,12 +1108,15 @@ namespace ProtoBuf.Meta
                         // Check deprecated enum value map isn't being used with conflicting enum values.
                         if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType, nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
                         {
-                            if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object tmp))
+                            // ProtoEnumAttribute.Value is an int
+                            if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object attrValue) && attrValue is int attrValuei32)
                             {
-                                var hasConflictingEnumValue = (int)value != (int)tmp;
-                                if (hasConflictingEnumValue) 
+                                int? valuei32 = EnumMember.TryGetInt32(value);
+
+                                var hasConflictingEnumValue = valuei32.HasValue && attrValuei32 != valuei32.Value;
+                                if (hasConflictingEnumValue)
                                 {
-                                    ThrowHelper.ThrowNotSupportedException($"Enum value maps have been deprecated and are no longer supported; Found conflicting ProtoEnumAttribute.Value set on '{member.DeclaringType.FullName}'.");
+                                    ThrowHelper.ThrowNotSupportedException($"Enum value maps have been deprecated and are no longer supported; Found conflicting ProtoEnumAttribute.Value set on '{member.DeclaringType.FullName}' (Enum raw value = '{value}', ProtoEnumAttribute.Value = '{attrValue}').");
                                 }
                             }
                         }

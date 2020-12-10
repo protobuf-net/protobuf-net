@@ -20,7 +20,11 @@ namespace ProtoBuf
         {
             [Obsolete(EnumValueDeprecated, false)]
             get { return enumValue; }
+#if DEBUG
+            [Obsolete(EnumValueDeprecated, false)]
+#else
             [Obsolete(EnumValueDeprecated, true)]
+#endif
             set { this.enumValue = value; hasValue = true; }
         }
 
