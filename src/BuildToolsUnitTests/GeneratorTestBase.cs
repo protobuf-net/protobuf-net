@@ -37,7 +37,7 @@ namespace BuildToolsUnitTests
         }
 
         protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
-            Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null, bool debugLog = true)
+            Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
             {
@@ -65,7 +65,7 @@ namespace BuildToolsUnitTests
 
         protected virtual bool ReferenceProtoBuf => true;
 
-        protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string callerMemberName = null)
+        protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null)
         {
             _ = callerMemberName;
             var workspace = new AdhocWorkspace();
