@@ -1113,7 +1113,7 @@ namespace ProtoBuf.Meta
                             {
                                 int? valuei32 = EnumMember.TryGetInt32(value);
 
-                                var hasConflictingEnumValue = valuei32.HasValue && attrValuei32 != valuei32.Value;
+                                var hasConflictingEnumValue = !valuei32.HasValue || attrValuei32 != valuei32.Value;
                                 if (hasConflictingEnumValue)
                                 {
                                     ThrowHelper.ThrowNotSupportedException($"Enum value maps have been deprecated and are no longer supported; Found conflicting ProtoEnumAttribute.Value set on '{member.DeclaringType.FullName}' (Enum raw value = '{value}', ProtoEnumAttribute.Value = '{attrValue}').");

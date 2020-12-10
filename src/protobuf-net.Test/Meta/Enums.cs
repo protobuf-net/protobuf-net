@@ -268,6 +268,18 @@ namespace ProtoBuf.unittest.Meta
             [ProtoEnum(Value = 8)] // Matching
             FooBar = 8
         }
+        enum ConflictingBlebU64 : ulong
+        {
+            [ProtoEnum(Value = 1234)] // Conflicting
+            Foo = long.MaxValue,
+        }
+
+        [Fact]
+        public void ObsoleteRemapValuesCannotConflictU64()
+        {
+            var model = RuntimeTypeModel.Create();
+            Assert.Throws<NotSupportedException>(() => model.Add(typeof(ConflictingBlebU64), true));
+        }
 
         [Fact]
         public void ObsoleteRemapValuesCannotConflictI32()
