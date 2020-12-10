@@ -1113,6 +1113,7 @@ namespace ProtoBuf.Meta
                             {
                                 int? valuei32 = EnumMember.TryGetInt32(value);
 
+                                // If the raw enum value is not safely convertable to an int32 and we're here (e.g. attribute value has been set to *something*), then we fail the check
                                 var hasConflictingEnumValue = !valuei32.HasValue || attrValuei32 != valuei32.Value;
                                 if (hasConflictingEnumValue)
                                 {
