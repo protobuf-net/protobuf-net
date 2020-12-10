@@ -1100,7 +1100,24 @@ namespace ProtoBuf.Meta
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
 
                     var value = ((FieldInfo)member).GetRawConstantValue();
-                    if (attrib is object) GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
+
+                    if (attrib is object)
+                    {
+                        GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
+
+                        // Check deprecated enum value map isn't being used with conflicting enum values.
+                        if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType, nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
+                        {
+                            if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object tmp))
+                            {
+                                var hasConflictingEnumValue = (int)value != (int)tmp;
+                                if (hasConflictingEnumValue) 
+                                {
+                                    ThrowHelper.ThrowNotSupportedException($"Enum value maps have been deprecated and are no longers supported; Found conflicting ProtoEnumAttribute.Value set on '{member.DeclaringType.FullName}'.");
+                                }
+                            }
+                        }
+                    }
                     if (string.IsNullOrWhiteSpace(name)) name = member.Name;
 
                     enumMember = new EnumMember(value, name);
