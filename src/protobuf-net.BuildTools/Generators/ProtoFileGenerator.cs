@@ -192,16 +192,16 @@ namespace ProtoBuf.BuildTools.Generators
                         if (userOptions is not null)
                         {
                             // copy over any keys that we know the tooling might want
-                            AddOption("ListSet", "listset");
-                            AddOption("OneOf", "oneof");
-                            AddOption("Services", "services");
-                            AddOption("LangVersion", "langver");
-                            AddOption("Package", "package");
-                            AddOption("Names", "names");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "ListSet", "listset");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "OneOf", "oneof");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Services", "services");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "LangVersion", "langver");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Package", "package");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
 
                             void AddOption(string readKey, string writeKey)
                             {
-                                if (userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + readKey, out string? optionValue))
+                                if (userOptions.TryGetValue(readKey, out string? optionValue))
                                 {
                                     options[writeKey] = optionValue;
                                 }
