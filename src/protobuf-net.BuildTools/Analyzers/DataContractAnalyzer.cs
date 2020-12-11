@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -147,7 +148,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor EnumValueRedundant = new(
             id: "PBN0017",
             title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueRedundant),
-            messageFormat: "This [ProtoEnum(Value)] declaration is redundant; it is recommended to omit it.",
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration is redundant; it is recommended to omit it.",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
@@ -155,9 +156,17 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor EnumValueNotSupported = new(
             id: "PBN0018",
             title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueNotSupported),
-            messageFormat: "This [ProtoEnum(Value)] declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.",
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor EnumNameRedundant = new(
+            id: "PBN0019",
+            title: nameof(DataContractAnalyzer) + "." + nameof(EnumNameRedundant),
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Name) + " declaration is redundant; it is recommended to omit it.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
@@ -265,6 +274,7 @@ namespace ProtoBuf.BuildTools.Analyzers
                     case SymbolKind.Field when member is IFieldSymbol field:
                         bool ignore = false;
                         int? overrideValue = null;
+                        string? overrideName = null;
                         foreach (var attrib in field.GetAttributes())
                         {
                             var ac = attrib.AttributeClass;
@@ -278,11 +288,15 @@ namespace ProtoBuf.BuildTools.Analyzers
                                 case nameof(ProtoEnumAttribute) when ac.InProtoBufNamespace():
                                     if (attrib.TryGetInt32ByName(nameof(ProtoEnumAttribute.Value), out int value))
                                         overrideValue = value;
+                                    if (attrib.TryGetStringByName(nameof(ProtoEnumAttribute.Name), out string s))
+                                        overrideName = s;
                                     break;
                             }
+                            if (ignore) break; // no point checking the rest
                         }
+                        if (ignore) continue;
 
-                        if (overrideValue.HasValue && !ignore)
+                        if (overrideValue is not null)
                         {
                             // - if the value is the same: it is redundant
                             // - if the value is different: it is not supported in v3
@@ -314,12 +328,20 @@ namespace ProtoBuf.BuildTools.Analyzers
                                     descriptor: DataContractAnalyzer.EnumValueNotSupported,
                                     location: Utils.PickLocation(ref context, field),
                                     // this is much more of a problem if the user is targeting v3
-                                    effectiveSeverity: v is not null && v.Major >= 3 ? DiagnosticSeverity.Error : DiagnosticSeverity.Info,
+                                    effectiveSeverity: v?.Major >= 3 ? DiagnosticSeverity.Error : DiagnosticSeverity.Info,
                                     additionalLocations: null,
                                     properties: null
                                 ));
 
                             }
+                        }
+
+                        if (overrideName is not null && overrideName == field.Name)
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                    descriptor: DataContractAnalyzer.EnumNameRedundant,
+                                    location: Utils.PickLocation(ref context, field)
+                                ));
                         }
                         break;
                 }
