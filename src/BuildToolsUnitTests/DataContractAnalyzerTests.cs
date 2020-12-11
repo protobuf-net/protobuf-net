@@ -609,7 +609,7 @@ public enum SomeEnum {
             var diag = diagnostics.Single(x => x.Id is not "CS0618" and not "CS0619");
             Assert.Equal(DataContractAnalyzer.EnumValueNotSupported, diag.Descriptor);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity); // error since we're targeting v3
-            Assert.Equal("This [ProtoEnum(Value)] declaration is conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal("This [ProtoEnum(Value)] declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
     }
 }

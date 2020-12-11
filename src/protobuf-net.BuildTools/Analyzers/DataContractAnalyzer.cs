@@ -155,7 +155,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor EnumValueNotSupported = new(
             id: "PBN0018",
             title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueNotSupported),
-            messageFormat: "This [ProtoEnum(Value)] declaration is conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.",
+            messageFormat: "This [ProtoEnum(Value)] declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
