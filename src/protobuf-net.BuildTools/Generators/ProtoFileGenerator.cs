@@ -38,21 +38,12 @@ namespace ProtoBuf.BuildTools.Generators
                 log?.Invoke($"Execute with debug log enabled");
 
                 Version?
-                    pbnetVersion = GetVersion("protobuf-net.Core") ?? GetVersion("protobuf-net") ?? GetVersion("protobuf-net.BuildTools"), // this last only used from tests
-                    pbnetGrpcVersion = GetVersion("protobuf-net.Grpc"),
-                    wcfVersion = GetVersion("System.ServiceModel.Primitives");
+                    pbnetVersion = context.Compilation.GetProtobufNetVersion(),
+                    pbnetGrpcVersion = context.Compilation.GetReferenceVersion("protobuf-net.Grpc"),
+                    wcfVersion = context.Compilation.GetReferenceVersion("System.ServiceModel.Primitives");
 
                 log?.Invoke($"Referencing protobuf-net {ShowVersion(pbnetVersion)}, protobuf-net.Grpc {ShowVersion(pbnetGrpcVersion)}, WCF {ShowVersion(wcfVersion)}");
 
-                Version ? GetVersion(string name)
-                {
-                    foreach (var ran in context.Compilation.ReferencedAssemblyNames)
-                    {
-                        if (string.Equals(name, ran.Name, StringComparison.InvariantCultureIgnoreCase))
-                            return ran.Version;
-                    }
-                    return null;
-                }
                 string ShowVersion(Version? version)
                     => version is null ? "(n/a)" : $"v{version}";
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -559,6 +560,56 @@ using ProtoBuf;
 public class Foo {}
 ", ignoreCompatibilityLevelAdvice: false);
             Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoNotWarnOnEnumsWithoutValue()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum]
+    Foo = 1
+}");
+            Assert.Empty(diagnostics.Where(x => x.Id is not "CS0618" and not "CS0619"));
+        }
+
+        [Fact]
+        public async Task NotifiesAboutRedundantEnumOverrides()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum(Value = 1)]
+    Foo = 1
+}");
+            // we'll overlook that the setter isn't actually available
+            var diag = diagnostics.Single(x => x.Id is not "CS0618" and not "CS0619");
+            Assert.Equal(DataContractAnalyzer.EnumValueRedundant, diag.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
+            Assert.Equal("This [ProtoEnum(Value)] declaration is redundant; it is recommended to omit it.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task NotifiesAboutIncompatibleEnumOverrides()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum(Value = 42)]
+    Foo = 1
+}");
+            // we'll overlook that the setter isn't actually available
+            var diag = diagnostics.Single(x => x.Id is not "CS0618" and not "CS0619");
+            Assert.Equal(DataContractAnalyzer.EnumValueNotSupported, diag.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity); // error since we're targeting v3
+            Assert.Equal("This [ProtoEnum(Value)] declaration is conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
     }
 }

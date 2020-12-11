@@ -172,5 +172,23 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static string Qualified(this INamespaceSymbol ns, string type)
             => (ns is null || ns.IsGlobalNamespace) ? type : (ns.ToDisplayString() + "." + type);
+
+        internal static Version? GetProtobufNetVersion(this Compilation compilation)
+            => compilation.GetReferenceVersion("protobuf-net.Core")
+            ?? compilation.GetReferenceVersion("protobuf-net")
+            ?? compilation.GetReferenceVersion("protobuf-net.BuildTools"); // this last only used from tests
+
+        internal static Version? GetReferenceVersion(this Compilation compilation, string name)
+        {
+            if (compilation is not null)
+            {
+                foreach (var ran in compilation.ReferencedAssemblyNames)
+                {
+                    if (string.Equals(name, ran.Name, StringComparison.InvariantCultureIgnoreCase))
+                        return ran.Version;
+                }
+            }
+            return null;
+        }
     }
 }
