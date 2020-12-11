@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -12,16 +14,40 @@ namespace BuildToolsUnitTests
     internal sealed class InMemoryAdditionalText : AdditionalText
     {
         private readonly SourceText _content;
-
-        public InMemoryAdditionalText(string path, string content)
+        private readonly (string key, string value)[]? _options;
+        public InMemoryAdditionalText(string path, string content, (string key, string value)[]? options = default)
         {
             Path = path;
             _content = SourceText.From(content, Encoding.UTF8);
+            _options = options;
+        }
+
+        public AnalyzerConfigOptions GetOptions()
+        {
+            if (_options is null || _options.Length == 0) return InMemoryConfigOptions.Empty;
+
+            var builder = ImmutableDictionary.CreateBuilder<string, string>(AnalyzerConfigOptions.KeyComparer);
+            foreach (var option in _options)
+            {
+                builder.Add(option.key, option.value);
+            }
+            return new InMemoryConfigOptions(builder.ToImmutable());
         }
 
         public override string Path { get; }
 
         public override SourceText GetText(CancellationToken cancellationToken = default) => _content;
+
+        private class InMemoryConfigOptions : AnalyzerConfigOptions
+        {
+            public static AnalyzerConfigOptions Empty { get; } = new InMemoryConfigOptions(ImmutableDictionary<string, string>.Empty);
+
+            private readonly ImmutableDictionary<string, string> _values;
+            public InMemoryConfigOptions(ImmutableDictionary<string, string> values)
+                => _values = values;
+            public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value)
+                => _values.TryGetValue(key, out value);
+        }
     }
 
     internal sealed class TestAnalyzeConfigOptionsProvider : AnalyzerConfigOptionsProvider

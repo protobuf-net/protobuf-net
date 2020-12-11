@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
@@ -16,6 +17,8 @@ namespace BuildToolsUnitTests
     {
         protected static AdditionalText[] Text(string path, string content) => new[] { new InMemoryAdditionalText(path, content) };
         protected static AdditionalText[] Texts(params (string path, string content)[] pairs) => pairs.Select(pair => new InMemoryAdditionalText(pair.path, pair.content)).ToArray();
+
+        protected static AdditionalText[] Texts(params (string path, string content, (string key, string value)[]? options)[] pairs) => pairs.Select(pair => new InMemoryAdditionalText(pair.path, pair.content, pair.options)).ToArray();
 
         protected static ImmutableDictionary<string, string> Options(params (string key, string value)[] pairs) => pairs.ToImmutableDictionary(pair => pair.key, pair => pair.value);
 
@@ -50,6 +53,19 @@ namespace BuildToolsUnitTests
             if (debugLog) globalOptions = globalOptions.SetItem("pbn_debug_log", "true");
 
             var optionsProvider = TestAnalyzeConfigOptionsProvider.Empty.WithGlobalOptions(new TestAnalyzerConfigOptions(globalOptions));
+            if (additionalTexts is not null && additionalTexts.Length != 0)
+            {
+                var map = ImmutableDictionary.CreateBuilder<object, AnalyzerConfigOptions>();
+                foreach (var text in additionalTexts)
+                {
+                    if (text is InMemoryAdditionalText mem)
+                    {
+                        map.Add(text, mem.GetOptions());
+                    }
+                }
+                optionsProvider = optionsProvider.WithAdditionalTreeOptions(map.ToImmutable());
+            }
+
             GeneratorDriver driver = CSharpGeneratorDriver.Create(new ISourceGenerator[] { Generator }, additionalTexts, parseOptions: parseOptions, optionsProvider: optionsProvider);
             (var project, var compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
             var result = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
