@@ -59,6 +59,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0074CABB-8
 		..\docs\3_0.md = ..\docs\3_0.md
 		..\docs\build_tools.md = ..\docs\build_tools.md
 		..\docs\compatibilitylevel.md = ..\docs\compatibilitylevel.md
+		..\docs\contract_first.md = ..\docs\contract_first.md
 		..\docs\index.md = ..\docs\index.md
 		..\docs\nodatime.md = ..\docs\nodatime.md
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
