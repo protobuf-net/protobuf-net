@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -144,30 +145,55 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor EnumValueRedundant = new(
+            id: "PBN0017",
+            title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueRedundant),
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration is redundant; it is recommended to omit it.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor EnumValueNotSupported = new(
+            id: "PBN0018",
+            title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueNotSupported),
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor EnumNameRedundant = new(
+            id: "PBN0019",
+            title: nameof(DataContractAnalyzer) + "." + nameof(EnumNameRedundant),
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Name) + " declaration is redundant; it is recommended to omit it.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => s_SupportedDiagnostics;
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
-            ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration);
+            ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.EnumDeclaration);
 
         /// <inheritdoc/>
         public override void Initialize(AnalysisContext ctx)
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(context => ConsiderPossibleProtoBufType(context), s_syntaxKinds);
-            ctx.RegisterCompilationAction(context => ConsiderCompilation(context));
+            ctx.RegisterSyntaxNodeAction(context => ConsiderPossibleProtoBufType(ref context), s_syntaxKinds);
+            ctx.RegisterCompilationAction(context => ConsiderCompilation(ref context));
         }
 
-        private void ConsiderCompilation(CompilationAnalysisContext context)
+        private void ConsiderCompilation(ref CompilationAnalysisContext context)
         {
-            var attribType = context.Compilation.GetTypeByMetadataName(Utils.ProtoBufNamespace + "." + nameof(CompatibilityLevelAttribute));
-            if (attribType is not null && !IsDeclaredAtModuleOrAssembly(context.Compilation, attribType)
-                && HasProtoContractsWithoutCompatibilityLevel(context.Compilation, attribType))
+            var pbVer = context.Compilation.GetProtobufNetVersion();
+            if (pbVer is not null && pbVer.Major >= 3
+                && !IsCompatibilityLevelDeclaredAtModuleOrAssembly(context.Compilation)
+                && HasProtoContractsWithoutCompatibilityLevel(context.Compilation))
             {
-                // so: it is available, but not used, and there are proto-contracts that do not declare it
+                // so: it should be available, but not used, and there are proto-contracts that do not declare it
                 context.ReportDiagnostic(Diagnostic.Create(
                         descriptor: DataContractAnalyzer.MissingCompatibilityLevel,
                         location: null,
@@ -177,7 +203,7 @@ namespace ProtoBuf.BuildTools.Analyzers
                     ));
             }
 
-            static bool HasProtoContractsWithoutCompatibilityLevel(Compilation compilation, INamedTypeSymbol attribType)
+            static bool HasProtoContractsWithoutCompatibilityLevel(Compilation compilation)
             {
                 foreach(var typeName in compilation.Assembly.TypeNames)
                 {
@@ -188,13 +214,12 @@ namespace ProtoBuf.BuildTools.Analyzers
                         foreach (var attrib in type.GetAttributes())
                         {
                             var ac = attrib.AttributeClass;
-                            if (ac == null) continue;
-                            if (SymbolEqualityComparer.Default.Equals(ac, attribType))
+                            if (ac?.Name == nameof(CompatibilityLevelAttribute) && ac.InProtoBufNamespace())
                             {
                                 hasCompatLevel = true;
                                 break; // we don't need more
                             }
-                            if (ac.Name == nameof(ProtoContractAttribute) && ac.InProtoBufNamespace())
+                            if (ac?.Name == nameof(ProtoContractAttribute) && ac.InProtoBufNamespace())
                             {
                                 isProtoContract = true;
                             }
@@ -205,30 +230,126 @@ namespace ProtoBuf.BuildTools.Analyzers
                 return false;
             }
 
-            static bool IsDeclaredAtModuleOrAssembly(Compilation compilation, INamedTypeSymbol attribType)
+            static bool IsCompatibilityLevelDeclaredAtModuleOrAssembly(Compilation compilation)
             {
                 foreach (var attrib in compilation.SourceModule.GetAttributes())
                 {
-                    if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, attribType))
-                    {
+                    var ac = attrib.AttributeClass;
+                    if (ac?.Name == nameof(CompatibilityLevelAttribute) && ac.InProtoBufNamespace())
                         return true;
-                    }
                 }
                 foreach (var attrib in compilation.Assembly.GetAttributes())
                 {
-                    if (SymbolEqualityComparer.Default.Equals(attrib.AttributeClass, attribType))
-                    {
+                    var ac = attrib.AttributeClass;
+                    if (ac?.Name == nameof(CompatibilityLevelAttribute) && ac.InProtoBufNamespace())
                         return true;
-                    }
                 }
                 return false;
             }
         }
 
-        private static void ConsiderPossibleProtoBufType(SyntaxNodeAnalysisContext context)
+        private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context)
         {
-            if (context.ContainingSymbol is not ITypeSymbol type) return;
-            
+            if (context.ContainingSymbol is not INamedTypeSymbol type) return;
+
+            switch (type?.TypeKind)
+            {
+                case TypeKind.Class:
+                case TypeKind.Struct:
+                case TypeKind.Interface:
+                    ConsiderPossibleDataContractType(ref context, type);
+                    break;
+                case TypeKind.Enum:
+                    ConsiderEnumType(ref context, type);
+                    break;
+            }
+        }
+
+        private static void ConsiderEnumType(ref SyntaxNodeAnalysisContext context, INamedTypeSymbol type)
+        {
+            foreach (var member in type.GetMembers())
+            {
+                switch (member.Kind)
+                {
+                    case SymbolKind.Field when member is IFieldSymbol field:
+                        bool ignore = false;
+                        int? overrideValue = null;
+                        string? overrideName = null;
+                        foreach (var attrib in field.GetAttributes())
+                        {
+                            var ac = attrib.AttributeClass;
+                            
+                            switch (ac?.Name)
+                            {
+                                case null: continue;
+                                case nameof(ProtoIgnoreAttribute) when ac.InProtoBufNamespace():
+                                    ignore = true;
+                                    break;
+                                case nameof(ProtoEnumAttribute) when ac.InProtoBufNamespace():
+                                    if (attrib.TryGetInt32ByName(nameof(ProtoEnumAttribute.Value), out int value))
+                                        overrideValue = value;
+                                    if (attrib.TryGetStringByName(nameof(ProtoEnumAttribute.Name), out string s))
+                                        overrideName = s;
+                                    break;
+                            }
+                            if (ignore) break; // no point checking the rest
+                        }
+                        if (ignore) continue;
+
+                        if (overrideValue is not null)
+                        {
+                            // - if the value is the same: it is redundant
+                            // - if the value is different: it is not supported in v3
+                            bool isMatch = field.ConstantValue switch
+                            {
+                                int i32 => i32 == overrideValue,
+                                long i64 => i64 == (long)overrideValue,
+                                short i16 => (int)i16 == overrideValue,
+                                sbyte i8 => (int)i8 == overrideValue,
+                                uint u32 => (long)u32 == (long)overrideValue,
+                                ulong u64 => u64 <= int.MaxValue && (long)u64 == (long)overrideValue,
+                                ushort u16 => (int)u16 == overrideValue,
+                                byte u8 => (int)u8 == overrideValue,
+                                char c => (int)c == overrideValue,
+                                _ => false,
+                            };
+
+                            if (isMatch)
+                            {
+                                context.ReportDiagnostic(Diagnostic.Create(
+                                    descriptor: DataContractAnalyzer.EnumValueRedundant,
+                                    location: Utils.PickLocation(ref context, field)
+                                ));
+                            }
+                            else
+                            {
+                                var v = context.Compilation.GetProtobufNetVersion();
+                                context.ReportDiagnostic(Diagnostic.Create(
+                                    descriptor: DataContractAnalyzer.EnumValueNotSupported,
+                                    location: Utils.PickLocation(ref context, field),
+                                    // this is much more of a problem if the user is targeting v3
+                                    effectiveSeverity: v?.Major >= 3 ? DiagnosticSeverity.Error : DiagnosticSeverity.Info,
+                                    additionalLocations: null,
+                                    properties: null
+                                ));
+
+                            }
+                        }
+
+                        if (overrideName is not null && overrideName == field.Name)
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                    descriptor: DataContractAnalyzer.EnumNameRedundant,
+                                    location: Utils.PickLocation(ref context, field)
+                                ));
+                        }
+                        break;
+                }
+            }
+        }
+
+        private static void ConsiderPossibleDataContractType(ref SyntaxNodeAnalysisContext context, INamedTypeSymbol type)
+        {
             var attribs = type.GetAttributes();
 
             DataContractContext? typeContext = null;

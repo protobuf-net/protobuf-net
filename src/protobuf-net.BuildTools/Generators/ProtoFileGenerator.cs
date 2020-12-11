@@ -8,6 +8,7 @@ using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -30,18 +31,30 @@ namespace ProtoBuf.BuildTools.Generators
 
         void ISourceGenerator.Initialize(GeneratorInitializationContext context) { }
 
-        static bool TryReadBoolSetting(in GeneratorExecutionContext context, string key, bool defaultValue = false)
-            => context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(key, out var s)
-                && s is not null && bool.TryParse(s, out bool b) ? b : defaultValue;
-
-
-
         void ISourceGenerator.Execute(GeneratorExecutionContext context)
         {
             try
             {
                 var log = Log;
                 log?.Invoke($"Execute with debug log enabled");
+
+                Version?
+                    pbnetVersion = context.Compilation.GetProtobufNetVersion(),
+                    pbnetGrpcVersion = context.Compilation.GetReferenceVersion("protobuf-net.Grpc"),
+                    wcfVersion = context.Compilation.GetReferenceVersion("System.ServiceModel.Primitives");
+
+                log?.Invoke($"Referencing protobuf-net {ShowVersion(pbnetVersion)}, protobuf-net.Grpc {ShowVersion(pbnetGrpcVersion)}, WCF {ShowVersion(wcfVersion)}");
+
+                string ShowVersion(Version? version)
+                    => version is null ? "(n/a)" : $"v{version}";
+
+                if (log is not null)
+                {
+                    foreach (var ran in context.Compilation.ReferencedAssemblyNames.OrderBy(x => x.Name))
+                    {
+                        log($"reference: {ran.Name} v{ran.Version}");
+                    }
+                }
 
                 var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).Select(at => new NormalizedAdditionalText(at)).ToImmutableArray();
                 if (schemas.IsDefaultOrEmpty)
@@ -100,7 +113,45 @@ namespace ProtoBuf.BuildTools.Generators
                     var location = Path.GetDirectoryName(schema.Value.Path);
                     log?.Invoke($"Processing '{name}' relative to '{location}'");
 
+                    var userOptions = context.AnalyzerConfigOptions.GetOptions(schema.Value);
                     set.AddImportPath(location);
+                    if (userOptions is not null && userOptions.TryGetValue("ImportPaths", out var extraPaths) && !string.IsNullOrWhiteSpace(extraPaths))
+                    {
+                        var baseUri = new Uri("file://" + schema.Value.Path, UriKind.Absolute);
+                        if (extraPaths.IndexOf(';') >= 0)
+                        {
+                            foreach (var part in extraPaths.Split(';'))
+                            {
+                                AddExtraPath(part);
+                            }
+                        }
+                        else
+                        {
+                            AddExtraPath(extraPaths);
+                        }
+                        void AddExtraPath(string? fragment)
+                        {
+                            fragment = fragment?.Trim();
+                            if (!string.IsNullOrWhiteSpace(fragment))
+                            {
+                                try
+                                {
+                                    var relative = new Uri(baseUri, fragment);
+                                    if (relative.IsAbsoluteUri)
+                                    {
+                                        var combined = relative.LocalPath;
+                                        log?.Invoke($"Adding extra import path '{relative.AbsolutePath}'");
+                                        set.AddImportPath(relative.AbsolutePath);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    log?.Invoke($"Failed to add relative path '{fragment}': {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                    
                     if (!set.Add(name))
                     {
                         log?.Invoke($"Failed to add '{name}'; skipping");
@@ -109,7 +160,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                     set.Process();
                     var errors = set.GetErrors();
-                    log?.Invoke($"Parsed {schemas.Length} schemas with {errors.Count(x => x.IsError)} errors, {errors.Count(x => x.IsWarning)} warnings");
+                    log?.Invoke($"Parsed schema with {errors.Count(x => x.IsError)} errors, {errors.Count(x => x.IsWarning)} warnings, {set.Files.Count} files");
                     foreach (var error in errors)
                     {
                         var position = new LinePosition(error.LineNumber - 1, error.ColumnNumber - 1); // zero index on these positions
@@ -123,19 +174,63 @@ namespace ProtoBuf.BuildTools.Generators
 
                         var level = error.IsError ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
                         const int ErrorNumberOffset = 1000;
+                        log?.Invoke(error.ToString());
                         context.ReportDiagnostic(Diagnostic.Create($"PBN{(error.ErrorNumber + ErrorNumberOffset).ToString("0000", CultureInfo.InvariantCulture)}",
                             "Protobuf", error.Message, level, level, true, error.IsError ? 0 : 2,
                             location: Location.Create(error.File, default, span)));
                     }
-                    log?.Invoke($"Files generated: {set.Files.Count}");
                     if (set.Files.Any())
                     {
-                        var options = new Dictionary<string, string>
-                {
-                    {"services", TryReadBoolSetting(context, "build_property.ProtoBufNet_GenerateServices", true) ? "yes" : "no" },
-                    {"oneof", TryReadBoolSetting(context, "build_property.ProtoBufNet_UseOneOf", true) ? "yes" : "no" },
-                };
-                        if (langver is string) options.Add("langver", langver);
+                        var options = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                        if (langver is not null) options.Add("langver", langver);
+
+                        if ((pbnetGrpcVersion ?? wcfVersion) is not null)
+                        {   // automatically generate services *if* the consumer is referencing either the WCF or gRPC bits
+                            options.Add("services", "yes");
+                        }
+
+                        if (userOptions is not null)
+                        {
+                            // copy over any keys that we know the tooling might want
+                            AddOption("langver");
+                            AddOption("oneof");
+                            AddOption("services");
+                            AddOption("package");
+                            AddOption("names");
+                            void AddOption(string? key)
+                            {
+                                key = key?.Trim()!;
+                                if (!string.IsNullOrEmpty(key) && userOptions.TryGetValue(key!, out string? found))
+                                {
+                                    options[key!] = found;
+                                }
+                            }
+
+                            // provide an extra API in case there are additional service keys to proxy to the tooling
+                            if (userOptions.TryGetValue("ExtraOptions", out var extraOptions))
+                            {
+                                if (extraOptions.IndexOf(';') >= 0)
+                                {
+                                    foreach (var part in extraOptions.Split(';'))
+                                    {
+                                        AddOption(part);
+                                    }
+                                }
+                                else
+                                {
+                                    AddOption(extraOptions);
+                                }
+                            }
+                        }
+
+                        if (log is not null)
+                        {
+                            foreach (var pair in options.OrderBy(x => x.Key))
+                            {
+                                log($": {pair.Key}={pair.Value}");
+                            }
+                        }
+
                         var files = generator.Generate(set, options: options);
                         foreach (var file in files)
                         {
@@ -148,6 +243,11 @@ namespace ProtoBuf.BuildTools.Generators
                             log?.Invoke($"Adding: '{finalName}' ({file.Text.Length} characters)");
                             context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
                         }
+                    }
+                    if (log is not null)
+                    {
+                        log($"Completed '{name}'");
+                        log("");
                     }
                 }
             }
@@ -186,10 +286,11 @@ namespace ProtoBuf.BuildTools.Generators
 
             bool IFileSystem.Exists(string path)
             {
+                path = NormalizePath(path);
                 var found = Find(path);
                 _log?.Invoke($"Checking for '{path}': {(found is not null ? "found" : "not found")}");
                 return found is not null;
-                
+
             }
 
             private AdditionalText? Find(string path)
@@ -205,6 +306,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             TextReader? IFileSystem.OpenText(string path)
             {
+                path = NormalizePath(path);
                 var content = Find(path)?.GetText()?.ToString();
                 if (content is null)
                 {

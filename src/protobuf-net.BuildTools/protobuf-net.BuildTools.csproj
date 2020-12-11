@@ -35,10 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <CompilerVisibleProperty Include="ProtoBufNet_DebugLog" />
-    <CompilerVisibleProperty Include="ProtoBufNet_GenerateServices" />
-    <CompilerVisibleProperty Include="ProtoBufNet_UseOneOf" />
-
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/any.proto" Link="google/protobuf/any.proto"/>
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/api.proto" Link="google/protobuf/api.proto"/>
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/descriptor.proto" Link="google/protobuf/descriptor.proto"/>

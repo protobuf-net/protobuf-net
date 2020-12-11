@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -558,6 +559,87 @@ using ProtoBuf;
 [ProtoContract]
 public class Foo {}
 ", ignoreCompatibilityLevelAdvice: false);
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoNotWarnOnEnumsWithoutValue()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum]
+    Foo = 1
+}");
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task NotifiesAboutRedundantEnumValueOverride()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum(Value = 1)]
+    Foo = 1
+}");
+            // we'll overlook that the setter isn't actually available
+            var diag = diagnostics.Single(x => x.Id is not "CS0618" and not "CS0619");
+            Assert.Equal(DataContractAnalyzer.EnumValueRedundant, diag.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
+            Assert.Equal("This ProtoEnumAttribute.Value declaration is redundant; it is recommended to omit it.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task NotifiesAboutIncompatibleEnumValueOverride()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum(Value = 42)]
+    Foo = 1
+}");
+            // we'll overlook that the setter isn't actually available
+            var diag = diagnostics.Single(x => x.Id is not "CS0618" and not "CS0619");
+            Assert.Equal(DataContractAnalyzer.EnumValueNotSupported, diag.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity); // error since we're targeting v3
+            Assert.Equal("This ProtoEnumAttribute.Value declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task NotifiesAboutRedundantEnumNameOverride()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum(Name = ""Foo"")]
+    Foo = 1
+}");
+            var diag = diagnostics.Single();
+            Assert.Equal(DataContractAnalyzer.EnumNameRedundant, diag.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
+            Assert.Equal("This ProtoEnumAttribute.Name declaration is redundant; it is recommended to omit it.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task DoesNotNotifyAboutMeaningfulEnumNameOverride()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+public enum SomeEnum {
+    None = 0,
+    [ProtoEnum(Name = ""foo"")]
+    Foo = 1
+}");
             Assert.Empty(diagnostics);
         }
     }
