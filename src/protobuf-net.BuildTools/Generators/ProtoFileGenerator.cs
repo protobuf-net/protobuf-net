@@ -115,7 +115,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                     var userOptions = context.AnalyzerConfigOptions.GetOptions(schema.Value);
                     set.AddImportPath(location);
-                    if (userOptions is not null && userOptions.TryGetValue("ImportPaths", out var extraPaths) && !string.IsNullOrWhiteSpace(extraPaths))
+                    if (userOptions is not null && userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + "ImportPaths", out var extraPaths) && !string.IsNullOrWhiteSpace(extraPaths))
                     {
                         var baseUri = new Uri("file://" + schema.Value.Path, UriKind.Absolute);
                         if (extraPaths.IndexOf(';') >= 0)
@@ -192,33 +192,18 @@ namespace ProtoBuf.BuildTools.Generators
                         if (userOptions is not null)
                         {
                             // copy over any keys that we know the tooling might want
-                            AddOption("langver");
-                            AddOption("oneof");
-                            AddOption("services");
-                            AddOption("package");
-                            AddOption("names");
-                            void AddOption(string? key)
-                            {
-                                key = key?.Trim()!;
-                                if (!string.IsNullOrEmpty(key) && userOptions.TryGetValue(key!, out string? found))
-                                {
-                                    options[key!] = found;
-                                }
-                            }
+                            AddOption("ListSet", "listset");
+                            AddOption("OneOf", "oneof");
+                            AddOption("Services", "services");
+                            AddOption("LangVersion", "langver");
+                            AddOption("Package", "package");
+                            AddOption("Names", "names");
 
-                            // provide an extra API in case there are additional service keys to proxy to the tooling
-                            if (userOptions.TryGetValue("ExtraOptions", out var extraOptions))
+                            void AddOption(string readKey, string writeKey)
                             {
-                                if (extraOptions.IndexOf(';') >= 0)
+                                if (userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + readKey, out string? optionValue))
                                 {
-                                    foreach (var part in extraOptions.Split(';'))
-                                    {
-                                        AddOption(part);
-                                    }
-                                }
-                                else
-                                {
-                                    AddOption(extraOptions);
+                                    options[writeKey] = optionValue;
                                 }
                             }
                         }

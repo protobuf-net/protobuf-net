@@ -35,6 +35,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ImportPaths" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="LangVersion" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ListSet" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Names" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="OneOf" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Package" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Services" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/any.proto" Link="google/protobuf/any.proto"/>
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/api.proto" Link="google/protobuf/api.proto"/>
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/descriptor.proto" Link="google/protobuf/descriptor.proto"/>

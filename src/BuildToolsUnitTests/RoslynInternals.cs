@@ -1,8 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
+using ProtoBuf.BuildTools.Internal;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -29,7 +28,7 @@ namespace BuildToolsUnitTests
             var builder = ImmutableDictionary.CreateBuilder<string, string>(AnalyzerConfigOptions.KeyComparer);
             foreach (var option in _options)
             {
-                builder.Add(option.key, option.value);
+                builder.Add(Literals.AdditionalFileMetadataPrefix + option.key, option.value);
             }
             return new InMemoryConfigOptions(builder.ToImmutable());
         }
