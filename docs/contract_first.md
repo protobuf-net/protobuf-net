@@ -48,7 +48,7 @@ protobuf-net also provides:
 
 - [protobuf-net.Protogen](https://www.nuget.org/packages/protobuf-net.Protogen/), a .NET Global Tool for command-line usage
 - [https://protogen.marcgravell.com/](https://protogen.marcgravell.com/) - an online version of the same
-- [protobuf-net.MSBuild[(https://www.nuget.org/packages/protobuf-net.MSBuild/) - a ".targets" based way of integrated protobuf-net's tools into the build
+- [protobuf-net.MSBuild](https://www.nuget.org/packages/protobuf-net.MSBuild/) - a ".targets" based way of integrated protobuf-net's tools into the build
 - `protogen` - a standalone executable version of the same tools
 
 All of these tools can be awkward, brittle, and non-obvious.
