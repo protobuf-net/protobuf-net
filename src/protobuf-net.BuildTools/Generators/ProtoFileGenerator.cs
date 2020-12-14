@@ -184,8 +184,15 @@ namespace ProtoBuf.BuildTools.Generators
                         var options = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                         if (langver is not null) options.Add("langver", langver);
 
-                        if ((pbnetGrpcVersion ?? wcfVersion) is not null)
+                        var services = pbnetGrpcVersion switch
                         {   // automatically generate services *if* the consumer is referencing either the WCF or gRPC bits
+                            not null when wcfVersion is not null => "grpc;wcf",
+                            not null => "grpc",
+                            null when wcfVersion is not null => "wcf",
+                            _ => null,
+                        };
+                        if (services is not null)
+                        {
                             options.Add("services", "yes");
                         }
 

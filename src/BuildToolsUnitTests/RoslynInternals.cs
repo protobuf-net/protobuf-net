@@ -26,9 +26,9 @@ namespace BuildToolsUnitTests
             if (_options is null || _options.Length == 0) return InMemoryConfigOptions.Empty;
 
             var builder = ImmutableDictionary.CreateBuilder<string, string>(AnalyzerConfigOptions.KeyComparer);
-            foreach (var option in _options)
+            foreach ((var key, var value) in _options)
             {
-                builder.Add(Literals.AdditionalFileMetadataPrefix + option.key, option.value);
+                builder.Add(Literals.AdditionalFileMetadataPrefix + key, value);
             }
             return new InMemoryConfigOptions(builder.ToImmutable());
         }

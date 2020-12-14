@@ -503,6 +503,26 @@ namespace ProtoBuf.Reflection
         protected const string OneOfEnumSuffixDiscriminator = "Case";
 
         /// <summary>
+        /// Indicates the kinds of service metadata that should be included
+        /// </summary>
+        [Flags]
+        protected enum ServiceKinds
+        {
+            /// <summary>
+            /// No serivices should be included
+            /// </summary>
+            None = 0,
+            /// <summary>
+            /// Indicates service metadata defined by WCF (System.ServiceModel) should be included
+            /// </summary>
+            Wcf = 1 << 0,
+            /// <summary>
+            /// Indicates service metadata defined by protobuf-net.Grpc should be included
+            /// </summary>
+            Grpc = 1 << 1,
+        }
+
+        /// <summary>
         /// Represents the state of a code-generation invocation
         /// </summary>
         protected class GeneratorContext
@@ -576,8 +596,33 @@ namespace ProtoBuf.Reflection
                 OneOfEnums = (File.Options?.GetOptions()?.EmitOneOfEnum ?? false) || (_options != null && _options.TryGetValue("oneof", out var oneof) && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase));
 
                 EmitListSetters = IsEnabled("listset");
-                EmitServices = IsEnabled("services");
+
+                var s = GetCustomOption("services");
+                void AddServices(string value)
+                {
+                    value = value?.Trim();
+                    if (string.IsNullOrWhiteSpace(value)) return;
+
+                    if (!Enum.TryParse(value, true, out ServiceKinds parsed))
+                    {   // for backwards-compatibility of what "services" meant in the past
+                        parsed = IsEnabledValue(value) ? ServiceKinds.Wcf : ServiceKinds.None;
+                    }
+                    _serviceKinds |= parsed;
+                }
+                if (s is not null && s.IndexOf(';') >= 0)
+                {
+                    foreach (var part in s.Split(';'))
+                    {
+                        AddServices(part);
+                    }
+                }
+                else
+                {
+                    AddServices(s);
+                }
             }
+
+            private ServiceKinds _serviceKinds;
 
             /// <summary>
             /// Whether lists should be written with getters
@@ -587,14 +632,23 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Whether services should be emitted
             /// </summary>
-            public bool EmitServices { get; }
+            public bool EmitServices => _serviceKinds != ServiceKinds.None;
+
+
+            /// <summary>
+            /// What kinds of services should be emitted
+            /// </summary>
+            public bool EmitServicesFor(ServiceKinds anyOf)
+                => (_serviceKinds & anyOf) != 0;
 
             /// <summary>
             /// Whether a custom option is enabled
             /// </summary>
             internal bool IsEnabled(string key)
+                => IsEnabledValue(GetCustomOption(key));
+
+            internal bool IsEnabledValue(string option)
             {
-                var option = GetCustomOption(key);
                 if (string.IsNullOrWhiteSpace(option)) return false;
                 option = option.Trim();
                 if (option == "1") return true;
