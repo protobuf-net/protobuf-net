@@ -49,5 +49,31 @@ namespace ProtoBuf.Test
             Assert.Equal("def", clone.LastName);
             Assert.Equal(123, clone.Count);
         }
+        
+        [ProtoContract]
+        [ProtoInclude(1, typeof(PositionalRecordWithAttributesWithInheritance))]
+        public abstract record BasePositionalRecordWithAttributesWithInheritance(
+            [property: ProtoMember(2)] string FirstName,
+            [property: ProtoMember(3)] string LastName
+        );
+        
+        [ProtoContract]
+        public record PositionalRecordWithAttributesWithInheritance (
+            string FirstName,
+            string LastName,
+            [property: ProtoMember(1)] int Count
+        ) : BasePositionalRecordWithAttributesWithInheritance(FirstName, LastName);
+        
+        [Fact]
+        public void CanRoundTripPositionalRecordWithAttributesWithInheritance()
+        {
+            var obj = new PositionalRecordWithAttributesWithInheritance("abc", "def", 123);
+            var model = RuntimeTypeModel.Create();
+            var clone = model.DeepClone(obj);
+            Assert.NotSame(obj, clone);
+            Assert.Equal("abc", clone.FirstName);
+            Assert.Equal("def", clone.LastName);
+            Assert.Equal(123, clone.Count);
+        }
     }
 }
