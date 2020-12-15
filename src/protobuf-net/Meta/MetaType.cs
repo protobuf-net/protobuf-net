@@ -142,10 +142,6 @@ namespace ProtoBuf.Meta
                 ThrowIfFrozen();
                 derivedMeta.ThrowIfFrozen();
 
-                if (IsAutoTuple || derivedMeta.IsAutoTuple)
-                {
-                    ThrowTupleTypeWithInheritance(derivedType);
-                }
                 if (surrogateType is object) ThrowSubTypeWithSurrogate(Type);
                 if (derivedMeta.surrogateType is object) ThrowSubTypeWithSurrogate(derivedType);
 
@@ -160,12 +156,6 @@ namespace ProtoBuf.Meta
             {
                 model.ReleaseLock(opaqueToken);
             }
-        }
-
-        private static void ThrowTupleTypeWithInheritance(Type type)
-        {
-            ThrowHelper.ThrowInvalidOperationException(
-                $"Tuple-based types cannot be used in inheritance hierarchies: {type.NormalizeName()}");
         }
 
         private void SetBaseType(MetaType baseType)
@@ -552,7 +542,6 @@ namespace ProtoBuf.Meta
             }
             if (IsAutoTuple)
             {
-                if (involvedInInheritance) ThrowTupleTypeWithInheritance(Type);
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
                 if (ctor is null) throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
