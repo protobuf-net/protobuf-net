@@ -24,7 +24,7 @@ namespace ProtoBuf
 
         /// <summary>
         /// Gets or sets the fist offset to use with implicit field tags;
-        /// only uesd if ImplicitFields is set.
+        /// only used if ImplicitFields is set.
         /// </summary>
         public int ImplicitFirstTag
         {
