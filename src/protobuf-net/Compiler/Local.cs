@@ -38,7 +38,7 @@ namespace ProtoBuf.Compiler
             if (ctx is object)
             {
                 // only *actually* dispose if this is context-bound; note that non-bound
-                // objects are cheekily re-used, and *must* be left intact agter a "using" etc
+                // objects are cheekily re-used, and *must* be left intact after a "using" etc
                 ctx.ReleaseToPool(value);
                 value = null; 
                 ctx = null;
