@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿using System;
+using ProtoBuf.Meta;
 using Xunit;
 
 namespace ProtoBuf.Test
@@ -22,6 +23,25 @@ namespace ProtoBuf.Test
         public void CanRoundTripPositionalRecord()
         {
             var obj = new PositionalRecord("abc", "def", 123);
+            var model = RuntimeTypeModel.Create();
+            var clone = model.DeepClone(obj);
+            Assert.NotSame(obj, clone);
+            Assert.Equal("abc", clone.FirstName);
+            Assert.Equal("def", clone.LastName);
+            Assert.Equal(123, clone.Count);
+        }
+        
+        [ProtoContract]
+        public record PositionalRecordWithAttributes(
+            [property: ProtoMember(1)] string FirstName,
+            [property: ProtoMember(2)] string LastName,
+            [property: ProtoMember(3)] int Count
+        );
+        
+        [Fact]
+        public void CanRoundTripPositionalRecordWithAttributes()
+        {
+            var obj = new PositionalRecordWithAttributes("abc", "def", 123);
             var model = RuntimeTypeModel.Create();
             var clone = model.DeepClone(obj);
             Assert.NotSame(obj, clone);
