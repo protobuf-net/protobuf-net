@@ -614,7 +614,7 @@ namespace ProtoBuf.Meta
         [Flags]
         internal enum AttributeFamily
         {
-            None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4, AutoTuple = 8
+            None = 0, ProtoBuf = 1, DataContractSerializer = 2, XmlSerializer = 4, AutoTuple = 8
         }
         private static Type GetBaseType(MetaType type)
         {
@@ -947,7 +947,7 @@ namespace ProtoBuf.Meta
                     case "System.Runtime.Serialization.DataContractAttribute":
                         if (!model.AutoAddProtoContractTypesOnly)
                         {
-                            family |= AttributeFamily.DataContractSerialier;
+                            family |= AttributeFamily.DataContractSerializer;
                         }
                         break;
                 }
@@ -1155,7 +1155,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerialier))
+            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerializer))
             {
                 attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
                 if (attrib is object)
