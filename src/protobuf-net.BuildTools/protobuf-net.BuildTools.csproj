@@ -35,13 +35,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArrayTypes" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ImportPaths" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="LangVersion" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ListSet" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Names" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="OneOf" />
-    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Package" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Services" />
+    <CompilerVisibleProperty Include="RootNamespace" />
   </ItemGroup>
 
   <ItemGroup>

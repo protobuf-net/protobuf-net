@@ -101,12 +101,23 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 log?.Invoke($"Detected {generator.Name} v{langver}");
 
+                
+                if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue(
+                    "build_property.RootNamespace", out var rootNamespace))
+                {
+                    if (!string.IsNullOrWhiteSpace(rootNamespace))
+                    {
+                        rootNamespace = rootNamespace.Trim();
+                    }
+                }
+                
                 var fileSystem = new AdditionalFilesFileSystem(log, schemas);
                 foreach (var schema in schemas)
                 {
                     var set = new FileDescriptorSet
                     {
-                        FileSystem = fileSystem
+                        FileSystem = fileSystem,
+                        DefaultPackage = rootNamespace,
                     };
 
                     var name = Path.GetFileName(schema.Value.Path);
@@ -199,13 +210,13 @@ namespace ProtoBuf.BuildTools.Generators
                         if (userOptions is not null)
                         {
                             // copy over any keys that we know the tooling might want
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "ArrayTypes", "arraytypes");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "LangVersion", "langver");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "ListSet", "listset");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "OneOf", "oneof");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Services", "services");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "LangVersion", "langver");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "Package", "package");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
-
+                            
                             void AddOption(string readKey, string writeKey)
                             {
                                 if (userOptions.TryGetValue(readKey, out string? optionValue))
