@@ -17,12 +17,13 @@ namespace ProtoBuf.Models
             Base64,
             File
         }
-        [RegularExpression(@"\A\b[-0-9a-fA-F\s]+\b\Z")]
+        [RegularExpression(@"\A\b[\-0-9a-fA-F\s]+\b\Z")]
         public string Hexadecimal { get; set; }
         [RegularExpression(@"^[a-zA-Z0-9\+/\s]*={0,3}$")]
         public string Base64 { get; set; }
         public IFileListEntry File { get; set; }
-        public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.File;
+        public bool ShowFullStrings { get; set; }
+        public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.Hexa;
 
         private async Task<byte[]> GetData()
         {
@@ -59,7 +60,7 @@ namespace ProtoBuf.Models
         public async Task<DecodeModel> GetDecodeModel()
         {
             var data = await GetData();
-            return (new DecodeModel(data));
+            return (new DecodeModel(data, ShowFullStrings));
         }
     }
 }

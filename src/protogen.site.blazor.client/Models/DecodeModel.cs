@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace ProtoBuf.Models
 {
     public class DecodeModel
     {
-        public DecodeModel(byte[] data)
+        public DecodeModel(byte[] data, bool showFullStrings)
         {
             Data = data;
-
+            ShowFullStrings = showFullStrings;
         }
 
         public ProtoReader GetReader()
@@ -24,7 +19,9 @@ namespace ProtoBuf.Models
 
         }
 
-        public byte[] Data { get; private set; }
+        public byte[] Data { get; }
+
+        public bool ShowFullStrings { get; }
 
     }
 }

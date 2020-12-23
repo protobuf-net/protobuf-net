@@ -17,6 +17,13 @@
                 <option value="@decodeContentType" selected="@(decodeContentType == model.DecodeContentType)">@decodeContentType</option>
             }
         </InputSelect>
+
+    </div>
+    <div>
+        <label>
+            Show Full String Values:
+            <InputCheckbox id="show-full-strings" @bind-Value="model.ShowFullStrings"></InputCheckbox>
+        </label>
     </div>
     @switch (model.DecodeContentType)
     {

@@ -1,20 +1,21 @@
 ﻿@using ProtoBuf.Models
 @using System.Text
 @using System.IO
-@WriteTier((DecodeModel.GetReader()))
+@WriteTier((DecodeModel.GetReader(), DecodeModel.ShowFullStrings))
 
 @code {
 
     [Parameter]
     public DecodeModel DecodeModel { get; set; }
 
-
-    private RenderFragment<ProtoReader> WriteTier;
+    private RenderFragment<(ProtoReader Reader, bool ShowFullStrings)> WriteTier;
 
     protected override void OnInitialized()
     {
-        WriteTier = reader =>@<div class="ml-5 border-left  border-secondary pl-1">
+        WriteTier = pair =>@<div class="ml-5 border-left  border-secondary pl-1">
         @{
+            var reader = pair.Reader;
+            var showFullStrings = pair.ShowFullStrings;
             long start = reader.Position;
             int field;
             while ((field = reader.ReadFieldHeader()) > 0)
@@ -45,7 +46,19 @@
                                 @try
                                 {
                                     var utf8 = Encoding.UTF8.GetString(payloadBytes);
-                                    if (utf8.Length > 16)
+
+                                    if (IsUri(utf8))
+                                    {
+                                        if (utf8.Length > 16 && !showFullStrings)
+                                        {
+                                            <span title="@utf8">UTF8 = "<a rel="noopener noreferrer nofollow" href="@utf8">@utf8.Substring(0, 16) ...</a>" (total @utf8.Length chars)</span>
+                                        }
+                                        else
+                                        {
+                                            <span>UTF8 = "<a rel="noopener noreferrer nofollow" href="@utf8">@utf8</a>"</span>
+                                        }
+                                    }
+                                    else if (utf8.Length > 16 && !showFullStrings)
                                     {
                                         <span title="@utf8">UTF8 = "@utf8.Substring(0, 16) ..." (total @utf8.Length chars)</span>
                                     }
@@ -65,7 +78,7 @@
                                 if (subReader != null)
                                 {
                                     <div class="ml-5">As sub-object : </div>
-                                    @WriteTier(subReader)
+                                    @WriteTier((subReader, showFullStrings))
                                 }
                             }
                             break;
@@ -78,7 +91,7 @@
                                     Group, Hexa = @AsHex(payloadStart, reader.Position - payloadStart)
                                 </div>
                             *@
-                            @WriteTier(reader)
+                            @WriteTier((reader, showFullStrings))
                             ProtoReader.EndSubItem(tok, reader);
                             break;
                         default:
@@ -87,13 +100,21 @@
                 </div>
                 start = reader.Position;
             }
-
         }
     </div>;
 }
-
-
 string AsHex(long start, long count) => BitConverter.ToString(DecodeModel.Data, checked((int)start), checked((int)count));
+
+bool IsUri(string input)
+{
+    return false; // this breaks... something (browser just hangs)
+    /* try
+    {
+        if (string.IsNullOrWhiteSpace(input)) return false;
+        return Uri.TryCreate(input, UriKind.Absolute, out _);
+    }
+    catch{ return false;} */
+}
 
 static ProtoReader TestCouldBeProto(byte[] payload)
 {
