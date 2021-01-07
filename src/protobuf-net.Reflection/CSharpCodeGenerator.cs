@@ -1057,7 +1057,7 @@ namespace ProtoBuf.Reflection
                 tw.WriteLine("\")]");
             }
             WriteOptions(ctx, service.Options);
-            ctx.WriteLine($"{GetAccess(GetAccess(service))} interface {Escape(name)}").WriteLine("{").Indent();
+            ctx.WriteLine($"{GetAccess(GetAccess(service))} partial interface {Escape(name)}").WriteLine("{").Indent();
         }
 
         /// <summary>
