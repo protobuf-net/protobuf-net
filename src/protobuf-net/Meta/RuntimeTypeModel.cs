@@ -1327,12 +1327,12 @@ namespace ProtoBuf.Meta
 #if PLAT_NO_EMITDLL
             AssemblyName an = new AssemblyName { Name = assemblyName };
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
-                AssemblyBuilderAccess.Run);
+                AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
 #else
             AssemblyName an = new AssemblyName { Name = assemblyName };
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
-                save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run);
+                save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
                                         : asm.DefineDynamicModule(moduleName);
 #endif

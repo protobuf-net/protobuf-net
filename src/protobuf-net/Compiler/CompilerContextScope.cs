@@ -45,7 +45,7 @@ namespace ProtoBuf.Compiler
         static class SharedModule
         {
             internal static readonly ModuleBuilder Shared
-                = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(nameof(SharedModule)), AssemblyBuilderAccess.Run)
+                = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(nameof(SharedModule)), AssemblyBuilderAccess.RunAndCollect)
                     .DefineDynamicModule(nameof(SharedModule));
         }
 
