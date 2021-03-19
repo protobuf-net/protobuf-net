@@ -5,13 +5,15 @@
     <OutputType>Library</OutputType>
     <SignAssembly>true</SignAssembly>
     <DelaySign>False</DelaySign>
-    <NoWarn>NU5105;CS1701;BC42016;IDE0057;IDE0090;IDE0079</NoWarn>
+    <NoWarn>NU5105;CS1701;BC42016;IDE0057;IDE0090;IDE0079;NU5048</NoWarn>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
     <Copyright>See https://github.com/protobuf-net/protobuf-net</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/protobuf-net/protobuf-net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/protobuf-net/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <!--<PackageIconUrl>https://protogen.marcgravell.com/images/protobuf-net.svg</PackageIconUrl>-->
+    <PackageIcon>protobuf-net.png</PackageIcon>
     <Product>protobuf-net ($(TargetFramework))</Product>
     <PackageReleaseNotes>https://protobuf-net.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
     
@@ -48,5 +50,12 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(SourceRoot)'==''">
     <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../protobuf-net.png">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 </Project>

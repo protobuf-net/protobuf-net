@@ -7,6 +7,7 @@
     <AssemblyName>protogen</AssemblyName>
     <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
     <GrpcTools>false</GrpcTools>
+    <ApplicationIcon>protobuf-net.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1' or '$(TargetFramework)'=='net5.0'">
     <GrpcTools>true</GrpcTools>
@@ -19,6 +20,6 @@
     <ProjectReference Include="../protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="protobuf-net.Grpc.Reflection" Version="1.0.123" Condition="'$(GrpcTools)'=='true'" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.33.1" Condition="'$(GrpcTools)'=='true'"/>
+    <PackageReference Include="Grpc.Net.Client" Version="2.33.1" Condition="'$(GrpcTools)'=='true'" />
   </ItemGroup>
 </Project>
