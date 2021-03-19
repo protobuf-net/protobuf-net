@@ -13,7 +13,7 @@
     <RepositoryUrl>https://github.com/protobuf-net/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <!--<PackageIconUrl>https://protogen.marcgravell.com/images/protobuf-net.svg</PackageIconUrl>-->
-    <PackageIcon>protobuf-net.svg</PackageIcon>
+    <PackageIcon>protobuf-net.png</PackageIcon>
     <Product>protobuf-net ($(TargetFramework))</Product>
     <PackageReleaseNotes>https://protobuf-net.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
     
