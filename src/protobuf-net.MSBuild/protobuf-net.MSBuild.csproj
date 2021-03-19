@@ -7,7 +7,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>protobuf-net.MSBuild</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <NoWarn>CS1591;NU5105;NU5128</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;NU5105;NU5128</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
