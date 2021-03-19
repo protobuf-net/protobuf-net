@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../../protobuf-net.svg">
+    <None Include="../../protobuf-net.png">
         <Pack>True</Pack>
         <PackagePath></PackagePath>
     </None>
