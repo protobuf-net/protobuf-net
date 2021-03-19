@@ -12,7 +12,8 @@
     <PackageProjectUrl>https://github.com/protobuf-net/protobuf-net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/protobuf-net/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageIconUrl>https://protogen.marcgravell.com/images/protobuf-net.svg</PackageIconUrl>
+    <!--<PackageIconUrl>https://protogen.marcgravell.com/images/protobuf-net.svg</PackageIconUrl>-->
+    <PackageIcon>protobuf-net.svg</PackageIcon>
     <Product>protobuf-net ($(TargetFramework))</Product>
     <PackageReleaseNotes>https://protobuf-net.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
     
@@ -49,5 +50,12 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(SourceRoot)'==''">
     <SourceRoot Include="$(MSBuildThisFileDirectory)/"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../protobuf-net.svg">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 </Project>
