@@ -10,6 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <DefineConstants>$(DefineConstants);PLAT_NO_RECORDS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

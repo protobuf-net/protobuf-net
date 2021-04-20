@@ -623,7 +623,7 @@ public enum SomeEnum {
     [ProtoEnum(Name = ""Foo"")]
     Foo = 1
 }");
-            var diag = diagnostics.Single();
+            var diag = Assert.Single(diagnostics);
             Assert.Equal(DataContractAnalyzer.EnumNameRedundant, diag.Descriptor);
             Assert.Equal(DiagnosticSeverity.Info, diag.Severity);
             Assert.Equal("This ProtoEnumAttribute.Name declaration is redundant; it is recommended to omit it.", diag.GetMessage(CultureInfo.InvariantCulture));
@@ -641,6 +641,62 @@ public enum SomeEnum {
     Foo = 1
 }");
             Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoesNotifyAboutBasicRecordsWithConflictingFields()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System.ComponentModel;
+namespace System.Runtime.CompilerServices
+{
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public class IsExternalInit{}
+}
+[ProtoContract]
+public record Test
+{
+	[ProtoMember(1)]
+	public string Name { get; init; } = string.Empty;
+
+	[ProtoMember(1)] // This does NOT get flagged with PBN0003
+	public string Value { get; init; } = string.Empty;
+}");
+            var diag = Assert.Single(diagnostics);
+            Assert.Equal(DataContractAnalyzer.DuplicateFieldNumber, diag.Descriptor);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal("The specified field number 1 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task DoesNotifyAboutRecordsWithRecordConstructor()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System.ComponentModel;
+namespace System.Runtime.CompilerServices
+{
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public class IsExternalInit{}
+}
+[ProtoContract]
+public record Test(
+	[property: ProtoMember(1)]
+	string Name,
+
+	[property: ProtoMember(1)] // This does NOT get flagged with PBN0003
+	string Value)
+{}");
+            Assert.Equal(2, diagnostics.Count);
+
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal("The specified field number 1 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
+
+            diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.ConstructorMissing);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal("There is no suitable (parameterless) constructor available for the proto-contract, and the SkipConstructor flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
     }
 }

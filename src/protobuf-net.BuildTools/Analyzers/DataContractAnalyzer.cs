@@ -175,7 +175,11 @@ namespace ProtoBuf.BuildTools.Analyzers
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => s_SupportedDiagnostics;
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
-            ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.EnumDeclaration);
+            ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.EnumDeclaration
+#if !PLAT_NO_RECORDS
+                , SyntaxKind.RecordDeclaration
+#endif
+                );
 
         /// <inheritdoc/>
         public override void Initialize(AnalysisContext ctx)
