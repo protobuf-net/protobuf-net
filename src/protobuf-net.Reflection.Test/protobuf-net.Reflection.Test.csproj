@@ -28,6 +28,9 @@
     <Content Include="Issues\messagesWithoutQuotationMarkInComments.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Issues\messagesWithQuotationMarkInComments2.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

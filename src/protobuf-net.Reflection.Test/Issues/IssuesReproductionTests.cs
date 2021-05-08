@@ -21,5 +21,19 @@ namespace ProtoBuf
 
             Assert.Equal(set.Files[0].MessageTypes.Count, set.Files[1].MessageTypes.Count);
         }
+
+        [Fact]
+        public void CorrectlyParsesMessageWithQuotationMarkInComment()
+        {
+            var set = new FileDescriptorSet();
+
+            using var fileWithQuotationMarkInComments =
+                File.OpenText(Path.Combine("Issues", "messagesWithQuotationMarkInComments2.proto"));
+            set.Add("messagesWithQuotationMarkInComments.proto", true, fileWithQuotationMarkInComments);
+
+            set.Process();
+
+            Assert.Single(set.Files[0].MessageTypes);
+        }
     }
 }
