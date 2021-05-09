@@ -31,6 +31,9 @@
     <Content Include="Issues\messagesWithQuotationMarkInComments2.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Schemas\messagesWithQuotationMarkInComments.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
