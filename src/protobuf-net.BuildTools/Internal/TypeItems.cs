@@ -9,17 +9,21 @@ namespace ProtoBuf.BuildTools.Internal
     }
     internal readonly struct Member : IBlame
     {
-        public Member (Location? blame, int fieldNumber, string memberName, string name)
+        public Member (Location? blame, int fieldNumber, string memberName, string name, ISymbol symbol, bool isRequired)
         {
             Blame = blame;
             FieldNumber = fieldNumber;
             MemberName = memberName;
             Name  = name;
+            Symbol = symbol;
+            IsRequired = isRequired;
         }
         public Location? Blame { get; }
         public int FieldNumber { get; }
         public string MemberName { get; }
         public string Name { get; }
+        public ISymbol Symbol { get; }
+        public bool IsRequired { get; }
     }
 
     internal readonly struct Ignore : IBlame

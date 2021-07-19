@@ -1,8 +1,13 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -232,6 +237,16 @@ namespace ProtoBuf.BuildTools.Internal
                                 properties: null
                             ));
                         }
+                        else if (ShouldDeclareDefault(member, out string? defaultValue) && defaultValue != null)
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                descriptor: DataContractAnalyzer.ShouldDeclareDefault,
+                                location: Utils.PickLocation(ref context, member.Blame),
+                                messageArgs: new object[] { member.MemberName, defaultValue },
+                                additionalLocations: null,
+                                properties: null
+                            ));
+                        }
                     }
                     else
                     {
@@ -260,6 +275,74 @@ namespace ProtoBuf.BuildTools.Internal
                 }
                 return false;
             }
+        }
+
+        private bool ShouldDeclareDefault(Member member, /*[MaybeNullWhen(false)]*/ out string? defaultValue)
+        {
+            ITypeSymbol? checkType = member.Symbol switch
+            {
+                IPropertySymbol propSym when ShouldCheck(propSym.Type) => propSym.Type,
+                IFieldSymbol fieldSym when ShouldCheck(fieldSym.Type) => fieldSym.Type,
+                _ => null,
+            };
+
+            bool ShouldCheck(ITypeSymbol type)
+            {
+                // Marc mentions [DefaultValue], [ProtoMember(IsRequired)], and ShouldSerializeXxx() as some ways to tell PB to send the value.
+                // https://stackoverflow.com/a/3162253/1882616
+                if (!member.IsRequired && (type.SpecialType == SpecialType.System_Boolean || type.TypeKind == TypeKind.Enum))
+                {
+                    bool hasDefaultValueAttrib = member.Symbol.GetAttributes().FirstOrDefault(attrib => attrib.AttributeClass != null
+                        && attrib.AttributeClass.Name == nameof(DefaultValueAttribute)
+                        && attrib.AttributeClass.InNamespace(nameof(System), nameof(System.ComponentModel))) != null;
+                    if (!hasDefaultValueAttrib)
+                    {
+                        string methodName = "ShouldSerialize" + member.Name;
+                        bool hasShouldSerializeMethod = member.Symbol.ContainingType.GetMembers().OfType<IMethodSymbol>()
+                            .FirstOrDefault(method => method.Name == methodName
+                                && method.ReturnType.SpecialType == SpecialType.System_Boolean) != null;
+                        return !hasShouldSerializeMethod;
+                    }
+                }
+
+                return false;
+            }
+
+            if (checkType != null)
+            {
+                EqualsValueClauseSyntax? equalsValue = null;
+                SyntaxNode? memberNode = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
+                if (memberNode != null && (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator)))
+                {
+                    equalsValue = (EqualsValueClauseSyntax?)memberNode.ChildNodes().FirstOrDefault(node => node.IsKind(SyntaxKind.EqualsValueClause));
+                }
+
+                SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
+                if (valueNode != null)
+                {
+                    if (checkType.SpecialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
+                    {
+                        defaultValue = "true";
+                        return true;
+                    }
+                    else if (checkType.TypeKind == TypeKind.Enum
+                        && valueNode is MemberAccessExpressionSyntax access
+                        && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
+                        && access.Expression.ToString() == checkType.Name)
+                    {
+                        string fieldName = access.Name.Identifier.ValueText;
+                        IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
+                        if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
+                        {
+                            defaultValue = $"{checkType.Name}.{fieldName}";
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            defaultValue = null;
+            return false;
         }
 
         internal void SetContract(ISymbol blame, AttributeData attrib)
@@ -322,7 +405,9 @@ namespace ProtoBuf.BuildTools.Internal
             if (!(attrib.TryGetStringByName(nameof(ProtoPartialMemberAttribute.Name), out var name)))
                 name = memberName;
 
-            (_members ??= new List<Member>()).Add(new Member(attrib.GetLocation(blame), tag, memberName, name));
+            attrib.TryGetBooleanByName(nameof(ProtoPartialMemberAttribute.IsRequired), out bool isRequired);
+
+            (_members ??= new List<Member>()).Add(new Member(attrib.GetLocation(blame), tag, memberName, name, blame, isRequired));
         }
 
         public bool OverlapsReservation(string name, out Reservation overlap)

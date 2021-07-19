@@ -698,5 +698,52 @@ public record Test(
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal("There is no suitable (parameterless) constructor available for the proto-contract, and the SkipConstructor flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
+
+        [Fact]
+        public async Task ReportsShouldDeclareDefault()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System;
+[ProtoContract]
+public class Foo {
+    [ProtoMember(1)] public bool FieldDefaultTrue = true;
+    [ProtoMember(2)] public bool PropertyDefaultTrue {get;set;} = true;
+    [ProtoMember(3)] public DayOfWeek FieldDefaultMonday = DayOfWeek.Monday;
+    [ProtoMember(4)] public DayOfWeek PropertyDefaultMonday {get;set;} = DayOfWeek.Monday;
+}
+");
+            var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault).ToList();
+            Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
+            Assert.Collection(diags.Select(diag => diag.GetMessage(CultureInfo.InvariantCulture)),
+                msg => Assert.Equal("Field 'FieldDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'PropertyDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'FieldDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'PropertyDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg));
+        }
+
+        [Fact]
+        public async Task DoesNotReportShouldDeclareDefault()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System;
+using System.ComponentModel;
+[ProtoContract]
+public class Foo {
+    [ProtoMember(1)] public bool FieldDefaultFalse;
+    [ProtoMember(2), System.ComponentModel.DefaultValue(true)] public bool FieldDefaultTrue = true;
+    [ProtoMember(3)] public bool PropertyDefaultFalse {get;set;}
+    [ProtoMember(4, IsRequired = true)] public bool PropertyDefaultTrue {get;set;} = true;
+    [ProtoMember(5)] public DayOfWeek FieldDefaultSunday;
+    [ProtoMember(6), DefaultValue(DayOfWeek.Monday)] public DayOfWeek FieldDefaultMonday = DayOfWeek.Monday;
+    [ProtoMember(7)] public DayOfWeek PropertyDefaultSunday {get;set;}
+    [ProtoMember(8)] public DayOfWeek PropertyDefaultMonday {get;set;} = DayOfWeek.Monday;
+    public bool ShouldSerializePropertyDefaultMonday() => true;
+}
+");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault));
+        }
     }
 }
+
