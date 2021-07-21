@@ -711,6 +711,20 @@ public class Foo {
     [ProtoMember(2)] public bool PropertyDefaultTrue {get;set;} = true;
     [ProtoMember(3)] public DayOfWeek FieldDefaultMonday = DayOfWeek.Monday;
     [ProtoMember(4)] public DayOfWeek PropertyDefaultMonday {get;set;} = DayOfWeek.Monday;
+    [ProtoMember(5)] public char TestChar {get;set;} = 'X';
+    [ProtoMember(6)] public sbyte TestSByte {get;set;} = 1;
+    [ProtoMember(7)] public byte TestByte {get;set;} = 0x2;
+    [ProtoMember(8)] public short TestInt16 {get;set;} = 0b0000_0011;
+    [ProtoMember(9)] public ushort TestUInt16 {get;set;} = 4;
+    [ProtoMember(10)] public int TestInt32 {get;set;} = -5;
+    [ProtoMember(11)] public uint TestUInt32 {get;set;} = 6u;
+    [ProtoMember(12)] public long TestInt64 {get;set;} = 1234567890123456789L;
+    [ProtoMember(13)] public ulong TestUInt64 {get;set;} = 6758493021UL;
+    [ProtoMember(14)] public decimal TestDecimal {get;set;} = 1.618033m;
+    [ProtoMember(15)] public float TestSingle {get;set;} = 2.71828f;
+    [ProtoMember(16)] public double TestDouble {get;set;} = 3.14159265;
+    [ProtoMember(17)] public nint TestIntPtr {get;set;} = 1;
+    [ProtoMember(18)] public nuint TestUIntPtr {get;set;} = 2;
 }
 ");
             var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault).ToList();
@@ -719,7 +733,21 @@ public class Foo {
                 msg => Assert.Equal("Field 'FieldDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'PropertyDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'FieldDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                msg => Assert.Equal("Field 'PropertyDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg));
+                msg => Assert.Equal("Field 'PropertyDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestChar' should use [DefaultValue('X')] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestSByte' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestByte' should use [DefaultValue(0x2)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestInt16' should use [DefaultValue(0b0000_0011)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestUInt16' should use [DefaultValue(4)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestInt32' should use [DefaultValue(-5)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestUInt32' should use [DefaultValue(6u)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestInt64' should use [DefaultValue(1234567890123456789L)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestUInt64' should use [DefaultValue(6758493021UL)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestDecimal' should use [DefaultValue(1.618033m)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestSingle' should use [DefaultValue(2.71828f)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestDouble' should use [DefaultValue(3.14159265)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestIntPtr' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestUIntPtr' should use [DefaultValue(2)] to ensure its value is sent since it's initialized to a non-default value.", msg));
         }
 
         [Fact]
@@ -740,6 +768,34 @@ public class Foo {
     [ProtoMember(7)] public DayOfWeek PropertyDefaultSunday {get;set;}
     [ProtoMember(8)] public DayOfWeek PropertyDefaultMonday {get;set;} = DayOfWeek.Monday;
     public bool ShouldSerializePropertyDefaultMonday() => true;
+    [ProtoMember(9), DefaultValue('X')] public char TestChar {get;set;} = 'X';
+    [ProtoMember(10), DefaultValue(1)] public sbyte TestSByte {get;set;} = 1;
+    [ProtoMember(11), DefaultValue(0x2)] public byte TestByte {get;set;} = 0x2;
+    [ProtoMember(12), DefaultValue(0b0000_0011)] public short TestInt16 {get;set;} = 0b0000_0011;
+    [ProtoMember(13), DefaultValue(4)] public ushort TestUInt16 {get;set;} = 4;
+    [ProtoMember(14), DefaultValue(-5)] public int TestInt32 {get;set;} = -5;
+    [ProtoMember(15), DefaultValue(6u)] public uint TestUInt32 {get;set;} = 6u;
+    [ProtoMember(16), DefaultValue(1234567890123456789L)] public long TestInt64 {get;set;} = 1234567890123456789L;
+    [ProtoMember(17), DefaultValue(6758493021UL)] public ulong TestUInt64 {get;set;} = 6758493021UL;
+    [ProtoMember(18), DefaultValue(1.618033m)] public decimal TestDecimal {get;set;} = 1.618033m;
+    [ProtoMember(19), DefaultValue(2.71828f)] public float TestSingle {get;set;} = 2.71828f;
+    [ProtoMember(20), DefaultValue(3.14159265)] public double TestDouble {get;set;} = 3.14159265;
+    [ProtoMember(21), DefaultValue(1)] public nint TestIntPtr {get;set;} = 1;
+    [ProtoMember(22), DefaultValue(2)] public nuint TestUIntPtr {get;set;} = 2;
+    [ProtoMember(23)] public char Test0Char {get;set;}
+    [ProtoMember(24)] public sbyte Test0SByte {get;set;}
+    [ProtoMember(25)] public byte Test0Byte {get;set;}
+    [ProtoMember(26)] public short Test0Int16 {get;set;}
+    [ProtoMember(27)] public ushort Test0UInt16 {get;set;}
+    [ProtoMember(28)] public int Test0Int32 {get;set;}
+    [ProtoMember(29)] public uint Test0UInt32 {get;set;}
+    [ProtoMember(30)] public long Test0Int64 {get;set;}
+    [ProtoMember(31)] public ulong Test0UInt64 {get;set;}
+    [ProtoMember(32)] public decimal Test0Decimal {get;set;}
+    [ProtoMember(33)] public float Test0Single {get;set;}
+    [ProtoMember(34)] public double Test0Double {get;set;}
+    [ProtoMember(35)] public nint Test0IntPtr {get;set;}
+    [ProtoMember(36)] public nuint Test0UIntPtr {get;set;}
 }
 ");
             Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault));

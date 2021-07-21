@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -13,6 +14,12 @@ namespace ProtoBuf.BuildTools.Internal
 {
     internal sealed class DataContractContext
     {
+        // Trim handles the UL and LU compound suffixes. We can't trim D or F suffixes on hex literals.
+        private static readonly char[] _trimmableNumericSuffixes = new[] { 'L', 'U', 'M', 'l', 'u', 'm', };
+        private static readonly char[] _floatNumericSuffixes = new[] { 'D', 'F', 'd', 'f' };
+        private static readonly HashSet<string> _nullCharLiterals = new(
+            new char[] { '\0', '\u0000', '\x0', '\x00', '\x000', '\x0000' }.Select(ch => $"'{ch}'"));
+
         private List<Ignore>? _ignores;
         private List<Member>? _members;
         private List<Reservation>? _reservations;
@@ -290,7 +297,7 @@ namespace ProtoBuf.BuildTools.Internal
             {
                 // Marc mentions [DefaultValue], [ProtoMember(IsRequired)], and ShouldSerializeXxx() as some ways to tell PB to send the value.
                 // https://stackoverflow.com/a/3162253/1882616
-                if (!member.IsRequired && (type.SpecialType == SpecialType.System_Boolean || type.TypeKind == TypeKind.Enum))
+                if (!member.IsRequired && (IsScalarValueType(type.SpecialType) || type.TypeKind == TypeKind.Enum))
                 {
                     bool hasDefaultValueAttrib = member.Symbol.GetAttributes().FirstOrDefault(attrib => attrib.AttributeClass != null
                         && attrib.AttributeClass.Name == nameof(DefaultValueAttribute)
@@ -308,6 +315,16 @@ namespace ProtoBuf.BuildTools.Internal
                 return false;
             }
 
+            bool IsScalarValueType(SpecialType type)
+                => type switch
+                {
+                    SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte or SpecialType.System_Byte
+                    or SpecialType.System_Int16 or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32
+                    or SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_Decimal or SpecialType.System_Single
+                    or SpecialType.System_Double or SpecialType.System_IntPtr or SpecialType.System_UIntPtr => true,
+                    _ => false,
+                };
+
             if (checkType != null)
             {
                 EqualsValueClauseSyntax? equalsValue = null;
@@ -320,10 +337,36 @@ namespace ProtoBuf.BuildTools.Internal
                 SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
                 if (valueNode != null)
                 {
-                    if (checkType.SpecialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
+                    SpecialType specialType = checkType.SpecialType;
+                    if (specialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
                     {
                         defaultValue = "true";
                         return true;
+                    }
+                    else if (specialType == SpecialType.System_Char && valueNode.IsKind(SyntaxKind.CharacterLiteralExpression))
+                    {
+                        defaultValue = valueNode.ToString();
+                        return !_nullCharLiterals.Contains(defaultValue);
+                    }
+                    else if (specialType != SpecialType.None
+                        && (valueNode.IsKind(SyntaxKind.NumericLiteralExpression) || valueNode.IsKind(SyntaxKind.UnaryMinusExpression)))
+                    {
+                        defaultValue = valueNode.ToString();
+
+                        string literalValue = defaultValue.TrimEnd(_trimmableNumericSuffixes).Replace("_", string.Empty);
+                        if (specialType == SpecialType.System_Single || specialType == SpecialType.System_Double)
+                        {
+                            literalValue = literalValue.TrimEnd(_floatNumericSuffixes);
+                            return double.TryParse(literalValue, out double value) && value != 0;
+                        }
+                        else if (literalValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || literalValue.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return literalValue.Skip(2).Any(ch => ch != '0');
+                        }
+                        else if (decimal.TryParse(literalValue, out decimal decimalValue))
+                        {
+                            return decimalValue != 0;
+                        }
                     }
                     else if (checkType.TypeKind == TypeKind.Enum
                         && valueNode is MemberAccessExpressionSyntax access
