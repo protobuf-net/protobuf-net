@@ -146,6 +146,7 @@ namespace ProtoBuf
                 stringInterner = null;
             }
             netCache.Clear();
+            UserState = null;
         }
 
         private protected enum Read32VarintMode
