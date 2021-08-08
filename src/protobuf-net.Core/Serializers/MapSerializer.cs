@@ -22,6 +22,12 @@ namespace ProtoBuf.Serializers
         public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             where TCollection : IDictionary<TKey, TValue>
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
+
+        /// <summary>Create a map serializer that operates on dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<TCollection, TKey, TValue> CreateReadOnlyDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+            where TCollection : IReadOnlyDictionary<TKey, TValue>
+            => SerializerCache<ReadOnlyDictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
     }
 
     /// <summary>
@@ -185,6 +191,79 @@ namespace ProtoBuf.Serializers
         {
             foreach (var pair in newValues.AsSpan())
                 values[pair.Key] = pair.Value;
+            return values;
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, TCollection values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            try
+            {
+                Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
+            }
+            finally
+            {
+                iter?.Dispose();
+            }
+        }
+    }
+
+    // special implementation for IReadOnlyDictionary property type uses the same approach
+    // as EnumerableSerializer - trying to detect actual field type at runtime
+    // and if it's not writable throw exception  
+    class ReadOnlyDictionarySerializer<TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
+        where TCollection : IReadOnlyDictionary<TKey, TValue>
+    {
+        private static void ThrowInvalidCollectionType(object collection)
+            => ThrowHelper.ThrowInvalidOperationException($"For repeated data declared as {typeof(TCollection).NormalizeName()}, the *underlying* dictionary ({collection?.GetType().NormalizeName()}) must implement IDictionary<T> and must not declare itself read-only; alternative (more exotic) collections can be used, but must be declared using their well-known form (for example, a member could be declared as ImmutableHashSet<T>)");
+
+        protected override TCollection Initialize(TCollection values, ISerializationContext context)
+        {
+            if (values is IDictionary<TKey, TValue> dict && !dict.IsReadOnly)
+                return values;
+
+            // note: don't call TypeModel.CreateInstance: *we are the factory*
+            return typeof(TCollection).IsInterface ? (TCollection)(object)new Dictionary<TKey, TValue>() : TypeModel.ActivatorCreate<TCollection>();
+        }
+
+        protected override TCollection Clear(TCollection values, ISerializationContext context)
+        {
+            if (values is IDictionary<TKey, TValue> dict)
+            {
+                dict.Clear();
+            }
+            else
+            {
+                ThrowInvalidCollectionType(values);
+            }
+            return values;
+        }
+
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        {
+            if (values is IDictionary<TKey, TValue> dict)
+            {
+                foreach (var pair in newValues.AsSpan())
+                    dict.Add(pair.Key, pair.Value);
+            }
+            else
+            {
+                ThrowInvalidCollectionType(values);
+            }
+            return values;
+        }
+
+        protected override TCollection SetValues(TCollection values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        {
+            if (values is IDictionary<TKey, TValue> dict)
+            {
+                foreach (var pair in newValues.AsSpan())
+                    dict[pair.Key] = pair.Value;
+            }
+            else
+            {
+                ThrowInvalidCollectionType(values);
+            }
             return values;
         }
 
