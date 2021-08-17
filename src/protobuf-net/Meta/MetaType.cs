@@ -1995,7 +1995,6 @@ namespace ProtoBuf.Meta
             {
                 var enums = GetEnumValues();
 
-
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
@@ -2025,19 +2024,23 @@ namespace ProtoBuf.Meta
 
                 bool haveWrittenZero = false;
                 // write zero values **first**
+
+                string enumPrefix = flags.HasFlag(SchemaGenerationFlags.PrefixEnumValuesWithEnumName) ? GetSchemaTypeName(callstack) + "_" : "";
+
                 foreach (var member in enums)
                 {
                     var parsed = member.TryGetInt32();
                     if (parsed.HasValue && parsed.Value == 0)
                     {
-                        NewLine(builder, indent + 1).Append(member.Name).Append(" = 0;");
+                        NewLine(builder, indent + 1).Append(enumPrefix + member.Name).Append(" = 0;");
                         haveWrittenZero = true;
                     }
                 }
 
                 if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
                 {
-                    NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
+                    NewLine(builder, indent + 1)
+                        .Append(enumPrefix + "ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
                 }
 
                 // note array is already sorted, so zero would already be first
@@ -2047,11 +2050,11 @@ namespace ProtoBuf.Meta
                     if (parsed.HasValue)
                     {
                         if (parsed.Value == 0) continue;
-                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(parsed.Value).Append(';');
+                        NewLine(builder, indent + 1).Append(enumPrefix + member.Name).Append(" = ").Append(parsed.Value).Append(';');
                     }
                     else
                     {
-                        NewLine(builder, indent + 1).Append("// ").Append(member.Name).Append(" = ").Append(member.Value).Append(';').Append(" // note: enums should be valid 32-bit integers");
+                        NewLine(builder, indent + 1).Append("// ").Append(enumPrefix + member.Name).Append(" = ").Append(member.Value).Append(';').Append(" // note: enums should be valid 32-bit integers");
                     }
                 }
                 if (HasReservations) AppendReservations();
