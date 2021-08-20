@@ -2026,7 +2026,6 @@ namespace ProtoBuf.Meta
                 // write zero values **first**
 
                 string enumPrefix = flags.HasFlag(SchemaGenerationFlags.PrefixEnumValuesWithEnumName) ? GetSchemaTypeName(callstack) + "_" : "";
-
                 foreach (var member in enums)
                 {
                     var parsed = member.TryGetInt32();
