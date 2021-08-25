@@ -1,9 +1,4 @@
-﻿using Google.Protobuf.Reflection;
-using ProtoBuf;
-using ProtoBuf.Meta;
-using ProtoBuf.Reflection;
-using ProtoBuf.Reflection.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -11,6 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using Google.Protobuf.Reflection;
+
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 
 namespace Google.Protobuf.Reflection
 {
@@ -185,7 +187,8 @@ namespace Google.Protobuf.Reflection
                 {
                     return typeof(FileDescriptorSet)
                     .Assembly.GetManifestResourceStream(resourceName);
-                } catch { }
+                }
+                catch { }
             }
             return null;
         }
@@ -271,7 +274,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Serializes this instance using the provided serializer (which does not need to be protobuf)
         /// </summary>
-        public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
+        public T Serialize<T>(Func<FileDescriptorSet, object, T> customSerializer, bool includeImports, object state = null)
         {
             T result;
             if (includeImports || Files.All(x => x.IncludeInOutput))
@@ -295,11 +298,12 @@ namespace Google.Protobuf.Reflection
         public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
             Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
-            Serialize((fds,o) => {
-
+            Serialize((fds, o) =>
+            {
                 var tuple = (Tuple<TypeModel, Stream>)o;
                 tuple.Item1.Serialize(tuple.Item2, fds);
-                return true; }, includeImports, state);
+                return true;
+            }, includeImports, state);
         }
 
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
@@ -409,7 +413,7 @@ namespace Google.Protobuf.Reflection
 
             static void GenerateSyntheticOneOfs(DescriptorProto obj)
             {
-                foreach(var field in obj.Fields)
+                foreach (var field in obj.Fields)
                 {
                     if (field.Proto3Optional && !field.ShouldSerializeOneofIndex())
                     {
@@ -1068,7 +1072,7 @@ namespace Google.Protobuf.Reflection
             var result = new string[pieces.Length + 1];
             int target = pieces.Length;
             string s = result[target--] = ".";
-            for (int i = 0; i < pieces.Length;i++)
+            for (int i = 0; i < pieces.Length; i++)
             {
                 s = result[target--] = s + pieces[i] + ".";
             }
@@ -1085,7 +1089,7 @@ namespace Google.Protobuf.Reflection
                 { // could be anything...
                     typeName = typeName.Substring(1); // remove the root
                 }
-                else if(typeName.StartsWith("." + Package + "."))
+                else if (typeName.StartsWith("." + Package + "."))
                 { // looks like a match
                     typeName = typeName.Substring(Package.Length + 2);
                 }
@@ -1890,11 +1894,18 @@ namespace Google.Protobuf.Reflection
         {
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
-            if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
+            tokens.Peek(out var next);
+            tokens.Consume();
+            // Special case for enums using the names 'option' or 'reserved'
+            if (tokens.Peek(out var after) && after.Value == "=")
+            {
+                Values.Add(EnumValueDescriptorProto.Parse(ctx, next.Value));
+            }
+            else if (next.Is(TokenType.AlphaNumeric, "option"))
             {
                 Options = ctx.ParseOptionStatement(Options, this);
             }
-            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "reserved"))
+            else if (next.Is(TokenType.AlphaNumeric, "reserved"))
             {
                 DescriptorProto.ParseReservedRanges(ctx, this, "enum", int.MaxValue, false);
             }
@@ -2309,10 +2320,10 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class EnumValueDescriptorProto : IField
     {
-        internal static EnumValueDescriptorProto Parse(ParserContext ctx)
+        internal static EnumValueDescriptorProto Parse(ParserContext ctx, string name = null)
         {
             var tokens = ctx.Tokens;
-            string name = tokens.Consume(TokenType.AlphaNumeric);
+            name ??= tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
             var value = tokens.ConsumeInt32();
 
@@ -3071,7 +3082,7 @@ namespace ProtoBuf.Reflection
         {
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
             return s.IndexOfAny(ExponentChars) < 0 ? s
-                :  val.ToString("0e+00", CultureInfo.InvariantCulture);
+                : val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()
