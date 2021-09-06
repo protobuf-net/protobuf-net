@@ -92,6 +92,7 @@ namespace ProtoBuf.MSBuild
             var errors = set.GetErrors();
             if(errors != null && errors.Length > 0)
             {
+                bool isError = false;
                 foreach(var error in errors)
                 {
                     var endCol = error.LineNumber + error.Text.Length;
@@ -99,6 +100,7 @@ namespace ProtoBuf.MSBuild
                     var errCode = errNum == 0 ? null : ("PBN" + errNum.ToString("0000"));
                     if (error.IsError)
                     {
+                        isError = true;
                         this.Log.LogError("protogen", errCode, null, error.File, error.LineNumber, error.ColumnNumber, error.LineNumber, endCol, error.Message);
                     }
                     else if(error.IsWarning)
@@ -106,7 +108,10 @@ namespace ProtoBuf.MSBuild
                         this.Log.LogWarning("protogen", errCode, null, error.File, error.LineNumber, error.ColumnNumber, error.LineNumber, endCol, error.Message);
                     }
                 }
-                return false;
+                if (isError)
+                {
+                    return false;
+                }
             }
 
             var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
