@@ -17,18 +17,18 @@ namespace Examples
     public class MySurrogate
     {
         [ProtoMember(1)]
-        public TreeNode nonRecursiveObj { get; set; }
+        public TreeNode treeNode { get; set; }
         [ProtoConverter]
-        public static INode From(MySurrogate value)
+        public static INode From(MySurrogate surrogate)
         {
-            return value.nonRecursiveObj;
+            return surrogate.treeNode;
         }
         [ProtoConverter]
         public static MySurrogate To(INode value)
         {
             var surrogate = new MySurrogate();
-            if (value is TreeNode nonRecursiveObj)
-                surrogate.nonRecursiveObj = nonRecursiveObj;
+            if (value is TreeNode treeNode)
+                surrogate.treeNode = treeNode;
             return surrogate;
         }
     }
