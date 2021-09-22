@@ -1,9 +1,11 @@
-﻿using Google.Protobuf.Reflection;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+
+using Google.Protobuf.Reflection;
 
 namespace ProtoBuf.Reflection
 {
@@ -146,7 +148,37 @@ namespace ProtoBuf.Reflection
                 tw.Write(AdditionalSuppressionCodes);
             }
             tw.WriteLine();
+            if (ctx.Usings)
+            {
+                tw.WriteLine("using System;");
+                tw.WriteLine("using System.Collections.Generic;");
+                tw.WriteLine("using System.ComponentModel;");
+                if (ctx.EmitServicesFor(ServiceKinds.Wcf))
+                    ctx.WriteLine("using System.ServiceModel;");
+                if (ctx.EmitServices)
+                    tw.WriteLine("using System.Threading.Tasks;");
+                tw.WriteLine();
+                tw.WriteLine("using ProtoBuf;");
+                if (ctx.EmitServices)
+                    tw.WriteLine("using ProtoBuf.Gprc;");
+                tw.WriteLine();
+                if (ctx.EmitServicesFor(ServiceKinds.Grpc))
+                    ctx.WriteLine("using ProtoBuf.Grpc.Configuration;");
+            }
         }
+
+        private static string Qualify<T>(GeneratorContext ctx)
+            => Qualify(typeof(T), ctx);
+
+        private static string Qualify(Type type, GeneratorContext ctx)
+            => Qualify(type.Namespace, TypeName(type), ctx);
+
+        private static string TypeName(Type type)
+            => !typeof(Attribute).IsAssignableFrom(type) ? type.Name
+               : type.Name.Substring(0, type.Name.Length - nameof(Attribute).Length);
+
+        private static string Qualify(string @namespace, string name, GeneratorContext ctx)
+            => ctx.Usings ? name : $"global::{@namespace}.{name}";
 
         /// <inheritdoc/>
         protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
@@ -180,10 +212,11 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state)
         {
+            ctx.WriteLine();
             var name = ctx.NameNormalizer.GetName(@enum);
-            var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
-            if (name != @enum.Name) tw.Write($@"Name = @""{@enum.Name}""");
-            tw.WriteLine(")]");
+            var tw = ctx.Write($"[{Qualify<ProtoContractAttribute>(ctx)}");
+            if (name != @enum.Name) tw.Write($@"(Name = {(@enum.Name.Contains("\\") ? "@" : "")}""{ @enum.Name}"")");
+            tw.WriteLine("]");
             WriteOptions(ctx, @enum.Options);
             ctx.WriteLine($"{GetAccess(GetAccess(@enum))} enum {Escape(name)}").WriteLine("{").Indent();
         }
@@ -193,7 +226,7 @@ namespace ProtoBuf.Reflection
 
         protected override void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state)
         {
-            ctx.Outdent().WriteLine("}").WriteLine();
+            ctx.Outdent().WriteLine("}");
         }
         /// <summary>
         /// Write an enum value
@@ -203,8 +236,8 @@ namespace ProtoBuf.Reflection
             var name = ctx.NameNormalizer.GetName(@enum);
             if (name != @enum.Name)
             {
-                var tw = ctx.Write("[global::ProtoBuf.ProtoEnum(");
-                tw.Write($@"Name = @""{@enum.Name}""");
+                var tw = ctx.Write($"[{Qualify<ProtoEnumAttribute>(ctx)}(");
+                tw.Write($@"Name = {(@enum.Name.Contains("\\") ? "@" : "")}""{@enum.Name}""");
                 tw.WriteLine(")]");
             }
 
@@ -217,37 +250,47 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteMessageFooter(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
-            ctx.Outdent().WriteLine("}").WriteLine();
+            ctx.Outdent().WriteLine("}");
         }
         /// <summary>
         /// Start a message
         /// </summary>
         protected override void WriteMessageHeader(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
+            ctx.WriteLine();
             var name = ctx.NameNormalizer.GetName(message);
-            var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
-            if (name != message.Name) tw.Write($@"Name = @""{message.Name}""");
-            tw.WriteLine(")]");
+            var tw = ctx.Write($"[{Qualify<ProtoContractAttribute>(ctx)}");
+            if (name != message.Name)
+                tw.Write($@"(Name = {(message.Name.Contains("\\") ? "@" : "")}""{message.Name}"")");
+            tw.WriteLine("]");
             WriteOptions(ctx, message.Options);
             tw = ctx.Write($"{GetAccess(GetAccess(message))} partial class {Escape(name)}");
-            tw.Write(" : global::ProtoBuf.IExtensible");
+            if (ctx.Extensible)
+                tw.Write($" : {Qualify<IExtensible>(ctx)}");
             tw.WriteLine();
             ctx.WriteLine("{").Indent();
             if (message.Options?.MessageSetWireFormat == true)
             {
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
-
-            ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
-                .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
-
-            if (ctx.Supports(CSharp6))
+            if (ctx.Extensible)
             {
-                ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
-            }
-            else
-            {
-                ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
+                string iExtension = Qualify<IExtension>(ctx);
+                ctx.WriteLine($"private {iExtension} {FieldPrefix}extensionData;")
+                   .WriteLine($"{iExtension} {Qualify<IExtensible>(ctx)}.GetExtensionObject(bool createIfMissing)");
+
+                string extensible = Qualify<Extensible>(ctx);
+                if (ctx.Supports(CSharp6))
+                {
+                    ctx.Indent().WriteLine($"=> {extensible}.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);")
+                       .Outdent();
+                }
+                else
+                {
+                    ctx.WriteLine("{")
+                       .Indent().WriteLine($"return {extensible}.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);")
+                       .Outdent().WriteLine("}");
+                }
             }
         }
 
@@ -256,7 +299,7 @@ namespace ProtoBuf.Reflection
             if (obj == null) return;
             if (obj.Deprecated)
             {
-                ctx.WriteLine($"[global::System.Obsolete]");
+                ctx.WriteLine($"[{Qualify<ObsoleteAttribute>(ctx)}]");
             }
         }
 
@@ -285,7 +328,7 @@ namespace ProtoBuf.Reflection
             if (ctx.Supports(CSharp6)) return false;
 
             var name = ctx.NameNormalizer.GetName(message);
-            ctx.WriteLine($"public {Escape(name)}()") // note: the .ctor is still public even if the type is internal; it is protected by the scope
+            ctx.WriteLine().WriteLine($"public {Escape(name)}()") // note: the .ctor is still public even if the type is internal; it is protected by the scope
                 .WriteLine("{").Indent();
             return true;
         }
@@ -299,12 +342,11 @@ namespace ProtoBuf.Reflection
             {
                 ctx.WriteLine("OnConstructor();");
             }
-            ctx.Outdent().WriteLine("}").WriteLine();
+            ctx.Outdent().WriteLine("}");
 
             if (ctx.Supports(CSharp3))
             {
-                ctx.WriteLine("partial void OnConstructor();")
-                .WriteLine();
+                ctx.WriteLine().WriteLine("partial void OnConstructor();");
             }
         }
 
@@ -330,11 +372,11 @@ namespace ProtoBuf.Reflection
                         out var keyDataFormat, out var _);
                     var valueTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.Number == 2),
                         out var valueDataFormat, out var _);
-                    ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                    ctx.WriteLine($"{Escape(name)} = new {Qualify(typeof(Dictionary<,>), ctx)}<{keyTypeName}, {valueTypeName}>();");
                 }
                 else if (!UseArray(field))
                 {
-                    ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.List<{typeName}>();");
+                    ctx.WriteLine($"{Escape(name)} = new {Qualify(typeof(List<>), ctx)}<{typeName}>();");
                 }
             }
             else if (!trackPresence)
@@ -418,11 +460,12 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto field, ref object state, OneOfStub[] oneOfs)
         {
+            ctx.WriteLine();
             var name = ctx.NameNormalizer.GetName(field);
-            var tw = ctx.Write($"[global::ProtoBuf.ProtoMember({field.Number}");
+            var tw = ctx.Write($"[{Qualify<ProtoMemberAttribute>(ctx)}({field.Number}");
             if (name != field.Name)
             {
-                tw.Write($@", Name = @""{field.Name}""");
+                tw.Write($@", Name = {(field.Name.Contains("\\") ? "@" : "")}""{field.Name}""");
             }
             var options = field.Options?.GetOptions();
             if (options?.AsReference == true)
@@ -445,7 +488,7 @@ namespace ProtoBuf.Reflection
 
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
+                tw.Write($", DataFormat = {Qualify<DataFormat>(ctx)}.{dataFormat}");
             }
             if (field.IsPackedField(ctx.Syntax))
             {
@@ -462,15 +505,16 @@ namespace ProtoBuf.Reflection
                 {
                     case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeUint64:
-                        ctx.WriteLine($"[global::System.ComponentModel.DefaultValue(typeof(ulong), \"{defaultValue}\")]");
+                        ctx.WriteLine($"[{Qualify<DefaultValueAttribute>(ctx)}(typeof(ulong), \"{defaultValue}\")]");
                         break;
 
                     default:
-                        ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                        ctx.WriteLine($"[{Qualify<DefaultValueAttribute>(ctx)}({defaultValue})]");
                         break;
                 }
             }
             WriteOptions(ctx, field.Options);
+            string accessor = GetAccess(GetAccess(field));
             if (isRepeated)
             {
                 var mapMsgType = isMap ? ctx.TryFind<DescriptorProto>(field.TypeName) : null;
@@ -483,38 +527,44 @@ namespace ProtoBuf.Reflection
                         out var valueDataFormat, out var _);
 
                     bool first = true;
-                    tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
+                    tw = ctx.Write($"[{Qualify<ProtoMapAttribute>(ctx)}");
+                    string dataFormatName = Qualify<DataFormat>(ctx);
                     if (!string.IsNullOrWhiteSpace(keyDataFormat))
                     {
-                        tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");
+                        tw.Write($"{(first ? "(" : ", ")}KeyFormat = {dataFormatName}.{keyDataFormat}");
                         first = false;
                     }
                     if (!string.IsNullOrWhiteSpace(valueDataFormat))
                     {
-                        tw.Write($"{(first ? "(" : ", ")}ValueFormat = global::ProtoBuf.DataFormat.{valueDataFormat}");
+                        tw.Write($"{(first ? "(" : ", ")}ValueFormat = {dataFormatName}.{valueDataFormat}");
                         first = false;
                     }
                     tw.WriteLine(first ? "]" : ")]");
+                    var dictionary = Qualify(typeof(Dictionary<,>), ctx);
                     if (ctx.Supports(CSharp6))
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                        ctx.WriteLine($"{accessor} {dictionary}<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "set; " : "")}}} = new{(ctx.Supports(CSharp9) ? "" : $"{dictionary}<{keyTypeName}, {valueTypeName}>")}();");
                     }
                     else
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
+                        ctx.WriteLine($"{accessor} {dictionary}<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                     }
                 }
                 else if (UseArray(field))
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}[] {Escape(name)} {{ get; set; }}");
-                }
-                else if (ctx.Supports(CSharp6))
-                {
-                    ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.List<{typeName}>();");
+                    ctx.WriteLine($"{accessor} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
                 else
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
+                    var list = Qualify(typeof(List<>), ctx);
+                    if (ctx.Supports(CSharp6))
+                    {
+                        ctx.WriteLine($"{accessor} {list}<{typeName}> {Escape(name)} {{ get; {(allowSet ? "set; " : "")}}} = new{(ctx.Supports(CSharp9) ? "" : $" {list}<{typeName}>")}();");
+                    }
+                    else
+                    {
+                        ctx.WriteLine($"{accessor} {list}<{typeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
+                    }
                 }
             }
             else if (oneOf is object)
@@ -522,7 +572,7 @@ namespace ProtoBuf.Reflection
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : defaultValue;
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(field.type, field.TypeName);
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)}").WriteLine("{").Indent();
+                ctx.WriteLine($"{accessor} {typeName} {Escape(name)}").WriteLine("{").Indent();
 
                 switch (field.type)
                 {
@@ -537,27 +587,27 @@ namespace ProtoBuf.Reflection
                         ctx.WriteLine($"{PropGetPrefix()}{fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue};{PropSuffix()}");
                         break;
                 }
-                var unionType = oneOf.GetUnionType();
+                var unionType = (ctx.Usings ? "global::ProtoBuf." : "") + oneOf.GetUnionType();
                 var cast = field.type == FieldDescriptorProto.Type.TypeEnum ? "(int)" : "";
-                ctx.WriteLine($"{PropSetPrefix()}{fieldName} = new global::ProtoBuf.{unionType}({field.Number}, {cast}value);{PropSuffix()}")
+                ctx.WriteLine($"{PropSetPrefix()}{fieldName} = new {unionType}({field.Number}, {cast}value);{PropSuffix()}")
                     .Outdent().WriteLine("}");
 
                 if (ctx.Supports(CSharp6))
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(field))} bool ShouldSerialize{name}() => {fieldName}.Is({field.Number});")
-                    .WriteLine($"{GetAccess(GetAccess(field))} void Reset{name}() => global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {field.Number});");
+                    ctx.WriteLine($"{accessor} bool ShouldSerialize{name}() => {fieldName}.Is({field.Number});")
+                    .WriteLine($"{accessor} void Reset{name}() => {unionType}.Reset(ref {fieldName}, {field.Number});");
                 }
                 else
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(field))} bool ShouldSerialize{name}()").WriteLine("{").Indent()
+                    ctx.WriteLine($"{accessor} bool ShouldSerialize{name}()").WriteLine("{").Indent()
                         .WriteLine($"return {fieldName}.Is({field.Number});").Outdent().WriteLine("}")
-                        .WriteLine($"{GetAccess(GetAccess(field))} void Reset{name}()").WriteLine("{").Indent()
-                        .WriteLine($"global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {field.Number});").Outdent().WriteLine("}");
+                        .WriteLine($"{accessor} void Reset{name}()").WriteLine("{").Indent()
+                        .WriteLine($"{unionType}.Reset(ref {fieldName}, {field.Number});").Outdent().WriteLine("}");
                 }
 
                 if (oneOf.IsFirst())
                 {
-                    ctx.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
+                    ctx.WriteLine().WriteLine($"private {unionType} {fieldName};");
                 }
             }
             else if (trackPresence)
@@ -612,7 +662,6 @@ namespace ProtoBuf.Reflection
                 if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
                 tw.WriteLine();
             }
-            ctx.WriteLine();
 
             string PropGetPrefix() => ctx.Supports(CSharp7) ? "get => " : "get { return ";
             string PropSetPrefix() => ctx.Supports(CSharp7) ? "set => " : "set { ";
@@ -626,7 +675,9 @@ namespace ProtoBuf.Reflection
             CSharp4 = new Version(4, 0), // optional parameters
             CSharp6 = new Version(6, 0), // pragma prefixes, method expressions, property initializers
             CSharp7 = new Version(7, 0), // property expressions
-            CSharp7_1 = new Version(7, 1); // default literals
+            CSharp7_1 = new Version(7, 1), // default literals
+            CSharp8 = new Version(8, 0), // ???
+            CSharp9 = new Version(9, 0); // new()
 
         /// <summary>
         /// Starts an extensions block
@@ -683,7 +734,7 @@ namespace ProtoBuf.Reflection
                 bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
                 var getMethodName = isRepeated ? nameof(Extensible.GetValues) : nameof(Extensible.GetValue);
-                if(isRepeated) ctx.WriteLine($"{GetAccess(GetAccess(field))} static global::System.Collections.Generic.IEnumerable<{nonNullableType}> Get{name}({@this}{extendee} obj)");
+                if (isRepeated) ctx.WriteLine($"{GetAccess(GetAccess(field))} static {Qualify(typeof(IEnumerable<>), ctx)}<{nonNullableType}> Get{name}({@this}{extendee} obj)");
                 else ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
                 if (ctx.Supports(CSharp6))
                 {
@@ -695,10 +746,10 @@ namespace ProtoBuf.Reflection
                     tw = ctx.Write("return ");
                 }
                 var defaultValue = isRepeated ? "null" : ctx.Supports(CSharp7_1) ? "default" : $"default({type})";
-                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.{getMethodName}<{(isRepeated ? nonNullableType : type)}>(obj, {field.Number}");
+                tw.Write($"obj == null ? {defaultValue} : {Qualify<Extensible>(ctx)}.{getMethodName}<{(isRepeated ? nonNullableType : type)}>(obj, {field.Number}");
                 if (!string.IsNullOrEmpty(dataFormat))
                 {
-                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                    tw.Write($", {Qualify<DataFormat>(ctx)}.{dataFormat}");
                 }
                 tw.WriteLine(");");
                 if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
@@ -715,10 +766,10 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine("{").Indent();
                     tw = ctx.Write("");
                 }
-                tw.Write($"global::ProtoBuf.Extensible.AppendValue<{nonNullableType}>(obj, {field.Number}");
+                tw.Write($"{Qualify<Extensible>(ctx)}.AppendValue<{nonNullableType}>(obj, {field.Number}");
                 if (!string.IsNullOrEmpty(dataFormat))
                 {
-                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                    tw.Write($", {Qualify<DataFormat>(ctx)}.{dataFormat}");
                 }
                 tw.WriteLine(", value);");
                 if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
@@ -823,35 +874,37 @@ namespace ProtoBuf.Reflection
         private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, string typeName, ref string dataFormat, ref bool isMap,
             bool nonNullable = false)
         {
+            var nullable = nonNullable ? "" : "?";
             switch (typeName)
             {
                 case WellKnownTypeTimestamp:
                     dataFormat = "WellKnown";
-                    return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
+                    return Qualify<DateTime>(ctx) + nullable;
                 case WellKnownTypeDuration:
                     dataFormat = "WellKnown";
-                    return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
+                    return Qualify<TimeSpan>(ctx) + nullable;
                 case WellKnownTypeEmpty:
-                    return "global::ProtoBuf.Empty";
+                    return Qualify<WellKnownTypes.Empty>(ctx);
                 case ".bcl.NetObjectProxy":
                     return "object";
                 case ".bcl.DateTime":
-                    return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
+                    return Qualify<DateTime>(ctx) + nullable;
                 case ".bcl.TimeSpan":
-                    return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
+                    return Qualify<TimeSpan>(ctx) + nullable;
                 case ".bcl.Decimal":
-                    return nonNullable ? "decimal" : "decimal?";
+                    return "decimal" + nullable;
                 case ".bcl.Guid":
-                    return nonNullable ? "global::System.Guid" : "global::System.Guid?";
+                    return Qualify<Guid>(ctx) + nullable;
             }
             var msgType = ctx.TryFind<DescriptorProto>(typeName);
-            if ( field!= null && field.type == FieldDescriptorProto.Type.TypeGroup)
+            if (field != null && field.type == FieldDescriptorProto.Type.TypeGroup)
             {
                 dataFormat = nameof(DataFormat.Group);
             }
             isMap = msgType?.Options?.MapEntry ?? false;
             return field == null ? MakeRelativeName(ctx, typeName) : MakeRelativeName(field, msgType, ctx.NameNormalizer);
         }
+
         private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, out string dataFormat, out bool isMap,
             bool nonNullable = false)
         {
@@ -899,7 +952,7 @@ namespace ProtoBuf.Reflection
                     switch (field.TypeName)
                     {
                         case ".bcl.DateTime.DateTimeKind":
-                            return "global::System.DateTimeKind";
+                            return Qualify<DateTimeKind>(ctx);
                     }
                     var enumType = ctx.TryFind<EnumDescriptorProto>(field.TypeName);
                     return MakeRelativeName(field, enumType, ctx.NameNormalizer);
@@ -911,12 +964,11 @@ namespace ProtoBuf.Reflection
             }
         }
 
-
         private string MakeRelativeName(FieldDescriptorProto field, IType target, NameNormalizer normalizer)
         {
             if (target == null) return Escape(field.TypeName); // the only thing we know
 
-            switch(target)
+            switch (target)
             {
                 case DescriptorProto message:
                     var overrideNs = message.Options?.GetOptions()?.Namespace;
@@ -1046,13 +1098,13 @@ namespace ProtoBuf.Reflection
             var name = ctx.NameNormalizer.GetName(service);
             if (ctx.EmitServicesFor(ServiceKinds.Grpc))
             {
-                var tw = ctx.Write("[global::ProtoBuf.Grpc.Configuration.Service(@\"");
+                var tw = ctx.Write($"[{Qualify("ProtoBuf.Grpc.Configuration", "Service", ctx)}(@\"");
                 tw.Write(service.FullyQualifiedName.TrimStart(ParserContext.Period));
                 tw.WriteLine("\")]");
             }
             if (ctx.EmitServicesFor(ServiceKinds.Wcf))
             {
-                var tw = ctx.Write("[global::System.ServiceModel.ServiceContract(Name = @\"");
+                var tw = ctx.Write($"[{Qualify("System.ServiceModel", "ServiceContract", ctx)}(Name = @\"");
                 tw.Write(service.FullyQualifiedName.TrimStart(ParserContext.Period));
                 tw.WriteLine("\")]");
             }
@@ -1078,11 +1130,11 @@ namespace ProtoBuf.Reflection
             {
                 if (ctx.EmitServicesFor(ServiceKinds.Grpc))
                 {
-                    ctx.WriteLine($@"[global::ProtoBuf.Grpc.Configuration.Operation(@""{method.Name}"")]");
+                    ctx.WriteLine($@"[{Qualify("ProtoBuf.Grpc.Configuration", "Operation", ctx)}({(method.Name.Contains("\\") ? "@" : "")}""{method.Name}"")]");
                 }
                 if (ctx.EmitServicesFor(ServiceKinds.Wcf))
                 {
-                    ctx.WriteLine($@"[global::System.ServiceModel.OperationContract(Name = @""{method.Name}"")]");
+                    ctx.WriteLine($@"[{Qualify("System.ServiceModel", "OperationContract", ctx)}(Name = {(method.Name.Contains("\\") ? "@" : "")}""{method.Name}"")]");
                 }
             }
             WriteOptions(ctx, method.Options);
@@ -1090,22 +1142,23 @@ namespace ProtoBuf.Reflection
             string returnType, inputType;
             if (method.ServerStreaming)
             {
-                returnType = "global::System.Collections.Generic.IAsyncEnumerable<" + GetTypeName(ctx, method.OutputType) + ">";
+                returnType = $"{Qualify("System.Collections.Generic", "IAsyncEnumerable", ctx)}<{GetTypeName(ctx, method.OutputType)}>";
             }
             else
             {
+                string valueTask = Qualify("System.Threading.Tasks", "ValueTask", ctx);
                 if (method.OutputType == WellKnownTypeEmpty)
                 {
-                    returnType = "global::System.Threading.Tasks.ValueTask";
+                    returnType = valueTask;
                 }
                 else
                 {
-                    returnType = "global::System.Threading.Tasks.ValueTask<" + GetTypeName(ctx, method.OutputType) + ">";
+                    returnType = $"{valueTask}<{GetTypeName(ctx, method.OutputType)}>";
                 }
             }
             if (method.ClientStreaming)
             {
-                inputType = "global::System.Collections.Generic.IAsyncEnumerable<" + GetTypeName(ctx, method.InputType) + ">"; 
+                inputType = $"{Qualify("System.Collections.Generic", "IAsyncEnumerable", ctx)}<{GetTypeName(ctx, method.InputType)}>";
             }
             else
             {
@@ -1125,13 +1178,14 @@ namespace ProtoBuf.Reflection
                 tw.Write(inputType);
                 tw.Write(method.ClientStreaming ? " values, " : " value, ");
             }
-            tw.Write("global::ProtoBuf.Grpc.CallContext context");
+            string callContext = Qualify("ProtoBuf.Grpc", "CallContext", ctx);
+            tw.Write($"{callContext} context");
             if (ctx.Supports(CSharp4))
             {
                 tw.Write(" = default");
                 if (!ctx.Supports(CSharp7_1))
                 {
-                    tw.Write("(global::ProtoBuf.Grpc.CallContext)");
+                    tw.Write($"({callContext})");
                 }
             }
             tw.WriteLine(");");

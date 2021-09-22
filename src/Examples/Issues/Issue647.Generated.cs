@@ -8,36 +8,29 @@
 #pragma warning disable CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 namespace ProtoBuf.Issues.Issue647Types.Bar
 {
-
-    [global::ProtoBuf.ProtoContract()]
+    [global::ProtoBuf.ProtoContract]
     public partial class BarClass : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
     }
-
 }
 
 namespace ProtoBuf.Issues.Issue647Types.Baz
 {
-
-    [global::ProtoBuf.ProtoContract()]
+    [global::ProtoBuf.ProtoContract]
     public partial class BazClass : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
     }
-
 }
 
 namespace ProtoBuf.Issues.Issue647Types.Foo
 {
-
-    [global::ProtoBuf.ProtoContract()]
+    [global::ProtoBuf.ProtoContract]
     public partial class FooClass : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
@@ -49,9 +42,7 @@ namespace ProtoBuf.Issues.Issue647Types.Foo
 
         [global::ProtoBuf.ProtoMember(2)]
         public global::ProtoBuf.Issues.Issue647Types.Baz.BazClass BazMember { get; set; }
-
     }
-
 }
 
 #pragma warning restore CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
