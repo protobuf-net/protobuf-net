@@ -483,11 +483,11 @@ namespace ProtoBuf.Reflection
             }
             if (field.IsPackedField(ctx.Syntax))
             {
-                tw.Write($", IsPacked = true");
+                tw.Write(", IsPacked = true");
             }
             if (field.label == FieldDescriptorProto.Label.LabelRequired)
             {
-                tw.Write($", IsRequired = true");
+                tw.Write(", IsRequired = true");
             }
             tw.WriteLine(")]");
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
@@ -729,7 +729,7 @@ namespace ProtoBuf.Reflection
                 else ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
                 if (ctx.Supports(CSharp6))
                 {
-                    tw = ctx.Indent().Write($"=> ");
+                    tw = ctx.Indent().Write("=> ");
                 }
                 else
                 {
@@ -750,7 +750,7 @@ namespace ProtoBuf.Reflection
                 ctx.WriteLine($"{GetAccess(GetAccess(field))} static void {setAccessorName}{name}({@this}{extendee} obj, {nonNullableType} value)");
                 if (ctx.Supports(CSharp6))
                 {
-                    tw = ctx.Indent().Write($"=> ");
+                    tw = ctx.Indent().Write("=> ");
                 }
                 else
                 {

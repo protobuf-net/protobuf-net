@@ -64,7 +64,7 @@ namespace Google.Protobuf.Reflection
         TextReader OpenText(string path);
     }
 
-    internal class DefaultFileSystem : IFileSystem
+    internal sealed class DefaultFileSystem : IFileSystem
     {
         private DefaultFileSystem() { }
         public static IFileSystem Instance { get; } = new DefaultFileSystem();
@@ -340,7 +340,7 @@ namespace Google.Protobuf.Reflection
             var s = ext.BeginQuery();
             try
             {
-                if (s is MemoryStream ms) return (ms).ToArray();
+                if (s is MemoryStream ms) return ms.ToArray();
 
                 byte[] buffer = new byte[len];
                 int offset = 0, read;
@@ -913,7 +913,7 @@ namespace Google.Protobuf.Reflection
                 ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
             }
 
-            if (Syntax == "" || Syntax == SyntaxProto2)
+            if (Syntax?.Length == 0 || Syntax == SyntaxProto2)
             {
                 Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
             }
@@ -1039,7 +1039,7 @@ namespace Google.Protobuf.Reflection
             return false;
         }
 
-        bool TryResolveFromFile(FileDescriptorProto file, string tn, out IType tp, bool taap)
+        private bool TryResolveFromFile(FileDescriptorProto file, string tn, out IType tp, bool taap)
         {
             tp = null;
             if (file == null || string.IsNullOrEmpty(tn)) return false;
@@ -1047,11 +1047,11 @@ namespace Google.Protobuf.Reflection
             if (tn[0] == '.')
             {
                 // fully qualified
-                return file.TryResolveType(tn, file, out tp, checkOwnPackage: false, allowImports: false, treatAllAsPublic: taap);
+                return file.TryResolveType(tn, file, out tp, allowImports: false, checkOwnPackage: false, treatAllAsPublic: taap);
             }
             foreach (var prefixPart in file.GetDescendingPackagePrefixes())
             {
-                if (file.TryResolveType(prefixPart + tn, file, out tp, checkOwnPackage: false, allowImports: false, treatAllAsPublic: taap))
+                if (file.TryResolveType(prefixPart + tn, file, out tp, allowImports: false, checkOwnPackage: false, treatAllAsPublic: taap))
                     return true;
             }
             tp = null;
@@ -1066,7 +1066,7 @@ namespace Google.Protobuf.Reflection
         private static readonly string[] s_defaultPackagePrefixes = new[] { "." };
         private static readonly char[] s_packageDelimiters = new[] { '.' };
 
-        static string[] CalculateDescendingPackagePrefixes(string package)
+        private static string[] CalculateDescendingPackagePrefixes(string package)
         {
             if (string.IsNullOrWhiteSpace(package)) return s_defaultPackagePrefixes;
 
@@ -1242,7 +1242,7 @@ namespace Google.Protobuf.Reflection
                         {
                             field.type = FieldDescriptorProto.Type.TypeEnum;
                             if (!string.IsNullOrWhiteSpace(field.DefaultValue)
-                                & !@enum.Values.Any(x => x.Name == field.DefaultValue))
+                                && !@enum.Values.Any(x => x.Name == field.DefaultValue))
                             {
                                 ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'", ErrorCode.EnumValueNotFound);
                             }
@@ -1863,7 +1863,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Range of reserved numeric values. Reserved values may not be used by
         /// entries in the same enum. Reserved ranges may not overlap.
-        ///
+        /// <para/>
         /// Note that this is distinct from DescriptorProto.ReservedRange in that it
         /// is inclusive such that it can appropriately represent the entire int32
         /// domain.
@@ -2016,7 +2016,7 @@ namespace Google.Protobuf.Reflection
             {
                 ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{parent.MaxField}", ErrorCode.FieldNumberInvalid);
             }
-            else if (number >= FirstReservedField && number <= LastReservedField)
+            else if (number is >= FirstReservedField and <= LastReservedField)
             {
                 ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations", ErrorCode.FieldNumberReserved);
             }
@@ -3091,13 +3091,9 @@ namespace ProtoBuf.Reflection
             var tokens = Tokens;
             try
             {
-                while (true)
+                while (!tokens.ConsumeIf(TokenType.Symbol, "]"))
                 {
-                    if (tokens.ConsumeIf(TokenType.Symbol, "]"))
-                    {
-                        break;
-                    }
-                    else if (!tokens.ConsumeIf(TokenType.Symbol, ","))
+                    if (!tokens.ConsumeIf(TokenType.Symbol, ","))
                     {
                         ReadOption(ref obj, parent);
                     }
