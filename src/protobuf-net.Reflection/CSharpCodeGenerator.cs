@@ -587,7 +587,7 @@ namespace ProtoBuf.Reflection
                         ctx.WriteLine($"{PropGetPrefix()}{fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue};{PropSuffix()}");
                         break;
                 }
-                var unionType = (ctx.Usings ? "global::ProtoBuf." : "") + oneOf.GetUnionType();
+                var unionType = Qualify("ProtoBuf", oneOf.GetUnionType(), ctx);
                 var cast = field.type == FieldDescriptorProto.Type.TypeEnum ? "(int)" : "";
                 ctx.WriteLine($"{PropSetPrefix()}{fieldName} = new {unionType}({field.Number}, {cast}value);{PropSuffix()}")
                     .Outdent().WriteLine("}");
