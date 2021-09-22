@@ -180,6 +180,10 @@ namespace ProtoBuf.Reflection
         private static string Qualify(string @namespace, string name, GeneratorContext ctx)
             => ctx.Usings ? name : $"global::{@namespace}.{name}";
 
+        private static string NameIfDifferent(INamed proto, string name, string prefix = "(", string suffix = ")")
+            => name == proto.Name ? string.Empty
+               : $@"{prefix}Name = {(proto.Name.Contains("\\") ? "@" : "")}""{proto.Name}""{suffix}";
+
         /// <inheritdoc/>
         protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
         {
@@ -214,16 +218,14 @@ namespace ProtoBuf.Reflection
         {
             ctx.WriteLine();
             var name = ctx.NameNormalizer.GetName(@enum);
-            var tw = ctx.Write($"[{Qualify<ProtoContractAttribute>(ctx)}");
-            if (name != @enum.Name) tw.Write($@"(Name = {(@enum.Name.Contains("\\") ? "@" : "")}""{ @enum.Name}"")");
-            tw.WriteLine("]");
+            ctx.WriteLine($"[{Qualify<ProtoContractAttribute>(ctx)}{NameIfDifferent(@enum, name)}]");
             WriteOptions(ctx, @enum.Options);
             ctx.WriteLine($"{GetAccess(GetAccess(@enum))} enum {Escape(name)}").WriteLine("{").Indent();
         }
+
         /// <summary>
         /// End an enum
         /// </summary>
-
         protected override void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state)
         {
             ctx.Outdent().WriteLine("}");
@@ -235,11 +237,7 @@ namespace ProtoBuf.Reflection
         {
             var name = ctx.NameNormalizer.GetName(@enum);
             if (name != @enum.Name)
-            {
-                var tw = ctx.Write($"[{Qualify<ProtoEnumAttribute>(ctx)}(");
-                tw.Write($@"Name = {(@enum.Name.Contains("\\") ? "@" : "")}""{@enum.Name}""");
-                tw.WriteLine(")]");
-            }
+                ctx.Write($"[{Qualify<ProtoEnumAttribute>(ctx)}{NameIfDifferent(@enum, name)}]");
 
             WriteOptions(ctx, @enum.Options);
             ctx.WriteLine($"{Escape(name)} = {@enum.Number},");
@@ -259,12 +257,9 @@ namespace ProtoBuf.Reflection
         {
             ctx.WriteLine();
             var name = ctx.NameNormalizer.GetName(message);
-            var tw = ctx.Write($"[{Qualify<ProtoContractAttribute>(ctx)}");
-            if (name != message.Name)
-                tw.Write($@"(Name = {(message.Name.Contains("\\") ? "@" : "")}""{message.Name}"")");
-            tw.WriteLine("]");
+            ctx.WriteLine($"[{Qualify<ProtoContractAttribute>(ctx)}{NameIfDifferent(message, name)}]");
             WriteOptions(ctx, message.Options);
-            tw = ctx.Write($"{GetAccess(GetAccess(message))} partial class {Escape(name)}");
+            var tw = ctx.Write($"{GetAccess(GetAccess(message))} partial class {Escape(name)}");
             if (ctx.Extensible)
                 tw.Write($" : {Qualify<IExtensible>(ctx)}");
             tw.WriteLine();
@@ -462,11 +457,7 @@ namespace ProtoBuf.Reflection
         {
             ctx.WriteLine();
             var name = ctx.NameNormalizer.GetName(field);
-            var tw = ctx.Write($"[{Qualify<ProtoMemberAttribute>(ctx)}({field.Number}");
-            if (name != field.Name)
-            {
-                tw.Write($@", Name = {(field.Name.Contains("\\") ? "@" : "")}""{field.Name}""");
-            }
+            var tw = ctx.Write($"[{Qualify<ProtoMemberAttribute>(ctx)}({field.Number}{NameIfDifferent(field, name, ", ", "")}");
             var options = field.Options?.GetOptions();
             if (options?.AsReference == true)
             {
@@ -980,7 +971,7 @@ namespace ProtoBuf.Reflection
                     if (!string.IsNullOrWhiteSpace(overrideNs))
                         return "global::" + overrideNs + "." + Escape(normalizer.GetName(@enum));
                     break;
-            };
+            }
 
             var declaringType = field.Parent;
 
@@ -1089,7 +1080,6 @@ namespace ProtoBuf.Reflection
             WellKnownTypeDuration = ".google.protobuf.Duration",
             WellKnownTypeEmpty = ".google.protobuf.Empty";
 
-
         /// <summary>
         /// Emit code preceeding a set of service methods
         /// </summary>
@@ -1130,11 +1120,11 @@ namespace ProtoBuf.Reflection
             {
                 if (ctx.EmitServicesFor(ServiceKinds.Grpc))
                 {
-                    ctx.WriteLine($@"[{Qualify("ProtoBuf.Grpc.Configuration", "Operation", ctx)}({(method.Name.Contains("\\") ? "@" : "")}""{method.Name}"")]");
+                    ctx.WriteLine($"[{Qualify("ProtoBuf.Grpc.Configuration", "Operation", ctx)}{NameIfDifferent(method, name)}]");
                 }
                 if (ctx.EmitServicesFor(ServiceKinds.Wcf))
                 {
-                    ctx.WriteLine($@"[{Qualify("System.ServiceModel", "OperationContract", ctx)}(Name = {(method.Name.Contains("\\") ? "@" : "")}""{method.Name}"")]");
+                    ctx.WriteLine($"[{Qualify("System.ServiceModel", "OperationContract", ctx)}{NameIfDifferent(method, name)}]");
                 }
             }
             WriteOptions(ctx, method.Options);

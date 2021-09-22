@@ -39,10 +39,14 @@ namespace Google.Protobuf.Reflection
         int End { get; set; }
     }
 
-    internal interface IField
+    internal interface INamed
+    {
+        string Name { get; }
+    }
+
+    internal interface IField : INamed
     {
         int Number { get; }
-        string Name { get; }
     }
 
     /// <summary>
@@ -172,8 +176,6 @@ namespace Google.Protobuf.Reflection
             }
             return EffectiveFileSystem.OpenText(found);
         }
-
-
 
         private static Stream TryGetEmbedded(string name)
         {
@@ -312,7 +314,7 @@ namespace Google.Protobuf.Reflection
     /// <summary>
     /// Describes a message type.
     /// </summary>
-    public partial class DescriptorProto : ISchemaObject, IType, IMessage, IReserved<DescriptorProto.ReservedRange, FieldDescriptorProto>
+    public partial class DescriptorProto : INamed, ISchemaObject, IType, IMessage, IReserved<DescriptorProto.ReservedRange, FieldDescriptorProto>
     {
         /// <summary>
         /// Range of reserved tag numbers. Reserved tag numbers may not be used by
@@ -1856,7 +1858,7 @@ namespace Google.Protobuf.Reflection
     /// <summary>
     /// Describes an enum type.
     /// </summary>
-    public partial class EnumDescriptorProto : ISchemaObject, IType, IReserved<EnumDescriptorProto.EnumReservedRange, EnumValueDescriptorProto>
+    public partial class EnumDescriptorProto : INamed, ISchemaObject, IType, IReserved<EnumDescriptorProto.EnumReservedRange, EnumValueDescriptorProto>
     {
         /// <summary>
         /// Range of reserved numeric values. Reserved values may not be used by
@@ -1922,7 +1924,6 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class FieldDescriptorProto : ISchemaObject, IField
     {
-
         /// <summary>
         /// Indicates whether this field is considered "packed" in the given schema
         /// </summary>
@@ -2254,7 +2255,7 @@ namespace Google.Protobuf.Reflection
     /// <summary>
     /// Describes a method of a service.
     /// </summary>
-    public partial class MethodDescriptorProto : ISchemaObject, IType
+    public partial class MethodDescriptorProto : INamed, ISchemaObject, IType
     {
         /// <inheritdoc/>
         public override string ToString() => Name;
