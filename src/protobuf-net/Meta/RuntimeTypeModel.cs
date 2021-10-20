@@ -1160,7 +1160,7 @@ namespace ProtoBuf.Meta
                 paramTypes[i] = parameters[i].ParameterType;
             }
             MethodBuilder newMethod = type.DefineMethod(baseMethod.Name,
-                (baseMethod.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final, baseMethod.CallingConvention, baseMethod.ReturnType, paramTypes);
+                (baseMethod.Attributes & ~(MethodAttributes.Abstract | MethodAttributes.NewSlot)) | MethodAttributes.Final, baseMethod.CallingConvention, baseMethod.ReturnType, paramTypes);
             if (baseMethod.IsGenericMethodDefinition)
             {
                 genericArgs = baseMethod.GetGenericArguments();
