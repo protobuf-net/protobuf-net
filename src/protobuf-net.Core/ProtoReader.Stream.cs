@@ -178,6 +178,10 @@ namespace ProtoBuf
                     // make sure we don't pool this if it came from a MemoryStream
                     BufferPool.ReleaseBufferToPool(ref _ioBuffer);
                 }
+                else
+                {
+                    _ioBuffer = null;
+                }
                 Pool<StreamProtoReader>.Put(this);
             }
 
