@@ -1236,6 +1236,11 @@ namespace ProtoBuf.Meta
             public int MetaDataVersion { get; set; }
 
             /// <summary>
+            /// The Version baked into the generated assembly.
+            /// </summary>
+            public Version AssemblyVersion { get; set; }
+
+            /// <summary>
             /// The acecssibility of the generated serializer
             /// </summary>
             public Accessibility Accessibility { get; set; }
@@ -1325,12 +1330,12 @@ namespace ProtoBuf.Meta
             }
 
 #if PLAT_NO_EMITDLL
-            AssemblyName an = new AssemblyName { Name = assemblyName };
+            AssemblyName an = new AssemblyName { Name = assemblyName, Version = options.AssemblyVersion };
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
 #else
-            AssemblyName an = new AssemblyName { Name = assemblyName };
+            AssemblyName an = new AssemblyName { Name = assemblyName, Version = options.AssemblyVersion };
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
