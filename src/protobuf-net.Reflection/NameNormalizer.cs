@@ -223,7 +223,7 @@ namespace ProtoBuf.Reflection
         protected HashSet<string> BuildConflicts(DescriptorProto parent, bool includeDescendents)
         {
             var conflicts = new HashSet<string>(
-                IsCaseSensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+                IsCaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase);
             if (parent != null)
             {
                 conflicts.Add(GetName(parent));
