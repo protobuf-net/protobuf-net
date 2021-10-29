@@ -22,7 +22,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Should case-sensitivity be used when computing conflicts?
         /// </summary>
-        protected internal override bool IsCaseSensitive => true;
+        protected internal override bool IsCaseSensitive => false;
 
         /// <summary>
         /// Create a new VBCodeGenerator instance

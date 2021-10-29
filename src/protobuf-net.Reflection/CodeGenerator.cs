@@ -136,7 +136,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Should case-sensitivity be used when computing conflicts?
         /// </summary>
-        protected internal virtual bool IsCaseSensitive => false;
+        protected internal virtual bool IsCaseSensitive => true;
 
         /// <summary>
         /// Handle keyword escaping in the language of this code generator
