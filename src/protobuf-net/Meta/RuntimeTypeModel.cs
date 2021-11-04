@@ -719,15 +719,34 @@ namespace ProtoBuf.Meta
                             shouldAdd = addEvenIfAutoDisabled = true; // always add basic tuples, such as KeyValuePair
                         }
 
-                        if (!shouldAdd || (
-                            !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
-                            )
+                        // for generic types, when no contract is set, see if a generic definition is registered and use that
+                        if (type.IsGenericType && !type.IsGenericTypeDefinition && family == MetaType.AttributeFamily.None)
                         {
-                            if (demand) ThrowUnexpectedType(type, this);
-                            return key;
+                            var genericTypeDefinition = type.GetGenericTypeDefinition();
+                            key = types.IndexOf(MetaTypeFinder, genericTypeDefinition);
+                            if (key >= 0)
+                            {
+                                var genericMetaType = (MetaType)types[key];
+                                if (genericMetaType.Pending)
+                                {
+                                    WaitOnLock();
+                                }
+                                metaType = genericMetaType.GenerateGenericType(type);
+                            }
                         }
 
-                        metaType = Create(type);
+                        if (metaType is null)
+                        {
+                            if (!shouldAdd || (
+                                !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
+                                )
+                            {
+                                if (demand) ThrowUnexpectedType(type, this);
+                                return key;
+                            }
+
+                            metaType = Create(type);
+                        }
                     }
 
                     metaType.Pending = true;
