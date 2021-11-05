@@ -62,7 +62,7 @@ message BarClass {
             Assert.Empty(set.GetErrors());
             var actualCsharp = CSharpCodeGenerator.Default.Generate(set, options: new Dictionary<string, string>
             {
-                { "nullable", "true" },
+                { "nullablevaluetype", "true" },
             }).Single().Text;
             Log(actualCsharp);
 
@@ -79,7 +79,7 @@ message BarClass {
             Assert.Empty(set.GetErrors());
             var actualCsharp = CSharpCodeGenerator.Default.Generate(set, options: new Dictionary<string, string>
             {
-                { "nullable", "true" },
+                { "nullablevaluetype", "true" },
             }).Single().Text;
             Log(actualCsharp);
 
@@ -96,7 +96,7 @@ message BarClass {
             Assert.Empty(set.GetErrors());
             var actualVB = VBCodeGenerator.Default.Generate(set, options: new Dictionary<string, string>
             {
-                { "nullable", "true" },
+                { "nullablevaluetype", "true" },
             }).Single().Text;
             Log(actualVB);
 
@@ -113,7 +113,7 @@ message BarClass {
             Assert.Empty(set.GetErrors());
             var actualVB = VBCodeGenerator.Default.Generate(set, options: new Dictionary<string, string>
             {
-                { "nullable", "true" },
+                { "nullablevaluetype", "true" },
             }).Single().Text;
             Log(actualVB);
 

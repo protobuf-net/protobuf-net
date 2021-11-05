@@ -600,7 +600,7 @@ namespace ProtoBuf.Reflection
                         isRef = isNullable;
                         break;
                 }
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} {(typeName + (isNullable ? "?": ""))} {Escape(name)}").WriteLine("{").Indent();
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}{(isNullable ? "?": "")} {Escape(name)}").WriteLine("{").Indent();
                 tw = ctx.Write(PropGetPrefix());
                 tw.Write(fieldName);
                 if (!string.IsNullOrWhiteSpace(defaultValue))
@@ -633,7 +633,7 @@ namespace ProtoBuf.Reflection
             }
             else
             {
-                tw = ctx.Write($"{GetAccess(GetAccess(field))} {(typeName + (IsNullableType(ctx, field) ? "?":""))} {Escape(name)} {{ get; set; }}");
+                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field) ? "?" : "")} {Escape(name)} {{ get; set; }}");
                 if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
                 tw.WriteLine();
             }
@@ -937,7 +937,7 @@ namespace ProtoBuf.Reflection
         }
         private bool IsNullableType(GeneratorContext ctx, FieldDescriptorProto field)
         {
-            if (ctx.IsEnabled("nullable") == false)
+            if (!ctx.IsEnabled("nullablevaluetype"))
                 return false;
             switch (field.type)
             {
