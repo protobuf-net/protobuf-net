@@ -1,10 +1,12 @@
-﻿using Google.Protobuf.Reflection;
-using ProtoBuf.Reflection.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+
+using Google.Protobuf.Reflection;
+
+using ProtoBuf.Reflection.Internal;
 
 namespace ProtoBuf.Reflection
 {
@@ -527,6 +529,8 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected class GeneratorContext
         {
+            private bool firstMember;
+
             /// <summary>
             /// The file being processed
             /// </summary>
@@ -556,6 +560,16 @@ namespace ProtoBuf.Reflection
             /// Whether to emit enums and discriminators for oneof groups
             /// </summary>
             internal bool OneOfEnums { get; }
+
+            /// <summary>
+            /// Whether to emit the IExtensible implementation
+            /// </summary>
+            internal bool Extensible { get; }
+
+            /// <summary>
+            /// Whether to emit usings rather than fully qualified namespaces
+            /// </summary>
+            internal bool Usings { get; }
 
             /// <summary>
             /// Create a new GeneratorContext instance
@@ -596,6 +610,9 @@ namespace ProtoBuf.Reflection
                 OneOfEnums = (File.Options?.GetOptions()?.EmitOneOfEnum ?? false) || (_options != null && _options.TryGetValue("oneof", out var oneof) && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase));
 
                 EmitListSetters = IsEnabled("listset");
+
+                Extensible = options == null || !options.TryGetValue("extensible", out var extensible) || bool.Parse(extensible);
+                Usings = options == null ? false : options.TryGetValue("usings", out var usings) && bool.Parse(usings);
 
                 var s = GetCustomOption("services");
                 void AddServices(string value)
@@ -705,7 +722,8 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public GeneratorContext WriteLine()
             {
-                Output.WriteLine();
+                if (!firstMember)
+                    Output.WriteLine();
                 return this;
             }
             /// <summary>
@@ -713,6 +731,7 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public GeneratorContext WriteLine(string line)
             {
+                firstMember = false;
                 var indentLevel = IndentLevel;
                 var target = Output;
                 while (indentLevel-- > 0)
@@ -727,6 +746,7 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public TextWriter Write(string value)
             {
+                firstMember = false;
                 var indentLevel = IndentLevel;
                 var target = Output;
                 while (indentLevel-- > 0)
@@ -742,6 +762,7 @@ namespace ProtoBuf.Reflection
             public GeneratorContext Indent()
             {
                 IndentLevel++;
+                firstMember = true;
                 return this;
             }
             /// <summary>

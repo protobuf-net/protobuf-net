@@ -1,9 +1,4 @@
-﻿using Google.Protobuf.Reflection;
-using ProtoBuf;
-using ProtoBuf.Meta;
-using ProtoBuf.Reflection;
-using ProtoBuf.Reflection.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -11,6 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using Google.Protobuf.Reflection;
+
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 
 namespace Google.Protobuf.Reflection
 {
@@ -37,10 +39,14 @@ namespace Google.Protobuf.Reflection
         int End { get; set; }
     }
 
-    internal interface IField
+    internal interface INamed
+    {
+        string Name { get; }
+    }
+
+    internal interface IField : INamed
     {
         int Number { get; }
-        string Name { get; }
     }
 
     /// <summary>
@@ -58,7 +64,7 @@ namespace Google.Protobuf.Reflection
         TextReader OpenText(string path);
     }
 
-    internal class DefaultFileSystem : IFileSystem
+    internal sealed class DefaultFileSystem : IFileSystem
     {
         private DefaultFileSystem() { }
         public static IFileSystem Instance { get; } = new DefaultFileSystem();
@@ -171,8 +177,6 @@ namespace Google.Protobuf.Reflection
             return EffectiveFileSystem.OpenText(found);
         }
 
-
-
         private static Stream TryGetEmbedded(string name)
         {
             if (string.IsNullOrWhiteSpace(name) || !name.EndsWith(".proto")) return null;
@@ -185,7 +189,8 @@ namespace Google.Protobuf.Reflection
                 {
                     return typeof(FileDescriptorSet)
                     .Assembly.GetManifestResourceStream(resourceName);
-                } catch { }
+                }
+                catch { }
             }
             return null;
         }
@@ -271,7 +276,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Serializes this instance using the provided serializer (which does not need to be protobuf)
         /// </summary>
-        public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
+        public T Serialize<T>(Func<FileDescriptorSet, object, T> customSerializer, bool includeImports, object state = null)
         {
             T result;
             if (includeImports || Files.All(x => x.IncludeInOutput))
@@ -295,11 +300,12 @@ namespace Google.Protobuf.Reflection
         public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
             Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
-            Serialize((fds,o) => {
-
+            Serialize((fds, o) =>
+            {
                 var tuple = (Tuple<TypeModel, Stream>)o;
                 tuple.Item1.Serialize(tuple.Item2, fds);
-                return true; }, includeImports, state);
+                return true;
+            }, includeImports, state);
         }
 
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
@@ -308,7 +314,7 @@ namespace Google.Protobuf.Reflection
     /// <summary>
     /// Describes a message type.
     /// </summary>
-    public partial class DescriptorProto : ISchemaObject, IType, IMessage, IReserved<DescriptorProto.ReservedRange, FieldDescriptorProto>
+    public partial class DescriptorProto : INamed, ISchemaObject, IType, IMessage, IReserved<DescriptorProto.ReservedRange, FieldDescriptorProto>
     {
         /// <summary>
         /// Range of reserved tag numbers. Reserved tag numbers may not be used by
@@ -334,7 +340,7 @@ namespace Google.Protobuf.Reflection
             var s = ext.BeginQuery();
             try
             {
-                if (s is MemoryStream ms) return (ms).ToArray();
+                if (s is MemoryStream ms) return ms.ToArray();
 
                 byte[] buffer = new byte[len];
                 int offset = 0, read;
@@ -409,7 +415,7 @@ namespace Google.Protobuf.Reflection
 
             static void GenerateSyntheticOneOfs(DescriptorProto obj)
             {
-                foreach(var field in obj.Fields)
+                foreach (var field in obj.Fields)
                 {
                     if (field.Proto3Optional && !field.ShouldSerializeOneofIndex())
                     {
@@ -907,7 +913,7 @@ namespace Google.Protobuf.Reflection
                 ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
             }
 
-            if (Syntax == "" || Syntax == SyntaxProto2)
+            if (Syntax?.Length == 0 || Syntax == SyntaxProto2)
             {
                 Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
             }
@@ -1033,7 +1039,7 @@ namespace Google.Protobuf.Reflection
             return false;
         }
 
-        bool TryResolveFromFile(FileDescriptorProto file, string tn, out IType tp, bool taap)
+        private bool TryResolveFromFile(FileDescriptorProto file, string tn, out IType tp, bool taap)
         {
             tp = null;
             if (file == null || string.IsNullOrEmpty(tn)) return false;
@@ -1041,11 +1047,11 @@ namespace Google.Protobuf.Reflection
             if (tn[0] == '.')
             {
                 // fully qualified
-                return file.TryResolveType(tn, file, out tp, checkOwnPackage: false, allowImports: false, treatAllAsPublic: taap);
+                return file.TryResolveType(tn, file, out tp, allowImports: false, checkOwnPackage: false, treatAllAsPublic: taap);
             }
             foreach (var prefixPart in file.GetDescendingPackagePrefixes())
             {
-                if (file.TryResolveType(prefixPart + tn, file, out tp, checkOwnPackage: false, allowImports: false, treatAllAsPublic: taap))
+                if (file.TryResolveType(prefixPart + tn, file, out tp, allowImports: false, checkOwnPackage: false, treatAllAsPublic: taap))
                     return true;
             }
             tp = null;
@@ -1060,7 +1066,7 @@ namespace Google.Protobuf.Reflection
         private static readonly string[] s_defaultPackagePrefixes = new[] { "." };
         private static readonly char[] s_packageDelimiters = new[] { '.' };
 
-        static string[] CalculateDescendingPackagePrefixes(string package)
+        private static string[] CalculateDescendingPackagePrefixes(string package)
         {
             if (string.IsNullOrWhiteSpace(package)) return s_defaultPackagePrefixes;
 
@@ -1068,7 +1074,7 @@ namespace Google.Protobuf.Reflection
             var result = new string[pieces.Length + 1];
             int target = pieces.Length;
             string s = result[target--] = ".";
-            for (int i = 0; i < pieces.Length;i++)
+            for (int i = 0; i < pieces.Length; i++)
             {
                 s = result[target--] = s + pieces[i] + ".";
             }
@@ -1085,7 +1091,7 @@ namespace Google.Protobuf.Reflection
                 { // could be anything...
                     typeName = typeName.Substring(1); // remove the root
                 }
-                else if(typeName.StartsWith("." + Package + "."))
+                else if (typeName.StartsWith("." + Package + "."))
                 { // looks like a match
                     typeName = typeName.Substring(Package.Length + 2);
                 }
@@ -1236,7 +1242,7 @@ namespace Google.Protobuf.Reflection
                         {
                             field.type = FieldDescriptorProto.Type.TypeEnum;
                             if (!string.IsNullOrWhiteSpace(field.DefaultValue)
-                                & !@enum.Values.Any(x => x.Name == field.DefaultValue))
+                                && !@enum.Values.Any(x => x.Name == field.DefaultValue))
                             {
                                 ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'", ErrorCode.EnumValueNotFound);
                             }
@@ -1852,12 +1858,12 @@ namespace Google.Protobuf.Reflection
     /// <summary>
     /// Describes an enum type.
     /// </summary>
-    public partial class EnumDescriptorProto : ISchemaObject, IType, IReserved<EnumDescriptorProto.EnumReservedRange, EnumValueDescriptorProto>
+    public partial class EnumDescriptorProto : INamed, ISchemaObject, IType, IReserved<EnumDescriptorProto.EnumReservedRange, EnumValueDescriptorProto>
     {
         /// <summary>
         /// Range of reserved numeric values. Reserved values may not be used by
         /// entries in the same enum. Reserved ranges may not overlap.
-        ///
+        /// <para/>
         /// Note that this is distinct from DescriptorProto.ReservedRange in that it
         /// is inclusive such that it can appropriately represent the entire int32
         /// domain.
@@ -1890,11 +1896,18 @@ namespace Google.Protobuf.Reflection
         {
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
-            if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
+            tokens.Peek(out var next);
+            tokens.Consume();
+            // Special case for enums using the names 'option' or 'reserved'
+            if (tokens.Peek(out var after) && after.Value == "=")
+            {
+                Values.Add(EnumValueDescriptorProto.Parse(ctx, next.Value));
+            }
+            else if (next.Is(TokenType.AlphaNumeric, "option"))
             {
                 Options = ctx.ParseOptionStatement(Options, this);
             }
-            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "reserved"))
+            else if (next.Is(TokenType.AlphaNumeric, "reserved"))
             {
                 DescriptorProto.ParseReservedRanges(ctx, this, "enum", int.MaxValue, false);
             }
@@ -1911,7 +1924,6 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class FieldDescriptorProto : ISchemaObject, IField
     {
-
         /// <summary>
         /// Indicates whether this field is considered "packed" in the given schema
         /// </summary>
@@ -2004,7 +2016,7 @@ namespace Google.Protobuf.Reflection
             {
                 ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{parent.MaxField}", ErrorCode.FieldNumberInvalid);
             }
-            else if (number >= FirstReservedField && number <= LastReservedField)
+            else if (number is >= FirstReservedField and <= LastReservedField)
             {
                 ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations", ErrorCode.FieldNumberReserved);
             }
@@ -2243,7 +2255,7 @@ namespace Google.Protobuf.Reflection
     /// <summary>
     /// Describes a method of a service.
     /// </summary>
-    public partial class MethodDescriptorProto : ISchemaObject, IType
+    public partial class MethodDescriptorProto : INamed, ISchemaObject, IType
     {
         /// <inheritdoc/>
         public override string ToString() => Name;
@@ -2309,10 +2321,10 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class EnumValueDescriptorProto : IField
     {
-        internal static EnumValueDescriptorProto Parse(ParserContext ctx)
+        internal static EnumValueDescriptorProto Parse(ParserContext ctx, string name = null)
         {
             var tokens = ctx.Tokens;
-            string name = tokens.Consume(TokenType.AlphaNumeric);
+            name ??= tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
             var value = tokens.ConsumeInt32();
 
@@ -3071,7 +3083,7 @@ namespace ProtoBuf.Reflection
         {
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
             return s.IndexOfAny(ExponentChars) < 0 ? s
-                :  val.ToString("0e+00", CultureInfo.InvariantCulture);
+                : val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()
@@ -3079,13 +3091,9 @@ namespace ProtoBuf.Reflection
             var tokens = Tokens;
             try
             {
-                while (true)
+                while (!tokens.ConsumeIf(TokenType.Symbol, "]"))
                 {
-                    if (tokens.ConsumeIf(TokenType.Symbol, "]"))
-                    {
-                        break;
-                    }
-                    else if (!tokens.ConsumeIf(TokenType.Symbol, ","))
+                    if (!tokens.ConsumeIf(TokenType.Symbol, ","))
                     {
                         ReadOption(ref obj, parent);
                     }
