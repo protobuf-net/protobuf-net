@@ -200,16 +200,26 @@ namespace Google.Protobuf.Reflection
             }
             return null;
         }
+
+        private FileDescriptorProto TryFindFileByName(string filename)
+        {
+            foreach (var file in Files)
+            {
+                if (string.Equals(file.Name, filename, StringComparison.OrdinalIgnoreCase))
+                    return file;
+            }
+            return null;
+        }
         private bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
-            descriptor = Files.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            descriptor = TryFindFileByName(name);
 
             if (descriptor == null && from != null && AllowNameOnlyImport && Path.GetFileName(name) == name) // only if no folder specified
             {
                 try
                 {
                     var inSameFolder = Path.Combine(Path.GetDirectoryName(from.Name), name);
-                    descriptor = Files.Find(x => string.Equals(x.Name, inSameFolder, StringComparison.OrdinalIgnoreCase));
+                    descriptor = TryFindFileByName(inSameFolder);
                 }
                 catch { } // ignore
             }
@@ -222,7 +232,7 @@ namespace Google.Protobuf.Reflection
             do
             {
                 didSomething = false;
-                var file = Files.Find(x => x.HasPendingImports);
+                var file = Files.Find(static x => x.HasPendingImports);
                 if (file != null)
                 {
                     // note that GetImports clears the flag
@@ -269,19 +279,49 @@ namespace Google.Protobuf.Reflection
         }
 
         /// <summary>
+        /// Reorders the <see cref="Files"/> so that they are in dependency order, i.e. dependencies come FIRST
+        /// </summary>
+        /// <remarks>This is mostly useful for compatibility with <c>protoc</c> with the <c>--descriptor_set_out --include_imports</c> switches</remarks>
+        public void ApplyFileDependencyOrder()
+        {
+            var fileOrder = new Dictionary<FileDescriptorProto, int>(Files.Count);
+            void Observe(FileDescriptorProto file)
+            {
+                if (file is null || fileOrder.ContainsKey(file))
+                    return; // nothing to do
+
+                foreach (var dep in file.Dependencies)
+                {
+                    Observe(TryFindFileByName(dep));
+                }
+                if (!fileOrder.TryGetValue(file, out _))
+                    fileOrder.Add(file, fileOrder.Count);
+            }
+
+            int GetOrder(FileDescriptorProto file)
+                => fileOrder.TryGetValue(file, out var order) ? order : fileOrder.Count;
+
+            foreach (var file in Files)
+            {
+                Observe(file);
+            }
+            Files.Sort((x, y) => GetOrder(x).CompareTo(GetOrder(y)));
+        }
+
+        /// <summary>
         /// Serializes this instance using the provided serializer (which does not need to be protobuf)
         /// </summary>
         public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
         {
             T result;
-            if (includeImports || Files.All(x => x.IncludeInOutput))
+            if (includeImports || Files.All(static x => x.IncludeInOutput))
             {
                 result = customSerializer(this, state);
             }
             else
             {
                 var snapshort = Files.ToArray();
-                Files.RemoveAll(x => !x.IncludeInOutput);
+                Files.RemoveAll(static x => !x.IncludeInOutput);
                 result = customSerializer(this, state);
                 Files.Clear();
                 Files.AddRange(snapshort);
@@ -295,7 +335,7 @@ namespace Google.Protobuf.Reflection
         public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
             Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
-            Serialize((fds,o) => {
+            Serialize(static (fds,o) => {
 
                 var tuple = (Tuple<TypeModel, Stream>)o;
                 tuple.Item1.Serialize(tuple.Item2, fds);
