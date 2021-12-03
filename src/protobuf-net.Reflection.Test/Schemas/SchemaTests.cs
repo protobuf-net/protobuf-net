@@ -30,7 +30,7 @@ namespace ProtoBuf.Schemas
             foreach (var file in Directory.GetFiles(SchemaPath, "*.proto", SearchOption.AllDirectories))
             {
                 yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", ""), false };
-                if (file.IndexOf("issue864", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                //if (file.IndexOf("issue864", StringComparison.InvariantCultureIgnoreCase) >= 0)
                 {
                     yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", ""), true };
                 }
@@ -332,6 +332,7 @@ namespace ProtoBuf.Schemas
             }
 
             set.Process();
+            set.ApplyFileDependencyOrder();
 
             var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
             using (var file = File.Create(parserBinPath))

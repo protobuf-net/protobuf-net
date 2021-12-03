@@ -269,6 +269,39 @@ namespace Google.Protobuf.Reflection
         }
 
         /// <summary>
+        /// Reorders the <see cref="Files"/> so that they are in dependency order, i.e. dependencies come FIRST
+        /// </summary>
+        /// <remarks>This is mostly useful for compatibility with <c>protoc</c> with the <c>--descriptor_set_out --include_imports</c> switches</remarks>
+        public void ApplyFileDependencyOrder()
+        {
+            var fileOrder = new Dictionary<FileDescriptorProto, int>(Files.Count);
+            void Observe(FileDescriptorProto file)
+            {
+                if (fileOrder.ContainsKey(file))
+                    return;
+
+                foreach (var dep in file.Dependencies)
+                {
+                    if (TryResolve(dep, file, out var depFile))
+                    {
+                        Observe(depFile);
+                    }
+                }
+                if (!fileOrder.TryGetValue(file, out _))
+                    fileOrder.Add(file, fileOrder.Count);
+            }
+
+            int GetOrder(FileDescriptorProto file)
+                => fileOrder.TryGetValue(file, out var order) ? order : fileOrder.Count;
+
+            foreach (var file in Files)
+            {
+                Observe(file);
+            }
+            Files.Sort((x, y) => GetOrder(x).CompareTo(GetOrder(y)));
+        }
+
+        /// <summary>
         /// Serializes this instance using the provided serializer (which does not need to be protobuf)
         /// </summary>
         public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
@@ -295,7 +328,7 @@ namespace Google.Protobuf.Reflection
         public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
             Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
-            Serialize((fds,o) => {
+            Serialize(static (fds,o) => {
 
                 var tuple = (Tuple<TypeModel, Stream>)o;
                 tuple.Item1.Serialize(tuple.Item2, fds);
