@@ -200,16 +200,26 @@ namespace Google.Protobuf.Reflection
             }
             return null;
         }
+
+        private FileDescriptorProto TryFindFileByName(string filename)
+        {
+            foreach (var file in Files)
+            {
+                if (string.Equals(file.Name, filename, StringComparison.OrdinalIgnoreCase))
+                    return file;
+            }
+            return null;
+        }
         private bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
-            descriptor = Files.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            descriptor = TryFindFileByName(name);
 
             if (descriptor == null && from != null && AllowNameOnlyImport && Path.GetFileName(name) == name) // only if no folder specified
             {
                 try
                 {
                     var inSameFolder = Path.Combine(Path.GetDirectoryName(from.Name), name);
-                    descriptor = Files.Find(x => string.Equals(x.Name, inSameFolder, StringComparison.OrdinalIgnoreCase));
+                    descriptor = TryFindFileByName(inSameFolder);
                 }
                 catch { } // ignore
             }
@@ -222,7 +232,7 @@ namespace Google.Protobuf.Reflection
             do
             {
                 didSomething = false;
-                var file = Files.Find(x => x.HasPendingImports);
+                var file = Files.Find(static x => x.HasPendingImports);
                 if (file != null)
                 {
                     // note that GetImports clears the flag
@@ -282,7 +292,7 @@ namespace Google.Protobuf.Reflection
 
                 foreach (var dep in file.Dependencies)
                 {
-                    Observe(Files.Find(x => string.Equals(x.Name, dep, StringComparison.OrdinalIgnoreCase)));
+                    Observe(TryFindFileByName(dep));
                 }
                 if (!fileOrder.TryGetValue(file, out _))
                     fileOrder.Add(file, fileOrder.Count);
@@ -304,14 +314,14 @@ namespace Google.Protobuf.Reflection
         public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
         {
             T result;
-            if (includeImports || Files.All(x => x.IncludeInOutput))
+            if (includeImports || Files.All(static x => x.IncludeInOutput))
             {
                 result = customSerializer(this, state);
             }
             else
             {
                 var snapshort = Files.ToArray();
-                Files.RemoveAll(x => !x.IncludeInOutput);
+                Files.RemoveAll(static x => !x.IncludeInOutput);
                 result = customSerializer(this, state);
                 Files.Clear();
                 Files.AddRange(snapshort);
