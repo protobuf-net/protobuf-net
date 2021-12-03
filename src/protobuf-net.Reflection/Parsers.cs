@@ -277,15 +277,12 @@ namespace Google.Protobuf.Reflection
             var fileOrder = new Dictionary<FileDescriptorProto, int>(Files.Count);
             void Observe(FileDescriptorProto file)
             {
-                if (fileOrder.ContainsKey(file))
-                    return;
+                if (file is null || fileOrder.ContainsKey(file))
+                    return; // nothing to do
 
                 foreach (var dep in file.Dependencies)
                 {
-                    if (TryResolve(dep, file, out var depFile))
-                    {
-                        Observe(depFile);
-                    }
+                    Observe(Files.Find(x => string.Equals(x.Name, dep, StringComparison.OrdinalIgnoreCase)));
                 }
                 if (!fileOrder.TryGetValue(file, out _))
                     fileOrder.Add(file, fileOrder.Count);
