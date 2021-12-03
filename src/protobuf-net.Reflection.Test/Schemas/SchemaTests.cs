@@ -26,8 +26,16 @@ namespace ProtoBuf.Schemas
 
         private const string SchemaPath = "Schemas";
         public static IEnumerable<object[]> GetSchemas()
-            => from file in Directory.GetFiles(SchemaPath, "*.proto", SearchOption.AllDirectories)
-               select new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "") };
+        {
+            foreach (var file in Directory.GetFiles(SchemaPath, "*.proto", SearchOption.AllDirectories))
+            {
+                yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", ""), false };
+                if (file.IndexOf("issue864", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                {
+                    yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", ""), true };
+                }
+            }
+        }
 
         [Fact]
         public void CanWriteMessageSetData()
@@ -222,7 +230,7 @@ namespace ProtoBuf.Schemas
 
         [Theory]
         [MemberData(nameof(GetSchemas))]
-        public void CompareProtoToParser(string path)
+        public void CompareProtoToParser(string path, bool includeImports)
         {
             if (path == "google/protobuf/map_unittest_proto3.proto") return; // TODO known oddity
 
@@ -245,6 +253,7 @@ namespace ProtoBuf.Schemas
 
                 psi.Arguments = $"--experimental_allow_proto3_optional --descriptor_set_out={protocBinPath} {path}";
                 if (includeComments) psi.Arguments += " --include_source_info";
+                if (includeImports) psi.Arguments += " --include_imports";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.CreateNoWindow = true;
                 psi.UseShellExecute = false;
@@ -327,10 +336,10 @@ namespace ProtoBuf.Schemas
             var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
             using (var file = File.Create(parserBinPath))
             {
-                set.Serialize(CustomProtogenSerializer.Instance, file, false);
+                set.Serialize(CustomProtogenSerializer.Instance, file, includeImports);
             }
 
-            var parserJson = set.Serialize((s, _) => JsonConvert.SerializeObject(s, Formatting.Indented, jsonSettings), false);
+            var parserJson = set.Serialize((s, _) => JsonConvert.SerializeObject(s, Formatting.Indented, jsonSettings), includeImports);
 
             var errors = set.GetErrors();
             Exception genError = null;
