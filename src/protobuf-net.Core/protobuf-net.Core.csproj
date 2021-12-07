@@ -19,6 +19,14 @@
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="C:\Users\steve\.nuget\packages\fsharp.core\6.0.1\contentFiles\any\netstandard2.0\FSharp.Core.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="6.0.1" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.1'">
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_CONCURRENT_CLEAR</DefineConstants>
   </PropertyGroup>

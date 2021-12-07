@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Internal;
+﻿using Microsoft.FSharp.Collections;
+using ProtoBuf.Internal;
 using System;
 using System.Buffers;
 using System.Collections;
@@ -82,6 +83,9 @@ namespace ProtoBuf.Serializers
             Add(typeof(IImmutableQueue<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableIQueue), targs));
             Add(typeof(ImmutableStack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableStack), targs));
             Add(typeof(IImmutableStack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateImmutableIStack), targs));
+            Add(typeof(FSharpMap<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateFSharpMap), targs));
+            Add(typeof(FSharpSet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateFSharpSet), targs));
+            Add(typeof(FSharpList<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateFSharpList), targs));
 
             // the concurrent set
             Add(typeof(ConcurrentDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateConcurrentDictionary), new[] { root, targs[0], targs[1] }), false);

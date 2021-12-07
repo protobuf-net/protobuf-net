@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.FSharp.Collections;
+using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -29,6 +30,7 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(ImmutableDictionary<int, string>), typeof(ImmutableDictionarySerializer<int, string>))]
         [InlineData(typeof(ImmutableSortedDictionary<int, string>), typeof(ImmutableSortedDictionarySerializer<int, string>))]
         [InlineData(typeof(IImmutableDictionary<int, string>), typeof(ImmutableIDictionarySerializer<int, string>))]
+        [InlineData(typeof(FSharpMap<int, string>), typeof(FSharpMapSerializer<int, string>))]
         [InlineData(typeof(Queue<int>), typeof(QueueSerializer<Queue<int>, int>))]
         [InlineData(typeof(Stack<int>), typeof(StackSerializer<Stack<int>, int>))]
         [InlineData(typeof(CustomGenericCollection<int>), typeof(EnumerableSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>,int>))]
@@ -46,6 +48,9 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IImmutableQueue<string>), typeof(ImmutableIQueueSerializer<string>))]
         [InlineData(typeof(ImmutableStack<string>), typeof(ImmutableStackSerializer<string>))]
         [InlineData(typeof(IImmutableStack<string>), typeof(ImmutableIStackSerializer<string>))]
+
+        [InlineData(typeof(FSharpList<string>), typeof(FSharpListSerializer<string>))]
+        [InlineData(typeof(FSharpSet<string>), typeof(FSharpSetSerializer<string>))]
 
         [InlineData(typeof(ConcurrentBag<string>), typeof(ConcurrentBagSerializer<ConcurrentBag<string>, string>))]
         [InlineData(typeof(ConcurrentStack<string>), typeof(ConcurrentStackSerializer<ConcurrentStack<string>, string>))]

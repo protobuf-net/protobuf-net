@@ -21,6 +21,10 @@
     <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="C:\Users\steve\.nuget\packages\fsharp.core\6.0.1\contentFiles\any\netstandard2.1\FSharp.Core.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="6.0.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
