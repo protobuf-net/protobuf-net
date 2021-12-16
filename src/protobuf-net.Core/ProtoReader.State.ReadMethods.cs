@@ -541,7 +541,7 @@ namespace ProtoBuf
 
 
                 SubItemToken token = StartSubItem();
-                if (type is object && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null))
+                if (type is object && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: false))
                 {
                     // handled it the easy way
                 }

@@ -150,14 +150,14 @@ namespace ProtoBuf.Meta
         ///  - IEnumerable sequences of any type handled by TrySerializeAuxiliaryType
         ///  
         /// </summary>
-        internal bool TrySerializeAuxiliaryType(ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
+        internal bool TrySerializeAuxiliaryType(ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList, bool isRoot)
         {
             PrepareDeserialize(value, ref type);
 
             WireType wireType = GetWireType(this, format, type);
             if (DynamicStub.CanSerialize(type, this, out var features))
             {
-                var scope = NormalizeAuxScope(features, isInsideList, type);
+                var scope = NormalizeAuxScope(features, isInsideList, type, isRoot);
                 try
                 {
                     if (!DynamicStub.TrySerializeAny(tag, wireType.AsFeatures() | FromAux, type, this, ref state, value))
@@ -177,7 +177,7 @@ namespace ProtoBuf.Meta
                 foreach (object item in sequence)
                 {
                     if (item is null) ThrowHelper.ThrowNullReferenceException();
-                    if (!TrySerializeAuxiliaryType(ref state, null, format, tag, item, true, sequence))
+                    if (!TrySerializeAuxiliaryType(ref state, null, format, tag, item, true, sequence, isRoot))
                     {
                         ThrowUnexpectedType(item.GetType(), this);
                     }
@@ -187,7 +187,7 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        static ObjectScope NormalizeAuxScope(SerializerFeatures features, bool isInsideList, Type type)
+        static ObjectScope NormalizeAuxScope(SerializerFeatures features, bool isInsideList, Type type, bool isRoot)
         {
             switch (features.GetCategory())
             {
@@ -198,7 +198,7 @@ namespace ProtoBuf.Meta
                 case SerializerFeatures.CategoryMessage:
                     return ObjectScope.WrappedMessage;
                 case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                    return isInsideList ? ObjectScope.WrappedMessage : ObjectScope.LikeRoot;
+                    return (isInsideList | isRoot) ? ObjectScope.WrappedMessage : ObjectScope.LikeRoot;
                 case SerializerFeatures.CategoryScalar:
                     return ObjectScope.Scalar;
                 default:
@@ -273,7 +273,7 @@ namespace ProtoBuf.Meta
 #if FEAT_DYNAMIC_REF
                     state.SetRootObject(value);
 #endif
-                    if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                    if (!TrySerializeAuxiliaryType(ref state, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null, isRoot: true))
                     {
                         ThrowUnexpectedType(type, this);
                     }
@@ -479,7 +479,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    if (!(TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null) || len == 0))
+                    if (!(TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: true) || len == 0))
                     {
                         TypeModel.ThrowUnexpectedType(type, this); // throws
                     }
@@ -1056,12 +1056,12 @@ namespace ProtoBuf.Meta
             if (!DynamicStub.TryDeserializeRoot(type, this, ref state, ref value, autoCreate))
             {
                 // this returns true to say we actively found something, but a value is assigned either way (or throws)
-                TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, autoCreate, false, null);
+                TryDeserializeAuxiliaryType(ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, autoCreate, false, null, isRoot: true);
             }
             return value;
         }
 
-        private bool TryDeserializeList(ref ProtoReader.State state, DataFormat format, int tag, Type listType, Type itemType, ref object value)
+        private bool TryDeserializeList(ref ProtoReader.State state, DataFormat format, int tag, Type listType, Type itemType, ref object value, bool isRoot)
         {
             bool found = false;
             object nextItem = null;
@@ -1069,7 +1069,7 @@ namespace ProtoBuf.Meta
 
             var arraySurrogate = list is null ? (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), nonPublic: true) : null;
 
-            while (TryDeserializeAuxiliaryType(ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
+            while (TryDeserializeAuxiliaryType(ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType, isRoot))
             {
                 found = true;
                 if (value is null && arraySurrogate is null)
@@ -1163,11 +1163,11 @@ namespace ProtoBuf.Meta
             return Activator.CreateInstance(concreteListType, nonPublic: true);
         }
 
-        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
+        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType, bool isRoot)
         {
             var liquid = state.Liquify();
             var result = TryDeserializeAuxiliaryType(ref liquid, format, tag, type, ref value,
-                skipOtherFields, asListItem, autoCreate, insideList, parentListOrType);
+                skipOtherFields, asListItem, autoCreate, insideList, parentListOrType, isRoot);
             state = liquid.Solidify();
             return result;
         }
@@ -1183,7 +1183,7 @@ namespace ProtoBuf.Meta
         ///  - IList sets of any type handled by TryDeserializeAuxiliaryType
         /// </para>
         /// </summary>
-        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.State state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
+        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.State state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType, bool isRoot)
         {
             if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
             WireType wiretype = GetWireType(this, format, type);
@@ -1203,7 +1203,7 @@ namespace ProtoBuf.Meta
                 if (itemType is object)
                 {
                     if (insideList) TypeModel.ThrowNestedListsNotSupported((parentListOrType as Type) ?? (parentListOrType?.GetType()));
-                    found = TryDeserializeList(ref state, format, tag, type, itemType, ref value);
+                    found = TryDeserializeList(ref state, format, tag, type, itemType, ref value, isRoot);
                     if (!found && autoCreate)
                     {
                         value = CreateListInstance(type, itemType);
@@ -1242,7 +1242,7 @@ namespace ProtoBuf.Meta
 
                 // this calls back into DynamicStub.TryDeserialize (with success assertion),
                 // so will handle primitives etc
-                var scope = NormalizeAuxScope(features, insideList, type);
+                var scope = NormalizeAuxScope(features, insideList, type, isRoot);
                 value = Deserialize(scope, ref state, type, value);
             }
             if (!found && !asListItem && autoCreate)
@@ -1554,7 +1554,7 @@ namespace ProtoBuf.Meta
             PrepareDeserialize(value, ref type);
             try
             {
-                if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null))
+                if (!TrySerializeAuxiliaryType(ref writeState, type, DataFormat.Default, TypeModel.ListItemTag, value, false, null, isRoot: true))
                     ThrowUnexpectedType(type, this);
                 writeState.Close();
             }
@@ -1572,7 +1572,7 @@ namespace ProtoBuf.Meta
             try
             {
                 value = null; // start from scratch!
-                TryDeserializeAuxiliaryType(ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null);
+                TryDeserializeAuxiliaryType(ref readState, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: true);
             }
             finally
             {
