@@ -54,7 +54,7 @@ namespace ProtoBuf
                 var state = ProtoReader.State.Create(stream, model, ctx, ProtoReader.TO_EOF).Solidify();
                 try
                 {
-                    while (model.TryDeserializeAuxiliaryType(ref state, format, tag, type, ref value, true, true, false, false, null) && value is object)
+                    while (model.TryDeserializeAuxiliaryType(ref state, format, tag, type, ref value, true, true, false, false, null, isRoot: false) && value is object)
                     {
                         if (!singleton)
                         {
@@ -98,7 +98,7 @@ namespace ProtoBuf
                 var state = ProtoWriter.State.Create(stream, model, null);
                 try
                 {
-                    model.TrySerializeAuxiliaryType(ref state, null, format, tag, value, false, null);
+                    model.TrySerializeAuxiliaryType(ref state, null, format, tag, value, false, null, isRoot: false);
                     state.Close();
                 }
                 catch
