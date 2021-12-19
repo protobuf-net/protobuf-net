@@ -17,6 +17,11 @@ let ``Test Map`` () =
         ["a", 1; "b", 2; "c", 3]
         |> Map.ofList
 
+    let source2 = 
+        ["a", 1.; "b", 2.; "c", 3.]
+        |> Map.ofList
+
+
     use ms = new MemoryStream (1024)
 
     model.Serialize(ms, source)
@@ -25,6 +30,14 @@ let ``Test Map`` () =
     let dest = model.Deserialize<Map<string,int>>(ms)
 
     Assert.True(source.Equals(dest))
+    ms.Position <- 0L
+
+    model.Serialize(ms, source2)
+    ms.Position <- 0L
+
+    let dest2 = model.Deserialize<Map<string,double>>(ms)
+
+    Assert.True(source2.Equals(dest2))
 
 [<Fact>]
 let ``Test List`` () =
