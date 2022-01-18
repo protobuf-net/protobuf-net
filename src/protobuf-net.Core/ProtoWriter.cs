@@ -242,6 +242,7 @@ namespace ProtoBuf
             ClearKnownObjects();
             model = null;
             UserState = null;
+            BufferSize = 0;
         }
 
         protected private virtual void ClearKnownObjects()
@@ -485,6 +486,13 @@ namespace ProtoBuf
         {
             return TypeModel.SerializeType(model, type);
         }
+
+        /// <summary>
+        /// Buffer size to use when writing; if non-positive, an internal default is used.
+        /// </summary>
+        /// <remarks>Not all writer implementations make use of this API</remarks>
+        [Obsolete("This API is experimental and may change / be removed without notice")]
+        public int BufferSize { get; set; }
 
 #if FEAT_DYNAMIC_REF
         /// <summary>
