@@ -486,6 +486,23 @@ namespace ProtoBuf
             return TypeModel.SerializeType(model, type);
         }
 
+        /// <summary>
+        /// Buffer size to use when writing; if non-positive, an internal default is used.
+        /// </summary>
+        /// <remarks>Not all writer implementations make use of this API</remarks>
+        [Obsolete("This API is experimental and may change / be removed without notice")]
+        public static int BufferSize
+        {
+            get => s_bufferSize;
+            set
+            {
+                s_bufferSize = value;
+                s_effectiveBufferSize = value <= 0 ? BufferPool.BUFFER_LENGTH : value;
+            }
+        }
+        private static int s_bufferSize, s_effectiveBufferSize = BufferPool.BUFFER_LENGTH;
+        internal static int EffectiveBufferSize => s_effectiveBufferSize;
+
 #if FEAT_DYNAMIC_REF
         /// <summary>
         /// Specifies a known root object to use during reference-tracked serialization
