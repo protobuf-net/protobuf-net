@@ -1474,7 +1474,7 @@ namespace ProtoBuf.Meta
         internal RepeatedSerializerStub TryGetRepeatedProvider(Type type, CompatibilityLevel ambient = default)
         {
             if (type is null) return null;
-            var repeated = RepeatedSerializers.TryGetRepeatedProvider(type);
+            var repeated = RepeatedSerializers.TryGetRepeatedProvider(type, _externalProviders);
             // but take it back if it is explicitly excluded
             if (repeated is object)
             { // looks like a list, but double check for IgnoreListHandling
@@ -2156,6 +2156,29 @@ namespace ProtoBuf.Meta
                 }
                 return value.Method;
             }
+        }
+        private Hashtable _externalProviders = null;
+        /// <summary>
+        /// Add an externally defined serialiser
+        /// </summary>
+        /// <param name="collectionType">type of the collectionn e.g. F# Map<_,_></param>
+        /// <param name="serializerType">type of the External Serializer</param>
+        /// <returns></returns>
+        public RuntimeTypeModel AddSerializer (Type collectionType, Type serializerType)
+        {
+            var collection = collectionType;
+            if (collection.IsGenericType)
+                collection = collection.GetGenericTypeDefinition();
+
+            lock (_serviceCache)
+            {
+                if (_externalProviders == null)
+                    _externalProviders = new Hashtable();
+            }
+            if (!_externalProviders.ContainsKey(collection))
+                RepeatedSerializers.Add(collection, (root, current, targs) => RepeatedSerializers.Resolve(serializerType, "Create", targs),true,_externalProviders);
+
+            return this;
         }
     }
 

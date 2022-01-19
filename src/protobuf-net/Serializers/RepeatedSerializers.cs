@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
         private static readonly Hashtable s_providers;
 
         private static readonly Hashtable s_methodsPerDeclaringType = new Hashtable(), s_knownTypes = new Hashtable();
-        private static MemberInfo Resolve(Type declaringType, string methodName, Type[] targs)
+        internal static MemberInfo Resolve(Type declaringType, string methodName, Type[] targs)
         {
             targs ??= Type.EmptyTypes;
             var methods = (MethodTuple[])s_methodsPerDeclaringType[declaringType];
@@ -100,13 +100,14 @@ namespace ProtoBuf.Serializers
             Add(typeof(IEnumerable<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateEnumerable), new[] { root, targs[0] }), false);
         }
 
-        public static void Add(Type type, Func<Type, Type, Type[], MemberInfo> implementation, bool exactOnly = true)
+        public static void Add(Type type, Func<Type, Type, Type[], MemberInfo> implementation, bool exactOnly = true, Hashtable externalProviders = null)
         {
+            var providers = (externalProviders == null ? s_providers : externalProviders);
             if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-            lock (s_providers)
+            lock (providers)
             {
-                var reg = new Registration(s_providers.Count + 1, implementation, exactOnly);
-                s_providers.Add(type, reg);
+                var reg = new Registration(s_providers.Count * (externalProviders == null ? 1 : -1) + 1, implementation, exactOnly);
+                providers.Add(type, reg);
             }
             lock (s_knownTypes)
             {
@@ -114,7 +115,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        internal static RepeatedSerializerStub TryGetRepeatedProvider(Type type)
+        internal static RepeatedSerializerStub TryGetRepeatedProvider(Type type, Hashtable externalProvders = null)
         {
             if (type is null || type == typeof(string)) return null;
 
@@ -132,7 +133,7 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    var rawProvider = GetProviderForType(type);
+                    var rawProvider = GetProviderForType(type, externalProvders);
                     if (rawProvider is null)
                     {
                         if (type.IsArray && type != typeof(byte[]))
@@ -196,7 +197,7 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        private static MemberInfo GetProviderForType(Type type)
+        private static MemberInfo GetProviderForType(Type type, Hashtable externalProviders)
         {
             if (type is null) return null;
 
@@ -228,6 +229,20 @@ namespace ProtoBuf.Serializers
             }
 
             Type current = type;
+            if (externalProviders != null)
+            {
+                while (current is object && current != typeof(object))
+                {
+                    if (TryGetExternalProvider(type, current, bestMatchPriority, out var found, out var priority, externalProviders)) Consider(found, priority);
+                    current = current.BaseType;
+                }
+
+                foreach (var iType in type.GetInterfaces())
+                {
+                    if (TryGetExternalProvider(type, iType, bestMatchPriority, out var found, out var priority, externalProviders)) Consider(found, priority);
+                }
+            }
+            current = type;
             while (current is object && current != typeof(object))
             {
                 if (TryGetProvider(type, current, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
@@ -262,6 +277,26 @@ namespace ProtoBuf.Serializers
             priority = found.Priority;
             return true;
 
+        }
+        private static bool TryGetExternalProvider(Type root, Type current, int bestMatchPriority, out MemberInfo member, out int priority, Hashtable externalProviders)
+        {
+            var found = (Registration)externalProviders[current];
+            if (found is null && current.IsGenericType)
+            {
+                found = (Registration)externalProviders[current.GetGenericTypeDefinition()];
+            }
+
+            if (found is null
+                || (found.Priority > bestMatchPriority)
+                || (found.ExactOnly && root != current))
+            {
+                member = null;
+                priority = default;
+                return false;
+            }
+            member = found.Resolve(root, current);
+            priority = found.Priority;
+            return true;
         }
 
         private sealed class Registration
