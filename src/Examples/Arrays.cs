@@ -59,23 +59,23 @@ namespace Examples
         public int[,] Values { get; set; }
     }
 
-    [ProtoContract(SkipConstructor=false)]
+    [ProtoContract(SkipConstructor = false)]
     public class WithAndWithoutOverwrite
     {
-        [ProtoMember(1, OverwriteList=false)]
+        [ProtoMember(1, OverwriteList = false)]
         public int[] Append = { 1, 2, 3 };
 
-        [ProtoMember(2, OverwriteList=true)]
+        [ProtoMember(2, OverwriteList = true)]
         public int[] Overwrite = { 4, 5, 6 };
     }
-    [ProtoContract(SkipConstructor=true)]
+    [ProtoContract(SkipConstructor = true)]
     public class WithSkipConstructor
     {
         [ProtoMember(1)]
         public int[] Values = { 1, 2, 3 };
     }
 
-    
+
     public class ArrayTests
     {
         private ITestOutputHelper Log { get; }
@@ -122,7 +122,7 @@ namespace Examples
         [Fact]
         public void TestOverwriteVersusAppend()
         {
-            var orig = new WithAndWithoutOverwrite { Append = new[] {7,8}, Overwrite = new[] { 9,10}};
+            var orig = new WithAndWithoutOverwrite { Append = new[] { 7, 8 }, Overwrite = new[] { 9, 10 } };
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(WithAndWithoutOverwrite), true);
@@ -336,6 +336,24 @@ namespace Examples
             clone = Serializer.DeepClone(foo);
             Assert.Equal(3, clone.Count);
         }
+        [Fact]
+        public void TestStringArrayWithMemory()
+        {
+            var foo = new List<string> { "abc", "def", "ghi" };
+
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, foo);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("0A-03-61-62-63-0A-03-64-65-66-0A-03-67-68-69", hex);
+
+            Memory<byte> m = new Memory<byte>(ms.ToArray());
+
+            var clone = (List<string>)Serializer.Deserialize(foo.GetType(), m);
+            Assert.Equal(3, clone.Count);
+
+            clone = Serializer.DeepClone(foo);
+            Assert.Equal(3, clone.Count);
+        }
 
         [ProtoContract]
         internal class Tst
@@ -373,7 +391,8 @@ namespace Examples
             Serializer.Serialize(stm, t);
             Log.WriteLine(stm.Length.ToString());
         }
-        static void VerifyNodeTree(Node node) {
+        static void VerifyNodeTree(Node node)
+        {
             Node clone = Serializer.DeepClone(node);
             bool eq = AreEqual(node, clone, out string msg);
             Assert.True(eq, msg);
@@ -387,7 +406,7 @@ namespace Examples
             if (x.Key != y.Key) { msg = "key"; return false; }
 
             Node[] xNodes = x.Nodes, yNodes = y.Nodes;
-            if (ReferenceEquals(xNodes,yNodes))
+            if (ReferenceEquals(xNodes, yNodes))
             { // trivial
             }
             else

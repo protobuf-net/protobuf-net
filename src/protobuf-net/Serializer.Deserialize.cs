@@ -54,7 +54,17 @@ namespace ProtoBuf
             using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, null, ProtoReader.TO_EOF);
             return state.DeserializeRootFallback(null, type);
         }
-
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream
+        /// </summary>
+        /// <param name="type">The type to be created.</param>
+        /// <param name="source">The binary memory to apply to the new instance (cannot be null).</param>
+        /// <returns>A new, initialized instance.</returns>
+        public static object Deserialize([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, in ReadOnlyMemory<byte> source)
+        {
+            using var state = ProtoReader.State.Create(source, RuntimeTypeModel.Default, null);
+            return state.DeserializeRootFallback(null, type);
+        }
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream
         /// </summary>
