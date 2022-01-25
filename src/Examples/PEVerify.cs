@@ -12,7 +12,7 @@ namespace Examples
         static readonly bool unavailable;
         static PEVerify()
         {
-            exePath = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\PEVerify.exe");
+            exePath = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\PEVerify.exe");
             if (!File.Exists(exePath))
             {
                 Console.Error.WriteLine("PEVerify not found at " + exePath);

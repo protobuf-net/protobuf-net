@@ -15,15 +15,19 @@ namespace ProtoBuf
     /// only the paths [such an object would ideally be IDisposable and use
     /// a finalizer to ensure that the files are removed].</remarks>
     /// <seealso cref="IExtensible"/>
-    public abstract class Extensible : IExtensible
+    public abstract class Extensible : ITypedExtensible, IExtensible
     {
         // note: not marked ProtoContract - no local state, and can't 
         // predict sub-classes
 
-        private IExtension extensionObject;
+        private BufferExtension extensionObject;
 
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)
             => GetExtensionObject(createIfMissing);
+
+        // if the type requested is the object-type, use the virtual method - otherwise go direct to our private implementation
+        IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
+            => ReferenceEquals(type, GetType()) ? GetExtensionObject(createIfMissing) : GetExtensionObjectImpl(type, createIfMissing);
 
         /// <summary>
         /// Retrieves the <see cref="IExtension">extension</see> object for the current
@@ -36,7 +40,28 @@ namespace ProtoBuf
         /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         protected virtual IExtension GetExtensionObject(bool createIfMissing)
-            => GetExtensionObject(ref extensionObject, createIfMissing);
+            => GetExtensionObjectImpl(GetType(), createIfMissing);
+
+        private IExtension GetExtensionObjectImpl(Type type, bool createIfMissing)
+        {
+            // look for a pre-existing node that represents the specified type
+            var current = extensionObject;
+            while (current is not null)
+            {
+                if (ReferenceEquals(current.Type, type)) return current;
+                current = current.Tail;
+            }
+
+            if (createIfMissing)
+            {
+                // create a new node for this level, and add it to the chain
+                var newNode = new BufferExtension();
+                newNode.SetTail(type, extensionObject);
+                current = extensionObject = newNode;
+            }
+
+            return current;
+        }
 
         /// <summary>
         /// Provides a simple, default implementation for <see cref="IExtension">extension</see> support,
