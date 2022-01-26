@@ -71,15 +71,114 @@ namespace ProtoBuf
                 return compiled;
             });
 
-        private void CanRoundTrip<T>(Func<RuntimeTypeModel, TypeModel> callback) where T : class, new()
+        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        [Fact]
+        public void SimpleExtensionDataUsage()
+        {
+            var obj = new SomeLeafType { When = new DateTime(2022, 01, 26, 10, 00, 00) };
+            obj.AppendValue(40, "a");
+            obj.AppendValue(41, "b", typeof(SomeLeafType));
+            obj.AppendValue(42, "c", typeof(SomeMiddleType));
+            obj.AppendValue(43, "d", typeof(SomeBaseType));
+
+            Assert.Equal("a", obj.GetValue<string>(40));
+            Assert.Equal("b", obj.GetValue<string>(41, typeof(SomeLeafType)));
+            Assert.Equal("c", obj.GetValue<string>(42, typeof(SomeMiddleType)));
+            Assert.Equal("d", obj.GetValue<string>(43, typeof(SomeBaseType)));
+
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, obj);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("52-16-52-10-0A-06-08-A0-B7-C4-8F-06-C2-02-01-61-CA-02-01-62-D2-02-01-63-DA-02-01-64", hex);
+
+            /*
+52-16                           field 10 SomeBaseType -> SomeMiddleType (len 22)
+    52-10                       field 10 SomeMiddleType -> SomeLeafType (len 16)
+        0A-06                   field 1 When (len 6)
+            08-A0-B7-C4-8F-06   field 1 seconds = 1643191200
+        C2-02-01-61             field 40 = "a"
+        CA-02-01-62             field 41 = "b"
+    D2-02-01-63                 field 42 = "c"
+DA-02-01-64                     field 43 = "d"
+             */
+
+            // just to prove that "seconds" value
+            var seconds = (obj.When - Epoch).TotalSeconds;
+            Assert.Equal(1643191200, seconds);
+
+            ms.Position = 0;
+
+            var clone = Serializer.Deserialize<SomeLeafType>(ms);
+            Assert.NotSame(obj, clone);
+
+            Assert.Equal("a", clone.GetValue<string>(40));
+            Assert.Equal("b", clone.GetValue<string>(41, typeof(SomeLeafType)));
+            Assert.Equal("c", clone.GetValue<string>(42, typeof(SomeMiddleType)));
+            Assert.Equal("d", clone.GetValue<string>(43, typeof(SomeBaseType)));
+        }
+
+        [Theory]
+        [InlineData(typeof(object))]
+        [InlineData(typeof(Extensible))]
+        [InlineData(typeof(string))]
+        [InlineData(typeof(SomeLeafType))]
+        [InlineData(typeof(SomeRandomDerivedType))]
+        public void DetectInvalidTargetInheritanceType(Type type)
+        {
+            var obj = new SomeMiddleType();
+            var ex = Assert.Throws<InvalidOperationException>(() => obj.GetValue<string>(40, type));
+            Assert.Equal($"The extension field target type '{type.FullName}' is not a valid base-type of 'ProtoBuf.InheritanceExtensible+SomeMiddleType'", ex.Message);
+        }
+
+        [Theory]
+        [InlineData(typeof(ISomeInterface))]
+        [InlineData(typeof(Foo))]
+        public void DetectInvalidTargetObjectType(Type type)
+        {
+            var obj = new SomeMiddleType();
+            var ex = Assert.Throws<NotSupportedException>(() => obj.GetValue<string>(40, type));
+            Assert.Equal($"Extension fields can only be used with class target types ('{type.FullName}' is not valid)", ex.Message);
+        }
+
+        class SomeRandomDerivedType : SomeMiddleType { }
+        interface ISomeInterface { }
+
+        [Fact]
+        public void DetectNullInstance()
+        {
+            SomeMiddleType obj = null;
+            var ex = Assert.Throws<ArgumentNullException>(() => obj.GetValue<string>(40));
+            Assert.Equal("instance", ex.ParamName);
+        }
+
+        [Fact]
+        public void DetectValueTypeInstance()
+        {
+            var obj = new Foo();
+            var ex = Assert.Throws<NotSupportedException>(() => obj.GetValue<string>(40));
+            Assert.Equal($"Extension fields can only be used with class target types ('{typeof(Foo).FullName}' is not valid)", ex.Message);
+        }
+
+        [ProtoContract]
+        struct Foo : ITypedExtensible
+        {
+            IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
+                => throw new NotImplementedException("shouldn't be called");
+        }
+
+        private void CanRoundTrip<T>(Func<RuntimeTypeModel, TypeModel> callback) where T : class, IExtensible, new()
         {
             var original = new T();
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add<T>();
             var finalModel = callback(model);
+
+            Extensible.AppendValue(finalModel, original, 99, "hello");
             var clone = finalModel.DeepClone(original);
             Assert.NotSame(original, clone);
+            Assert.Equal("hello", Extensible.GetValue<string>(clone, 99));
         }
 
         private void CanReliablyRoundTripRetainingData(Func<RuntimeTypeModel, TypeModel> callback)

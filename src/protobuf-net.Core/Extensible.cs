@@ -22,12 +22,14 @@ namespace ProtoBuf
 
         private BufferExtension extensionObject;
 
+#pragma warning disable CS0618 // access to deprecated GetExtensionObject API
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)
             => GetExtensionObject(createIfMissing);
 
         // if the type requested is the object-type, use the virtual method - otherwise go direct to our private implementation
         IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
             => ReferenceEquals(type, GetType()) ? GetExtensionObject(createIfMissing) : GetExtensionObjectImpl(type, createIfMissing);
+#pragma warning restore CS0618 // access to deprecated GetExtensionObject API
 
         /// <summary>
         /// Retrieves the <see cref="IExtension">extension</see> object for the current
@@ -39,6 +41,7 @@ namespace ProtoBuf
         /// if the extension object does not exist or is not available.</returns>
         /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
         /// and true during deserialization upon encountering unexpected fields.</remarks>
+        [Obsolete("This API is considered, and may no longer be used in all scenarios (in particular when inheritance is involved); it is not recommended to rely on this API")]
         protected virtual IExtension GetExtensionObject(bool createIfMissing)
             => GetExtensionObjectImpl(GetType(), createIfMissing);
 
