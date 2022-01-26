@@ -11,6 +11,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.2: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## pending
+
+- support unknwon/extension fields on models that involve inheritance
+
 ## 3.0.62
 
 - add .NET 5 TFM and support for related features such as record-types
