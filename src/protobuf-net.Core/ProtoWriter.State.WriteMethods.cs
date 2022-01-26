@@ -813,7 +813,11 @@ namespace ProtoBuf
                 // header detail, so we'll copy it implicitly
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();
 
-                IExtension extn = instance.GetExtensionObject(false);
+                AppendExtensionDataImpl(instance.GetExtensionObject(false));
+            }
+
+            private void AppendExtensionDataImpl(IExtension extn)
+            {
                 if (extn is object)
                 {
                     // unusually we *don't* want "using" here; the "finally" does that, with
@@ -833,6 +837,19 @@ namespace ProtoBuf
                     }
                     finally { extn.EndQuery(source); }
                 }
+            }
+
+            /// <summary>
+            /// Copies any extension data stored for the instance to the underlying stream
+            /// </summary>
+            public void AppendExtensionData(ITypedExtensible instance, Type type)
+            {
+                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                // we expect the writer to be raw here; the extension data will have the
+                // header detail, so we'll copy it implicitly
+                if (WireType != WireType.None) ThrowInvalidSerializationOperation();
+
+                AppendExtensionDataImpl(instance.GetExtensionObject(type, false));
             }
 
             // general purpose serialization exception message

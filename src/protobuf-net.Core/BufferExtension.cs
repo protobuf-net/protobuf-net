@@ -10,6 +10,15 @@ namespace ProtoBuf
     {
         private ArraySegment<byte> _buffer;
 
+        internal Type Type { get; private set; }
+        internal BufferExtension Tail { get; private set; }
+
+        internal void SetTail(Type type, BufferExtension tail)
+        {
+            Type = type;
+            Tail = tail;
+        }
+
         void IExtensionResettable.Reset()
         {
             _buffer = default;

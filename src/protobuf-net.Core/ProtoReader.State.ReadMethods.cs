@@ -834,7 +834,21 @@ namespace ProtoBuf
             public void AppendExtensionData(IExtensible instance)
             {
                 if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
-                IExtension extn = instance.GetExtensionObject(true);
+                AppendExtensionDataImpl(instance.GetExtensionObject(true));
+            }
+
+            /// <summary>
+            /// Copies the current field into the instance as extension data
+            /// </summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public void AppendExtensionData(ITypedExtensible instance, Type type)
+            {
+                if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
+                AppendExtensionDataImpl(instance.GetExtensionObject(type, true));
+            }
+
+            private void AppendExtensionDataImpl(IExtension extn)
+            {
                 bool commit = false;
                 // unusually we *don't* want "using" here; the "finally" does that, with
                 // the extension object being responsible for disposal etc

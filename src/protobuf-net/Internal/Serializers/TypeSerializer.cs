@@ -136,7 +136,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
-            if (!isRootType) return false;
+            if (!GetFlag(StateFlags.IsRootType)) return false;
             if (callbacks is object && callbacks[callbackType] is object) return true;
             for (int i = 0; i < serializers.Length; i++)
             {
@@ -152,7 +152,32 @@ namespace ProtoBuf.Internal.Serializers
         Type IProtoTypeSerializer.BaseType => BaseType;
         private IRuntimeProtoSerializerNode[] serializers;
         private int[] fieldNumbers;
-        private bool isRootType, useConstructor, isExtensible, hasConstructor, assertKnownType;
+
+        enum StateFlags
+        {
+            None = 0,
+            IsRootType = 1 << 0,
+            HasConstructor = 1 << 1,
+            UseConstructor = 1 << 2,
+            IsExtensible = 1 << 3,
+            IsTypedExtensible = 1 << 4,
+            AssertKnownType = 1 << 5,
+        }
+        private StateFlags flags;
+        private void SetFlag(StateFlags flag, bool value)
+        {
+            if (value)
+            {
+                flags |= flag;
+            }
+            else
+            {
+                flags &= ~flag;
+            }
+        }
+        private bool GetFlag(StateFlags flag)
+            => (flags & flag) != 0;
+
         private CallbackSet callbacks;
         private MethodInfo[] baseCtorCallbacks;
         private MethodInfo factory;
@@ -200,9 +225,9 @@ namespace ProtoBuf.Internal.Serializers
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;
             this.callbacks = callbacks;
-            this.isRootType = isRootType;
-            this.useConstructor = useConstructor;
-            this.assertKnownType = assertKnownType;
+            SetFlag(StateFlags.IsRootType, isRootType);
+            SetFlag(StateFlags.UseConstructor, useConstructor);
+            SetFlag(StateFlags.AssertKnownType, assertKnownType);
 
             if (baseCtorCallbacks is object)
             {
@@ -223,15 +248,20 @@ namespace ProtoBuf.Internal.Serializers
                 throw new ArgumentException("Cannot create a TypeSerializer for nullable types", nameof(forType));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
             }
-            if (iextensible.IsAssignableFrom(forType))
+
+            bool isExtensible = TypeSerializerMethodCache.Type_IExtensible.IsAssignableFrom(forType);
+            bool isTypedExtensible = TypeSerializerMethodCache.Type_ITypedIExtensible.IsAssignableFrom(forType);
+            if (isExtensible || isTypedExtensible)
             {
-                if (forType.IsValueType || !isRootType || hasSubTypes)
+                if (forType.IsValueType || ((!isRootType || hasSubTypes) && !isTypedExtensible))
                 {
-                    throw new NotSupportedException("IExtensible is not supported in structs or classes with inheritance");
+                    throw new NotSupportedException(nameof(IExtensible) + " is not supported in structs or classes with inheritance without " + nameof(ITypedExtensible));
                 }
-                isExtensible = true;
+                SetFlag(StateFlags.IsExtensible, isExtensible);
+                SetFlag(StateFlags.IsTypedExtensible, isTypedExtensible);
             }
-            hasConstructor = !constructType.IsAbstract && Helpers.GetConstructor(constructType, Type.EmptyTypes, true) is object;
+            bool hasConstructor = !constructType.IsAbstract && Helpers.GetConstructor(constructType, Type.EmptyTypes, true) is object;
+            SetFlag(StateFlags.HasConstructor, hasConstructor);
             if (constructType != forType && useConstructor && !hasConstructor)
             {
                 throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, nameof(constructType));
@@ -246,7 +276,6 @@ namespace ProtoBuf.Internal.Serializers
                 };
             }
         }
-        private static readonly System.Type iextensible = typeof(IExtensible);
 
         private bool CanHaveInheritance
         {
@@ -262,12 +291,12 @@ namespace ProtoBuf.Internal.Serializers
 
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context)
         {
-            if (isRootType && callbacks is object)
+            if (GetFlag(StateFlags.IsRootType) && callbacks is object)
                 InvokeCallback(callbacks[callbackType], value, context);
         }
         public void Callback(ref T value, TypeModel.CallbackType callbackType, ISerializationContext context)
         {
-            if (isRootType && callbacks is object)
+            if (GetFlag(StateFlags.IsRootType) && callbacks is object)
             {
                 object boxed = value;
                 InvokeCallback(callbacks[callbackType], boxed, context);
@@ -291,7 +320,7 @@ namespace ProtoBuf.Internal.Serializers
                 }
             }
             if (actualType == constructType) return null; // needs to be last in case the default concrete type is also a known sub-type
-            if (assertKnownType)
+            if (GetFlag(StateFlags.AssertKnownType))
             {
                 TypeModel.ThrowUnexpectedSubtype(ExpectedType, actualType); // might throw (if not a proxy)
             }
@@ -321,7 +350,15 @@ namespace ProtoBuf.Internal.Serializers
                 }
             }
             //Debug.WriteLine("<< Writing fields for " + forType.FullName);
-            if (isExtensible) state.AppendExtensionData((IExtensible)value);
+
+            if (UseTypedExtensible)
+            {
+                state.AppendExtensionData((ITypedExtensible)value, ExpectedType);
+            }
+            else if (GetFlag(StateFlags.IsExtensible))
+            {
+                state.AppendExtensionData((IExtensible)value);
+            }
             Callback(ref value, TypeModel.CallbackType.AfterSerialize, state.Context);
         }
 
@@ -377,7 +414,12 @@ namespace ProtoBuf.Internal.Serializers
                 if (!fieldHandled)
                 {
                     //Debug.WriteLine(": [" + fieldNumber + "] (unknown)");
-                    if (isExtensible)
+                    if (UseTypedExtensible)
+                    {
+                        var val = getter(ref bodyState);
+                        state.AppendExtensionData((ITypedExtensible)val, ExpectedType);
+                    }
+                    else if (GetFlag(StateFlags.IsExtensible))
                     {
                         var val = getter(ref bodyState);
                         state.AppendExtensionData((IExtensible)val);
@@ -443,9 +485,9 @@ namespace ProtoBuf.Internal.Serializers
             {
                 obj = InvokeCallback(factory, null, context);
             }
-            else if (useConstructor)
+            else if (GetFlag(StateFlags.UseConstructor))
             {
-                if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
+                if (!GetFlag(StateFlags.HasConstructor)) TypeModel.ThrowCannotCreateInstance(constructType);
                 obj = Activator.CreateInstance(constructType, nonPublic: true);
             }
             else
@@ -552,14 +594,14 @@ namespace ProtoBuf.Internal.Serializers
                             {
                                 ser.EmitWrite(ctx, typed);
                             }
-                            
+
                             ctx.Branch(startFields, false);
                             ctx.MarkLabel(nextTest);
                         }
                     }
                 }
 
-                if (assertKnownType)
+                if (GetFlag(StateFlags.AssertKnownType))
                 {
                     MethodInfo method;
                     if (constructType is object && constructType != ExpectedType)
@@ -585,13 +627,27 @@ namespace ProtoBuf.Internal.Serializers
             }
 
             // extension data
-            if (isExtensible)
+            if (UseTypedExtensible)
             {
-                ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.AppendExtensionData), loc);
+                using var tmp = ctx.GetLocalWithValue(typeof(ITypedExtensible), loc);
+                ctx.LoadState();
+                ctx.LoadValue(tmp);
+                ctx.LoadValue(ExpectedType);
+                ctx.EmitCall(TypeSerializerMethodCache.Method_Write_AppendExtensionData_ITypedExtensible);
             }
+            else if (GetFlag(StateFlags.IsExtensible))
+            {
+                using var tmp = ctx.GetLocalWithValue(typeof(IExtensible), loc);
+                ctx.LoadState();
+                ctx.LoadValue(tmp);
+                ctx.EmitCall(TypeSerializerMethodCache.Method_Write_AppendExtensionData_IExtensible);
+            }
+
             // post-callbacks
             EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
         }
+
+        private bool UseTypedExtensible => GetFlag(StateFlags.IsTypedExtensible) && (HasInheritance || !GetFlag(StateFlags.IsExtensible));
 
         private static void EmitInvokeCallback(Compiler.CompilerContext ctx, MethodInfo method, Type constructType, Type type, Local valueFrom)
         {
@@ -660,7 +716,7 @@ namespace ProtoBuf.Internal.Serializers
         private void EmitCallbackIfNeeded(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             Debug.Assert(valueFrom is object);
-            if (isRootType && ((IProtoTypeSerializer)this).HasCallbacks(callbackType))
+            if (GetFlag(StateFlags.IsRootType) && ((IProtoTypeSerializer)this).HasCallbacks(callbackType))
             {
                 if (HasInheritance && callbackType == TypeModel.CallbackType.BeforeDeserialize)
                 {
@@ -808,11 +864,16 @@ namespace ProtoBuf.Internal.Serializers
             }
 
             ctx.LoadState();
-            if (isExtensible)
+            if (UseTypedExtensible)
             {
                 LoadFromState(ctx, loc);
-                ctx.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.AppendExtensionData),
-                    new[] { typeof(IExtensible) }));
+                ctx.LoadValue(ExpectedType);
+                ctx.EmitCall(TypeSerializerMethodCache.Method_Read_AppendExtensionData_ITypedExtensible);
+            }
+            else if (GetFlag(StateFlags.IsExtensible))
+            {
+                LoadFromState(ctx, loc);
+                ctx.EmitCall(TypeSerializerMethodCache.Method_Read_AppendExtensionData_IExtensible);
             }
             else
             {
@@ -960,7 +1021,7 @@ namespace ProtoBuf.Internal.Serializers
         }
 
         bool IProtoTypeSerializer.ShouldEmitCreateInstance
-            => factory is object || !useConstructor;
+            => factory is object || !GetFlag(StateFlags.UseConstructor);
 
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
@@ -969,13 +1030,13 @@ namespace ProtoBuf.Internal.Serializers
             {
                 EmitInvokeCallback(ctx, factory, constructType, ExpectedType, null);
             }
-            else if (!useConstructor)
+            else if (!GetFlag(StateFlags.UseConstructor))
             {   // DataContractSerializer style
                 ctx.LoadValue(constructType);
                 ctx.EmitCall(typeof(BclHelpers).GetMethod(nameof(BclHelpers.GetUninitializedObject)));
                 ctx.Cast(ExpectedType);
             }
-            else if (constructType.IsClass && hasConstructor)
+            else if (constructType.IsClass && GetFlag(StateFlags.HasConstructor))
             {   // XmlSerializer style
                 ctx.EmitCtor(constructType);
             }
@@ -1038,6 +1099,13 @@ namespace ProtoBuf.Internal.Serializers
 
     internal static class TypeSerializerMethodCache
     {
+        internal static readonly Type Type_IExtensible = typeof(IExtensible), Type_ITypedIExtensible = typeof(ITypedExtensible);
+        internal static readonly MethodInfo
+            Method_Write_AppendExtensionData_IExtensible = typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.AppendExtensionData), new[] { typeof(IExtensible) }),
+            Method_Write_AppendExtensionData_ITypedExtensible = typeof(ProtoWriter.State).GetMethod(nameof(ProtoWriter.State.AppendExtensionData), new[] { typeof(ITypedExtensible), typeof(Type) }),
+            Method_Read_AppendExtensionData_IExtensible = typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.AppendExtensionData), new[] { typeof(IExtensible) }),
+            Method_Read_AppendExtensionData_ITypedExtensible = typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.AppendExtensionData), new[] { typeof(ITypedExtensible), typeof(Type) });
+
         internal static readonly Dictionary<int,MethodInfo> ThrowUnexpectedSubtype
         = (from method in typeof(TypeModel).GetMethods(BindingFlags.Static | BindingFlags.Public)
                 where method.Name == nameof(TypeModel.ThrowUnexpectedSubtype) && method.IsGenericMethodDefinition
