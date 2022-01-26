@@ -118,6 +118,51 @@ DA-02-01-64                     field 43 = "d"
             Assert.Equal("d", clone.GetValue<string>(43, typeof(SomeBaseType)));
         }
 
+        [Fact]
+        public void SimpleCustomExtensionDataUsage()
+        {
+            var obj = new CustomLeafType { When = new DateTime(2022, 01, 26, 10, 00, 00) };
+            obj.AppendValue(40, "a");
+            obj.AppendValue(41, "b", typeof(CustomLeafType));
+            obj.AppendValue(42, "c", typeof(CustomMiddleType));
+            obj.AppendValue(43, "d", typeof(CustomBaseType));
+
+            Assert.Equal("a", obj.GetValue<string>(40));
+            Assert.Equal("b", obj.GetValue<string>(41, typeof(CustomLeafType)));
+            Assert.Equal("c", obj.GetValue<string>(42, typeof(CustomMiddleType)));
+            Assert.Equal("d", obj.GetValue<string>(43, typeof(CustomBaseType)));
+
+            using var ms = new MemoryStream();
+            Serializer.Serialize(ms, obj);
+            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+            Assert.Equal("52-16-52-10-0A-06-08-A0-B7-C4-8F-06-C2-02-01-61-CA-02-01-62-D2-02-01-63-DA-02-01-64", hex);
+
+            /*
+52-16                           field 10 CustomBaseType -> CustomMiddleType (len 22)
+    52-10                       field 10 CustomMiddleType -> CustomLeafType (len 16)
+        0A-06                   field 1 When (len 6)
+            08-A0-B7-C4-8F-06   field 1 seconds = 1643191200
+        C2-02-01-61             field 40 = "a"
+        CA-02-01-62             field 41 = "b"
+    D2-02-01-63                 field 42 = "c"
+DA-02-01-64                     field 43 = "d"
+             */
+
+            // just to prove that "seconds" value
+            var seconds = (obj.When - Epoch).TotalSeconds;
+            Assert.Equal(1643191200, seconds);
+
+            ms.Position = 0;
+
+            var clone = Serializer.Deserialize<CustomLeafType>(ms);
+            Assert.NotSame(obj, clone);
+
+            Assert.Equal("a", clone.GetValue<string>(40));
+            Assert.Equal("b", clone.GetValue<string>(41, typeof(CustomLeafType)));
+            Assert.Equal("c", clone.GetValue<string>(42, typeof(CustomMiddleType)));
+            Assert.Equal("d", clone.GetValue<string>(43, typeof(CustomBaseType)));
+        }
+
         [Theory]
         [InlineData(typeof(object))]
         [InlineData(typeof(Extensible))]
@@ -246,6 +291,37 @@ DA-02-01-64                     field 43 = "d"
         [ProtoContract]
         [CompatibilityLevel(CompatibilityLevel.Level300)]
         public sealed class SomeLeafType : SomeMiddleType
+        {
+            [ProtoMember(1)]
+            public DateTime When { get; set; }
+        }
+
+        [ProtoContract]
+        [ProtoInclude(10, typeof(CustomMiddleType))]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public abstract class CustomBaseType : ITypedExtensible
+        {
+            IExtension extension;
+
+            [ProtoMember(1)]
+            public int Id { get; set; }
+
+            IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
+                => Extensible.GetExtensionObject(ref extension, type, createIfMissing);
+        }
+
+        [ProtoContract]
+        [ProtoInclude(10, typeof(CustomLeafType))]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class CustomMiddleType : CustomBaseType
+        {
+            [ProtoMember(1)]
+            public string Message { get; set; }
+        }
+
+        [ProtoContract]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public sealed class CustomLeafType : CustomMiddleType
         {
             [ProtoMember(1)]
             public DateTime When { get; set; }

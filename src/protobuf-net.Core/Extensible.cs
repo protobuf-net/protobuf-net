@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ProtoBuf.Meta;
 using System.Collections;
+using ProtoBuf.Internal;
 
 namespace ProtoBuf
 {
@@ -20,7 +21,7 @@ namespace ProtoBuf
         // note: not marked ProtoContract - no local state, and can't 
         // predict sub-classes
 
-        private BufferExtension extensionObject;
+        private IExtension extensionObject;
 
 #pragma warning disable CS0618 // access to deprecated GetExtensionObject API
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)
@@ -28,7 +29,7 @@ namespace ProtoBuf
 
         // if the type requested is the object-type, use the virtual method - otherwise go direct to our private implementation
         IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
-            => ReferenceEquals(type, GetType()) ? GetExtensionObject(createIfMissing) : GetExtensionObjectImpl(type, createIfMissing);
+            => ReferenceEquals(type, GetType()) ? GetExtensionObject(createIfMissing) : GetExtensionObject(ref extensionObject, type, createIfMissing);
 #pragma warning restore CS0618 // access to deprecated GetExtensionObject API
 
         /// <summary>
@@ -43,24 +44,48 @@ namespace ProtoBuf
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         [Obsolete("This API is considered, and may no longer be used in all scenarios (in particular when inheritance is involved); it is not recommended to rely on this API")]
         protected virtual IExtension GetExtensionObject(bool createIfMissing)
-            => GetExtensionObjectImpl(GetType(), createIfMissing);
+            => GetExtensionObject(ref extensionObject, GetType(), createIfMissing);
 
-        private IExtension GetExtensionObjectImpl(Type type, bool createIfMissing)
+        /// <summary>
+        /// Provides a simple, default implementation for <see cref="IExtension">extension</see> support,
+        /// optionally creating it if it does not already exist. Designed to be called by
+        /// classes implementing <see cref="IExtensible"/>.
+        /// </summary>
+        /// <param name="createIfMissing">Should a new extension object be
+        /// created if it does not already exist?</param>
+        /// <param name="type">The <see cref="Type"/> that holds the fields, in terms of the inheritance model; the same <c>tag</c> key can appear against different <c>type</c> levels for the same <c>instance</c>, with different values.</param>
+        /// <param name="extensionObject">The extension field to check (and possibly update).</param>
+        /// <returns>The extension object if it exists (or was created), or null
+        /// if the extension object does not exist or is not available.</returns>
+        /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
+        /// and true during deserialization upon encountering unexpected fields.</remarks>
+        public static IExtension GetExtensionObject(ref IExtension extensionObject, Type type, bool createIfMissing)
         {
+            if (type is null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+
             // look for a pre-existing node that represents the specified type
-            var current = extensionObject;
-            while (current is not null)
+            BufferExtension root = extensionObject as BufferExtension, current = root;
+            if (root is null)
             {
-                if (ReferenceEquals(current.Type, type)) return current;
-                current = current.Tail;
+                if (extensionObject is not null) ThrowHelper.ThrowNotSupportedException($"Custom extension implementations should not be passed to {nameof(GetExtensionObject)}");
+            }
+            else
+            {
+                while (current is not null)
+                {
+                    var targetType = current.Type;
+                    if (targetType is null) ThrowHelper.ThrowInvalidOperationException("Typed and untyped extension data cannot be mixed");
+                    if (ReferenceEquals(targetType, type)) return current;
+                    current = current.Tail;
+                }
             }
 
             if (createIfMissing)
             {
                 // create a new node for this level, and add it to the chain
                 var newNode = new BufferExtension();
-                newNode.SetTail(type, extensionObject);
-                current = extensionObject = newNode;
+                newNode.SetTail(type, root);
+                extensionObject = current = newNode;
             }
 
             return current;
@@ -80,9 +105,16 @@ namespace ProtoBuf
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         public static IExtension GetExtensionObject(ref IExtension extensionObject, bool createIfMissing)
         {
-            if (createIfMissing && extensionObject is null)
+            if (extensionObject is null)
             {
-                extensionObject = new BufferExtension();
+                if (createIfMissing)
+                {
+                    extensionObject = new BufferExtension();
+                }
+            }
+            else if (extensionObject is BufferExtension be && be.Type is not null)
+            {
+                ThrowHelper.ThrowInvalidOperationException("Typed and untyped extension data cannot be mixed");
             }
             return extensionObject;
         }

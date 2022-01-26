@@ -9,7 +9,7 @@ namespace ProtoBuf.Serializers
     /// ExternalSerializer provides a base class for concrete types to inherit from, but only provide the methods for collection management
     /// It does not require changes to internal protobuf-net state handling
     /// </summary>
-    /// <typeparam name="TCollection">the collection type being provided (e.g. Map<_,_> for F#) </typeparam>
+    /// <typeparam name="TCollection">the collection type being provided (e.g. Map for F#) </typeparam>
     /// <typeparam name="T">type of the value held within the collection</typeparam>
 
     public abstract class ExternalSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : RepeatedSerializer<TCollection, T> where TCollection : IEnumerable<T>

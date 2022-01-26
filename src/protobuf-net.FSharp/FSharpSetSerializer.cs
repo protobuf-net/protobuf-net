@@ -14,6 +14,7 @@ namespace ProtoBuf.FSharp
     /// <typeparam name="T">content of unique items within the Set</typeparam>
     public sealed class FSharpSetSerializer<T> : ExternalSerializer<FSharpSet<T>, T>
     {
+        /// <inheritdoc/>
         protected override FSharpSet<T> AddRange(FSharpSet<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
         {
             if (values == null || values.IsEmpty)
@@ -27,11 +28,13 @@ namespace ProtoBuf.FSharp
             return SetModule.Union(values, SetModule.OfSeq(newValues));
         }
 
+        /// <inheritdoc/>
         protected override FSharpSet<T> Clear(FSharpSet<T> values, ISerializationContext context)
         {
             return SetModule.Empty<T>();
         }
 
+        /// <inheritdoc/>
         protected override int TryGetCount(FSharpSet<T> values)
         {
             return values is null ? 0 : values.Count;
@@ -41,7 +44,7 @@ namespace ProtoBuf.FSharp
     /// <summary>
     /// Factory class to provide consistent idiom with in-build protobuf collections.
     /// This class is the reason for implementation in C# rather than F#: 
-    ///     static classes in F# are module, but module does not allow typeof<module>
+    ///     static classes in F# are module, but module does not allow typeof-module
     /// </summary>
     public static class FSharpSetFactory
     {

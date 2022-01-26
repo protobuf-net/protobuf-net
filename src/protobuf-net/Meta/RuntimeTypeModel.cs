@@ -2161,7 +2161,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Add an externally defined serialiser
         /// </summary>
-        /// <param name="collectionType">type of the collectionn e.g. F# Map<_,_></param>
+        /// <param name="collectionType">type of the collectionn e.g. F# Map</param>
         /// <param name="serializerType">type of the External Serializer</param>
         /// <returns></returns>
         public RuntimeTypeModel AddSerializer (Type collectionType, Type serializerType)

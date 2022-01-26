@@ -35,7 +35,7 @@ namespace Examples
         private IExtension extensionObject;
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)
         {
-            return Extensible.GetExtensionObject(ref extensionObject, createIfMissing);
+            return Extensible.GetExtensionObject(ref extensionObject, typeof(InterfaceBased), createIfMissing);
         }
 
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
