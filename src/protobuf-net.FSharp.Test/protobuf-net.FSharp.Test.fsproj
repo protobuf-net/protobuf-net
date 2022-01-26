@@ -1,32 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <TargetFrameworks>netcoreapp3.1;net462;net5.0</TargetFrameworks>
-	  <RootNamespace>ProtoBuf.FSharp.Test</RootNamespace>
-  <LangVersion>latest</LangVersion>
-            <IsPackable>false</IsPackable>
-    <GenerateProgramFile>false</GenerateProgramFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netcoreapp3.1;net462;net5.0</TargetFrameworks>
+        <RootNamespace>ProtoBuf.FSharp.Test</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <IsPackable>false</IsPackable>
+        <GenerateProgramFile>false</GenerateProgramFile>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Tests.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Tests.fs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
-    <PackageReference Include="xunit" Version="2.4.0" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
-    <PackageReference Include="coverlet.collector" Version="1.2.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+        <PackageReference Include="xunit" Version="2.4.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+        <PackageReference Include="coverlet.collector" Version="1.2.0" />
+        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
-    <ProjectReference Include="..\protobuf-net.FSharp\protobuf-net.FSharp.csproj" />
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
+        <ProjectReference Include="..\protobuf-net.FSharp\protobuf-net.FSharp.csproj" />
+        <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="5.0.2" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Update="FSharp.Core" Version="5.0.2" />
+    </ItemGroup>
 
 </Project>

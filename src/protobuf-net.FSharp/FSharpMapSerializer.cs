@@ -15,10 +15,15 @@ namespace ProtoBuf.FSharp
     /// <typeparam name="TValue">type of value</typeparam>
     public sealed class FSharpMapSerializer<TKey, TValue> : ExternalMapSerializer<FSharpMap<TKey, TValue>, TKey, TValue>
     {
+        /// <inheritdoc/>
         protected override FSharpMap<TKey, TValue> Clear(FSharpMap<TKey, TValue> values, ISerializationContext context)
             => MapModule.Empty<TKey, TValue>();
+
+        /// <inheritdoc/>
         protected override FSharpMap<TKey, TValue> Initialize(FSharpMap<TKey, TValue> values, ISerializationContext context)
             => values ?? MapModule.Empty<TKey, TValue>();
+
+        /// <inheritdoc/>
         protected override FSharpMap<TKey, TValue> AddRange(FSharpMap<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (values == null || values.IsEmpty)
@@ -32,6 +37,8 @@ namespace ProtoBuf.FSharp
             }
             return map;
         }
+
+        /// <inheritdoc/>
         protected override FSharpMap<TKey, TValue> SetValues(FSharpMap<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
             if (values.IsEmpty)
@@ -54,7 +61,7 @@ namespace ProtoBuf.FSharp
     /// <summary>
     /// Factory class to provide consistent idiom with in-build protobuf collections.
     /// This class is the reason for implementation in C# rather than F#: 
-    ///     static classes in F# are module, but module does not allow typeof<module>
+    ///     static classes in F# are module, but module does not allow typeof-module
     /// </summary>
     public static class FSharpMapFactory 
     {

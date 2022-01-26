@@ -36,7 +36,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="createIfMissing">Should a new extension object be
         /// created if it does not already exist?</param>
-        /// <param name="type">The <see cref="Type"/>, as seen from an inheritance perspective</param>
+        /// <param name="type">The <see cref="Type"/> that holds the fields, in terms of the inheritance model; the same <c>tag</c> key can appear against different <c>type</c> levels for the same <c>instance</c>, with different values.</param>
         /// <returns>The extension object if it exists (or was created), or null
         /// if the extension object does not exist or is not available.</returns>
         /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
