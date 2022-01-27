@@ -482,7 +482,7 @@ namespace ProtoBuf.Meta
                     ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
                     if (ser is null)
                     {
-                        throw new InvalidOperationException("No serializer defined for type: " + MemberType.ToString());
+                        ThrowHelper.NoSerializerDefined(MemberType);
                     }
 
                     // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)

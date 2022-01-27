@@ -11,7 +11,7 @@ namespace ProtoBuf.Internal
     {
         internal static string NormalizeName(this Type type)
         {
-            return type?.ToString();
+            return type?.ToString() ?? "(null)";
             //if (type is null) return null;
             //if (type.IsEnum) return type.Name;
 

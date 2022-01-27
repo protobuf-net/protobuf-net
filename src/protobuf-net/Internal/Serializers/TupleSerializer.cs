@@ -37,7 +37,7 @@ namespace ProtoBuf.Internal.Serializers
                 IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, compatibilityLevel, tmp, out WireType wireType, asReference, false, false, true), serializer;
                 if (tail is null)
                 {
-                    throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
+                    ThrowHelper.NoSerializerDefined(tmp);
                 }
 
                 if (repeated is null)
