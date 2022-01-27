@@ -57,6 +57,22 @@ namespace ProtoBuf.Internal
             }
         }
 
+        internal static void NoSerializerDefined(Type type)
+        {
+            var ex = new InvalidOperationException("No serializer defined for type: " + type.NormalizeName());
+
+            if (type is not null && type.FindInterfaces((i, _) => i.FullName == "Google.Protobuf.IMessage", null).Length > 0)
+            {
+                try { throw ex; } // this is just to set the stack-trace
+                catch (Exception inner)
+                {
+                    ex = new InvalidOperationException($"Type '{type.NormalizeName()}' looks like a Google.Protobuf type; it cannot be used directly with protobuf-net without manual configuration; it may be possible to generate a protobuf-net type instead; see https://protobuf-net.github.io/protobuf-net/contract_first", inner);
+                }
+            }
+            // attempt to detect Google protobuf types, and give a suitable message
+            throw ex;
+        }
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException()
             => throw new NotSupportedException();

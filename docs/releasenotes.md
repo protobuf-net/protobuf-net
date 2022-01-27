@@ -14,6 +14,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 ## pending
 
 - support unknwon/extension fields on models that involve inheritance (via either `Extensible` or `ITypedExtensible`)
+- detect Google.Protobuf types and provide guidance (#722)
 
 ## 3.0.62
 
