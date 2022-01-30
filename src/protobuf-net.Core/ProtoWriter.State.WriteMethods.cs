@@ -330,7 +330,7 @@ namespace ProtoBuf
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
-                    WriteFieldHeader(fieldNumber, WireType.String);
+                    WriteFieldHeader(fieldNumber, features.IsGroup() ? WireType.StartGroup : WireType.String);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
                 }
             }

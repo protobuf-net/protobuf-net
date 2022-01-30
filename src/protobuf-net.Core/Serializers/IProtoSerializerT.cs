@@ -161,6 +161,10 @@ namespace ProtoBuf.Serializers
         public static bool IsRepeated(this SerializerFeatures features)
             => (features & CategoryMask) == SerializerFeatures.CategoryRepeated;
 
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsGroup(this SerializerFeatures features)
+            => (features & (WireTypeMask | SerializerFeatures.WireTypeSpecified))
+                == (SerializerFeatures.WireTypeStartGroup | SerializerFeatures.WireTypeSpecified);
 
         // core wire-type bits plus the zig-zag marker; first 4 bits
         private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;
