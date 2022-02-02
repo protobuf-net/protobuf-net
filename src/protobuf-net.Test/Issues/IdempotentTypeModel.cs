@@ -1,6 +1,4 @@
-﻿#if FEAT_NULL_LIST_ITEMS
-
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using Xunit;
@@ -58,5 +56,3 @@ namespace ProtoBuf.Issues
 
     }
 }
-
-#endif

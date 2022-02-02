@@ -357,15 +357,41 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Write a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
+            /// </summary>
+            public void WriteWrapped<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                features.InheritFrom(serializer.Features);
+
+                WriteFieldHeader(fieldNumber, features.IsWrappedGroup() ? WireType.StartGroup : WireType.String);
+#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
+                var tok = StartSubItem(TypeHelper<T>.IsReferenceType & features.ApplyRecursionCheck() ? (object)value : null, PrefixStyle.Base128);
+#pragma warning restore CS0618
+                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
+                {   // only write the field if it has a meaningful value (note: we remove the wrap options to avoid recursion)
+                    WriteAny<T>(1, features & ~(SerializerFeatures.OptionWrapped | SerializerFeatures.OptionWrappedGroup), value, serializer);
+                }
+#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
+                EndSubItem(tok);
+#pragma warning restore CS0618
+            }
+
+            /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
             public void WriteAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                features.InheritFrom(serializer.Features);
+
+                if (features.IsWrapped())
+                {
+                    WriteWrapped<T>(fieldNumber, features, value, serializer);
+                    return;
+                }
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
-                    serializer ??= TypeModel.GetSerializer<T>(Model);
-                    features.InheritFrom(serializer.Features);
-
                     switch (features.GetCategory())
                     {
                         case SerializerFeatures.CategoryRepeated:

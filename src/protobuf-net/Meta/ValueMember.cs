@@ -456,24 +456,12 @@ namespace ProtoBuf.Meta
                     }
                     else
                     {
-                        if (SupportNull)
-                        {
-#if FEAT_NULL_LIST_ITEMS
-                            something new here; old code not even remotely compatible
-#else
-                            ThrowHelper.ThrowNotSupportedException("null items in lists");
-#endif
-                        }
-
                         _ = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-
 
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
                         if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
-#if FEAT_NULL_LIST_ITEMS
-                        if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
-#endif
+                        if (SupportNull) listFeatures |= SerializerFeatures.OptionWrapped;
                         ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures, CompatibilityLevel, DataFormat);
                     }
                 }
@@ -752,9 +740,7 @@ namespace ProtoBuf.Meta
            OPTIONS_IsPacked = 2,
            OPTIONS_IsRequired = 4,
            OPTIONS_OverwriteList = 8,
-#if FEAT_NULL_LIST_ITEMS
            OPTIONS_SupportNull = 16,
-#endif
 #if FEAT_DYNAMIC_REF
            OPTIONS_AsReference = 32,
            OPTIONS_DynamicType = 128,
@@ -780,19 +766,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool SupportNull
         {
-#if FEAT_NULL_LIST_ITEMS
             get { return HasFlag(OPTIONS_SupportNull); }
             set { SetFlag(OPTIONS_SupportNull, value, true); }
-#else
-            get => false;
-            [Obsolete(SupportNullNotImplemented, true)]
-            set { if (value != SupportNull) ThrowHelper.ThrowNotSupportedException(); }
-#endif
         }
-
-#if !FEAT_NULL_LIST_ITEMS
-        internal const string SupportNullNotImplemented = "Nullable list elements are not currently implemented";
-#endif
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
         {

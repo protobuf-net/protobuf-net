@@ -95,19 +95,22 @@ namespace ProtoBuf.Serializers
         /// </summary>
         OptionSkipRecursionCheck = 1 << 10,
 
+        /// <summary>
+        /// Adds a layer of writing, which only writes values if they are not null; the inner field number is always <c>1</c>, as per <c>Wrappers.proto</c>
+        /// </summary>
+        OptionWrapped = 1 << 11,
+
+        /// <summary>
+        /// When using <see cref="OptionWrapped"/>, determines whether the parent object should be written using group semantics
+        /// </summary>
+        OptionWrappedGroup = 1 << 12,
+
         // this isn't quite ready; the problem is that the property assignment / null-check logic
         // gets hella messy
         ///// <summary>
         ///// If a method would return the same reference as was passed in, return null/nothing instead
         ///// </summary>
         //OptionReturnNothingWhenUnchanged = 1 << n,
-
-#if FEAT_NULL_LIST_ITEMS
-        /// <summary>
-        /// Nulls in lists should be preserved
-        /// </summary>
-        OptionListsSupportNull = 1 << m,
-#endif
 
 
         // RESERVED: 1 << 30, see FromAux
@@ -154,8 +157,8 @@ namespace ProtoBuf.Serializers
         }
 
         [MethodImpl(ProtoReader.HotPath)]
-        public static bool IsPackedDisabled(this SerializerFeatures features)
-            => (features & SerializerFeatures.OptionPackedDisabled) != 0;
+        public static bool IsPackedDisabled(this SerializerFeatures features) // note: can't pack if wrapping is enabled
+            => (features & (SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrapped)) != 0;
 
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsRepeated(this SerializerFeatures features)
@@ -165,6 +168,21 @@ namespace ProtoBuf.Serializers
         public static bool IsGroup(this SerializerFeatures features)
             => (features & (WireTypeMask | SerializerFeatures.WireTypeSpecified))
                 == (SerializerFeatures.WireTypeStartGroup | SerializerFeatures.WireTypeSpecified);
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsWrapped(this SerializerFeatures features)
+            => (features & SerializerFeatures.OptionWrapped) != 0 && features.GetCategory() switch
+            {
+                SerializerFeatures.CategoryMessage => true,
+                SerializerFeatures.CategoryMessageWrappedAtRoot => true,
+                SerializerFeatures.CategoryScalar => true,
+                // doesn't apply to repeated or anything unclear
+                _ => false,
+            };
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsWrappedGroup(this SerializerFeatures features)
+            => (features & SerializerFeatures.OptionWrappedGroup) != 0;
 
         // core wire-type bits plus the zig-zag marker; first 4 bits
         private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;

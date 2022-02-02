@@ -104,8 +104,6 @@ namespace Examples.Issues
             Assert.True(clone.StringArray.SequenceEqual(new[] { "c", null, "", "d", null }));
         }
 
-
-#if FEAT_NULL_LIST_ITEMS
         static RuntimeTypeModel GetModelWithSupportForNulls()
         {
             var model = RuntimeTypeModel.Create();
@@ -136,6 +134,5 @@ namespace Examples.Issues
 
             RunTestNull(model.Compile(), "Compile");
         }
-#endif
     }
 }

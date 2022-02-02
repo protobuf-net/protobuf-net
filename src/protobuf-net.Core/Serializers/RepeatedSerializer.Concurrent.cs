@@ -74,12 +74,12 @@ namespace ProtoBuf.Serializers
                 iter?.Dispose();
             }
         }
-        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer)
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer, SerializerFeatures features)
         {
             var iter = values.GetEnumerator();
             try
             {
-                Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+                Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
             }
             finally
             {

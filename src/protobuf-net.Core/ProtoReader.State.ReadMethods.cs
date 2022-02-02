@@ -184,7 +184,7 @@ namespace ProtoBuf
                 features.InheritFrom(serializerFeatures);
                 category = serializerFeatures.GetCategory();
                 packed = false;
-                if (TypeHelper<T>.CanBePacked && WireType == WireType.String)
+                if (TypeHelper<T>.CanBePacked && WireType == WireType.String && !features.IsWrapped())
                 {
                     // the wire type should never by "string" for a type that *can* be
                     // packed, so this *is* packed
@@ -197,28 +197,40 @@ namespace ProtoBuf
 
             [MethodImpl(ProtoReader.HotPath)]
             private void ReadRepeatedCore<TSerializer, TList, T>(ref TList values, SerializerFeatures category, WireType wireType, in TSerializer serializer,
-                T initialValue)
+                T initialValue, SerializerFeatures features)
                 where TSerializer : ISerializer<T>
                 where TList : ICollection<T>
             {
                 int field = FieldNumber;
+                bool isWrapped = features.IsWrapped();
+                if (isWrapped)
+                {
+                    initialValue = default(T); // prefer true null
+                }
                 do
                 {
                     T element;
-                    switch (category)
+                    if (isWrapped)
                     {
-                        case SerializerFeatures.CategoryScalar:
-                            Hint(wireType);
-                            element = serializer.Read(ref this, initialValue);
-                            break;
-                        case SerializerFeatures.CategoryMessage:
-                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
-                            element = ReadMessage<TSerializer, T>(default, initialValue, serializer);
-                            break;
-                        default:
-                            category.ThrowInvalidCategory();
-                            element = default;
-                            break;
+                        element = ReadWrapped<T>(features, initialValue, serializer);
+                    }
+                    else
+                    {
+                        switch (category)
+                        {
+                            case SerializerFeatures.CategoryScalar:
+                                Hint(wireType);
+                                element = serializer.Read(ref this, initialValue);
+                                break;
+                            case SerializerFeatures.CategoryMessage:
+                            case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                                element = ReadMessage<TSerializer, T>(default, initialValue, serializer);
+                                break;
+                            default:
+                                category.ThrowInvalidCategory();
+                                element = default;
+                                break;
+                        }
                     }
                     values.Add(element);
                 } while (TryReadFieldHeader(field));
@@ -278,7 +290,7 @@ namespace ProtoBuf
                 {
                     var wireType = features.GetWireType();
                     if (packed) ReadPackedScalar<TSerializer, ReadBuffer<T>, T>(ref buffer, wireType, serializer);
-                    else ReadRepeatedCore<TSerializer, ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, initialValue);
+                    else ReadRepeatedCore<TSerializer, ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, initialValue, features);
                     return buffer;
                 }
                 catch
@@ -1001,6 +1013,10 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 features.InheritFrom(serializerFeatures);
+
+                if (features.IsWrapped())
+                    return ReadWrapped<T>(features, value, serializer);
+
                 switch (serializerFeatures.GetCategory())
                 {
                     case SerializerFeatures.CategoryMessage:
@@ -1015,6 +1031,33 @@ namespace ProtoBuf
                         features.ThrowInvalidCategory();
                         return default;
                 }
+            }
+
+            /// <summary>
+            /// Read a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
+            /// </summary>
+            public T ReadWrapped<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                features.InheritFrom(serializer.Features);
+
+                var tok = StartSubItem();
+                int field;
+                while ((field = ReadFieldHeader()) > 0)
+                {
+                    switch (field)
+                    {
+                        case 1:
+                            // read the inner value (note: we remove the wrap options to avoid recursion)
+                            value = ReadAny(features & ~(SerializerFeatures.OptionWrapped | SerializerFeatures.OptionWrappedGroup), value, serializer);
+                            break;
+                        default:
+                            SkipField();
+                            break;
+                    }
+                }
+                EndSubItem(tok);
+                return value;
             }
 
             internal TypeModel Model
