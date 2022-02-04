@@ -735,21 +735,25 @@ namespace ProtoBuf.Meta
             set { SetName(value); }
         }
 
-        private const byte
-           OPTIONS_IsStrict = 1,
-           OPTIONS_IsPacked = 2,
-           OPTIONS_IsRequired = 4,
-           OPTIONS_OverwriteList = 8,
-           OPTIONS_SupportNull = 16,
+        private const ushort
+           OPTIONS_IsStrict = 1 << 0,
+           OPTIONS_IsPacked = 1 << 1,
+           OPTIONS_IsRequired = 1 << 2,
+           OPTIONS_OverwriteList = 1 << 3,
+           OPTIONS_CollectionSupportsNullElements = 1 << 4,
+           OPTIONS_CollectionSupportsNullElementsGroup = 1 << 5,
 #if FEAT_DYNAMIC_REF
-           OPTIONS_AsReference = 32,
-           OPTIONS_DynamicType = 128,
+           OPTIONS_AsReference = ,
+           OPTIONS_DynamicType = ,
 #endif
-           OPTIONS_IsMap = 64;
+           OPTIONS_IsMap = 1 << 6,
+           OPTIONS_CollectionSupportsNullCollection = 1 << 7,
+           OPTIONS_CollectionSupportsNullCollectionGroup = 1 << 8,
+           OPTIONS_IsWrapped = 1 << 9;
 
-        private byte flags;
-        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
-        private void SetFlag(byte flag, bool value, bool throwIfFrozen)
+        private ushort flags;
+        private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
+        private void SetFlag(ushort flag, bool value, bool throwIfFrozen = true)
         {
             if (throwIfFrozen && HasFlag(flag) != value)
             {
@@ -758,16 +762,59 @@ namespace ProtoBuf.Meta
             if (value)
                 flags |= flag;
             else
-                flags = (byte)(flags & ~flag);
+                flags = (ushort)(flags & ~flag);
         }
 
         /// <summary>
         /// Should lists have extended support for null values? Note this makes the serialization less efficient.
         /// </summary>
+        [Obsolete("Please use " + nameof(CollectionSupportsNullElements) + " with " + nameof(CollectionSupportsNullElementsGroup) + "; see the documentation for " + nameof(CollectionSupportsNullElementsAttribute) + " for more information.")]
         public bool SupportNull
         {
-            get { return HasFlag(OPTIONS_SupportNull); }
-            set { SetFlag(OPTIONS_SupportNull, value, true); }
+            get => CollectionSupportsNullElements && CollectionSupportsNullElementsGroup;
+            set
+            {
+                var oldValue = CollectionSupportsNullElements && CollectionSupportsNullElementsGroup;
+                if (value != oldValue)
+                {   // only change *anything* if we're changing everything
+                    CollectionSupportsNullElements = CollectionSupportsNullElementsGroup = value;
+                }
+            }
+        }
+
+        /// <see cref="CollectionSupportsNullElementsAttribute"/>
+        public bool CollectionSupportsNullElements
+        {
+            get { return HasFlag(OPTIONS_CollectionSupportsNullElements); }
+            set { SetFlag(OPTIONS_CollectionSupportsNullElements, value); }
+        }
+
+        /// <see cref="CollectionSupportsNullElementsAttribute.AsGroup"/>
+        public bool CollectionSupportsNullElementsGroup
+        {
+            get { return HasFlag(OPTIONS_CollectionSupportsNullElementsGroup); }
+            set { SetFlag(OPTIONS_CollectionSupportsNullElementsGroup, value); }
+        }
+
+        /// <see cref="CollectionSupportsNullElementsAttribute"/>
+        public bool CollectionSupportsNullCollection
+        {
+            get { return HasFlag(OPTIONS_CollectionSupportsNullCollection); }
+            set { SetFlag(OPTIONS_CollectionSupportsNullCollection, value); }
+        }
+
+        /// <see cref="CollectionSupportsNullElementsAttribute.AsGroup"/>
+        public bool CollectionSupportsNullCollectionGroup
+        {
+            get { return HasFlag(OPTIONS_CollectionSupportsNullCollectionGroup); }
+            set { SetFlag(OPTIONS_CollectionSupportsNullCollectionGroup, value); }
+        }
+
+        /// <see cref="WrappedAttribute"/>
+        public bool IsWrapped
+        {
+            get { return HasFlag(OPTIONS_IsWrapped); }
+            set { SetFlag(OPTIONS_IsWrapped, value); }
         }
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
