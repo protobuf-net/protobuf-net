@@ -461,7 +461,16 @@ namespace ProtoBuf.Meta
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
                         if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
-                        if (SupportNull) listFeatures |= SerializerFeatures.OptionWrapped;
+#pragma warning disable CS0618
+                        if (SupportNull)
+                        {
+                            if (NullWrappedValue || NullWrappedCollection)
+                            {
+                                ThrowHelper.ThrowNotSupportedException($"{nameof(SupportNull)} cannot be combined with {NullWrappedValue} or {NullWrappedCollection}");
+                            }
+                            listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup;
+                        }
+#pragma warning restore CS0618
                         ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures, CompatibilityLevel, DataFormat);
                     }
                 }
@@ -740,16 +749,16 @@ namespace ProtoBuf.Meta
            OPTIONS_IsPacked = 1 << 1,
            OPTIONS_IsRequired = 1 << 2,
            OPTIONS_OverwriteList = 1 << 3,
-           OPTIONS_CollectionSupportsNullElements = 1 << 4,
-           OPTIONS_CollectionSupportsNullElementsGroup = 1 << 5,
+           OPTIONS_NullWrappedValue = 1 << 4,
+           OPTIONS_NullWrappedValueGroup = 1 << 5,
 #if FEAT_DYNAMIC_REF
            OPTIONS_AsReference = ,
            OPTIONS_DynamicType = ,
 #endif
            OPTIONS_IsMap = 1 << 6,
-           OPTIONS_CollectionSupportsNullCollection = 1 << 7,
-           OPTIONS_CollectionSupportsNullCollectionGroup = 1 << 8,
-           OPTIONS_IsWrapped = 1 << 9;
+           OPTIONS_NullWrappedCollection = 1 << 7,
+           OPTIONS_NullWrappedCollectionGroup = 1 << 8,
+           OPTIONS_SupportNull = 1 << 9;
 
         private ushort flags;
         private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
@@ -768,53 +777,39 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Should lists have extended support for null values? Note this makes the serialization less efficient.
         /// </summary>
-        [Obsolete("Please use " + nameof(CollectionSupportsNullElements) + " with " + nameof(CollectionSupportsNullElementsGroup) + "; see the documentation for " + nameof(CollectionSupportsNullElementsAttribute) + " for more information.")]
+        [Obsolete("Please use " + nameof(NullWrappedValue) + " with " + nameof(NullWrappedValueGroup) + "; see the documentation for " + nameof(NullWrappedValueAttribute) + " for more information.")]
         public bool SupportNull
         {
-            get => CollectionSupportsNullElements && CollectionSupportsNullElementsGroup;
-            set
-            {
-                var oldValue = CollectionSupportsNullElements && CollectionSupportsNullElementsGroup;
-                if (value != oldValue)
-                {   // only change *anything* if we're changing everything
-                    CollectionSupportsNullElements = CollectionSupportsNullElementsGroup = value;
-                }
-            }
+            get { return HasFlag(OPTIONS_SupportNull); }
+            set { SetFlag(OPTIONS_SupportNull, value); }
         }
 
-        /// <see cref="CollectionSupportsNullElementsAttribute"/>
-        public bool CollectionSupportsNullElements
+        /// <see cref="NullWrappedValueAttribute"/>
+        public bool NullWrappedValue
         {
-            get { return HasFlag(OPTIONS_CollectionSupportsNullElements); }
-            set { SetFlag(OPTIONS_CollectionSupportsNullElements, value); }
+            get { return HasFlag(OPTIONS_NullWrappedValue); }
+            set { SetFlag(OPTIONS_NullWrappedValue, value); }
         }
 
-        /// <see cref="CollectionSupportsNullElementsAttribute.AsGroup"/>
-        public bool CollectionSupportsNullElementsGroup
+        /// <see cref="NullWrappedValueAttribute.AsGroup"/>
+        public bool NullWrappedValueGroup
         {
-            get { return HasFlag(OPTIONS_CollectionSupportsNullElementsGroup); }
-            set { SetFlag(OPTIONS_CollectionSupportsNullElementsGroup, value); }
+            get { return HasFlag(OPTIONS_NullWrappedValueGroup); }
+            set { SetFlag(OPTIONS_NullWrappedValueGroup, value); }
         }
 
-        /// <see cref="CollectionSupportsNullElementsAttribute"/>
-        public bool CollectionSupportsNullCollection
+        /// <see cref="NullWrappedValueAttribute"/>
+        public bool NullWrappedCollection
         {
-            get { return HasFlag(OPTIONS_CollectionSupportsNullCollection); }
-            set { SetFlag(OPTIONS_CollectionSupportsNullCollection, value); }
+            get { return HasFlag(OPTIONS_NullWrappedCollection); }
+            set { SetFlag(OPTIONS_NullWrappedCollection, value); }
         }
 
-        /// <see cref="CollectionSupportsNullElementsAttribute.AsGroup"/>
-        public bool CollectionSupportsNullCollectionGroup
+        /// <see cref="NullWrappedValueAttribute.AsGroup"/>
+        public bool NullWrappedCollectionGroup
         {
-            get { return HasFlag(OPTIONS_CollectionSupportsNullCollectionGroup); }
-            set { SetFlag(OPTIONS_CollectionSupportsNullCollectionGroup, value); }
-        }
-
-        /// <see cref="WrappedAttribute"/>
-        public bool IsWrapped
-        {
-            get { return HasFlag(OPTIONS_IsWrapped); }
-            set { SetFlag(OPTIONS_IsWrapped, value); }
+            get { return HasFlag(OPTIONS_NullWrappedCollectionGroup); }
+            set { SetFlag(OPTIONS_NullWrappedCollectionGroup, value); }
         }
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)

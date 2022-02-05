@@ -110,10 +110,12 @@ namespace Examples.Issues
             model.AutoCompile = false;
             model.Add(typeof(NullableSequences), true);
             var metaType = model[typeof(NullableSequences)];
+#pragma warning disable CS0618
             metaType[1].SupportNull = true;
             metaType[2].SupportNull = true;
             metaType[3].SupportNull = true;
             metaType[4].SupportNull = true;
+#pragma warning restore CS0618
             return model;
         }
         [Fact]

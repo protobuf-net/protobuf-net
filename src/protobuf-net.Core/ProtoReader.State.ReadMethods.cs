@@ -1041,6 +1041,17 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
+                bool wouldWriteIfNull;
+                if (features.IsRepeated())
+                {
+                    ProtoWriter.State.AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedCollection, SerializerFeatures.OptionWrappedCollectionGroup);
+                    wouldWriteIfNull = false;
+                }
+                else
+                {
+                    ProtoWriter.State.AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedValue, SerializerFeatures.OptionWrappedValueGroup);
+                    wouldWriteIfNull = features.HasAny(SerializerFeatures.OptionWrappedValueFieldPresence);
+                }
                 var tok = StartSubItem();
                 int field;
                 while ((field = ReadFieldHeader()) > 0)

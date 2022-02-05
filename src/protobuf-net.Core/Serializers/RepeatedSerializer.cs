@@ -154,8 +154,11 @@ namespace ProtoBuf.Serializers
             where TEnumerator : IEnumerator<TItem>
         {
             var writer = state.GetWriter();
-            bool wrapped = features.IsWrapped();
-                while (values.MoveNext())
+            bool wrapped = features.HasAny(SerializerFeatures.OptionWrappedValue);
+            // when wrapping inside a collection, we always need to write the message header, so:
+            // we must use field-presence rules
+            if (wrapped) features |= SerializerFeatures.OptionWrappedValueFieldPresence;
+            while (values.MoveNext())
             {
                 var value = values.Current;
 
@@ -184,7 +187,6 @@ namespace ProtoBuf.Serializers
                     }
                 }
             }
-
         }
 
         internal abstract long Measure(TCollection values, IMeasuringSerializer<TItem> serializer, ISerializationContext context, WireType wireType);

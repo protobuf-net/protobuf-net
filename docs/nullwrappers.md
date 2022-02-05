@@ -90,9 +90,10 @@ class SomeMessage
 The `[NullWrappedValue]` here tells protobuf-net to insert a conceptual additional level in the encoding, without actually
 having the allocate anything along the way. When used with individual values (we'll discuss collections in a moment), it is
 only valid to use this on *scalar values* (which is to say: things that aren't "messages" in the protobuf sense), that are *nullable*. If
-protobuf-net encounters this attribute on a value that it isn't writing as a scalar and nullable, **an error with be thrown** - this is
+protobuf-net encounters this attribute on a value that it isn't writing as a scalar and nullable, **an error will be thrown** - this is
 deliberate (vs being silently ignored), so that if we introduce any additional scenarios later we do not need to consider
-changes to existing code that executes without error, but would do something different.
+changes to existing code that executes without error, but would do something different. This feature is not compatible with explicit
+default values (`[DefaultValue(...)]`) and an error will be thrown if this is attempted.
 
 ## Collections
 

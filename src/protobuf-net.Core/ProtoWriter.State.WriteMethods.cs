@@ -356,6 +356,17 @@ namespace ProtoBuf
                 WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
             }
 
+            internal static WireType AssertWrappedAndGetWireType(ref SerializerFeatures features,
+                    SerializerFeatures demanded, SerializerFeatures group)
+            {
+                if (!features.HasAny(demanded))
+                {
+                    ThrowHelper.ThrowInvalidOperationException($"{nameof(WriteWrapped)} called for {features.GetCategory()}, but {demanded} was not specified");
+                }
+                features &= ~demanded; // we then *remove* that option, to prevent recursion from WriteAny
+                return features.HasAny(group) ? WireType.StartGroup : WireType.String;
+            }
+
             /// <summary>
             /// Write a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
             /// </summary>
@@ -364,13 +375,32 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
-                WriteFieldHeader(fieldNumber, features.IsWrappedGroup() ? WireType.StartGroup : WireType.String);
+                WireType wrapperFormat;
+                bool writeIfNull;
+
+                if (features.IsRepeated())
+                {
+                    wrapperFormat = AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedCollection, SerializerFeatures.OptionWrappedCollectionGroup);
+                    writeIfNull = false;
+                }
+                else
+                {
+                    wrapperFormat = AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedValue, SerializerFeatures.OptionWrappedValueGroup);
+                    writeIfNull = features.HasAny(SerializerFeatures.OptionWrappedValueFieldPresence);
+                }
+                bool isNull = TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value);
+                if (!writeIfNull && isNull)
+                {
+                    // nothing to do
+                    return;
+                }
+                WriteFieldHeader(fieldNumber, wrapperFormat);
 #pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
                 var tok = StartSubItem(TypeHelper<T>.IsReferenceType & features.ApplyRecursionCheck() ? (object)value : null, PrefixStyle.Base128);
 #pragma warning restore CS0618
-                if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
-                {   // only write the field if it has a meaningful value (note: we remove the wrap options to avoid recursion)
-                    WriteAny<T>(1, features & ~(SerializerFeatures.OptionWrapped | SerializerFeatures.OptionWrappedGroup), value, serializer);
+                if (!isNull)
+                {   // only write the field if it has a meaningful value (note: we already remove the relevant wrap options, so: not recursive)
+                    WriteAny<T>(1, features, value, serializer);
                 }
 #pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
                 EndSubItem(tok);
@@ -385,7 +415,7 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
-                if (features.IsWrapped())
+                if (features.HasAny(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedCollection))
                 {
                     WriteWrapped<T>(fieldNumber, features, value, serializer);
                     return;

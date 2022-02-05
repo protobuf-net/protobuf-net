@@ -96,14 +96,34 @@ namespace ProtoBuf.Serializers
         OptionSkipRecursionCheck = 1 << 10,
 
         /// <summary>
-        /// Adds a layer of writing, which only writes values if they are not null; the inner field number is always <c>1</c>, as per <c>Wrappers.proto</c>
+        /// Adds an additional message when writing scalar values or collection elements; the inner field
+        /// number is always <c>1</c>, as per <c>wrappers.proto</c>
         /// </summary>
-        OptionWrapped = 1 << 11,
+        OptionWrappedValue = 1 << 11,
 
         /// <summary>
-        /// When using <see cref="OptionWrapped"/>, determines whether the parent object should be written using group semantics
+        /// When using <see cref="OptionWrappedValue"/>, specifies that the wrapper message should be written using group semantics (rather than length-prefix semantics)
         /// </summary>
-        OptionWrappedGroup = 1 << 12,
+        OptionWrappedValueGroup = 1 << 12,
+
+        /// <summary>
+        /// When using <see cref="OptionWrappedValue"/>, specifies that the field should be written using field-presence
+        /// rules (rather than implicit-zero rules, as per <c>wrappers.proto</c>); when specified, the wrapper message
+        /// is always written, and the inner field is only written if the value is non-null; when omitted, the wrapper
+        /// message is only written if the value is not null, and the inner field is only written if the value
+        /// is non-zero/empty; this flag is added automatically when serializing collection elements
+        /// </summary>
+        OptionWrappedValueFieldPresence = 1 << 13,
+
+        /// <summary>
+        /// Adds a layer of writing, which only writes values if they are not null; the inner field number is always <c>1</c>, as per <c>wrappers.proto</c>
+        /// </summary>
+        OptionWrappedCollection = 1 << 14,
+
+        /// <summary>
+        /// When using <see cref="OptionWrappedCollectionGroup"/>, specifies that the wrapper message should be written using group semantics (rather than length-prefix semantics)
+        /// </summary>
+        OptionWrappedCollectionGroup = 1 << 15,
 
         // this isn't quite ready; the problem is that the property assignment / null-check logic
         // gets hella messy
@@ -158,7 +178,7 @@ namespace ProtoBuf.Serializers
 
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsPackedDisabled(this SerializerFeatures features) // note: can't pack if wrapping is enabled
-            => (features & (SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrapped)) != 0;
+            => (features & (SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue)) != 0;
 
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsRepeated(this SerializerFeatures features)
@@ -170,19 +190,8 @@ namespace ProtoBuf.Serializers
                 == (SerializerFeatures.WireTypeStartGroup | SerializerFeatures.WireTypeSpecified);
 
         [MethodImpl(ProtoReader.HotPath)]
-        public static bool IsWrapped(this SerializerFeatures features)
-            => (features & SerializerFeatures.OptionWrapped) != 0 && features.GetCategory() switch
-            {
-                SerializerFeatures.CategoryMessage => true,
-                SerializerFeatures.CategoryMessageWrappedAtRoot => true,
-                SerializerFeatures.CategoryScalar => true,
-                // doesn't apply to repeated or anything unclear
-                _ => false,
-            };
-
-        [MethodImpl(ProtoReader.HotPath)]
-        public static bool IsWrappedGroup(this SerializerFeatures features)
-            => (features & SerializerFeatures.OptionWrappedGroup) != 0;
+        public static bool HasAny(this SerializerFeatures features, SerializerFeatures values)
+            => (features & values) != 0;
 
         // core wire-type bits plus the zig-zag marker; first 4 bits
         private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;
