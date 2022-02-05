@@ -89,7 +89,7 @@ class SomeMessage
 
 The `[NullWrappedValue]` here tells protobuf-net to insert a conceptual additional level in the encoding, without actually
 having the allocate anything along the way. When used with individual values (we'll discuss collections in a moment), it is
-only valid to use this on *scalar values* (which is to say: things that aren't "messages" in the protobuf sense). If
+only valid to use this on *scalar values* (which is to say: things that aren't "messages" in the protobuf sense), that are *nullable*. If
 protobuf-net encounters this attribute on a value that it isn't writing as a scalar, **an error with be thrown** - this is
 deliberate (vs being silently ignored), so that if we introduce any additional scenarios later we do not need to consider
 changes to existing code that executes without error, but would do something different.
@@ -106,10 +106,10 @@ repeated .google.protobuf.Int32Value values = 6;
 ```
 
 However, this doesn't convey quite the same meaning; if we send the collection `{1, null, 0, 2}`, the serializer would *have*
-to write a message wrapper for the `null` (since it always has to write *something* for any value); it could then choose
+to write a message wrapper for the null (since it always has to write *something* for any value); it could then choose
 to omit the value field, so we'd just have an empty message payload. But because `wrappers.proto` doesn't use "field presence",
 then by a strict interpretation: the value for a zero is *also* an empty message payload with no value field
-(because of the implicit zero). This means that in the payload there would be no difference between a `null` and a zero value.
+(because of the implicit zero). This means that in the payload there would be no difference between a null and a zero value.
 Instead, then, to support this intent, we want to use "field presence" in the internal message; this is not strictly identical
 to how `Int32Value` would normally be written, but it expresses our intent more correctly; protobuf-net can apply this to
 *scalar and message* types in a collection, including messages, allowing us to convey a range of null values:
@@ -121,7 +121,7 @@ class SomeMessage
     // *similar* to (but with field-presence)
     // repeated .google.protobuf.Int32Value values = 6;
     [ProtoMember(6), NullWrappedValue]
-    public List<int> Ids {get;} = new();
+    public List<int?> Ids {get;} = new();
 
     // likewise, but using field-presence in an artifical
     // message type that has: SomeOtherMessage value = 1;
