@@ -193,6 +193,11 @@ namespace ProtoBuf.Serializers
         public static bool HasAny(this SerializerFeatures features, SerializerFeatures values)
             => (features & values) != 0;
 
+        [MethodImpl(ProtoReader.HotPath)]
+        public static T DefaultFor<T>(this SerializerFeatures features)
+            // prefer true nunll when wrapped
+            => features.HasAny(SerializerFeatures.OptionWrappedValue) ? default(T) : TypeHelper<T>.Default;
+
         // core wire-type bits plus the zig-zag marker; first 4 bits
         private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;
 

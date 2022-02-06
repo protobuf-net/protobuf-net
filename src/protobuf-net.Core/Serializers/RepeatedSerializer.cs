@@ -288,9 +288,12 @@ namespace ProtoBuf.Serializers
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);
 
+            if (features.HasAny(SerializerFeatures.OptionWrappedValue))
+                features |= SerializerFeatures.OptionWrappedValueFieldPresence;
+
             var ctx = state.Context;
             values = Initialize(values, ctx);
-            using var buffer = state.FillBuffer<ISerializer<TItem>, TItem>(features, serializer, TypeHelper<TItem>.Default);
+            using var buffer = state.FillBuffer<ISerializer<TItem>, TItem>(features, serializer, features.DefaultFor<TItem>());
             if ((features & SerializerFeatures.OptionClearCollection) != 0) values = Clear(values, ctx);
             if (buffer.IsEmpty) return values;
             var segment = buffer.Segment;

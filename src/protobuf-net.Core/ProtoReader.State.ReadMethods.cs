@@ -184,7 +184,7 @@ namespace ProtoBuf
                 features.InheritFrom(serializerFeatures);
                 category = serializerFeatures.GetCategory();
                 packed = false;
-                if (TypeHelper<T>.CanBePacked && WireType == WireType.String && !features.IsWrapped())
+                if (TypeHelper<T>.CanBePacked && WireType == WireType.String && !features.HasAny(SerializerFeatures.OptionWrappedValue))
                 {
                     // the wire type should never by "string" for a type that *can* be
                     // packed, so this *is* packed
@@ -196,17 +196,13 @@ namespace ProtoBuf
             }
 
             [MethodImpl(ProtoReader.HotPath)]
-            private void ReadRepeatedCore<TSerializer, TList, T>(ref TList values, SerializerFeatures category, WireType wireType, in TSerializer serializer,
-                T initialValue, SerializerFeatures features)
+            private void ReadRepeatedCore<TSerializer, TList, T>(ref TList values, SerializerFeatures category, WireType wireType, in TSerializer serializer, SerializerFeatures features)
                 where TSerializer : ISerializer<T>
                 where TList : ICollection<T>
             {
                 int field = FieldNumber;
-                bool isWrapped = features.IsWrapped();
-                if (isWrapped)
-                {
-                    initialValue = default(T); // prefer true null
-                }
+                bool isWrapped = features.HasAny(SerializerFeatures.OptionWrappedValue);
+                var initialValue = features.DefaultFor<T>();
                 do
                 {
                     T element;
@@ -290,7 +286,7 @@ namespace ProtoBuf
                 {
                     var wireType = features.GetWireType();
                     if (packed) ReadPackedScalar<TSerializer, ReadBuffer<T>, T>(ref buffer, wireType, serializer);
-                    else ReadRepeatedCore<TSerializer, ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, initialValue, features);
+                    else ReadRepeatedCore<TSerializer, ReadBuffer<T>, T>(ref buffer, category, wireType, serializer, features);
                     return buffer;
                 }
                 catch

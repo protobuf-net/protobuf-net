@@ -471,21 +471,45 @@ namespace ProtoBuf.Meta
                             listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup;
                         }
 #pragma warning restore CS0618
+                        else
+                        {
+                            if (NullWrappedCollection)
+                            {
+                                listFeatures |= SerializerFeatures.OptionWrappedCollection;
+                                if (NullWrappedCollectionGroup) listFeatures |= SerializerFeatures.OptionWrappedCollectionGroup;
+                            }
+                            if (NullWrappedValue)
+                            {
+                                listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence;
+                                if (NullWrappedValueGroup) listFeatures |= SerializerFeatures.OptionWrappedValueGroup;
+                            }
+                        }
+
                         ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures, CompatibilityLevel, DataFormat);
                     }
                 }
                 else
                 {
-                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
+                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, allowComplexTypes: !NullWrappedValue);
                     if (ser is null)
                     {
                         ThrowHelper.NoSerializerDefined(MemberType);
                     }
-
                     // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
-                    
+
                     else
                     {
+                        if (NullWrappedValue)
+                        {
+                            if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
+                            var valueFeatures = SerializerFeatures.OptionWrappedValue;
+                            if (NullWrappedValueGroup) valueFeatures |= SerializerFeatures.OptionWrappedValueGroup;
+                            if (_defaultValue is object || IsRequired) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with default values or required values");
+
+                            // we now replace 'ser' with a serializer that uses read/write-any ([wrapped]), but it was
+                            // useful to know that we can at least get a suitable serializer
+                            ser = AnyTypeSerializer.Create(MemberType, valueFeatures, CompatibilityLevel, DataFormat);
+                        }
                         ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
 
                         if (_defaultValue is object && !IsRequired && getSpecified is null)
