@@ -1014,8 +1014,10 @@ namespace ProtoBuf
                 var serializerFeatures = serializer.Features;
                 features.InheritFrom(serializerFeatures);
 
-                if (features.IsWrapped())
-                    return ReadWrapped<T>(features, value, serializer);
+                if (features.HasAny(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedCollection))
+                {
+                    return ReadWrapped<T>(features, value, serializer); ;
+                }
 
                 switch (serializerFeatures.GetCategory())
                 {
@@ -1041,17 +1043,7 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
-                bool wouldWriteIfNull;
-                if (features.IsRepeated())
-                {
-                    ProtoWriter.State.AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedCollection, SerializerFeatures.OptionWrappedCollectionGroup);
-                    wouldWriteIfNull = false;
-                }
-                else
-                {
-                    ProtoWriter.State.AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedValue, SerializerFeatures.OptionWrappedValueGroup);
-                    wouldWriteIfNull = features.HasAny(SerializerFeatures.OptionWrappedValueFieldPresence);
-                }
+                ProtoWriter.State.AssertWrappedAndGetWireType(ref features, out var fieldPresence);
                 var tok = StartSubItem();
                 int field;
                 while ((field = ReadFieldHeader()) > 0)
@@ -1059,8 +1051,8 @@ namespace ProtoBuf
                     switch (field)
                     {
                         case 1:
-                            // read the inner value (note: we remove the wrap options to avoid recursion)
-                            value = ReadAny(features & ~(SerializerFeatures.OptionWrapped | SerializerFeatures.OptionWrappedGroup), value, serializer);
+                            // read the inner value (note: wrap options alreay removed to avoid recursion)
+                            value = ReadAny(features, value, serializer);
                             break;
                         default:
                             SkipField();
@@ -1068,6 +1060,13 @@ namespace ProtoBuf
                     }
                 }
                 EndSubItem(tok);
+                if (!fieldPresence && TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value))
+                {
+                    // even if the field isn't found, the fact that we had the wrapper at all means that
+                    // we shouldn't return null
+                    value = TypeHelper<T>.Default;
+                }
+
                 return value;
             }
 

@@ -356,15 +356,28 @@ namespace ProtoBuf
                 WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
             }
 
-            internal static WireType AssertWrappedAndGetWireType(ref SerializerFeatures features,
-                    SerializerFeatures demanded, SerializerFeatures group)
+            internal static WireType AssertWrappedAndGetWireType(ref SerializerFeatures features, out bool fieldPresence)
             {
-                if (!features.HasAny(demanded))
+                if (features.IsRepeated())
                 {
-                    ThrowHelper.ThrowInvalidOperationException($"{nameof(WriteWrapped)} called for {features.GetCategory()}, but {demanded} was not specified");
+                    fieldPresence = false;
+                    return AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedCollection, SerializerFeatures.OptionWrappedCollectionGroup);
                 }
-                features &= ~demanded; // we then *remove* that option, to prevent recursion from WriteAny
-                return features.HasAny(group) ? WireType.StartGroup : WireType.String;
+                else
+                {
+                    fieldPresence = features.HasAny(SerializerFeatures.OptionWrappedValueFieldPresence);
+                    return AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedValue, SerializerFeatures.OptionWrappedValueGroup);
+                }
+                static WireType AssertWrappedAndGetWireType(ref SerializerFeatures features,
+                    SerializerFeatures demanded, SerializerFeatures group)
+                {
+                    if (!features.HasAny(demanded))
+                    {
+                        ThrowHelper.ThrowInvalidOperationException($"{nameof(WriteWrapped)} called for {features.GetCategory()}, but {demanded} was not specified");
+                    }
+                    features &= ~demanded; // we then *remove* that option, to prevent recursion from WriteAny
+                    return features.HasAny(group) ? WireType.StartGroup : WireType.String;
+                }
             }
 
             /// <summary>
@@ -375,21 +388,9 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
-                WireType wrapperFormat;
-                bool writeIfNull;
-
-                if (features.IsRepeated())
-                {
-                    wrapperFormat = AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedCollection, SerializerFeatures.OptionWrappedCollectionGroup);
-                    writeIfNull = false;
-                }
-                else
-                {
-                    wrapperFormat = AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedValue, SerializerFeatures.OptionWrappedValueGroup);
-                    writeIfNull = features.HasAny(SerializerFeatures.OptionWrappedValueFieldPresence);
-                }
+                var wrapperFormat = AssertWrappedAndGetWireType(ref features, out var fieldPresence);
                 bool isNull = TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value);
-                if (!writeIfNull && isNull)
+                if (!fieldPresence && isNull)
                 {
                     // nothing to do
                     return;
@@ -398,8 +399,10 @@ namespace ProtoBuf
 #pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
                 var tok = StartSubItem(TypeHelper<T>.IsReferenceType & features.ApplyRecursionCheck() ? (object)value : null, PrefixStyle.Base128);
 #pragma warning restore CS0618
-                if (!isNull)
-                {   // only write the field if it has a meaningful value (note: we already remove the relevant wrap options, so: not recursive)
+                if (!isNull && (fieldPresence || TypeHelper<T>.ValueChecker.HasNonTrivialValue(value)))
+                {   // only write the field if it has a meaningful value (note: we already remove the relevant wrap options,
+                    // so: not recursive); if we're using field-presence, we write any non-null value; otherwise,
+                    // (think 'wrappers.proto') we only write non-zero values
                     WriteAny<T>(1, features, value, serializer);
                 }
 #pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
