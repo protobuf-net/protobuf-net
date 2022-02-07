@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class ByteSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private ByteSerializer() { }
         internal static readonly ByteSerializer Instance = new ByteSerializer();
         public Type ExpectedType { get { return expectedType; } }

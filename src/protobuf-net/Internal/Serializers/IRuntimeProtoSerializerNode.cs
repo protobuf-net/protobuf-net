@@ -5,6 +5,11 @@ namespace ProtoBuf.Internal.Serializers
     internal interface IRuntimeProtoSerializerNode
     {
         /// <summary>
+        /// Does this represent a scalar type?
+        /// </summary>
+        bool IsScalar { get; }
+
+        /// <summary>
         /// The type that this serializer is intended to work for.
         /// </summary>
         Type ExpectedType { get; }

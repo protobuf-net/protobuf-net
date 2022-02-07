@@ -181,6 +181,10 @@ namespace ProtoBuf.Serializers
             => (features & (SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue)) != 0;
 
         [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsScalar(this SerializerFeatures features)
+            => features.GetCategory() == SerializerFeatures.CategoryScalar;
+
+        [MethodImpl(ProtoReader.HotPath)]
         public static bool IsRepeated(this SerializerFeatures features)
             => (features & CategoryMask) == SerializerFeatures.CategoryRepeated;
 

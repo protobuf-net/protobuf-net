@@ -490,9 +490,9 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
+
                     ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, allowComplexTypes: true);
                     if (ser is null) ThrowHelper.NoSerializerDefined(MemberType);
-                    
                     if (NullWrappedValue)
                     {
                         if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
@@ -502,8 +502,8 @@ namespace ProtoBuf.Meta
                         if (_defaultValue is object) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with default values");
                         if (IsRequired) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with required values");
                         if (IsPacked) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with packed values");
-                        if (DataFormat != DataFormat.Default) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with non-default data-format");
-                        if (ser is IProtoTypeSerializer) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with message types");
+                        if (DataFormat != DataFormat.Default) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with {nameof(DataFormat)}.{nameof(DataFormat.Default)}");
+                        if (!ser.IsScalar) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with scalar types, or in a collection");
 
                         // we now replace 'ser' with a serializer that uses read/write-any ([wrapped]), but it was
                         // useful to know that we can at least get a suitable serializer

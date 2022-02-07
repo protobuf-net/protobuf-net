@@ -6,6 +6,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class ParseableSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private readonly MethodInfo parse;
         public static ParseableSerializer TryCreate(Type type)
         {

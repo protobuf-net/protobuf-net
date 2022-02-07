@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class TimeSpanSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => false;
         private static TimeSpanSerializer s_Legacy, s_Duration;
         private static readonly Type expectedType = typeof(TimeSpan);
         private readonly bool _useDuration;

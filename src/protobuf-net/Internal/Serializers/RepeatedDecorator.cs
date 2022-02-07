@@ -36,9 +36,17 @@ namespace ProtoBuf.Internal.Serializers
         private readonly CompatibilityLevel _compatibilityLevel;
         private readonly DataFormat _dataFormat;
 
+        bool IRuntimeProtoSerializerNode.IsScalar
+        {
+            get
+            {
+                var inbuilt = TypeModel.GetInbuiltSerializer<T>(_compatibilityLevel, _dataFormat);
+                return inbuilt is not null && inbuilt.Features.IsScalar();
+            }
+        }
+
         private readonly RepeatedSerializerStub _stub;
         private RepeatedSerializer<TCollection, T> Serializer => (RepeatedSerializer<TCollection, T>)_stub.Serializer;
- 
 
         public RepeatedDecorator(int fieldNumber, SerializerFeatures features, CompatibilityLevel compatibilityLevel, DataFormat dataFormat, RepeatedSerializerStub stub)
         {

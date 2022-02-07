@@ -11,6 +11,8 @@ namespace ProtoBuf.Internal.Serializers
         private readonly CompatibilityLevel _compatibilityLevel;
         private readonly DataFormat _dataFormat;
 
+        bool IRuntimeProtoSerializerNode.IsScalar => _features.IsScalar();
+
         public AnyTypeSerializer(SerializerFeatures features,
             CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
         {

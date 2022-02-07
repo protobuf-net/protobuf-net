@@ -140,11 +140,14 @@ namespace ProtoBuf.Test
 
         [Theory]
         [InlineData(typeof(HazInvalidDefaultValue), "NullWrappedValue cannot be used with default values")]
-        [InlineData(typeof(HazInvalidDataFormat), "NullWrappedValue cannot be used with non-default data-format")]
+        [InlineData(typeof(HazInvalidDataFormat), "NullWrappedValue can only be used with DataFormat.Default")]
         [InlineData(typeof(HazInvalidPacked), "NullWrappedValue cannot be used with packed values")]
         [InlineData(typeof(HazInvalidReqired), "NullWrappedValue cannot be used with required values")]
         [InlineData(typeof(HazInvalidNonNullableValue), "NullWrappedValue cannot be used with non-nullable values")]
-        [InlineData(typeof(HazInvalidMessageValue), "NullWrappedValue cannot be used with message types")]
+        [InlineData(typeof(HazInvalidMessageValue), "NullWrappedValue can only be used with scalar types, or in a collection")]
+        [InlineData(typeof(HazInvalidDecimal_Bcl), "NullWrappedValue can only be used with scalar types, or in a collection")]
+        [InlineData(typeof(HazInvalidGuid_Bcl), "NullWrappedValue can only be used with scalar types, or in a collection")]
+        [InlineData(typeof(HazInvalidGuid_Bytes), "NullWrappedValue can only be used with DataFormat.Default")]
         public void DetectInvalidConfiguration(Type type, string message)
         {
             var ex = Assert.Throws<NotSupportedException>(() =>
@@ -154,6 +157,16 @@ namespace ProtoBuf.Test
                 model.CompileInPlace();
             });
             Assert.Equal(message, ex.Message);
+        }
+
+        [Theory]
+        [InlineData(typeof(HazValidDecimal_String))]
+        [InlineData(typeof(HazValidGuid_String))]
+        public void DetectValidConfiguration(Type type)
+        {
+            var model = RuntimeTypeModel.Create();
+            _ = model[type];
+            model.CompileInPlace();
         }
 
         [ProtoContract]
@@ -203,6 +216,51 @@ namespace ProtoBuf.Test
             [ProtoMember(1)]
             [NullWrappedValue]
             public SomeMessageType Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidDecimal_Bcl
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            [CompatibilityLevel(CompatibilityLevel.Level240)]
+            public decimal? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazValidDecimal_String
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            [CompatibilityLevel(CompatibilityLevel.Level300)]
+            public decimal? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidGuid_Bcl
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            [CompatibilityLevel(CompatibilityLevel.Level240)]
+            public Guid? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidGuid_Bytes
+        {
+            [ProtoMember(1, DataFormat = DataFormat.FixedSize)]
+            [NullWrappedValue]
+            [CompatibilityLevel(CompatibilityLevel.Level300)]
+            public Guid? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazValidGuid_String
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            [CompatibilityLevel(CompatibilityLevel.Level300)]
+            public Guid? Value { get; set; }
         }
 
         [ProtoContract]

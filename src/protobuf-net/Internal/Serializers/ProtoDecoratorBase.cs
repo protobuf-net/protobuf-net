@@ -4,6 +4,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal abstract class ProtoDecoratorBase : IRuntimeProtoSerializerNode
     {
+        public virtual bool IsScalar => Tail.IsScalar;
         public abstract Type ExpectedType { get; }
         protected readonly IRuntimeProtoSerializerNode Tail;
         protected ProtoDecoratorBase(IRuntimeProtoSerializerNode tail)

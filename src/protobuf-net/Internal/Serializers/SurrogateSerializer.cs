@@ -15,6 +15,8 @@ namespace ProtoBuf.Internal.Serializers
         bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
+        bool IRuntimeProtoSerializerNode.IsScalar => features.IsScalar();
+
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
 
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, ISerializationContext context) { }
