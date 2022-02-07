@@ -1302,6 +1302,19 @@ namespace ProtoBuf.Meta
                         vm.IsMap = true;
                     }
                 }
+
+                if ((attrib = GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName)) is object)
+                {
+                    vm.NullWrappedValue = true;
+                    if (attrib.TryGet(nameof(NullWrappedValueAttribute.AsGroup), out object tmp) && tmp is bool b)
+                        vm.NullWrappedValueGroup = b;
+                }
+                if ((attrib = GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName)) is object)
+                {
+                    vm.NullWrappedCollection = true;
+                    if (attrib.TryGet(nameof(NullWrappedCollectionAttribute.AsGroup), out object tmp) && tmp is bool b)
+                        vm.NullWrappedCollectionGroup = b;
+                }
             }
             return vm;
         }

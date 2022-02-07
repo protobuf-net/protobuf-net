@@ -80,7 +80,7 @@ namespace ProtoBuf.Internal.Serializers
             return false;
         }
         private static MethodInfo FindSerializerFeaturesMethod(Type type, string name)
-            => (MethodInfo)typeof(ProtoWriter.State).FindMembers(
+            => (MethodInfo)type.FindMembers(
                 MemberTypes.Method, BindingFlags.Public | BindingFlags.Instance,
                 FindSerializerFeaturesMethodFilter, name).Single();
 
