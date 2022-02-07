@@ -14,8 +14,10 @@ namespace ProtoBuf.Test
     {
         private readonly ITestOutputHelper _log;
         public NullWrappedValueTests(ITestOutputHelper log)
-            => _log = log;
-
+        {
+            _log = log;
+            Log("Working folder: " + Directory.GetCurrentDirectory());
+        }
         private void Log(string message)
             => _log?.WriteLine(message);
 
@@ -142,16 +144,20 @@ namespace ProtoBuf.Test
             prepare?.Invoke(runtimeModel);
             _ = runtimeModel[typeof(T)]; // make sure we touch T
 
-            Execute(runtimeModel, "runtime"); // runtime-only
-            runtimeModel.CompileInPlace(); // compile-in-place
-            Execute(runtimeModel, nameof(runtimeModel.CompileInPlace)); // runtime-only
-            Execute(runtimeModel.Compile(), nameof(runtimeModel.Compile)); // in-memory compile
-            Execute(PEVerify.CompileAndVerify(runtimeModel, name), nameof(PEVerify.CompileAndVerify)); // dll compile
+            Execute(() => runtimeModel, "runtime"); // runtime-only
+            Execute(() =>
+            {
+                runtimeModel.CompileInPlace(); // compile-in-place
+                return runtimeModel;
+            }, nameof(runtimeModel.CompileInPlace)); // runtime-only
+            Execute(() => runtimeModel.Compile(), nameof(runtimeModel.Compile)); // in-memory compile
+            Execute(() => PEVerify.CompileAndVerify(runtimeModel, nameof(NullWrappedValueTests) + "_" + name), nameof(PEVerify.CompileAndVerify)); // dll compile
 
-            void Execute(TypeModel serializeModel, string scenario)
+            void Execute(Func<TypeModel> factory, string scenario)
             {
                 try
                 {
+                    var serializeModel = factory();
                     try
                     {
                         assert?.Invoke(value);
