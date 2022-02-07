@@ -40,15 +40,12 @@ namespace ProtoBuf.Test
         [InlineData(false)]
         public void CanApplySimpleConfiguration(bool configured)
         {
-            Assert.Equal(0, Internal.TypeHelper<int?>.Default);
-            Assert.Equal(0, Internal.TypeHelper<int>.Default);
-            Assert.Equal(0L, Internal.TypeHelper<long?>.Default);
-            Assert.Equal(0L, Internal.TypeHelper<long>.Default);
             var model = RuntimeTypeModel.Create();
             if (configured)
             {
                 model.AfterApplyDefaultBehaviour += (sender, e) =>
                 {
+                    // configure all Nullable<T> properties as wrapped
                     foreach (var field in e.MetaType.GetFields())
                     {
                         if (Nullable.GetUnderlyingType(field.MemberType) is object)
