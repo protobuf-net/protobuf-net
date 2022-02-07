@@ -490,33 +490,31 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, allowComplexTypes: !NullWrappedValue);
-                    if (ser is null)
+                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, allowComplexTypes: true);
+                    if (ser is null) ThrowHelper.NoSerializerDefined(MemberType);
+                    
+                    if (NullWrappedValue)
                     {
-                        ThrowHelper.NoSerializerDefined(MemberType);
+                        if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
+                        var valueFeatures = SerializerFeatures.OptionWrappedValue;
+                        if (NullWrappedValueGroup) valueFeatures |= SerializerFeatures.OptionWrappedValueGroup;
+                        if (MemberType.IsValueType && Nullable.GetUnderlyingType(MemberType) is null) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with non-nullable values");
+                        if (_defaultValue is object) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with default values");
+                        if (IsRequired) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with required values");
+                        if (IsPacked) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with packed values");
+                        if (DataFormat != DataFormat.Default) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with non-default data-format");
+                        if (ser is IProtoTypeSerializer) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with message types");
+
+                        // we now replace 'ser' with a serializer that uses read/write-any ([wrapped]), but it was
+                        // useful to know that we can at least get a suitable serializer
+                        ser = AnyTypeSerializer.Create(MemberType, valueFeatures, CompatibilityLevel, DataFormat);
                     }
-                    // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
+                    ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
 
-                    else
-                    {
-                        if (NullWrappedValue)
-                        {
-                            if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
-                            var valueFeatures = SerializerFeatures.OptionWrappedValue;
-                            if (NullWrappedValueGroup) valueFeatures |= SerializerFeatures.OptionWrappedValueGroup;
-                            if (_defaultValue is object || IsRequired) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with default values or required values");
-
-                            // we now replace 'ser' with a serializer that uses read/write-any ([wrapped]), but it was
-                            // useful to know that we can at least get a suitable serializer
-                            ser = AnyTypeSerializer.Create(MemberType, valueFeatures, CompatibilityLevel, DataFormat);
-                        }
-                        ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
-
-                        if (_defaultValue is object && !IsRequired && getSpecified is null)
-                        {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
-                            // as does "IsRequired"
-                            ser = new DefaultValueDecorator(_defaultValue, ser);
-                        }
+                    if (_defaultValue is object && !IsRequired && getSpecified is null)
+                    {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
+                        // as does "IsRequired"
+                        ser = new DefaultValueDecorator(_defaultValue, ser);
                     }
                     if (MemberType == typeof(Uri))
                     {

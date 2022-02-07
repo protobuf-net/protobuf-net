@@ -2,6 +2,7 @@
 using ProtoBuf.unittest;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -136,6 +137,76 @@ namespace ProtoBuf.Test
             [NullWrappedValue(AsGroup = true)]
             public int? Value { get; set; }
         }
+
+        [Theory]
+        [InlineData(typeof(HazInvalidDefaultValue), "NullWrappedValue cannot be used with default values")]
+        [InlineData(typeof(HazInvalidDataFormat), "NullWrappedValue cannot be used with non-default data-format")]
+        [InlineData(typeof(HazInvalidPacked), "NullWrappedValue cannot be used with packed values")]
+        [InlineData(typeof(HazInvalidReqired), "NullWrappedValue cannot be used with required values")]
+        [InlineData(typeof(HazInvalidNonNullableValue), "NullWrappedValue cannot be used with non-nullable values")]
+        [InlineData(typeof(HazInvalidMessageValue), "NullWrappedValue cannot be used with message types")]
+        public void DetectInvalidConfiguration(Type type, string message)
+        {
+            var ex = Assert.Throws<NotSupportedException>(() =>
+            {
+                var model = RuntimeTypeModel.Create();
+                _ = model[type];
+                model.CompileInPlace();
+            });
+            Assert.Equal(message, ex.Message);
+        }
+
+        [ProtoContract]
+        public class HazInvalidDefaultValue
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            [DefaultValue(42)]
+            public int? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidDataFormat
+        {
+            [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
+            [NullWrappedValue]
+            public int? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidPacked
+        {
+            [ProtoMember(1, IsPacked = true)]
+            [NullWrappedValue]
+            public int? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidReqired
+        {
+            [ProtoMember(1, IsRequired = true)]
+            [NullWrappedValue]
+            public int? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidNonNullableValue
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            public int Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazInvalidMessageValue
+        {
+            [ProtoMember(1)]
+            [NullWrappedValue]
+            public SomeMessageType Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class SomeMessageType { }
 
         private void AssertModel<T>(T value, string expectedHex, Action<T> assert, Action<RuntimeTypeModel> prepare = null, [CallerMemberName] string name = null)
         {
