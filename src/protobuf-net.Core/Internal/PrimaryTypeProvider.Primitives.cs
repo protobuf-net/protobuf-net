@@ -54,7 +54,20 @@ namespace ProtoBuf.Internal
         IValueChecker<short>,
         IValueChecker<char>,
         IValueChecker<Uri>,
-        IValueChecker<Type>
+        IValueChecker<Type>,
+
+        IValueChecker<int?>,
+        IValueChecker<long?>,
+        IValueChecker<bool?>,
+        IValueChecker<float?>,
+        IValueChecker<double?>,
+        IValueChecker<byte?>,
+        IValueChecker<ushort?>,
+        IValueChecker<uint?>,
+        IValueChecker<ulong?>,
+        IValueChecker<sbyte?>,
+        IValueChecker<short?>,
+        IValueChecker<char?>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -332,5 +345,30 @@ namespace ProtoBuf.Internal
         bool IValueChecker<byte[]>.IsNull(byte[] value) => value is null;
         bool IValueChecker<Uri>.IsNull(Uri value) => value is null;
         bool IValueChecker<Type>.IsNull(Type value) => value is null;
+
+        bool IValueChecker<int?>.HasNonTrivialValue(int? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<int?>.IsNull(int? value) => !value.HasValue;
+        bool IValueChecker<uint?>.HasNonTrivialValue(uint? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<uint?>.IsNull(uint? value) => !value.HasValue;
+        bool IValueChecker<short?>.HasNonTrivialValue(short? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<short?>.IsNull(short? value) => !value.HasValue;
+        bool IValueChecker<ushort?>.HasNonTrivialValue(ushort? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<ushort?>.IsNull(ushort? value) => !value.HasValue;
+        bool IValueChecker<long?>.HasNonTrivialValue(long? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<long?>.IsNull(long? value) => !value.HasValue;
+        bool IValueChecker<ulong?>.HasNonTrivialValue(ulong? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<ulong?>.IsNull(ulong? value) => !value.HasValue;
+        bool IValueChecker<float?>.HasNonTrivialValue(float? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<float?>.IsNull(float? value) => !value.HasValue;
+        bool IValueChecker<double?>.HasNonTrivialValue(double? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<double?>.IsNull(double? value) => !value.HasValue;
+        bool IValueChecker<byte?>.HasNonTrivialValue(byte? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<byte?>.IsNull(byte? value) => !value.HasValue;
+        bool IValueChecker<sbyte?>.HasNonTrivialValue(sbyte? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<sbyte?>.IsNull(sbyte? value) => !value.HasValue;
+        bool IValueChecker<bool?>.HasNonTrivialValue(bool? value) => value.GetValueOrDefault();
+        bool IValueChecker<bool?>.IsNull(bool? value) => !value.HasValue;
+        bool IValueChecker<char?>.HasNonTrivialValue(char? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<char?>.IsNull(char? value) => !value.HasValue;
     }
 }

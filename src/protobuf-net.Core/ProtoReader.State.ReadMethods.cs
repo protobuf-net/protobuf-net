@@ -1060,7 +1060,7 @@ namespace ProtoBuf
                 {
                     // even if the field isn't found, the fact that we had the wrapper at all means that
                     // we shouldn't return null
-                    value = TypeHelper<T>.Default;
+                    value = TypeHelper<T>.NonTrivialDefault;
                 }
 
                 return value;
