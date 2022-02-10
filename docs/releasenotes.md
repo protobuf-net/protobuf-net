@@ -15,6 +15,8 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 - support unknwon/extension fields on models that involve inheritance (via either `Extensible` or `ITypedExtensible`)
 - detect Google.Protobuf types and provide guidance (#722)
+- don't throw if `EnumPassthru` is explicitly set to `true` (#881) from code compiled against v2
+
 
 ## 3.0.62
 
