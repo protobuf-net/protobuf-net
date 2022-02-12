@@ -2487,7 +2487,10 @@ namespace ProtoBuf.Meta
         {
             var metaType = new MetaType(model, type, factory);
             metaType.SetSurrogate(surrogateType.GetGenericTypeDefinition());
+            metaType._compatibilityLevel = _compatibilityLevel;
             metaType._fields = _fields;
+            metaType._enums = _enums;
+            metaType._reservations = _reservations;
             return metaType;
         }
     }
