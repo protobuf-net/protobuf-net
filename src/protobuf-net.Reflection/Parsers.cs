@@ -305,9 +305,16 @@ namespace Google.Protobuf.Reflection
                                 else
                                 {
                                     var field = message.Fields.Single();
-                                    message.ParsedSpecialKind = field.Proto3Optional 
-                                        ? DescriptorProto.SpecialKind.NullableWrapperFieldPresence
-                                        : DescriptorProto.SpecialKind.NullableWrapperImplicitZero;
+                                    if (field.Number == 1)
+                                    {
+                                        message.ParsedSpecialKind = field.Proto3Optional || field.ShouldSerializeOneofIndex()
+                                            ? DescriptorProto.SpecialKind.NullableWrapperFieldPresence
+                                            : DescriptorProto.SpecialKind.NullableWrapperImplicitZero;
+                                    }
+                                    else
+                                    {
+                                        ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' must use field 1; {field.Number} is invalid", ErrorCode.InvalidMessageKind);
+                                    }
                                 }
                                 break;
                             default:
