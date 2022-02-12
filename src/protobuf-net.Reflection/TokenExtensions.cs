@@ -86,8 +86,10 @@ namespace ProtoBuf.Reflection
             return false;
         }
         public static string Consume(this Peekable<Token> tokens, TokenType type)
+            => Consume(tokens, type, out _);
+        public static string Consume(this Peekable<Token> tokens, TokenType type, out Token token)
         {
-            var token = tokens.Read();
+            token = tokens.Read();
             token.Assert(type);
             string s = token.Value;
             tokens.Consume();

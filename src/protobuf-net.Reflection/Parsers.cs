@@ -276,6 +276,51 @@ namespace Google.Protobuf.Reflection
                 using var ctx = new ParserContext(file, null, Errors);
                 file.ResolveTypes(ctx, true);
             }
+            foreach (var file in Files)
+            {
+                using var ctx = new ParserContext(file, null, Errors);
+                foreach (var message in file.MessageTypes)
+                {
+                    PreProcessMessage(message, ctx);
+                }
+                static void PreProcessMessage(DescriptorProto message, ParserContext ctx)
+                {
+                    if (message == null) return;
+                    var options = Extensions.GetOptions(message?.Options);
+                    if (options is not null)
+                    {
+                        switch (options.MessageKind)
+                        {
+                            case MessageKind.None:
+                                break; // nothing to do
+                            case MessageKind.NullWrapper:
+                                if (ctx.Syntax != FileDescriptorProto.SyntaxProto3)
+                                {
+                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires {FileDescriptorProto.SyntaxProto3} syntax", ErrorCode.InvalidMessageKind);
+                                }
+                                else if (message.Fields.Count != 1)
+                                {
+                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires exactly one field", ErrorCode.InvalidMessageKind);
+                                }
+                                else
+                                {
+                                    var field = message.Fields.Single();
+                                    message.ParsedSpecialKind = field.Proto3Optional 
+                                        ? DescriptorProto.SpecialKind.NullableWrapperFieldPresence
+                                        : DescriptorProto.SpecialKind.NullableWrapperImplicitZero;
+                                }
+                                break;
+                            default:
+                                ctx.Errors.Warn(message.SourceLocation, $"Unexpected message kind on '{message.Name}': {options.MessageKind}", ErrorCode.InvalidMessageKind);
+                                break;
+                        }
+                    }
+                    foreach (var subMessage in message.NestedTypes)
+                    {
+                        PreProcessMessage(subMessage, ctx);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -357,6 +402,16 @@ namespace Google.Protobuf.Reflection
         /// </summary>
         public partial class ReservedRange : IReservedRange { }
 
+        internal Token SourceLocation { get; set; }
+        internal enum SpecialKind
+        {
+            None,
+            NullableWrapperImplicitZero,
+            NullableWrapperFieldPresence,
+        }
+
+        internal SpecialKind ParsedSpecialKind { get; set; }
+
         /// <summary>
         /// Gets the extension data associated with an object, as a byte-array
         /// </summary>
@@ -437,11 +492,12 @@ namespace Google.Protobuf.Reflection
         int IMessage.MaxField => MaxField;
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
-            var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
+            var name = ctx.Tokens.Consume(TokenType.AlphaNumeric, out var token);
             ctx.CheckNames(parent, name, ctx.Tokens.Previous);
             if (ctx.TryReadObject(out obj))
             {
                 obj.Name = name;
+                obj.SourceLocation = token;
                 GenerateSyntheticOneOfs(obj);
                 return true;
             }

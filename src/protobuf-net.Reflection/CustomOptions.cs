@@ -68,6 +68,9 @@ namespace ProtoBuf.Reflection
         [global::System.ComponentModel.DefaultValue("")]
         public string Namespace { get; set; } = "";
 
+        [global::ProtoBuf.ProtoMember(5, Name = @"messageKind")]
+        [global::System.ComponentModel.DefaultValue(MessageKind.None)]
+        public MessageKind MessageKind { get; set; }
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -183,7 +186,16 @@ namespace ProtoBuf.Reflection
         Internal = 3,
     }
 
-    public static partial class Extensions
+    [global::ProtoBuf.ProtoContract()]
+    public enum MessageKind
+    {
+        [global::ProtoBuf.ProtoEnum(Name = @"MESSAGEKIND_NONE")]
+        None = 0,
+        [global::ProtoBuf.ProtoEnum(Name = @"MESSAGEKIND_NULL_WRAPPER")]
+        NullWrapper = 1,
+    }
+
+public static partial class Extensions
     {
         private static TypeModel Serializer => CustomProtogenSerializer.Instance;
         public static ProtogenFileOptions GetOptions(this global::Google.Protobuf.Reflection.FileOptions obj)

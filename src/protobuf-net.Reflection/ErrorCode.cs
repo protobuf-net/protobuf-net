@@ -46,5 +46,6 @@
         UnexpectedEOF = 38,
         InvalidString = 39,
         SyntaxErrorUnknownEntity = 40,
+        InvalidMessageKind = 41,
     }
 }
