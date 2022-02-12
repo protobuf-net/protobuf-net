@@ -146,6 +146,14 @@ namespace ProtoBuf.Internal
                 .GetField(nameof(StructValueChecker<int>.Instance))
                 .GetValue(null);
         }
+
+        internal static object CreateNonTrivialDefault(Type type)
+        {
+            if (type.IsValueType) return Activator.CreateInstance(Nullable.GetUnderlyingType(type) ?? type);
+            if (type == typeof(string)) return "";
+            if (type == typeof(byte[])) return Array.Empty<byte>();
+            return null;
+        }
     }
 
     internal static class TypeHelper<T>
@@ -162,6 +170,8 @@ namespace ProtoBuf.Internal
         public static readonly bool CanBePacked = !CanBeNull && TypeHelper.CanBePacked(typeof(T));
 
         public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
+
+        public static readonly T NonTrivialDefault = Default ?? (T)TypeHelper.CreateNonTrivialDefault(typeof(T));
 
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]
