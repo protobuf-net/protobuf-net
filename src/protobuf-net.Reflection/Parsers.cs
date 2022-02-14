@@ -296,11 +296,11 @@ namespace Google.Protobuf.Reflection
                             case MessageKind.NullWrapper:
                                 if (ctx.Syntax != FileDescriptorProto.SyntaxProto3)
                                 {
-                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires {FileDescriptorProto.SyntaxProto3} syntax", ErrorCode.InvalidMessageKind);
+                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires {FileDescriptorProto.SyntaxProto3} syntax", ErrorCode.MessageKindNullWrapperProto3);
                                 }
                                 else if (message.Fields.Count != 1)
                                 {
-                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires exactly one field", ErrorCode.InvalidMessageKind);
+                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires exactly one field (found: {message.Fields.Count})", ErrorCode.MessageKindNullWrapperSingleField);
                                 }
                                 else
                                 {
@@ -313,12 +313,12 @@ namespace Google.Protobuf.Reflection
                                     }
                                     else
                                     {
-                                        ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' must use field 1; {field.Number} is invalid", ErrorCode.InvalidMessageKind);
+                                        ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' must use field 1 (found: {field.Number})", ErrorCode.MessageKindNullWrapperFieldOne);
                                     }
                                 }
                                 break;
                             default:
-                                ctx.Errors.Warn(message.SourceLocation, $"Unexpected message kind on '{message.Name}': {options.MessageKind}", ErrorCode.InvalidMessageKind);
+                                ctx.Errors.Warn(message.SourceLocation, $"Unexpected message kind on '{message.Name}': {options.MessageKind}", ErrorCode.MessageKindUnknownKind);
                                 break;
                         }
                     }
