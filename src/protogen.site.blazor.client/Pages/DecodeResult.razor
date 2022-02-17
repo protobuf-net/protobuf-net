@@ -1,21 +1,21 @@
 ﻿@using ProtoBuf.Models
 @using System.Text
 @using System.IO
-@WriteTier((DecodeModel.GetReader(), DecodeModel.ShowFullStrings))
+@WriteTier((DecodeModel.GetReader(), DecodeModel.Data))
 
 @code {
 
     [Parameter]
     public DecodeModel DecodeModel { get; set; }
 
-    private RenderFragment<(ProtoReader Reader, bool ShowFullStrings)> WriteTier;
+    private RenderFragment<(ProtoReader Reader, byte[] Data)> WriteTier;
 
     protected override void OnInitialized()
     {
         WriteTier = pair =>@<div class="ml-5 border-left  border-secondary pl-1">
         @{
             var reader = pair.Reader;
-            var showFullStrings = pair.ShowFullStrings;
+            var showFullStrings = DecodeModel.ShowFullStrings;
             long start = reader.Position;
             int field;
             while ((field = reader.ReadFieldHeader()) > 0)
@@ -23,7 +23,7 @@
                 long payloadStart = reader.Position;
 
                 <div>
-                    Field #@reader.FieldNumber: @AsHex(start, payloadStart - start)
+                    Field #@reader.FieldNumber: @AsHex(pair.Data, start, payloadStart - start)
                     <span class="badge badge-secondary">@reader.WireType</span>
                     @switch (reader.WireType)
                     {
@@ -33,7 +33,7 @@
                             // just pretending everything is integers for now, for simplicity
                             var val = reader.ReadInt64();
                             <span>
-                                Value = @val, Hex = @AsHex(payloadStart, reader.Position - payloadStart)
+                                Value = @val, Hex = @AsHex(pair.Data, payloadStart, reader.Position - payloadStart)
                             </span>
                             break;
                         case WireType.String:
@@ -41,7 +41,7 @@
                             // this isn't efficient, but it works
                             var payloadBytes = ProtoReader.AppendBytes(null, reader);
                             <span>
-                                Length = @payloadBytes.Length, Hex = @AsHex(payloadStart, reader.Position - payloadStart - payloadBytes.Length),
+                                Length = @payloadBytes.Length, Hex = @AsHex(pair.Data, payloadStart, reader.Position - payloadStart - payloadBytes.Length),
 
                                 @try
                                 {
@@ -78,7 +78,7 @@
                                 if (subReader != null)
                                 {
                                     <div class="ml-5">As sub-object : </div>
-                                    @WriteTier((subReader, showFullStrings))
+                                    @WriteTier((subReader, payloadBytes))
                                 }
                             }
                             break;
@@ -91,7 +91,7 @@
                                     Group, Hexa = @AsHex(payloadStart, reader.Position - payloadStart)
                                 </div>
                             *@
-                            @WriteTier((reader, showFullStrings))
+                            @WriteTier((reader, pair.Data))
                             ProtoReader.EndSubItem(tok, reader);
                             break;
                         default:
@@ -103,7 +103,7 @@
         }
     </div>;
 }
-string AsHex(long start, long count) => BitConverter.ToString(DecodeModel.Data, checked((int)start), checked((int)count));
+string AsHex(byte[] data, long start, long count) => BitConverter.ToString(data, checked((int)start), checked((int)count));
 
 bool IsUri(string input)
 {
@@ -122,7 +122,7 @@ static ProtoReader TestCouldBeProto(byte[] payload)
       return null; // not worth bothering with
   try
   {
-      var ms = new MemoryStream(payload);
+      var ms = new MemoryStream(payload, false);
 #pragma warning disable CS0618
       using (var test = ProtoReader.Create(ms, null, null))
 #pragma warning restore CS0618
