@@ -253,7 +253,7 @@ namespace Examples
                 Assert.Null(actual); //, caption);
                 return;
             }
-            if (expected != null) Assert.NotNull(actual); //, caption);
+            Assert.NotNull(actual); //, caption);
 
             Assert.NotSame(expected, actual); //, caption);
 
