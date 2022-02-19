@@ -140,7 +140,6 @@ namespace ProtoBuf.Meta
 
             Member = member ?? throw new ArgumentNullException(nameof(member));
             ParentType = parentType;
-            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             
             if (defaultValue is object && (defaultValue.GetType() != memberType))
             {
