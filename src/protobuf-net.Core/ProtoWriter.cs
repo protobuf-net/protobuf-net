@@ -72,7 +72,7 @@ namespace ProtoBuf
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
             => writer.DefaultState().WriteBytes(new ReadOnlyMemory<byte>(data, offset, length));
 
-        private int depth = 0;
+        private int _depth = 0;
         private const int RecursionCheckDepth = 25;
 
         /// <summary>
@@ -88,8 +88,12 @@ namespace ProtoBuf
 
         private void PreSubItem(ref State state, object instance)
         {
-            if (depth < 0) state.ThrowInvalidSerializationOperation();
-            if (++depth > RecursionCheckDepth)
+            if (_depth < 0) state.ThrowInvalidSerializationOperation();
+            if (++_depth >= (model is null ? TypeModel.DefaultMaxDepth : model.MaxDepth))
+            {
+                state.ThrowTooDeep(_depth);
+            }
+            if (_depth > RecursionCheckDepth)
             {
                 CheckRecursionStackAndPush(instance);
             }
@@ -129,8 +133,8 @@ namespace ProtoBuf
         private void PostSubItem(ref State state)
         {
             if (WireType != WireType.None) state.ThrowInvalidSerializationOperation();
-            if (depth <= 0) state.ThrowInvalidSerializationOperation();
-            if (depth-- > RecursionCheckDepth)
+            if (_depth <= 0) state.ThrowInvalidSerializationOperation();
+            if (_depth-- > RecursionCheckDepth)
             {
                 PopRecursionStack();
             }
@@ -155,7 +159,7 @@ namespace ProtoBuf
             _position64 = 0;
             _needFlush = false;
             this.packedFieldNumber = 0;
-            depth = 0;
+            _depth = 0;
             fieldNumber = 0;
             this.model = model;
             WireType = WireType.None;
@@ -234,7 +238,7 @@ namespace ProtoBuf
 
         protected private virtual void Cleanup()
         {
-            if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
+            if (_depth == 0 && _needFlush && ImplDemandFlushOnDispose)
             {
                 ThrowHelper.ThrowInvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
@@ -303,12 +307,12 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public void Close() => DefaultState().Close();
 
-        internal int Depth => depth;
+        internal int Depth => _depth;
 
         [MethodImpl(HotPath)]
         internal void CheckClear(ref State state)
         {
-            if (depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.GetPosition()})");
+            if (_depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {_depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.GetPosition()})");
             _needFlush = false; // because we ^^^ *JUST DID*
         }
 
@@ -490,18 +494,12 @@ namespace ProtoBuf
         /// Buffer size to use when writing; if non-positive, an internal default is used.
         /// </summary>
         /// <remarks>Not all writer implementations make use of this API</remarks>
-        [Obsolete("This API is experimental and may change / be removed without notice")]
+        [Obsolete("Please migrate to " + nameof(TypeModel) + "." + nameof(TypeModel.BufferSize))]
         public static int BufferSize
         {
-            get => s_bufferSize;
-            set
-            {
-                s_bufferSize = value;
-                s_effectiveBufferSize = value <= 0 ? BufferPool.BUFFER_LENGTH : value;
-            }
+            get => TypeModel.DefaultModel.BufferSize;
+            set => TypeModel.DefaultModel.BufferSize = value;
         }
-        private static int s_bufferSize, s_effectiveBufferSize = BufferPool.BUFFER_LENGTH;
-        internal static int EffectiveBufferSize => s_effectiveBufferSize;
 
 #if FEAT_DYNAMIC_REF
         /// <summary>

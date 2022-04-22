@@ -39,6 +39,28 @@ namespace ProtoBuf.Meta
     /// </summary>
     public abstract partial class TypeModel
     {
+        // config options
+
+        /// <summary>
+        /// Gets or sets the buffer-size to use when writing messages via <see cref="IBufferWriter{T}"/>
+        /// </summary>
+        public int BufferSize
+        {
+            get => _bufferSize;
+            set => _bufferSize = value <= 0 ? BufferPool.BUFFER_LENGTH : value; // use default if invalid
+        }
+        /// <summary>
+        /// Gets or sets the max serialization/deserialization depth
+        /// </summary>
+        public int MaxDepth
+        {
+            get => _maxDepth;
+            set => _maxDepth = value <= 0 ? DefaultMaxDepth : value; // use default if invalid
+        }
+
+        private int _bufferSize = BufferPool.BUFFER_LENGTH, _maxDepth = DefaultMaxDepth;
+        internal const int DefaultMaxDepth = 512;
+
         /// <summary>
         /// Gets a cached serializer for a type, as offered by a given provider
         /// </summary>

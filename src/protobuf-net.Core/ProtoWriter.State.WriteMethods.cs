@@ -860,6 +860,9 @@ namespace ProtoBuf
                 ThrowHelper.ThrowProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}, depth {Depth}");
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowTooDeep(int depth) => ThrowHelper.ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + depth.ToString());
+
             /// <summary>
             /// Used for packed encoding; indicates that the next field should be skipped rather than
             /// a field header written. Note that the field number must match, else an exception is thrown
