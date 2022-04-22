@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "protobuf-net.Protogen": {
-      "commandName": "Project",
-      "commandLineArgs": "--proto_path=c:\\code\\test *.proto --csharp_out=c:\\code\\test",
-      "workingDirectory": "c:\\Code"
-    }
-  }
-}

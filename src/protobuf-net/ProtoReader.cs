@@ -500,6 +500,7 @@ namespace ProtoBuf
             {
                 int bytes = (int)ReadUInt32Variant(false);
                 if (bytes == 0) return "";
+                if (bytes < 0) ThrowInvalidLength(bytes);
                 if (available < bytes) Ensure(bytes, true);
 
                 string s = encoding.GetString(ioBuffer, ioIndex, bytes);
@@ -519,6 +520,11 @@ namespace ProtoBuf
         {
             string desc = type == null ? "<null>" : type.FullName;
             throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), this);
+        }
+
+        private void ThrowInvalidLength(long length)
+        {
+            throw AddErrorData(new InvalidOperationException("Invalid length: " + length.ToString()), this);
         }
 
         private Exception CreateWireTypeException()
@@ -634,7 +640,7 @@ namespace ProtoBuf
                     return new SubItemToken((long)(-reader.fieldNumber));
                 case WireType.String:
                     long len = (long)reader.ReadUInt64Variant();
-                    if (len < 0) throw AddErrorData(new InvalidOperationException(), reader);
+                    if (len < 0) reader.ThrowInvalidLength(len);
                     long lastEnd = reader.blockEnd64;
                     reader.blockEnd64 = reader.position64 + len;
                     reader.depth++;
@@ -754,6 +760,7 @@ namespace ProtoBuf
                     return;
                 case WireType.String:
                     long len = (long)ReadUInt64Variant();
+                    if (len < 0) ThrowInvalidLength(len);
                     if (len <= available)
                     { // just jump it!
                         available -= (int)len;
@@ -885,6 +892,7 @@ namespace ProtoBuf
                     int len = (int)reader.ReadUInt32Variant(false);
                     reader.wireType = WireType.None;
                     if (len == 0) return value ?? EmptyBlob;
+                    if (len < 0) reader.ThrowInvalidLength(len);
                     int offset;
                     if (value == null || value.Length == 0)
                     {
