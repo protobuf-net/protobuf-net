@@ -47,6 +47,13 @@ namespace ProtoBuf
 
         private TypeModel _model;
         private int _fieldNumber, _depth;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IncrDepth() => ++_depth >= (_model is null ? TypeModel.DefaultMaxDepth : _model.MaxDepth);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void DecrDepth() => _depth--;
+
         private long blockEnd64;
         private readonly NetObjectCache netCache = new NetObjectCache();
 

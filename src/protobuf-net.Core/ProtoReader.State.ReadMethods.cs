@@ -476,14 +476,14 @@ namespace ProtoBuf
                 {
                     case WireType.StartGroup:
                         reader.WireType = WireType.None; // to prevent glitches from double-calling
-                        reader._depth++;
+                        if (reader.IncrDepth()) ThrowTooDeep();
                         return new SubItemToken((long)(-reader._fieldNumber));
                     case WireType.String:
                         long len = (long)ReadUInt64Varint();
                         if (len < 0) ThrowInvalidOperationException();
                         long lastEnd = reader.blockEnd64;
                         reader.blockEnd64 = reader._longPosition + len;
-                        reader._depth++;
+                        if (reader.IncrDepth()) ThrowTooDeep();
                         return new SubItemToken(lastEnd);
                     default:
                         ThrowWireTypeException();
@@ -508,7 +508,7 @@ namespace ProtoBuf
                         if (value64 >= 0) ThrowProtoException("A length-based message was terminated via end-group; this indicates data corruption");
                         if (-(int)value64 != reader._fieldNumber) ThrowProtoException("Wrong group was ended"); // wrong group ended!
                         reader.WireType = WireType.None; // this releases ReadFieldHeader
-                        reader._depth--;
+                        reader.DecrDepth();
                         break;
                     // case WireType.None: // TODO reinstate once reads reset the wire-type
                     default:
@@ -519,7 +519,7 @@ namespace ProtoBuf
                             ThrowProtoException($"Sub-message not read correctly (end {reader.blockEnd64} vs {position})");
                         }
                         reader.blockEnd64 = value64;
-                        reader._depth--;
+                        reader.DecrDepth();
                         break;
                         /*default:
                             throw reader.BorkedIt(); */
@@ -673,9 +673,9 @@ namespace ProtoBuf
             private void SkipGroup()
             {
                 int originalFieldNumber = _reader._fieldNumber;
-                _reader._depth++; // need to satisfy the sanity-checks in ReadFieldHeader
+                if (_reader.IncrDepth()) ThrowTooDeep(); // need to satisfy the sanity-checks in ReadFieldHeader
                 while (ReadFieldHeader() > 0) { SkipField(); }
-                _reader._depth--;
+                _reader.DecrDepth();
                 if (_reader.WireType == WireType.EndGroup && _reader._fieldNumber == originalFieldNumber)
                 { // we expect to exit in a similar state to how we entered
                     _reader.WireType = WireType.None;
@@ -774,6 +774,10 @@ namespace ProtoBuf
             {
                 throw AddErrorData(new EndOfStreamException(), _reader, ref this);
             }
+
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowTooDeep() => ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + _reader._depth.ToString());
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidOperationException(string message = null)
