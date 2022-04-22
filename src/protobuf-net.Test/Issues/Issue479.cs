@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Meta;
 using System;
+using System.IO;
 using Xunit;
 
 namespace ProtoBuf.Test.Issues
@@ -53,6 +54,17 @@ namespace ProtoBuf.Test.Issues
             });
             Assert.Equal("Invalid length: -944124693168783374", ex.Message);
 
+            ex = Assert.Throws<InvalidOperationException>(() =>
+            {
+                Serializer.Deserialize<Person>(new ReadOnlyMemory<byte>(bytes));
+            });
+            Assert.Equal("Invalid length: -944124693168783374", ex.Message);
+
+            ex = Assert.Throws<InvalidOperationException>(() =>
+            {
+                Serializer.Deserialize<Person>(new MemoryStream(bytes));
+            });
+            Assert.Equal("Invalid length: -944124693168783374", ex.Message);
         }
     }
 }
