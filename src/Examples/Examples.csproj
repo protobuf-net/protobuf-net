@@ -82,7 +82,6 @@
 
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
   </ItemGroup>
   <ItemGroup>
