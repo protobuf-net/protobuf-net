@@ -427,7 +427,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected virtual void WriteOneOf(GeneratorContext ctx, OneOfStub stub)
         {
-            if (ctx.OneOfEnums)
+            if (ctx.OneOfEnums && !stub.IsProto3OptionalSyntheticOneOf())
             {
                 int index = stub.Index;
                 var obj = stub.OneOf;
