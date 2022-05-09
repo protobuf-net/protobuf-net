@@ -16,6 +16,7 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 - [`CompatibilityLevel`](http://protobuf-net.github.io/protobuf-net/compatibilitylevel)
 - [Build Tools for protobuf-net and protobuf-net.Grpc](https://protobuf-net.github.io/protobuf-net/build_tools)
 - [Generating code from .proto files at build-time](http://protobuf-net.github.io/protobuf-net/contract_first)
+- [Schema analysis tools](http://protobuf-net.github.io/protobuf-net/schemas)
 
 ## Donate
 
