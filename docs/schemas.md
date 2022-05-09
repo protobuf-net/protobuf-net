@@ -87,7 +87,7 @@ foreach (var file in schemaSet.Files)
     static MethodType GetMethodType(bool clientStreaming, bool serverStreaming)
         => clientStreaming
             ? serverStreaming ? MethodType.DuplexStreaming : MethodType.ClientStreaming
-            : serverStreaming ? MethodType.ClientStreaming : MethodType.Unary;
+            : serverStreaming ? MethodType.ServerStreaming : MethodType.Unary;
 }
 ```
 
@@ -98,7 +98,7 @@ TimeService.proto: 1 services
 package: 'MegaCorp'
 service: 'TimeService'; 1 methods
 > method: Subscribe; CS: False, SS: True
-  (ClientStreaming; .google.protobuf.Empty; .MegaCorp.TimeResult)
+  (ServerStreaming; .google.protobuf.Empty; .MegaCorp.TimeResult)
 google/protobuf/empty.proto: 0 services
 google/protobuf/timestamp.proto: 0 services
 ```
