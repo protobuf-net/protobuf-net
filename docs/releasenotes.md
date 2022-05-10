@@ -12,6 +12,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## 3.1.4
+
+- allow `OverwriteList` to work with properties declared as `IEnumerable<T>` (as a special-case) even if the existing value is a non-null, non-clearable collection
+
 ## 3.1.0
 
 - enforce maximum model depth (`TypeModel.MaxDepth`) during serialize and deserialize
