@@ -89,7 +89,7 @@ namespace ProtoBuf
             private protected override bool TryFlush(ref State state)
             {
                 if (flushLock != 0) return false;
-                if (ioIndex != 0 && dest is object)
+                if (ioIndex != 0 && dest is not null)
                 {
                     dest.Write(ioBuffer, 0, ioIndex);
                     ioIndex = 0;

@@ -121,7 +121,7 @@ namespace ProtoBuf.Meta
         {
             if (type.IsEnum) return WireType.Varint;
 
-            if (model is object && model.CanSerializeContractType(type))
+            if (model is not null && model.CanSerializeContractType(type))
             {
                 return format == DataFormat.Group ? WireType.StartGroup : WireType.String;
             }
@@ -148,6 +148,10 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.DateTime:
                 case ProtoTypeCode.Decimal:
                 case ProtoTypeCode.ByteArray:
+                case ProtoTypeCode.ByteArraySegment:
+                case ProtoTypeCode.ByteMemory:
+                case ProtoTypeCode.ByteReadOnlyMemory:
+                case ProtoTypeCode.BytePooledMemory:
                 case ProtoTypeCode.TimeSpan:
                 case ProtoTypeCode.Guid:
                 case ProtoTypeCode.Uri:
@@ -372,7 +376,7 @@ namespace ProtoBuf.Meta
             var serializer = TryGetSerializer<T>(state.Model);
             if (serializer is null)
             {
-                Debug.Assert(state.Model is object, "Model is null");
+                Debug.Assert(state.Model is not null, "Model is null");
                 long position = state.GetPosition();
                 state.Model.SerializeRootFallback(ref state, value);
                 return state.GetPosition() - position;
@@ -463,7 +467,7 @@ namespace ProtoBuf.Meta
             }
             do
             {
-                bool expectPrefix = expectedField > 0 || resolver is object;
+                bool expectPrefix = expectedField > 0 || resolver is not null;
                 len = ProtoReader.ReadLongLengthPrefix(source, expectPrefix, style, out int actualField, out int tmpBytesRead);
                 if (tmpBytesRead == 0) return value;
                 bytesRead += tmpBytesRead;
@@ -472,7 +476,7 @@ namespace ProtoBuf.Meta
                 switch (style)
                 {
                     case PrefixStyle.Base128:
-                        if (expectPrefix && expectedField == 0 && type is null && resolver is object)
+                        if (expectPrefix && expectedField == 0 && type is null && resolver is not null)
                         {
                             type = resolver(actualField);
                             skip = type is null;
@@ -1112,7 +1116,7 @@ namespace ProtoBuf.Meta
             if (arraySurrogate is object)
             {
                 Array newArray;
-                if (value is object)
+                if (value is not null)
                 {
                     if (arraySurrogate.Count == 0)
                     {   // we'll stay with what we had, thanks
@@ -1151,7 +1155,7 @@ namespace ProtoBuf.Meta
                 string fullName;
                 bool handled = false;
                 if (listType.IsInterface &&
-                    (fullName = listType.FullName) is object && fullName.Contains("Dictionary")) // have to try to be frugal here...
+                    (fullName = listType.FullName) is not null && fullName.Contains("Dictionary")) // have to try to be frugal here...
                 {
 
                     if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
@@ -1222,7 +1226,7 @@ namespace ProtoBuf.Meta
                 {
                     itemType = type.GetElementType();
                 }
-                if (itemType is object)
+                if (itemType is not null)
                 {
                     if (insideList) TypeModel.ThrowNestedListsNotSupported((parentListOrType as Type) ?? (parentListOrType?.GetType()));
                     found = TryDeserializeList(ref state, format, tag, type, itemType, ref value, isRoot);
@@ -1367,7 +1371,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates whether the supplied type is explicitly modelled by the model
         /// </summary>
-        internal bool IsDefined(Type type, CompatibilityLevel ambient) => type is object && DynamicStub.IsKnownType(type, this, ambient);
+        internal bool IsDefined(Type type, CompatibilityLevel ambient) => type is not null && DynamicStub.IsKnownType(type, this, ambient);
 
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
@@ -1652,10 +1656,10 @@ namespace ProtoBuf.Meta
         {
             string fullName = type is null ? "(unknown)" : type.FullName;
 
-            if (type is object)
+            if (type is not null)
             {
                 Type baseType = type.BaseType;
-                if (baseType is object && baseType
+                if (baseType is not null && baseType
                     .IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
                 {
                     ThrowHelper.ThrowInvalidOperationException(
@@ -1667,7 +1671,7 @@ namespace ProtoBuf.Meta
             {
                 ThrowHelper.ThrowInvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
             }
-            catch (Exception ex) when (model is object)
+            catch (Exception ex) when (model is not null)
             {
                 ex.Data["TypeModel"] = model.ToString();
                 throw;
@@ -1689,10 +1693,10 @@ namespace ProtoBuf.Meta
 
         internal static string SerializeType(TypeModel model, System.Type type)
         {
-            if (model is object)
+            if (model is not null)
             {
                 TypeFormatEventHandler handler = model.DynamicTypeFormatting;
-                if (handler is object)
+                if (handler is not null)
                 {
                     TypeFormatEventArgs args = new TypeFormatEventArgs(type);
                     handler(model, args);
@@ -1704,14 +1708,14 @@ namespace ProtoBuf.Meta
 
         internal static Type DeserializeType(TypeModel model, string value)
         {
-            if (model is object)
+            if (model is not null)
             {
                 TypeFormatEventHandler handler = model.DynamicTypeFormatting;
-                if (handler is object)
+                if (handler is not null)
                 {
                     TypeFormatEventArgs args = new TypeFormatEventArgs(value);
                     handler(model, args);
-                    if (args.Type is object) return args.Type;
+                    if (args.Type is not null) return args.Type;
                 }
             }
             return Type.GetType(value);
@@ -1746,7 +1750,7 @@ namespace ProtoBuf.Meta
             static bool CheckIfNullableT(ref Type type)
             {
                 Type tmp = Nullable.GetUnderlyingType(type);
-                if (tmp is object)
+                if (tmp is not null)
                 {
                     type = tmp;
                     return true;
@@ -1807,7 +1811,7 @@ namespace ProtoBuf.Meta
             else
             {
                 options = new SchemaGenerationOptions { Syntax = syntax };
-                if (type is object) options.Types.Add(type);
+                if (type is not null) options.Types.Add(type);
             }
             return GetSchema(options);
         }
@@ -1893,7 +1897,7 @@ namespace ProtoBuf.Meta
             {
                 Type type = Type.GetType(name);
 
-                if (type is object) return type;
+                if (type is not null) return type;
             }
             catch { }
             try
@@ -1904,7 +1908,7 @@ namespace ProtoBuf.Meta
                 if (assembly is null) assembly = Assembly.GetCallingAssembly();
 
                 Type type = assembly?.GetType(fullName);
-                if (type is object) return type;
+                if (type is not null) return type;
             }
             catch { }
             return null;

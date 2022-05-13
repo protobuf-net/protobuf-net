@@ -334,7 +334,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Indicates whether an instance currently exists
         /// </summary>
-        public bool HasValue => _value is object;
+        public bool HasValue => _value is not null;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private T Cast()
@@ -346,7 +346,7 @@ namespace ProtoBuf.Serializers
             // what they asked for)
             var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
 
-            if (_value is object) typed = Merge(_context, _value, typed);
+            if (_value is not null) typed = Merge(_context, _value, typed);
             _onBeforeDeserialize?.Invoke(typed, _context);
             _value = typed;
             return typed;
@@ -379,10 +379,10 @@ namespace ProtoBuf.Serializers
         /// </summary>
         public void OnBeforeDeserialize(Action<T, ISerializationContext> callback)
         {
-            if (callback is object)
+            if (callback is not null)
             {
                 if (_value is T obj) callback.Invoke(obj, _context);
-                else if (_onBeforeDeserialize is object) ThrowHelper.ThrowInvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
+                else if (_onBeforeDeserialize is not null) ThrowHelper.ThrowInvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
                 else _onBeforeDeserialize = callback;
             }
         }

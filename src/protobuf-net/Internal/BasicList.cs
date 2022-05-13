@@ -96,7 +96,7 @@ namespace ProtoBuf.Internal
             internal Node(object[] data, int length)
             {
                 Debug.Assert((data is null && length == 0) ||
-                    (data is object && length > 0 && length <= data.Length));
+                    (data is not null && length > 0 && length <= data.Length));
                 this.data = data;
 
                 this.Length = length;

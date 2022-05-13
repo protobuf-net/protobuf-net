@@ -12,6 +12,8 @@
   <ItemGroup>
     <Compile Include="..\Benchmark\Codegen\*.cs" />
     <Compile Include="..\Benchmark\*.cs" />
+    <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.cs" />
+    <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.generated.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

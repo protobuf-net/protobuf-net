@@ -19,7 +19,7 @@ namespace ProtoBuf.Compiler
         internal Local(CompilerContext ctx, Type type)
         {
             this.ctx = ctx;
-            if (ctx is object) { value = ctx.GetFromPool(type); }
+            if (ctx is not null) { value = ctx.GetFromPool(type); }
             this.type = type;
         }
 
@@ -35,7 +35,7 @@ namespace ProtoBuf.Compiler
         
         public void Dispose()
         {
-            if (ctx is object)
+            if (ctx is not null)
             {
                 // only *actually* dispose if this is context-bound; note that non-bound
                 // objects are cheekily re-used, and *must* be left intact agter a "using" etc
@@ -50,7 +50,7 @@ namespace ProtoBuf.Compiler
             if((object)this == (object)other) return true;
 
             object ourVal = value; // use prop to ensure obj-disposed etc
-            return other is object && ourVal == (object)(other.value); 
+            return other is not null && ourVal == (object)(other.value); 
         }
     }
 }

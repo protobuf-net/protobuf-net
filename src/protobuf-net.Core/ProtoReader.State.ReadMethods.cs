@@ -315,9 +315,9 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
             /// </summary>
-            [MethodImpl(MethodImplOptions.NoInlining)]
+            [MethodImpl(ProtoReader.HotPath)]
             public byte[] AppendBytes(byte[] value)
-                => AppendBytes(value, DefaultMemoryConverter<byte>.Instance);
+                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
@@ -341,11 +341,19 @@ namespace ProtoBuf
                 => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <summary>
+            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            public PooledMemory<byte> AppendBytes(PooledMemory<byte> value)
+                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
             public TStorage AppendBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
                 => AppendBytesImpl(value, converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model));
+
 
             private TStorage AppendBytesImpl<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
             {
@@ -544,7 +552,7 @@ namespace ProtoBuf
 
 
                 SubItemToken token = StartSubItem();
-                if (type is object && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: false))
+                if (type is not null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: false))
                 {
                     // handled it the easy way
                 }
@@ -803,7 +811,7 @@ namespace ProtoBuf
 
             internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
             {
-                if (exception is object && source is object && !exception.Data.Contains("protoSource"))
+                if (exception is not null && source is not null && !exception.Data.Contains("protoSource"))
                 {
                     exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                         source.FieldNumber, source.WireType, state.GetPosition(), source._depth));
@@ -936,7 +944,7 @@ namespace ProtoBuf
                         writeState.WriteInt64(ReadInt64());
                         return;
                     case WireType.String:
-                        writeState.WriteBytes(AppendBytes(null));
+                        writeState.WriteBytes(AppendBytes((byte[])null));
                         return;
                     case WireType.StartGroup:
                         SubItemToken readerToken = StartSubItem(),

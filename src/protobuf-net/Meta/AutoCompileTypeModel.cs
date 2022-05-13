@@ -46,7 +46,7 @@ namespace ProtoBuf.Meta
             if (options is null)
             {
                 var obj = (TypeModel)s_assemblyModels[assembly];
-                if (obj is object) return obj;
+                if (obj is not null) return obj;
             }
             return CreateForAssemblyImpl(assembly, options);
         }
@@ -82,7 +82,7 @@ namespace ProtoBuf.Meta
             lock (assembly)
             {
                 var found = (TypeModel)s_assemblyModels[assembly];
-                if (found is object) return found;
+                if (found is not null) return found;
 
                 RuntimeTypeModel model = null;
                 foreach (var type in assembly.GetTypes())
@@ -91,7 +91,7 @@ namespace ProtoBuf.Meta
                     if (!IsFullyPublic(type)) continue;
                     if (!type.IsDefined(typeof(ProtoContractAttribute), true)) continue;
 
-                    if (options is object && !options.OnIncludeType(type)) continue;
+                    if (options is not null && !options.OnIncludeType(type)) continue;
 
                     (model ??= RuntimeTypeModel.Create()).Add(type, true);
                 }

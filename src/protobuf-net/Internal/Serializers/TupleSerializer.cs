@@ -126,7 +126,7 @@ namespace ProtoBuf.Internal.Serializers
             for (int i = 0; i < tails.Length; i++)
             {
                 object val = GetValue(value, i);
-                if (val is object) tails[i].Write(ref state, val);
+                if (val is not null) tails[i].Write(ref state, val);
             }
         }
 
@@ -330,7 +330,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 for (int i = 0; i < locals.Length; i++)
                 {
-                    if (locals[i] is object)
+                    if (locals[i] is not null)
                         locals[i].Dispose(); // release for re-use
                 }
             }

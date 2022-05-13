@@ -168,14 +168,14 @@ namespace ProtoBuf.Compiler
 
         internal bool ImplementsServiceFor<T>(CompatibilityLevel ambient)
         {
-            if (_model is null || typeof(T).IsEnum || Nullable.GetUnderlyingType(typeof(T)) is object) return false;
+            if (_model is null || typeof(T).IsEnum || Nullable.GetUnderlyingType(typeof(T)) is not null) return false;
             if (!_model.IsKnownType<T>(ambient)) return false;
 
             var mt = _model[typeof(T)];
             if (mt is null) return false;
-            if (mt.SerializerType is object) return false;
+            if (mt.SerializerType is not null) return false;
 
-            if (_model.TryGetRepeatedProvider(mt.Type) is object) return false;
+            if (_model.TryGetRepeatedProvider(mt.Type) is not null) return false;
             return true;
         }
     }

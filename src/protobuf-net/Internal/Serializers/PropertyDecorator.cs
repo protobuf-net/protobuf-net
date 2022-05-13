@@ -29,7 +29,7 @@ namespace ProtoBuf.Internal.Serializers
         {
             if (property is null) throw new ArgumentNullException(nameof(property));
 
-            writeValue = tail.ReturnsValue && (GetShadowSetter(property) is object || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) is object));
+            writeValue = tail.ReturnsValue && (GetShadowSetter(property) is not null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) is not null));
             if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) is null)
             {
                 throw new InvalidOperationException($"Cannot serialize property without an accessible get accessor: {property.DeclaringType.FullName}.{property.Name}");
@@ -51,18 +51,18 @@ namespace ProtoBuf.Internal.Serializers
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            Debug.Assert(value is object);
+            Debug.Assert(value is not null);
             value = property.GetValue(value, null);
-            if (value is object) Tail.Write(ref state, value);
+            if (value is not null) Tail.Write(ref state, value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value is object);
+            Debug.Assert(value is not null);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
             object newVal = Tail.Read(ref state, oldVal);
-            if (readOptionsWriteValue && newVal is object) // if the tail returns a null, intepret that as *no assign*
+            if (readOptionsWriteValue && newVal is not null) // if the tail returns a null, intepret that as *no assign*
             {
                 if (shadowSetter is null)
                 {

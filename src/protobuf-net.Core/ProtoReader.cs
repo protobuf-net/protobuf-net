@@ -147,7 +147,7 @@ namespace ProtoBuf
         {
             OnDispose();
             _model = null;
-            if (stringInterner is object)
+            if (stringInterner is not null)
             {
                 stringInterner.Clear();
                 stringInterner = null;
@@ -627,7 +627,7 @@ namespace ProtoBuf
                 source.Seek(count, SeekOrigin.Current);
                 count = 0;
             }
-            else if (buffer is object)
+            else if (buffer is not null)
             {
                 int bytesRead;
                 while (count > buffer.Length && (bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)

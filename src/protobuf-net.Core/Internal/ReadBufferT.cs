@@ -79,7 +79,7 @@ namespace ProtoBuf.Internal
 
         private static void Recyle(ref T[] array)
         {
-            if (array is object)
+            if (array is not null)
             {
 #if PLAT_ISREF
                         bool clearArray = System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences<T>();
