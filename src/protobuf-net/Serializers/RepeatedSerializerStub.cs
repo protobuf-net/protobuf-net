@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
 
             // the value cannot be repeated (neither can key, but we ruled that out above)
             var repeated = model is null ? RepeatedSerializers.TryGetRepeatedProvider(value) : model.TryGetRepeatedProvider(value);
-            if (repeated is object) return false;
+            if (repeated is not null) return false;
 
             return true;
 
@@ -34,7 +34,7 @@ namespace ProtoBuf.Serializers
                 if (type.IsEnum) return true;
                 if (type == typeof(string)) return true;
                 if (!type.IsValueType) return false;
-                if (Nullable.GetUnderlyingType(type) is object) return false;
+                if (Nullable.GetUnderlyingType(type) is not null) return false;
                 switch (Type.GetTypeCode(type))
                 {
                     case TypeCode.SByte:
@@ -72,7 +72,7 @@ namespace ProtoBuf.Serializers
                 };
                 return _serializer;
             }
-            catch(TargetInvocationException tie) when (tie.InnerException is object)
+            catch(TargetInvocationException tie) when (tie.InnerException is not null)
             {
                 throw tie.InnerException;
             }
@@ -105,7 +105,7 @@ namespace ProtoBuf.Serializers
                 Type t => t,
                 _ => null,
             };
-            while (type is object && type != typeof(object))
+            while (type is not null && type != typeof(object))
             {
                 if (type.IsGenericType)
                 {

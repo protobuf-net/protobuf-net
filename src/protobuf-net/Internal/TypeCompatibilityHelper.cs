@@ -36,7 +36,7 @@ namespace ProtoBuf.Internal
                 }
 
                 var assembly = module.Assembly;
-                if (assembly is object)
+                if (assembly is not null)
                 {
                     if (Attribute.GetCustomAttribute(assembly, typeof(CompatibilityLevelAttribute), true) is CompatibilityLevelAttribute forAssembly
                         && forAssembly.Level > CompatibilityLevel.NotSpecified)

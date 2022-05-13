@@ -104,7 +104,7 @@ namespace ProtoBuf
         private void CheckRecursionStackAndPush(object instance)
         {
             if (recursionStack is null) { recursionStack = new List<object>(); }
-            else if (instance is object)
+            else if (instance is not null)
             {
                 int hitLevel = 0;
                 foreach (var obj in recursionStack)

@@ -292,7 +292,7 @@ namespace ProtoBuf
             /// <param name="dest">The destination stream to write to.</param>
             public static void Serialize(Stream dest, object instance)
             {
-                if (instance is object)
+                if (instance is not null)
                 {
                     var state = ProtoWriter.State.Create(dest, RuntimeTypeModel.Default);
                     try
@@ -380,7 +380,7 @@ namespace ProtoBuf
             public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, ProtoBuf.TypeResolver resolver, out object value)
             {
                 value = RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, null, style, 0, resolver);
-                return value is object;
+                return value is not null;
             }
 
             /// <summary>

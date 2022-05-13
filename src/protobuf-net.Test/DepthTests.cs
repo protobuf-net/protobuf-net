@@ -7,6 +7,8 @@ namespace ProtoBuf.Test
 {
     public class DepthTests
     {
+        private readonly RuntimeTypeModel _model = RuntimeTypeModel.Create();
+
         [ProtoContract]
         public class RecursiveModel
         {
@@ -41,7 +43,7 @@ namespace ProtoBuf.Test
         [InlineData(514, 520, true)]
         public void TestSerialize(int depth, int maxDepth, bool success)
         {
-            var oldDepth = RuntimeTypeModel.Default.MaxDepth;
+            var oldDepth = _model.MaxDepth;
             try
             {
                 var obj = new RecursiveModel();
@@ -51,24 +53,24 @@ namespace ProtoBuf.Test
                 }
                 Assert.Equal(depth, obj.TotalDepth());
                 var ms = new MemoryStream();
-                RuntimeTypeModel.Default.MaxDepth = maxDepth;
+                _model.MaxDepth = maxDepth;
 
                 if (success)
                 {
-                    Serializer.Serialize(ms, obj);
+                    _model.Serialize(ms, obj);
                     ms.Position = 0;
-                    obj = Serializer.Deserialize<RecursiveModel>(ms);
+                    obj = _model.Deserialize<RecursiveModel>(ms);
                     Assert.Equal(depth, obj.TotalDepth());
                 }
                 else
                 {
-                    var ex = Assert.Throws<InvalidOperationException>(() => Serializer.Serialize(ms, obj));
+                    var ex = Assert.Throws<InvalidOperationException>(() => _model.Serialize(ms, obj));
                     Assert.Equal($"Maximum model depth exceeded (see TypeModel.MaxDepth): {maxDepth}", ex.Message);
                 }
             }
             finally
             {
-                RuntimeTypeModel.Default.MaxDepth = oldDepth;
+                _model.MaxDepth = oldDepth;
             }
         }
 
@@ -86,7 +88,7 @@ namespace ProtoBuf.Test
         [InlineData(514, 520, true)]
         public void TestDeserialize(int depth, int maxDepth, bool success)
         {
-            var oldDepth = RuntimeTypeModel.Default.MaxDepth;
+            var oldDepth = _model.MaxDepth;
             try
             {
                 var obj = new RecursiveModel();
@@ -96,24 +98,24 @@ namespace ProtoBuf.Test
                 }
                 Assert.Equal(depth, obj.TotalDepth());
                 var ms = new MemoryStream();
-                RuntimeTypeModel.Default.MaxDepth = depth + 10;
-                Serializer.Serialize(ms, obj);
+                _model.MaxDepth = depth + 10;
+                _model.Serialize(ms, obj);
                 ms.Position = 0;
-                RuntimeTypeModel.Default.MaxDepth = maxDepth;
+                _model.MaxDepth = maxDepth;
                 if (success)
                 {
-                    obj = Serializer.Deserialize<RecursiveModel>(ms);
+                    obj = _model.Deserialize<RecursiveModel>(ms);
                     Assert.Equal(depth, obj.TotalDepth());
                 }
                 else
                 {
-                    var ex = Assert.Throws<InvalidOperationException>(() => Serializer.Deserialize<RecursiveModel>(ms));
+                    var ex = Assert.Throws<InvalidOperationException>(() => _model.Deserialize<RecursiveModel>(ms));
                     Assert.Equal($"Maximum model depth exceeded (see TypeModel.MaxDepth): {maxDepth}", ex.Message);
                 }
             }
             finally
             {
-                RuntimeTypeModel.Default.MaxDepth = oldDepth;
+                _model.MaxDepth = oldDepth;
             }
         }
     }

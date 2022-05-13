@@ -192,7 +192,7 @@ namespace ProtoBuf.Serializers
 
             if (!repeated.IsMap) // we allow nesting on dictionaries, just not on arrays/lists etc
             {
-                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) is object) return true;
+                if (repeated.ItemType == repeated.ForType || TryGetRepeatedProvider(repeated.ItemType) is not null) return true;
             }
             return false;
         }
@@ -231,7 +231,7 @@ namespace ProtoBuf.Serializers
             Type current = type;
             if (externalProviders != null)
             {
-                while (current is object && current != typeof(object))
+                while (current is not null && current != typeof(object))
                 {
                     if (TryGetExternalProvider(type, current, bestMatchPriority, out var found, out var priority, externalProviders)) Consider(found, priority);
                     current = current.BaseType;
@@ -243,7 +243,7 @@ namespace ProtoBuf.Serializers
                 }
             }
             current = type;
-            while (current is object && current != typeof(object))
+            while (current is not null && current != typeof(object))
             {
                 if (TryGetProvider(type, current, bestMatchPriority, out var found, out var priority)) Consider(found, priority);
                 current = current.BaseType;

@@ -40,7 +40,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IRuntimeProtoSerializerNode rootTail, SerializerFeatures features)
         {
-            Debug.Assert(declaredType is object, "declaredType");
+            Debug.Assert(declaredType is not null, "declaredType");
             Debug.Assert(rootTail is object, "rootTail");
             Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType), "surrogate type mismatch");
             this.declaredType = declaredType;
