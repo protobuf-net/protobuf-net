@@ -4,14 +4,18 @@ using Google.Protobuf;
 using Hyper;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
-using System.IO;
 
 namespace Benchmark
 {
-    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp31), SimpleJob(RuntimeMoniker.NetCoreApp50), MemoryDiagnoser]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp31), SimpleJob(RuntimeMoniker.Net60), MemoryDiagnoser]
     public class BufferStrategyBenchmarks
     {
+        static BufferStrategyBenchmarks()
+        {
+            RuntimeTypeModel.Default.Add<PooledBytes>().SetFactory(nameof(PooledBytes.Create));
+        }
         private readonly byte[] _payloadBytes;
         private readonly ReadOnlyMemory<byte> _payloadROM;
         public BufferStrategyBenchmarks()
@@ -30,6 +34,7 @@ namespace Benchmark
             template.WriteTo(_payloadBytes);
             _payloadROM = _payloadBytes;
 
+            // test deserialize
             var obj = new BytesTest();
             obj.MergeFrom(_payloadBytes);
             Assert(obj.Value.Memory, value);
@@ -39,6 +44,9 @@ namespace Benchmark
 
             using var pooled = Serializer.Deserialize<PooledBytes>(_payloadROM);
             Assert(pooled.Value, value);
+
+            using var pooledCustom = Serializer.Deserialize<CustomPooledBytes>(_payloadROM);
+            Assert(pooledCustom.Value, value);
         }
 
         static void Assert(ReadOnlyMemory<byte> actual, ReadOnlyMemory<byte> expected)
@@ -67,15 +75,22 @@ namespace Benchmark
             obj.Dispose();
         }
 
+        [Benchmark]
+        public void ProtobufNetCustomPooledMemory()
+        {
+            var obj = Serializer.Deserialize<CustomPooledBytes>(_payloadROM);
+            obj.Dispose();
+        }
+
         [ProtoContract]
-        public class SimpleBytes
+        public sealed class SimpleBytes
         {
             [ProtoMember(1)]
             public byte[] Value { get; set; }
         }
 
         [ProtoContract]
-        public class PooledBytes : IDisposable
+        public sealed class PooledBytes : IDisposable
         {
             [ProtoMember(1)]
             public PooledMemory<byte> Value { get; set; }
@@ -85,6 +100,77 @@ namespace Benchmark
                 var tmp = Value;
                 Value = default;
                 tmp.Dispose();
+
+                s_Spare = this;
+            }
+
+            [ThreadStatic]
+            private static PooledBytes s_Spare;
+
+            public static PooledBytes Create()
+            {
+                var obj = s_Spare ?? new PooledBytes();
+                s_Spare = null;
+                return obj;
+            }
+        }
+
+        [ProtoContract(Serializer = typeof(CustomPooledBytesSerializer))]
+        public sealed class CustomPooledBytes : IDisposable
+        {
+            [ProtoMember(1)]
+            public PooledMemory<byte> Value { get; set; }
+
+            public void Dispose()
+            {
+                var tmp = Value;
+                Value = default;
+                tmp.Dispose();
+
+                s_Spare = this;
+            }
+
+            [ThreadStatic]
+            private static CustomPooledBytes s_Spare;
+
+            private static CustomPooledBytes Create()
+            {
+                var obj = s_Spare ?? new CustomPooledBytes();
+                s_Spare = null;
+                return obj;
+            }
+
+            private sealed class CustomPooledBytesSerializer : ISerializer<CustomPooledBytes>
+            {
+                SerializerFeatures ISerializer<CustomPooledBytes>.Features => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+
+                CustomPooledBytes ISerializer<CustomPooledBytes>.Read(ref ProtoReader.State state, CustomPooledBytes value)
+                {
+                    value ??= Create();
+                    int field;
+                    while ((field = state.ReadFieldHeader()) > 0)
+                    {
+                        switch (field)
+                        {
+                            case 1:
+                                value.Value = state.AppendBytes(value.Value);
+                                break;
+                            default:
+                                state.SkipField();
+                                break;
+                        }
+                    }
+                    return value;
+                }
+
+                void ISerializer<CustomPooledBytes>.Write(ref ProtoWriter.State state, CustomPooledBytes value)
+                {
+                    if (!value.Value.IsEmpty)
+                    {
+                        state.WriteFieldHeader(1, WireType.String);
+                        state.WriteBytes(value.Value);
+                    }
+                }
             }
         }
     }
