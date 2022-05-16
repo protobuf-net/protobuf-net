@@ -1,9 +1,17 @@
 ﻿using Google.Protobuf.Reflection;
+using System;
+using System.Linq;
 
 namespace ProtoBuf.Reflection
 {
     public partial class CommonCodeGenerator
     {
+        private protected static bool UsePooledMemory(GeneratorContext ctx)
+            => string.Equals(ctx.GetCustomOption("bytes"), "PooledMemory", StringComparison.InvariantCultureIgnoreCase);
+
+        private protected static bool UsePooledMemory(GeneratorContext ctx, DescriptorProto message)
+            => UsePooledMemory(ctx) && message.Fields.Any(static field => field.type == FieldDescriptorProto.Type.TypeBytes);
+
         /// <summary>
         /// Represents the union summary of a one-of declaration
         /// </summary>
