@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 #nullable enable
 namespace ProtoBuf
@@ -28,8 +29,11 @@ namespace ProtoBuf
         /// <inheritdoc cref="Memory{T}.IsEmpty"/>
         public bool IsEmpty => Memory.IsEmpty;
 
-        // empty and no dispose required
-        internal bool IsTrivial => Memory.IsEmpty && _dispose is null;
+        /// <summary>
+        /// Indicates whether the value is empty and no dispose required
+        /// </summary>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool IsTrivial => Memory.IsEmpty && _dispose is null;
 
         /// <summary>
         /// Release all resources associated with this instance.
