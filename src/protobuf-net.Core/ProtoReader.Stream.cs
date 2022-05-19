@@ -58,7 +58,7 @@ namespace ProtoBuf
             s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
         {
-            if (s_origin is not null && s_buffer is not null)
+            if (s_origin is not null && s_buffer is not null && ms.GetType() == typeof(MemoryStream)) // don't consider subclasses
             {
                 try
                 {

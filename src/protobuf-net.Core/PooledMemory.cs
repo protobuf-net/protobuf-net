@@ -17,6 +17,12 @@ namespace ProtoBuf
         /// Gets the underlying memory represented by this instance.
         /// </summary>
         public Memory<T> Memory { get; }
+
+        /// <summary>
+        /// Gets the underlying span represented by this instance.
+        /// </summary>
+        public Span<T> Span => Memory.Span;
+
         /// <inheritdoc cref="Memory{T}.Length"/>
         public int Length => Memory.Length;
         /// <inheritdoc cref="Memory{T}.IsEmpty"/>
