@@ -341,13 +341,6 @@ namespace ProtoBuf
                 => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <summary>
-            /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
-            /// </summary>
-            [MethodImpl(ProtoReader.HotPath)]
-            public PooledMemory<byte> AppendBytes(PooledMemory<byte> value)
-                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
-
-            /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]

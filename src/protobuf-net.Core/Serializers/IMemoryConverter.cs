@@ -49,8 +49,7 @@ namespace ProtoBuf.Serializers
         IMemoryConverter<T[], T>,
         IMemoryConverter<ArraySegment<T>, T>,
         IMemoryConverter<Memory<T>, T>,
-        IMemoryConverter<ReadOnlyMemory<T>, T>,
-        IMemoryConverter<PooledMemory<T>, T>
+        IMemoryConverter<ReadOnlyMemory<T>, T>
     {
         [MethodImpl(ProtoReader.HotPath)]
         internal static IMemoryConverter<TStorage, T> GetFor<TStorage>(TypeModel model)
@@ -132,28 +131,5 @@ namespace ProtoBuf.Serializers
             value = newValue;
             return newValue.Slice(oldLength);
         }
-
-
-        Memory<T> IMemoryConverter<PooledMemory<T>, T>.Expand(ISerializationContext context, ref PooledMemory<T> value, int additionalCapacity)
-        {
-            if (value.IsTrivial)
-            {
-                // trivial old value; just alloc fresh
-                value = PooledMemory<T>.Rent(additionalCapacity);
-                return value.Memory;
-            }
-            int oldCapacity = value.Length;
-            var oldValue = value;
-            value = PooledMemory<T>.Rent(oldCapacity + additionalCapacity);
-            oldValue.Memory.CopyTo(value.Memory);
-            oldValue.Dispose();
-            return value.Memory.Slice(oldCapacity, additionalCapacity);
-        }
-
-        int IMemoryConverter<PooledMemory<T>, T>.GetLength(in PooledMemory<T> value) => value.Length;
-
-        Memory<T> IMemoryConverter<PooledMemory<T>, T>.GetMemory(in PooledMemory<T> value) => value.Memory;
-
-        PooledMemory<T> IMemoryConverter<PooledMemory<T>, T>.NonNull(in PooledMemory<T> value) => value;
     }
 }

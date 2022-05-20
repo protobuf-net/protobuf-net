@@ -151,7 +151,6 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.ByteArraySegment:
                 case ProtoTypeCode.ByteMemory:
                 case ProtoTypeCode.ByteReadOnlyMemory:
-                case ProtoTypeCode.BytePooledMemory:
                 case ProtoTypeCode.TimeSpan:
                 case ProtoTypeCode.Guid:
                 case ProtoTypeCode.Uri:

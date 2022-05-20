@@ -489,6 +489,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String
             /// </summary>
+            [MethodImpl(HotPath)]
             public void WriteBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
                 => WriteBytes((ReadOnlyMemory<byte>)(
                     converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model)
@@ -500,13 +501,6 @@ namespace ProtoBuf
             [MethodImpl(HotPath)]
             public void WriteBytes(Memory<byte> data)
                 => WriteBytes((ReadOnlyMemory<byte>)data);
-
-            /// <summary>
-            /// Writes a binary chunk to the stream; supported wire-types: String
-            /// </summary>
-            [MethodImpl(HotPath)]
-            public void WriteBytes(PooledMemory<byte> data)
-                => WriteBytes((ReadOnlyMemory<byte>)data.Memory);
 
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String

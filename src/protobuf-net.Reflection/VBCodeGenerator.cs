@@ -829,7 +829,7 @@ namespace ProtoBuf.Reflection
                 case FieldDescriptorProto.Type.TypeUint64:
                     return "ULong";
                 case FieldDescriptorProto.Type.TypeBytes:
-                    return UsePooledMemory(ctx) ? "Global.ProtoBuf.PooledMemory(Of Byte)" : "Byte()";
+                    return UseMemory(ctx) ? "Global.System.Memory(Of Byte)" : "Byte()";
                 case FieldDescriptorProto.Type.TypeEnum:
                     switch (field.TypeName)
                     {

@@ -657,9 +657,6 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.ByteReadOnlyMemory:
                     defaultWireType = WireType.String;
                     return new BlobSerializer<ReadOnlyMemory<byte>>(overwriteList);
-                case ProtoTypeCode.BytePooledMemory:
-                    defaultWireType = WireType.String;
-                    return new BlobSerializer<PooledMemory<byte>>(overwriteList);
                 case ProtoTypeCode.Type:
                     defaultWireType = WireType.String;
                     return SystemTypeSerializer.Instance;

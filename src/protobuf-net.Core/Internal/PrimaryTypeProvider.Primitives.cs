@@ -16,7 +16,6 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<ArraySegment<byte>>,
         IMeasuringSerializer<Memory<byte>>,
         IMeasuringSerializer<ReadOnlyMemory<byte>>,
-        IMeasuringSerializer<PooledMemory<byte>>,
         IMeasuringSerializer<byte>,
         IMeasuringSerializer<ushort>,
         IMeasuringSerializer<uint>,
@@ -89,17 +88,6 @@ namespace ProtoBuf.Internal
         void ISerializer<byte[]>.Write(ref ProtoWriter.State state, byte[] value) => state.WriteBytes(value);
         SerializerFeatures ISerializer<byte[]>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
         int IMeasuringSerializer<byte[]>.Measure(ISerializationContext context, WireType wireType, byte[] value)
-            => wireType switch
-            {
-                WireType.String => value.Length,
-                _ => -1,
-            };
-
-        PooledMemory<byte> ISerializer<PooledMemory<byte>>.Read(ref ProtoReader.State state, PooledMemory<byte> value) => state.AppendBytes(value);
-        void ISerializer<PooledMemory<byte>>.Write(ref ProtoWriter.State state, PooledMemory<byte> value) => state.WriteBytes(value.Memory);
-        SerializerFeatures ISerializer<PooledMemory<byte>>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
-
-        int IMeasuringSerializer<PooledMemory<byte>>.Measure(ISerializationContext context, WireType wireType, PooledMemory<byte> value)
             => wireType switch
             {
                 WireType.String => value.Length,
