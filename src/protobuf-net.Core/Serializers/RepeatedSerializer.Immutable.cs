@@ -61,8 +61,63 @@ namespace ProtoBuf.Serializers
         public static RepeatedSerializer<IImmutableSet<T>, T> CreateImmutableISet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => SerializerCache<ImmutableISetSerializer<T>>.InstanceField;
 
+        public static RepeatedSerializer<Memory<T>, T> CreateMemory<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+            => SerializerCache<MemorySerializer<T>>.InstanceField;
+    }
+
+    sealed class MemorySerializer<T> : RepeatedSerializer<Memory<T>, T>
+    {
+        protected override int TryGetCount(Memory<T> values) => values.Length;
+
+        protected override Memory<T> Clear(Memory<T> values, ISerializationContext context) => throw new NotSupportedException();
+        protected override Memory<T> Initialize(Memory<T> values, ISerializationContext context) => throw new NotSupportedException();
+        protected override Memory<T> AddRange(Memory<T> values, ref ArraySegment<T> newValues, ISerializationContext context) => throw new NotSupportedException();
+
+        static ArrayEnumerator GetEnumerator(Memory<T> values)
+        {
+            if (values.IsEmpty) return new ArrayEnumerator(null, 0, 0);
+            if (MemoryMarshal.TryGetArray<T>(values, out var segment)) return new ArrayEnumerator(segment.Array, segment.Offset, segment.Count);
+            return Throw();
+
+            static ArrayEnumerator Throw() => throw new NotImplementedException("Not a suitable backing array");
+        }
+        internal override long Measure(Memory<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            var iter = GetEnumerator(values);
+            return Measure(ref iter, serializer, context, wireType);
+        }
+
+        internal override void WritePacked(ref ProtoWriter.State state, Memory<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
+        {
+            var iter = GetEnumerator(values);
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, Memory<T> values, ISerializer<T> serializer)
+        {
+            var iter = GetEnumerator(values);
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+        }
 
 
+        [StructLayout(LayoutKind.Auto)]
+        struct ArrayEnumerator : IEnumerator<T>
+        {
+            public void Reset() => ThrowHelper.ThrowNotSupportedException();
+            readonly int _end;
+            readonly T[] _array;
+            int _index;
+            public ArrayEnumerator(T[] array, int offset, int count)
+            {
+                _array = array;
+                _index = offset - 1;
+                _end = offset + count;
+            }
+            public T Current => _array[_index];
+            object IEnumerator.Current => _array[_index];
+            public bool MoveNext() => ++_index < _end;
+            public void Dispose() { }
+        }
     }
 
     sealed class ImmutableArraySerializer<T> : RepeatedSerializer<ImmutableArray<T>, T>
