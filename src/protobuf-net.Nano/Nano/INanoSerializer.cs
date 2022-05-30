@@ -16,5 +16,5 @@ public interface INanoSerializer<T>
     /// <summary>
     /// Write a message
     /// </summary>
-    void Write(ref Writer writer, in T value);
+    void Write(in T value, ref Writer writer);
 }
