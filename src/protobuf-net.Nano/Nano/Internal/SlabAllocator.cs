@@ -2,9 +2,8 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 
-namespace ProtoBuf.Api;
+namespace ProtoBuf.Nano.Internal;
 
 internal static class SlabAllocator<T>
 {

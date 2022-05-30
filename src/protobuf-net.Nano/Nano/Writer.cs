@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+﻿using ProtoBuf.Nano.Internal;
 using System;
 using System.Buffers;
 using System.Diagnostics;
@@ -9,8 +9,11 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 #endif
 
-namespace ProtoBuf.Api;
+namespace ProtoBuf.Nano;
 
+/// <summary>
+/// Raw API for formatting protobuf data
+/// </summary>
 public ref struct Writer
 {
 #if USE_SPAN_BUFFER
@@ -27,6 +30,14 @@ public ref struct Writer
     private long _positionBase;
     private object _state;
 
+    /// <summary>
+    /// Gets the position of the writer
+    /// </summary>
+    public long Position => _positionBase + _index;
+
+    /// <summary>
+    /// Create a new writer instance backed by a buffer-writer
+    /// </summary>
     public Writer(IBufferWriter<byte> target)
     {
         _state = target;
@@ -67,6 +78,9 @@ public ref struct Writer
         }
     }
 
+    /// <summary>
+    /// Returns the length, in bytes, of the supplied value as a 32-bit unsigned varint
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint MeasureVarint32(uint value)
     {
@@ -87,8 +101,14 @@ public ref struct Writer
         }
     }
 
+    /// <summary>
+    /// Flush and release all resources associated with this instance
+    /// </summary>
     public void Dispose() => Flush();
 
+    /// <summary>
+    /// Returns the length, in bytes, of the supplied value as a 64-bit unsigned varint
+    /// </summary>
     internal static uint MeasureVarint64(ulong value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -113,23 +133,49 @@ public ref struct Writer
         }
     }
 
+    /// <summary>
+    /// Returns the length, in bytes, of a payload including the length prefix
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong MeasureWithLengthPrefix(ulong bytes) => MeasureVarint64(bytes) + bytes;
 
+    /// <summary>
+    /// Returns the length, in bytes, of a payload including the length prefix
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong MeasureWithLengthPrefix(uint bytes) => MeasureVarint64(bytes) + (ulong)bytes;
 
+
+    /// <summary>
+    /// Returns the length, in bytes, of a payload including the length prefix
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ulong MeasureWithLengthPrefix(ReadOnlyMemory<char> value)
+    public static ulong MeasureWithLengthPrefix(string value)
+        => MeasureWithLengthPrefix((uint)Reader.UTF8.GetByteCount(value));
+
+    /// <summary>
+    /// Returns the length, in bytes, of a payload including the length prefix
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ulong MeasureWithLengthPrefix(ReadOnlyMemory<char> value)
         => MeasureWithLengthPrefix((uint)Reader.UTF8.GetByteCount(value.Span));
 
+    /// <summary>
+    /// Returns the length, in bytes, of a payload including the length prefix
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static ulong MeasureWithLengthPrefix(ReadOnlyMemory<byte> value)
         => MeasureWithLengthPrefix((uint)value.Length);
 
+    /// <summary>
+    /// Writes a new tag (field-header)
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteTag(uint value) => WriteVarintUInt32(value);
 
+    /// <summary>
+    /// Writes a new tag (field-header)
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void WriteTag(byte value)
     {
@@ -205,11 +251,24 @@ public ref struct Writer
     private void WriteVarintUInt32Slow(uint value)
         => throw new NotImplementedException();
 
+    /// <summary>
+    /// Writes a payload including length prefix
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void WriteString(ReadOnlyMemory<char> value)
-        => WriteString(value.Span);
+    public void WriteWithLengthPrefix(string value)
+        => WriteWithLengthPrefix(value.AsSpan());
 
-    internal void WriteString(ReadOnlySpan<char> value)
+    /// <summary>
+    /// Writes a payload including length prefix
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteWithLengthPrefix(ReadOnlyMemory<char> value)
+        => WriteWithLengthPrefix(value.Span);
+
+    /// <summary>
+    /// Writes a payload including length prefix
+    /// </summary>
+    private void WriteWithLengthPrefix(ReadOnlySpan<char> value)
     {
         var bytes = Reader.UTF8.GetByteCount(value);
         WriteVarintUInt32((uint)bytes);
@@ -342,11 +401,17 @@ public ref struct Writer
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void WriteVarintUInt64Slow(ulong value) => throw new NotImplementedException();
 
+    /// <summary>
+    /// Writes a payload including length prefix
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void WriteBytes(ReadOnlyMemory<byte> value)
-        => WriteBytes(value.Span);
+    public void WriteWithLengthPrefix(ReadOnlyMemory<byte> value)
+        => WriteWithLengthPrefix(value.Span);
 
-    internal void WriteBytes(ReadOnlySpan<byte> value)
+    /// <summary>
+    /// Writes a payload including length prefix
+    /// </summary>
+    private void WriteWithLengthPrefix(ReadOnlySpan<byte> value)
     {
         var bytes = value.Length;
         WriteVarintUInt32((uint)bytes);
@@ -367,6 +432,9 @@ public ref struct Writer
     private void WriteBytesBytesSlow(ReadOnlySpan<byte> value)
         => throw new NotImplementedException();
 
+    /// <summary>
+    /// Writes a 32-bit floating-point value
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteSingle(float value)
     {

@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace ProtoBuf.Internal;
+namespace ProtoBuf.Nano.Internal;
 
 internal static class PlatformShims
 {

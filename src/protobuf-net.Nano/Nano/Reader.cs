@@ -5,12 +5,18 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using ProtoBuf.Internal;
+using ProtoBuf.Nano.Internal;
 
-namespace ProtoBuf.Api;
+namespace ProtoBuf.Nano;
 
+/// <summary>
+/// Raw API for parsing protobuf data
+/// </summary>
 public ref struct Reader
 {
+    /// <summary>
+    /// Releases all resources associated with this instance
+    /// </summary>
     public void Dispose()
     {
 #if USE_SPAN_BUFFER
@@ -38,10 +44,16 @@ public ref struct Reader
 #endif
     int _index, _end;
     long _positionBase;
-    long Position => _positionBase + _index;
+    /// <summary>
+    /// Gets the position of the reader
+    /// </summary>
+    public long Position => _positionBase + _index;
     long _objectEnd;
     internal static readonly UTF8Encoding UTF8 = new(false);
 
+    /// <summary>
+    /// Create a new reader instance backed by an array
+    /// </summary>
     public Reader(byte[] buffer, int offset, int count)
     {
 #if USE_SPAN_BUFFER
@@ -55,6 +67,11 @@ public ref struct Reader
         _positionBase = 0;
         _objectEnd = _end;
     }
+
+    /// <summary>
+    /// Create a new reader instance backed by a single memory value
+    /// </summary>
+    /// <param name="value"></param>
     public Reader(ReadOnlyMemory<byte> value)
     {
 #if USE_SPAN_BUFFER
@@ -82,6 +99,11 @@ public ref struct Reader
         _positionBase = 0;
         _objectEnd = _end;
     }
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
+    /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
     public ReadOnlyMemory<byte> ReadBytes(ReadOnlyMemory<byte> value)
     {
         var bytes = ReadLengthPrefix();
@@ -131,6 +153,11 @@ public ref struct Reader
         RefCountedMemory.TryRelease(value);
         return default;
     }
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of utf-8 encoded characters
+    /// </summary>
+    /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
     public ReadOnlyMemory<char> ReadString(ReadOnlyMemory<char> value)
     {
         var bytes = ReadLengthPrefix();
@@ -175,6 +202,9 @@ public ref struct Reader
         throw new NotImplementedException();
     }
 
+    /// <summary>
+    /// Read a raw tag (field header), taking object boundaries into account
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint ReadTag()
     {
@@ -208,37 +238,45 @@ public ref struct Reader
     }
 
 
-    //public ReadOnlyMemory<T> AppendLengthPrefixed<T>(ReadOnlyMemory<T> itemRequests, MessageReader<T> reader, uint tag, int sizeHint)
-    //{
-    //    Memory<T> target = SlabAllocator<T>.Expand(itemRequests, sizeHint);
-    //    int count = itemRequests.Length;
-
-    //    var oldEnd = _objectEnd;
-    //    var targetSpan = target.Span;
-    //    do
-    //    {
-    //        var subItemLength = ReadLengthPrefix();
-    //        _objectEnd = Position + subItemLength;
-    //        if (count == targetSpan.Length)
-    //        {
-    //            target = SlabAllocator<T>.Expand(target, sizeHint); ;
-    //            targetSpan = target.Span;
-    //        }
-    //        targetSpan[count++] = reader(ref this);
-    //        _objectEnd = oldEnd;
-    //    } while (TryReadTag(tag));
-
-    //    Debug.Assert(oldEnd >= Position);
-
-    //    target.TryRecover(count);
-    //    return target.Slice(0, count);
-    //}
-
-    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-    public unsafe ReadOnlyMemory<T> UnsafeAppendLengthPrefixed<T>(ReadOnlyMemory<T> itemRequests, delegate*<ref Reader, T> reader, uint tag, int sizeHint)
+    /// <summary>
+    /// Extend an existing collection of sub-items, treating each as length-prefixed
+    /// </summary>
+    /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
+    public ReadOnlyMemory<T> AppendLengthPrefixed<T>(ReadOnlyMemory<T> value, INanoSerializer<T> reader, uint tag, int sizeHint)
     {
-        Memory<T> target = SlabAllocator<T>.Expand(itemRequests, sizeHint);
-        int count = itemRequests.Length;
+        Memory<T> target = SlabAllocator<T>.Expand(value, sizeHint);
+        int count = value.Length;
+
+        var oldEnd = _objectEnd;
+        var targetSpan = target.Span;
+        do
+        {
+            var subItemLength = ReadLengthPrefix();
+            _objectEnd = Position + subItemLength;
+            if (count == targetSpan.Length)
+            {
+                target = SlabAllocator<T>.Expand(target, sizeHint); ;
+                targetSpan = target.Span;
+            }
+            targetSpan[count++] = reader.Read(ref this);
+            _objectEnd = oldEnd;
+        } while (TryReadTag(tag));
+
+        Debug.Assert(oldEnd >= Position);
+
+        RefCountedMemory.TryRecover(target, count);
+        return target.Slice(0, count);
+    }
+
+    /// <summary>
+    /// Extend an existing collection of sub-items, treating each as length-prefixed
+    /// </summary>
+    /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+    public unsafe ReadOnlyMemory<T> AppendLengthPrefixed<T>(ReadOnlyMemory<T> value, delegate*<ref Reader, T> reader, uint tag, int sizeHint)
+    {
+        Memory<T> target = SlabAllocator<T>.Expand(value, sizeHint);
+        int count = value.Length;
 
         var oldEnd = _objectEnd;
         var targetSpan = target.Span;
@@ -261,6 +299,9 @@ public ref struct Reader
         return target.Slice(0, count);
     }
 
+    /// <summary>
+    /// Read a 32-bit floating point value value
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float ReadSingle()
     {
@@ -280,7 +321,10 @@ public ref struct Reader
     [MethodImpl(MethodImplOptions.NoInlining)]
     private float ReadSingleSlow() => throw new NotImplementedException();
 
-    internal ulong ReadVarintUInt64()
+    /// <summary>
+    /// Read an unsigned 64-bit varint value
+    /// </summary>
+    public ulong ReadVarintUInt64()
     {
         if (_index + 10 <= _end)
         {
@@ -321,7 +365,11 @@ public ref struct Reader
         return ThrowTooManyBytes();
         static ulong ThrowTooManyBytes() => throw new InvalidOperationException("Too many bytes!");
     }
-    internal uint ReadVarintUInt32()
+
+    /// <summary>
+    /// Read an unsigned 32-bit varint value
+    /// </summary>
+    public uint ReadVarintUInt32()
     {
         if (_index + 5 <= _end)
         {

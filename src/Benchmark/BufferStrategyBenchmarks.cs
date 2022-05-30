@@ -3,8 +3,8 @@ using BenchmarkDotNet.Jobs;
 using Google.Protobuf;
 using Hyper;
 using ProtoBuf;
-using ProtoBuf.Api;
 using ProtoBuf.Meta;
+using ProtoBuf.Nano;
 using ProtoBuf.Serializers;
 using System;
 

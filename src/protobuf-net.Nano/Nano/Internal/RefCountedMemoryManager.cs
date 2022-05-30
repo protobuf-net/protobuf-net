@@ -3,16 +3,24 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace ProtoBuf.Api;
+namespace ProtoBuf.Nano.Internal;
 
-public abstract class RefCountedMemoryManager<T> : MemoryManager<T>
+/// <summary>
+/// A custom memory-manager that implements ref-counting
+/// </summary>
+internal abstract class RefCountedMemoryManager<T> : MemoryManager<T>
 {
     private int _refCount = 1;
+
+    /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
         if (disposing) Release();
     }
 
+    /// <summary>
+    /// Gets the counter value associated with this instance
+    /// </summary>
     public int RefCount => Volatile.Read(ref _refCount);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,7 +35,7 @@ public abstract class RefCountedMemoryManager<T> : MemoryManager<T>
         throw new InvalidOperationException("already dead!");
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Release()
+    internal void Release()
     {
         switch (Interlocked.Decrement(ref _refCount))
         {
@@ -41,5 +49,8 @@ public abstract class RefCountedMemoryManager<T> : MemoryManager<T>
         }
     }
 
+    /// <summary>
+    /// Operation to perform when the counter becomes zero
+    /// </summary>
     protected abstract void OnRelease();
 }
