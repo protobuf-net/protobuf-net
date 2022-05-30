@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
+        <RootNamespace>ProtoBuf</RootNamespace>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <AssemblyName>protobuf-net.Nano</AssemblyName>
+        <Title>protobuf-net.Nano</Title>
+        <Description>Underlying serializer API for protobuf-net</Description>
+        <DefineConstants Condition="'$(TargetFramework)' != 'net461' and '$(TargetFramework)' != 'netstandard2.0' and '$(TargetFramework)' != 'netstandard2.1'">$(DefineConstants);USE_SPAN_BUFFER</DefineConstants>
+        <LangVersion>10</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net461' or '$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="System.Memory" Version="4.5.4" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    </ItemGroup>
+</Project>

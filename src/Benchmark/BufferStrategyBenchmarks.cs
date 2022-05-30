@@ -3,6 +3,7 @@ using BenchmarkDotNet.Jobs;
 using Google.Protobuf;
 using Hyper;
 using ProtoBuf;
+using ProtoBuf.Api;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -93,13 +94,13 @@ namespace Benchmark
         public sealed class PooledBytes : IDisposable
         {
             [ProtoMember(1)]
-            public PooledMemory<byte> Value { get; set; }
+            public Memory<byte> Value { get; set; }
 
             public void Dispose()
             {
                 var tmp = Value;
                 Value = default;
-                tmp.Dispose();
+                RefCountedMemory.TryRelease(tmp);
 
                 s_Spare = this;
             }
@@ -119,13 +120,13 @@ namespace Benchmark
         public sealed class CustomPooledBytes : IDisposable
         {
             [ProtoMember(1)]
-            public PooledMemory<byte> Value { get; set; }
+            public Memory<byte> Value { get; set; }
 
             public void Dispose()
             {
                 var tmp = Value;
                 Value = default;
-                tmp.Dispose();
+                RefCountedMemory.TryRelease(tmp);
 
                 s_Spare = this;
             }

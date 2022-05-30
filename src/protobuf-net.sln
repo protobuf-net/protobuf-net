@@ -96,6 +96,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "protobuf-net.FSharp.Test", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.FSharp", "protobuf-net.FSharp\protobuf-net.FSharp.csproj", "{763193DB-D730-4898-AB6B-986880AB18BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Nano", "protobuf-net.Nano\protobuf-net.Nano.csproj", "{8698E360-1375-4AAA-AC4D-C829086558FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -283,6 +285,12 @@ Global
 		{763193DB-D730-4898-AB6B-986880AB18BF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{763193DB-D730-4898-AB6B-986880AB18BF}.VS|Any CPU.ActiveCfg = Debug|Any CPU
 		{763193DB-D730-4898-AB6B-986880AB18BF}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{8698E360-1375-4AAA-AC4D-C829086558FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8698E360-1375-4AAA-AC4D-C829086558FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8698E360-1375-4AAA-AC4D-C829086558FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8698E360-1375-4AAA-AC4D-C829086558FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8698E360-1375-4AAA-AC4D-C829086558FE}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{8698E360-1375-4AAA-AC4D-C829086558FE}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -319,6 +327,7 @@ Global
 		{B09E5BE2-3DE5-410C-A852-17626F0AC48D} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 		{43E0D7CC-2A54-43F9-B66C-8809C3851E2A} = {0D637072-686D-4DC7-91E4-87913E5154B4}
 		{763193DB-D730-4898-AB6B-986880AB18BF} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
+		{8698E360-1375-4AAA-AC4D-C829086558FE} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFE3C0D9-B865-48B9-9CC8-8AEA71EB5C16}
