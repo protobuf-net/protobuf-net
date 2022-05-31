@@ -1,5 +1,28 @@
 ﻿# Typical results
 
+(deserialize only)
+
+|                        Method |                  Job |              Runtime |      Mean |     Error |    StdDev |    Median |    Gen 0 |   Gen 1 |   Gen 2 | Allocated |
+|------------------------------ |--------------------- |--------------------- |----------:|----------:|----------:|----------:|---------:|--------:|--------:|----------:|
+|         DeserializeRequestGBP |             .NET 6.0 |             .NET 6.0 | 262.01 us |  4.738 us |  8.172 us | 259.50 us |  91.7969 | 39.0625 |       - | 770,800 B |
+|        DeserializeResponseGBP |             .NET 6.0 |             .NET 6.0 | 184.28 us |  1.325 us |  1.473 us | 183.74 us |  61.2793 | 21.7285 |       - | 513,960 B |
+|        DeserializeRequestNano |             .NET 6.0 |             .NET 6.0 | 188.31 us |  2.426 us |  2.150 us | 188.06 us |        - |       - |       - |     101 B |
+|       DeserializeResponseNano |             .NET 6.0 |             .NET 6.0 | 117.61 us |  2.154 us |  1.910 us | 117.12 us |        - |       - |       - |      64 B |
+|  DeserializeRequestNanoNoPool |             .NET 6.0 |             .NET 6.0 | 127.15 us |  2.418 us |  2.970 us | 125.89 us |  60.5469 | 27.3438 |       - | 508,984 B |
+| DeserializeResponseNanoNoPool |             .NET 6.0 |             .NET 6.0 |  79.70 us |  1.472 us |  1.446 us |  80.03 us |  30.0293 | 10.0098 |       - | 252,096 B |
+|    DeserializeRequestNanoSlab |             .NET 6.0 |             .NET 6.0 | 422.53 us | 28.035 us | 82.661 us | 451.46 us |  33.2031 | 33.2031 | 33.2031 | 401,981 B |
+|   DeserializeResponseNanoSlab |             .NET 6.0 |             .NET 6.0 | 228.54 us |  4.481 us |  6.427 us | 229.56 us |  10.0098 | 10.0098 | 10.0098 | 199,455 B |
+|         DeserializeRequestGBP | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 521.86 us |  4.468 us |  4.179 us | 520.35 us | 143.5547 | 60.5469 |       - | 905,451 B |
+|        DeserializeResponseGBP | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 327.92 us |  2.382 us |  2.228 us | 327.46 us |  81.5430 | 31.7383 |       - | 515,387 B |
+|        DeserializeRequestNano | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 494.70 us |  2.361 us |  1.972 us | 494.78 us |        - |       - |       - |     104 B |
+|       DeserializeResponseNano | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 280.40 us |  1.438 us |  1.345 us | 280.42 us |        - |       - |       - |      64 B |
+|  DeserializeRequestNanoNoPool | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 185.17 us |  2.985 us |  2.646 us | 184.50 us |  80.8105 | 26.8555 |       - | 510,288 B |
+| DeserializeResponseNanoNoPool | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 110.48 us |  0.857 us |  0.760 us | 110.55 us |  39.9170 | 13.3057 |       - | 252,706 B |
+|    DeserializeRequestNanoSlab | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 392.46 us |  7.146 us |  6.684 us | 392.04 us |  37.1094 | 37.1094 | 37.1094 | 402,441 B |
+|   DeserializeResponseNanoSlab | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 225.93 us |  4.402 us |  4.117 us | 226.84 us |  20.5078 | 20.5078 | 20.5078 | 199,634 B |
+
+(everything, earlier build)
+
 |                        Method |                  Job |              Runtime |       Mean |     Error |    StdDev |    Gen 0 |   Gen 1 | Allocated |
 |------------------------------ |--------------------- |--------------------- |-----------:|----------:|----------:|---------:|--------:|----------:|
 |             MeasureRequestGBP |             .NET 6.0 |             .NET 6.0 |  50.860 us | 0.3675 us | 0.3438 us |        - |       - |         - |
