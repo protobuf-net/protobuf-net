@@ -20,7 +20,7 @@ public class MemorySliceBenchmarks
     private const int OPCOUNT = 1024;
 
     [Benchmark(OperationsPerInvoke = OPCOUNT)]
-    public void New()
+    public void NewMemory()
     {
         for (int i = 0; i < OPCOUNT; i++)
         {
@@ -29,11 +29,56 @@ public class MemorySliceBenchmarks
     }
 
     [Benchmark(OperationsPerInvoke = OPCOUNT)]
-    public void Slice()
+    public void MemorySlice()
     {
         for (int i = 0; i < OPCOUNT; i++)
         {
             _ = _memory.Slice(_offset, 42);
         }
+    }
+
+
+    [Benchmark(OperationsPerInvoke = OPCOUNT)]
+    public void NewArray_Small()
+    {
+        for (int i = 0; i < OPCOUNT; i++)
+        {
+            _ = new byte[32];
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = OPCOUNT)]
+    public void GCArray_Small()
+    {
+#if NET5_0_OR_GREATER
+        for (int i = 0; i < OPCOUNT; i++)
+        {
+            _ = GC.AllocateUninitializedArray<byte>(32);
+        }
+#else
+        throw new PlatformNotSupportedException();
+#endif
+    }
+
+    [Benchmark(OperationsPerInvoke = OPCOUNT)]
+    public void NewArray_Large()
+    {
+        for (int i = 0; i < OPCOUNT; i++)
+        {
+            _ = new byte[4096];
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = OPCOUNT)]
+    public void GCArray_Large()
+    {
+#if NET5_0_OR_GREATER
+        for (int i = 0; i < OPCOUNT; i++)
+        {
+            _ = GC.AllocateUninitializedArray<byte>(4096);
+        }
+#else
+        throw new PlatformNotSupportedException();
+#endif
     }
 }
