@@ -100,7 +100,7 @@ namespace Benchmark
             {
                 var tmp = Value;
                 Value = default;
-                RefCountedMemory.TryRelease(tmp);
+                RefCountedMemory.Release(tmp);
 
                 s_Spare = this;
             }
@@ -126,7 +126,7 @@ namespace Benchmark
             {
                 var tmp = Value;
                 Value = default;
-                RefCountedMemory.TryRelease(tmp);
+                RefCountedMemory.Release(tmp);
 
                 s_Spare = this;
             }

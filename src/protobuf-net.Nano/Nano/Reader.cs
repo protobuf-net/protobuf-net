@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -103,46 +104,70 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
+    public byte[] ReadBytes()
+    {
+        var bytes = ReadLengthPrefix();
+        if (bytes == 0) return Array.Empty<byte>();
+
+        if (_index + bytes <= _end)
+        {
+            var arr = new byte[bytes];
+#if USE_SPAN_BUFFER
+        _buffer.Slice(_index, bytes).CopyTo(arr);
+#else
+            Buffer.BlockCopy(_buffer, _index, arr, 0, bytes);
+#endif
+            _index += bytes;
+            return arr;
+        }
+        return ReadBytesVectorSlow(bytes);
+    }
+
+    private byte[] ReadBytesVectorSlow(int length) => throw new NotImplementedException();
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
     /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
     public ReadOnlyMemory<byte> ReadBytes(ReadOnlyMemory<byte> value)
     {
         var bytes = ReadLengthPrefix();
         if (bytes == 0) return Empty(value);
 
-        Memory<byte> mutable;
-        if (bytes <= value.Length && RefCountedMemory.GetRefCount(value) == 1)
-        {
-            mutable = MemoryMarshal.AsMemory(value.Slice(0, bytes));
-        }
-        else
-        {
-            RefCountedMemory.TryRelease(value);
-            mutable = SlabAllocator<byte>.Rent(bytes);
-        }
-
         if (_index + bytes <= _end)
         {
+            Memory<byte> mutable;
+            if (bytes <= value.Length && RefCountedMemory.GetRefCount(value) == 1)
+            {
+                mutable = MemoryMarshal.AsMemory(value.Slice(0, bytes));
+            }
+            else
+            {
+                RefCountedMemory.Release(value);
+                mutable = SlabAllocator<byte>.Rent(bytes);
+            }
 #if USE_SPAN_BUFFER
             _buffer.Slice(_index, bytes).CopyTo(mutable.Span);
 #else
             new Span<byte>(_buffer, _index, bytes).CopyTo(mutable.Span);
 #endif
             _index += bytes;
+            return mutable;
         }
         else
         {
-            ReadBytesSlow(mutable);
+            RefCountedMemory.Release(value);
+            return ReadBytesSlow(bytes);
         }
-        return mutable;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private void ReadBytesSlow(Memory<byte> value) => throw new NotImplementedException();
+    private ReadOnlyMemory<byte> ReadBytesSlow(int length) => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int ReadLengthPrefix()
     {
-        var len = ReadVarintInt32();
+        int len = ReadVarintInt32();
         if (len < 0) ThrowNegative();
         return len;
 
@@ -150,9 +175,35 @@ public ref struct Reader
     }
     private static ReadOnlyMemory<T> Empty<T>(ReadOnlyMemory<T> value)
     {
-        RefCountedMemory.TryRelease(value);
+        RefCountedMemory.Release(value);
         return default;
     }
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of utf-8 encoded characters
+    /// </summary>
+    public string ReadString()
+    {
+        var bytes = ReadLengthPrefix();
+        if (bytes == 0) return "";
+
+        if (_index + bytes <= _end)
+        {
+#if USE_SPAN_BUFFER
+            var s = UTF8.GetString(_buffer.Slice(_index, bytes));
+#else
+            var s = UTF8.GetString(_buffer, _index, bytes);
+#endif
+            _index += bytes;
+            return s;
+        }
+        else
+        {
+            return ReadStringSlow(bytes);
+        }
+    }
+
+    private string ReadStringSlow(int length) => throw new NotImplementedException();
 
     /// <summary>
     /// Reads a length-prefixed chunk of utf-8 encoded characters
@@ -179,7 +230,7 @@ public ref struct Reader
             }
             else
             {
-                RefCountedMemory.TryRelease(value);
+                RefCountedMemory.Release(value);
                 mutable = SlabAllocator<char>.Rent(expectedChars);
             }
 #if USE_SPAN_BUFFER
@@ -273,7 +324,7 @@ public ref struct Reader
     /// </summary>
     /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-    public unsafe ReadOnlyMemory<T> AppendLengthPrefixed<T>(ReadOnlyMemory<T> value, delegate*<ref Reader, T> reader, uint tag, int sizeHint)
+    public unsafe ReadOnlyMemory<T> UnsafeAppendLengthPrefixed<T>(ReadOnlyMemory<T> value, delegate*<ref Reader, T> reader, uint tag, int sizeHint)
     {
         Memory<T> target = SlabAllocator<T>.Expand(value, sizeHint);
         int count = value.Length;
@@ -297,6 +348,26 @@ public ref struct Reader
 
         RefCountedMemory.TryRecover(target, count);
         return target.Slice(0, count);
+    }
+
+    /// <summary>
+    /// Extend an existing collection of sub-items, treating each as length-prefixed
+    /// </summary>
+    /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
+    [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+    public unsafe void UnsafeAppendLengthPrefixed<T>(List<T> value, delegate*<ref Reader, T> reader, uint tag)
+    {
+        var oldEnd = _objectEnd;
+        do
+        {
+            var subItemLength = ReadLengthPrefix();
+            _objectEnd = Position + subItemLength;
+            
+            value.Add(reader(ref this));
+            _objectEnd = oldEnd;
+        } while (TryReadTag(tag));
+
+        Debug.Assert(oldEnd >= Position);
     }
 
     /// <summary>
@@ -438,8 +509,15 @@ public ref struct Reader
     private byte ReadRawByteSlow() => throw new NotImplementedException();
 
     private uint ReadVarintUInt32Slow() => throw new NotImplementedException();
-    internal int ReadVarintInt32() => (int)ReadVarintUInt32();
 
-    internal long ReadVarintInt64() => (long)ReadVarintUInt64();
+    /// <summary>
+    /// Read a signed 32-bit varint value
+    /// </summary>
+    public int ReadVarintInt32() => (int)ReadVarintUInt32();
+
+    /// <summary>
+    /// Read an signed 64-bit varint value
+    /// </summary>
+    public long ReadVarintInt64() => (long)ReadVarintUInt64();
 }
 

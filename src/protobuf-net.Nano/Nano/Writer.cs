@@ -109,7 +109,7 @@ public ref struct Writer
     /// <summary>
     /// Returns the length, in bytes, of the supplied value as a 64-bit unsigned varint
     /// </summary>
-    internal static uint MeasureVarint64(ulong value)
+    public static uint MeasureVarint64(ulong value)
     {
 #if NETCOREAPP3_1_OR_GREATER
         if (Lzcnt.X64.IsSupported)
@@ -164,20 +164,20 @@ public ref struct Writer
     /// Returns the length, in bytes, of a payload including the length prefix
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ulong MeasureWithLengthPrefix(ReadOnlyMemory<byte> value)
+    public static ulong MeasureWithLengthPrefix(ReadOnlyMemory<byte> value)
         => MeasureWithLengthPrefix((uint)value.Length);
 
     /// <summary>
     /// Writes a new tag (field-header)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void WriteTag(uint value) => WriteVarintUInt32(value);
+    public void WriteTag(uint value) => WriteVarintUInt32(value);
 
     /// <summary>
     /// Writes a new tag (field-header)
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void WriteTag(byte value)
+    public void WriteTag(byte value)
     {
         if (_index < _end & (value & 0x80) == 0)
         {
@@ -189,7 +189,10 @@ public ref struct Writer
         }
     }
 
-    private void WriteVarintUInt32(uint value)
+    /// <summary>
+    /// Write an unsigned integer with varint encoding
+    /// </summary>
+    public void WriteVarintUInt32(uint value)
     {
         if (_index + 5 <= _end)
         {
@@ -290,8 +293,11 @@ public ref struct Writer
     private void WriteStringBytesSlow(ReadOnlySpan<char> value)
         => throw new NotImplementedException();
 
+    /// <summary>
+    /// Write an unsigned integer with varint encoding
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void WriteVarintUInt64(ulong value)
+    public void WriteVarintUInt64(ulong value)
     {
         if ((value >> 32) == 0) WriteVarintUInt32((uint)value);
         else WriteVarintUInt64Full(value);

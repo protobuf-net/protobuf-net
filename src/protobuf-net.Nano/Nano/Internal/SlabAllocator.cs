@@ -10,8 +10,8 @@ internal static class SlabAllocator<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Memory<T> Expand(ReadOnlyMemory<T> value, int sizeHint)
     {
-        int countHint, length;
-        if (MemoryMarshal.TryGetMemoryManager<T, SlabAllocator<T>.PerThreadSlab>(value, out var manager, out var start, out length))
+        int countHint;
+        if (MemoryMarshal.TryGetMemoryManager<T, SlabAllocator<T>.PerThreadSlab>(value, out var manager, out var start, out int length))
         {
             countHint = Math.Max(length, sizeHint); // double, or size hint: whichever is bigger
             if (manager.TryExpandForCurrentThread(start, length, countHint))
