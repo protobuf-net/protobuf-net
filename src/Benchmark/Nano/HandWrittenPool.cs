@@ -434,9 +434,6 @@ public sealed class ForwardResponse : IDisposable
     private static ForwardResponse ReadSingle(ref Reader reader) => Merge(null, ref reader);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ForwardResponse ReadSingle2(ref Reader reader) => Merge2(null, ref reader);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static ForwardResponse Merge(ForwardResponse? value, ref Reader reader)
     {
         value ??= new(default, 0, 0);
@@ -450,29 +447,6 @@ public sealed class ForwardResponse : IDisposable
                     {
                         value._itemResponses = reader.UnsafeAppendLengthPrefixed(value._itemResponses, ForwardPerItemResponse.UnsafeReader, (1 << 3) | (int)WireType.String, 4000);
                     }
-                    break;
-                case (2 << 3) | (int)WireType.Varint:
-                    value._routeLatencyInUs = reader.ReadVarintInt64();
-                    break;
-                case (3 << 3) | (int)WireType.Varint:
-                    value._routeStartTimeInTicks = reader.ReadVarintInt64();
-                    break;
-            }
-        }
-        return value;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal unsafe static ForwardResponse Merge2(ForwardResponse? value, ref Reader reader)
-    {
-        value ??= new(default, 0, 0);
-        uint tag;
-        while ((tag = reader.ReadTag()) != 0)
-        {
-            switch (tag)
-            {
-                case (1 << 3) | (int)WireType.String:
-                    value._itemResponses = reader.UnsafeAppendLengthPrefixed(value._itemResponses, ForwardPerItemResponse.UnsafeReader, (1 << 3) | (int)WireType.String, 4000);
                     break;
                 case (2 << 3) | (int)WireType.Varint:
                     value._routeLatencyInUs = reader.ReadVarintInt64();
@@ -512,7 +486,7 @@ public sealed class ForwardResponse : IDisposable
         if (!ros.IsSingleSegment) return Slow(ros);
 
         var reader = new Reader(ros.First);
-        var value = ReadSingle2(ref reader);
+        var value = ReadSingle(ref reader);
         reader.Dispose();
         return value;
 
@@ -523,7 +497,7 @@ public sealed class ForwardResponse : IDisposable
             payload.CopyTo(oversized);
 
             var reader = new Reader(oversized, 0, len);
-            var value = ReadSingle2(ref reader);
+            var value = ReadSingle(ref reader);
             reader.Dispose();
             ArrayPool<byte>.Shared.Return(oversized);
             return value;
