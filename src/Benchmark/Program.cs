@@ -1,4 +1,4 @@
-﻿#define RUN
+﻿//#define RUN
 using BenchmarkDotNet.Running;
 using System;
 

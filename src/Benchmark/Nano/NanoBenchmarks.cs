@@ -1,4 +1,4 @@
-﻿#define BASIC_ONLY
+﻿#define DESERIALIZE_ONLY
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
@@ -160,7 +160,7 @@ public class NanoBenchmarks
 
     const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure";
 
-#if !BASIC_ONLY
+#if !DESERIALIZE_ONLY
     [Benchmark]
     [BenchmarkCategory(CategoryMeasure)]
     public void MeasureRequestGBP()
@@ -278,12 +278,13 @@ public class NanoBenchmarks
 
     [Benchmark]
     [BenchmarkCategory(CategorySerialize)]
-    public void SerializeResponseNanoSlab ()
+    public void SerializeResponseNanoSlab()
     {
         var writer = new Writer(Empty());
         HandWrittenSlab.ForwardResponse.WriteSingle(_hwsResponse, ref writer);
         writer.Dispose();
     }
+#endif
 
     [Benchmark]
     [BenchmarkCategory(CategoryDeserialize)]
@@ -298,7 +299,6 @@ public class NanoBenchmarks
     {
         GoogleCodeGen.ForwardResponse.Parser.ParseFrom(_responseBA);
     }
-#endif
 
     [Benchmark]
     [BenchmarkCategory(CategoryDeserialize)]

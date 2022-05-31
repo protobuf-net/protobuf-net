@@ -111,9 +111,14 @@ public ref struct Reader
 
         if (_index + bytes <= _end)
         {
+#if NET5_0_OR_GREATER
+            var arr = GC.AllocateUninitializedArray<byte>(bytes);
+#else
             var arr = new byte[bytes];
+#endif
+
 #if USE_SPAN_BUFFER
-        _buffer.Slice(_index, bytes).CopyTo(arr);
+            _buffer.Slice(_index, bytes).CopyTo(arr);
 #else
             Buffer.BlockCopy(_buffer, _index, arr, 0, bytes);
 #endif
@@ -157,20 +162,12 @@ public ref struct Reader
     public ReadOnlyMemory<byte> ReadRefCountedBytes(ReadOnlyMemory<byte> value)
     {
         var bytes = ReadLengthPrefix();
-        if (bytes == 0) return Empty(value);
+        RefCountedMemory.Release(value);
+        if (bytes == 0) return default;
 
         if (_index + bytes <= _end)
         {
-            Memory<byte> mutable;
-            if (bytes <= value.Length && RefCountedMemory.GetRefCount(value) == 1)
-            {
-                mutable = MemoryMarshal.AsMemory(value.Slice(0, bytes));
-            }
-            else
-            {
-                RefCountedMemory.Release(value);
-                mutable = RefCountedSlabAllocator<byte>.Rent(bytes);
-            }
+            Memory<byte> mutable = RefCountedSlabAllocator<byte>.Rent(bytes);
 #if USE_SPAN_BUFFER
             _buffer.Slice(_index, bytes).CopyTo(mutable.Span);
 #else
@@ -181,7 +178,6 @@ public ref struct Reader
         }
         else
         {
-            RefCountedMemory.Release(value);
             return ReadRefCountedBytesSlow(bytes);
         }
     }
@@ -200,11 +196,6 @@ public ref struct Reader
         return len;
 
         static void ThrowNegative() => throw new InvalidOperationException("Negative length");
-    }
-    private static ReadOnlyMemory<T> Empty<T>(ReadOnlyMemory<T> value)
-    {
-        RefCountedMemory.Release(value);
-        return default;
     }
 
     /// <summary>
@@ -275,7 +266,8 @@ public ref struct Reader
     public ReadOnlyMemory<char> ReadRefCountedString(ReadOnlyMemory<char> value)
     {
         var bytes = ReadLengthPrefix();
-        if (bytes == 0) return Empty(value);
+        RefCountedMemory.Release(value);
+        if (bytes == 0) return default;
 
         if (_index + bytes <= _end)
         {
@@ -285,17 +277,7 @@ public ref struct Reader
 #else
             var expectedChars = UTF8.GetCharCount(_buffer, _index, bytes);
 #endif
-
-            Memory<char> mutable;
-            if (expectedChars <= value.Length && RefCountedMemory.GetRefCount(value) == 1)
-            {
-                mutable = MemoryMarshal.AsMemory(value.Slice(0, expectedChars));
-            }
-            else
-            {
-                RefCountedMemory.Release(value);
-                mutable = RefCountedSlabAllocator<char>.Rent(expectedChars);
-            }
+            Memory<char> mutable = RefCountedSlabAllocator<char>.Rent(expectedChars);
 #if USE_SPAN_BUFFER
             var actualChars = UTF8.GetChars(source, mutable.Span);
 #else
@@ -308,7 +290,6 @@ public ref struct Reader
         }
         else
         {
-            RefCountedMemory.Release(value);
             return ReadRefCountedStringSlow(bytes);
         }
     }

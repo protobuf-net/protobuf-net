@@ -78,32 +78,32 @@ public static class RefCountedMemory
         }
     }
 
-    /// <summary>
-    /// If the supplied memory is ref-counted: query the current counter
-    /// </summary>
-    /// <returns>The current count if the memory is ref-counted; <c>-1</c> otherwise</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetRefCount<T>(Memory<T> value)
-    {
-        if (MemoryMarshal.TryGetMemoryManager<T, RefCountedMemoryManager<T>>(value, out var manager))
-        {
-            return manager.RefCount;
-        }
-        return -1;
-    }
+    ///// <summary>
+    ///// If the supplied memory is ref-counted: query the current counter
+    ///// </summary>
+    ///// <returns>The current count if the memory is ref-counted; <c>-1</c> otherwise</returns>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //internal static int GetRefCount<T>(Memory<T> value)
+    //{
+    //    if (MemoryMarshal.TryGetMemoryManager<T, RefCountedMemoryManager<T>>(value, out var manager))
+    //    {
+    //        return manager.RefCount;
+    //    }
+    //    return -1;
+    //}
 
-    /// <summary>
-    /// If the supplied memory is ref-counted: query the current counter
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int GetRefCount<T>(ReadOnlyMemory<T> value)
-    {
-        if (MemoryMarshal.TryGetMemoryManager<T, RefCountedMemoryManager<T>>(value, out var manager))
-        {
-            return manager.RefCount;
-        }
-        return -1;
-    }
+    ///// <summary>
+    ///// If the supplied memory is ref-counted: query the current counter
+    ///// </summary>
+    //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    //internal static int GetRefCount<T>(ReadOnlyMemory<T> value)
+    //{
+    //    if (MemoryMarshal.TryGetMemoryManager<T, RefCountedMemoryManager<T>>(value, out var manager))
+    //    {
+    //        return manager.RefCount;
+    //    }
+    //    return -1;
+    //}
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
