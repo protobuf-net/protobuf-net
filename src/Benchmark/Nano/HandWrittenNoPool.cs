@@ -204,7 +204,7 @@ public sealed class ForwardRequest
     public ForwardRequest(string? traceId, List<ForwardPerItemRequest>? itemRequests, byte[]? requestContextInfo)
     {
         _traceId = traceId;
-        _itemRequests = itemRequests ?? new List<ForwardPerItemRequest>();
+        _itemRequests = itemRequests ?? new List<ForwardPerItemRequest>(3500);
         _requestContextInfo = requestContextInfo;
     }
 }
@@ -461,7 +461,7 @@ public sealed class ForwardResponse
 
     public ForwardResponse(List<ForwardPerItemResponse>? itemResponses, long routeLatencyInUs, long routeStartTimeInTicks)
     {
-        _itemResponses = itemResponses ?? new List<ForwardPerItemResponse>();
+        _itemResponses = itemResponses ?? new List<ForwardPerItemResponse>(3500);
         _routeLatencyInUs = routeLatencyInUs;
         _routeStartTimeInTicks = routeStartTimeInTicks;
     }

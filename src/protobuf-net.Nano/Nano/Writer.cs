@@ -109,6 +109,7 @@ public ref struct Writer
     /// <summary>
     /// Returns the length, in bytes, of the supplied value as a 64-bit unsigned varint
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint MeasureVarint64(ulong value)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -192,6 +193,7 @@ public ref struct Writer
     /// <summary>
     /// Write an unsigned integer with varint encoding
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteVarintUInt32(uint value)
     {
         if (_index + 5 <= _end)
@@ -240,8 +242,12 @@ public ref struct Writer
             else
 #endif
             {
-                Throw();
-                static void Throw() => throw new NotImplementedException();
+                while ((value & ~0x7FU) != 0)
+                {
+                    _buffer[_index++] = (byte)((value & 0x7F) | 0x80);
+                    value >>= 7;
+                }
+                _buffer[_index++] = (byte)value;
             }
         }
         else
@@ -395,8 +401,12 @@ public ref struct Writer
             else
 #endif
             {
-                Throw();
-                static void Throw() => throw new NotImplementedException();
+                while ((value & ~0x7FUL) != 0)
+                {
+                    _buffer[_index++] = (byte)((value & 0x7F) | 0x80);
+                    value >>= 7;
+                }
+                _buffer[_index++] = (byte)value;
             }
         }
         else
