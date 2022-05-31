@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿#define BASIC_ONLY
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using Google.Protobuf;
@@ -159,7 +160,7 @@ public class NanoBenchmarks
 
     const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure";
 
-
+#if !BASIC_ONLY
     [Benchmark]
     [BenchmarkCategory(CategoryMeasure)]
     public void MeasureRequestGBP()
@@ -297,6 +298,7 @@ public class NanoBenchmarks
     {
         GoogleCodeGen.ForwardResponse.Parser.ParseFrom(_responseBA);
     }
+#endif
 
     [Benchmark]
     [BenchmarkCategory(CategoryDeserialize)]

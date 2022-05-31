@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Nano.Internal;
@@ -7,73 +6,63 @@ namespace ProtoBuf.Nano.Internal;
 internal static class SimpleSlabAllocator<T>
 {
     [ThreadStatic]
-    private static PerThreadSlab? s_ThreadLocal;
+    private static int s_remaining;
 
-    private readonly static int SlabSize = (512 * 1024) / Unsafe.SizeOf<T>(); // , MaxChunkSize = 64 * 1024;
+    // measures show: on .NET Core etc, Slice is 2x faster than new (.45 vs .26 ns)
+    // on netfx, new is faster (.45 vs .68 ns)
+#if NETCOREAPP3_1_OR_GREATER
+    [ThreadStatic]
+    private static Memory<T> s_memory;
+#else
+    [ThreadStatic]
+    private static T[]? s_array;
+#endif
 
+    private readonly static int SlabSize = (512 * 1024) / Unsafe.SizeOf<T>();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Memory<T> Rent(int length)
     {
-        if (length == 0) return default;
-        var slab = s_ThreadLocal;
-        if (length > 0 && slab is not null && slab.TryRent(length, out var value)) return value;
+        if (length > 0 && length <= s_remaining)
+        {
+#if NETCOREAPP3_1_OR_GREATER
+            var mem = s_memory.Slice(SlabSize - s_remaining, length);
+#else
+            var mem = new Memory<T>(s_array, SlabSize - s_remaining, length);
+#endif
+            s_remaining -= length;
+            return mem;
+        }
         return RentSlow(length);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
     private static Memory<T> RentSlow(int length)
     {
+        if (length == 0) return default;
         if (length < 0) ThrowOutOfRange();
 
-        if (length > SlabSize) return new T[length]; // give up for over-sized
+        if (length > SlabSize)
+        {   // give up for over-sized
+#if NET5_0_OR_GREATER
+            return GC.AllocateUninitializedArray<T>(length);
+#else
+            return new T[length];
+#endif
+        }
 
-        if (!(s_ThreadLocal = new PerThreadSlab()).TryRent(length, out var value)) ThrowUnableToRent();
-        return value;
-
+        s_remaining = SlabSize - length;
+#if NET5_0_OR_GREATER
+        s_memory = GC.AllocateUninitializedArray<T>(SlabSize);
+        return s_memory.Slice(0, length);
+#elif NETCOREAPP3_1_OR_GREATER
+        s_memory = new T[SlabSize];
+        return s_memory.Slice(0, length);
+#else
+        s_array = new T[SlabSize];
+        return new Memory<T>(s_array, 0, length);
+#endif
 
         static void ThrowOutOfRange() => throw new ArgumentOutOfRangeException(nameof(length));
-        static void ThrowUnableToRent() => throw new InvalidOperationException("Unable to allocate from slab!");
-    }
-
-    internal sealed class PerThreadSlab : MemoryManager<T>
-    {
-        private readonly T[] _array;
-        private int _remaining;
-        private readonly Memory<T> _memory;
-
-        public PerThreadSlab()
-        {
-             _array = new T[SlabSize];
-            _remaining = _array.Length;
-            _memory = base.Memory;
-        }
-
-        public override Memory<T> Memory => _memory;
-
-        public override Span<T> GetSpan() => _array;
-
-        protected override bool TryGetArray(out ArraySegment<T> segment)
-        {
-            segment = new ArraySegment<T>(_array);
-            return true;
-        }
-
-        public override MemoryHandle Pin(int elementIndex = 0)
-            => throw new NotImplementedException();
-        public override void Unpin()
-            => throw new NotImplementedException();
-
-        protected override void Dispose(bool disposing) { }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryRent(int size, out Memory<T> value)
-        {
-            if (size <= _remaining)
-            {
-                value = _memory.Slice(_array.Length - _remaining, size);
-                _remaining -= size;
-                return true;
-            }
-            value = default;
-            return false;
-        }
     }
 }

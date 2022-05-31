@@ -40,7 +40,6 @@ internal static class RefCountedSlabAllocator<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Memory<T> Rent(int length)
     {
-        if (length == 0) return default;
         var slab = s_ThreadLocal;
         if (length > 0 && slab is not null && slab.TryRent(length, out var value)) return value;
         return RentSlow(length);
@@ -49,9 +48,17 @@ internal static class RefCountedSlabAllocator<T>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static Memory<T> RentSlow(int length)
     {
+        if (length == 0) return default;
         if (length < 0) ThrowOutOfRange();
 
-        if (length > SlabSize) return new T[length]; // give up for over-sized
+        if (length > SlabSize)
+        {   // give up for over-sized
+#if NET5_0_OR_GREATER
+            return GC.AllocateUninitializedArray<T>(length);
+#else
+            return new T[length];
+#endif
+        }
 
         s_ThreadLocal?.Release();
         if (!(s_ThreadLocal = new PerThreadSlab()).TryRent(length, out var value)) ThrowUnableToRent();
