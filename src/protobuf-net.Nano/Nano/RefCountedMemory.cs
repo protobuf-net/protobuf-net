@@ -15,7 +15,7 @@ public static class RefCountedMemory
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Memory<T> Rent<T>(int length)
-        => SlabAllocator<T>.Rent(length);
+        => RefCountedSlabAllocator<T>.Rent(length);
 
     /// <summary>
     /// If the supplied memory is ref-counted: decrement the counter
@@ -109,7 +109,7 @@ public static class RefCountedMemory
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void TryRecover<T>(Memory<T> value, int count)
     {
-        if (MemoryMarshal.TryGetMemoryManager<T, SlabAllocator<T>.PerThreadSlab>(value, out var manager, out var start, out var length))
+        if (MemoryMarshal.TryGetMemoryManager<T, RefCountedSlabAllocator<T>.PerThreadSlab>(value, out var manager, out var start, out var length))
         {
             manager.TryRecoverForCurrentThread(start, length, count);
         }
@@ -118,7 +118,7 @@ public static class RefCountedMemory
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void TryRecover<T>(ReadOnlyMemory<T> value, int count)
     {
-        if (MemoryMarshal.TryGetMemoryManager<T, SlabAllocator<T>.PerThreadSlab>(value, out var manager, out var start, out var length))
+        if (MemoryMarshal.TryGetMemoryManager<T, RefCountedSlabAllocator<T>.PerThreadSlab>(value, out var manager, out var start, out var length))
         {
             manager.TryRecoverForCurrentThread(start, length, count);
         }

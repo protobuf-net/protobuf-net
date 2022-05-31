@@ -128,8 +128,33 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
+    public ReadOnlyMemory<byte> ReadSlabBytes()
+    {
+        var bytes = ReadLengthPrefix();
+        if (bytes == 0) return default;
+
+        if (_index + bytes <= _end)
+        {
+            Memory<byte> mutable = SimpleSlabAllocator<byte>.Rent(bytes);
+#if USE_SPAN_BUFFER
+            _buffer.Slice(_index, bytes).CopyTo(mutable.Span);
+#else
+            new Span<byte>(_buffer, _index, bytes).CopyTo(mutable.Span);
+#endif
+            _index += bytes;
+            return mutable;
+        }
+        else
+        {
+            return ReadSlabBytesSlow(bytes);
+        }
+    }
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
     /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
-    public ReadOnlyMemory<byte> ReadBytes(ReadOnlyMemory<byte> value)
+    public ReadOnlyMemory<byte> ReadRefCountedBytes(ReadOnlyMemory<byte> value)
     {
         var bytes = ReadLengthPrefix();
         if (bytes == 0) return Empty(value);
@@ -144,7 +169,7 @@ public ref struct Reader
             else
             {
                 RefCountedMemory.Release(value);
-                mutable = SlabAllocator<byte>.Rent(bytes);
+                mutable = RefCountedSlabAllocator<byte>.Rent(bytes);
             }
 #if USE_SPAN_BUFFER
             _buffer.Slice(_index, bytes).CopyTo(mutable.Span);
@@ -157,12 +182,15 @@ public ref struct Reader
         else
         {
             RefCountedMemory.Release(value);
-            return ReadBytesSlow(bytes);
+            return ReadRefCountedBytesSlow(bytes);
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ReadOnlyMemory<byte> ReadBytesSlow(int length) => throw new NotImplementedException();
+    private ReadOnlyMemory<byte> ReadSlabBytesSlow(int length) => throw new NotImplementedException();
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ReadOnlyMemory<byte> ReadRefCountedBytesSlow(int length) => throw new NotImplementedException();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int ReadLengthPrefix()
@@ -203,13 +231,48 @@ public ref struct Reader
         }
     }
 
+    /// <summary>
+    /// Reads a length-prefixed chunk of utf-8 encoded characters
+    /// </summary>
+    public ReadOnlyMemory<char> ReadSlabString()
+    {
+        var bytes = ReadLengthPrefix();
+        if (bytes == 0) return default;
+
+        if (_index + bytes <= _end)
+        {
+#if USE_SPAN_BUFFER
+            var source = _buffer.Slice(_index, bytes);
+            var expectedChars = UTF8.GetCharCount(source);
+#else
+            var expectedChars = UTF8.GetCharCount(_buffer, _index, bytes);
+#endif
+
+            Memory<char> mutable = SimpleSlabAllocator<char>.Rent(expectedChars);
+#if USE_SPAN_BUFFER
+            var actualChars = UTF8.GetChars(source, mutable.Span);
+#else
+            var actualChars = UTF8.GetChars(new ReadOnlySpan<byte>(_buffer, _index, bytes), mutable.Span);
+#endif
+
+            Debug.Assert(expectedChars == actualChars);
+            _index += bytes;
+            return mutable;
+        }
+        else
+        {
+            return ReadSlabStringSlow(bytes);
+        }
+    }
+
+    private ReadOnlyMemory<char> ReadSlabStringSlow(int length) => throw new NotImplementedException();
     private string ReadStringSlow(int length) => throw new NotImplementedException();
 
     /// <summary>
     /// Reads a length-prefixed chunk of utf-8 encoded characters
     /// </summary>
     /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
-    public ReadOnlyMemory<char> ReadString(ReadOnlyMemory<char> value)
+    public ReadOnlyMemory<char> ReadRefCountedString(ReadOnlyMemory<char> value)
     {
         var bytes = ReadLengthPrefix();
         if (bytes == 0) return Empty(value);
@@ -231,7 +294,7 @@ public ref struct Reader
             else
             {
                 RefCountedMemory.Release(value);
-                mutable = SlabAllocator<char>.Rent(expectedChars);
+                mutable = RefCountedSlabAllocator<char>.Rent(expectedChars);
             }
 #if USE_SPAN_BUFFER
             var actualChars = UTF8.GetChars(source, mutable.Span);
@@ -245,10 +308,11 @@ public ref struct Reader
         }
         else
         {
-            return ReadStringSlow(bytes, value);
+            RefCountedMemory.Release(value);
+            return ReadRefCountedStringSlow(bytes);
         }
     }
-    private ReadOnlyMemory<char> ReadStringSlow(int bytes, ReadOnlyMemory<char> value)
+    private ReadOnlyMemory<char> ReadRefCountedStringSlow(int bytes)
     {
         throw new NotImplementedException();
     }
@@ -295,7 +359,7 @@ public ref struct Reader
     /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
     public ReadOnlyMemory<T> AppendLengthPrefixed<T>(ReadOnlyMemory<T> value, INanoSerializer<T> reader, uint tag, int sizeHint)
     {
-        Memory<T> target = SlabAllocator<T>.Expand(value, sizeHint);
+        Memory<T> target = RefCountedSlabAllocator<T>.Expand(value, sizeHint);
         int count = value.Length;
 
         var oldEnd = _objectEnd;
@@ -306,7 +370,7 @@ public ref struct Reader
             _objectEnd = Position + subItemLength;
             if (count == targetSpan.Length)
             {
-                target = SlabAllocator<T>.Expand(target, sizeHint); ;
+                target = RefCountedSlabAllocator<T>.Expand(target, sizeHint); ;
                 targetSpan = target.Span;
             }
             targetSpan[count++] = reader.Read(ref this);
@@ -326,7 +390,7 @@ public ref struct Reader
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
     public unsafe ReadOnlyMemory<T> UnsafeAppendLengthPrefixed<T>(ReadOnlyMemory<T> value, delegate*<ref Reader, T> reader, uint tag, int sizeHint)
     {
-        Memory<T> target = SlabAllocator<T>.Expand(value, sizeHint);
+        Memory<T> target = RefCountedSlabAllocator<T>.Expand(value, sizeHint);
         int count = value.Length;
 
         var oldEnd = _objectEnd;
@@ -337,7 +401,7 @@ public ref struct Reader
             _objectEnd = Position + subItemLength;
             if (count == targetSpan.Length)
             {
-                target = SlabAllocator<T>.Expand(target, sizeHint); ;
+                target = RefCountedSlabAllocator<T>.Expand(target, sizeHint); ;
                 targetSpan = target.Span;
             }
             targetSpan[count++] = reader(ref this);

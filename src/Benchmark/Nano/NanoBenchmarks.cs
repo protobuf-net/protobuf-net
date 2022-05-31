@@ -25,6 +25,8 @@ public class NanoBenchmarks
     private HandWrittenPool.ForwardResponse _hwResponse;
     private HandWrittenNoPool.ForwardRequest _hwnpRequest;
     private HandWrittenNoPool.ForwardResponse _hwnpResponse;
+    private HandWrittenSlab.ForwardRequest _hwsRequest;
+    private HandWrittenSlab.ForwardResponse _hwsResponse;
 
     [GlobalSetup]
     public void Setup()
@@ -127,6 +129,32 @@ public class NanoBenchmarks
             HandWrittenNoPool.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenNoPool.ForwardResponse.Measure(obj));
+
+        _hwsRequest = Prepare(_requestBA, buffer =>
+        {
+            var reader = new Reader(buffer);
+            var obj = HandWrittenSlab.ForwardRequest.Merge(null, ref reader);
+            reader.Dispose();
+            return obj;
+        }, (obj, bw) =>
+        {
+            var writer = new Writer(bw);
+            HandWrittenSlab.ForwardRequest.WriteSingle(obj, ref writer);
+            writer.Dispose();
+        }, Empty(), obj => (long)HandWrittenSlab.ForwardRequest.Measure(obj));
+
+        _hwsResponse = Prepare(_responseBA, buffer =>
+        {
+            var reader = new Reader(buffer);
+            var obj = HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
+            reader.Dispose();
+            return obj;
+        }, (obj, bw) =>
+        {
+            var writer = new Writer(bw);
+            HandWrittenSlab.ForwardResponse.WriteSingle(obj, ref writer);
+            writer.Dispose();
+        }, Empty(), obj => (long)HandWrittenSlab.ForwardResponse.Measure(obj));
     }
 
     const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure";
@@ -172,6 +200,20 @@ public class NanoBenchmarks
     public void MeasureResponseNanoNoPool()
     {
         HandWrittenNoPool.ForwardResponse.Measure(_hwnpResponse);
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryMeasure)]
+    public void MeasureRequestNanoSlab()
+    {
+        HandWrittenSlab.ForwardRequest.Measure(_hwsRequest);
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryMeasure)]
+    public void MeasureResponseNanoSlab()
+    {
+        HandWrittenSlab.ForwardResponse.Measure(_hwsResponse);
     }
 
     [Benchmark]
@@ -225,6 +267,24 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
+    [BenchmarkCategory(CategorySerialize)]
+    public void SerializeRequestNanoSlab()
+    {
+        var writer = new Writer(Empty());
+        HandWrittenSlab.ForwardRequest.WriteSingle(_hwsRequest, ref writer);
+        writer.Dispose();
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategorySerialize)]
+    public void SerializeResponseNanoSlab ()
+    {
+        var writer = new Writer(Empty());
+        HandWrittenSlab.ForwardResponse.WriteSingle(_hwsResponse, ref writer);
+        writer.Dispose();
+    }
+
+    [Benchmark]
     [BenchmarkCategory(CategoryDeserialize)]
     public void DeserializeRequestGBP()
     {
@@ -273,6 +333,24 @@ public class NanoBenchmarks
     {
         var reader = new Reader(_responseBA);
         HandWrittenNoPool.ForwardResponse.Merge(null, ref reader);
+        reader.Dispose();
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryDeserialize)]
+    public void DeserializeRequestNanoSlab()
+    {
+        var reader = new Reader(_requestBA);
+        HandWrittenSlab.ForwardRequest.Merge(null, ref reader);
+        reader.Dispose();
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryDeserialize)]
+    public void DeserializeResponseNanoSlab()
+    {
+        var reader = new Reader(_responseBA);
+        HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
         reader.Dispose();
     }
 

@@ -6,7 +6,7 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Benchmark.Nano.HandWrittenPool;
+namespace Benchmark.Nano.HandWrittenSlab;
 
 //static class WireTypes
 //{
@@ -99,7 +99,7 @@ public sealed class ForwardRequest : IDisposable
             switch (tag)
             {
                 case (1 << 3) | (int)WireType.String:
-                    value._traceId = reader.ReadRefCountedString(value._traceId);
+                    value._traceId = reader.ReadSlabString();
                     break;
                 case (2 << 3) | (int)WireType.String:
                     unsafe
@@ -108,7 +108,7 @@ public sealed class ForwardRequest : IDisposable
                     }
                     break;
                 case (3 << 3) | (int)WireType.String:
-                    value._requestContextInfo = reader.ReadRefCountedBytes(value._requestContextInfo);
+                    value._requestContextInfo = reader.ReadSlabBytes();
                     break;
             }
         }
@@ -170,9 +170,7 @@ public sealed class ForwardRequest : IDisposable
 
     public void Dispose()
     {
-        RefCountedMemory.Release(_traceId);
-        RefCountedMemory.ReleaseAll(_itemRequests);
-        RefCountedMemory.Release(_requestContextInfo);
+        RefCountedMemory.Release(_itemRequests);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -213,7 +211,7 @@ message ForwardPerItemRequest
   bytes itemContext = 2;
 }
 */
-public readonly struct ForwardPerItemRequest : IDisposable
+public readonly struct ForwardPerItemRequest
 {
     private readonly ReadOnlyMemory<byte> _itemId;
     private readonly ReadOnlyMemory<byte> _itemContext;
@@ -235,10 +233,10 @@ public readonly struct ForwardPerItemRequest : IDisposable
             switch (tag)
             {
                 case (1 << 3) | (int)WireType.String:
-                    _itemId = reader.ReadRefCountedBytes(_itemId);
+                    _itemId = reader.ReadSlabBytes();
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    _itemContext = reader.ReadRefCountedBytes(_itemContext);
+                    _itemContext = reader.ReadSlabBytes();
                     break;
             }
         }
@@ -251,12 +249,6 @@ public readonly struct ForwardPerItemRequest : IDisposable
 
     public ReadOnlyMemory<byte> ItemId => _itemId;
     public ReadOnlyMemory<byte> ItemContext => _itemContext;
-
-    public void Dispose()
-    {
-        RefCountedMemory.Release(_itemId);
-        RefCountedMemory.Release(_itemContext);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static ulong Measure(in ForwardPerItemRequest value)
@@ -294,7 +286,7 @@ message ForwardPerItemResponse {
   bytes extraResult = 2;
 }
 */
-public readonly struct ForwardPerItemResponse : IDisposable
+public readonly struct ForwardPerItemResponse
 {
     private readonly float _result;
     private readonly ReadOnlyMemory<byte> _extraResult;
@@ -320,7 +312,7 @@ public readonly struct ForwardPerItemResponse : IDisposable
                     _result = reader.ReadSingle();
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    _extraResult = reader.ReadRefCountedBytes(_extraResult);
+                    _extraResult = reader.ReadSlabBytes();
                     break;
             }
         }
@@ -349,11 +341,6 @@ public readonly struct ForwardPerItemResponse : IDisposable
 
     public float Result => _result;
     public ReadOnlyMemory<byte> ExtraResult => _extraResult;
-
-    public void Dispose()
-    {
-        RefCountedMemory.Release(_extraResult);
-    }
 
     internal static void WriteSingle(in ForwardPerItemResponse value, ref Writer writer)
     {
@@ -532,6 +519,6 @@ public sealed class ForwardResponse : IDisposable
 
     public void Dispose()
     {
-        RefCountedMemory.ReleaseAll(_itemResponses);
+        RefCountedMemory.Release(_itemResponses);
     }
 }
