@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using Google.Protobuf;
+using ProtoBuf;
 using ProtoBuf.Nano;
 using System;
 using System.Buffers;
@@ -29,6 +30,8 @@ public class NanoBenchmarks
     private HandWrittenNoPool.ForwardResponse _hwnpResponse;
     private HandWrittenSlab.ForwardRequest _hwsRequest;
     private HandWrittenSlab.ForwardResponse _hwsResponse;
+    private SimpleProtobufNet.ForwardRequest _pbnRequest;
+    private SimpleProtobufNet.ForwardResponse _pbnResponse;
 
     [GlobalSetup]
     public void Setup()
@@ -158,6 +161,12 @@ public class NanoBenchmarks
             HandWrittenSlab.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenSlab.ForwardResponse.Measure(obj), obj => obj.Dispose());
+
+        _pbnRequest = Prepare(_requestBA, buffer => Serializer.Deserialize<SimpleProtobufNet.ForwardRequest>((ReadOnlyMemory<byte>)buffer),
+            (obj, bw) => Serializer.Serialize(bw, obj), Empty(), obj => Serializer.Measure(obj).LengthOnly(), null);
+
+        _pbnResponse = Prepare(_responseBA, buffer => Serializer.Deserialize<SimpleProtobufNet.ForwardResponse>((ReadOnlyMemory<byte>)buffer),
+            (obj, bw) => Serializer.Serialize(bw, obj), Empty(), obj => Serializer.Measure(obj).LengthOnly(), null);
     }
 
     const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure", CategoryRequest = "Request", CategoryResponse = "Response";
@@ -205,18 +214,32 @@ public class NanoBenchmarks
         HandWrittenNoPool.ForwardResponse.Measure(_hwnpResponse);
     }
 
-    [Benchmark]
+    //[Benchmark]
     [BenchmarkCategory(CategoryMeasure, CategoryRequest)]
     public void MeasureRequestNanoSlab()
     {
         HandWrittenSlab.ForwardRequest.Measure(_hwsRequest);
     }
 
-    [Benchmark]
+    //[Benchmark]
     [BenchmarkCategory(CategoryMeasure, CategoryResponse)]
     public void MeasureResponseNanoSlab()
     {
         HandWrittenSlab.ForwardResponse.Measure(_hwsResponse);
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryMeasure, CategoryRequest)]
+    public void MeasureRequestPBN()
+    {
+        Serializer.Measure(_pbnRequest).LengthOnly();
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryMeasure, CategoryResponse)]
+    public void MeasureResponsePBN()
+    {
+        Serializer.Measure(_pbnResponse).LengthOnly();
     }
 
     [Benchmark]
@@ -269,7 +292,7 @@ public class NanoBenchmarks
         writer.Dispose();
     }
 
-    [Benchmark]
+    //[Benchmark]
     [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNanoSlab()
     {
@@ -278,13 +301,27 @@ public class NanoBenchmarks
         writer.Dispose();
     }
 
-    [Benchmark]
+    //[Benchmark]
     [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNanoSlab()
     {
         var writer = new Writer(Empty());
         HandWrittenSlab.ForwardResponse.WriteSingle(_hwsResponse, ref writer);
         writer.Dispose();
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategorySerialize, CategoryRequest)]
+    public void SerializeRequestPBN()
+    {
+        Serializer.Serialize(Empty(), _pbnRequest);
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategorySerialize, CategoryResponse)]
+    public void SerializeResponsePBN()
+    {
+        Serializer.Serialize(Empty(), _pbnResponse);
     }
 #endif
 
@@ -341,7 +378,7 @@ public class NanoBenchmarks
         reader.Dispose();
     }
 
-    [Benchmark]
+    //[Benchmark]
     [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNanoSlab()
     {
@@ -351,7 +388,7 @@ public class NanoBenchmarks
         obj.Dispose();
     }
 
-    [Benchmark]
+    //[Benchmark]
     [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNanoSlab()
     {
@@ -359,6 +396,20 @@ public class NanoBenchmarks
         var obj = HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
         reader.Dispose();
         obj.Dispose();
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
+    public void DeserializeRequestPBN()
+    {
+        Serializer.Deserialize<SimpleProtobufNet.ForwardRequest>((ReadOnlyMemory<byte>)_requestBA);
+    }
+
+    [Benchmark]
+    [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
+    public void DeserializeResponsePBN()
+    {
+        Serializer.Deserialize<SimpleProtobufNet.ForwardResponse>((ReadOnlyMemory<byte>)_responseBA);
     }
 
 
@@ -371,7 +422,7 @@ public class NanoBenchmarks
     
     // tests deserialize, serialize and measure, and validates serialize and measure outputs
     private static T Prepare<T>(byte[] payload, Func<byte[], T> parser, Action<T, IBufferWriter<byte>> writer,
-        SimpleBufferWriter bw, Func<T, long> measure, Action<T>? dispose)
+        SimpleBufferWriter bw, Func<T, long> measure, Action<T> dispose)
     {
         var obj = parser(payload);
         writer(obj, bw);

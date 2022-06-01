@@ -1,4 +1,4 @@
-﻿//#define RUN
+﻿// #define RUN
 using BenchmarkDotNet.Running;
 using System;
 
@@ -14,7 +14,7 @@ namespace Benchmark
             for (int i = 0 ; i < 50000 ; i++)
             {
                 if ((i % 1000) == 0) Console.Write(".");
-                obj.DeserializeRequestNanoSlab();
+                obj.MeasureRequestPBN();
             }
 #else
 
