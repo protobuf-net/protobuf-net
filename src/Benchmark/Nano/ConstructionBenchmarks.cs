@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 
 namespace Benchmark.Nano;
 
+#pragma warning disable CS0649 // unused fields: yes, we know - they're just there for padding
+
 [SimpleJob(RuntimeMoniker.Net60)] //, SimpleJob(RuntimeMoniker.Net472)]
 public class ConstructionBenchmarks
 {
@@ -63,16 +65,19 @@ public class ConstructionBenchmarks
             this = src;
             x = ctx.Read();
         }
+        public override string ToString() => $"{x},{a},{b},{c},{d},{e},{f}";
     }
 
     public struct B
     {
-        Guid a, b, c, d, e, f;
+        readonly Guid a, b, c, d, e, f;
         int x;
         public static void Read(ref B value, ref Context ctx)
         {
             value.x = ctx.Read();
         }
+
+        public override string ToString() => $"{x},{a},{b},{c},{d},{e},{f}";
     }
 
     public readonly struct C
@@ -82,7 +87,7 @@ public class ConstructionBenchmarks
 
         private struct Mutable
         {
-            public Guid a, b, c, d;
+            public Guid a, b, c, d, e, f;
             public int x;
         }
 
@@ -91,6 +96,8 @@ public class ConstructionBenchmarks
             ref var mutable = ref Unsafe.As<C, Mutable>(ref value);
             mutable.x = ctx.Read();
         }
+
+        public override string ToString() => $"{x},{a},{b},{c},{d},{e},{f}";
     }
 
     public readonly struct D
@@ -102,12 +109,13 @@ public class ConstructionBenchmarks
         {
             Unsafe.AsRef(in value.x) = ctx.Read();
         }
+
+        public override string ToString() => $"{a},{b},{c},{d},{e},{f}";
     }
 
     public ref struct Context
     {
         public int Read() => 42;
-
     }
 }
 

@@ -62,11 +62,6 @@ public sealed class ForwardRequest
     private readonly List<ForwardPerItemRequest> _itemRequests;
     private byte[]? _requestContextInfo;
 
-    internal static readonly unsafe delegate*<ref Reader, ForwardRequest> UnsafeReader = &ReadSingle;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ForwardRequest ReadSingle(ref Reader reader) => Merge(null, ref reader);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void WriteSingle(ForwardRequest value, ref Writer writer)
     {
@@ -96,9 +91,10 @@ public sealed class ForwardRequest
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ForwardRequest Merge(ForwardRequest? value, ref Reader reader)
+    internal static void Merge(ref ForwardRequest? byRef, ref Reader reader, bool reset)
     {
-        value ??= new(default, default, default);
+        var value = (reset || byRef is null) ? byRef = new(default, default, default) : byRef;
+
         uint tag;
         while ((tag = reader.ReadTag()) != 0)
         {
@@ -118,7 +114,6 @@ public sealed class ForwardRequest
                     break;
             }
         }
-        return value;
     }
 
 
@@ -150,15 +145,16 @@ public sealed class ForwardRequest
         ctx.Complete();
     }
 
-    public static ForwardRequest ContextDeserialize(Grpc.Core.DeserializationContext ctx)
+    public static unsafe ForwardRequest ContextDeserialize(Grpc.Core.DeserializationContext ctx)
     {
         var ros = ctx.PayloadAsReadOnlySequence();
         if (!ros.IsSingleSegment) return Slow(ros);
 
         var reader = new Reader(ros.First);
-        var value = ReadSingle(ref reader);
+        ForwardRequest? value = default;
+        Merge(ref value, ref reader, true);
         reader.Dispose();
-        return value;
+        return value!;
 
         static ForwardRequest Slow(ReadOnlySequence<byte> payload)
         {
@@ -167,10 +163,11 @@ public sealed class ForwardRequest
             payload.CopyTo(oversized);
 
             var reader = new Reader(oversized, 0, len);
-            var value = ReadSingle(ref reader);
+            ForwardRequest? value = default;
+            Merge(ref value, ref reader, true);
             reader.Dispose();
             ArrayPool<byte>.Shared.Return(oversized);
-            return value;
+            return value!;
         }
     }
 
@@ -412,8 +409,6 @@ public sealed class ForwardResponse
             writer.WriteVarintUInt64((ulong)value._routeStartTimeInTicks);
         }
     }
-
-    internal static readonly unsafe delegate*<ref Reader, ForwardResponse> UnsafeReader = &ReadSingle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ForwardResponse ReadSingle(ref Reader reader) => Merge(null, ref reader);

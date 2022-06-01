@@ -1,4 +1,4 @@
-﻿#define DESERIALIZE_ONLY
+﻿// #define DESERIALIZE_ONLY
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
@@ -13,7 +13,7 @@ using System.Text;
 namespace Benchmark.Nano;
 
 [SimpleJob(RuntimeMoniker.Net60)]
-//[SimpleJob(RuntimeMoniker.Net472)]
+[SimpleJob(RuntimeMoniker.Net472)]
 [MemoryDiagnoser, GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory, BenchmarkLogicalGroupRule.ByJob)]
 public class NanoBenchmarks
 {
@@ -77,8 +77,8 @@ public class NanoBenchmarks
         }
 
         // now prepare isolated objects for the serialize
-        _gpbRequest = Prepare(_requestBA, GoogleCodeGen.ForwardRequest.Parser.ParseFrom, (obj, bw) => obj.WriteTo(bw), Empty(), obj => obj.CalculateSize());
-        _gpbResponse = Prepare(_responseBA, GoogleCodeGen.ForwardResponse.Parser.ParseFrom, (obj, bw) => obj.WriteTo(bw), Empty(), obj => obj.CalculateSize());
+        _gpbRequest = Prepare(_requestBA, GoogleCodeGen.ForwardRequest.Parser.ParseFrom, (obj, bw) => obj.WriteTo(bw), Empty(), obj => obj.CalculateSize(), null);
+        _gpbResponse = Prepare(_responseBA, GoogleCodeGen.ForwardResponse.Parser.ParseFrom, (obj, bw) => obj.WriteTo(bw), Empty(), obj => obj.CalculateSize(), null);
 
         _hwRequest = Prepare(_requestBA, buffer =>
         {
@@ -91,7 +91,7 @@ public class NanoBenchmarks
             var writer = new Writer(bw);
             HandWrittenPool.ForwardRequest.WriteSingle(obj, ref writer);
             writer.Dispose();
-        }, Empty(), obj => (long)HandWrittenPool.ForwardRequest.Measure(obj));
+        }, Empty(), obj => (long)HandWrittenPool.ForwardRequest.Measure(obj), obj => obj.Dispose());
 
         _hwResponse = Prepare(_responseBA, buffer =>
         {
@@ -104,12 +104,13 @@ public class NanoBenchmarks
             var writer = new Writer(bw);
             HandWrittenPool.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
-        }, Empty(), obj => (long)HandWrittenPool.ForwardResponse.Measure(obj));
+        }, Empty(), obj => (long)HandWrittenPool.ForwardResponse.Measure(obj), obj => obj.Dispose());
 
         _hwnpRequest = Prepare(_requestBA, buffer =>
         {
             var reader = new Reader(buffer);
-            var obj = HandWrittenNoPool.ForwardRequest.Merge(null, ref reader);
+            HandWrittenNoPool.ForwardRequest obj = default;
+            HandWrittenNoPool.ForwardRequest.Merge(ref obj, ref reader, true);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
@@ -117,7 +118,7 @@ public class NanoBenchmarks
             var writer = new Writer(bw);
             HandWrittenNoPool.ForwardRequest.WriteSingle(obj, ref writer);
             writer.Dispose();
-        }, Empty(), obj => (long)HandWrittenNoPool.ForwardRequest.Measure(obj));
+        }, Empty(), obj => (long)HandWrittenNoPool.ForwardRequest.Measure(obj), null);
 
         _hwnpResponse = Prepare(_responseBA, buffer =>
         {
@@ -130,7 +131,7 @@ public class NanoBenchmarks
             var writer = new Writer(bw);
             HandWrittenNoPool.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
-        }, Empty(), obj => (long)HandWrittenNoPool.ForwardResponse.Measure(obj));
+        }, Empty(), obj => (long)HandWrittenNoPool.ForwardResponse.Measure(obj), null);
 
         _hwsRequest = Prepare(_requestBA, buffer =>
         {
@@ -143,7 +144,7 @@ public class NanoBenchmarks
             var writer = new Writer(bw);
             HandWrittenSlab.ForwardRequest.WriteSingle(obj, ref writer);
             writer.Dispose();
-        }, Empty(), obj => (long)HandWrittenSlab.ForwardRequest.Measure(obj));
+        }, Empty(), obj => (long)HandWrittenSlab.ForwardRequest.Measure(obj), obj => obj.Dispose());
 
         _hwsResponse = Prepare(_responseBA, buffer =>
         {
@@ -156,7 +157,7 @@ public class NanoBenchmarks
             var writer = new Writer(bw);
             HandWrittenSlab.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
-        }, Empty(), obj => (long)HandWrittenSlab.ForwardResponse.Measure(obj));
+        }, Empty(), obj => (long)HandWrittenSlab.ForwardResponse.Measure(obj), obj => obj.Dispose());
     }
 
     const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure", CategoryRequest = "Request", CategoryResponse = "Response";
@@ -326,7 +327,8 @@ public class NanoBenchmarks
     public void DeserializeRequestNanoNoPool()
     {
         var reader = new Reader(_requestBA);
-        HandWrittenNoPool.ForwardRequest.Merge(null, ref reader);
+        HandWrittenNoPool.ForwardRequest obj = default;
+        HandWrittenNoPool.ForwardRequest.Merge(ref obj, ref reader, true);
         reader.Dispose();
     }
 
@@ -344,8 +346,9 @@ public class NanoBenchmarks
     public void DeserializeRequestNanoSlab()
     {
         var reader = new Reader(_requestBA);
-        HandWrittenSlab.ForwardRequest.Merge(null, ref reader);
+        var obj = HandWrittenSlab.ForwardRequest.Merge(null, ref reader);
         reader.Dispose();
+        obj.Dispose();
     }
 
     [Benchmark]
@@ -353,8 +356,9 @@ public class NanoBenchmarks
     public void DeserializeResponseNanoSlab()
     {
         var reader = new Reader(_responseBA);
-        HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
+        var obj = HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
         reader.Dispose();
+        obj.Dispose();
     }
 
 
@@ -367,7 +371,7 @@ public class NanoBenchmarks
     
     // tests deserialize, serialize and measure, and validates serialize and measure outputs
     private static T Prepare<T>(byte[] payload, Func<byte[], T> parser, Action<T, IBufferWriter<byte>> writer,
-        SimpleBufferWriter bw, Func<T, long> measure)
+        SimpleBufferWriter bw, Func<T, long> measure, Action<T>? dispose)
     {
         var obj = parser(payload);
         writer(obj, bw);
@@ -380,6 +384,7 @@ public class NanoBenchmarks
         {
             throw new InvalidOperationException("Measure error");
         }
+        dispose?.Invoke(obj);
         return obj;
     }
 

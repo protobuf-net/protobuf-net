@@ -13,6 +13,7 @@ namespace ProtoBuf.Nano;
 /// <summary>
 /// Raw API for parsing protobuf data
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0064:Make readonly fields writable", Justification = "read-only is fine here")]
 public ref struct Reader
 {
     /// <summary>
@@ -160,6 +161,20 @@ public ref struct Reader
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void OverwriteReadSlabBytes(in ReadOnlyMemory<byte> value)
+        => ReadSlabBytes(out Unsafe.As<ReadOnlyMemory<byte>, Memory<byte>>(ref Unsafe.AsRef(in value)));
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void OverwriteReadSlabBytes(in Memory<byte> value)
+        => ReadSlabBytes(out Unsafe.AsRef(in value));
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReadSlabBytes(ref ReadOnlyMemory<byte> value)
         => ReadSlabBytes(out Unsafe.As<ReadOnlyMemory<byte>, Memory<byte>>(ref value));
 
@@ -167,7 +182,7 @@ public ref struct Reader
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ReadSlabBytes(out Memory<byte> value)
+    public void ReadSlabBytes(out Memory<byte> value) // => value = ReadBytes();
     {
         var bytes = ReadLengthPrefix();
 
@@ -179,7 +194,7 @@ public ref struct Reader
 #else
             new Span<byte>(_buffer, _index, bytes).CopyTo(value.Span);
 #endif
-            _index += bytes;
+    _index += bytes;
         }
         else
         {
@@ -204,6 +219,17 @@ public ref struct Reader
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ReadRefCountedBytes(ref ReadOnlyMemory<byte> value)
         => ReadRefCountedBytes(ref Unsafe.As<ReadOnlyMemory<byte>, Memory<byte>>(ref value));
+
+//    internal unsafe T UnsafeReadSingle<T>(delegate*<ref T, ref Reader, bool, void> reader)
+//    {
+//#if NET5_0_OR_GREATER
+//        Unsafe.SkipInit(out T value);
+//#else
+//        T value = default!;
+//#endif
+//        reader(ref value, ref this, true);
+//        return value;
+//    }
 
     /// <summary>
     /// Reads a length-prefixed chunk of bytes
@@ -474,11 +500,10 @@ public ref struct Reader
         {
             var subItemLength = ReadLengthPrefix();
             _objectEnd = Position + subItemLength;
-            T newVal;
 #if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
-            Unsafe.SkipInit(out newVal);
+            Unsafe.SkipInit(out T newVal);
 #else
-            newVal = default!;
+            T newVal = default!;
 #endif
             reader(ref newVal, ref this, true);
             value.Add(newVal);

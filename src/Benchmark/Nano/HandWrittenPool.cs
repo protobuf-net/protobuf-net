@@ -60,8 +60,6 @@ public sealed class ForwardRequest : IDisposable
     private ReadOnlyMemory<ForwardPerItemRequest> _itemRequests;
     private ReadOnlyMemory<byte> _requestContextInfo;
 
-    internal static readonly unsafe delegate*<ref Reader, ForwardRequest> UnsafeReader = &ReadSingle;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ForwardRequest ReadSingle(ref Reader reader) => Merge(null, ref reader);
 
@@ -412,8 +410,6 @@ public sealed class ForwardResponse : IDisposable
             writer.WriteVarintUInt64((ulong)value._routeStartTimeInTicks);
         }
     }
-
-    internal static readonly unsafe delegate*<ref Reader, ForwardResponse> UnsafeReader = &ReadSingle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ForwardResponse ReadSingle(ref Reader reader) => Merge(null, ref reader);

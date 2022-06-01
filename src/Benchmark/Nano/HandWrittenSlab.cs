@@ -60,8 +60,6 @@ public sealed class ForwardRequest : IDisposable
     private ReadOnlyMemory<ForwardPerItemRequest> _itemRequests;
     private ReadOnlyMemory<byte> _requestContextInfo;
 
-    internal static readonly unsafe delegate*<ref Reader, ForwardRequest> UnsafeReader = &ReadSingle;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ForwardRequest ReadSingle(ref Reader reader) => Merge(null, ref reader);
 
@@ -226,10 +224,10 @@ public readonly struct ForwardPerItemRequest
             switch (tag)
             {
                 case (1 << 3) | (int)WireType.String:
-                    reader.ReadSlabBytes(ref Unsafe.AsRef(in value._itemId));
+                    reader.OverwriteReadSlabBytes(in value._itemId);
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    reader.ReadSlabBytes(ref Unsafe.AsRef(in value._itemContext));
+                    reader.OverwriteReadSlabBytes(in value._itemContext);
                     break;
             }
         }
@@ -297,7 +295,7 @@ public readonly struct ForwardPerItemResponse
                     Unsafe.AsRef(in value._result) = reader.ReadSingle();
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    reader.ReadSlabBytes(ref Unsafe.AsRef(in value._extraResult));
+                    reader.OverwriteReadSlabBytes(in value._extraResult);
                     break;
             }
         }
@@ -399,8 +397,6 @@ public sealed class ForwardResponse : IDisposable
             writer.WriteVarintUInt64((ulong)value._routeStartTimeInTicks);
         }
     }
-
-    internal static readonly unsafe delegate*<ref Reader, ForwardResponse> UnsafeReader = &ReadSingle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ForwardResponse ReadSingle(ref Reader reader) => Merge(null, ref reader);
