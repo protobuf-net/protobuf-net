@@ -6,13 +6,15 @@ using System;
 
 namespace Benchmark.Nano;
 
-[SimpleJob(RuntimeMoniker.Net60), SimpleJob(RuntimeMoniker.Net472)]
+[SimpleJob(RuntimeMoniker.Net60)]
+//[SimpleJob(RuntimeMoniker.Net472)]
 [MemoryDiagnoser]
 public class ArrayAllocBenchmarks
 {
     private const int OperationsPerInvoke = 1000;
 
-    [Params(8, 32, 256)]
+    //[Params(8, 32, 256)]
+    [Params(32)]
     public int Length { get; set; }
 
     [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
@@ -21,6 +23,16 @@ public class ArrayAllocBenchmarks
         for (int i = 0; i < 1000; i++)
         {
             _ = SimpleSlabAllocator<byte>.Rent(Length);
+        }
+    }
+
+    [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+    public void SimpleSlabRentByRef()
+    {
+        Memory<byte> value = default;
+        for (int i = 0; i < 1000; i++)
+        {
+            SimpleSlabAllocator<byte>.Rent(out value, Length);
         }
     }
 
@@ -50,7 +62,7 @@ public class ArrayAllocBenchmarks
 #if NET5_0_OR_GREATER
             _ = GC.AllocateUninitializedArray<byte>(Length);
 #else
-            throw new PlatformNotSupportedException();
+            _ = new byte[Length];
 #endif
         }
     }

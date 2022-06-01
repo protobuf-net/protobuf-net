@@ -12,7 +12,8 @@ using System.Text;
 
 namespace Benchmark.Nano;
 
-[SimpleJob(RuntimeMoniker.Net60), SimpleJob(RuntimeMoniker.Net472)]
+[SimpleJob(RuntimeMoniker.Net60)]
+//[SimpleJob(RuntimeMoniker.Net472)]
 [MemoryDiagnoser, GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory, BenchmarkLogicalGroupRule.ByJob)]
 public class NanoBenchmarks
 {

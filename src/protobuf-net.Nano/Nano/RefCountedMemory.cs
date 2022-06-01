@@ -33,6 +33,18 @@ public static class RefCountedMemory
     /// If the supplied memory is ref-counted: decrement the counter
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void ReleaseByRef<T>(in Memory<T> value)
+    {
+        if (MemoryMarshal.TryGetMemoryManager<T, RefCountedMemoryManager<T>>(value, out var manager))
+        {
+            manager.Release();
+        }
+    }
+
+    /// <summary>
+    /// If the supplied memory is ref-counted: decrement the counter
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Release<T>(ReadOnlyMemory<T> value)
     {
         if (MemoryMarshal.TryGetMemoryManager<T, RefCountedMemoryManager<T>>(value, out var manager))

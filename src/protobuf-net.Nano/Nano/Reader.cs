@@ -138,9 +138,8 @@ public ref struct Reader
     public ReadOnlyMemory<byte> ReadSlabBytes() //=> ReadBytes();
     {
         var bytes = ReadLengthPrefix();
-        if (bytes == 0) return default;
 
-        if (_index + bytes <= _end)
+        if (bytes > 0 & _index + bytes <= _end)
         {
             Memory<byte> mutable = SimpleSlabAllocator<byte>.Rent(bytes);
 #if USE_SPAN_BUFFER
@@ -160,36 +159,96 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
-    /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlyMemory<byte> ReadRefCountedBytes(ReadOnlyMemory<byte> value)
+    public void ReadSlabBytes(ref ReadOnlyMemory<byte> value)
+        => ReadSlabBytes(out Unsafe.As<ReadOnlyMemory<byte>, Memory<byte>>(ref value));
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadSlabBytes(out Memory<byte> value)
     {
         var bytes = ReadLengthPrefix();
-        RefCountedMemory.Release(value);
-        if (bytes == 0) return default;
 
-        if (_index + bytes <= _end)
+        if (bytes > 0 & _index + bytes <= _end)
         {
-            Memory<byte> mutable = RefCountedSlabAllocator<byte>.Rent(bytes);
+            SimpleSlabAllocator<byte>.Rent(out value, bytes);
 #if USE_SPAN_BUFFER
-            _buffer.Slice(_index, bytes).CopyTo(mutable.Span);
+            _buffer.Slice(_index, bytes).CopyTo(value.Span);
 #else
-            new Span<byte>(_buffer, _index, bytes).CopyTo(mutable.Span);
+            new Span<byte>(_buffer, _index, bytes).CopyTo(value.Span);
 #endif
             _index += bytes;
-            return mutable;
         }
         else
         {
-            return ReadRefCountedBytesSlow(bytes);
+            ReadSlabBytesSlow(out value, bytes);
+        }
+    }
+
+    private void ReadSlabBytesSlow(out Memory<byte> value, int bytes)
+    {
+        if (bytes == 0)
+        {
+            value = default;
+            return;
+        }
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
+    /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadRefCountedBytes(ref ReadOnlyMemory<byte> value)
+        => ReadRefCountedBytes(ref Unsafe.As<ReadOnlyMemory<byte>, Memory<byte>>(ref value));
+
+    /// <summary>
+    /// Reads a length-prefixed chunk of bytes
+    /// </summary>
+    /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadRefCountedBytes(ref Memory<byte> value)
+    {
+        var bytes = ReadLengthPrefix();
+        RefCountedMemory.ReleaseByRef(in value);
+
+        if (bytes > 0 & _index + bytes <= _end)
+        {
+            value = RefCountedSlabAllocator<byte>.Rent(bytes);
+#if USE_SPAN_BUFFER
+            _buffer.Slice(_index, bytes).CopyTo(value.Span);
+#else
+            new Span<byte>(_buffer, _index, bytes).CopyTo(value.Span);
+#endif
+            _index += bytes;
+        }
+        else
+        {
+            ReadRefCountedBytesSlow(ref value, bytes);
         }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ReadOnlyMemory<byte> ReadSlabBytesSlow(int length) => throw new NotImplementedException();
+    private Memory<byte> ReadSlabBytesSlow(int length)
+    {
+        if (length == 0) return default;
+            
+        throw new NotImplementedException();
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private ReadOnlyMemory<byte> ReadRefCountedBytesSlow(int length) => throw new NotImplementedException();
+    private void ReadRefCountedBytesSlow(ref Memory<byte> value, int length)
+    {
+        if (length == 0)
+        {
+            value = default;
+            return;
+        }
+        throw new NotImplementedException();
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int ReadLengthPrefix()

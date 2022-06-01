@@ -108,7 +108,7 @@ public sealed class ForwardRequest : IDisposable
                     }
                     break;
                 case (3 << 3) | (int)WireType.String:
-                    value._requestContextInfo = reader.ReadRefCountedBytes(value._requestContextInfo);
+                    reader.ReadRefCountedBytes(ref value._requestContextInfo);
                     break;
             }
         }
@@ -228,10 +228,10 @@ public readonly struct ForwardPerItemRequest : IDisposable
             switch (tag)
             {
                 case (1 << 3) | (int)WireType.String:
-                    Unsafe.AsRef(in value._itemId) = reader.ReadRefCountedBytes(value._itemId);
+                    reader.ReadRefCountedBytes(ref Unsafe.AsRef(in value._itemId));
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    Unsafe.AsRef(in value._itemContext) = reader.ReadRefCountedBytes(value._itemContext);
+                    reader.ReadRefCountedBytes(ref Unsafe.AsRef(in value._itemContext));
                     break;
             }
         }
@@ -305,7 +305,7 @@ public readonly struct ForwardPerItemResponse : IDisposable
                     Unsafe.AsRef(in value._result) = reader.ReadSingle();
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    Unsafe.AsRef(in value._extraResult) = reader.ReadRefCountedBytes(value._extraResult);
+                    reader.ReadRefCountedBytes(ref Unsafe.AsRef(in value._extraResult));
                     break;
             }
         }
