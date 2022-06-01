@@ -2,6 +2,7 @@
 
 "Nano" is the working title of an experimental protobuf-net v4 reader/writer API; the internal details are completely re-imagined and *aggressively* optimized using BenchmarkDotNet. The regular
 consumer-facing API should not be impacted, since most users *never touch* the reader/writer API. There are absolutely no guarantees that this API will ever ship, but: it is looking very worthwhile.
+It is *incredibly* incomplete and is not fit for any real world use yet! Please don't attempt to use it: it absolutely will not work for you yet.
 
 Key:
 
