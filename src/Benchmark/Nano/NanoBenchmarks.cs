@@ -158,7 +158,7 @@ public class NanoBenchmarks
         }, Empty(), obj => (long)HandWrittenSlab.ForwardResponse.Measure(obj));
     }
 
-    const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure";
+    const string CategorySerialize = "Serialize", CategoryDeserialize = "Deserialize", CategoryMeasure = "Measure", CategoryRequest = "Request", CategoryResponse = "Response";
 
 #if !DESERIALIZE_ONLY
     [Benchmark]
@@ -287,21 +287,21 @@ public class NanoBenchmarks
 #endif
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestGBP()
     {
         GoogleCodeGen.ForwardRequest.Parser.ParseFrom(_requestBA);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseGBP()
     {
         GoogleCodeGen.ForwardResponse.Parser.ParseFrom(_responseBA);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNano()
     {
         var reader = new Reader(_requestBA);
@@ -311,7 +311,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNano()
     {
         var reader = new Reader(_responseBA);
@@ -321,7 +321,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNanoNoPool()
     {
         var reader = new Reader(_requestBA);
@@ -330,7 +330,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNanoNoPool()
     {
         var reader = new Reader(_responseBA);
@@ -339,7 +339,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNanoSlab()
     {
         var reader = new Reader(_requestBA);
@@ -348,7 +348,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryDeserialize)]
+    [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNanoSlab()
     {
         var reader = new Reader(_responseBA);

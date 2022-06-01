@@ -104,7 +104,7 @@ public sealed class ForwardRequest : IDisposable
                 case (2 << 3) | (int)WireType.String:
                     unsafe
                     {
-                        value._itemRequests = reader.UnsafeAppendLengthPrefixed(value._itemRequests, ForwardPerItemRequest.UnsafeReader, (2 << 3) | (int)WireType.String, 4000);
+                        value._itemRequests = reader.UnsafeAppendLengthPrefixed(value._itemRequests, &ForwardPerItemRequest.Merge, (2 << 3) | (int)WireType.String, 4000);
                     }
                     break;
                 case (3 << 3) | (int)WireType.String:
@@ -216,27 +216,20 @@ public readonly struct ForwardPerItemRequest
     private readonly ReadOnlyMemory<byte> _itemId;
     private readonly ReadOnlyMemory<byte> _itemContext;
 
-    private static readonly ForwardPerItemRequest Default;
-
-    internal static readonly unsafe delegate*<ref Reader, ForwardPerItemRequest> UnsafeReader = &ReadSingle;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ForwardPerItemRequest ReadSingle(ref Reader reader) => new ForwardPerItemRequest(in Default, ref reader);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ForwardPerItemRequest(in ForwardPerItemRequest value, ref Reader reader)
+    internal static void Merge(ref ForwardPerItemRequest value, ref Reader reader, bool reset)
     {
-        this = value;
+        if (reset) value = default;
         uint tag;
         while ((tag = reader.ReadTag()) != 0)
         {
             switch (tag)
             {
                 case (1 << 3) | (int)WireType.String:
-                    _itemId = reader.ReadSlabBytes();
+                    Unsafe.AsRef(in value._itemId) = reader.ReadSlabBytes();
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    _itemContext = reader.ReadSlabBytes();
+                    Unsafe.AsRef(in value._itemContext) = reader.ReadSlabBytes();
                     break;
             }
         }
@@ -291,28 +284,20 @@ public readonly struct ForwardPerItemResponse
     private readonly float _result;
     private readonly ReadOnlyMemory<byte> _extraResult;
 
-    private static readonly ForwardPerItemResponse Default;
-
-    internal static readonly unsafe delegate*<ref Reader, ForwardPerItemResponse> UnsafeReader = &ReadSingle;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ForwardPerItemResponse ReadSingle(ref Reader reader) => new ForwardPerItemResponse(in Default, ref reader);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-
-    internal ForwardPerItemResponse(in ForwardPerItemResponse value, ref Reader reader)
+    internal static void Merge(ref ForwardPerItemResponse value, ref Reader reader, bool reset)
     {
-        this = value;
+        if (reset) value = default;
         uint tag;
         while ((tag = reader.ReadTag()) != 0)
         {
             switch (tag)
             {
                 case (1 << 3) | (int)WireType.Fixed32:
-                    _result = reader.ReadSingle();
+                    Unsafe.AsRef(in value._result) = reader.ReadSingle();
                     break;
                 case (2 << 3) | (int)WireType.String:
-                    _extraResult = reader.ReadSlabBytes();
+                    Unsafe.AsRef(in value._extraResult) = reader.ReadSlabBytes();
                     break;
             }
         }
@@ -432,7 +417,7 @@ public sealed class ForwardResponse : IDisposable
                 case (1 << 3) | (int)WireType.String:
                     unsafe
                     {
-                        value._itemResponses = reader.UnsafeAppendLengthPrefixed(value._itemResponses, ForwardPerItemResponse.UnsafeReader, (1 << 3) | (int)WireType.String, 4000);
+                        value._itemResponses = reader.UnsafeAppendLengthPrefixed(value._itemResponses, &ForwardPerItemResponse.Merge, (1 << 3) | (int)WireType.String, 4000);
                     }
                     break;
                 case (2 << 3) | (int)WireType.Varint:

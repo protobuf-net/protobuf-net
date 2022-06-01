@@ -104,6 +104,7 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public byte[] ReadBytes()
     {
         var bytes = ReadLengthPrefix();
@@ -133,7 +134,8 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
-    public ReadOnlyMemory<byte> ReadSlabBytes()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlyMemory<byte> ReadSlabBytes() //=> ReadBytes();
     {
         var bytes = ReadLengthPrefix();
         if (bytes == 0) return default;
@@ -159,6 +161,7 @@ public ref struct Reader
     /// Reads a length-prefixed chunk of bytes
     /// </summary>
     /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlyMemory<byte> ReadRefCountedBytes(ReadOnlyMemory<byte> value)
     {
         var bytes = ReadLengthPrefix();
@@ -201,6 +204,7 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of utf-8 encoded characters
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string ReadString()
     {
         var bytes = ReadLengthPrefix();
@@ -225,6 +229,7 @@ public ref struct Reader
     /// <summary>
     /// Reads a length-prefixed chunk of utf-8 encoded characters
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlyMemory<char> ReadSlabString()
     {
         var bytes = ReadLengthPrefix();
@@ -263,6 +268,7 @@ public ref struct Reader
     /// Reads a length-prefixed chunk of utf-8 encoded characters
     /// </summary>
     /// <remarks>The supplied existing value is discarded (i.e. replace not append), after releasing any backing memory</remarks>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlyMemory<char> ReadRefCountedString(ReadOnlyMemory<char> value)
     {
         var bytes = ReadLengthPrefix();
@@ -308,6 +314,7 @@ public ref struct Reader
         return ReadVarintUInt32();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryReadTag(uint tag)
     {
         if (Position >= _objectEnd) return false;
@@ -369,7 +376,7 @@ public ref struct Reader
     /// </summary>
     /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-    public unsafe ReadOnlyMemory<T> UnsafeAppendLengthPrefixed<T>(ReadOnlyMemory<T> value, delegate*<ref Reader, T> reader, uint tag, int sizeHint)
+    public unsafe ReadOnlyMemory<T> UnsafeAppendLengthPrefixed<T>(ReadOnlyMemory<T> value, delegate*<ref T, ref Reader, bool, void> read, uint tag, int sizeHint)
     {
         Memory<T> target = RefCountedSlabAllocator<T>.Expand(value, sizeHint);
         int count = value.Length;
@@ -385,9 +392,10 @@ public ref struct Reader
                 target = RefCountedSlabAllocator<T>.Expand(target, sizeHint); ;
                 targetSpan = target.Span;
             }
-            targetSpan[count++] = reader(ref this);
+            read(ref targetSpan[count++], ref this, true);
             _objectEnd = oldEnd;
-        } while (TryReadTag(tag));
+        }
+        while (TryReadTag(tag));
 
         Debug.Assert(oldEnd >= Position);
 
@@ -400,17 +408,24 @@ public ref struct Reader
     /// </summary>
     /// <remarks>It is assumed that the first tag has already been consumed; additional items are consumed as long as the next tag encountered is a match</remarks>
     [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-    public unsafe void UnsafeAppendLengthPrefixed<T>(List<T> value, delegate*<ref Reader, T> reader, uint tag)
+    public unsafe void UnsafeAppendLengthPrefixed<T>(List<T> value, delegate*<ref T, ref Reader, bool, void> reader, uint tag)
     {
         var oldEnd = _objectEnd;
         do
         {
             var subItemLength = ReadLengthPrefix();
             _objectEnd = Position + subItemLength;
-            
-            value.Add(reader(ref this));
+            T newVal;
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER
+            Unsafe.SkipInit(out newVal);
+#else
+            newVal = default!;
+#endif
+            reader(ref newVal, ref this, true);
+            value.Add(newVal);
             _objectEnd = oldEnd;
-        } while (TryReadTag(tag));
+        }
+        while (TryReadTag(tag));
 
         Debug.Assert(oldEnd >= Position);
     }
