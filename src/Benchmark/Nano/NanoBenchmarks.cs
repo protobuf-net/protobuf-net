@@ -164,77 +164,77 @@ public class NanoBenchmarks
 
 #if !DESERIALIZE_ONLY
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryRequest)]
     public void MeasureRequestGBP()
     {
         _gpbRequest.CalculateSize();
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryResponse)]
     public void MeasureResponseGBP()
     {
         _gpbResponse.CalculateSize();
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryRequest)]
     public void MeasureRequestNano()
     {
         HandWrittenPool.ForwardRequest.Measure(_hwRequest);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryResponse)]
     public void MeasureResponseNano()
     {
         HandWrittenPool.ForwardResponse.Measure(_hwResponse);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryRequest)]
     public void MeasureRequestNanoNoPool()
     {
         HandWrittenNoPool.ForwardRequest.Measure(_hwnpRequest);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryResponse)]
     public void MeasureResponseNanoNoPool()
     {
         HandWrittenNoPool.ForwardResponse.Measure(_hwnpResponse);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryRequest)]
     public void MeasureRequestNanoSlab()
     {
         HandWrittenSlab.ForwardRequest.Measure(_hwsRequest);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategoryMeasure)]
+    [BenchmarkCategory(CategoryMeasure, CategoryResponse)]
     public void MeasureResponseNanoSlab()
     {
         HandWrittenSlab.ForwardResponse.Measure(_hwsResponse);
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestGBP()
     {
         _gpbRequest.WriteTo(Empty());
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseGBP()
     {
         _gpbResponse.WriteTo(Empty());
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNano()
     {
         var writer = new Writer(Empty());
@@ -243,7 +243,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNano()
     {
         var writer = new Writer(Empty());
@@ -252,7 +252,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNanoNoPool()
     {
         var writer = new Writer(Empty());
@@ -261,7 +261,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNanoNoPool()
     {
         var writer = new Writer(Empty());
@@ -270,7 +270,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNanoSlab()
     {
         var writer = new Writer(Empty());
@@ -279,7 +279,7 @@ public class NanoBenchmarks
     }
 
     [Benchmark]
-    [BenchmarkCategory(CategorySerialize)]
+    [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNanoSlab()
     {
         var writer = new Writer(Empty());
