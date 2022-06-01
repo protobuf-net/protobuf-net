@@ -13,7 +13,7 @@ using System.Text;
 namespace Benchmark.Nano;
 
 [SimpleJob(RuntimeMoniker.Net60), SimpleJob(RuntimeMoniker.Net472)]
-[MemoryDiagnoser, GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
+[MemoryDiagnoser, GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory, BenchmarkLogicalGroupRule.ByJob)]
 public class NanoBenchmarks
 {
     private const int ExtraResultSize = 32;
