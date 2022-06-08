@@ -93,13 +93,13 @@ namespace Benchmark
         public sealed class PooledBytes : IDisposable
         {
             [ProtoMember(1)]
-            public PooledMemory<byte> Value { get; set; }
+            public Memory<byte> Value { get; set; }
 
             public void Dispose()
             {
                 var tmp = Value;
                 Value = default;
-                tmp.Dispose();
+                // tmp.Dispose();
 
                 s_Spare = this;
             }
@@ -119,13 +119,13 @@ namespace Benchmark
         public sealed class CustomPooledBytes : IDisposable
         {
             [ProtoMember(1)]
-            public PooledMemory<byte> Value { get; set; }
+            public Memory<byte> Value { get; set; }
 
             public void Dispose()
             {
                 var tmp = Value;
                 Value = default;
-                tmp.Dispose();
+                // tmp.Dispose();
 
                 s_Spare = this;
             }
