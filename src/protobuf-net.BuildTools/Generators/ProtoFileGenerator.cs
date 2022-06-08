@@ -192,17 +192,8 @@ namespace ProtoBuf.BuildTools.Generators
                         };
                         if (services is not null)
                         {
-                            options.Add("services", "yes");
+                            options.Add("services", services);
                         }
-                        options.Add("allrefs", context.Compilation.GetAllRefs());
-                        //if (pbnetGrpcVersion is not null)
-                        //{
-                        //    options.Add("protobuf-net.Grpc", pbnetGrpcVersion.ToString());
-                        //}
-                        //if (wcfVersion is not null)
-                        //{
-                        //    options.Add("System.ServiceModel.Primitives", wcfVersion.ToString());
-                        //}
 
                         if (userOptions is not null)
                         {
