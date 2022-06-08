@@ -13,6 +13,9 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<float>,
         IMeasuringSerializer<double>,
         IMeasuringSerializer<byte[]>,
+        IMeasuringSerializer<ArraySegment<byte>>,
+        IMeasuringSerializer<Memory<byte>>,
+        IMeasuringSerializer<ReadOnlyMemory<byte>>,
         IMeasuringSerializer<byte>,
         IMeasuringSerializer<ushort>,
         IMeasuringSerializer<uint>,
@@ -85,6 +88,39 @@ namespace ProtoBuf.Internal
         void ISerializer<byte[]>.Write(ref ProtoWriter.State state, byte[] value) => state.WriteBytes(value);
         SerializerFeatures ISerializer<byte[]>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
         int IMeasuringSerializer<byte[]>.Measure(ISerializationContext context, WireType wireType, byte[] value)
+            => wireType switch
+            {
+                WireType.String => value.Length,
+                _ => -1,
+            };
+
+        ArraySegment<byte> ISerializer<ArraySegment<byte>>.Read(ref ProtoReader.State state, ArraySegment<byte> value) => state.AppendBytes(value);
+        void ISerializer<ArraySegment<byte>>.Write(ref ProtoWriter.State state, ArraySegment<byte> value) => state.WriteBytes(value);
+        SerializerFeatures ISerializer<ArraySegment<byte>>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
+
+        int IMeasuringSerializer<ArraySegment<byte>>.Measure(ISerializationContext context, WireType wireType, ArraySegment<byte> value)
+            => wireType switch
+            {
+                WireType.String => value.Count,
+                _ => -1,
+            };
+
+        Memory<byte> ISerializer<Memory<byte>>.Read(ref ProtoReader.State state, Memory<byte> value) => state.AppendBytes(value);
+        void ISerializer<Memory<byte>>.Write(ref ProtoWriter.State state, Memory<byte> value) => state.WriteBytes(value);
+        SerializerFeatures ISerializer<Memory<byte>>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
+
+        int IMeasuringSerializer<Memory<byte>>.Measure(ISerializationContext context, WireType wireType, Memory<byte> value)
+            => wireType switch
+            {
+                WireType.String => value.Length,
+                _ => -1,
+            };
+
+        ReadOnlyMemory<byte> ISerializer<ReadOnlyMemory<byte>>.Read(ref ProtoReader.State state, ReadOnlyMemory<byte> value) => state.AppendBytes(value);
+        void ISerializer<ReadOnlyMemory<byte>>.Write(ref ProtoWriter.State state, ReadOnlyMemory<byte> value) => state.WriteBytes(value);
+        SerializerFeatures ISerializer<ReadOnlyMemory<byte>>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryScalar;
+
+        int IMeasuringSerializer<ReadOnlyMemory<byte>>.Measure(ISerializationContext context, WireType wireType, ReadOnlyMemory<byte> value)
             => wireType switch
             {
                 WireType.String => value.Length,
@@ -300,10 +336,10 @@ namespace ProtoBuf.Internal
             };
 
 
-        bool IValueChecker<string>.HasNonTrivialValue(string value) => value is object; //  note: we write "" (when found), for compat
-        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => value?.OriginalString is object; //  note: we write "" (when found), for compat
-        bool IValueChecker<Type>.HasNonTrivialValue(Type value) => value is object;
-        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value is object;  //  note: we write [] (when found), for compat
+        bool IValueChecker<string>.HasNonTrivialValue(string value) => value is not null; //  note: we write "" (when found), for compat
+        bool IValueChecker<Uri>.HasNonTrivialValue(Uri value) => value?.OriginalString is not null; //  note: we write "" (when found), for compat
+        bool IValueChecker<Type>.HasNonTrivialValue(Type value) => value is not null;
+        bool IValueChecker<byte[]>.HasNonTrivialValue(byte[] value) => value is not null;  //  note: we write [] (when found), for compat
         bool IValueChecker<sbyte>.HasNonTrivialValue(sbyte value) => value != 0;
         bool IValueChecker<short>.HasNonTrivialValue(short value) => value != 0;
         bool IValueChecker<int>.HasNonTrivialValue(int value) => value != 0;

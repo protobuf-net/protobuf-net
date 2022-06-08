@@ -437,7 +437,15 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                ThrowInvalidCollectionType(values);
+                if (typeof(TCollection) == typeof(IEnumerable<T>))
+                {
+                    // this is a recognised case; we'll use the same default type as Initialize
+                    values = Initialize(default, context);
+                }
+                else
+                {
+                    ThrowInvalidCollectionType(values);
+                }
             }
             return values;
         }

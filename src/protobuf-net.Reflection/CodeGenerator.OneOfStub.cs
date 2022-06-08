@@ -1,9 +1,14 @@
 ﻿using Google.Protobuf.Reflection;
+using System;
+using System.Linq;
 
 namespace ProtoBuf.Reflection
 {
     public partial class CommonCodeGenerator
     {
+        private protected static bool UseMemory(GeneratorContext ctx)
+            => string.Equals(ctx.GetCustomOption("bytes"), "Memory", StringComparison.InvariantCultureIgnoreCase);
+
         /// <summary>
         /// Represents the union summary of a one-of declaration
         /// </summary>

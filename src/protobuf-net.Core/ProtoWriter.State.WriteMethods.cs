@@ -17,7 +17,7 @@ namespace ProtoBuf
             /// </summary>
             public void WriteString(int fieldNumber, string value, StringMap map = null)
             {
-                if (value is object)
+                if (value is not null)
                 {
                     WriteFieldHeader(fieldNumber, WireType.String);
                     WriteStringWithLengthPrefix(value, map);
@@ -475,22 +475,32 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String
             /// </summary>
+            [MethodImpl(HotPath)]
             public void WriteBytes(ArraySegment<byte> data)
                 => WriteBytes(new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
 
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String
             /// </summary>
+            [MethodImpl(HotPath)]
             public void WriteBytes(byte[] data)
                 => WriteBytes(new ReadOnlyMemory<byte>(data));
 
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String
             /// </summary>
+            [MethodImpl(HotPath)]
             public void WriteBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
-                =>WriteBytes((ReadOnlyMemory<byte>)(
+                => WriteBytes((ReadOnlyMemory<byte>)(
                     converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model)
                     ).GetMemory(value));
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void WriteBytes(Memory<byte> data)
+                => WriteBytes((ReadOnlyMemory<byte>)data);
 
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String
@@ -757,7 +767,7 @@ namespace ProtoBuf
                         goto case WireType.String;
                     case WireType.String:
 #if DEBUG
-                        if (Model is object && Model.ForwardsOnly)
+                        if (Model is not null && Model.ForwardsOnly)
                         {
                             ThrowHelper.ThrowProtoException("Should not be buffering data: " + instance ?? "(null)");
                         }
@@ -859,6 +869,9 @@ namespace ProtoBuf
                 if (_writer is null) ThrowHelper.ThrowProtoException("No underlying writer");
                 ThrowHelper.ThrowProtoException($"Invalid serialization operation with wire-type {WireType} at position {GetPosition()}, depth {Depth}");
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowTooDeep(int depth) => ThrowHelper.ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + depth.ToString());
 
             /// <summary>
             /// Used for packed encoding; indicates that the next field should be skipped rather than

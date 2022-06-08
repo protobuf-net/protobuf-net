@@ -230,6 +230,25 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteMessageFooter(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
+            //if (UsePooledMemory(ctx, message))
+            //{
+            //    ctx.Write("public virtual void Dispose()").WriteLine();
+            //    ctx.WriteLine("{").Indent();
+            //    bool first = true;
+            //    foreach (var field in message.Fields)
+            //    {
+            //        if (field.type == FieldDescriptorProto.Type.TypeBytes)
+            //        {
+            //            var member = Escape(ctx.NameNormalizer.GetName(field));
+            //            ctx.WriteLine($"{(first ? "var " : "")}__oldMemory = {member};");
+            //            ctx.WriteLine($"{member} = default{(ctx.Supports(CSharp7_1) ? "" : "(global::ProtoBuf.PooledMemory<byte>)")};");
+            //            ctx.WriteLine("__oldMemory.Dispose();");
+            //            first = false;
+            //        }
+            //    }
+            //    ctx.WriteLine("OnDispose(); // invoke user-defined additional dispose features, if any");
+            //    ctx.Outdent().WriteLine("}").WriteLine("partial void OnDispose(); // implement in a partial class to add additional dispose features").WriteLine();
+            //}
             ctx.Outdent().WriteLine("}").WriteLine();
         }
         /// <summary>
@@ -244,6 +263,10 @@ namespace ProtoBuf.Reflection
             WriteOptions(ctx, message.Options);
             tw = ctx.Write($"{GetAccess(GetAccess(message))} partial class {Escape(name)}");
             tw.Write(" : global::ProtoBuf.IExtensible");
+            //if (UsePooledMemory(ctx, message))
+            //{
+            //    tw.Write(", global::System.IDisposable");
+            //}
             tw.WriteLine();
             ctx.WriteLine("{").Indent();
             if (message.Options?.MessageSetWireFormat == true)
@@ -907,7 +930,7 @@ namespace ProtoBuf.Reflection
                 case FieldDescriptorProto.Type.TypeUint64:
                     return "ulong";
                 case FieldDescriptorProto.Type.TypeBytes:
-                    return "byte[]";
+                    return UseMemory(ctx) ? "global::System.Memory<byte>" : "byte[]";
                 case FieldDescriptorProto.Type.TypeEnum:
                     switch (field.TypeName)
                     {
@@ -923,7 +946,6 @@ namespace ProtoBuf.Reflection
                     return field.TypeName;
             }
         }
-
 
         private string MakeRelativeName(FieldDescriptorProto field, IType target, NameNormalizer normalizer)
         {

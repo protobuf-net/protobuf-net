@@ -7,17 +7,25 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - gRPC: see [protobuf-net.Grpc](https://github.com/protobuf-net/protobuf-net.Grpc)
 - 2.4.*: critical maintenance only (no feature work planned)
 - 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
-- 3.1: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
-- 3.2: protogen support for emitting pre-coded custom serializers
+- 3.1: adds model depth validation, which may impact some models; see `TypeModel.MaxDepth`
+- future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
+- future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## pending
+## 3.1.4
+
+- allow `OverwriteList` to work with properties declared as `IEnumerable<T>` (as a special-case) even if the existing value is a non-null, non-clearable collection
+
+## 3.1.0
+
+- enforce maximum model depth (`TypeModel.MaxDepth`) during serialize and deserialize
+
+## 3.0.131
 
 - support unknwon/extension fields on models that involve inheritance (via either `Extensible` or `ITypedExtensible`)
 - detect Google.Protobuf types and provide guidance (#722)
 - don't throw if `EnumPassthru` is explicitly set to `true` (#881) from code compiled against v2
-- fix #479
-
+- fix #479 (also backported as 2.4.7)
 
 ## 3.0.62
 

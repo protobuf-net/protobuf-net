@@ -8,7 +8,6 @@ using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -213,6 +212,7 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "LangVersion", "langver");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Package", "package");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Bytes", "bytes");
 
                             void AddOption(string readKey, string writeKey)
                             {

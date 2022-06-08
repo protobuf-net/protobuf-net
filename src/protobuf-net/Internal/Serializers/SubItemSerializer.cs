@@ -290,11 +290,11 @@ namespace ProtoBuf.Internal.Serializers
 
         private static void LoadSerializer<T>(CompilerContext ctx, FieldInfo serializer, Type serializerType)
         {
-            if (serializerType is object && (ctx.NonPublic || RuntimeTypeModel.IsFullyPublic(serializerType)))
+            if (serializerType is not null && (ctx.NonPublic || RuntimeTypeModel.IsFullyPublic(serializerType)))
             {
                 EmitLoadCustomSerializer(ctx, serializerType, typeof(T));
             }
-            else if (serializer is object)
+            else if (serializer is not null)
             {
                 ctx.LoadValue(serializer, checkAccessibility: false);
             }

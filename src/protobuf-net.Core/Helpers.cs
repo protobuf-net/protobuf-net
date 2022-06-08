@@ -59,6 +59,9 @@ namespace ProtoBuf
             if (type == typeof(Guid)) return ProtoTypeCode.Guid;
             if (type == typeof(Uri)) return ProtoTypeCode.Uri;
             if (type == typeof(byte[])) return ProtoTypeCode.ByteArray;
+            if (type == typeof(ArraySegment<byte>)) return ProtoTypeCode.ByteArraySegment;
+            if (type == typeof(Memory<byte>)) return ProtoTypeCode.ByteMemory;
+            if (type == typeof(ReadOnlyMemory<byte>)) return ProtoTypeCode.ByteReadOnlyMemory;
             if (type == typeof(Type)) return ProtoTypeCode.Type;
 
             return ProtoTypeCode.Unknown;
@@ -177,6 +180,9 @@ namespace ProtoBuf
         ByteArray = 101,
         Guid = 102,
         Uri = 103,
-        Type = 104
+        Type = 104,
+        ByteArraySegment = 105,
+        ByteMemory = 106,
+        ByteReadOnlyMemory = 107,
     }
 }

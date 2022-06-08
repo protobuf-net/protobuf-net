@@ -8,5 +8,6 @@
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="OneOf" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Package" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Services" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Bytes" />
     </ItemGroup>
 </Project>

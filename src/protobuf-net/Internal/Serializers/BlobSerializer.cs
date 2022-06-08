@@ -2,11 +2,11 @@
 
 namespace ProtoBuf.Internal.Serializers
 {
-    internal sealed class BlobSerializer : IRuntimeProtoSerializerNode
+    internal sealed class BlobSerializer<T> : IRuntimeProtoSerializerNode
     {
         public Type ExpectedType { get { return expectedType; } }
 
-        private static readonly Type expectedType = typeof(byte[]);
+        private static readonly Type expectedType = typeof(T);
 
         public BlobSerializer(bool overwriteList)
         {
@@ -17,12 +17,12 @@ namespace ProtoBuf.Internal.Serializers
 
         public object Read(ref ProtoReader.State state, object value)
         {
-            return state.AppendBytes(overwriteList ? null : (byte[])value);
+            return state.AppendBytes(overwriteList ? default : (T)value);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            state.WriteBytes((byte[])value);
+            state.WriteBytes((T)value);
         }
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return !overwriteList; } }
@@ -30,11 +30,11 @@ namespace ProtoBuf.Internal.Serializers
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteBytes), valueFrom, argType: typeof(byte[]));
+            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteBytes), valueFrom, argType: typeof(T));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            using var tmp = overwriteList ? default : ctx.GetLocalWithValue(typeof(byte[]), entity);
+            using var tmp = overwriteList ? default : ctx.GetLocalWithValue(typeof(T), entity);
             ctx.LoadState();
             if (overwriteList)
             {
@@ -46,7 +46,7 @@ namespace ProtoBuf.Internal.Serializers
             }
             ctx.EmitCall(typeof(ProtoReader.State)
                .GetMethod(nameof(ProtoReader.State.AppendBytes),
-               new[] { typeof(byte[])}));
+               new[] { typeof(T)}));
         }
     }
 }

@@ -38,7 +38,7 @@ namespace ProtoBuf.Internal
                 }
                 // since we might be ignoring sub-types, we need to walk upwards and check all
                 type = type.BaseType;
-            } while (type is object && type != typeof(object));
+            } while (type is not null && type != typeof(object));
             return false;
         }
 
@@ -57,7 +57,7 @@ namespace ProtoBuf.Internal
                 }
                 // since we might be ignoring sub-types, we need to walk upwards and check all
                 type = type.BaseType;
-            } while (type is object && type != typeof(object));
+            } while (type is not null && type != typeof(object));
             return false;
         }
 
@@ -73,7 +73,7 @@ namespace ProtoBuf.Internal
                 // since we might be ignoring sub-types, we need to walk upwards and check all
                 type = type.BaseType;
             }
-            while (type is object && type != typeof(object));
+            while (type is not null && type != typeof(object));
             return false;
         }
 
@@ -111,7 +111,7 @@ namespace ProtoBuf.Internal
             // use indirection if possible
             if (obj is null)
             {
-                if (alt is object && alt != type) obj = Get(alt);
+                if (alt is not null && alt != type) obj = Get(alt);
                 obj ??= TryCreateConcrete(typeof(ConcreteStub<>), type);
             }
             lock (s_byType)
@@ -141,7 +141,7 @@ namespace ProtoBuf.Internal
 
                 // EF POCO
                 string fullName = type.FullName;
-                if (fullName is object && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
+                if (fullName is not null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
                 {
                     return type.BaseType;
                 }
@@ -246,7 +246,7 @@ namespace ProtoBuf.Internal
 
             // note: in IsKnownType and CanSerialize we want to avoid asking for the serializer from
             // the model unless we actually need it, as that can cause re-entrancy loops
-            protected override bool IsKnownType(TypeModel model, CompatibilityLevel ambient) => model is object && model.IsKnownType<T>(ambient);
+            protected override bool IsKnownType(TypeModel model, CompatibilityLevel ambient) => model is not null && model.IsKnownType<T>(ambient);
 
             protected override bool CanSerialize(TypeModel model, out SerializerFeatures features)
             {
