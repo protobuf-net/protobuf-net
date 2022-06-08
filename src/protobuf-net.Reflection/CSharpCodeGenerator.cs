@@ -148,6 +148,11 @@ namespace ProtoBuf.Reflection
             {
                 tw.WriteLine($"//   Detected: System.ServiceModel.Primitives v{opt}");
             }
+            opt = ctx.GetCustomOption("allrefs");
+            if (!string.IsNullOrWhiteSpace(opt))
+            {
+                tw.Write("//   Refs: " + opt);
+            }
 
             tw
                .WriteLine("// </auto-generated>")

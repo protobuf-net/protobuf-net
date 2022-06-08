@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Text;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -189,6 +190,18 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
             return null;
+        }
+
+        internal static string GetAllRefs(this Compilation compilation)
+        {
+            if (compilation is null) return "(no compilation)";
+            var sb = new StringBuilder();
+            foreach (var ran in compilation.ReferencedAssemblyNames)
+            {
+                if (sb.Length != 0) sb.Append(", ");
+                sb.Append(ran.Name).Append("=").Append(ran.Version);
+            }
+            return sb.ToString();
         }
     }
 }
