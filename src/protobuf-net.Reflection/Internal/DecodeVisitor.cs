@@ -53,118 +53,136 @@ namespace ProtoBuf.Internal
                     OnUnkownField(ref reader);
                     continue;
                 }
-                switch (field.type)
+                int repeatedIndex = field.label == FieldDescriptorProto.Label.LabelRepeated ? 0 : -1;
+                if (repeatedIndex >= 0)
                 {
-                    case FieldDescriptorProto.Type.TypeBool:
-                        OnField(field, reader.ReadBoolean());
-                        break;
-                    case FieldDescriptorProto.Type.TypeSfixed32:
-                    case FieldDescriptorProto.Type.TypeInt32:
-                        OnField(field, reader.ReadInt32());
-                        break;
-                    case FieldDescriptorProto.Type.TypeFixed32:
-                        OnField(field, reader.ReadUInt32());
-                        break;
-                    case FieldDescriptorProto.Type.TypeSint32:
-                        reader.Hint(WireType.SignedVarint);
-                        OnField(field, reader.ReadInt32());
-                        break;
-                    case FieldDescriptorProto.Type.TypeDouble:
-                        OnField(field, reader.ReadDouble());
-                        break;
-                    case FieldDescriptorProto.Type.TypeFloat:
-                        OnField(field, reader.ReadSingle());
-                        break;
-                    case FieldDescriptorProto.Type.TypeString:
-                        OnField(field, reader.ReadString());
-                        break;
-                    case FieldDescriptorProto.Type.TypeSfixed64:
-                    case FieldDescriptorProto.Type.TypeInt64:
-                        OnField(field, reader.ReadInt64());
-                        break;
-                    case FieldDescriptorProto.Type.TypeSint64:
-                        reader.Hint(WireType.SignedVarint);
-                        OnField(field, reader.ReadInt64());
-                        break;
-                    case FieldDescriptorProto.Type.TypeUint32:
-                        OnField(field, reader.ReadUInt32());
-                        break;
-                    case FieldDescriptorProto.Type.TypeFixed64:
-                    case FieldDescriptorProto.Type.TypeUint64:
-                        OnField(field, reader.ReadUInt64());
-                        break;
-                    case FieldDescriptorProto.Type.TypeBytes:
-                        OnField(field, reader.AppendBytes(null));
-                        break;
-                    case FieldDescriptorProto.Type.TypeMessage:
-                        if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is DescriptorProto messageType)
-                        {
-                            var tok = reader.StartSubItem();
-                            OnBeginMessage(field, messageType);
-                            Visit(ref reader, messageType);
-                            OnEndMessage(field, messageType);
-                            reader.EndSubItem(tok);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("Unable to locate sub-message kind: " + field.TypeName);
-                        }
-                        break;
-                    // things we don't handle yet
-                    case FieldDescriptorProto.Type.TypeEnum:
-                        if (_knownTypes.TryGetValue(field.TypeName, out inner) && inner is EnumDescriptorProto enumDescriptor)
-                        {
-                            var value = reader.ReadInt32();
-                            EnumValueDescriptorProto found = null;
-                            foreach (var defined in enumDescriptor.Values)
+                    OnBeginRepeated(field);
+                }
+                do
+                {
+                    switch (field.type)
+                    {
+                        case FieldDescriptorProto.Type.TypeBool:
+                            OnField(field, reader.ReadBoolean(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeSfixed32:
+                        case FieldDescriptorProto.Type.TypeInt32:
+                            OnField(field, reader.ReadInt32(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeFixed32:
+                            OnField(field, reader.ReadUInt32(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeSint32:
+                            reader.Hint(WireType.SignedVarint);
+                            OnField(field, reader.ReadInt32(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeDouble:
+                            OnField(field, reader.ReadDouble(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeFloat:
+                            OnField(field, reader.ReadSingle(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeString:
+                            OnField(field, reader.ReadString(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeSfixed64:
+                        case FieldDescriptorProto.Type.TypeInt64:
+                            OnField(field, reader.ReadInt64(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeSint64:
+                            reader.Hint(WireType.SignedVarint);
+                            OnField(field, reader.ReadInt64(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeUint32:
+                            OnField(field, reader.ReadUInt32(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeFixed64:
+                        case FieldDescriptorProto.Type.TypeUint64:
+                            OnField(field, reader.ReadUInt64(), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeBytes:
+                            OnField(field, reader.AppendBytes(null), repeatedIndex);
+                            break;
+                        case FieldDescriptorProto.Type.TypeMessage:
+                            if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is DescriptorProto messageType)
                             {
-                                if (defined.Number == value)
-                                {
-                                    found = defined;
-                                    break;
-                                }
+                                var tok = reader.StartSubItem();
+                                OnBeginMessage(field, messageType, repeatedIndex);
+                                Visit(ref reader, messageType);
+                                OnEndMessage(field, messageType, repeatedIndex);
+                                reader.EndSubItem(tok);
                             }
-                            OnField(field, found, value);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("Unable to locate enum kind: " + field.TypeName);
-                        }
-                        break;
-                    // things we will probably never handle
-                    case FieldDescriptorProto.Type.TypeGroup:
-                        throw new NotSupportedException("groups are not supported"); // you will probably never need this
-                    // unexpected things
-                    default: // 
-                        throw new InvalidOperationException($"unexpected proto type: {field.type}");
+                            else
+                            {
+                                throw new InvalidOperationException("Unable to locate sub-message kind: " + field.TypeName);
+                            }
+                            break;
+                        // things we don't handle yet
+                        case FieldDescriptorProto.Type.TypeEnum:
+                            if (_knownTypes.TryGetValue(field.TypeName, out inner) && inner is EnumDescriptorProto enumDescriptor)
+                            {
+                                var value = reader.ReadInt32();
+                                EnumValueDescriptorProto found = null;
+                                foreach (var defined in enumDescriptor.Values)
+                                {
+                                    if (defined.Number == value)
+                                    {
+                                        found = defined;
+                                        break;
+                                    }
+                                }
+                                OnField(field, found, value, repeatedIndex);
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException("Unable to locate enum kind: " + field.TypeName);
+                            }
+                            break;
+                        // things we will probably never handle
+                        case FieldDescriptorProto.Type.TypeGroup:
+                            throw new NotSupportedException("groups are not supported"); // you will probably never need this
+                                                                                         // unexpected things
+                        default: // 
+                            throw new InvalidOperationException($"unexpected proto type: {field.type}");
+                    }
+                    if (repeatedIndex >= 0) repeatedIndex++;
+                } while (repeatedIndex >= 0 && reader.TryReadFieldHeader(fieldNumber));
+
+                if (repeatedIndex >= 0)
+                {
+                    OnEndRepeated(field, repeatedIndex);
                 }
             }
         }
 
         public IFormatProvider FormatProvider { get; set; } = CultureInfo.InvariantCulture;
-        protected abstract void OnFieldFallback(FieldDescriptorProto field, string value); // fallback to allow simple shared handling
+        protected abstract void OnFieldFallback(FieldDescriptorProto field, string value, int index); // fallback to allow simple shared handling
 
-        protected virtual void OnField(FieldDescriptorProto field, bool value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, int value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, uint value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, long value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, ulong value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, float value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, double value) => OnFieldFallback(field, value.ToString(FormatProvider));
-        protected virtual void OnField(FieldDescriptorProto field, string value) => OnFieldFallback(field, value);
-        protected virtual void OnField(FieldDescriptorProto field, byte[] value) => OnFieldFallback(field, BitConverter.ToString(value));
-        private void OnField(FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
+        protected virtual void OnField(FieldDescriptorProto field, bool value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, int value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, uint value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, long value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, ulong value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, float value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, double value, int index) => OnFieldFallback(field, value.ToString(FormatProvider), index);
+        protected virtual void OnField(FieldDescriptorProto field, string value, int index) => OnFieldFallback(field, value, index);
+        protected virtual void OnField(FieldDescriptorProto field, byte[] value, int index) => OnFieldFallback(field, BitConverter.ToString(value), index);
+        private void OnField(FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value, int index)
         {
-            if (@enum is null) OnFieldFallback(field, value.ToString(FormatProvider));
-            else OnFieldFallback(field, @enum.Name);
+            if (@enum is null) OnFieldFallback(field, value.ToString(FormatProvider), index);
+            else OnFieldFallback(field, @enum.Name, index);
         }
-        protected virtual void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message) => Depth++;
-        protected virtual void OnEndMessage(FieldDescriptorProto field, DescriptorProto message) => Depth--;
+        protected virtual void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message, int index) => Depth++;
+        protected virtual void OnEndMessage(FieldDescriptorProto field, DescriptorProto message, int index) => Depth--;
         protected virtual void OnUnkownField(ref ProtoReader.State reader) => reader.SkipField();
+
+        protected virtual void OnBeginRepeated(FieldDescriptorProto field) => Depth++;
+
+        protected virtual void OnEndRepeated(FieldDescriptorProto field, int count) => Depth--;
 
         protected virtual void Flush() { }
 
-        public int Depth { get; private set; }
+        public int Depth { get; protected set; }
         public virtual void Dispose() { }
     }
 
@@ -189,17 +207,36 @@ namespace ProtoBuf.Internal
             base.OnUnkownField(ref reader); // skip the value
         }
 
-        protected override void OnFieldFallback(FieldDescriptorProto field, string value)
-            => WriteLine($"{field.Number}: {field.Name}={value} ({field.type})");
-
-        protected override void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message)
+        protected override void OnBeginRepeated(FieldDescriptorProto field)
         {
-            WriteLine($"{field.Number}: {field.Name}={{");
-            base.OnBeginMessage(field, message);
+            WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}=[ ({field.type})");
+            base.OnBeginRepeated(field);
         }
-        protected override void OnEndMessage(FieldDescriptorProto field, DescriptorProto message)
+        protected override void OnEndRepeated(FieldDescriptorProto field, int count)
         {
-            base.OnEndMessage(field, message);
+            base.OnEndRepeated(field, count);
+            WriteLine($"] // {field.Name}, count: {count.ToString(FormatProvider)}");
+        }
+        protected override void OnFieldFallback(FieldDescriptorProto field, string value, int index)
+        {
+            if (index < 0)
+            {
+                WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={value} ({field.type})");
+            }
+            else
+            {
+                WriteLine($"#{index.ToString(FormatProvider)}={value}");
+            }
+        }
+
+        protected override void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message, int index)
+        {
+            WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={{");
+            base.OnBeginMessage(field, message, index);
+        }
+        protected override void OnEndMessage(FieldDescriptorProto field, DescriptorProto message, int index)
+        {
+            base.OnEndMessage(field, message, index);
             WriteLine($"}} // {field.Name}");
         }
     }

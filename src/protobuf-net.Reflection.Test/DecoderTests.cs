@@ -62,7 +62,7 @@ namespace ProtoBuf.Reflection.Test
             schemaSet.Add("dummy.proto", source: new StringReader(@"
 message Test {
   optional int32 a = 1;
-  optional string b = 2;
+  repeated string b = 2;
   optional Test c = 3;
   optional Blap d = 4;
   optional Blap e = 5;
@@ -82,7 +82,9 @@ enum Blap {
             new TextDecodeVisitor(_output).Visit(ms, schemaSet.Files[0], "Test");
             var result = _output.ToString();
             Assert.Equal(@"1: a=150 (TypeInt32)
-2: b=testing (TypeString)
+2: b=[ (TypeString)
+ #0=testing
+] // b, count: 1
 3: c={
  1: a=150 (TypeInt32)
 } // c
