@@ -768,49 +768,52 @@ namespace ProtoBuf.Reflection
             private readonly Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
 
             internal void BuildTypeIndex()
+                => CommonCodeGenerator.BuildTypeIndex(File, _knownTypes);
+        }
+
+        internal static void BuildTypeIndex(FileDescriptorProto origin, Dictionary<string, object> knownTypes)
+        {
+            static void AddMessage(DescriptorProto message, Dictionary<string, object> knownTypes)
             {
-                void AddMessage(DescriptorProto message)
+                knownTypes[message.FullyQualifiedName] = message;
+                foreach (var @enum in message.EnumTypes)
                 {
-                    _knownTypes[message.FullyQualifiedName] = message;
-                    foreach (var @enum in message.EnumTypes)
-                    {
-                        _knownTypes[@enum.FullyQualifiedName] = @enum;
-                    }
-                    foreach (var msg in message.NestedTypes)
-                    {
-                        AddMessage(msg);
-                    }
+                    knownTypes[@enum.FullyQualifiedName] = @enum;
                 }
+                foreach (var msg in message.NestedTypes)
                 {
-                    var processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    var pendingFiles = new Queue<FileDescriptorProto>();
+                    AddMessage(msg, knownTypes);
+                }
+            }
+            {
+                var processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var pendingFiles = new Queue<FileDescriptorProto>();
 
-                    _knownTypes.Clear();
-                    processedFiles.Add(File.Name);
-                    pendingFiles.Enqueue(File);
+                knownTypes.Clear();
+                processedFiles.Add(origin.Name);
+                pendingFiles.Enqueue(origin);
 
-                    while (pendingFiles.Count != 0)
+                while (pendingFiles.Count != 0)
+                {
+                    var file = pendingFiles.Dequeue();
+
+                    foreach (var @enum in file.EnumTypes)
                     {
-                        var file = pendingFiles.Dequeue();
+                        knownTypes[@enum.FullyQualifiedName] = @enum;
+                    }
+                    foreach (var msg in file.MessageTypes)
+                    {
+                        AddMessage(msg, knownTypes);
+                    }
 
-                        foreach (var @enum in file.EnumTypes)
+                    if (file.HasImports())
+                    {
+                        foreach (var import in file.GetImports())
                         {
-                            _knownTypes[@enum.FullyQualifiedName] = @enum;
-                        }
-                        foreach (var msg in file.MessageTypes)
-                        {
-                            AddMessage(msg);
-                        }
-
-                        if (file.HasImports())
-                        {
-                            foreach (var import in file.GetImports())
+                            if (processedFiles.Add(import.Path))
                             {
-                                if (processedFiles.Add(import.Path))
-                                {
-                                    var importFile = file.Parent.GetFile(file, import.Path);
-                                    if (importFile != null) pendingFiles.Enqueue(importFile);
-                                }
+                                var importFile = file.Parent.GetFile(file, import.Path);
+                                if (importFile != null) pendingFiles.Enqueue(importFile);
                             }
                         }
                     }

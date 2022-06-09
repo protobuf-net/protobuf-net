@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using ProtoBuf;
+using ProtoBuf.Internal;
 using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
@@ -11,18 +12,39 @@ namespace protogen
 {
     internal static class Program
     {
+        private enum ExecMode
+        {
+            None,
+            Error,
+            Help,
+            Version,
+            Generate,
+            Decode,
+            Grpc,
+        }
         private static async Task<int> Main(string[] args)
         {
+            var mode = ExecMode.None;
+            void SetMode(ExecMode value)
+            {
+                // always allow to switch into error/help; otherwise: set once only
+                if (mode == ExecMode.None || (value is ExecMode.Error or ExecMode.Help))
+                {
+                    mode = value;
+                }
+                else
+                {
+                    Console.Error.WriteLine($"Cannot perform {value}; already attempting {mode}");
+                    mode = ExecMode.Error;
+                }
+            }
             try
             {
                 string outPath = null; // -o{FILE}, --descriptor_set_out={FILE}
-                bool version = false; // --version
-                bool help = false; // -h, --help
                 var importPaths = new List<string>(); // -I{PATH}, --proto_path={PATH}
                 var inputFiles = new List<string>(); // {PROTO_FILES} (everything not `-`)
-                bool exec = false;
                 string package = null; // --package=foo
-                string grpcMode = null, grpcUrl = null, grpcService = null;
+                string grpcMode = null, grpcUrl = null, grpcService = null, decodeRootType = null;
                 CodeGenerator codegen = null;
 
                 Dictionary<string, string> options = null;
@@ -59,29 +81,29 @@ namespace protogen
                         case "":
                             break;
                         case "--version":
-                            version = true;
+                            SetMode(ExecMode.Version);
                             break;
                         case "--package":
                             package = rhs;
                             break;
                         case "-h":
                         case "--help":
-                            help = true;
+                            SetMode(ExecMode.Help);
                             break;
                         case "--csharp_out":
                             outPath = rhs;
                             codegen = CSharpCodeGenerator.Default;
-                            exec = true;
+                            SetMode(ExecMode.Generate);
                             break;
                         case "--vb_out":
                             outPath = rhs;
                             codegen = VBCodeGenerator.Default;
-                            exec = true;
+                            SetMode(ExecMode.Generate);
                             break;
                         case "--descriptor_set_out":
                             outPath = rhs;
                             codegen = null;
-                            exec = true;
+                            SetMode(ExecMode.Generate);
                             break;
                         case "--proto_path":
                             importPaths.Add(rhs);
@@ -94,6 +116,7 @@ namespace protogen
                         case "--grpc":
                             if (++i < args.Length)
                             {
+                                SetMode(ExecMode.Grpc);
                                 grpcMode = args[i];
                                 if (++i < args.Length)
                                 {
@@ -106,10 +129,27 @@ namespace protogen
                                 }
                             }
                             break;
+                        case "--decode":
+                            // TODO: some question over whether it is "--decode {ROOT TYPE}" vs "--decode={ROOT TYPE}"
+                            // let's try both? but: should follow exactly what protoc does here, IMO
+                            if (string.IsNullOrWhiteSpace(decodeRootType = rhs) && ++i < args.Length)
+                            {
+                                decodeRootType = args[i];
+                            }
+                            if (string.IsNullOrWhiteSpace(decodeRootType))
+                            {
+                                Console.Error.WriteLine("No root type specified for decode");
+                                SetMode(ExecMode.Error);
+                            }
+                            else
+                            {
+                                SetMode(ExecMode.Decode);
+                            }
+                            break;
                         default:
                             if (lhs.StartsWith("-") || !string.IsNullOrWhiteSpace(rhs))
                             {
-                                help = true;
+                                SetMode(ExecMode.Error);
                                 break;
                             }
                             else
@@ -120,130 +160,149 @@ namespace protogen
                     }
                 }
 
-                if (help)
+                switch (mode)
                 {
-                    ShowHelp();
-                    return 0;
-                }
-                else if (version)
-                {
-                    var ver = GetVersion(typeof(Program));
-                    Console.WriteLine($"protogen {ver}");
-                    var tmp = GetVersion<ProtoReader>();
-                    if (tmp != ver) Console.WriteLine($"protobuf-net {tmp}");
-                    tmp = GetVersion<FileDescriptorSet>();
-                    if (tmp != ver) Console.WriteLine($"protobuf-net.Reflection {tmp}");
-                    return 0;
-                }
-                else if (grpcMode is object)
-                {
+                    case ExecMode.Help:
+                    case ExecMode.Error:
+                        ShowHelp();
+                        break;
+                    case ExecMode.Version:
+                        var ver = GetVersion(typeof(Program));
+                        Console.WriteLine($"protogen {ver}");
+                        var tmp = GetVersion<ProtoReader>();
+                        if (tmp != ver) Console.WriteLine($"protobuf-net {tmp}");
+                        tmp = GetVersion<FileDescriptorSet>();
+                        if (tmp != ver) Console.WriteLine($"protobuf-net.Reflection {tmp}");
+                        break;
+                    case ExecMode.Grpc:
 #if GRPC_TOOLS
-                    return await GrpcTools.ExecuteAsync(grpcMode, grpcUrl, grpcService, codegen, outPath, options);
+                        return await GrpcTools.ExecuteAsync(grpcMode, grpcUrl, grpcService, codegen, outPath, options);
 #else
-                    Console.Error.Write("gRPC tools are not available on this platform");
-                    await Task.Yield(); // this is just to make the compiler happy, and doesn't really matter
-                    return 1;
+                        Console.Error.Write("gRPC tools are not available on this platform");
+                        await Task.Yield(); // this is just to make the compiler happy, and doesn't really matter
+                        return 1;
 #endif
-                }
-                else if (inputFiles.Count == 0)
-                {
-                    Console.Error.WriteLine("Missing input file.");
-                    return -1;
-                }
-                else if (!exec)
-                {
-                    Console.Error.WriteLine("Missing output directives.");
-                    return -1;
-                }
-                else
-                {
-                    int exitCode = 0;
-                    var set = new FileDescriptorSet
-                    {
-                        DefaultPackage = package
-                    };
-                    if (importPaths.Count == 0)
-                    {
-                        set.AddImportPath(Directory.GetCurrentDirectory());
-                    }
-                    else
-                    {
-                        foreach (var dir in importPaths)
+                    case ExecMode.Generate:
+                    case ExecMode.Decode: // share the parse step between generate/decode
+                        if (inputFiles.Count == 0)
                         {
-                            if (Directory.Exists(dir))
+                            Console.Error.WriteLine("Missing input file.");
+                            return -1;
+                        }
+                        int exitCode = 0;
+                        var set = new FileDescriptorSet
+                        {
+                            DefaultPackage = package
+                        };
+                        if (importPaths.Count == 0)
+                        {
+                            set.AddImportPath(Directory.GetCurrentDirectory());
+                        }
+                        else
+                        {
+                            foreach (var dir in importPaths)
                             {
-                                set.AddImportPath(dir);
+                                if (Directory.Exists(dir))
+                                {
+                                    set.AddImportPath(dir);
+                                }
+                                else
+                                {
+                                    Console.Error.WriteLine($"Directory not found: {dir}");
+                                    exitCode = 1;
+                                }
                             }
-                            else
+                        }
+
+                        // add the library area for auto-imports (library inbuilts)
+                        set.AddImportPath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
+
+                        if (inputFiles.Count == 1 && importPaths.Count == 1)
+                        {
+                            SearchOption? searchOption = null;
+                            if (inputFiles[0] == "**/*.proto"
+                                || inputFiles[0] == "**\\*.proto")
                             {
-                                Console.Error.WriteLine($"Directory not found: {dir}");
+                                searchOption = SearchOption.AllDirectories;
+                                set.AllowNameOnlyImport = true;
+                            }
+                            else if (inputFiles[0] == "*.proto")
+                            {
+                                searchOption = SearchOption.TopDirectoryOnly;
+                            }
+
+                            if (searchOption != null)
+                            {
+                                inputFiles.Clear();
+                                var searchRoot = importPaths[0];
+                                foreach (var path in Directory.EnumerateFiles(importPaths[0], "*.proto", searchOption.Value))
+                                {
+                                    inputFiles.Add(MakeRelativePath(searchRoot, path));
+                                }
+                            }
+                        }
+
+                        foreach (var input in inputFiles)
+                        {
+                            if (!set.Add(input, true))
+                            {
+                                Console.Error.WriteLine($"File not found: {input}");
                                 exitCode = 1;
                             }
                         }
-                    }
 
-                    // add the library area for auto-imports (library inbuilts)
-                    set.AddImportPath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
-
-                    if (inputFiles.Count == 1 && importPaths.Count == 1)
-                    {
-                        SearchOption? searchOption = null;
-                        if (inputFiles[0] == "**/*.proto"
-                            || inputFiles[0] == "**\\*.proto")
+                        if (exitCode != 0) return exitCode;
+                        set.Process();
+                        var errors = set.GetErrors();
+                        foreach (var err in errors)
                         {
-                            searchOption = SearchOption.AllDirectories;
-                            set.AllowNameOnlyImport = true;
+                            if (err.IsError) exitCode++;
+                            Console.Error.WriteLine(err.ToString());
                         }
-                        else if (inputFiles[0] == "*.proto")
-                        {
-                            searchOption = SearchOption.TopDirectoryOnly;
-                        }
+                        if (exitCode != 0) return exitCode;
 
-                        if (searchOption != null)
+                        if (mode == ExecMode.Decode)
                         {
-                            inputFiles.Clear();
-                            var searchRoot = importPaths[0];
-                            foreach (var path in Directory.EnumerateFiles(importPaths[0], "*.proto", searchOption.Value))
+                            IType type = set.Files[0];
+                            var rootType = type.Find(decodeRootType);
+                            if (rootType is DescriptorProto descriptor)
                             {
-                                inputFiles.Add(MakeRelativePath(searchRoot, path));
+                                new TextDecodeVisitor(Console.Out).Visit(Console.OpenStandardInput(), descriptor);
+                                break;
                             }
-                        }
-                    }
+                            else if (rootType is null)
+                            {
+                                Console.Error.WriteLine($"Root type not found: {decodeRootType}");
+                                return -1;
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine($"Root type {decodeRootType} must be a message kind");
+                                return -1;
+                            }
+                        } // othewise: code-gen
 
-                    foreach (var input in inputFiles)
-                    {
-                        if (!set.Add(input, true))
+                        if (codegen == null)
                         {
-                            Console.Error.WriteLine($"File not found: {input}");
-                            exitCode = 1;
-                        }
-                    }
+                            using (var fds = File.Create(outPath))
+                            {
+                                Serializer.Serialize(fds, set);
+                            }
 
-                    if (exitCode != 0) return exitCode;
-                    set.Process();
-                    var errors = set.GetErrors();
-                    foreach (var err in errors)
-                    {
-                        if (err.IsError) exitCode++;
-                        Console.Error.WriteLine(err.ToString());
-                    }
-                    if (exitCode != 0) return exitCode;
-
-                    if (codegen == null)
-                    {
-                        using (var fds = File.Create(outPath))
-                        {
-                            Serializer.Serialize(fds, set);
+                            break;
                         }
 
-                        return 0;
-                    }
-
-                    var files = codegen.Generate(set, options: options);
-                    WriteFiles(files, outPath);
-
-                    return 0;
+                        var files = codegen.Generate(set, options: options);
+                        WriteFiles(files, outPath);
+                        break;
+                    case ExecMode.None:
+                        Console.Error.WriteLine("Missing output directives.");
+                        return -1;
+                    default:
+                        Console.Error.WriteLine($"Unhandled mode: {mode}");
+                        return -1;
                 }
+                return mode == ExecMode.Error ? -1 : 0;
             }
             catch (Exception ex)
             {
