@@ -10,24 +10,29 @@ namespace ProtoBuf.Internal
 {
     internal abstract class DecodeVisitor : IDisposable
     {
-        private static FileDescriptorProto GetFile(DescriptorProto descriptor)
-        {
-            IType type = descriptor;
-            while (type is not null)
-            {
-                if (type is FileDescriptorProto file) return file;
-                type = type.Parent;
-            }
-            throw new InvalidOperationException("Unable to resolve file from message: " + descriptor?.Name);
-        }
         private readonly Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
-        public void Visit(Stream stream, DescriptorProto descriptor)
+        public void Visit(Stream stream, FileDescriptorProto file, string rootMessageType)
         {
-            CommonCodeGenerator.BuildTypeIndex(GetFile(descriptor), _knownTypes);
+            if (stream is null) throw new ArgumentNullException(nameof(stream));
+            if (file is null) throw new ArgumentNullException(nameof(file));
+
+            // build an index over the known types; note that this uses .-rooted syntax, so make sure
+            // that our input matches that if needed
+            CommonCodeGenerator.BuildTypeIndex(file, _knownTypes);
+            rootMessageType = (rootMessageType ?? "").Trim();
+            if (rootMessageType.Length > 0 && rootMessageType[0] != '.') rootMessageType = "." + rootMessageType;
+
+            if (_knownTypes.TryGetValue(rootMessageType, out var found) && found is DescriptorProto descriptor)
+            { } // fine!
+            else
+            {
+                throw new InvalidOperationException($"Unable to resolve root message kind '{rootMessageType}' from {file.Name}");
+            }
             var reader = ProtoReader.State.Create(stream, null);
             try
             {
                 Visit(ref reader, descriptor);
+                Flush();
             }
             finally
             {
@@ -134,8 +139,9 @@ namespace ProtoBuf.Internal
         protected virtual void OnField(FieldDescriptorProto field, byte[] value) => OnFieldFallback(field, BitConverter.ToString(value));
         protected virtual void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message) => Depth++;
         protected virtual void OnEndMessage(FieldDescriptorProto field, DescriptorProto message) => Depth--;
-
         protected virtual void OnUnkownField(ref ProtoReader.State reader) => reader.SkipField();
+
+        protected virtual void Flush() { }
 
         public int Depth { get; private set; }
         public virtual void Dispose() { }
@@ -145,8 +151,11 @@ namespace ProtoBuf.Internal
     {
         public TextWriter Output { get; }
         public TextDecodeVisitor(TextWriter output)
-            => Output = output;
+            => Output = output ?? throw new ArgumentNullException(nameof(output));
         public string Indent { get; set; } = " ";
+
+        protected override void Flush() => Output.Flush();
+
         private void WriteLine(string message)
         {
             for (int i = 0; i < Depth; i++)

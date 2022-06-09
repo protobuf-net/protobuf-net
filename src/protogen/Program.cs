@@ -263,23 +263,7 @@ namespace protogen
 
                         if (mode == ExecMode.Decode)
                         {
-                            IType type = set.Files[0];
-                            var rootType = type.Find(decodeRootType);
-                            if (rootType is DescriptorProto descriptor)
-                            {
-                                new TextDecodeVisitor(Console.Out).Visit(Console.OpenStandardInput(), descriptor);
-                                break;
-                            }
-                            else if (rootType is null)
-                            {
-                                Console.Error.WriteLine($"Root type not found: {decodeRootType}");
-                                return -1;
-                            }
-                            else
-                            {
-                                Console.Error.WriteLine($"Root type {decodeRootType} must be a message kind");
-                                return -1;
-                            }
+                            new TextDecodeVisitor(Console.Out).Visit(Console.OpenStandardInput(), set.Files[0], decodeRootType);
                         } // othewise: code-gen
 
                         if (codegen == null)
