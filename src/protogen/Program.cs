@@ -153,7 +153,7 @@ namespace protogen
                                 break;
                             }
                             else
-                            {
+                            { // protogen --decode MyRootType my.proto < some.bin
                                 inputFiles.Add(lhs);
                             }
                             break;
@@ -265,20 +265,22 @@ namespace protogen
                         {
                             using var visitor = new TextDecodeVisitor(Console.Out);
                             visitor.Visit(Console.OpenStandardInput(), set.Files[0], decodeRootType);
-                        } // othewise: code-gen
-
-                        if (codegen == null)
+                        }
+                        else // othewise: code-gen
                         {
-                            using (var fds = File.Create(outPath))
+                            if (codegen == null)
                             {
-                                Serializer.Serialize(fds, set);
+                                using (var fds = File.Create(outPath))
+                                {
+                                    Serializer.Serialize(fds, set);
+                                }
+
+                                break;
                             }
 
-                            break;
+                            var files = codegen.Generate(set, options: options);
+                            WriteFiles(files, outPath);
                         }
-
-                        var files = codegen.Generate(set, options: options);
-                        WriteFiles(files, outPath);
                         break;
                     case ExecMode.None:
                         Console.Error.WriteLine("Missing output directives.");
