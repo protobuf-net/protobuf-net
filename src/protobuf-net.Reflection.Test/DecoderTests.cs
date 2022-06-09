@@ -79,7 +79,8 @@ enum Blap {
                 0x20, 0x01, // enum mapped to defined value
                 0x28, 0x05, // enum without defined value
             });
-            new TextDecodeVisitor(_output).Visit(ms, schemaSet.Files[0], "Test");
+            using var visitor = new TextDecodeVisitor(_output);
+            visitor.Visit(ms, schemaSet.Files[0], "Test");
             var result = _output.ToString();
             Assert.Equal(@"1: a=150 (TypeInt32)
 2: b=[ (TypeString)

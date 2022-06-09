@@ -263,7 +263,8 @@ namespace protogen
 
                         if (mode == ExecMode.Decode)
                         {
-                            new TextDecodeVisitor(Console.Out).Visit(Console.OpenStandardInput(), set.Files[0], decodeRootType);
+                            using var visitor = new TextDecodeVisitor(Console.Out);
+                            visitor.Visit(Console.OpenStandardInput(), set.Files[0], decodeRootType);
                         } // othewise: code-gen
 
                         if (codegen == null)
