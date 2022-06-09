@@ -138,11 +138,11 @@ namespace ProtoBuf.Internal
                                 throw new InvalidOperationException("Unable to locate enum kind: " + field.TypeName);
                             }
                             break;
+
                         // things we will probably never handle
                         case FieldDescriptorProto.Type.TypeGroup:
                             throw new NotSupportedException("groups are not supported"); // you will probably never need this
-                                                                                         // unexpected things
-                        default: // 
+                        default: // unexpected things
                             throw new InvalidOperationException($"unexpected proto type: {field.type}");
                     }
                     if (repeatedIndex >= 0) repeatedIndex++;
