@@ -104,6 +104,7 @@ namespace ProtoBuf.Internal
                             OnField(field, reader.AppendBytes(null), repeatedIndex);
                             break;
                         case FieldDescriptorProto.Type.TypeMessage:
+                        case FieldDescriptorProto.Type.TypeGroup: // this code is *designed* for TypeMessage, but should work for TypeGroup too?
                             if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is DescriptorProto messageType)
                             {
                                 var tok = reader.StartSubItem();
@@ -117,7 +118,6 @@ namespace ProtoBuf.Internal
                                 throw new InvalidOperationException("Unable to locate sub-message kind: " + field.TypeName);
                             }
                             break;
-                        // things we don't handle yet
                         case FieldDescriptorProto.Type.TypeEnum:
                             if (_knownTypes.TryGetValue(field.TypeName, out inner) && inner is EnumDescriptorProto enumDescriptor)
                             {
@@ -138,10 +138,6 @@ namespace ProtoBuf.Internal
                                 throw new InvalidOperationException("Unable to locate enum kind: " + field.TypeName);
                             }
                             break;
-
-                        // things we will probably never handle
-                        case FieldDescriptorProto.Type.TypeGroup:
-                            throw new NotSupportedException("groups are not supported"); // you will probably never need this
                         default: // unexpected things
                             throw new InvalidOperationException($"unexpected proto type: {field.type}");
                     }
