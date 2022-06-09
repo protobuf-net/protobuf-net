@@ -21,7 +21,7 @@ namespace ProtoBuf.Internal
         }
         protected override void OnUnkownField(ref ProtoReader.State reader)
         {
-            WriteLine($"{reader.FieldNumber}: (unknown, {reader.WireType})");
+            WriteLine($"{reader.FieldNumber.ToString(FormatProvider)}: (unknown, {reader.WireType})");
             base.OnUnkownField(ref reader); // skip the value
         }
 
