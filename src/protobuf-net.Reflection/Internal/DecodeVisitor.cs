@@ -231,7 +231,14 @@ namespace ProtoBuf.Internal
 
         protected override void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message, int index)
         {
-            WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={{");
+            if (index < 0)
+            {
+                WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={{");
+            }
+            else
+            {
+                WriteLine($"#{index.ToString(FormatProvider)}={{");
+            }
             base.OnBeginMessage(field, message, index);
         }
         protected override void OnEndMessage(FieldDescriptorProto field, DescriptorProto message, int index)
