@@ -97,12 +97,12 @@ namespace ProtoBuf.Internal
                         OnField(field, reader.AppendBytes(null));
                         break;
                     case FieldDescriptorProto.Type.TypeMessage:
-                        if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is DescriptorProto innerDescriptor)
+                        if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is DescriptorProto messageType)
                         {
                             var tok = reader.StartSubItem();
-                            OnBeginMessage(field, innerDescriptor);
-                            Visit(ref reader, innerDescriptor);
-                            OnEndMessage(field, innerDescriptor);
+                            OnBeginMessage(field, messageType);
+                            Visit(ref reader, messageType);
+                            OnEndMessage(field, messageType);
                             reader.EndSubItem(tok);
                         }
                         else
@@ -112,9 +112,25 @@ namespace ProtoBuf.Internal
                         break;
                     // things we don't handle yet
                     case FieldDescriptorProto.Type.TypeEnum:
-                        throw new NotImplementedException($"proto type not handled yet: {field.type}");
-                    // (TODO: read as a varint (32-bit), and resolve the name from the enum descriptor if possible, but note
-                    // that unknown values should be handled and presented as integers)
+                        if (_knownTypes.TryGetValue(field.TypeName, out inner) && inner is EnumDescriptorProto enumDescriptor)
+                        {
+                            var value = reader.ReadInt32();
+                            EnumValueDescriptorProto found = null;
+                            foreach (var defined in enumDescriptor.Values)
+                            {
+                                if (defined.Number == value)
+                                {
+                                    found = defined;
+                                    break;
+                                }
+                            }
+                            OnField(field, found, value);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Unable to locate enum kind: " + field.TypeName);
+                        }
+                        break;
                     // things we will probably never handle
                     case FieldDescriptorProto.Type.TypeGroup:
                         throw new NotSupportedException("groups are not supported"); // you will probably never need this
@@ -137,6 +153,11 @@ namespace ProtoBuf.Internal
         protected virtual void OnField(FieldDescriptorProto field, double value) => OnFieldFallback(field, value.ToString(FormatProvider));
         protected virtual void OnField(FieldDescriptorProto field, string value) => OnFieldFallback(field, value);
         protected virtual void OnField(FieldDescriptorProto field, byte[] value) => OnFieldFallback(field, BitConverter.ToString(value));
+        private void OnField(FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
+        {
+            if (@enum is null) OnFieldFallback(field, value.ToString(FormatProvider));
+            else OnFieldFallback(field, @enum.Name);
+        }
         protected virtual void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message) => Depth++;
         protected virtual void OnEndMessage(FieldDescriptorProto field, DescriptorProto message) => Depth--;
         protected virtual void OnUnkownField(ref ProtoReader.State reader) => reader.SkipField();

@@ -64,12 +64,21 @@ message Test {
   optional int32 a = 1;
   optional string b = 2;
   optional Test c = 3;
+  optional Blap d = 4;
+  optional Blap e = 5;
+}
+enum Blap {
+   BLAB_X = 0;
+   BLAB_Y = 1;
 }"));
             schemaSet.Process();
             using var ms = new MemoryStream(new byte[] {
-                0x08, 0x96, 0x01,
-                0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67,
-                0x1a, 0x03, 0x08, 0x96, 0x01 });
+                0x08, 0x96, 0x01, // integer
+                0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, // string
+                0x1a, 0x03, 0x08, 0x96, 0x01, // sub-message
+                0x20, 0x01, // enum mapped to defined value
+                0x28, 0x05, // enum without defined value
+            });
             new TextDecodeVisitor(_output).Visit(ms, schemaSet.Files[0], "Test");
             var result = _output.ToString();
             Assert.Equal(@"1: a=150 (TypeInt32)
@@ -77,6 +86,8 @@ message Test {
 3: c={
  1: a=150 (TypeInt32)
 } // c
+4: d=BLAB_Y (TypeEnum)
+5: e=5 (TypeEnum)
 ", result, ignoreLineEndingDifferences: true);
         }
     }
