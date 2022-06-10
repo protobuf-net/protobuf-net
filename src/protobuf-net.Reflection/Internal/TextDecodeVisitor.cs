@@ -25,44 +25,50 @@ namespace ProtoBuf.Internal
             base.OnUnkownField(ref reader); // skip the value
         }
 
-        protected override void OnBeginRepeated(FieldDescriptorProto field)
+        protected override object OnBeginRepeated(FieldDescriptorProto field)
         {
             WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}=[ ({field.type})");
-            base.OnBeginRepeated(field);
+            return base.OnBeginRepeated(field);
         }
-        protected override void OnEndRepeated(FieldDescriptorProto field, int count)
+        protected override void OnEndRepeated(FieldDescriptorProto field)
         {
-            base.OnEndRepeated(field, count);
-            WriteLine($"] // {field.Name}, count: {count.ToString(FormatProvider)}");
+            base.OnEndRepeated(field);
+            WriteLine($"] // {field.Name}, count: {Index.ToString(FormatProvider)}");
         }
-        protected override void OnFieldFallback(FieldDescriptorProto field, string value, int index)
+        protected override void OnFieldFallback(FieldDescriptorProto field, string value)
         {
-            if (index < 0)
+            if (Index < 0)
             {
                 WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={value} ({field.type})");
             }
             else
             {
-                WriteLine($"#{index.ToString(FormatProvider)}={value}");
+                WriteLine($"#{Index.ToString(FormatProvider)}={value}");
             }
         }
 
-        protected override void OnBeginMessage(FieldDescriptorProto field, DescriptorProto message, int index)
+        protected override object OnBeginMessage(FieldDescriptorProto field, DescriptorProto message)
         {
-            if (index < 0)
+            if (field is not null)
             {
-                WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={{");
+                if (Index < 0)
+                {
+                    WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={{");
+                }
+                else
+                {
+                    WriteLine($"#{Index.ToString(FormatProvider)}={{");
+                }
             }
-            else
-            {
-                WriteLine($"#{index.ToString(FormatProvider)}={{");
-            }
-            base.OnBeginMessage(field, message, index);
+            return base.OnBeginMessage(field, message);
         }
-        protected override void OnEndMessage(FieldDescriptorProto field, DescriptorProto message, int index)
+        protected override void OnEndMessage(FieldDescriptorProto field, DescriptorProto message)
         {
-            base.OnEndMessage(field, message, index);
-            WriteLine($"}} // {field.Name}");
+            base.OnEndMessage(field, message);
+            if (field is not null)
+            {
+                WriteLine($"}} // {field.Name}");
+            }
         }
     }
 }
