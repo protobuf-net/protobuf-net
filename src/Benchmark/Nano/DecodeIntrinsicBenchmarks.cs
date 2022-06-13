@@ -57,6 +57,10 @@ namespace Benchmark.Nano
             reader = GetReader();
             if ((actualValue = reader.IntrinsicsPreferShort3()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort3)} value: {expectedValue} vs {actualValue}");
             if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort3)} index: {expectedIndex} vs {reader.Index}");
+
+            reader = GetReader();
+            if ((actualValue = reader.IntrinsicsPreferShort4()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort4)} value: {expectedValue} vs {actualValue}");
+            if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort4)} index: {expectedIndex} vs {reader.Index}");
         }
 
         [Params(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)]
@@ -170,6 +174,20 @@ namespace Benchmark.Nano
             {
                 reader.Index = index; // reset for multiple reads on same data
                 final = reader.IntrinsicsPreferShort3();
+            }
+            return final;
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public ulong IntrinsicsPreferShort4()
+        {
+            var reader = GetReader();
+            ulong final = 0;
+            int index = reader.Index;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                reader.Index = index; // reset for multiple reads on same data
+                final = reader.IntrinsicsPreferShort4();
             }
             return final;
         }
@@ -370,6 +388,55 @@ namespace Benchmark.Nano
                             value, 0x8080808080808080); // MSB in each octet
                         // and use PEXT to retain all the data bits
                         value = (Bmi2.X64.ParallelBitExtract(value, 0x7f7f7f7f7f7f7f7f) << 14) | ((uint)(b1 & 0x7f) << 7) | (uint)(b0 & 0x7f);
+
+                        // now use TZCNT on the complement to find all the continuations
+                        var continuations = Bmi1.TrailingZeroCount(~(uint)hiBits);
+                        if (continuations == 8) ThrowMalformed();
+                        _index += (int)continuations + 1;
+                        // if we have zero continuations, we want to read 1 byte
+                        var mask = ~((~0x7FUL) << (7 * (int)(continuations + 2)));
+                        return value & mask;
+                    }
+                    else
+                    {
+                        return ReadVarintUInt64Slow();
+                    }
+                }
+                else
+#endif
+                {
+                    return Unoptimized();
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ulong IntrinsicsPreferShort4()
+            {
+#if NETCOREAPP3_1_OR_GREATER
+                if (Bmi2.X64.IsSupported && Bmi1.IsSupported)
+                {
+                    if (_index + 10 <= _end)
+                    {
+                        var val16 = Unsafe.ReadUnaligned<ushort>(ref Unsafe.AsRef(in _buffer[_index++]));
+                        if (!BitConverter.IsLittleEndian) val16 = BinaryPrimitives.ReverseEndianness(val16);
+
+                        if ((val16 & 0x80) == 0) return val16 & 0xffU;
+
+                        if ((val16 & 0x8000) == 0)
+                        {
+                            _index++;
+                            return ((val16 & 0x7f00U) >> 1) | (val16 & 0x7fU);
+                        }
+
+                        // read the remaining 8 octets (varint is max 10)
+                        var value = Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[++_index]));
+                        if (!BitConverter.IsLittleEndian) value = BinaryPrimitives.ReverseEndianness(value);
+
+                        // use PEXT to get all the high bits as a contiguous chunk
+                        var hiBits = Bmi2.X64.ParallelBitExtract(
+                            value, 0x8080808080808080); // MSB in each octet
+                        // and use PEXT to retain all the data bits
+                        value = (Bmi2.X64.ParallelBitExtract(value, 0x7f7f7f7f7f7f7f7f) << 14) | ((val16 & 0x7f00U) >> 1) | (val16 & 0x7fU);
 
                         // now use TZCNT on the complement to find all the continuations
                         var continuations = Bmi1.TrailingZeroCount(~(uint)hiBits);
