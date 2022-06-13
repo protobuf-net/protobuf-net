@@ -28,10 +28,15 @@ namespace Benchmark.Nano
             span[_length - 1] &= 0x7F; // remove the high bit from the last one
 
             ulong actualValue;
-            var reader = GetReader();
             var expectedIndex = _byteOffset + _length;
+
+            var reader = GetReader();
             if ((actualValue = reader.Unoptimized()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.Unoptimized)} value: {expectedValue} vs {actualValue}");
             if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.Unoptimized)} index: {expectedIndex} vs {reader.Index}");
+
+            reader = GetReader();
+            if ((actualValue = reader.UnsafeAdd()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.UnsafeAdd)} value: {expectedValue} vs {actualValue}");
+            if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.UnsafeAdd)} index: {expectedIndex} vs {reader.Index}");
 
             reader = GetReader();
             if ((actualValue = reader.Intrinsics()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.Intrinsics)} value: {expectedValue} vs {actualValue}");
@@ -77,6 +82,20 @@ namespace Benchmark.Nano
             {
                 reader.Index = index; // reset for multiple reads on same data
                 final = reader.Unoptimized();
+            }
+            return final;
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public ulong UnsafeAdd()
+        {
+            var reader = GetReader();
+            ulong final = 0;
+            int index = reader.Index;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                reader.Index = index; // reset for multiple reads on same data
+                final = reader.UnsafeAdd();
             }
             return final;
         }
@@ -169,6 +188,37 @@ namespace Benchmark.Nano
                     do
                     {
                         byte b = buffer[_index++];
+                        result |= (ulong)(b & 0x7F) << shift;
+                        if (b < 0x80)
+                        {
+                            return result;
+                        }
+                        shift += 7;
+                    }
+                    while (shift < 64);
+
+                    ThrowMalformed();
+                }
+                return ReadVarintUInt64Slow();
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ulong UnsafeAdd()
+            {
+                if (_index + 10 <= _end)
+                {
+                    var buffer = _buffer;
+                    ref var ptr = ref Unsafe.AsRef(in buffer[0]);
+                    ulong result = Unsafe.Add(ref ptr, _index++);
+                    if (result < 128)
+                    {
+                        return result;
+                    }
+                    result &= 0x7f;
+                    int shift = 7;
+                    do
+                    {
+                        byte b = Unsafe.Add(ref ptr, _index++);
                         result |= (ulong)(b & 0x7F) << shift;
                         if (b < 0x80)
                         {

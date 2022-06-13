@@ -19,6 +19,7 @@ namespace Benchmark
                     obj.VarintLen = length;
 
                     Console.WriteLine(obj.Unoptimized());
+                    Console.WriteLine(obj.UnsafeAdd());
                     Console.WriteLine(obj.Intrinsics());
                     Console.WriteLine(obj.IntrinsicsSwitched());
                     Console.WriteLine(obj.IntrinsicsPreferShort());
