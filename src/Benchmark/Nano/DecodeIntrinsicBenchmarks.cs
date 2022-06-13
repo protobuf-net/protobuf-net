@@ -53,6 +53,10 @@ namespace Benchmark.Nano
             reader = GetReader();
             if ((actualValue = reader.IntrinsicsPreferShort2()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort2)} value: {expectedValue} vs {actualValue}");
             if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort2)} index: {expectedIndex} vs {reader.Index}");
+
+            reader = GetReader();
+            if ((actualValue = reader.IntrinsicsPreferShort3()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort3)} value: {expectedValue} vs {actualValue}");
+            if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort3)} index: {expectedIndex} vs {reader.Index}");
         }
 
         [Params(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)]
@@ -152,6 +156,20 @@ namespace Benchmark.Nano
             {
                 reader.Index = index; // reset for multiple reads on same data
                 final = reader.IntrinsicsPreferShort2();
+            }
+            return final;
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public ulong IntrinsicsPreferShort3()
+        {
+            var reader = GetReader();
+            ulong final = 0;
+            int index = reader.Index;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                reader.Index = index; // reset for multiple reads on same data
+                final = reader.IntrinsicsPreferShort3();
             }
             return final;
         }
@@ -360,6 +378,58 @@ namespace Benchmark.Nano
                         // if we have zero continuations, we want to read 1 byte
                         var mask = ~((~0x7FUL) << (7 * (int)(continuations + 2)));
                         return value & mask;
+                    }
+                    else
+                    {
+                        return ReadVarintUInt64Slow();
+                    }
+                }
+                else
+#endif
+                {
+                    return Unoptimized();
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ulong IntrinsicsPreferShort3()
+            {
+#if NETCOREAPP3_1_OR_GREATER
+                if (Bmi2.IsSupported && Bmi2.X64.IsSupported && Bmi1.IsSupported)
+                {
+                    if (_index + 10 <= _end)
+                    {
+                        var lo28 = Unsafe.ReadUnaligned<uint>(ref Unsafe.AsRef(in _buffer[_index]));
+                        if (!BitConverter.IsLittleEndian) lo28 = BinaryPrimitives.ReverseEndianness(lo28);
+
+                        var continuations = Bmi1.TrailingZeroCount(~Bmi2.ParallelBitExtract(
+                            lo28, 0x80808080)); // MSB in each octet
+                        _index += (int)continuations + 1;
+                        switch (continuations)
+                        {
+                            case 0: return lo28 & 0x7f;
+                            case 1: return Bmi2.ParallelBitExtract(lo28, 0x7f7f);
+                            case 2: return Bmi2.ParallelBitExtract(lo28, 0x7f7f7f);
+                            case 3: return Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7f);
+                        }
+                        lo28 = Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7f);
+                        var hi36 = Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[_index - 3]));
+                        if (!BitConverter.IsLittleEndian) hi36 = BinaryPrimitives.ReverseEndianness(hi36);
+
+                        continuations = Bmi1.TrailingZeroCount(~(uint)Bmi2.X64.ParallelBitExtract(
+                            hi36, 0x8080808080800000)); // MSB in each octet (ignoring the low two=overlap)
+                        _index += (int)continuations;
+                        switch (continuations)
+                        {
+                            case 0: return ((hi36 & 0x7f0000) << 12) | lo28;
+                            case 1: return (Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f0000) << 28) | lo28;
+                            case 2: return (Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f0000) << 28) | lo28;
+                            case 3: return (Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f0000) << 28) | lo28;
+                            case 4: return (Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f7f0000) << 28) | lo28;
+                            case 5: return (Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f7f7f0000) << 28) | lo28;
+                        }
+                        ThrowMalformed();
+                        return 0; // not reached
                     }
                     else
                     {

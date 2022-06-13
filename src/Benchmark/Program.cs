@@ -24,6 +24,7 @@ namespace Benchmark
                     Console.WriteLine(obj.IntrinsicsSwitched());
                     Console.WriteLine(obj.IntrinsicsPreferShort());
                     Console.WriteLine(obj.IntrinsicsPreferShort2());
+                    Console.WriteLine(obj.IntrinsicsPreferShort3());
                 }
             }
 #else
