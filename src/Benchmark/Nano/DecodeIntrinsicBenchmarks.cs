@@ -413,6 +413,8 @@ namespace Benchmark.Nano
                             case 3: return Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7f);
                         }
                         lo28 = Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7f);
+                        // we want another 6 octets; we'll read 8 (because that's easy), overlapping with
+                        // the data we already read, so we can avoid needing to allow 12 bytes for this path
                         var hi36 = Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[_index - 3]));
                         if (!BitConverter.IsLittleEndian) hi36 = BinaryPrimitives.ReverseEndianness(hi36);
 
