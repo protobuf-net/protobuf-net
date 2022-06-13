@@ -9,17 +9,26 @@ namespace Benchmark
         private static void Main(string[] args)
         {
 #if (DEBUG || RUN) && NEW_API
-            var obj = new Nano.NanoBenchmarks();
-            obj.Setup();
-            for (int i = 0 ; i < 50000 ; i++)
+            var obj = new Nano.DecodeIntrinsicBenchmarks();
+            for (int offset = 0; offset < 8; offset++)
             {
-                if ((i % 1000) == 0) Console.Write(".");
-                obj.MeasureRequestPBN();
+                obj.ByteOffset = offset;
+                for (int length = 1; length <= 10; length++)
+                {
+                    Console.WriteLine($"offset: {offset}; length: {length}");
+                    obj.VarintLen = length;
+
+                    Console.WriteLine(obj.Unoptimized());
+                    Console.WriteLine(obj.Intrinsics());
+                    Console.WriteLine(obj.IntrinsicsSwitched());
+                    Console.WriteLine(obj.IntrinsicsPreferShort());
+                    Console.WriteLine(obj.IntrinsicsPreferShort2());
+                }
             }
 #else
 
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 #endif
+            }
         }
-    }
 }
