@@ -117,7 +117,11 @@ public sealed class ForwardRequest
     }
 
 
-    public string? TraceId => _traceId;
+    public string? TraceId
+    {
+        get => _traceId;
+        set => _traceId = value;
+    }
     public List<ForwardPerItemRequest> ItemRequests => _itemRequests;
     public byte[]? RequestContextInfo => _requestContextInfo;
 
