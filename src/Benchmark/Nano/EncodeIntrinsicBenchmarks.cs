@@ -405,7 +405,7 @@ namespace Benchmark.Nano
                 {
                     if (_index + 5 <= _end)
                     {
-                        var octets = (32 - Lzcnt.LeadingZeroCount(value) + 6) / 7;
+                        var octets = (38 - Lzcnt.LeadingZeroCount(value)) / 7;
                         switch (octets)
                         {
                             case 0:
@@ -453,7 +453,7 @@ namespace Benchmark.Nano
                             _buffer[_index++] = (byte)value;
                             return;
                         }
-                        var octets = (32 - Lzcnt.LeadingZeroCount(value) + 6) / 7;
+                        var octets = (38 - Lzcnt.LeadingZeroCount(value)) / 7;
                         if (octets < 5)
                         {
                             var shift = (4 - (int)octets) << 3;
@@ -495,7 +495,7 @@ namespace Benchmark.Nano
                             _buffer[_index++] = (byte)value;
                             return;
                         }
-                        var octets = (32 - Lzcnt.LeadingZeroCount(value) + 6) / 7;
+                        var octets = (38 - Lzcnt.LeadingZeroCount(value)) / 7;
                         if (octets < 5)
                         {
                             Unsafe.WriteUnaligned(ref _buffer[_index], Bmi2.ParallelBitDeposit(value,
@@ -531,7 +531,7 @@ namespace Benchmark.Nano
                 {
                     if (_index + 5 <= _end)
                     {
-                        var octets = (32 - Lzcnt.LeadingZeroCount(value) + 6) / 7;
+                        var octets = (38 - Lzcnt.LeadingZeroCount(value)) / 7;
                         switch (octets)
                         {
                             case 0:
