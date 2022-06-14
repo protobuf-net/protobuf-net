@@ -49,15 +49,18 @@ namespace Benchmark.Nano
             var actualLen = BenchmarkWriter.Measure_Unoptimized(_value);
             if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_Unoptimized)}: {_length} vs {actualLen}");
 
-            actualLen = BenchmarkWriter.Measure_Max(_value);
-            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_Max)}: {_length} vs {actualLen}");
+            actualLen = BenchmarkWriter.Measure_Lzcnt(_value);
+            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_Lzcnt)}: {_length} vs {actualLen}");
+
+            actualLen = BenchmarkWriter.Measure_LzcntMax(_value);
+            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_LzcntMax)}: {_length} vs {actualLen}");
         }
 
         private const int OperationsPerInvoke = 32 * 1024;
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke, Baseline = true)]
         [BenchmarkCategory("Measure32")]
-        public void Measure_Unpotimized()
+        public void Measure_Unoptimized()
         {
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
@@ -67,11 +70,21 @@ namespace Benchmark.Nano
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         [BenchmarkCategory("Measure32")]
-        public void Measure_Max()
+        public void Measure_Lzcnt()
         {
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                BenchmarkWriter.Measure_Max(_value);
+                BenchmarkWriter.Measure_Lzcnt(_value);
+            }
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        [BenchmarkCategory("Measure32")]
+        public void Measure_LzcntMax()
+        {
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                BenchmarkWriter.Measure_LzcntMax(_value);
             }
         }
 
@@ -551,9 +564,18 @@ namespace Benchmark.Nano
                     WriteVarintUInt32_Unoptimized(value);
                 }
             }
-    
             [MethodImpl(HotPath)]
             public static uint Measure_Unoptimized(uint value)
+            {
+                if ((value & (~0U << 7)) == 0) return 1;
+                if ((value & (~0U << 14)) == 0) return 2;
+                if ((value & (~0U << 21)) == 0) return 3;
+                if ((value & (~0U << 28)) == 0) return 4;
+                return 5;
+            }
+
+            [MethodImpl(HotPath)]
+            public static uint Measure_Lzcnt(uint value)
             {
 #if NETCOREAPP3_1_OR_GREATER
                 if (Lzcnt.IsSupported)
@@ -573,7 +595,7 @@ namespace Benchmark.Nano
             }
 
             [MethodImpl(HotPath)]
-            public static uint Measure_Max(uint value)
+            public static uint Measure_LzcntMax(uint value)
             {
 #if NETCOREAPP3_1_OR_GREATER
                 if (Lzcnt.IsSupported)
