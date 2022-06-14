@@ -1,7 +1,4 @@
 ﻿// #define RUN
-using BenchmarkDotNet.Running;
-using System;
-
 namespace Benchmark
 {
     public static class Program
@@ -9,29 +6,25 @@ namespace Benchmark
         private static void Main(string[] args)
         {
 #if (DEBUG || RUN) && NEW_API
-            var obj = new Nano.DecodeIntrinsicBenchmarks();
+            var obj = new Nano.EncodeIntrinsicBenchmarks();
             for (int offset = 0; offset < 8; offset++)
             {
                 obj.ByteOffset = offset;
-                for (int length = 1; length <= 10; length++)
+                for (int length = 1; length <= 5; length++)
                 {
-                    Console.WriteLine($"offset: {offset}; length: {length}");
+                    System.Console.WriteLine($"offset: {offset}; length: {length}");
                     obj.VarintLen = length;
 
-                    Console.WriteLine(obj.Unoptimized());
-                    Console.WriteLine(obj.UnsafeAdd());
-                    Console.WriteLine(obj.Intrinsics());
-                    Console.WriteLine(obj.IntrinsicsSwitched());
-                    Console.WriteLine(obj.IntrinsicsPreferShort());
-                    Console.WriteLine(obj.IntrinsicsPreferShort2());
-                    Console.WriteLine(obj.IntrinsicsPreferShort3());
-                    Console.WriteLine(obj.IntrinsicsPreferShort4());
+                    System.Console.WriteLine(obj.Unoptimized());
+                    System.Console.WriteLine(obj.Intrinsic());
+                    System.Console.WriteLine(obj.WithZeroHighBits());
+                    System.Console.WriteLine(obj.WithZeroHighBits2());
+                    System.Console.WriteLine(obj.ShiftedMasks());
                 }
             }
 #else
-
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+            BenchmarkDotNet.Running.BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
 #endif
-            }
         }
+    }
 }

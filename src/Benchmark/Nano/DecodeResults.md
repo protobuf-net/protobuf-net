@@ -1,4 +1,58 @@
-﻿|                 Method | VarintLen | ByteOffset |      Mean |     Error |    StdDev | Ratio | RatioSD |
+﻿|                 Method | VarintLen | ByteOffset |     Mean |     Error |    StdDev |   Median | Ratio | RatioSD |
+|----------------------- |---------- |----------- |---------:|----------:|----------:|---------:|------:|--------:|
+|            Unoptimized |         1 |          0 | 1.061 ns | 0.0334 ns | 0.0978 ns | 1.041 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         1 |          0 | 1.829 ns | 0.0414 ns | 0.1214 ns | 1.813 ns |  1.74 |    0.19 |
+|    IntrinsicsTzcntDiv2 |         1 |          0 | 1.820 ns | 0.0411 ns | 0.1204 ns | 1.805 ns |  1.73 |    0.20 |
+| IntrinsicsPreferShort2 |         1 |          0 | 1.045 ns | 0.0296 ns | 0.0863 ns | 1.023 ns |  0.99 |    0.12 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         2 |          0 | 1.828 ns | 0.0462 ns | 0.1354 ns | 1.807 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         2 |          0 | 1.801 ns | 0.0432 ns | 0.1239 ns | 1.787 ns |  0.99 |    0.10 |
+|    IntrinsicsTzcntDiv2 |         2 |          0 | 1.851 ns | 0.0586 ns | 0.1699 ns | 1.830 ns |  1.02 |    0.11 |
+| IntrinsicsPreferShort2 |         2 |          0 | 1.855 ns | 0.0660 ns | 0.1925 ns | 1.809 ns |  1.02 |    0.11 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         3 |          0 | 2.686 ns | 0.0929 ns | 0.2738 ns | 2.660 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         3 |          0 | 1.980 ns | 0.1013 ns | 0.2972 ns | 1.916 ns |  0.74 |    0.13 |
+|    IntrinsicsTzcntDiv2 |         3 |          0 | 2.045 ns | 0.0884 ns | 0.2592 ns | 2.037 ns |  0.77 |    0.12 |
+| IntrinsicsPreferShort2 |         3 |          0 | 3.200 ns | 0.0987 ns | 0.2831 ns | 3.140 ns |  1.20 |    0.17 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         4 |          0 | 3.557 ns | 0.0997 ns | 0.2941 ns | 3.551 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         4 |          0 | 1.867 ns | 0.0513 ns | 0.1503 ns | 1.866 ns |  0.53 |    0.06 |
+|    IntrinsicsTzcntDiv2 |         4 |          0 | 1.970 ns | 0.0630 ns | 0.1857 ns | 1.950 ns |  0.56 |    0.07 |
+| IntrinsicsPreferShort2 |         4 |          0 | 3.472 ns | 0.1301 ns | 0.3794 ns | 3.475 ns |  0.98 |    0.13 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         5 |          0 | 4.208 ns | 0.1150 ns | 0.3374 ns | 4.157 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         5 |          0 | 3.647 ns | 0.0993 ns | 0.2927 ns | 3.601 ns |  0.87 |    0.10 |
+|    IntrinsicsTzcntDiv2 |         5 |          0 | 3.309 ns | 0.1003 ns | 0.2942 ns | 3.283 ns |  0.79 |    0.09 |
+| IntrinsicsPreferShort2 |         5 |          0 | 3.338 ns | 0.1321 ns | 0.3873 ns | 3.211 ns |  0.80 |    0.11 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         6 |          0 | 5.241 ns | 0.1714 ns | 0.5055 ns | 5.192 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         6 |          0 | 3.713 ns | 0.0994 ns | 0.2914 ns | 3.712 ns |  0.71 |    0.09 |
+|    IntrinsicsTzcntDiv2 |         6 |          0 | 3.245 ns | 0.1060 ns | 0.3108 ns | 3.174 ns |  0.62 |    0.08 |
+| IntrinsicsPreferShort2 |         6 |          0 | 3.391 ns | 0.0864 ns | 0.2520 ns | 3.370 ns |  0.65 |    0.08 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         7 |          0 | 5.768 ns | 0.1743 ns | 0.5139 ns | 5.722 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         7 |          0 | 3.655 ns | 0.1008 ns | 0.2925 ns | 3.584 ns |  0.64 |    0.07 |
+|    IntrinsicsTzcntDiv2 |         7 |          0 | 3.230 ns | 0.1219 ns | 0.3556 ns | 3.157 ns |  0.56 |    0.07 |
+| IntrinsicsPreferShort2 |         7 |          0 | 3.393 ns | 0.1195 ns | 0.3485 ns | 3.312 ns |  0.59 |    0.07 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         8 |          0 | 6.547 ns | 0.2083 ns | 0.5942 ns | 6.352 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         8 |          0 | 3.676 ns | 0.1158 ns | 0.3397 ns | 3.621 ns |  0.56 |    0.07 |
+|    IntrinsicsTzcntDiv2 |         8 |          0 | 3.246 ns | 0.0997 ns | 0.2909 ns | 3.232 ns |  0.50 |    0.06 |
+| IntrinsicsPreferShort2 |         8 |          0 | 3.298 ns | 0.0885 ns | 0.2526 ns | 3.257 ns |  0.51 |    0.06 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |         9 |          0 | 7.444 ns | 0.2579 ns | 0.7564 ns | 7.308 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |         9 |          0 | 3.697 ns | 0.1109 ns | 0.3271 ns | 3.694 ns |  0.50 |    0.06 |
+|    IntrinsicsTzcntDiv2 |         9 |          0 | 3.312 ns | 0.0984 ns | 0.2855 ns | 3.270 ns |  0.45 |    0.06 |
+| IntrinsicsPreferShort2 |         9 |          0 | 3.400 ns | 0.1128 ns | 0.3274 ns | 3.367 ns |  0.46 |    0.06 |
+|                        |           |            |          |           |           |          |       |         |
+|            Unoptimized |        10 |          0 | 8.218 ns | 0.2127 ns | 0.6237 ns | 8.169 ns |  1.00 |    0.00 |
+|     IntrinsicsTzcntDiv |        10 |          0 | 3.708 ns | 0.1156 ns | 0.3408 ns | 3.644 ns |  0.45 |    0.05 |
+|    IntrinsicsTzcntDiv2 |        10 |          0 | 3.331 ns | 0.1226 ns | 0.3595 ns | 3.308 ns |  0.41 |    0.06 |
+| IntrinsicsPreferShort2 |        10 |          0 | 3.428 ns | 0.1206 ns | 0.3536 ns | 3.436 ns |  0.42 |    0.06 |
+
+(older, shows approaches no longer routinely tested)
+
+|                 Method | VarintLen | ByteOffset |      Mean |     Error |    StdDev | Ratio | RatioSD |
 |----------------------- |---------- |----------- |----------:|----------:|----------:|------:|--------:|
 |            Unoptimized |         1 |          0 | 0.9701 ns | 0.0192 ns | 0.0262 ns |  1.00 |    0.00 |
 |              UnsafeAdd |         1 |          0 | 1.1643 ns | 0.0216 ns | 0.0202 ns |  1.21 |    0.04 |

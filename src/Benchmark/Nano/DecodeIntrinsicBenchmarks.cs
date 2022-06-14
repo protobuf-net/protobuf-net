@@ -61,6 +61,14 @@ namespace Benchmark.Nano
             reader = GetReader();
             if ((actualValue = reader.IntrinsicsPreferShort4()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort4)} value: {expectedValue} vs {actualValue}");
             if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsPreferShort4)} index: {expectedIndex} vs {reader.Index}");
+
+            reader = GetReader();
+            if ((actualValue = reader.IntrinsicsTzcntDiv()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsTzcntDiv)} value: {expectedValue} vs {actualValue}");
+            if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsTzcntDiv)} index: {expectedIndex} vs {reader.Index}");
+
+            reader = GetReader();
+            if ((actualValue = reader.IntrinsicsTzcntDiv2()) != expectedValue) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsTzcntDiv2)} value: {expectedValue} vs {actualValue}");
+            if (reader.Index != expectedIndex) throw new InvalidOperationException($"{nameof(BenchmarkReader.IntrinsicsTzcntDiv2)} index: {expectedIndex} vs {reader.Index}");
         }
 
         [Params(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)]
@@ -94,7 +102,7 @@ namespace Benchmark.Nano
             return final;
         }
 
-        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        //[Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         public ulong UnsafeAdd()
         {
             var reader = GetReader();
@@ -109,6 +117,34 @@ namespace Benchmark.Nano
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public ulong IntrinsicsTzcntDiv()
+        {
+            var reader = GetReader();
+            ulong final = 0;
+            int index = reader.Index;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                reader.Index = index; // reset for multiple reads on same data
+                final = reader.IntrinsicsTzcntDiv();
+            }
+            return final;
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public ulong IntrinsicsTzcntDiv2()
+        {
+            var reader = GetReader();
+            ulong final = 0;
+            int index = reader.Index;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                reader.Index = index; // reset for multiple reads on same data
+                final = reader.IntrinsicsTzcntDiv2();
+            }
+            return final;
+        }
+
+        //[Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         public ulong Intrinsics()
         {
             var reader = GetReader();
@@ -136,7 +172,7 @@ namespace Benchmark.Nano
             return final;
         }
 
-        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        //[Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         public ulong IntrinsicsPreferShort()
         {
             var reader = GetReader();
@@ -164,7 +200,7 @@ namespace Benchmark.Nano
             return final;
         }
 
-        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        //[Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         public ulong IntrinsicsPreferShort3()
         {
             var reader = GetReader();
@@ -178,7 +214,7 @@ namespace Benchmark.Nano
             return final;
         }
 
-        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        //[Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         public ulong IntrinsicsPreferShort4()
         {
             var reader = GetReader();
@@ -459,6 +495,122 @@ namespace Benchmark.Nano
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ulong IntrinsicsTzcntDiv()
+            {
+#if NETCOREAPP3_1_OR_GREATER
+                if (Bmi2.X64.IsSupported && Bmi1.IsSupported)
+                {
+                    if (_index + 10 <= _end)
+                    {
+                        var lo28 = Unsafe.ReadUnaligned<uint>(ref Unsafe.AsRef(in _buffer[_index]));
+                        if (!BitConverter.IsLittleEndian) lo28 = BinaryPrimitives.ReverseEndianness(lo28);
+                        // we'll pick out all the MSBs, invert and take the tzcnt; if this gives 0-7,
+                        // then the first inverted MSB was 1, meaning: the original MSB was zero;
+                        // likewise, if this gives 32 then the final inverted MSB was zero, meaning: the
+                        // original MSB was one
+                        var continuations = Bmi1.TrailingZeroCount((~lo28) & 0x80808080U) / 8;
+                        _index += (int)continuations + 1;
+                        switch (continuations)
+                        {   
+                            case 0: return lo28 & 0x7fU;
+                            case 1: return Bmi2.ParallelBitExtract(lo28, 0x7f7fU);
+                            case 2: return Bmi2.ParallelBitExtract(lo28, 0x7f7f7fU);
+                            case 3: return Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7fU);
+                        }
+
+                        lo28 = Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7f);
+                        // we want another 6 octets; we'll read 8 (because that's easy), overlapping with
+                        // the data we already read, so we can avoid needing to allow 12 bytes for this path
+                        var hi36 = (BitConverter.IsLittleEndian ? Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[_index - 3]))
+                            : BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[_index - 3])))
+                            ) >> 16; // drop the 2 octets we already inspected
+
+                        continuations = (uint)Bmi1.X64.TrailingZeroCount((~hi36) & 0x808080808080U) / 8;
+                        _index += (int)continuations;
+                        return (continuations switch
+                        {
+                            0 => hi36 & 0x7fU,
+                            1 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7fU),
+                            2 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7fU),
+                            3 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7fU),
+                            4 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f7fU),
+                            5 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f7f7fU),
+                            _ => ThrowMalformedWithResult(),
+                        } << 28) | lo28;
+                    }
+                    else
+                    {
+                        return ReadVarintUInt64Slow();
+                    }
+                }
+                else
+#endif
+                {
+                    return Unoptimized();
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ulong IntrinsicsTzcntDiv2()
+            {
+#if NETCOREAPP3_1_OR_GREATER
+                if (Bmi2.X64.IsSupported && Bmi1.IsSupported)
+                {
+                    if (_index + 10 <= _end)
+                    {
+                        var lo28 = Unsafe.ReadUnaligned<uint>(ref Unsafe.AsRef(in _buffer[_index++]));
+                        if (!BitConverter.IsLittleEndian) lo28 = BinaryPrimitives.ReverseEndianness(lo28);
+                        // we'll pick out all the MSBs, invert and take the tzcnt; if this gives 0-7,
+                        // then the first inverted MSB was 1, meaning: the original MSB was zero;
+                        // likewise, if this gives 32 then the final inverted MSB was zero, meaning: the
+                        // original MSB was one
+                        var continuations = Bmi1.TrailingZeroCount((~lo28) & 0x80808080U) / 8;
+                        //_index += (int)continuations + 1;
+                        switch (continuations)
+                        {
+                            case 0: return lo28 & 0x7fU;
+                            case 1:
+                                _index++;
+                                return Bmi2.ParallelBitExtract(lo28, 0x7f7fU);
+                            case 2:
+                                _index += 2;
+                                return Bmi2.ParallelBitExtract(lo28, 0x7f7f7fU);
+                            case 3:
+                                _index += 3;
+                                return Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7fU);
+                        }
+
+                        // we want another 6 octets; we'll read 8 (because that's easy), overlapping with
+                        // the data we already read, so we can avoid needing to allow 12 bytes for this path
+                        var hi36 = (BitConverter.IsLittleEndian ? Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[_index + 1]))
+                            : BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<ulong>(ref Unsafe.AsRef(in _buffer[_index + 1])))
+                            ) >> 16; // drop the 2 octets we already inspected
+
+                        continuations = (uint)Bmi1.X64.TrailingZeroCount((~hi36) & 0x808080808080U) / 8;
+                        _index += (int)(continuations + 4);
+                        return (continuations switch
+                        {
+                            0 => hi36 & 0x7fU,
+                            1 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7fU),
+                            2 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7fU),
+                            3 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7fU),
+                            4 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f7fU),
+                            5 => Bmi2.X64.ParallelBitExtract(hi36, 0x7f7f7f7f7f7fU),
+                            _ => ThrowMalformedWithResult(),
+                        } << 28) | Bmi2.ParallelBitExtract(lo28, 0x7f7f7f7f);
+                    }
+                    else
+                    {
+                        return ReadVarintUInt64Slow();
+                    }
+                }
+                else
+#endif
+                {
+                    return Unoptimized();
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ulong IntrinsicsPreferShort3()
             {
 #if NETCOREAPP3_1_OR_GREATER
@@ -575,7 +727,14 @@ namespace Benchmark.Nano
 
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            private void ThrowMalformed() => throw new NotImplementedException();
+            private static void ThrowMalformed() => throw new NotImplementedException();
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            static ulong ThrowMalformedWithResult()
+            {
+                ThrowMalformed();
+                return 0;
+            }
+
             [MethodImpl(MethodImplOptions.NoInlining)]
             private ulong ReadVarintUInt64Slow() => throw new NotImplementedException();
         }
