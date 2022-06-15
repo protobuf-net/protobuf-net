@@ -130,8 +130,6 @@ namespace protogen
                             }
                             break;
                         case "--decode":
-                            // TODO: some question over whether it is "--decode {ROOT TYPE}" vs "--decode={ROOT TYPE}"
-                            // let's try both? but: should follow exactly what protoc does here, IMO
                             if (string.IsNullOrWhiteSpace(decodeRootType = rhs) && ++i < args.Length)
                             {
                                 decodeRootType = args[i];
