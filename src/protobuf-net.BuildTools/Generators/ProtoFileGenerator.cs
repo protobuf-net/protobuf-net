@@ -226,13 +226,16 @@ namespace ProtoBuf.BuildTools.Generators
                         var files = generator.Generate(set, options: options);
                         foreach (var file in files)
                         {
-                            var finalName = Path.GetFileName(file.Name); // not allowed to use path qualifiers
-                            var ext = Path.GetExtension(finalName);
-                            if (!ext.StartsWith(".generated."))
-                            {
-                                finalName = Path.ChangeExtension(finalName, "generated" + ext);
-                            }
-                            log?.Invoke($"Adding: '{finalName}' ({file.Text.Length} characters)");
+                            // not allowed to use path qualifiers
+                            // fix not unique HintName (AddSource method)
+                            var finalName = $"{Path.GetFileNameWithoutExtension(file.Name)}-{Guid.NewGuid():N}";
+                            var ext = Path.GetExtension(file.Name);
+
+                            // set .generated extension prefix
+                            ext = ext.StartsWith(".generated.") ? ext : $"generated{ext}";
+                            finalName = Path.ChangeExtension(finalName, ext);
+
+                            log?.Invoke($"Adding: '{finalName}' ({file.Text.Length} characters) [{file.Name}]");
                             context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
                         }
                     }
