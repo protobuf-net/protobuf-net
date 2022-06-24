@@ -48,8 +48,6 @@ namespace ProtoBuf.Internal
         public object Parent { get; private set; }
         private void Visit(ref ProtoReader.State reader, DescriptorProto descriptor)
         {
-            // IMPORTANT TODO: no attempt made here to handle "repeated" yet, which is a huge omission;
-            // in particular, we need to support "packed primitives" (but not packed message kinds)
             int fieldNumber, oldIndex = Index;
             object oldCurrent = Current, oldParent = Parent;
             while ((fieldNumber = reader.ReadFieldHeader()) > 0)
@@ -67,12 +65,52 @@ namespace ProtoBuf.Internal
                     Parent = Current;
                     Current = OnBeginRepeated(field);
                 }
+                long packedEnd = -1;
+                var packedWireType = reader.WireType;
+                if (isRepeated && reader.WireType == WireType.String && FieldDescriptorProto.CanPack(field.type))
+                {
+                    var bytes = reader.ReadUInt32Varint(ProtoReader.Read32VarintMode.Unsigned);
+                    packedEnd = reader.GetPosition() + bytes;
+                    packedWireType = field.type switch
+                    {
+                        FieldDescriptorProto.Type.TypeBool => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeDouble => WireType.Fixed64,
+                        FieldDescriptorProto.Type.TypeFloat => WireType.Fixed32,
+                        FieldDescriptorProto.Type.TypeInt64 => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeUint64 => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeInt32 => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeFixed64 => WireType.Fixed64,
+                        FieldDescriptorProto.Type.TypeFixed32 => WireType.Fixed32,
+                        FieldDescriptorProto.Type.TypeUint32 => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeEnum => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeSfixed32 => WireType.Fixed32,
+                        FieldDescriptorProto.Type.TypeSfixed64 => WireType.Fixed64,
+                        FieldDescriptorProto.Type.TypeSint32 => WireType.Varint,
+                        FieldDescriptorProto.Type.TypeSint64 => WireType.Varint,
+                        _ => throw new NotImplementedException($"No packed wire type specified for: {field.type}"),
+                    };
+                }
+
                 do
                 {
                     if (isRepeated)
                     {
+                        if (packedEnd >= 0) // data is packed
+                        {
+                            // packed could technically be zero bytes; rather than complicate the loop, we'll
+                            // check for "end of packed data" at the start of each loop iteration, so we can
+                            // exclude that zero case
+                            var position = reader.GetPosition();
+                            if (position >= packedEnd)
+                            {
+                                if (position == packedEnd) break; // exit loop; we've consumed all the packed data
+                                throw new InvalidOperationException("Incorrectly read past packed data"); // this shouldn't happen
+                            }
+                            reader.WireType = packedWireType; // spoof the wire type
+                        }
                         Index++;
                     }
+
                     switch (field.type)
                     {
                         case FieldDescriptorProto.Type.TypeBool:
@@ -157,7 +195,9 @@ namespace ProtoBuf.Internal
                         default: // unexpected things
                             throw new InvalidOperationException($"unexpected proto type: {field.type}");
                     }
-                } while (isRepeated && reader.TryReadFieldHeader(fieldNumber));
+
+                    // keep looping if "packed" (tests for exit at start of loop), or if we're still reading the same field number
+                } while (isRepeated && (packedEnd >= 0 || reader.TryReadFieldHeader(fieldNumber)));
 
                 if (isRepeated)
                 {

@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using ProtoBuf.Internal;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -69,6 +70,7 @@ message Test {
   optional Test c = 3;
   optional Blap d = 4;
   optional Blap e = 5;
+  repeated int32 f = 6 [packed=true];
 }
 enum Blap {
    BLAB_X = 0;
@@ -78,14 +80,31 @@ enum Blap {
             return schemaSet;
         }
 
-        private static MemoryStream GetDummyPayload()
-            => new MemoryStream(new byte[] {
+        private static MemoryStream GetDummyPayload(byte fCount = 0)
+        {
+            var ms = new MemoryStream();
+            var buffer = new byte[] {
                 0x08, 0x96, 0x01, // integer
                 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67, // string
                 0x1a, 0x03, 0x08, 0x96, 0x01, // sub-message
                 0x20, 0x01, // enum mapped to defined value
                 0x28, 0x05, // enum without defined value
-            });
+            };
+            ms.Write(buffer, 0, buffer.Length);
+            if (fCount > 0)
+            {
+                // lazy; keep everything small so we can use single-byte logic
+                if (fCount > 100) throw new ArgumentOutOfRangeException(nameof(fCount));
+                ms.WriteByte(0x32); // field 6, length-prefixed
+                ms.WriteByte(fCount); // single-byte, so: length==this value
+                for (byte i = 0; i < fCount; i++)
+                {
+                    ms.WriteByte(i);
+                }
+            }
+            ms.Position = 0;
+            return ms;
+        }
 
         [Fact]
         public void BasicDecodeUsage()
@@ -108,6 +127,34 @@ enum Blap {
         }
 
         [Fact]
+        public void BasicDecodeUsagePackedRepeated()
+        {
+            var schemaSet = GetDummySchema();
+            using var ms = GetDummyPayload(fCount: 6);
+            using var visitor = new TextDecodeVisitor(_output);
+            visitor.Visit(ms, schemaSet.Files[0], "Test");
+            var result = _output.ToString();
+            Assert.Equal(@"1: a=150 (TypeInt32)
+2: b=[ (TypeString)
+ #0=testing
+] // b, count: 1
+3: c={
+ 1: a=150 (TypeInt32)
+} // c
+4: d=BLAB_Y (TypeEnum)
+5: e=5 (TypeEnum)
+6: f=[ (TypeInt32)
+ #0=0
+ #1=1
+ #2=2
+ #3=3
+ #4=4
+ #5=5
+] // f, count: 6
+", result, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
         public void ObjectDecodeUsage()
         {
             var schemaSet = GetDummySchema();
@@ -126,6 +173,28 @@ enum Blap {
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
             Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void ObjectDecodeUsagePackedRepeate()
+        {
+            var schemaSet = GetDummySchema();
+            using var ms = GetDummyPayload(fCount: 6);
+            using var visitor = new ObjectDecodeVisitor();
+            dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
+
+            // test dynamic access
+            Assert.Equal(150, (int)obj.a);
+            Assert.Equal("testing", ((List<string>)obj.b).Single());
+            Assert.Equal(150, (int)obj.c.a);
+            Assert.Equal(1, (int)obj.d);
+            Assert.Equal(5, (int)obj.e);
+            Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.f));
+
+            // and via JSON
+            string json = JsonConvert.SerializeObject((object)obj);
+            _log.WriteLine(json);
+            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
         }
     }
 }

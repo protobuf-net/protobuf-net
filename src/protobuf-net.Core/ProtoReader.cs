@@ -156,7 +156,7 @@ namespace ProtoBuf
             UserState = null;
         }
 
-        private protected enum Read32VarintMode
+        internal protected enum Read32VarintMode
         {
             Signed,
             Unsigned,
