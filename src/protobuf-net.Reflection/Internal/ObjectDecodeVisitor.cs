@@ -9,20 +9,32 @@ namespace ProtoBuf.Internal
 
     internal class ObjectDecodeVisitor : DecodeVisitor
     {
-        public Func<FieldDescriptorProto, string> FieldNameSelector { get; set; }
+        public enum EnumMode
+        {
+            Value,
+            Name,
+        }
+        public enum FieldNameMode
+        {
+            Name,
+            JsonName,
+        }
+        public FieldNameMode FieldNames { get; set; } = FieldNameMode.Name;
+        public EnumMode Enums { get; set; } = EnumMode.Value;
+
+        public static ObjectDecodeVisitor ForJson()
+            => new ObjectDecodeVisitor { FieldNames = FieldNameMode.JsonName, Enums = EnumMode.Name };
 
         private string GetName(FieldDescriptorProto field)
-            => FieldNameSelector?.Invoke(field) ?? field.Name;
-
-        public static class FieldNameSelectors
         {
-            public static Func<FieldDescriptorProto, string> Default { get; } = field => field.Name;
-            public static Func<FieldDescriptorProto, string> Json { get; } = field =>
+            switch (FieldNames)
             {
-                var jsonName = field.JsonName;
-                return string.IsNullOrWhiteSpace(jsonName) ? field.Name : jsonName;
-            };
-
+                case FieldNameMode.JsonName:
+                    var name = field.JsonName;
+                    if (!string.IsNullOrWhiteSpace(name)) return name;
+                    break;
+            }
+            return field.Name;
         }
 
         protected override object OnBeginMessage(FieldDescriptorProto field, DescriptorProto message)
@@ -120,7 +132,21 @@ namespace ProtoBuf.Internal
         protected override void OnField(FieldDescriptorProto field, string value) => Store(field, value);
         protected override void OnField(FieldDescriptorProto field, uint value) => Store(field, value); // TODO: box handling for 0/small?
         protected override void OnField(FieldDescriptorProto field, ulong value) => Store(field, value); // TODO: box handling for 0/small?
-        protected override void OnField(FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value) => Store(field, value); // TODO: box handling for 0/small/-1?
+        protected override void OnField(FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
+        {
+            switch (Enums)
+            {
+                case EnumMode.Name:
+                    var name = @enum?.Name;
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        Store(field, name);
+                        return;
+                    }
+                    break;
+            }
+            Store(field, value); // TODO: box handling for 0/small/-1?
+        }
 
         protected override void OnFieldFallback(FieldDescriptorProto field, string value)
             => throw new NotImplementedException("Unexpected usage of " + nameof(OnFieldFallback));

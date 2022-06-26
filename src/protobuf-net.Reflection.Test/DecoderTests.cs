@@ -207,19 +207,19 @@ enum Blap {
         {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
-            using var visitor = new ObjectDecodeVisitor { FieldNameSelector = ObjectDecodeVisitor.FieldNameSelectors.Json };
+            using var visitor = ObjectDecodeVisitor.ForJson();
             dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
 
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""ja"":150,""jb"":[""testing""],""c"":{""ja"":150},""jd"":1,""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""ja"":150,""jb"":[""testing""],""c"":{""ja"":150},""jd"":""BLAB_Y"",""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.ja);
             Assert.Equal("testing", ((List<string>)obj.jb).Single());
             Assert.Equal(150, (int)obj.c.ja);
-            Assert.Equal(1, (int)obj.jd);
+            Assert.Equal("BLAB_Y", (string)obj.jd);
             Assert.Equal(5, (int)obj.e);
             Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.jf));
         }
