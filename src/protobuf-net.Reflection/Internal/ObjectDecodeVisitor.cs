@@ -93,6 +93,9 @@ namespace ProtoBuf.Internal
                             case FieldDescriptorProto.Type.TypeBytes:
                                 OnField(f, ParseDefaultBytes(f.DefaultValue));
                                 break;
+                            case FieldDescriptorProto.Type.TypeEnum:
+                                OnField(f, ParseDefaultEnum(f, out var value), value);
+                                break;
                             default:
                                 if (!string.IsNullOrEmpty(f.DefaultValue))
                                 {
@@ -105,6 +108,43 @@ namespace ProtoBuf.Internal
                 }
             }
             return obj;
+        }
+
+        private EnumValueDescriptorProto ParseDefaultEnum(FieldDescriptorProto field, out int value)
+        {
+            if (TryGetEnumType(field, out var enumDescriptor))
+            {
+                if (string.IsNullOrEmpty(field.DefaultValue))
+                {
+                    if (enumDescriptor.Values.Count == 0)
+                    {
+                        value = 0;
+                        return null;
+                    }
+                    var tmp = enumDescriptor.Values[0];
+                    value = tmp.Number;
+                    return tmp;
+
+                }
+                foreach (var defined in enumDescriptor.Values)
+                {
+                    if (defined.Name == field.DefaultValue)
+                    {
+                        value = defined.Number;
+                        return defined;
+                    }
+                }
+                value = ParseDefaultInt32(field.DefaultValue);
+                foreach (var defined in enumDescriptor.Values)
+                {
+                    if (defined.Number == value)
+                    {
+                        return defined;
+                    }
+                }
+                return null;
+            }
+            throw new FormatException();
         }
 
         private byte[] ParseDefaultBytes(string defaultValue)

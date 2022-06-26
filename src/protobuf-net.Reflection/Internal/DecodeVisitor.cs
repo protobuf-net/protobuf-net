@@ -173,7 +173,7 @@ namespace ProtoBuf.Internal
                             }
                             break;
                         case FieldDescriptorProto.Type.TypeEnum:
-                            if (_knownTypes.TryGetValue(field.TypeName, out inner) && inner is EnumDescriptorProto enumDescriptor)
+                            if (TryGetEnumType(field, out var enumDescriptor))
                             {
                                 var value = reader.ReadInt32();
                                 EnumValueDescriptorProto found = null;
@@ -210,7 +210,16 @@ namespace ProtoBuf.Internal
             }
             Index = oldIndex;
         }
-
+        protected bool TryGetEnumType(FieldDescriptorProto field, out EnumDescriptorProto enumDescriptor)
+        {
+            if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is EnumDescriptorProto tmp)
+            {
+                enumDescriptor = tmp;
+                return true;
+            }
+            enumDescriptor = null;
+            return false;
+        }
         public IFormatProvider FormatProvider { get; set; } = CultureInfo.InvariantCulture;
         protected abstract void OnFieldFallback(FieldDescriptorProto field, string value); // fallback to allow simple shared handling
 
