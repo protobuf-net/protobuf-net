@@ -72,6 +72,8 @@ message Test {
   optional Blap d = 4 [json_name=""jd""];
   optional Blap e = 5; // deliberately no json_name
   repeated int32 f = 6 [packed=true, json_name=""jf""];
+  int32 g = 7; // not presence-tracked; should apply default value (never specified)
+  optional int32 h = 8; // presence-tracked; should *NOT* apply default value (never specified)
 }
 enum Blap {
    BLAB_X = 0;
@@ -165,12 +167,12 @@ enum Blap {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload();
             using var visitor = new ObjectDecodeVisitor();
-            dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
-
+            IDictionary<string,object> lookup = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            dynamic obj = lookup;
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""a"":150,""b"":[""testing""],""g"":0,""c"":{""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.a);
@@ -178,7 +180,10 @@ enum Blap {
             Assert.Equal(150, (int)obj.c.a);
             Assert.Equal(1, (int)obj.d);
             Assert.Equal(5, (int)obj.e);
+            Assert.Equal(0, (int)obj.g);
+            Assert.False(lookup.ContainsKey("h"));
         }
+
 
         [Fact]
         public void ObjectDecodeUsagePackedRepeated()
@@ -186,12 +191,13 @@ enum Blap {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
             using var visitor = new ObjectDecodeVisitor();
-            dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            IDictionary<string, object> lookup = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            dynamic obj = lookup;
 
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""a"":150,""b"":[""testing""],""g"":0,""c"":{""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.a);
@@ -200,6 +206,8 @@ enum Blap {
             Assert.Equal(1, (int)obj.d);
             Assert.Equal(5, (int)obj.e);
             Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.f));
+            Assert.Equal(0, (int)obj.g);
+            Assert.False(lookup.ContainsKey("h"));
         }
 
         [Fact]
@@ -208,12 +216,13 @@ enum Blap {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
             using var visitor = ObjectDecodeVisitor.ForJson();
-            dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            IDictionary<string, object> lookup = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            dynamic obj = lookup;
 
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""ja"":150,""jb"":[""testing""],""c"":{""ja"":150},""jd"":""BLAB_Y"",""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""ja"":150,""jb"":[""testing""],""g"":0,""c"":{""ja"":150},""jd"":""BLAB_Y"",""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.ja);
@@ -222,6 +231,8 @@ enum Blap {
             Assert.Equal("BLAB_Y", (string)obj.jd);
             Assert.Equal(5, (int)obj.e);
             Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.jf));
+            Assert.Equal(0, (int)obj.g);
+            Assert.False(lookup.ContainsKey("h"));
         }
     }
 }

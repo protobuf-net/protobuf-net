@@ -3,12 +3,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
+using System.IO;
 
 namespace ProtoBuf.Internal
 {
 
     internal class ObjectDecodeVisitor : DecodeVisitor
     {
+        public new ExpandoObject Visit(Stream stream, FileDescriptorProto file, string rootMessageType)
+            => (ExpandoObject)base.Visit(stream, file, rootMessageType);
         public enum EnumMode
         {
             Value,
@@ -19,6 +23,7 @@ namespace ProtoBuf.Internal
             Name,
             JsonName,
         }
+        public bool ApplyDefaultValues { get; set; } = true;
         public FieldNameMode FieldNames { get; set; } = FieldNameMode.Name;
         public EnumMode Enums { get; set; } = EnumMode.Value;
 
@@ -44,8 +49,114 @@ namespace ProtoBuf.Internal
             {
                 return existing;
             }
-            return new ExpandoObject();
+
+            // create new holder object with initialized defaults
+            var obj = new ExpandoObject();
+            if (ApplyDefaultValues)
+            {
+                foreach (var f in message.Fields)
+                {
+                    if (f.label == FieldDescriptorProto.Label.LabelOptional && !f.Proto3Optional)
+                    {
+                        switch (f.type)
+                        {
+                            case FieldDescriptorProto.Type.TypeBool:
+                                OnField(f, ParseDefaultBoolean(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeDouble:
+                                OnField(f, ParseDefaultDouble(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeFloat:
+                                OnField(f, ParseDefaultSingle(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeFixed32:
+                            case FieldDescriptorProto.Type.TypeInt32:
+                            case FieldDescriptorProto.Type.TypeSfixed32:
+                            case FieldDescriptorProto.Type.TypeSint32:
+                                OnField(f, ParseDefaultInt32(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeFixed64:
+                            case FieldDescriptorProto.Type.TypeInt64:
+                            case FieldDescriptorProto.Type.TypeSfixed64:
+                            case FieldDescriptorProto.Type.TypeSint64:
+                                OnField(f, ParseDefaultInt64(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeUint64:
+                                OnField(f, ParseDefaultUInt64(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeUint32:
+                                OnField(f, ParseDefaultUInt32(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeString:
+                                OnField(f, ParseDefaultString(f.DefaultValue));
+                                break;
+                            case FieldDescriptorProto.Type.TypeBytes:
+                                OnField(f, ParseDefaultBytes(f.DefaultValue));
+                                break;
+                            default:
+                                if (!string.IsNullOrEmpty(f.DefaultValue))
+                                {
+                                    throw new NotSupportedException($"Unhandled default type: {f.type}: '{f.DefaultValue}'");
+                                }
+                                break;
+
+                        }
+                    }
+                }
+            }
+            return obj;
         }
+
+        private byte[] ParseDefaultBytes(string defaultValue)
+        {
+            if (string.IsNullOrEmpty(defaultValue)) return Array.Empty<byte>();
+            throw new FormatException();
+        }
+
+        private double ParseDefaultDouble(string defaultValue)
+        {
+            if (string.IsNullOrEmpty(defaultValue)) return 0;
+            if (double.TryParse(defaultValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)) return value;
+            throw new FormatException();
+        }
+
+        private bool ParseDefaultBoolean(string defaultValue)
+        {
+            if (string.IsNullOrEmpty(defaultValue)) return false;
+            if (!bool.TryParse(defaultValue, out var tmp)) return tmp;
+            return defaultValue switch
+            {
+                "0" => false,
+                "1" => true,
+                _ => throw new FormatException(),
+            };
+        }
+
+        private float ParseDefaultSingle(string defaultValue)
+            => (float)ParseDefaultDouble(defaultValue);
+
+        private int ParseDefaultInt32(string defaultValue)
+            => checked((int)ParseDefaultUInt64(defaultValue));
+
+        private long ParseDefaultInt64(string defaultValue)
+        {
+            if (string.IsNullOrEmpty(defaultValue)) return 0;
+            if (long.TryParse(defaultValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)) return value;
+            throw new FormatException();
+        }
+
+        private ulong ParseDefaultUInt64(string defaultValue)
+        {
+            if (string.IsNullOrEmpty(defaultValue)) return 0;
+            if (ulong.TryParse(defaultValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)) return value;
+            throw new FormatException();
+        }
+
+        private uint ParseDefaultUInt32(string defaultValue)
+            => checked((uint)ParseDefaultUInt64(defaultValue));
+
+        private string ParseDefaultString(string defaultValue)
+            => defaultValue ?? "";
 
         protected override object OnBeginRepeated(FieldDescriptorProto field)
         {
