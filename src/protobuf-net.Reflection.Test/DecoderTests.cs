@@ -59,24 +59,29 @@ namespace ProtoBuf.Reflection.Test
             public override string ToString() => _total.ToString();
         }
 
-        private static FileDescriptorSet GetDummySchema()
+        private FileDescriptorSet GetDummySchema()
         {
             var schemaSet = new FileDescriptorSet();
             // inspired from the encoding document
             schemaSet.Add("dummy.proto", source: new StringReader(@"
+syntax=""proto3"";
 message Test {
-  optional int32 a = 1;
-  repeated string b = 2;
-  optional Test c = 3;
-  optional Blap d = 4;
-  optional Blap e = 5;
-  repeated int32 f = 6 [packed=true];
+  optional int32 a = 1 [json_name=""ja""];
+  repeated string b = 2 [json_name=""jb""];
+  optional Test c = 3; // deliberately no json_name
+  optional Blap d = 4 [json_name=""jd""];
+  optional Blap e = 5; // deliberately no json_name
+  repeated int32 f = 6 [packed=true, json_name=""jf""];
 }
 enum Blap {
    BLAB_X = 0;
    BLAB_Y = 1;
 }"));
             schemaSet.Process();
+            foreach (var error in schemaSet.GetErrors())
+            {
+                _log.WriteLine(error.Message);
+            }
             return schemaSet;
         }
 
@@ -162,26 +167,31 @@ enum Blap {
             using var visitor = new ObjectDecodeVisitor();
             dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
 
+            // test via JSON
+            string json = JsonConvert.SerializeObject((object)obj);
+            _log.WriteLine(json);
+            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
+
             // test dynamic access
             Assert.Equal(150, (int)obj.a);
             Assert.Equal("testing", ((List<string>)obj.b).Single());
             Assert.Equal(150, (int)obj.c.a);
             Assert.Equal(1, (int)obj.d);
             Assert.Equal(5, (int)obj.e);
-
-            // and via JSON
-            string json = JsonConvert.SerializeObject((object)obj);
-            _log.WriteLine(json);
-            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
-        public void ObjectDecodeUsagePackedRepeate()
+        public void ObjectDecodeUsagePackedRepeated()
         {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
             using var visitor = new ObjectDecodeVisitor();
             dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
+
+            // test via JSON
+            string json = JsonConvert.SerializeObject((object)obj);
+            _log.WriteLine(json);
+            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.a);
@@ -190,11 +200,28 @@ enum Blap {
             Assert.Equal(1, (int)obj.d);
             Assert.Equal(5, (int)obj.e);
             Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.f));
+        }
 
-            // and via JSON
+        [Fact]
+        public void ObjectDecodeUsagePackedRepeatedJson()
+        {
+            var schemaSet = GetDummySchema();
+            using var ms = GetDummyPayload(fCount: 6);
+            using var visitor = new ObjectDecodeVisitor { FieldNameSelector = ObjectDecodeVisitor.FieldNameSelectors.Json };
+            dynamic obj = visitor.Visit(ms, schemaSet.Files[0], "Test");
+
+            // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""a"":150,""b"":[""testing""],""c"":{""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""ja"":150,""jb"":[""testing""],""c"":{""ja"":150},""jd"":1,""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+
+            // test dynamic access
+            Assert.Equal(150, (int)obj.ja);
+            Assert.Equal("testing", ((List<string>)obj.jb).Single());
+            Assert.Equal(150, (int)obj.c.ja);
+            Assert.Equal(1, (int)obj.jd);
+            Assert.Equal(5, (int)obj.e);
+            Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.jf));
         }
     }
 }

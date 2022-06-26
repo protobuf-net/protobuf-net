@@ -6,12 +6,29 @@ using System.Dynamic;
 
 namespace ProtoBuf.Internal
 {
+
     internal class ObjectDecodeVisitor : DecodeVisitor
     {
+        public Func<FieldDescriptorProto, string> FieldNameSelector { get; set; }
+
+        private string GetName(FieldDescriptorProto field)
+            => FieldNameSelector?.Invoke(field) ?? field.Name;
+
+        public static class FieldNameSelectors
+        {
+            public static Func<FieldDescriptorProto, string> Default { get; } = field => field.Name;
+            public static Func<FieldDescriptorProto, string> Json { get; } = field =>
+            {
+                var jsonName = field.JsonName;
+                return string.IsNullOrWhiteSpace(jsonName) ? field.Name : jsonName;
+            };
+
+        }
+
         protected override object OnBeginMessage(FieldDescriptorProto field, DescriptorProto message)
         {
             base.OnBeginMessage(field, message);
-            if (field is not null && Current is IDictionary<string, object> lookup && lookup.TryGetValue(field.Name, out var existing))
+            if (field is not null && Current is IDictionary<string, object> lookup && lookup.TryGetValue(GetName(field), out var existing))
             {
                 return existing;
             }
@@ -21,7 +38,7 @@ namespace ProtoBuf.Internal
         protected override object OnBeginRepeated(FieldDescriptorProto field)
         {
             base.OnBeginRepeated(field);
-            if (field is not null && Current is IDictionary<string, object> lookup && lookup.TryGetValue(field.Name, out var existing))
+            if (field is not null && Current is IDictionary<string, object> lookup && lookup.TryGetValue(GetName(field), out var existing))
             {
                 return existing;
             }
@@ -62,7 +79,7 @@ namespace ProtoBuf.Internal
                 {
                     if (Parent is IDictionary<string, object> lookup)
                     {
-                        lookup[field.Name] = Current;
+                        lookup[GetName(field)] = Current;
                     }
                 }
             }
@@ -78,7 +95,7 @@ namespace ProtoBuf.Internal
             }
             else
             {
-                if (Current is IDictionary<string, object> lookup) lookup[field.Name] = box is null ? value : box(value);
+                if (Current is IDictionary<string, object> lookup) lookup[GetName(field)] = box is null ? value : box(value);
             }
         }
 
@@ -86,7 +103,7 @@ namespace ProtoBuf.Internal
         {
             if (Parent is IDictionary<string, object> lookup)
             {
-                lookup[field.Name] = Current;
+                lookup[GetName(field)] = Current;
             }
             base.OnEndRepeated(field);
         }
