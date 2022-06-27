@@ -156,6 +156,8 @@ namespace ProtoBuf.Internal
         private double ParseDefaultDouble(string defaultValue)
         {
             if (string.IsNullOrEmpty(defaultValue)) return 0;
+            if (defaultValue == "+inf") return double.PositiveInfinity;
+            if (defaultValue == "-inf") return double.NegativeInfinity;
             if (double.TryParse(defaultValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var value)) return value;
             throw new FormatException();
         }
