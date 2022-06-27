@@ -64,11 +64,6 @@ namespace ProtoBuf.Internal
                 _mapKey = default;
                 _messageType = message;
             }
-            private VisitContext(in VisitContext value, DiscriminatedUnion64Object mapKey)
-            {
-                this = value;
-                _mapKey = mapKey;
-            }
 
             internal VisitContext StepIn(object obj) => new VisitContext(obj, this._current, this._messageType);
 
@@ -98,29 +93,34 @@ namespace ProtoBuf.Internal
                 _ => null,
             };
 
-            internal VisitContext WithMapKey<TKey>(TKey key)
+            internal void UnsafeWithMapKey<TKey>(TKey key)
             {
+                DiscriminatedUnion64Object mapKey;
                 if (typeof(TKey) == typeof(int))
                 {
-                    return new VisitContext(in this, new DiscriminatedUnion64Object((int)MapKeyKind.Int32, Unsafe.As<TKey, int>(ref key)));
+                    mapKey = new DiscriminatedUnion64Object((int)MapKeyKind.Int32, Unsafe.As<TKey, int>(ref key));
                 }
                 else if (typeof(TKey) == typeof(uint))
                 {
-                    return new VisitContext(in this, new DiscriminatedUnion64Object((int)MapKeyKind.UInt32, Unsafe.As<TKey, uint>(ref key)));
+                    mapKey = new DiscriminatedUnion64Object((int)MapKeyKind.UInt32, Unsafe.As<TKey, uint>(ref key));
                 }
                 else if (typeof(TKey) == typeof(long))
                 {
-                    return new VisitContext(in this, new DiscriminatedUnion64Object((int)MapKeyKind.Int64, Unsafe.As<TKey, long>(ref key)));
+                    mapKey = new DiscriminatedUnion64Object((int)MapKeyKind.Int64, Unsafe.As<TKey, long>(ref key));
                 }
                 else if (typeof(TKey) == typeof(ulong))
                 {
-                    return new VisitContext(in this, new DiscriminatedUnion64Object((int)MapKeyKind.UInt64, Unsafe.As<TKey, ulong>(ref key)));
+                    mapKey = new DiscriminatedUnion64Object((int)MapKeyKind.UInt64, Unsafe.As<TKey, ulong>(ref key));
                 }
                 else if (typeof(TKey) == typeof(string))
                 {
-                    return new VisitContext(in this, new DiscriminatedUnion64Object((int)MapKeyKind.String, Unsafe.As<TKey, string>(ref key)));
+                    mapKey = new DiscriminatedUnion64Object((int)MapKeyKind.String, Unsafe.As<TKey, string>(ref key));
                 }
-                return this;
+                else
+                {
+                    return; // nothing to do
+                }
+                Unsafe.AsRef(in this._mapKey) = mapKey;
             }
         }
 
@@ -430,7 +430,8 @@ namespace ProtoBuf.Internal
             Reader<TValue> valueReader,
             FieldDescriptorProto mapField, FieldDescriptorProto valueField, TKey defaultKey, TValue defaultValue = default)
         {
-            ctx = ctx.StepIn(OnBeginMap<TKey, TValue>(in ctx, mapField)).WithMapKey(defaultKey);
+            ctx = ctx.StepIn(OnBeginMap<TKey, TValue>(in ctx, mapField));
+            ctx.UnsafeWithMapKey<TKey>(defaultKey); // this needs to be called before the value-read
             ctx.UnsafeIncrIndex();
             do
             {
@@ -444,7 +445,7 @@ namespace ProtoBuf.Internal
                     {
                         case 1:
                             key = keyReader(in ctx, ref reader);
-                            ctx = ctx.WithMapKey<TKey>(key); // this needs to be called before the value-read
+                            ctx.UnsafeWithMapKey<TKey>(key); // this needs to be called before the value-read
                             break;
                         case 2:
                             value = valueReader(in ctx, ref reader);
