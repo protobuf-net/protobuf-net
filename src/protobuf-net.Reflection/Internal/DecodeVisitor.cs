@@ -70,15 +70,7 @@ namespace ProtoBuf.Internal
                 _mapKey = mapKey;
             }
 
-            internal VisitContext StepIn(object obj)
-            {
-                var clone = this;
-                Unsafe.AsRef(in clone._parent) = this._current;
-                Unsafe.AsRef(in clone._current) = obj;
-                Unsafe.AsRef(in clone._index) = -1;
-                Unsafe.AsRef(in clone._mapKey) = default;
-                return clone;
-            }
+            internal VisitContext StepIn(object obj) => new VisitContext(obj, this._current, this._messageType);
 
             internal void UnsafeIncrIndex() => Unsafe.AsRef(in _index)++;
 
