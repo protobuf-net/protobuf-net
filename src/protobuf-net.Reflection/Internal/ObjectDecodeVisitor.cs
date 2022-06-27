@@ -42,59 +42,60 @@ namespace ProtoBuf.Internal
             return field.Name;
         }
 
-        protected override object OnBeginMessage(FieldDescriptorProto field, DescriptorProto message)
+        protected override object OnBeginMessage(in VisitContext callingContext, FieldDescriptorProto field)
         {
-            base.OnBeginMessage(field, message);
-            if (field is not null && Current is IDictionary<string, object> lookup && lookup.TryGetValue(GetName(field), out var existing))
+            base.OnBeginMessage(in callingContext, field);
+            if (field is not null && callingContext.Current is IDictionary<string, object> lookup && lookup.TryGetValue(GetName(field), out var existing))
             {
                 return existing;
             }
 
             // create new holder object with initialized defaults
             var obj = new ExpandoObject();
+            var ctx = callingContext.StepIn(obj);
             if (ApplyDefaultValues)
             {
-                foreach (var f in message.Fields)
+                foreach (var f in ctx.MessageType.Fields)
                 {
                     if (f.label == FieldDescriptorProto.Label.LabelOptional && !f.Proto3Optional)
                     {
                         switch (f.type)
                         {
                             case FieldDescriptorProto.Type.TypeBool:
-                                OnField(f, ParseDefaultBoolean(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultBoolean(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeDouble:
-                                OnField(f, ParseDefaultDouble(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultDouble(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeFloat:
-                                OnField(f, ParseDefaultSingle(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultSingle(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeFixed32:
                             case FieldDescriptorProto.Type.TypeInt32:
                             case FieldDescriptorProto.Type.TypeSfixed32:
                             case FieldDescriptorProto.Type.TypeSint32:
-                                OnField(f, ParseDefaultInt32(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultInt32(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeFixed64:
                             case FieldDescriptorProto.Type.TypeInt64:
                             case FieldDescriptorProto.Type.TypeSfixed64:
                             case FieldDescriptorProto.Type.TypeSint64:
-                                OnField(f, ParseDefaultInt64(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultInt64(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeUint64:
-                                OnField(f, ParseDefaultUInt64(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultUInt64(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeUint32:
-                                OnField(f, ParseDefaultUInt32(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultUInt32(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeString:
-                                OnField(f, ParseDefaultString(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultString(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeBytes:
-                                OnField(f, ParseDefaultBytes(f.DefaultValue));
+                                OnField(in ctx, f, ParseDefaultBytes(f.DefaultValue));
                                 break;
                             case FieldDescriptorProto.Type.TypeEnum:
-                                OnField(f, ParseDefaultEnum(f, out var value), value);
+                                OnField(in ctx, f, ParseDefaultEnum(f, out var value), value);
                                 break;
                             default:
                                 if (!string.IsNullOrEmpty(f.DefaultValue))
@@ -200,10 +201,35 @@ namespace ProtoBuf.Internal
         private string ParseDefaultString(string defaultValue)
             => defaultValue ?? "";
 
-        protected override object OnBeginRepeated(FieldDescriptorProto field)
+
+        protected override object OnBeginMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field)
         {
-            base.OnBeginRepeated(field);
-            if (field is not null && Current is IDictionary<string, object> lookup && lookup.TryGetValue(GetName(field), out var existing))
+            base.OnBeginMap<TKey, TValue>(in ctx, field);
+            if (field is not null && ctx.Current is IDictionary<string, object> lookup)
+            {
+                var name = GetName(field);
+                if (lookup.TryGetValue(name, out var existing))
+                {
+                    return existing;
+                }
+                return lookup[name] = new Dictionary<TKey, TValue>();
+            }
+            return null;
+        }
+
+        protected override void OnMapEntry<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto.Type valueType, TKey key, TValue value)
+        {
+            base.OnMapEntry(in ctx, valueType, key, value);
+            if (ctx.Current is Dictionary<TKey, TValue> typed)
+            {
+                typed[key] = value;
+            }
+        }
+
+        protected override object OnBeginRepeated(in VisitContext ctx, FieldDescriptorProto field)
+        {
+            base.OnBeginRepeated(in ctx, field);
+            if (field is not null && ctx.Current is IDictionary<string, object> lookup && lookup.TryGetValue(GetName(field), out var existing))
             {
                 return existing;
             }
@@ -221,71 +247,78 @@ namespace ProtoBuf.Internal
                 FieldDescriptorProto.Type.TypeString => new List<string>(),
                 FieldDescriptorProto.Type.TypeBytes => new List<byte[]>(),
                 FieldDescriptorProto.Type.TypeUint32 => new List<uint>(),
+                FieldDescriptorProto.Type.TypeEnum when Enums == EnumMode.Name => new List<object>(),
                 FieldDescriptorProto.Type.TypeEnum => new List<int>(),
                 FieldDescriptorProto.Type.TypeSfixed32 => new List<int>(),
                 FieldDescriptorProto.Type.TypeSfixed64 => new List<long>(),
                 FieldDescriptorProto.Type.TypeSint32 => new List<int>(),
                 FieldDescriptorProto.Type.TypeSint64 => new List<long>(),
-                _ => new List<object>(),
+                FieldDescriptorProto.Type.TypeMessage => new List<ExpandoObject>(),
+                FieldDescriptorProto.Type.TypeGroup => new List<ExpandoObject>(),
+                _ => throw new NotSupportedException($"Unexpected field type: {field.type}"),
             };
         }
 
         private static bool IsRepeated(FieldDescriptorProto field) => field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-        protected override void OnEndMessage(FieldDescriptorProto field, DescriptorProto message)
+        protected override void OnEndMessage(in VisitContext ctx, FieldDescriptorProto field)
         {
-            if (field is not null & Current is not null)
+            if (field is not null & ctx.Current is not null)
             {
                 if (IsRepeated(field))
                 {
-                    if (Parent is IList list) list.Add(Current);
+                    if (ctx.Parent is IList list) list.Add(ctx.Current);
                 }
                 else 
                 {
-                    if (Parent is IDictionary<string, object> lookup)
+                    if (ctx.Parent is IDictionary<string, object> lookup)
                     {
-                        lookup[GetName(field)] = Current;
+                        lookup[GetName(field)] = ctx.Current;
                     }
                 }
             }
-            base.OnEndMessage(field, message);
+            base.OnEndMessage(in ctx, field);
         }
 
-        private void Store<T>(FieldDescriptorProto field, T value, Func<T, object> box = null)
+        private void Store<T>(in VisitContext ctx, FieldDescriptorProto field, T value, Func<T, object> box = null)
         {
             if (IsRepeated(field))
             {
-                if (Current is IList<T> typed) typed.Add(value);
-                else if (Current is IList untyped) untyped.Add(box is null ? value : box(value));
+                if (ctx.Current is IList<T> typed) typed.Add(value);
+                else if (ctx.Current is IList untyped) untyped.Add(box is null ? value : box(value));
             }
             else
             {
-                if (Current is IDictionary<string, object> lookup) lookup[GetName(field)] = box is null ? value : box(value);
+                if (ctx.Current is IDictionary<string, object> lookup) lookup[GetName(field)] = box is null ? value : box(value);
             }
         }
 
-        protected override void OnEndRepeated(FieldDescriptorProto field)
+        protected override void OnEndRepeated(in VisitContext ctx, FieldDescriptorProto field)
         {
-            if (Parent is IDictionary<string, object> lookup)
+            if (ctx.Parent is IDictionary<string, object> lookup)
             {
-                lookup[GetName(field)] = Current;
+                lookup[GetName(field)] = ctx.Current;
             }
-            base.OnEndRepeated(field);
+            base.OnEndRepeated(in ctx, field);
         }
 
         static readonly object BoxedTrue = true, BoxedFalse = false;
-        protected override void OnField(FieldDescriptorProto field, bool value) => Store(field, value, static value => value ? BoxedTrue : BoxedFalse);
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, bool value) => Store(in ctx, field, value, static value => value ? BoxedTrue : BoxedFalse);
 
-        protected override void OnField(FieldDescriptorProto field, byte[] value) => Store(field, value);
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, byte[] value) => Store(in ctx, field, value);
 
-        protected override void OnField(FieldDescriptorProto field, double value) => Store(field, value); // TODO: box handling for 0/1/-1?
-        protected override void OnField(FieldDescriptorProto field, float value) => Store(field, value); // TODO: box handling for 0/1/-1?
-        protected override void OnField(FieldDescriptorProto field, int value) => Store(field, value); // TODO: box handling for 0/small/-1?
-        protected override void OnField(FieldDescriptorProto field, long value) => Store(field, value); // TODO: box handling for 0/small/-1?
-        protected override void OnField(FieldDescriptorProto field, string value) => Store(field, value);
-        protected override void OnField(FieldDescriptorProto field, uint value) => Store(field, value); // TODO: box handling for 0/small?
-        protected override void OnField(FieldDescriptorProto field, ulong value) => Store(field, value); // TODO: box handling for 0/small?
-        protected override void OnField(FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, double value) => Store(in ctx, field, value); // TODO: box handling for 0/1/-1?
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, float value) => Store(in ctx, field, value); // TODO: box handling for 0/1/-1?
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, int value)
+        {
+            if (value == 0) System.Diagnostics.Debugger.Break();
+            Store(in ctx, field, value); // TODO: box handling for 0/small/-1?
+        }
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, long value) => Store(in ctx, field, value); // TODO: box handling for 0/small/-1?
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, string value) => Store(in ctx, field, value);
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, uint value) => Store(in ctx, field, value); // TODO: box handling for 0/small?
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, ulong value) => Store(in ctx, field, value); // TODO: box handling for 0/small?
+        protected override void OnField(in VisitContext ctx, FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
         {
             switch (Enums)
             {
@@ -293,15 +326,15 @@ namespace ProtoBuf.Internal
                     var name = @enum?.Name;
                     if (!string.IsNullOrWhiteSpace(name))
                     {
-                        Store(field, name);
+                        Store(in ctx, field, name);
                         return;
                     }
                     break;
             }
-            Store(field, value); // TODO: box handling for 0/small/-1?
+            Store(in ctx, field, value); // TODO: box handling for 0/small/-1?
         }
 
-        protected override void OnFieldFallback(FieldDescriptorProto field, string value)
+        protected override void OnFieldFallback(in VisitContext ctx, FieldDescriptorProto field, string value)
             => throw new NotImplementedException("Unexpected usage of " + nameof(OnFieldFallback));
     }
 }

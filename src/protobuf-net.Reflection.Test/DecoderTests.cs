@@ -59,11 +59,7 @@ namespace ProtoBuf.Reflection.Test
             public override string ToString() => _total.ToString();
         }
 
-        private FileDescriptorSet GetDummySchema()
-        {
-            var schemaSet = new FileDescriptorSet();
-            // inspired from the encoding document
-            schemaSet.Add("dummy.proto", source: new StringReader(@"
+        private FileDescriptorSet GetDummySchema() => GetSchema(@"
 syntax=""proto3"";
 message Test {
   optional int32 a = 1 [json_name=""ja""];
@@ -78,7 +74,12 @@ message Test {
 enum Blap {
    BLAB_X = 0;
    BLAB_Y = 1;
-}"));
+}");
+        private FileDescriptorSet GetSchema(string source)
+        {
+            var schemaSet = new FileDescriptorSet();
+            // inspired from the encoding document
+            schemaSet.Add("dummy.proto", source: new StringReader(source));
             schemaSet.Process();
             foreach (var error in schemaSet.GetErrors())
             {
@@ -121,6 +122,7 @@ enum Blap {
             using var visitor = new TextDecodeVisitor(_output);
             visitor.Visit(ms, schemaSet.Files[0], "Test");
             var result = _output.ToString();
+
             Assert.Equal(@"1: a=150 (TypeInt32)
 2: b=[ (TypeString)
  #0=testing
@@ -172,7 +174,7 @@ enum Blap {
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""a"":150,""b"":[""testing""],""g"":0,""c"":{""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""g"":0,""a"":150,""b"":[""testing""],""c"":{""g"":0,""a"":150},""d"":1,""e"":5}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.a);
@@ -197,7 +199,7 @@ enum Blap {
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""a"":150,""b"":[""testing""],""g"":0,""c"":{""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""g"":0,""a"":150,""b"":[""testing""],""c"":{""g"":0,""a"":150},""d"":1,""e"":5,""f"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.a);
@@ -222,7 +224,7 @@ enum Blap {
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""ja"":150,""jb"":[""testing""],""g"":0,""c"":{""ja"":150},""jd"":""BLAB_Y"",""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""g"":0,""ja"":150,""jb"":[""testing""],""c"":{""g"":0,""ja"":150},""jd"":""BLAB_Y"",""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.ja);
@@ -233,6 +235,95 @@ enum Blap {
             Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.jf));
             Assert.Equal(0, (int)obj.g);
             Assert.False(lookup.ContainsKey("h"));
+        }
+
+
+        private MemoryStream GetMapPayload()
+        {
+#pragma warning disable CS0618
+            var ms = new MemoryStream();
+            var writer = ProtoWriter.State.Create(ms, null);
+            writer.WriteFieldHeader(1, WireType.String);
+            var tok = writer.StartSubItem(null);
+            writer.WriteInt32Varint(1, 12); // key: 12
+            writer.WriteString(2, "abc"); // value: "abc"
+            writer.EndSubItem(tok);
+
+            writer.WriteFieldHeader(1, WireType.String);
+            tok = writer.StartSubItem(null);
+            writer.WriteInt32Varint(1, 31); // key: 31
+            writer.WriteString(2, "def"); // value: "def"
+            writer.EndSubItem(tok);
+
+            writer.WriteFieldHeader(2, WireType.String);
+            tok = writer.StartSubItem(null);
+            writer.WriteString(1, "ghi"); // key: "ghi"
+            writer.WriteFieldHeader(2, WireType.String);
+            var innerTok = writer.StartSubItem(null);
+            writer.WriteInt32Varint(1, 99); // id: 99
+            writer.EndSubItem(innerTok);
+            writer.EndSubItem(tok);
+
+            writer.WriteFieldHeader(2, WireType.String);
+            tok = writer.StartSubItem(null);
+            writer.WriteString(1, "jkl"); // key: "jkl"
+            writer.WriteFieldHeader(2, WireType.String);
+            innerTok = writer.StartSubItem(null);
+            writer.WriteInt32Varint(1, 100); // id: 100
+            writer.EndSubItem(innerTok);
+            writer.EndSubItem(tok);
+
+#pragma warning restore CS0618
+            writer.Flush();
+            writer.Dispose();
+            ms.Position = 0;
+            return ms;
+        }
+        private FileDescriptorSet GetMapSchema() => GetSchema(@"
+syntax=""proto3"";
+message Foo {
+  map<int32, string> a = 1;
+  map<string, Bar> b = 2;
+}
+message Bar {
+  int32 id = 1;
+}");
+
+        [Fact]
+        public void ProcessMaps_Text()
+        {
+            var schemaSet = GetMapSchema();
+            var text = new TextDecodeVisitor(_output);
+            text.Visit(GetMapPayload(), schemaSet.Files[0], ".Foo");
+            var result = _output.ToString();
+            Assert.Equal(@"1: a={
+ #0: 12=abc
+ #1: 31=def
+} // a, count: 2
+2: b={
+ #0: ghi={
+  1: id=99 (TypeInt32)
+ } // b
+ #1: jkl={
+  1: id=100 (TypeInt32)
+ } // b
+} // b, count: 2
+", result, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void ProcessMaps_Json()
+        {
+            var schemaSet = GetMapSchema();
+            var visitor = ObjectDecodeVisitor.ForJson();
+
+            IDictionary<string, object> lookup = visitor.Visit(GetMapPayload(), schemaSet.Files[0], ".Foo");
+            dynamic obj = lookup;
+
+            // test via JSON
+            string json = JsonConvert.SerializeObject((object)obj);
+            _log.WriteLine(json);
+            Assert.Equal(@"{""a"":{""12"":""abc"",""31"":""def""},""b"":{""ghi"":{""id"":99},""jkl"":{""id"":100}}}", json, ignoreLineEndingDifferences: true);
         }
     }
 }
