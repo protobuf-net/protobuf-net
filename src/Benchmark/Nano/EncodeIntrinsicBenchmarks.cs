@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 #if NETCOREAPP3_1_OR_GREATER
 using System.Runtime.Intrinsics.X86;
@@ -34,6 +35,10 @@ namespace Benchmark.Nano
             var actual = writer.GetHexAndReset();
             if (actual != expected) throw new InvalidOperationException($"Encode failure {nameof(writer.WriteVarintUInt32_WriteIntrinsic)}: {expected} vs {actual}");
 
+            writer.WriteVarintUInt32_Switched(_value);
+            actual = writer.GetHexAndReset();
+            if (actual != expected) throw new InvalidOperationException($"Encode failure {nameof(writer.WriteVarintUInt32_Switched)}: {expected} vs {actual}");
+
             writer.WriteVarintUInt32_WithZeroHighBits(_value);
             actual = writer.GetHexAndReset();
             if (actual != expected) throw new InvalidOperationException($"Encode failure {nameof(writer.WriteVarintUInt32_WithZeroHighBits)}: {expected} vs {actual}");
@@ -46,45 +51,58 @@ namespace Benchmark.Nano
             actual = writer.GetHexAndReset();
             if (actual != expected) throw new InvalidOperationException($"Encode failure {nameof(writer.WriteVarintUInt32_ShiftedMasks)}: {expected} vs {actual}");
 
-            var actualLen = BenchmarkWriter.Measure_Unoptimized(_value);
-            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_Unoptimized)}: {_length} vs {actualLen}");
+            var actualLen = BenchmarkWriter.Measure_Leq(_value);
+            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_Leq)}: {_length} vs {actualLen}");
 
-            actualLen = BenchmarkWriter.Measure_Lzcnt(_value);
-            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_Lzcnt)}: {_length} vs {actualLen}");
+            actualLen = BenchmarkWriter.Measure_BitTest(_value);
+            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_BitTest)}: {_length} vs {actualLen}");
 
-            actualLen = BenchmarkWriter.Measure_LzcntMax(_value);
-            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_LzcntMax)}: {_length} vs {actualLen}");
+            actualLen = BenchmarkWriter.Measure_LzcntDiv(_value);
+            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_LzcntDiv)}: {_length} vs {actualLen}");
+
+            actualLen = BenchmarkWriter.Measure_LzcntMulShift(_value);
+            if (actualLen != _length) throw new InvalidOperationException($"Measure failure {nameof(writer.Measure_LzcntMulShift)}: {_length} vs {actualLen}");
         }
 
         private const int OperationsPerInvoke = 32 * 1024;
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke, Baseline = true)]
         [BenchmarkCategory("Measure32")]
-        public void Measure_Unoptimized()
+        public void Measure_Leq()
         {
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                BenchmarkWriter.Measure_Unoptimized(_value);
+                BenchmarkWriter.Measure_Leq(_value);
             }
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         [BenchmarkCategory("Measure32")]
-        public void Measure_Lzcnt()
+        public void Measure_BitTest()
         {
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                BenchmarkWriter.Measure_Lzcnt(_value);
+                BenchmarkWriter.Measure_BitTest(_value);
             }
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         [BenchmarkCategory("Measure32")]
-        public void Measure_LzcntMax()
+        public void Measure_LzcntDiv()
         {
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                BenchmarkWriter.Measure_LzcntMax(_value);
+                BenchmarkWriter.Measure_LzcntDiv(_value);
+            }
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        [BenchmarkCategory("Measure32")]
+        public void Measure_LzcntMulShift()
+        {
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                BenchmarkWriter.Measure_LzcntMulShift(_value);
             }
         }
 
@@ -98,6 +116,20 @@ namespace Benchmark.Nano
             {
                 writer.Index = index; // reset for multiple reads on same data
                 writer.WriteVarintUInt32_Unoptimized(_value);
+            }
+            return writer.Count;
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        [BenchmarkCategory("Encode32")]
+        public int Switched()
+        {
+            var writer = GetWriter();
+            int index = writer.Index;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                writer.Index = index; // reset for multiple reads on same data
+                writer.WriteVarintUInt32_Switched(_value);
             }
             return writer.Count;
         }
@@ -223,57 +255,64 @@ namespace Benchmark.Nano
             {
                 if (_index + 5 <= _end)
                 {
-#if NETCOREAPP3_1_OR_GREATER
-                    if (Lzcnt.IsSupported)
+                    while ((value & ~0x7FU) != 0)
                     {
-                        var bits = 32 - Lzcnt.LeadingZeroCount(value);
-                        const uint HI_BIT = 0b10000000;
-
-                        switch ((bits + 6) / 7)
-                        {
-                            case 0:
-                            case 1:
-                                _buffer[_index++] = (byte)value;
-                                return;
-                            case 2:
-                                _buffer[_index++] = (byte)(value | HI_BIT);
-                                _buffer[_index++] = (byte)(value >> 7);
-                                return;
-                            case 3:
-                                _buffer[_index++] = (byte)(value | HI_BIT);
-                                _buffer[_index++] = (byte)((value >> 7) | HI_BIT);
-                                _buffer[_index++] = (byte)(value >> 14);
-                                return;
-                            case 4:
-                                _buffer[_index++] = (byte)(value | HI_BIT);
-                                _buffer[_index++] = (byte)((value >> 7) | HI_BIT);
-                                _buffer[_index++] = (byte)((value >> 14) | HI_BIT);
-                                _buffer[_index++] = (byte)(value >> 21);
-                                return;
-                            default:
-                                _buffer[_index++] = (byte)(value | HI_BIT);
-                                _buffer[_index++] = (byte)((value >> 7) | HI_BIT);
-                                _buffer[_index++] = (byte)((value >> 14) | HI_BIT);
-                                _buffer[_index++] = (byte)((value >> 21) | HI_BIT);
-                                _buffer[_index++] = (byte)(value >> 28);
-                                return;
-                        }
+                        _buffer[_index++] = (byte)((value & 0x7F) | 0x80);
+                        value >>= 7;
                     }
-                    else
-#endif
+                    _buffer[_index++] = (byte)value;
+                }
+                else
+                {
+                    WriteVarintUInt32Slow(value);
+                }
+            }
+
+            /// <summary>
+            /// Write an unsigned integer with varint encoding
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void WriteVarintUInt32_Switched(uint value)
+            {
+#if NETCOREAPP3_1_OR_GREATER
+                if (_index + 5 <= _end)
+                {
+                    switch (((31 - (uint)BitOperations.LeadingZeroCount(value | 1)) * 37) >> 8)
                     {
-                        while ((value & ~0x7FU) != 0)
-                        {
-                            _buffer[_index++] = (byte)((value & 0x7F) | 0x80);
-                            value >>= 7;
-                        }
-                        _buffer[_index++] = (byte)value;
+                        case 0:
+                            _buffer[_index++] = (byte)value;
+                            return;
+                        case 1:
+                            _buffer[_index++] = (byte)(value | 0x80);
+                            _buffer[_index++] = (byte)(value >> 7);
+                            return;
+                        case 2:
+                            _buffer[_index++] = (byte)(value | 0x80);
+                            _buffer[_index++] = (byte)((value >> 7) | 0x80);
+                            _buffer[_index++] = (byte)(value >> 14);
+                            return;
+                        case 3:
+                            _buffer[_index++] = (byte)(value | 0x80);
+                            _buffer[_index++] = (byte)((value >> 7) | 0x80);
+                            _buffer[_index++] = (byte)((value >> 14) | 0x80);
+                            _buffer[_index++] = (byte)(value >> 21);
+                            return;
+                        default:
+                            _buffer[_index++] = (byte)(value | 0x80);
+                            _buffer[_index++] = (byte)((value >> 7) | 0x80);
+                            _buffer[_index++] = (byte)((value >> 14) | 0x80);
+                            _buffer[_index++] = (byte)((value >> 21) | 0x80);
+                            _buffer[_index++] = (byte)(value >> 28);
+                            return;
                     }
                 }
                 else
                 {
                     WriteVarintUInt32Slow(value);
                 }
+#else
+                WriteVarintUInt32_Unoptimized(value);
+#endif
             }
 
             private void WriteVarintUInt64Full(ulong value)
@@ -564,8 +603,19 @@ namespace Benchmark.Nano
                     WriteVarintUInt32_Unoptimized(value);
                 }
             }
+
             [MethodImpl(HotPath)]
-            public static uint Measure_Unoptimized(uint value)
+            public static uint Measure_Leq(uint value)
+            {
+                if (value <= 0x7F) return 1;
+                if (value <= 0x3FFF) return 2;
+                if (value <= 0x1FFFFF) return 3;
+                if (value <= 0xFFFFFFF) return 4;
+                return 5;
+            }
+
+            [MethodImpl(HotPath)]
+            public static uint Measure_BitTest(uint value)
             {
                 if ((value & (~0U << 7)) == 0) return 1;
                 if ((value & (~0U << 14)) == 0) return 2;
@@ -575,43 +625,38 @@ namespace Benchmark.Nano
             }
 
             [MethodImpl(HotPath)]
-            public static uint Measure_Lzcnt(uint value)
+            public static uint Measure_LzcntDiv(uint value)
             {
 #if NETCOREAPP3_1_OR_GREATER
-                if (Lzcnt.IsSupported)
-                {
-                    var bits = 32 - Lzcnt.LeadingZeroCount(value);
-                    return bits == 0 ? 1 : ((bits + 6) / 7);
-                }
-                else
+                return (38 - (uint)BitOperations.LeadingZeroCount(value | 1)) / 7;
+#else
+                if ((value & (~0U << 7)) == 0) return 1;
+                if ((value & (~0U << 14)) == 0) return 2;
+                if ((value & (~0U << 21)) == 0) return 3;
+                if ((value & (~0U << 28)) == 0) return 4;
+                return 5;
 #endif
-                {
-                    if ((value & (~0U << 7)) == 0) return 1;
-                    if ((value & (~0U << 14)) == 0) return 2;
-                    if ((value & (~0U << 21)) == 0) return 3;
-                    if ((value & (~0U << 28)) == 0) return 4;
-                    return 5;
-                }
             }
 
             [MethodImpl(HotPath)]
-            public static uint Measure_LzcntMax(uint value)
+            public static uint Measure_LzcntMulShift(uint value)
             {
 #if NETCOREAPP3_1_OR_GREATER
-                if (Lzcnt.IsSupported)
-                {
-                    return Math.Max((38 - Lzcnt.LeadingZeroCount(value)) / 7, 1);
-                }
-                else
+                // the | 1 ensures we treat zero as one byte; the use
+                // of BitOperations rather than specific CPU instructions
+                // is for CPU portability; the (x * 37) >> 8 is evil
+                // hackness that works (faster) as / 7, for x in [0,85]
+                return ((38 - (uint)BitOperations.LeadingZeroCount(value | 1)) * 37) >> 8;
+#else
+                if ((value & (~0U << 7)) == 0) return 1;
+                if ((value & (~0U << 14)) == 0) return 2;
+                if ((value & (~0U << 21)) == 0) return 3;
+                if ((value & (~0U << 28)) == 0) return 4;
+                return 5;
 #endif
-                {
-                    if ((value & (~0U << 7)) == 0) return 1;
-                    if ((value & (~0U << 14)) == 0) return 2;
-                    if ((value & (~0U << 21)) == 0) return 3;
-                    if ((value & (~0U << 28)) == 0) return 4;
-                    return 5;
-                }
             }
+
+
         }
     }
 }
