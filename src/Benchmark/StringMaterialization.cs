@@ -27,8 +27,11 @@ namespace Benchmark
 
         private const int OperationsPerInvoke = 1024;
 
-        [Params(1,10,100,1000)]
+        [Params(10, 1000)]
         public int Length { get; set; }
+
+        [Params(0, 5)]
+        public int Offset { get; set; }
 
         private static readonly UTF8Encoding utf8 = new UTF8Encoding(false);
 
@@ -37,20 +40,23 @@ namespace Benchmark
         {
             var buffer = _rawPayload;
             var bytes = Length;
+            var offset = Offset;
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                _ = utf8.GetString(buffer, 0, bytes);
+                _ = utf8.GetString(buffer, offset, bytes);
             }
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void GetStringSpan()
+        public void GetStringSpanSlice()
         {
 #if NETCOREAPP3_1_OR_GREATER
-            var span = new ReadOnlySpan<byte>(_rawPayload, 0, Length);
+            ReadOnlySpan<byte> span = _rawPayload;
+            var bytes = Length;
+            var offset = Offset;
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                _ = utf8.GetString(span);
+                _ = utf8.GetString(span.Slice(offset, bytes));
             }
 #else
             throw new PlatformNotSupportedException();
@@ -61,11 +67,12 @@ namespace Benchmark
         public unsafe void GetStringUnsafe()
         {
             var bytes = Length;
+            var offset = Offset;
             fixed (byte* ptr = _rawPayload)
             {
                 for (int i = 0; i < OperationsPerInvoke; i++)
                 {
-                    _ = utf8.GetString(ptr, bytes);
+                    _ = utf8.GetString(ptr + offset, bytes);
                 }
             }
         }
@@ -74,15 +81,16 @@ namespace Benchmark
         public unsafe void StringNewOverwrite()
         {
             var bytes = Length;
+            var offset = Offset;
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
                 fixed (byte* bPtr = _rawPayload)
                 {
-                    int chars = utf8.GetCharCount(bPtr, bytes);
+                    int chars = utf8.GetCharCount(bPtr + offset, bytes);
                     string s = new string('\0', bytes);
                     fixed (char* cPtr = s)
                     {
-                        utf8.GetChars(bPtr, bytes, cPtr, chars);
+                        utf8.GetChars(bPtr + offset, bytes, cPtr, chars);
                     }
                 }
             }
@@ -93,15 +101,16 @@ namespace Benchmark
         {
 #if NETCOREAPP3_1_OR_GREATER
             var bytes = Length;
+            var offset = Offset;
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
                 fixed (byte* bPtr = _rawPayload)
                 {
-                    int chars = utf8.GetCharCount(bPtr, bytes);
+                    int chars = utf8.GetCharCount(bPtr, bytes + offset);
                     string s = string.Create(chars, (object)null, static delegate { }); // don't actually initialize in the callback
                     fixed (char* cPtr = s)
                     {
-                        utf8.GetChars(bPtr, bytes, cPtr, chars);
+                        utf8.GetChars(bPtr, bytes + offset, cPtr, chars);
                     }
                 }
             }
@@ -115,11 +124,12 @@ namespace Benchmark
         {
 #if NETCOREAPP3_1_OR_GREATER
             var bytes = Length;
+            var offset = Offset;
             var buffer = _rawPayload;
             for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                _ = string.Create(bytes, (bytes, buffer),
-                    static (chars, state) => utf8.GetChars(new ReadOnlySpan<byte>(state.buffer, 0, state.bytes), chars)
+                _ = string.Create(bytes, (buffer, offset, bytes),
+                    static (chars, state) => utf8.GetChars(new ReadOnlySpan<byte>(state.buffer, state.offset, state.bytes), chars)
                 );
             }
 #else
