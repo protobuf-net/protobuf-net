@@ -58,8 +58,6 @@ namespace Benchmark
             {
                 _ = utf8.GetString(span.Slice(offset, bytes));
             }
-#else
-            throw new PlatformNotSupportedException();
 #endif
         }
 
@@ -114,8 +112,6 @@ namespace Benchmark
                     }
                 }
             }
-#else
-            throw new PlatformNotSupportedException();
 #endif
         }
 
@@ -132,8 +128,6 @@ namespace Benchmark
                     static (chars, state) => utf8.GetChars(new ReadOnlySpan<byte>(state.buffer, state.offset, state.bytes), chars)
                 );
             }
-#else
-            throw new PlatformNotSupportedException();
 #endif
         }
     }
