@@ -1,7 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using System;
-using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Benchmark
@@ -95,7 +95,7 @@ namespace Benchmark
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public unsafe void StringCreateOverwrite()
+        public unsafe void StringCreateOverwriteUnsafe()
         {
 #if NETCOREAPP3_1_OR_GREATER
             var bytes = Length;
@@ -111,6 +111,23 @@ namespace Benchmark
                         utf8.GetChars(bPtr, bytes + offset, cPtr, chars);
                     }
                 }
+            }
+#endif
+        }
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public void StringCreateOverwriteSpans()
+        {
+#if NETCOREAPP3_1_OR_GREATER
+            var bytes = Length;
+            var offset = Offset;
+            ReadOnlySpan<byte> span = _rawPayload;
+            for (int i = 0; i < OperationsPerInvoke; i++)
+            {
+                var slice = span.Slice(offset, Length);
+                int chars = utf8.GetCharCount(slice);
+                var s = string.Create(chars, (object)null, static delegate { }); // don't actually initialize in the callback
+                utf8.GetChars(slice, MemoryMarshal.AsMemory(s.AsMemory()).Span);
             }
 #endif
         }
