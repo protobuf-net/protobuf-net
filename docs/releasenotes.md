@@ -12,6 +12,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## pending
+
+- fix protogen parsing of escape characters in custom options (#931)
+
 ## 3.1.17
 
 - add .NET 6 TFM for protogen  (#928)
