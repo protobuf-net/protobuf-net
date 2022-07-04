@@ -1831,14 +1831,14 @@ namespace Google.Protobuf.Reflection
                                     else
                                     {
                                         using var ms = new MemoryStream(value.AggregateValue.Length);
-                                        if (!LoadBytes(ms, value.AggregateValue))
+                                        if (!LoadBytes(ms, value.AggregateValue, out bool haveRawUnicode))
                                         {
                                             ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
                                             state.WriteBytes(Array.Empty<byte>()); // just to silence the writer, so the real error is surfaced
                                             continue;
                                         }
 
-                                        if (field.type == FieldDescriptorProto.Type.TypeString)
+                                        if (field.type == FieldDescriptorProto.Type.TypeString && haveRawUnicode)
                                         {
                                             TokenExtensions.ValidateUtf8(option.Token, ms, ctx.Errors); // still written, note
                                         }
@@ -1856,9 +1856,9 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        private static unsafe bool LoadBytes(Stream ms, string value)
+        private static unsafe bool LoadBytes(Stream ms, string value, out bool haveRawUnicode)
         {
-            bool isEscaped = false;
+            bool isEscaped = haveRawUnicode = false;
             byte* b = stackalloc byte[10];
             int octalCount = 0;
             uint pendingOctal = 0;
@@ -1874,6 +1874,7 @@ namespace Google.Protobuf.Reflection
                         if (octalCount == 3)
                         {
                             ms.WriteByte(checked((byte)pendingOctal));
+                            if (pendingOctal > 127) haveRawUnicode = true;
                             octalCount = 0;
                             pendingOctal = 0;
                             isEscaped = false;
