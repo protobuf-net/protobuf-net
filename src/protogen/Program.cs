@@ -372,6 +372,10 @@ Parse PROTO_FILES and generate output based on the options given:
                               given, the current working directory is used.
   --version                   Show version info and exit.
   -h, --help                  Show this text and exit.
+  --decode=MESSAGE_TYPE       Read a binary message of the given type from
+                              standard input and write it in text format
+                              to standard output.  The message type must
+                              be defined in PROTO_FILES or their imports.
   -oFILE,                     Writes a FileDescriptorSet (a protocol buffer,
     --descriptor_set_out=FILE defined in descriptor.proto) containing all of
                               the input files to FILE.
