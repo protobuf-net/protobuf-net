@@ -3,8 +3,8 @@
     <PropertyGroup>
         <TargetFrameworks>netcoreapp3.1;net462;net6.0</TargetFrameworks>
         <RootNamespace>ProtoBuf.FSharp.Test</RootNamespace>
-        <LangVersion>10</LangVersion>
         <IsPackable>false</IsPackable>
+        <LangVersion>latest</LangVersion>
         <GenerateProgramFile>false</GenerateProgramFile>
     </PropertyGroup>
 
@@ -14,8 +14,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
-        <PackageReference Include="xunit" Version="2.4.0" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+        <PackageReference Include="xunit" Version="2.4.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" />
         <PackageReference Include="coverlet.collector" Version="1.2.0" />
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     </ItemGroup>
