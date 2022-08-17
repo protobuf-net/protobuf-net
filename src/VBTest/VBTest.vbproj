@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>14</LangVersion>
+    <LangVersion>10</LangVersion>
     <RootNamespace />
     <NoWarn>IDE1006</NoWarn>
     <IsTestProject>false</IsTestProject>

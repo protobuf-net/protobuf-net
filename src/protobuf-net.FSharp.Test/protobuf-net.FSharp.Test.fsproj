@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netcoreapp3.1;net462;net5.0</TargetFrameworks>
+        <TargetFrameworks>netcoreapp3.1;net462;net6.0</TargetFrameworks>
         <RootNamespace>ProtoBuf.FSharp.Test</RootNamespace>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>10</LangVersion>
         <IsPackable>false</IsPackable>
         <GenerateProgramFile>false</GenerateProgramFile>
     </PropertyGroup>
@@ -24,10 +24,6 @@
         <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
         <ProjectReference Include="..\protobuf-net.FSharp\protobuf-net.FSharp.csproj" />
         <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Update="FSharp.Core" Version="5.0.2" />
     </ItemGroup>
 
 </Project>

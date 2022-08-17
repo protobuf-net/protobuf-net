@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.14.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.0" />
     <PackageReference Include="NodaTime" Version="3.0.3" />
     <PackageReference Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
     <PackageReference Include="xunit" Version="2.4.1" />

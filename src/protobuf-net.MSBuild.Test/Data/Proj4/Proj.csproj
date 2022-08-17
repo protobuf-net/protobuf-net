@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>TestNS</RootNamespace>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <GrpcServices>true</GrpcServices>
   </PropertyGroup>
 
