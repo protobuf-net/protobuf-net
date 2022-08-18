@@ -143,6 +143,7 @@ namespace ProtoBuf.Serializers
                 state.Hint(WireType.SignedVarint);
         }
 
+        [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowInvalidCategory(this SerializerFeatures features)
         {

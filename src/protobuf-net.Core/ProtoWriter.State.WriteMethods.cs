@@ -735,7 +735,7 @@ namespace ProtoBuf
             /// <param name="instance">The instance to write.</param>
             /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
             [Obsolete(PreferWriteMessage, false)]
-            public SubItemToken StartSubItem(object instance) => StartSubItem(instance, PrefixStyle.Base128);
+            public SubItemToken StartSubItem(object? instance) => StartSubItem(instance, PrefixStyle.Base128);
 
             /// <summary>
             /// Releases any resources associated with this instance

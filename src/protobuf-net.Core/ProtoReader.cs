@@ -109,7 +109,7 @@ namespace ProtoBuf
         /// <summary>
         /// Initialize the reader
         /// </summary>
-        internal void Init(TypeModel model, object userState)
+        internal void Init(TypeModel model, object? userState)
         {
             OnInit();
             _model = model;
