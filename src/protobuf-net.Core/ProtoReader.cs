@@ -235,7 +235,7 @@ namespace ProtoBuf
 
         private Dictionary<string, string>? stringInterner;
 
-        [return: NotNullIfNotNull(nameof(value))]
+        [return: NotNullIfNotNull("value")]
         private protected string? Intern(string? value)
         {
             if (value is null) return null;
