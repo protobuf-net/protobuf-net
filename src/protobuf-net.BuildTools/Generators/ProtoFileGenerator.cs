@@ -264,7 +264,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 if (Log is null) throw;
                 Log.Invoke($"Exception: '{ex.Message}' ({ex.GetType().Name})");
-                Log.Invoke(ex.StackTrace);
+                Log.Invoke(ex.StackTrace!);
             }
         }
 
