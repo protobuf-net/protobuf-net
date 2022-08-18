@@ -1,4 +1,6 @@
-﻿using ProtoBuf.Internal;
+﻿#nullable enable
+
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
@@ -17,7 +19,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         [Obsolete(ProtoReader.PreferStateAPI, false)]
-        public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext context = null)
+        public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext? context = null)
             => StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
 
         partial struct State
@@ -28,14 +30,14 @@ namespace ProtoBuf
             /// <param name="dest">The destination stream</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
             /// <param name="userState">Additional context about this serialization operation</param>
-            public static State Create(Stream dest, TypeModel model, object userState = null)
+            public static State Create(Stream dest, TypeModel model, object? userState = null)
             {
                 var writer = StreamProtoWriter.CreateStreamProtoWriter(dest, model, userState);
                 return new State(writer);
             }
         }
 
-        private class StreamProtoWriter : ProtoWriter
+        private sealed class StreamProtoWriter : ProtoWriter
         {
             protected internal override State DefaultState() => new State(this);
 
@@ -44,8 +46,11 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
+#nullable disable
             private StreamProtoWriter() { }
-            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, object userState)
+#nullable enable
+
+            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, object? userState)
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
                 obj.Init(model, userState, true);
@@ -57,7 +62,7 @@ namespace ProtoBuf
                 return obj;
             }
 
-            internal override void Init(TypeModel model, object userState, bool impactCount)
+            internal override void Init(TypeModel model, object? userState, bool impactCount)
             {
                 base.Init(model, userState, impactCount);
                 ioIndex = 0;
@@ -74,7 +79,7 @@ namespace ProtoBuf
             {
                 base.Cleanup();
                 // importantly, this does **not** own the stream, and does not dispose it
-                dest = null;
+                dest = null!;
                 BufferPool.ReleaseBufferToPool(ref ioBuffer);
             }
 
@@ -141,7 +146,7 @@ namespace ProtoBuf
                     // because many implementations won't have overridden the method yet
                     if (MemoryMarshal.TryGetArray(bytes, out var segment))
                     {
-                        dest.Write(segment.Array, segment.Offset, segment.Count);
+                        dest.Write(segment.Array!, segment.Offset, segment.Count);
                     }
                     else
                     {
@@ -181,14 +186,14 @@ namespace ProtoBuf
                 }
             }
 #endif
-            private protected override void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data)
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data)
             {
                 int length = checked((int)data.Length);
                 if (length == 0) return;
                 if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
                 {
                     DemandSpace(length, this, ref state);
-                    System.Buffers.BuffersExtensions.CopyTo(data, new Span<byte>(ioBuffer, ioIndex, length));
+                    BuffersExtensions.CopyTo(data, new Span<byte>(ioBuffer, ioIndex, length));
                     ioIndex += length;
                 }
                 else
@@ -202,21 +207,21 @@ namespace ProtoBuf
 #if PLAT_SPAN_OVERLOADS
                         dest.Write(chunk.Span);
 #else
-                        if (System.Runtime.InteropServices.MemoryMarshal.TryGetArray(chunk, out var segment))
+                        if (MemoryMarshal.TryGetArray(chunk, out var segment))
                         {
                             dest.Write(segment.Array, segment.Offset, segment.Count);
                         }
                         else
                         {
-                            var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(chunk.Length);
+                            var rentedBuffer = ArrayPool<byte>.Shared.Rent(chunk.Length);
                             try
                             {
-                                chunk.CopyTo(arr);
-                                dest.Write(arr, 0, chunk.Length);
+                                chunk.CopyTo(rentedBuffer);
+                                dest.Write(rentedBuffer, 0, chunk.Length);
                             }
                             finally
                             {
-                                System.Buffers.ArrayPool<byte>.Shared.Return(arr);
+                                ArrayPool<byte>.Shared.Return(rentedBuffer);
                             }
                         }
 #endif
@@ -326,7 +331,7 @@ namespace ProtoBuf
                     }
                 }
             }
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 switch (WireType)
                 {

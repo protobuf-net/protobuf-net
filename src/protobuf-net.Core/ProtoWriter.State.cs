@@ -1,8 +1,8 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -153,7 +153,7 @@ namespace ProtoBuf
                 int bytes;
                 if (MemoryMarshal.TryGetArray<byte>(_memory, out var segment))
                 {
-                    bytes = source.Read(segment.Array, segment.Offset + OffsetInCurrent, RemainingInCurrent);
+                    bytes = source.Read(segment.Array!, segment.Offset + OffsetInCurrent, RemainingInCurrent);
                 }
                 else
                 {
