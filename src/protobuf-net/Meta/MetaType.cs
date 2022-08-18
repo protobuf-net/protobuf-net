@@ -1688,7 +1688,7 @@ namespace ProtoBuf.Meta
 
         internal List<ValueMember> Fields => _fields ??= new();
 
-        private List<EnumMember> _enums;
+        private List<EnumMember>? _enums;
 
         [MemberNotNullWhen(true, nameof(_enums))]
         internal bool HasEnums => _enums is { Count: not 0 };
