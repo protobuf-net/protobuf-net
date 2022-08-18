@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net462;netcoreapp3.1;net5.0</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp3.1;net6.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
     <DefineConstants Condition="$(CI) != 'true'">$(DefineConstants);LONG_RUNNING</DefineConstants>
     <NoWarn>$(NoWarn);IDE0060;IDE0051;IDE0044;IDE0063;IDE0028;IDE0034;IDE1006;IDE0017;IDE0052;xUnit1004;CA1507;CA1069;CA1822;CA1825</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net5.0'">
+  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net6.0'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">
@@ -21,12 +21,11 @@
       <Aliases>gpb</Aliases>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
-    <PackageReference Include="System.Threading.Channels" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -50,8 +49,8 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net5.0'">
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+  <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net6.0'">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
