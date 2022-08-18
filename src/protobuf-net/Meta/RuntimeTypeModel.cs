@@ -230,7 +230,7 @@ namespace ProtoBuf.Meta
                         origin = mt.Origin;
                     }
                     string tmp;
-                    if (package is null && !string.IsNullOrWhiteSpace(tmp = mt.GuessPackage()))
+                    if (package is null && !string.IsNullOrWhiteSpace(tmp = mt.GuessPackage()!))
                     {
                         package = tmp;
                     }
@@ -242,7 +242,7 @@ namespace ProtoBuf.Meta
             {
                 if (!string.IsNullOrWhiteSpace(toAdd.Origin) && !string.Equals(toAdd.Origin, origin, StringComparison.Ordinal))
                 {
-                    imports.Add(toAdd.Origin);
+                    imports.Add(toAdd.Origin!);
                     return; // external type; not our problem!
                 }
 
@@ -448,7 +448,7 @@ namespace ProtoBuf.Meta
 
         private void CascadeDependents(List<MetaType> list, MetaType metaType, HashSet<string> imports, string? origin)
         {
-            MetaType tmp;
+            MetaType? tmp;
             var repeated = TryGetRepeatedProvider(metaType.Type);
             if (repeated is not null)
             {
@@ -460,7 +460,7 @@ namespace ProtoBuf.Meta
                 {
                     if (MetaType.ResolveTupleConstructor(metaType.Type, out var mapping) is not null)
                     {
-                        for (int i = 0; i < mapping.Length; i++)
+                        for (uint i = 0; i < (uint)mapping!.Length; i++)
                         {
                             Type? type = null;
                             if (mapping[i] is PropertyInfo propertyInfo) type = propertyInfo.PropertyType;
@@ -536,7 +536,7 @@ namespace ProtoBuf.Meta
             var mt = (MetaType)types[index];
             if (mt.HasSurrogate)
             {
-                coreSerializer = ValueMember.TryGetCoreSerializer(this, mt.surrogateDataFormat, mt.CompatibilityLevel, mt.surrogateType, out _, false, false, false, false);
+                coreSerializer = ValueMember.TryGetCoreSerializer(this, mt._surrogateDataFormat, mt.CompatibilityLevel, mt._surrogateType, out _, false, false, false, false);
                 if (coreSerializer is object)
                 {   // inbuilt basic surrogate
                     return;
@@ -545,7 +545,7 @@ namespace ProtoBuf.Meta
             var temp = mt.GetSurrogateOrBaseOrSelf(false);
             if (!string.IsNullOrWhiteSpace(temp.Origin) && temp.Origin != origin)
             {
-                imports.Add(temp.Origin);
+                imports.Add(temp.Origin!);
                 return; // external type; not our problem!
             }
             if (list.Contains(temp))
@@ -905,13 +905,13 @@ namespace ProtoBuf.Meta
         /// <remarks>This callback should be fast and not involve complex external calls, as it may block the model</remarks>
         public event EventHandler<TypeAddedEventArgs>? AfterApplyDefaultBehaviour;
 
-        internal static void OnBeforeApplyDefaultBehaviour(MetaType metaType, ref TypeAddedEventArgs args)
+        internal static void OnBeforeApplyDefaultBehaviour(MetaType metaType, ref TypeAddedEventArgs? args)
             => OnApplyDefaultBehaviour(metaType?.Model?.BeforeApplyDefaultBehaviour, metaType!, ref args);
 
-        internal static void OnAfterApplyDefaultBehaviour(MetaType metaType, ref TypeAddedEventArgs args)
+        internal static void OnAfterApplyDefaultBehaviour(MetaType metaType, ref TypeAddedEventArgs? args)
             => OnApplyDefaultBehaviour(metaType?.Model?.AfterApplyDefaultBehaviour, metaType!, ref args);
 
-        private static void OnApplyDefaultBehaviour(EventHandler<TypeAddedEventArgs>? handler, MetaType metaType, ref TypeAddedEventArgs args)
+        private static void OnApplyDefaultBehaviour(EventHandler<TypeAddedEventArgs>? handler, MetaType metaType, ref TypeAddedEventArgs? args)
         {
             if (handler is not null)
             {
@@ -1135,13 +1135,13 @@ namespace ProtoBuf.Meta
             public SerializerPair(int metaKey, int baseKey, MetaType type, MethodBuilder serialize, MethodBuilder deserialize,
                 ILGenerator serializeBody, ILGenerator deserializeBody)
             {
-                MetaKey = metaKey;
-                BaseKey = baseKey;
-                Serialize = serialize;
-                Deserialize = deserialize;
-                SerializeBody = serializeBody;
-                DeserializeBody = deserializeBody;
-                Type = type;
+                this.MetaKey = metaKey;
+                this.BaseKey = baseKey;
+                this.Serialize = serialize;
+                this.Deserialize = deserialize;
+                this.SerializeBody = serializeBody;
+                this.DeserializeBody = deserializeBody;
+                this.Type = type;
             }
         }
 
@@ -1437,7 +1437,8 @@ namespace ProtoBuf.Meta
                     AddProxy(type, runtimeType, repeated.Provider, false);
                 }
             }
-            static bool ShouldEmitCustomSerializerProxy(Type serializerType)
+
+            static bool ShouldEmitCustomSerializerProxy(Type? serializerType)
             {
                 if (serializerType is null) return false; // nothing to do
                 if (IsFullyPublic(serializerType)) return true; // fine, just do it
@@ -1554,7 +1555,7 @@ namespace ProtoBuf.Meta
                     ThrowHelper.ThrowInvalidOperationException("Non-public type cannot be used with full dll compilation: " + problem.NormalizeName());
                 }
 
-                Type inheritanceRoot = metaType.GetInheritanceRoot();
+                Type? inheritanceRoot = metaType.GetInheritanceRoot();
 
                 // we always emit the serializer API
                 var serType = typeof(ISerializer<>).MakeGenericType(runtimeType);
@@ -1855,9 +1856,9 @@ namespace ProtoBuf.Meta
                 }
 
                 var mt = this[effectiveType];
-                if (mt.HasSurrogate && ValueMember.TryGetCoreSerializer(this, mt.surrogateDataFormat, mt.CompatibilityLevel, mt.surrogateType, out _, false, false, false ,false) is object)
+                if (mt.HasSurrogate && ValueMember.TryGetCoreSerializer(this, mt._surrogateDataFormat, mt.CompatibilityLevel, mt._surrogateType, out _, false, false, false ,false) is object)
                 {   // inbuilt basic surrogate
-                    return GetSchemaTypeName(callstack, mt.surrogateType, mt.surrogateDataFormat, mt.CompatibilityLevel, false, false, imports);
+                    return GetSchemaTypeName(callstack, mt._surrogateType, mt._surrogateDataFormat, mt.CompatibilityLevel, false, false, imports);
                 }
                 var actualMeta = mt.GetSurrogateOrBaseOrSelf(true);
                 if (IsWellKnownType(actualMeta.Type, out wellKnownName, imports))
@@ -2151,8 +2152,8 @@ namespace ProtoBuf.Meta
             CompatibilityLevel compatibilityLevel = CompatibilityLevel.NotSpecified)
         {
             Add<TUnderlying>(compatibilityLevel: compatibilityLevel).SetSurrogate(typeof(TSurrogate),
-                GetMethod(underlyingToSurrogate, nameof(underlyingToSurrogate)),
-                GetMethod(surrogateToUnderlying, nameof(surrogateToUnderlying)), dataFormat);
+                GetMethod(underlyingToSurrogate, nameof(underlyingToSurrogate))!,
+                GetMethod(surrogateToUnderlying, nameof(surrogateToUnderlying))!, dataFormat);
             return this;
 
             static MethodInfo? GetMethod(Delegate? value, string paramName)
