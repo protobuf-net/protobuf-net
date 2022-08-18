@@ -3,6 +3,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal
@@ -173,7 +174,7 @@ namespace ProtoBuf.Internal
     internal interface IValueChecker<in T>
     {
         bool HasNonTrivialValue(T value);
-        bool IsNull(T value);
+        bool IsNull([NotNullWhen(true)] T value);
     }
     internal sealed class ReferenceValueChecker : IValueChecker<object>
     {
