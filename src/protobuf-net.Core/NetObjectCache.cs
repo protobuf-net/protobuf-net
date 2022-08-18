@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -25,7 +27,7 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ (_subTypeLevel?.GetHashCode() ?? 0);
             [MethodImpl(ProtoReader.HotPath)]
-            public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
+            public override bool Equals(object? obj) => obj is ObjectKey other && Equals(other);
             [MethodImpl(ProtoReader.HotPath)]
             public bool Equals(ObjectKey other) => this._obj == other._obj & this._subTypeLevel == other._subTypeLevel;
         }
