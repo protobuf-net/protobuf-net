@@ -1745,7 +1745,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsValidEnum() => IsValidEnum(_enums);
 
-        internal static bool IsValidEnum(IList<EnumMember> values)
+        internal static bool IsValidEnum(IList<EnumMember>? values)
         {
             if (values is null || values.Count == 0) return false;
             foreach(var val in values)
