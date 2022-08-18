@@ -1,4 +1,5 @@
-﻿
+﻿#nullable enable
+
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
@@ -9,6 +10,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 namespace ProtoBuf
 {
@@ -45,7 +47,7 @@ namespace ProtoBuf
 
         private protected abstract bool IsFullyConsumed(ref State state);
 
-        private TypeModel _model;
+        private TypeModel? _model;
         private int _fieldNumber, _depth;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,12 +94,12 @@ namespace ProtoBuf
         int _usageCount;
         partial void OnDispose()
         {
-            int count = System.Threading.Interlocked.Decrement(ref _usageCount);
+            int count = Interlocked.Decrement(ref _usageCount);
             if (count != 0) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 0, was {count}");
         }
         partial void OnInit()
         {
-            int count = System.Threading.Interlocked.Increment(ref _usageCount);
+            int count = Interlocked.Increment(ref _usageCount);
             if (count != 1) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 1, was {count}");
         }
 #endif
@@ -128,7 +130,7 @@ namespace ProtoBuf
         /// <summary>
         /// Addition information about this deserialization operation.
         /// </summary>
-        public object UserState { get; private set; }
+        public object? UserState { get; private set; }
 
         /// <summary>
         /// Addition information about this deserialization operation.
@@ -172,7 +174,6 @@ namespace ProtoBuf
             [MethodImpl(HotPath)]
             get { return checked((int)_longPosition); }
         }
-
 
         /// <summary>
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
@@ -232,11 +233,13 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public long ReadInt64() => DefaultState().ReadInt64();
 
-        private Dictionary<string, string> stringInterner;
-        private protected string Intern(string value)
+        private Dictionary<string, string>? stringInterner;
+
+        [return: NotNullIfNotNull(nameof(value))]
+        private protected string? Intern(string? value)
         {
             if (value is null) return null;
-            if (value.Length == 0) return "";
+            if (value.Length is 0) return "";
             if (stringInterner is null)
             {
                 stringInterner = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -244,7 +247,7 @@ namespace ProtoBuf
                     { value, value }
                 };
             }
-            else if (stringInterner.TryGetValue(value, out string found))
+            else if (stringInterner.TryGetValue(value, out string? found))
             {
                 value = found;
             }
@@ -269,14 +272,11 @@ namespace ProtoBuf
         [MethodImpl(MethodImplOptions.NoInlining)]
         public void ThrowEnumException(Type type, int value) => DefaultState().ThrowEnumException(type, value);
 
-
         /// <summary>
         /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
         public double ReadDouble() => DefaultState().ReadDouble();
-
-
 
         /// <summary>
         /// Reads (merges) a sub-message from the stream, internally calling StartSubItem and EndSubItem, and (in between)
@@ -322,7 +322,8 @@ namespace ProtoBuf
             return _fieldNumber;
         }
         private static void ThrowInvalidField(int fieldNumber)
-            => ThrowHelper.ThrowProtoException("Invalid field in source data: " + fieldNumber.ToString());
+            => ThrowHelper.ThrowProtoException($"Invalid field in source data: {fieldNumber}");
+
         private static void ThrowUnexpectedEndGroup()
             => ThrowHelper.ThrowProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
 
@@ -336,7 +337,7 @@ namespace ProtoBuf
         /// <summary>
         /// Get the TypeModel associated with this reader
         /// </summary>
-        public TypeModel Model
+        public TypeModel? Model
         {
             get => _model;
             internal set => _model = value;
@@ -745,7 +746,7 @@ namespace ProtoBuf
         public static object Merge(ProtoReader parent, object from, object to)
         {
             if (parent is null) ThrowHelper.ThrowArgumentNullException(nameof(parent));
-            TypeModel model = parent.Model;
+            TypeModel model = parent.Model!;
             var userState = parent.UserState;
             if (model is null) ThrowHelper.ThrowInvalidOperationException("Types cannot be merged unless a type-model has been specified");
             using var ms = new MemoryStream();
