@@ -35,13 +35,8 @@ namespace ProtoBuf.Reflection
             internal int CountRef { get; private set; }
             internal int CountTotal => CountRef + Count32 + Count64;
 
-            private bool _anyProto3Optional;
-
-            private void AccountFor(FieldDescriptorProto.Type type, string typeName, bool isProto3Optional)
+            private void AccountFor(FieldDescriptorProto.Type type, string typeName)
             {
-                if (isProto3Optional)
-                    _anyProto3Optional = true;
-
                 switch (type)
                 {
                     case FieldDescriptorProto.Type.TypeBool:
@@ -135,7 +130,7 @@ namespace ProtoBuf.Reflection
                 {
                     if (field.ShouldSerializeOneofIndex())
                     {
-                        stubs[field.OneofIndex].AccountFor(field.type, field.TypeName, field.Proto3Optional);
+                        stubs[field.OneofIndex].AccountFor(field.type, field.TypeName);
                     }
                 }
                 return stubs;
@@ -169,7 +164,20 @@ namespace ProtoBuf.Reflection
             }
 
             internal bool IsProto3OptionalSyntheticOneOf()
-                => CountTotal == 1 && _anyProto3Optional;
+            {
+                if (CountTotal == 1)
+                {
+                    // can only apply for single-field scenarios
+                    foreach (var field in OneOf.Parent.Fields)
+                    {
+                        if (field.ShouldSerializeOneofIndex() && field.OneofIndex == Index)
+                        {
+                            return field.Proto3Optional;
+                        }
+                    }
+                }
+                return false;
+            }
         }
     }
 }
