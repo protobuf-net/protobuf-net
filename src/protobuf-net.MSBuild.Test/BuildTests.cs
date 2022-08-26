@@ -122,6 +122,12 @@ namespace ProtoBuf.Build
         {
             BuildProject("Data/Proj4/Proj.csproj");
         }
+
+        [Fact]
+        public void BuildOneOfEnumAndOptional()
+        {
+            BuildProject("Data/Proj5/Proj.csproj");
+        }
     }
 }
 #endif
