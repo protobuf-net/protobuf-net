@@ -3,9 +3,9 @@ using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenContext
+internal class CodeGenParseContext
 {
     public NameNormalizer NameNormalizer { get; set; } = NameNormalizer.Default;
 

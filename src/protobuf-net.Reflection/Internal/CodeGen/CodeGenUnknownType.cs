@@ -1,6 +1,6 @@
 ﻿#nullable enable
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 partial class CodeGenType
 {

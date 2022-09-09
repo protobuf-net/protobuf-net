@@ -1,8 +1,9 @@
 ﻿#nullable enable
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
+using System.ComponentModel;
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenMessage : CodeGenType
 {
@@ -30,11 +31,20 @@ internal class CodeGenMessage : CodeGenType
     public string OriginalName { get; set; }
     public string Package { get; set; }
 
+    [DefaultValue(false)]
+    public bool IsMapEntry { get; set; }
+
+    [DefaultValue(false)]
+    public bool IsDeprecated { get; set; }
+
+    [DefaultValue(Access.Public)]
+    public Access Access { get; set; } = Access.Public;
+
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     public bool ShouldSerializePackage() => !string.IsNullOrWhiteSpace(Package);
 
 
-    internal static CodeGenMessage Parse(DescriptorProto message, string fullyQualifiedPrefix, CodeGenContext context, string package)
+    internal static CodeGenMessage Parse(DescriptorProto message, string fullyQualifiedPrefix, CodeGenParseContext context, string package)
     {
         var name = context.NameNormalizer.GetName(message);
         var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix);
@@ -66,7 +76,7 @@ internal class CodeGenMessage : CodeGenType
         return newMessage;
     }
 
-    internal void FixupPlaceholders(CodeGenContext context)
+    internal void FixupPlaceholders(CodeGenParseContext context)
     {
         if (ShouldSerializeFields())
         {

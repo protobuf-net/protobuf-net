@@ -1,23 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <AssemblyName>protobuf-net.Reflection</AssemblyName>
-    <Title>protobuf-net.Reflection</Title>
-    <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
-    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Debug;Release;VS</Configurations>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Remove="google\**\*.proto" />
-    <None Remove="protobuf-net\**\*.proto" />
-    <EmbeddedResource Include="google\**\*.proto" />
-    <EmbeddedResource Include="protobuf-net\**\*.proto" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="google\type\" />
-  </ItemGroup>
+    <PropertyGroup>
+        <AssemblyName>protobuf-net.Reflection</AssemblyName>
+        <Title>protobuf-net.Reflection</Title>
+        <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
+        <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release;VS</Configurations>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Remove="google\**\*.proto" />
+        <None Remove="protobuf-net\**\*.proto" />
+        <EmbeddedResource Include="google\**\*.proto" />
+        <EmbeddedResource Include="protobuf-net\**\*.proto" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="google\type\" />
+        <Compile Update="Internal/CodeGen/*Type.cs" DependentUpon="CodeGenType.cs"/>
+        <Compile Update="Internal/CodeGen/CodeGenMessage.cs" DependentUpon="CodeGenType.cs"/>
+        <Compile Update="Internal/CodeGen/CodeGenEnum.cs" DependentUpon="CodeGenType.cs"/>
+    </ItemGroup>
 </Project>

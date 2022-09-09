@@ -1,5 +1,6 @@
 ﻿#nullable enable
-namespace ProtoBuf.CodeGen;
+
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenSimpleType : CodeGenType
 {

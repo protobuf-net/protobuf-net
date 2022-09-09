@@ -3,8 +3,9 @@
 
 using Google.Protobuf.Reflection;
 using System;
+using System.ComponentModel;
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenField
 {
@@ -23,11 +24,27 @@ internal class CodeGenField
     public string Name { get; set; }
     public string BackingName { get; set; } // the name to use when generating an explicit field
     public string OriginalName { get; set; } // the name in the schema (not used in code, except in the [ProtoMember(..., Name = ...)]
+    [DefaultValue(false)]
+    public bool IsRepeated { get; set; }
+    [DefaultValue(false)]
+    public bool TrackFieldPresence { get; set; }
+    [DefaultValue(false)]
+    public bool AsReference { get; set; }
+    [DefaultValue(false)]
+    public bool AsDynamicType { get; set; }
+    [DefaultValue(false)]
+    public bool IsRequired { get; set; }
+    [DefaultValue(false)]
+    public bool IsPacked { get; set; }
+    [DefaultValue(false)]
+    public bool IsDeprecated { get; internal set; }
+    [DefaultValue(Access.Public)]
+    public Access Access { get; set; } = Access.Public;
 
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     public bool ShouldSerializeBackingName() => BackingName != Name;
 
-    internal static CodeGenField Parse(FieldDescriptorProto field, CodeGenContext context)
+    internal static CodeGenField Parse(FieldDescriptorProto field, CodeGenParseContext context)
     {
         var name = context.NameNormalizer.GetName(field);
         var newField = new CodeGenField(field.Number, name)

@@ -5,7 +5,7 @@
 using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using ProtoBuf.CodeGen;
+using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -21,7 +21,6 @@ public class AOTSchemaTests
 
     public AOTSchemaTests(ITestOutputHelper output)
         => _output = output;
-    
 
     private const string SchemaPath = "AOT/Schemas";
     public static IEnumerable<object[]> GetSchemas()
@@ -63,7 +62,7 @@ public class AOTSchemaTests
         }
         Assert.Empty(errors);
 
-        var context = new CodeGenContext();
+        var context = new CodeGenParseContext();
         var parsed = CodeGenSet.Parse(fds, context);
 
         var json = JsonConvert.SerializeObject(parsed, JsonSettings);
@@ -75,19 +74,27 @@ public class AOTSchemaTests
         _output.WriteLine($"updating {target}...");
         File.WriteAllText(target, json);
 #else
-        if (File.Exists(jsonPath))
-        {
-            var expectedJson = File.ReadAllText(jsonPath);
-            Assert.Equal(expectedJson, json);
-        }
-        else
-        {
-            _output.WriteLine($"({jsonPath} found)");
-        }
+
+        Assert.True(File.Exists(jsonPath), $"{jsonPath} does not exist");
+        var expectedJson = File.ReadAllText(jsonPath);
+        Assert.Equal(expectedJson, json);
 #endif
 
+        var codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed));
+        Assert.NotNull(codeFile);
 
+        var csPath = Path.ChangeExtension(protoPath, ".cs");
+#if UPDATE_FILES
+        target = Path.Combine(Path.GetDirectoryName(CallerFilePath())!, "..", csPath).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        _output.WriteLine($"updating {target}...");
+        File.WriteAllText(target, codeFile.Text);
+#else
+
+        Assert.True(File.Exists(csPath), $"{csPath} does not exist");
+        var expectedCs = File.ReadAllText(csPath);
+        Assert.Equal(expectedCs, codeFile.Text);
+#endif
     }
 
-    private string CallerFilePath([CallerFilePath] string path = null) => path;
+    private string CallerFilePath([CallerFilePath] string path = "") => path;
 }

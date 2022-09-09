@@ -2,7 +2,7 @@
 
 using System;
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal abstract partial class CodeGenType
 {
@@ -11,7 +11,6 @@ internal abstract partial class CodeGenType
     public string FullyQualifiedPrefix { get; }
     public bool ShouldSerializeFullyQualifiedPrefix() => !string.IsNullOrWhiteSpace(FullyQualifiedPrefix) && !IsWellKnownType(out _);
     public bool ShouldSerializeName() => !IsWellKnownType(out _);
-    public CodeGenType? ParentType { get; }
     public CodeGenType(string name, string fullyQualifiedPrefix)
     {
         Name = name?.Trim() ?? "";

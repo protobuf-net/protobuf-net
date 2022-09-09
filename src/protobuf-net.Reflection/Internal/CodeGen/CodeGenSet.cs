@@ -2,11 +2,11 @@
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenSet
 {
-    public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenContext context)
+    public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenParseContext context)
     {
         var set = new CodeGenSet();
         foreach (var file in descriptorSet.Files)
@@ -35,7 +35,7 @@ internal class CodeGenSet
         return set;
     }
 
-    private void FixupPlaceholders(CodeGenContext context)
+    private void FixupPlaceholders(CodeGenParseContext context)
     {
         if (ShouldSerializeFiles())
         {

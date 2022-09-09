@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.Collections.Generic;
 
-namespace ProtoBuf.CodeGen;
+namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenFile
 {
@@ -19,7 +19,7 @@ internal class CodeGenFile
     public bool ShouldSerializeMessages() => _messages is { Count: > 0 };
     public bool ShouldSerializeEnums() => _enums is { Count: > 0 };
 
-    internal void FixupPlaceholders(CodeGenContext context)
+    internal void FixupPlaceholders(CodeGenParseContext context)
     {
         if (ShouldSerializeMessages())
         {
