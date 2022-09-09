@@ -26,12 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="AOT/Schemas/**/*.proto">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AOT/Schemas/**/*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Update="AOT/Schemas/**/*.proto" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="AOT/Schemas/**/*.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+    <None Update="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
   </ItemGroup>
-
 </Project>

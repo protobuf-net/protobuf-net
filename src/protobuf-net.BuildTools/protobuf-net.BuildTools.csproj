@@ -69,4 +69,10 @@
     <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/protogen.proto" Link="protobuf-net/protogen.proto" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="CodeGen\*Type.cs" DependentUpon="CodeGenType.cs"/>
+    <Compile Update="CodeGen\CodeGenMessage.cs" DependentUpon="CodeGenType.cs"/>
+    <Compile Update="CodeGen\CodeGenEnum.cs" DependentUpon="CodeGenType.cs"/>
+  </ItemGroup>
+
 </Project>
