@@ -12,6 +12,7 @@ internal class CodeGenContext
     private readonly Dictionary<string, CodeGenType> _contractTypes = new Dictionary<string, CodeGenType>();
     public CodeGenType GetContractType(string fqn)
     {
+        if (string.IsNullOrWhiteSpace(fqn)) return CodeGenType.Unknown;
         if (!_contractTypes.TryGetValue(fqn, out var found))
         {
             found = new CodeGenPlaceholderType(fqn);
