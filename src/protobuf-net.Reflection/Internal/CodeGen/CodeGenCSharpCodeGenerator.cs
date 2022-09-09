@@ -332,13 +332,13 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         {
             if (field.Type is CodeGenMessage mapMsgType  && mapMsgType.IsMapEntry)
             {
-                var keyTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 1).Type, out _);
-                var valueTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 2).Type, out _);
+                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 1).Type, out _);
+                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 2).Type, out _);
                 ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
             }
             else if (!UseArray(field.Type))
             {
-                ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.List<{GetTypeName(ctx, field.Type, out _)}>();");
+                ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.List<{GetEscapedTypeName(ctx, field.Type, out _)}>();");
             }
         }
         else if (!field.TrackFieldPresence)
@@ -438,7 +438,7 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         }
 
         bool suppressDefaultAttribute = field.IsRequired;
-        var typeName = GetTypeName(ctx, field.Type, out var dataFormat);
+        var typeName = GetEscapedTypeName(ctx, field.Type, out var dataFormat);
         string defaultValue = null; // GetDefaultValue(ctx, field, typeName);
 
         if (!string.IsNullOrWhiteSpace(dataFormat))
@@ -472,9 +472,9 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
             bool allowSet = ctx.EmitListSetters;
             if (field.Type is CodeGenMessage mapMsgType && mapMsgType.IsMapEntry)
             {
-                var keyTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 1).Type,
+                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 1).Type,
                     out var keyDataFormat);
-                var valueTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 2).Type,
+                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 2).Type,
                     out var valueDataFormat);
 
                 bool first = true;
@@ -810,7 +810,8 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     //    return Escape(typeName);
     //}
 
-    private string GetTypeName(CodeGenGeneratorContext ctx, CodeGenType type, out string dataFormat)
+    private static readonly char[] NamespaceSplitTokens = new[] { '.', '+' };
+    private string GetEscapedTypeName(CodeGenGeneratorContext ctx, CodeGenType type, out string dataFormat)
     {
         dataFormat = "";
         //isMap = false;
@@ -831,7 +832,25 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         //        break;
 
         //}
-        return Escape(type.ToString());
+        var prefix = type.FullyQualifiedPrefix;
+        if (string.IsNullOrWhiteSpace(prefix)) return "global::" + Escape(type.Name);
+
+        var index = prefix.IndexOfAny(NamespaceSplitTokens);
+        if (index == prefix.Length - 1)
+        {
+            return "global::" + Escape(prefix.Substring(0, prefix.Length - 1)) + "." + Escape(type.Name);
+        }
+        
+        // the following is not hugely efficient; we could clean up later if we want
+        var tokens = prefix.Split(NamespaceSplitTokens);
+        var sb = new StringBuilder(prefix.Length + 16);
+        sb.Append("global::");
+        foreach (var token in tokens)
+        {
+            sb.Append(Escape(token)).Append('.');
+        }
+        sb.Append(Escape(type.Name));
+        return sb.ToString();
 
         //switch (field.Type)
         //{
