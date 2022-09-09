@@ -29,10 +29,7 @@ internal class CodeGenMessage : CodeGenType
         set => base.Name = value;
     }
     public string OriginalName { get; set; }
-    public string Package { get; set; }
-
-    [DefaultValue(false)]
-    public bool IsMapEntry { get; set; }
+    public string Package { get; set; } = "";
 
     [DefaultValue(false)]
     public bool IsDeprecated { get; set; }
@@ -82,17 +79,10 @@ internal class CodeGenMessage : CodeGenType
         {
             foreach (var field in Fields)
             {
-                if (field.Type is CodeGenPlaceholderType placeholder)
+                if (context.FixupPlaceholder(field.Type, out var found))
                 {
-                    field.Type = context.GetContractType(placeholder.Name);
+                    field.Type = found;
                 }
-            }
-        }
-        if (ShouldSerializeMessages())
-        {
-            foreach (var message in Messages)
-            {
-                message.FixupPlaceholders(context);
             }
         }
     }

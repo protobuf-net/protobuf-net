@@ -181,11 +181,6 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     ///// Emit code preceeding a set of service methods
     ///// </summary>
     //protected virtual void WriteServiceHeader(CodeGenGeneratorContext ctx, ServiceDescriptorProto service, ref object state) { }
-    /// <summary>
-    /// Check whether a particular message should be suppressed - for example because it represents a map
-    /// </summary>
-    protected virtual bool ShouldOmitMessage(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
-        => message.IsMapEntry; // don't write this type - use a dictionary instead
 
     /// <summary>
     /// Emit code representing a message type
@@ -193,7 +188,6 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     protected virtual void WriteMessage(CodeGenGeneratorContext ctx, CodeGenMessage message)
     {
         object state = null;
-        if (ShouldOmitMessage(ctx, message, ref state)) return;
 
         WriteMessageHeader(ctx, message, ref state);
         //var oneOfs = OneOfStub.Build(message);

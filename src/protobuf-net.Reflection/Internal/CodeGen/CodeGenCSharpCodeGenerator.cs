@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal.CodeGen;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -330,10 +331,10 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 
         if (field.IsRepeated)
         {
-            if (field.Type is CodeGenMessage mapMsgType  && mapMsgType.IsMapEntry)
+            if (field.Type is CodeGenMapEntryType mapMsgType)
             {
-                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 1).Type, out _);
-                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 2).Type, out _);
+                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out _);
+                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out _);
                 ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
             }
             else if (!UseArray(field.Type))
@@ -470,12 +471,10 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         if (field.IsRepeated)
         {
             bool allowSet = ctx.EmitListSetters;
-            if (field.Type is CodeGenMessage mapMsgType && mapMsgType.IsMapEntry)
+            if (field.Type is CodeGenMapEntryType mapMsgType)
             {
-                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 1).Type,
-                    out var keyDataFormat);
-                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.Fields.Single(x => x.FieldNumber == 2).Type,
-                    out var valueDataFormat);
+                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out var keyDataFormat);
+                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out var valueDataFormat);
 
                 bool first = true;
                 tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
