@@ -1,0 +1,23 @@
+{
+  "Files": [
+    {
+      "Name": "Basic.proto",
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "BasicField",
+              "OriginalName": "basic_field"
+            }
+          ],
+          "Name": "BasicMessage",
+          "OriginalName": "basic_message",
+          "Package": "basic_package",
+          "FullyQualifiedPrefix": "BasicPackage."
+        }
+      ]
+    }
+  ]
+}

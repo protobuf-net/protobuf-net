@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package basic_package;
+
+message basic_message {
+	string basic_field = 1;
+}
