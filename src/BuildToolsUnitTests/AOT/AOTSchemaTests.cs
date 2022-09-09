@@ -81,6 +81,7 @@ public class AOTSchemaTests
 #endif
 
         var codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed));
+        Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "cs"), codeFile.Name);
         Assert.NotNull(codeFile);
 
         var csPath = Path.ChangeExtension(protoPath, ".cs");
