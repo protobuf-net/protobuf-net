@@ -26,7 +26,24 @@ internal class CodeGenSet
             }
             set.Files.Add(newFile);
         }
+
+        // note: if message/enum type is consumed before it is defined, we simplify things
+        // by using a place-holder initially (via the protobuf FQN); we need to go back over the
+        // tree, and substitute out any such place-holders for the final types
+        set.FixupPlaceholders(context);
+
         return set;
+    }
+
+    private void FixupPlaceholders(CodeGenContext context)
+    {
+        if (ShouldSerializeFiles())
+        {
+            foreach (var file in Files)
+            {
+                file.FixupPlaceholders(context);
+            }
+        }
     }
 
     public List<CodeGenFile> Files { get; } = new List<CodeGenFile>();

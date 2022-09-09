@@ -5,11 +5,8 @@
 using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using ProtoBuf.CodeGen;
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -34,38 +31,16 @@ public class AOTSchemaTests
             yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "")  };
         }
     }
-
-    sealed class CodeGenBinder : ISerializationBinder
+    private static JsonSerializerSettings JsonSettings { get; } = new JsonSerializerSettings
     {
-        private CodeGenBinder() { }
-        private static readonly CodeGenBinder s_Instance = new();
-        public static JsonSerializerSettings Settings { get; } = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented,
-            NullValueHandling = NullValueHandling.Ignore,
-            SerializationBinder = s_Instance,
-            DateFormatHandling = DateFormatHandling.IsoDateFormat,
-            DefaultValueHandling = DefaultValueHandling.Ignore,
-            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
-            TypeNameHandling = TypeNameHandling.Auto,
-            Converters = { new StringEnumConverter() },
-        };
-
-        Type ISerializationBinder.BindToType(string? assemblyName, string typeName) => throw new NotImplementedException();
-
-        void ISerializationBinder.BindToName(Type serializedType, out string? assemblyName, out string? typeName)
-        {
-            assemblyName = null;
-            if (!s_ExpectedTypes.TryGetValue(serializedType, out typeName))
-                throw new ArgumentOutOfRangeException($"Type {serializedType.FullName} was not anticipated");
-        }
-        static readonly ImmutableDictionary<Type, string> s_ExpectedTypes = ImmutableDictionary.Create<Type, string>()
-            .Add(typeof(CodeGenSimpleType), "simple")
-            .Add(typeof(CodeGenSimpleType.WellKnown), "known")
-            .Add(typeof(CodeGenMessage), "msg")
-            .Add(typeof(CodeGenEnum), "enum")
-            .Add(typeof(CodeGenUnknownType), "unknown");
-    }
+        Formatting = Formatting.Indented,
+        NullValueHandling = NullValueHandling.Ignore,
+        DateFormatHandling = DateFormatHandling.IsoDateFormat,
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
+        TypeNameHandling = TypeNameHandling.None,
+        Converters = { new StringEnumConverter() },
+    };
 
 
     [Theory]
@@ -91,7 +66,7 @@ public class AOTSchemaTests
         var context = new CodeGenContext();
         var parsed = CodeGenSet.Parse(fds, context);
 
-        var json = JsonConvert.SerializeObject(parsed, CodeGenBinder.Settings);
+        var json = JsonConvert.SerializeObject(parsed, JsonSettings);
         _output.WriteLine(json);
 
         var jsonPath = Path.ChangeExtension(protoPath, ".json");

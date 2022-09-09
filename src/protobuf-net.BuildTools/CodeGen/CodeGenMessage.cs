@@ -37,11 +37,10 @@ internal class CodeGenMessage : CodeGenType
     internal static CodeGenMessage Parse(DescriptorProto message, string fullyQualifiedPrefix, CodeGenContext context, string package)
     {
         var name = context.NameNormalizer.GetName(message);
-        var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix)
-        {
-            OriginalName = message.Name,
-            Package = package,
-        };
+        var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix);
+        context.Register(message.FullyQualifiedName, newMessage);
+        newMessage.OriginalName = message.Name;
+        newMessage.Package = package;
 
         if (message.Fields.Count > 0)
         {
@@ -65,5 +64,26 @@ internal class CodeGenMessage : CodeGenType
         }
 
         return newMessage;
+    }
+
+    internal void FixupPlaceholders(CodeGenContext context)
+    {
+        if (ShouldSerializeFields())
+        {
+            foreach (var field in Fields)
+            {
+                if (field.Type is CodeGenPlaceholderType placeholder)
+                {
+                    field.Type = context.GetContractType(placeholder.Name);
+                }
+            }
+        }
+        if (ShouldSerializeMessages())
+        {
+            foreach (var message in Messages)
+            {
+                message.FixupPlaceholders(context);
+            }
+        }
     }
 }

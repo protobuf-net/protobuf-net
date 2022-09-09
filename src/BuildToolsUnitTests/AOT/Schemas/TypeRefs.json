@@ -1,0 +1,132 @@
+{
+  "Files": [
+    {
+      "Name": "TypeRefs.proto",
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "MsgA",
+              "Name": "A",
+              "OriginalName": "a"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "MsgB",
+              "Name": "B",
+              "OriginalName": "b"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "MsgB+MsgC",
+              "Name": "C",
+              "OriginalName": "c"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "MsgD",
+              "Name": "D",
+              "OriginalName": "d"
+            }
+          ],
+          "Name": "MsgA",
+          "OriginalName": "msg_a"
+        },
+        {
+          "Messages": [
+            {
+              "Fields": [
+                {
+                  "FieldNumber": 1,
+                  "TypeName": "MsgA",
+                  "Name": "A",
+                  "OriginalName": "a"
+                },
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "MsgB",
+                  "Name": "B",
+                  "OriginalName": "b"
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "MsgB+MsgC",
+                  "Name": "C",
+                  "OriginalName": "c"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "MsgD",
+                  "Name": "D",
+                  "OriginalName": "d"
+                }
+              ],
+              "Name": "MsgC",
+              "OriginalName": "msg_c",
+              "FullyQualifiedPrefix": "MsgB+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "MsgA",
+              "Name": "A",
+              "OriginalName": "a"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "MsgB",
+              "Name": "B",
+              "OriginalName": "b"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "MsgB+MsgC",
+              "Name": "C",
+              "OriginalName": "c"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "MsgD",
+              "Name": "D",
+              "OriginalName": "d"
+            }
+          ],
+          "Name": "MsgB",
+          "OriginalName": "msg_b"
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "MsgA",
+              "Name": "A",
+              "OriginalName": "a"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "MsgB",
+              "Name": "B",
+              "OriginalName": "b"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "MsgB+MsgC",
+              "Name": "C",
+              "OriginalName": "c"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "MsgD",
+              "Name": "D",
+              "OriginalName": "d"
+            }
+          ],
+          "Name": "MsgD",
+          "OriginalName": "msg_d"
+        }
+      ]
+    }
+  ]
+}

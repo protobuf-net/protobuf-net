@@ -18,4 +18,15 @@ internal class CodeGenFile
 
     public bool ShouldSerializeMessages() => _messages is { Count: > 0 };
     public bool ShouldSerializeEnums() => _enums is { Count: > 0 };
+
+    internal void FixupPlaceholders(CodeGenContext context)
+    {
+        if (ShouldSerializeMessages())
+        {
+            foreach (var message in Messages)
+            {
+                message.FixupPlaceholders(context);
+            }
+        }
+    }
 }

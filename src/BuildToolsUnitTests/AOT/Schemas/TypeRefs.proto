@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+message msg_a
+{
+	msg_a a = 1;
+	msg_b b = 2;
+	msg_b.msg_c c = 3;
+	msg_d d = 4;
+}
+message msg_b
+{
+	msg_a a = 1;
+	msg_b b = 2;
+	msg_c c = 3;
+	msg_d d = 4;
+
+	message msg_c
+	{
+		msg_a a = 1;
+		msg_b b = 2;
+		msg_c c = 3;
+		msg_d d = 4;
+	}
+}
+message msg_d
+{
+	msg_a a = 1;
+	msg_b b = 2;
+	msg_b.msg_c c = 3;
+	msg_d d = 4;
+}
