@@ -2955,7 +2955,14 @@ namespace ProtoBuf.Reflection
                     ReadOption(ref obj, parent, nameParts);
                     any = true;
 
-                    tokens.ConsumeIf(TokenType.Symbol, ","); // comma between elements is optional
+                    // comma between elements is optional
+                    var consumedComma = tokens.ConsumeIf(TokenType.Symbol, ",");
+
+                    // alternatively, semicolons are also valid element separators
+                    if (!consumedComma)
+                    {
+                        tokens.ConsumeIf(TokenType.Symbol, ";");
+                    }
                 }
                 if (!any)
                 {
