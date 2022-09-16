@@ -5,7 +5,7 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenFile
 {
-    public string Name { get; }
+    public string Name { get; internal set; }
     public CodeGenFile(string name)
     {
         Name = name;

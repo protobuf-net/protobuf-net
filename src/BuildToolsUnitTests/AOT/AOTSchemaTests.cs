@@ -3,11 +3,17 @@
 // #define UPDATE_FILES
 
 using Google.Protobuf.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using ProtoBuf;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Xunit;
@@ -95,6 +101,63 @@ public class AOTSchemaTests
         var expectedCs = File.ReadAllText(csPath);
         Assert.Equal(expectedCs, codeFile.Text);
 #endif
+
+        // now we run the *generated* code through Roslyn, and see if we can parse it again
+        var syntaxTree = CSharpSyntaxTree.ParseText(codeFile.Text, new CSharpParseOptions(LanguageVersion.Preview), path: Path.GetFileName(csPath));
+        var libs = new[]
+        {
+            GetLib<object>(),
+            GetLib<ProtoWriter>(),
+            MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=4.2.2.0").Location),
+        };
+        var compilation = CSharpCompilation.Create("MyCompilation.dll",
+            syntaxTrees: new[] { syntaxTree }, references: libs, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        // try the compile; if it doesn't look good here, everything else is broken
+        using var ms = new MemoryStream();
+        var result = compilation.Emit(ms);
+        foreach (var diag in result.Diagnostics)
+        {
+            if (diag.Severity == DiagnosticSeverity.Error)
+            {
+                _output.WriteLine(diag.ToString());
+            }
+        }
+
+        // ******************************************
+        // TODO: un #if this! if this fails, the code is invalid, so the parse step is not very valid
+#if RELEASE
+        Assert.True(result.Success, "generated code does not compile");
+#endif
+        var model = compilation.GetSemanticModel(syntaxTree, false);
+        Assert.NotNull(model);
+        CodeGenSet parsedFromCode = new();
+        foreach (var symbol in model.LookupNamespacesAndTypes(0))
+        {
+            var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
+            if (firstRef is not null && firstRef.SyntaxTree == syntaxTree)
+            {
+                CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
+            }
+        }
+
+        json = JsonConvert.SerializeObject(parsedFromCode, JsonSettings);
+        _output.WriteLine(json);
+        jsonPath = Path.ChangeExtension(protoPath, ".pjson");
+#if UPDATE_FILES
+        target = Path.Combine(Path.GetDirectoryName(CallerFilePath())!, "..", jsonPath).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        _output.WriteLine($"updating {target}...");
+        File.WriteAllText(target, json);
+#else
+        Assert.True(File.Exists(jsonPath), $"{jsonPath} does not exist");
+        expectedJson = File.ReadAllText(jsonPath);
+        Assert.Equal(expectedJson, json);
+#endif
+
+
+        static MetadataReference GetLib<T>()
+            => MetadataReference.CreateFromFile(typeof(T).Assembly.Location);
     }
 
     private string CallerFilePath([CallerFilePath] string path = "") => path;

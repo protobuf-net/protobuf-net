@@ -7,7 +7,7 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenMessage : CodeGenType
 {
-    private CodeGenMessage(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
+    internal CodeGenMessage(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
     {
         OriginalName = base.Name;
     }

@@ -28,6 +28,8 @@
   <ItemGroup>
     <None Update="AOT/Schemas/**/*.proto" CopyToOutputDirectory="PreserveNewest" />
     <None Update="AOT/Schemas/**/*.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+    <None Update="AOT/Schemas/**/*.pjson" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+
     <Compile Remove="AOT/Schemas/**/*.cs" />
     <None Include="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
   </ItemGroup>

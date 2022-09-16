@@ -114,6 +114,17 @@ namespace ProtoBuf.BuildTools.Internal
             value = default;
             return false;
         }
+
+        internal static bool TryGetString(this TypedConstant constant, out string value)
+        {
+            if (constant.Kind == TypedConstantKind.Primitive && constant.Value is string s)
+            {
+                value = s;
+                return true;
+            }
+            value = default!;
+            return false;
+        }
         internal static bool TryGetStringByName(this AttributeData attributeData, string name, out string value)
         {
             if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is string s)
