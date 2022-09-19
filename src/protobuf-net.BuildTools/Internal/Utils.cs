@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -125,6 +126,19 @@ namespace ProtoBuf.BuildTools.Internal
             value = default!;
             return false;
         }
+        
+        internal static bool TryGetInt32(this TypedConstant constant, out int value)
+        {
+            if (constant.Kind == TypedConstantKind.Primitive && constant.Value is int val)
+            {
+                value = val;
+                return true;
+            }
+            
+            value = default!;
+            return false;
+        }
+        
         internal static bool TryGetStringByName(this AttributeData attributeData, string name, out string value)
         {
             if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is string s)
@@ -200,6 +214,15 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
             return null;
+        }
+
+        internal static CodeGenType GetCodeGenType(this IPropertySymbol symbol)
+        {
+            return symbol.Type.Name.ToLower() switch
+            {
+                "string" => CodeGenSimpleType.String,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
     }
 }

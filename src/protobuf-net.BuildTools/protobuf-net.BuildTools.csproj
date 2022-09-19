@@ -25,6 +25,18 @@
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     <Compile Include="../protobuf-net.Reflection/**/*.cs" Link="protobuf-net.Reflection" />
     <Compile Remove="../protobuf-net.Reflection/obj/**/*.cs" />
+    <Compile Update="Internal\CodeGenSemanticModelParser.Class.cs">
+      <DependentUpon>CodeGenSemanticModelParser.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internal\CodeGenSemanticModelParser.Property.cs">
+      <DependentUpon>CodeGenSemanticModelParser.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internal\CodeGenSemanticModelParser.Common.cs">
+      <DependentUpon>CodeGenSemanticModelParser.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Internal\CodeGenSemanticModelParser.Namespace.cs">
+      <DependentUpon>CodeGenSemanticModelParser.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

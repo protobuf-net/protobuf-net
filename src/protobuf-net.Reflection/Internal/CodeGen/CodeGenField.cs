@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-
 using Google.Protobuf.Reflection;
 using System;
 using System.ComponentModel;
