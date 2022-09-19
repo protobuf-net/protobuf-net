@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="AOT\Schemas\Enums.cs" />
     <None Update="AOT/Schemas/**/*.proto" CopyToOutputDirectory="PreserveNewest" />
     <None Update="AOT/Schemas/**/*.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
     <None Update="AOT/Schemas/**/*.pjson" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
@@ -36,5 +37,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <DependentUpon>Basic.proto</DependentUpon>
     </None>
+    <Compile Update="AOT\Schemas\Enums.cs">
+      <DependentUpon>Enums.proto</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>
