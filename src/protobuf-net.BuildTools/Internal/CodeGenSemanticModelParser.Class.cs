@@ -8,13 +8,21 @@ namespace ProtoBuf.Internal;
 
 internal static partial class CodeGenSemanticModelParser
 {
-    private static object ParseType(CodeGenFile file, ISymbol symbol, ITypeSymbol typeSymbol)
+    private static object ParseType(CodeGenFile file, object parentGenType, ITypeSymbol typeSymbol)
     {
         var attribs = typeSymbol.GetAttributes();
         if (IsProtoContract(attribs))
         {
             var codeGenMessage = ParseMessage(typeSymbol, attribs);
-            file.Messages.Add(codeGenMessage);
+
+            if (parentGenType is CodeGenMessage parentGenMessage)
+            {
+                parentGenMessage.Messages.Add(codeGenMessage);
+            }
+            else
+            {
+                file.Messages.Add(codeGenMessage);
+            }
             
             return codeGenMessage;
         }

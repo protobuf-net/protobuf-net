@@ -14,7 +14,7 @@
           ],
           "Name": "BasicMessage",
           "OriginalName": "basic_message",
-          "Package": "basic_package",
+          "Package": "BasicPackage",
           "FullyQualifiedPrefix": "BasicPackage."
         }
       ]

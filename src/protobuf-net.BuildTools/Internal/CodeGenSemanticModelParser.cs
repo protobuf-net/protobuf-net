@@ -49,7 +49,7 @@ internal static partial class CodeGenSemanticModelParser
                             set.Files.Add(file);
                         }
                         
-                        currentCodeGenType = ParseType(file, symbol, type);
+                        currentCodeGenType = ParseType(file, parentGenType, type);
                         break;
                 }
             }
@@ -57,7 +57,6 @@ internal static partial class CodeGenSemanticModelParser
             if (currentSymbol is IPropertySymbol property)
             {
                 currentCodeGenType = ParseProperty(parentGenType as CodeGenMessage, currentSymbol, property);
-                break;
             }
 
             if (currentSymbol is INamespaceSymbol namespaceSymbol)

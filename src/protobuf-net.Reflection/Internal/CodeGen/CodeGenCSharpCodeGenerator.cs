@@ -151,7 +151,16 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     /// <inheritdoc/>
     protected override void WriteNamespaceHeader(CodeGenGeneratorContext ctx, string @namespace)
     {
-        ctx.WriteLine($"namespace {@namespace}");
+        if (!string.IsNullOrEmpty(@namespace))
+        {
+            ctx.WriteLine(@namespace.Last() == '.'
+                ? $"namespace {@namespace.Remove(@namespace.Length - 1)}"
+                : $"namespace {@namespace}");    
+        }
+        else
+        {
+            ctx.WriteLine($"namespace {Path.GetFileNameWithoutExtension(ctx.File.Name)}");
+        }
         ctx.WriteLine("{").Indent().WriteLine();
     }
 

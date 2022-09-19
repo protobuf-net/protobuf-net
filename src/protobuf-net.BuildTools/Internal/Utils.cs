@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.BuildTools.Internal
@@ -218,11 +219,13 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static CodeGenType GetCodeGenType(this IPropertySymbol symbol)
         {
-            return symbol.Type.Name.ToLower() switch
+            var symbolTypeName = symbol.Type.Name;
+            if (Enum.TryParse<CodeGenWellKnownType>(symbolTypeName, ignoreCase: true, out var wellKnownType))
             {
-                "string" => CodeGenSimpleType.String,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                return new CodeGenSimpleType.WellKnown(wellKnownType, symbolTypeName, "System.");    
+            }
+
+            return new CodeGenCustomType(symbolTypeName, symbol.Type?.BaseType?.Name ?? string.Empty);
         }
     }
 }
