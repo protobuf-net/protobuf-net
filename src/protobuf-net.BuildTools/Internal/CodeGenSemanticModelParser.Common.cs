@@ -9,7 +9,7 @@ internal static partial class CodeGenSemanticModelParser
 {
     [ThreadStatic] private static Stack<(string Name, string Token)>? s_FQN_Stack;
 
-    private static string GetFullyQualifiedPrefix(ITypeSymbol type)
+    private static string GetFullyQualifiedPrefix(ISymbol type)
     {
         static bool IsAnticipated(SymbolKind kind)
             => kind == SymbolKind.Namespace || kind == SymbolKind.NamedType;

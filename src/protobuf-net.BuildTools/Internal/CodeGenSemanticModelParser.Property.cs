@@ -19,13 +19,13 @@ namespace ProtoBuf.Internal
             var propertyAttributes = propertySymbol.GetAttributes();
             if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))
             {
-                return ParseMember(message, symbol, propertySymbol, protoMemberAttribute);
+                return ParseMember(message, propertySymbol, protoMemberAttribute);
             }
 
             return null;
         }
         
-        private static CodeGenField ParseMember(CodeGenMessage message, ISymbol symbol, IPropertySymbol propertySymbol, AttributeData protoMemberAttribute)
+        private static CodeGenField ParseMember(CodeGenMessage message, IPropertySymbol propertySymbol, AttributeData protoMemberAttribute)
         {
             var (fieldNumber, originalName) = GetFieldNumberAndOriginalName(protoMemberAttribute);
             var codeGenField = new CodeGenField(fieldNumber, propertySymbol.Name)
