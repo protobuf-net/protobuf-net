@@ -33,10 +33,6 @@
 
     <Compile Remove="AOT/Schemas/**/*.cs" />
     <None Include="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
-    <None Update="AOT\Schemas\Basic.cs.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <DependentUpon>Basic.proto</DependentUpon>
-    </None>
     <Compile Update="AOT\Schemas\Enums.cs">
       <DependentUpon>Enums.proto</DependentUpon>
     </Compile>
