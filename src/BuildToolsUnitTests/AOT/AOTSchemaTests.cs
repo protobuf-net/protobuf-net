@@ -134,13 +134,14 @@ public class AOTSchemaTests
 #endif
         var model = compilation.GetSemanticModel(syntaxTree, false);
         Assert.NotNull(model);
+
         CodeGenSet parsedFromCode = new();
         foreach (var symbol in model.LookupNamespacesAndTypes(0))
         {
             var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if (firstRef is not null && firstRef.SyntaxTree == syntaxTree)
             {
-                CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
+                parsedFromCode = ProtoBuf.Internal.CodeGenSemantic.CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
             }
         }
 

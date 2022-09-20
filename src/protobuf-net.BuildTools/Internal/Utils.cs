@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Text;
 using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -226,6 +227,53 @@ namespace ProtoBuf.BuildTools.Internal
             }
 
             return new CodeGenCustomType(symbolTypeName, symbol.Type?.BaseType?.Name ?? string.Empty);
+        }
+        
+        internal static string GetFullyQualifiedPrefix(this ISymbol type)
+        {
+            static bool IsAnticipated(SymbolKind kind)
+                => kind == SymbolKind.Namespace || kind == SymbolKind.NamedType;
+
+            static string GetToken(SymbolKind kind) => kind == SymbolKind.Namespace ? "." : "+";
+
+            var symbol = type?.ContainingSymbol;
+
+            var stack = new Stack<(string Name, string Token)>();
+            int len = 0;
+            while (symbol is not null && IsAnticipated(symbol.Kind))
+            {
+                if (!string.IsNullOrWhiteSpace(symbol.Name))
+                {
+                    stack.Push((symbol.Name, GetToken(symbol.Kind)));
+                }
+
+                len += symbol.Name.Length + 1;
+                symbol = symbol.ContainingSymbol;
+            }
+
+            string result;
+            switch (stack.Count)
+            {
+                case 0:
+                    result = "";
+                    break;
+                case 1:
+                    var tmp = stack.Pop();
+                    result = tmp.Name + tmp.Token;
+                    break;
+                default:
+                    var sb = new StringBuilder(len);
+                    while (stack.Count > 0)
+                    {
+                        tmp = stack.Pop();
+                        sb.Append(tmp.Name).Append(tmp.Token);
+                    }
+
+                    result = sb.ToString();
+                    break;
+            }
+        
+            return result;
         }
     }
 }
