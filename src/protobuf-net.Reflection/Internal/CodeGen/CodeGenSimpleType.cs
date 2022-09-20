@@ -5,6 +5,7 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 internal class CodeGenSimpleType : CodeGenType
 {
     public static CodeGenSimpleType String = new WellKnown(CodeGenWellKnownType.String, "String", "System.");
+    public static CodeGenSimpleType Int32 = new WellKnown(CodeGenWellKnownType.Int32, "Integer", "System.");
     protected CodeGenSimpleType(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix) { }
     public virtual CodeGenWellKnownType WellKnownType => CodeGenWellKnownType.None;
     public virtual bool ShouldSerializeWellKnownType() => false;

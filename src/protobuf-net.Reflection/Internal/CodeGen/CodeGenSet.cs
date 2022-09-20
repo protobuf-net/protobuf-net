@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -15,7 +16,9 @@ internal class CodeGenSet
 
             var newFile = new CodeGenFile(file.Name);
             string namespacePrefix = context.NameNormalizer.GetName(file);
+            if (string.IsNullOrEmpty(namespacePrefix)) namespacePrefix = Path.GetFileNameWithoutExtension(file.Name);
             if (!string.IsNullOrWhiteSpace(namespacePrefix)) namespacePrefix += ".";
+            
             foreach (var type in file.MessageTypes)
             {
                 newFile.Messages.Add(CodeGenMessage.Parse(type, namespacePrefix, context, file.Package));
