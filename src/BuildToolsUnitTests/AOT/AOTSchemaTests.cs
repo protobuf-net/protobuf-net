@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using ProtoBuf;
-using ProtoBuf.Internal;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Collections.Generic;
 using System.IO;
@@ -70,7 +69,7 @@ public class AOTSchemaTests
         }
         Assert.Empty(errors);
 
-        // build CodeGenSet out of FDS and check expected json equaility
+        // build CodeGenSet out of FDS and check expected json equality
         var context = new CodeGenParseContext();
         var parsed = CodeGenSet.Parse(fds, context);
         var json = JsonConvert.SerializeObject(parsed, JsonSettings);
@@ -147,7 +146,7 @@ public class AOTSchemaTests
 
         json = JsonConvert.SerializeObject(parsedFromCode, JsonSettings);
         _output.WriteLine(json);
-        jsonPath = Path.ChangeExtension(protoPath, ".cs.json");
+        jsonPath = Path.ChangeExtension(protoPath, ".pjson");
 #if UPDATE_FILES
         target = Path.Combine(Path.GetDirectoryName(CallerFilePath())!, "..", jsonPath).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         _output.WriteLine($"updating {target}...");

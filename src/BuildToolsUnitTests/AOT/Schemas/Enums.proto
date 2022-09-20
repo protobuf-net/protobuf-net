@@ -9,6 +9,5 @@ enum Corpus {
 }
 
 message SearchRequest {
-  string query = 1;
   Corpus corpus = 2;
 }

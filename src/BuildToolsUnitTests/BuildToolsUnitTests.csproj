@@ -40,5 +40,8 @@
     <Compile Update="AOT\Schemas\Enums.cs">
       <DependentUpon>Enums.proto</DependentUpon>
     </Compile>
+    <None Update="AOT\Schemas\Enums.pjson">
+      <DependentUpon>Enums.proto</DependentUpon>
+    </None>
   </ItemGroup>
 </Project>
