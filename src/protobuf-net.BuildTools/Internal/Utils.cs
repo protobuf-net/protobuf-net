@@ -136,7 +136,7 @@ namespace ProtoBuf.BuildTools.Internal
                 return true;
             }
             
-            value = default!;
+            value = default;
             return false;
         }
         

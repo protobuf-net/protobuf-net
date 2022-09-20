@@ -226,7 +226,7 @@ namespace ProtoBuf
     public sealed class ProtoPartialMemberAttribute : ProtoMemberAttribute
     {
         /// <summary>
-        /// Creates a new
+        /// Creates a new ProtoMemberAttribute instance.
         ///
         /// instance.
         /// </summary>

@@ -153,14 +153,13 @@ internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     {
         if (!string.IsNullOrEmpty(@namespace))
         {
-            ctx.WriteLine(@namespace.Last() == '.'
-                ? $"namespace {@namespace.Remove(@namespace.Length - 1)}"
-                : $"namespace {@namespace}");    
+            ctx.WriteLine($"namespace {@namespace.TrimEnd('.')}");    
         }
         else
         {
             ctx.WriteLine($"namespace {Path.GetFileNameWithoutExtension(ctx.File.Name)}");
         }
+        
         ctx.WriteLine("{").Indent().WriteLine();
     }
 
