@@ -96,12 +96,12 @@ internal partial class CodeGenCSharpCodeGenerator
             field.Type.IsWellKnownType(out var knownType);
             switch (knownType)
             {
-                case CodeGenWellKnownType.None:
+                case CodeGenWellKnownType.String:
                     ctx.WriteLine($"case {GetTag(field, WireType.String)}: // field {field.FieldNumber}, string").Indent()
                         .WriteLine($"value.{field.BackingName} = reader.ReadString();").WriteLine("break;")
                         .Outdent();
                     break;
-                case CodeGenWellKnownType.String:
+                case CodeGenWellKnownType.None:
                     ctx.WriteLine($"case {GetTag(field, WireType.String)}: // field {field.FieldNumber}, string").Indent()
                         .WriteLine($"oldEnd = reader.ConstrainByLengthPrefix();")
                         .WriteLine($"value.{field.BackingName} = {Type(field.Type)}.Merge(value.{field.BackingName}, ref reader);")
