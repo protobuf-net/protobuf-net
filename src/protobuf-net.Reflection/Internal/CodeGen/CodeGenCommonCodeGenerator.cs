@@ -54,7 +54,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             using (var buffer = new StringWriter())
             {
                 var ctx = new CodeGenGeneratorContext(this, file, buffer, Indent, options);
-                
+
                 WriteFile(ctx, file);
                 generated = buffer.ToString();
             }
@@ -231,6 +231,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         //    }
         //    WriteExtensionsFooter(ctx, message, ref extState);
         //}
+        WriteMessageSerializer(ctx, message, ref state);
         WriteMessageFooter(ctx, message, ref state);
     }
 
@@ -260,6 +261,11 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// </summary>
     protected abstract void WriteMessageFooter(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state);
 
+    protected virtual void WriteMessageSerializer(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
+    {
+        // no implemnetation by default
+    }
+
     /// <summary>
     /// Emit code preceeding a set of message fields
     /// </summary>
@@ -276,6 +282,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         //{
         //    // WriteEnumValue(ctx, inner, ref state);
         //}
+        // WriteEnumSerializer(...);
         WriteEnumFooter(ctx, obj, ref state);
     }
 
