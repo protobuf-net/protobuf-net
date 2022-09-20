@@ -10,7 +10,7 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// <summary>
 /// A code generator that writes C#
 /// </summary>
-internal class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
+internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 {
     /// <summary>
     /// Reusable code-generator instance
