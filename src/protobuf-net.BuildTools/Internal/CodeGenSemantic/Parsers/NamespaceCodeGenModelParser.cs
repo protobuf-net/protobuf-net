@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using ProtoBuf.Internal.CodeGenSemantic.Abstractions;
@@ -24,24 +25,25 @@ internal sealed class NamespaceCodeGenModelParser : ISymbolCodeGenModelParser<IN
         var childSymbols = symbol.GetMembers();
         foreach (var childSymbol in childSymbols)
         {
-            if (childSymbol.IsType)
+            if (childSymbol is ITypeSymbol typedChildSymbol)
             {
-                var typeParser = SymbolCodeGenModelParserProvider.GetTypeParser();
-                var parsedCodeGenType = typeParser.Parse((ITypeSymbol)childSymbol, parseContext);
-                if (parsedCodeGenType is null)
+                switch (typedChildSymbol.TypeKind)
                 {
-                    // throw some kind of exception here
-                }
-                
-                // attach parsed codeGen to appropriate collection
-                switch (parsedCodeGenType)
-                {
-                    case CodeGenMessage codeGenMessage:
+                    case TypeKind.Struct:
+                    case TypeKind.Class:
+                        var messageParser = SymbolCodeGenModelParserProvider.GetMessageParser();
+                        var codeGenMessage = messageParser.Parse(typedChildSymbol, parseContext);
                         codeGenFile.Messages.Add(codeGenMessage);
                         break;
-                    case CodeGenEnum codeGenEnum:
+                    
+                    case TypeKind.Enum:
+                        var enumParser = SymbolCodeGenModelParserProvider.GetEnumParser();
+                        var codeGenEnum = enumParser.Parse(typedChildSymbol, parseContext);
                         codeGenFile.Enums.Add(codeGenEnum);
-                        break;
+                        break; 
+                        
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
             

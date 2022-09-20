@@ -17,7 +17,7 @@ internal static class CodeGenSemanticModelParser
     {
         if (symbol is INamespaceSymbol namespaceSymbol)
         {
-            var namespaceParser = SymbolCodeGenModelParserProvider.GetNamespaceParser();
+            var namespaceParser = SymbolCodeGenModelParserProvider.GetFileParser();
             var parseContext = new NamespaceParseContext();
             var codeGenFile = namespaceParser.Parse(namespaceSymbol, parseContext);
             

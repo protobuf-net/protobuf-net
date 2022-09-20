@@ -5,36 +5,30 @@ using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGenSemantic.Abstractions;
 using ProtoBuf.Internal.CodeGenSemantic.Models;
-using ProtoBuf.Reflection.Internal.CodeGen;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Parsers;
+namespace ProtoBuf.Internal.CodeGenSemantic.Parsers.Common;
 
-internal sealed class FieldCodeGenModelParser : ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField>
+internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : ISymbolCodeGenModelParser<IPropertySymbol, TCodeGenModel>
 {
-    public CodeGenField Parse(IPropertySymbol symbol, NamespaceParseContext parseContext)
+    public abstract TCodeGenModel Parse(IPropertySymbol symbol, NamespaceParseContext parseContext);
+
+    protected bool IsProtoMember(ImmutableArray<AttributeData> attributes, out AttributeData protoMemberAttributeData)
     {
-        var propertyAttributes = symbol.GetAttributes();
-        if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))
+        foreach (var attribute in attributes)
         {
-            return ParseMember(symbol, protoMemberAttribute);
+            var ac = attribute.AttributeClass;
+            if (ac?.Name == nameof(ProtoMemberAttribute) && ac.InProtoBufNamespace())
+            {
+                protoMemberAttributeData = attribute;
+                return true;
+            }
         }
 
-        return null;
+        protoMemberAttributeData = null;
+        return false;
     }
     
-    private static CodeGenField ParseMember(IPropertySymbol propertySymbol, AttributeData protoMemberAttribute)
-    {
-        var (fieldNumber, originalName) = GetFieldNumberAndOriginalName(protoMemberAttribute);
-        var codeGenField = new CodeGenField(fieldNumber, propertySymbol.Name)
-        {
-            OriginalName = originalName,
-            Type = propertySymbol.GetCodeGenType()
-        };
-        
-        return codeGenField;
-    }
-    
-    private static (int fieldNumber, string originalName) GetFieldNumberAndOriginalName(AttributeData protoMemberAttribute)
+    protected (int fieldNumber, string originalName) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
     {
         int fieldNumber = default;
         string originalName = null;
@@ -47,7 +41,6 @@ internal sealed class FieldCodeGenModelParser : ISymbolCodeGenModelParser<IPrope
             {
                 if (protoMemberAttribute.ConstructorArguments.IsDefaultOrEmpty)
                 {
-                    // TODO pass property symbol
                     throw new InvalidOperationException($"Missing constructor parameters ... TODO pass property symbol");
                 }
                     
@@ -74,21 +67,5 @@ internal sealed class FieldCodeGenModelParser : ISymbolCodeGenModelParser<IPrope
         }
 
         return (fieldNumber, originalName);
-    }
-    
-    private static bool IsProtoMember(ImmutableArray<AttributeData> attributes, out AttributeData protoMemberAttributeData)
-    {
-        foreach (var attribute in attributes)
-        {
-            var ac = attribute.AttributeClass;
-            if (ac?.Name == nameof(ProtoMemberAttribute) && ac.InProtoBufNamespace())
-            {
-                protoMemberAttributeData = attribute;
-                return true;
-            }
-        }
-
-        protoMemberAttributeData = null;
-        return false;
     }
 }
