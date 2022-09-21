@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -15,15 +14,16 @@ internal static class CodeGenSemanticModelParser
 
     public static CodeGenSet Parse(CodeGenSet set, ISymbol symbol)
     {
+        var symbolCodeGenModelParserProvider = new SymbolCodeGenModelParserProvider();
         if (symbol is INamespaceSymbol namespaceSymbol)
         {
-            var namespaceParser = SymbolCodeGenModelParserProvider.GetFileParser();
-            var parseContext = new NamespaceParseContext();
-            var codeGenFile = namespaceParser.Parse(namespaceSymbol, parseContext);
+            var namespaceParser = symbolCodeGenModelParserProvider.GetNamespaceParser();
+            var codeGenFile = namespaceParser.Parse(namespaceSymbol);
             
             set.Files.Add(codeGenFile);
         }
-
+        
+        symbolCodeGenModelParserProvider.CodeGenParseContext.FixupPlaceholders();
         return set;
     }
 }

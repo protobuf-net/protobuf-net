@@ -1,7 +1,5 @@
-﻿using System;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers.Common;
 using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
@@ -10,17 +8,21 @@ namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGenEnum>
 {
-    public override CodeGenEnum Parse(ITypeSymbol symbol, NamespaceParseContext parseContext)
+    public EnumCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
     {
-        var codeGenEnum = InitializeCodeGenEnum(symbol, parseContext);
+    }
+    
+    public override CodeGenEnum Parse(ITypeSymbol symbol)
+    {
+        var codeGenEnum = InitializeCodeGenEnum(symbol);
         
         var childSymbols = symbol.GetMembers();
         foreach (var childSymbol in childSymbols)
         {
             if (childSymbol is IFieldSymbol fieldSymbol)
             {
-                var enumValueParser = SymbolCodeGenModelParserProvider.GetEnumValueParser();
-                var parsedEnumValue = enumValueParser.Parse(fieldSymbol, parseContext);
+                var enumValueParser = ParserProvider.GetEnumValueParser();
+                var parsedEnumValue = enumValueParser.Parse(fieldSymbol);
                 codeGenEnum.EnumValues.Add(parsedEnumValue);
             }
         }
@@ -28,18 +30,20 @@ internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGe
         return codeGenEnum;
     }
 
-    private CodeGenEnum InitializeCodeGenEnum(ITypeSymbol symbol, NamespaceParseContext parseContext)
+    private CodeGenEnum InitializeCodeGenEnum(ITypeSymbol symbol)
     {
         var symbolAttributes = symbol.GetAttributes();
         if (IsProtoContract(symbolAttributes, out var protoContractAttributeData))
         {
-            return ParseEnum(symbol, protoContractAttributeData, parseContext);
+            var codeGenEnum = ParseEnum(symbol, protoContractAttributeData);
+            ParseContext.Register(symbol.GetFullyQualifiedType(), codeGenEnum);
+            return codeGenEnum;
         }
         
         return null;
     }
     
-    private CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData, NamespaceParseContext parseContext)
+    private CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
         var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix());
         // add enum inherit type here

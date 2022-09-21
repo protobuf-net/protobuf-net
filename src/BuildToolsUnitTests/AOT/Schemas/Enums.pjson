@@ -13,15 +13,27 @@
             }
           ],
           "Name": "SearchRequest",
+          "Package": "BasicPackage",
           "FullyQualifiedPrefix": "BasicPackage."
         }
       ],
       "Enums": [
         {
           "EnumValues": [
-            null,
-            null,
-            null
+            {
+              "Name": "CorpusUnspecified",
+              "OriginalName": "CORPUS_UNSPECIFIED"
+            },
+            {
+              "Name": "CorpusUniversal",
+              "Value": 1,
+              "OriginalName": "CORPUS_UNIVERSAL"
+            },
+            {
+              "Name": "CorpusWeb",
+              "Value": 2,
+              "OriginalName": "CORPUS_WEB"
+            }
           ],
           "TypeName": "int32",
           "Name": "Corpus",

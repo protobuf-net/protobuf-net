@@ -2,13 +2,15 @@
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Models;
+using ProtoBuf.Internal.CodeGen.Providers;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers.Common;
 
-internal abstract class TypeCodeGenModelParserBase<TCodeGenModel> : ISymbolCodeGenModelParser<ITypeSymbol, TCodeGenModel>
+internal abstract class TypeCodeGenModelParserBase<TCodeGenModel> : SymbolCodeGenModelParserBase<ITypeSymbol, TCodeGenModel>
 {
-    public abstract TCodeGenModel Parse(ITypeSymbol symbol, NamespaceParseContext parseContext);
+    protected TypeCodeGenModelParserBase(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    {
+    }
     
     protected bool IsProtoContract(ImmutableArray<AttributeData> attributes, out AttributeData protoContractAttributeData)
     {

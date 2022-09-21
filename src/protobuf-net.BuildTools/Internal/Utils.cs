@@ -262,5 +262,11 @@ namespace ProtoBuf.BuildTools.Internal
         
             return result;
         }
+
+        internal static string GetFullyQualifiedType(this ITypeSymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullyQualifiedType(this IPropertySymbol symbol) => symbol.Type.ToString();
+
+        internal static int GetConstantValue(this IFieldSymbol symbol) => symbol.ConstantValue is int constantInteger ? constantInteger : default;
     }
 }
