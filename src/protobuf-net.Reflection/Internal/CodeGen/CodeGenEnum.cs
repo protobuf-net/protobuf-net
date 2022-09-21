@@ -17,7 +17,10 @@ internal class CodeGenEnum : CodeGenType
     private List<CodeGenEnumValue>? _enumValues;
     public List<CodeGenEnumValue> EnumValues => _enumValues ??= new();
     
-    public CodeGenType Type { get; set; } = CodeGenSimpleType.Int32; 
+    public CodeGenType Type { get; set; } = CodeGenSimpleType.Int32;
+    public bool ShouldSerializeType() => false;
+
+    public string? TypeName => Type?.Serialize();
 
     [DefaultValue(false)]
     public bool IsDeprecated { get; set; }

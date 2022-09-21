@@ -35,9 +35,7 @@
               "OriginalName": "CORPUS_WEB"
             }
           ],
-          "Type": {
-            "WellKnownType": "Int32"
-          },
+          "TypeName": "int32",
           "Name": "Corpus",
           "FullyQualifiedPrefix": "BasicPackage."
         }

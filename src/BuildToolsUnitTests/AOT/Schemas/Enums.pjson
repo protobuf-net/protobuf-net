@@ -4,24 +4,26 @@
       "Name": "Enums.cs",
       "Messages": [
         {
-          "Fields": [
+          "Enums": [
             {
-              "FieldNumber": 1,
-              "TypeName": "string",
-              "Name": "Query",
-              "OriginalName": "query"
-            },
-            {
-              "FieldNumber": 2,
+              "OriginalName": "corpus",
               "TypeName": "EnumCorpus",
               "Name": "Corpus",
-              "OriginalName": "corpus"
+              "FullyQualifiedPrefix": "BasicPackage.SearchRequest+"
             }
           ],
           "Name": "SearchRequest",
           "FullyQualifiedPrefix": "BasicPackage."
-        },
+        }
+      ],
+      "Enums": [
         {
+          "EnumValues": [
+            null,
+            null,
+            null
+          ],
+          "TypeName": "int32",
           "Name": "Corpus",
           "FullyQualifiedPrefix": "BasicPackage."
         }

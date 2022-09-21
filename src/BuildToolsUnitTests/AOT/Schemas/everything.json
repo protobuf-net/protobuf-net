@@ -1,0 +1,640 @@
+{
+  "Files": [
+    {
+      "Name": "everything.proto",
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "AllTheThings.TestNetObject",
+              "Name": "Foo",
+              "OriginalName": "foo"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "AllTheThings.TestNetObject",
+              "Name": "barRef"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": ":NetObjectProxy",
+              "Name": "barDyn"
+            }
+          ],
+          "Name": "TestNetObject",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "float",
+              "Name": "A",
+              "OriginalName": "a"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "B",
+              "OriginalName": "b"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "float",
+              "Name": "C",
+              "OriginalName": "c"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "float",
+              "Name": "D",
+              "OriginalName": "d"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "float",
+              "Name": "E",
+              "OriginalName": "e"
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "float",
+              "Name": "F",
+              "OriginalName": "f"
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "bool",
+              "Name": "G",
+              "OriginalName": "g"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "int32",
+              "Name": "requiredWithDefault"
+            }
+          ],
+          "Name": "MagicValues",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "FooName",
+              "OriginalName": "foo_name"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "string",
+              "Name": "Name",
+              "OriginalName": "name"
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "bool",
+              "Name": "SubMessage",
+              "OriginalName": "sub_message"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "string",
+              "Name": "Name2",
+              "OriginalName": "name2"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "bool",
+              "Name": "SubMessage2",
+              "OriginalName": "sub_message2"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "string",
+              "Name": "BarName",
+              "OriginalName": "bar_name"
+            }
+          ],
+          "Name": "SampleMessage",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Enums": [
+            {
+              "EnumValues": [
+                {
+                  "Name": "Universal",
+                  "OriginalName": "UNIVERSAL"
+                },
+                {
+                  "Name": "Web",
+                  "Value": 1,
+                  "OriginalName": "WEB"
+                },
+                {
+                  "Name": "Images",
+                  "Value": 2,
+                  "OriginalName": "IMAGES"
+                },
+                {
+                  "Name": "Local",
+                  "Value": 3,
+                  "OriginalName": "LOCAL"
+                },
+                {
+                  "Name": "News",
+                  "Value": 4,
+                  "OriginalName": "NEWS"
+                },
+                {
+                  "Name": "Products",
+                  "Value": 5,
+                  "OriginalName": "PRODUCTS"
+                },
+                {
+                  "Name": "Video",
+                  "Value": 6,
+                  "OriginalName": "VIDEO"
+                }
+              ],
+              "TypeName": "int32",
+              "Name": "Corpus",
+              "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Query",
+              "OriginalName": "query"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "int32",
+              "Name": "PageNumber",
+              "OriginalName": "page_number"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "ResultPerPage",
+              "OriginalName": "result_per_page"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "AllTheThings.SearchRequest+Corpus",
+              "Name": "CorpusValue",
+              "OriginalName": "corpus"
+            }
+          ],
+          "Name": "SearchRequest",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Messages": [
+            {
+              "Fields": [
+                {
+                  "FieldNumber": 1,
+                  "TypeName": "string",
+                  "Name": "Url",
+                  "OriginalName": "url"
+                },
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Title",
+                  "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets"
+                }
+              ],
+              "Name": "Result",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+            },
+            {
+              "Fields": [
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Url",
+                  "OriginalName": "url"
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Title",
+                  "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets"
+                }
+              ],
+              "Name": "Grouped",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+            },
+            {
+              "Fields": [
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Url",
+                  "OriginalName": "url"
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Title",
+                  "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets"
+                }
+              ],
+              "Name": "Upper",
+              "OriginalName": "UPPER",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "AllTheThings.SearchResponse+Result",
+              "Name": "Results",
+              "OriginalName": "result"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "AllTheThings.SearchResponse+Grouped",
+              "Name": "Groupeds",
+              "OriginalName": "grouped"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "AllTheThings.SearchResponse+Upper",
+              "Name": "UpperValue",
+              "OriginalName": "upper"
+            }
+          ],
+          "Name": "SearchResponse",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Messages": [
+            {
+              "Fields": [
+                {
+                  "FieldNumber": 1,
+                  "TypeName": "sint32",
+                  "Name": "Key",
+                  "OriginalName": "key"
+                },
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Value",
+                  "OriginalName": "value"
+                }
+              ],
+              "Name": "MapField1Entry",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.Outer+"
+            },
+            {
+              "Fields": [
+                {
+                  "FieldNumber": 1,
+                  "TypeName": "string",
+                  "Name": "Key",
+                  "OriginalName": "key"
+                },
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "AllTheThings.Outer",
+                  "Name": "Value",
+                  "OriginalName": "value"
+                }
+              ],
+              "Name": "MapField2Entry",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.Outer+"
+            },
+            {
+              "Messages": [
+                {
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "int64",
+                      "Name": "Ival",
+                      "OriginalName": "ival"
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "bool",
+                      "Name": "Booly",
+                      "OriginalName": "booly"
+                    }
+                  ],
+                  "Name": "Inner",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleAA+"
+                }
+              ],
+              "Name": "MiddleAA",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.Outer+"
+            },
+            {
+              "Messages": [
+                {
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "int32",
+                      "Name": "Ival",
+                      "OriginalName": "ival"
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "bool",
+                      "Name": "Booly",
+                      "OriginalName": "booly"
+                    }
+                  ],
+                  "Name": "Inner",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleBB+"
+                }
+              ],
+              "Name": "MiddleBB",
+              "Package": "AllTheThings",
+              "FullyQualifiedPrefix": "AllTheThings.Outer+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 7,
+              "TypeName": "AllTheThings.Outer+MapField1Entry",
+              "Name": "MapField1s",
+              "OriginalName": "map_field1"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "AllTheThings.Outer+MapField2Entry",
+              "Name": "MapField2s",
+              "OriginalName": "map_field2"
+            }
+          ],
+          "Name": "Outer",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Result",
+              "OriginalName": "result"
+            }
+          ],
+          "Name": "SomeOtherMessage",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "int32",
+              "Name": "Required",
+              "OriginalName": "required"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "int32",
+              "Name": "Optional",
+              "OriginalName": "optional"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Repeateds",
+              "OriginalName": "repeated"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int32",
+              "Name": "Packeds",
+              "OriginalName": "packed"
+            }
+          ],
+          "Name": "FieldRules",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 536870911,
+              "TypeName": "string",
+              "Name": "His",
+              "OriginalName": "hi"
+            },
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Lo",
+              "OriginalName": "lo"
+            }
+          ],
+          "Name": "TagRanges",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Name": "Foo",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Name": "Baz",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "double",
+              "Name": "Double",
+              "OriginalName": "double"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "Float",
+              "OriginalName": "float"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Int32",
+              "OriginalName": "int32"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int64",
+              "Name": "Int64",
+              "OriginalName": "int64"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "uint32",
+              "Name": "Uint32",
+              "OriginalName": "uint32"
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "uint64",
+              "Name": "Uint64",
+              "OriginalName": "uint64"
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "sint32",
+              "Name": "Sint32",
+              "OriginalName": "sint32"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "sint64",
+              "Name": "Sint64",
+              "OriginalName": "sint64"
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "fixed32",
+              "Name": "Fixed32",
+              "OriginalName": "fixed32"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "fixed64",
+              "Name": "Fixed64",
+              "OriginalName": "fixed64"
+            },
+            {
+              "FieldNumber": 11,
+              "TypeName": "sfixed32",
+              "Name": "Sfixed32",
+              "OriginalName": "sfixed32"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "sfixed64",
+              "Name": "Sfixed64",
+              "OriginalName": "sfixed64"
+            },
+            {
+              "FieldNumber": 13,
+              "TypeName": "bool",
+              "Name": "Bool",
+              "OriginalName": "bool"
+            },
+            {
+              "FieldNumber": 14,
+              "TypeName": "string",
+              "Name": "String",
+              "OriginalName": "string"
+            },
+            {
+              "FieldNumber": 15,
+              "TypeName": "bytes",
+              "Name": "Bytes",
+              "OriginalName": "bytes"
+            }
+          ],
+          "Name": "PrimitiveFieldTypes",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        }
+      ],
+      "Enums": [
+        {
+          "EnumValues": [
+            {
+              "Name": "A"
+            },
+            {
+              "Name": "B",
+              "Value": 1
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "RootEnum",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "EnumValues": [
+            {
+              "Name": "EaaUnknown",
+              "OriginalName": "EAA_UNKNOWN"
+            },
+            {
+              "Name": "EaaStarted",
+              "Value": 1,
+              "OriginalName": "EAA_STARTED"
+            },
+            {
+              "Name": "EaaRunning",
+              "Value": 1,
+              "OriginalName": "EAA_RUNNING"
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "EnumAllowingAlias",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "EnumValues": [
+            {
+              "Name": "EnaaUnknown",
+              "OriginalName": "ENAA_UNKNOWN"
+            },
+            {
+              "Name": "EnaaStarted",
+              "Value": 1,
+              "OriginalName": "ENAA_STARTED"
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "EnumNotAllowingAlias",
+          "FullyQualifiedPrefix": "AllTheThings."
+        }
+      ]
+    }
+  ]
+}
