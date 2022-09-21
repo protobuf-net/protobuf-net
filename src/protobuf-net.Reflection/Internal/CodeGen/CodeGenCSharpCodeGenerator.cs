@@ -460,7 +460,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         var typeName = GetEscapedTypeName(ctx, field.Type, out var dataFormat);
         string defaultValue = null; // GetDefaultValue(ctx, field, typeName);
 
-        if (!string.IsNullOrWhiteSpace(dataFormat))
+        if (dataFormat.HasValue)
         {
             tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
         }
@@ -496,12 +496,12 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 
                 bool first = true;
                 tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
-                if (!string.IsNullOrWhiteSpace(keyDataFormat))
+                if (keyDataFormat.HasValue)
                 {
                     tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");
                     first = false;
                 }
-                if (!string.IsNullOrWhiteSpace(valueDataFormat))
+                if (valueDataFormat.HasValue)
                 {
                     tw.Write($"{(first ? "(" : ", ")}ValueFormat = global::ProtoBuf.DataFormat.{valueDataFormat}");
                     first = false;
@@ -828,9 +828,9 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     //}
 
     private static readonly char[] NamespaceSplitTokens = new[] { '.', '+' };
-    private string GetEscapedTypeName(CodeGenGeneratorContext ctx, CodeGenType type, out string dataFormat)
+    private string GetEscapedTypeName(CodeGenGeneratorContext ctx, CodeGenType type, out DataFormat? dataFormat)
     {
-        dataFormat = "";
+        dataFormat = null;
         //isMap = false;
         if (type is null) return null;
 
@@ -838,8 +838,37 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         {
             switch (known)
             {
-                case CodeGenWellKnownType.String:
-                    return "string";
+                case CodeGenWellKnownType.Boolean: return "bool";
+                case CodeGenWellKnownType.String: return "string";
+                case CodeGenWellKnownType.Bytes: return "byte[]";
+                case CodeGenWellKnownType.Int64: return "long";
+                case CodeGenWellKnownType.Int32: return "int";
+                case CodeGenWellKnownType.UInt64: return "ulong";
+                case CodeGenWellKnownType.UInt32: return "uint";
+                case CodeGenWellKnownType.SInt64:
+                    dataFormat = DataFormat.ZigZag;
+                    return "long";
+                case CodeGenWellKnownType.SInt32:
+                    dataFormat = DataFormat.ZigZag;
+                    return "int";
+                case CodeGenWellKnownType.Float: return "float";
+                case CodeGenWellKnownType.Double: return "double";
+                case CodeGenWellKnownType.Fixed32:
+                    dataFormat = DataFormat.FixedSize;
+                    return "uint";
+                case CodeGenWellKnownType.SFixed32:
+                    dataFormat = DataFormat.FixedSize;
+                    return "int";
+                case CodeGenWellKnownType.Fixed64:
+                    dataFormat = DataFormat.FixedSize;
+                    return "ulong";
+                case CodeGenWellKnownType.SFixed64:
+                    dataFormat = DataFormat.FixedSize;
+                    return "long";
+                case CodeGenWellKnownType.NetObjectProxy:
+                    return "object";
+                default:
+                    throw new NotImplementedException($"Well known format not handled in {nameof(GetEscapedTypeName)}: {known}");
             }
         }
         //switch (type)

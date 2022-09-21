@@ -19,53 +19,6 @@ namespace BasicPackage
         [global::ProtoBuf.ProtoMember(2, Name = @"corpus")]
         public global::BasicPackage.Corpus Corpus { get; set; }
 
-        internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
-        {
-            if (value.Corpus is global::BasicPackage.Corpus obj2)
-            {
-                writer.WriteTag(18); // field 2, string
-                writer.WriteVarintUInt64(global::BasicPackage.Corpus.Measure(obj2);
-                global::BasicPackage.Corpus.Write(obj2, ref writer);
-            }
-        }
-
-        internal static ulong Measure(SearchRequest value)
-        {
-            ulong len = 0;
-            if (value.Corpus is global::BasicPackage.Corpus obj2)
-            {
-                len += 1 + global::BasicPackage.Corpus.Measure(obj2);
-            }
-            return len;
-        }
-
-        internal static SearchRequest Merge(SearchRequest value, ref global::ProtoBuf.Nano.Reader reader)
-        {
-            ulong oldEnd;
-            if (value is null) value = new();
-            uint tag;
-            while ((tag = reader.ReadTag()) != 0)
-            {
-                switch (tag)
-                {
-                    case 18: // field 2, string
-                        oldEnd = reader.ConstrainByLengthPrefix();
-                        value.Corpus = global::BasicPackage.Corpus.Merge(value.Corpus, ref reader);
-                        reader.Unconstrain(oldEnd);
-                        break;
-                    case 19: // field 2, group
-                        oldEnd = reader.ConstrainByGroup(tag);
-                        value.Corpus = global::BasicPackage.Corpus.Merge(value.Corpus, ref reader);
-                        reader.Unconstrain(oldEnd);
-                        break;
-                    default:
-                        reader.Skip(tag);
-                        break;
-                }
-            }
-            return value;
-        }
-
     }
 
     [global::ProtoBuf.ProtoContract()]

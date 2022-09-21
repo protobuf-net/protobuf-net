@@ -126,10 +126,10 @@ namespace ProtoBuf.BuildTools.Internal
             value = default!;
             return false;
         }
-        
+
         internal static bool TryGetInt32(this TypedConstant constant, out int value)
         {
-            if (constant.Kind == TypedConstantKind.Primitive && constant.Value is int val)
+            if (constant.Kind is TypedConstantKind.Primitive or TypedConstantKind.Enum && constant.Value is int val)
             {
                 value = val;
                 return true;
@@ -138,7 +138,7 @@ namespace ProtoBuf.BuildTools.Internal
             value = default;
             return false;
         }
-        
+
         internal static bool TryGetStringByName(this AttributeData attributeData, string name, out string value)
         {
             if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is string s)
@@ -152,7 +152,7 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static bool TryGetInt32ByName(this AttributeData attributeData, string name, out int value)
         {
-            if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is int i)
+            if (TryGetByName(attributeData, name, out var raw) && raw.Kind is TypedConstantKind.Primitive or TypedConstantKind.Enum && raw.Value is int i)
             {
                 value = i;
                 return true;

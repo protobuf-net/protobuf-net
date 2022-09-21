@@ -29,14 +29,15 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
         protoMemberAttributeData = null;
         return false;
     }
-    
-    protected (int fieldNumber, string originalName) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
+
+    protected (int fieldNumber, string originalName, DataFormat? dataFormat) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
     {
         int fieldNumber = default;
         string originalName = null;
-            
+        DataFormat? dataFormat = null;
+
         var attributeClass = protoMemberAttribute.AttributeClass;
-        if (attributeClass is null) return (fieldNumber, originalName);
+        if (attributeClass is null) return (fieldNumber, originalName, dataFormat);
         if (attributeClass.InProtoBufNamespace())
         {
             // default constructor parameters
@@ -45,7 +46,7 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
                 {
                     throw new InvalidOperationException($"Missing constructor parameters ... TODO pass property symbol");
                 }
-                    
+
                 var fieldNumberCtorArg = protoMemberAttribute.ConstructorArguments.FirstOrDefault();
                 if (!fieldNumberCtorArg.TryGetInt32(out fieldNumber))
                 {
@@ -61,13 +62,15 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
                     case nameof(ProtoMemberAttribute.Name) when namedArgument.Value.TryGetString(out var stringValue):
                         originalName = stringValue;
                         break;
-                                
+                    case nameof(ProtoMemberAttribute.DataFormat) when namedArgument.Value.TryGetInt32(out var dataFormat32):
+                        dataFormat = (DataFormat)dataFormat32;
+                        break;
                     default:
                         throw new InvalidOperationException($"Unexpected named arg: {attributeClass.Name}.{namedArgument.Key}");
                 }
             }
         }
 
-        return (fieldNumber, originalName);
+        return (fieldNumber, originalName, dataFormat);
     }
 }

@@ -5,7 +5,7 @@
 // </auto-generated>
 
 #region Designer generated code
-#pragma warning disable 0612, 0618, 1591, 3021
+#pragma warning disable CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 namespace AllTheThings
 {
 
@@ -14,23 +14,15 @@ namespace AllTheThings
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public TestNetObject()
-        {
-            OnConstructor();
-        }
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        partial void OnConstructor();
+        [global::ProtoBuf.ProtoMember(1, Name = @"foo")]
+        public global::AllTheThings.TestNetObject Foo { get; set; }
 
-        [global::ProtoBuf.ProtoMember(1, Name = @"foo", AsReference = true)]
-        public TestNetObject Foo { get; set; }
+        [global::ProtoBuf.ProtoMember(2)]
+        public global::AllTheThings.TestNetObject barRef { get; set; }
 
-        [global::ProtoBuf.ProtoMember(2, AsReference = true)]
-        public TestNetObject barRef { get; set; }
-
-        [global::ProtoBuf.ProtoMember(3, DynamicType = true)]
+        [global::ProtoBuf.ProtoMember(3)]
         public object barDyn { get; set; }
 
     }
@@ -40,136 +32,30 @@ namespace AllTheThings
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public MagicValues()
-        {
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        [global::System.ComponentModel.DefaultValue(float.PositiveInfinity)]
-        public float A
-        {
-            get { return __pbn__A ?? float.PositiveInfinity; }
-            set { __pbn__A = value; }
-        }
-        public bool ShouldSerializeA()
-        {
-            return __pbn__A != null;
-        }
-        public void ResetA()
-        {
-            __pbn__A = null;
-        }
-        private float? __pbn__A;
+        public float A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        [global::System.ComponentModel.DefaultValue(float.NegativeInfinity)]
-        public float B
-        {
-            get { return __pbn__B ?? float.NegativeInfinity; }
-            set { __pbn__B = value; }
-        }
-        public bool ShouldSerializeB()
-        {
-            return __pbn__B != null;
-        }
-        public void ResetB()
-        {
-            __pbn__B = null;
-        }
-        private float? __pbn__B;
+        public float B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        [global::System.ComponentModel.DefaultValue(float.NaN)]
-        public float C
-        {
-            get { return __pbn__C ?? float.NaN; }
-            set { __pbn__C = value; }
-        }
-        public bool ShouldSerializeC()
-        {
-            return __pbn__C != null;
-        }
-        public void ResetC()
-        {
-            __pbn__C = null;
-        }
-        private float? __pbn__C;
+        public float C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        [global::System.ComponentModel.DefaultValue(0)]
-        public float D
-        {
-            get { return __pbn__D ?? 0; }
-            set { __pbn__D = value; }
-        }
-        public bool ShouldSerializeD()
-        {
-            return __pbn__D != null;
-        }
-        public void ResetD()
-        {
-            __pbn__D = null;
-        }
-        private float? __pbn__D;
+        public float D { get; set; }
 
         [global::ProtoBuf.ProtoMember(5, Name = @"e")]
-        [global::System.ComponentModel.DefaultValue(0)]
-        public float E
-        {
-            get { return __pbn__E ?? 0; }
-            set { __pbn__E = value; }
-        }
-        public bool ShouldSerializeE()
-        {
-            return __pbn__E != null;
-        }
-        public void ResetE()
-        {
-            __pbn__E = null;
-        }
-        private float? __pbn__E;
+        public float E { get; set; }
 
         [global::ProtoBuf.ProtoMember(6, Name = @"f")]
-        [global::System.ComponentModel.DefaultValue(0)]
-        public float F
-        {
-            get { return __pbn__F ?? 0; }
-            set { __pbn__F = value; }
-        }
-        public bool ShouldSerializeF()
-        {
-            return __pbn__F != null;
-        }
-        public void ResetF()
-        {
-            __pbn__F = null;
-        }
-        private float? __pbn__F;
+        public float F { get; set; }
 
         [global::ProtoBuf.ProtoMember(7, Name = @"g")]
-        [global::System.ComponentModel.DefaultValue(true)]
-        public bool G
-        {
-            get { return __pbn__G ?? true; }
-            set { __pbn__G = value; }
-        }
-        public bool ShouldSerializeG()
-        {
-            return __pbn__G != null;
-        }
-        public void ResetG()
-        {
-            __pbn__G = null;
-        }
-        private bool? __pbn__G;
+        public bool G { get; set; }
 
-        [global::ProtoBuf.ProtoMember(8, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(8)]
         public int requiredWithDefault { get; set; }
 
     }
@@ -179,121 +65,25 @@ namespace AllTheThings
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public SampleMessage()
-        {
-            Name = @"abc";
-            Name2 = @"abc";
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"foo_name")]
-        [global::System.ComponentModel.DefaultValue(@"abc")]
-        public string FooName
-        {
-            get { return __pbn__FooName ?? @"abc"; }
-            set { __pbn__FooName = value; }
-        }
-        public bool ShouldSerializeFooName()
-        {
-            return __pbn__FooName != null;
-        }
-        public void ResetFooName()
-        {
-            __pbn__FooName = null;
-        }
-        private string __pbn__FooName;
+        public string FooName { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"name")]
-        [global::System.ComponentModel.DefaultValue(@"abc")]
-        public string Name
-        {
-            get { return __pbn__test_oneof.Is(4) ? ((string)__pbn__test_oneof.Object) : @"abc"; }
-            set { __pbn__test_oneof = new global::ProtoBuf.DiscriminatedUnion32Object(4, value); }
-        }
-        public bool ShouldSerializeName()
-        {
-            return __pbn__test_oneof.Is(4);
-        }
-        public void ResetName()
-        {
-            global::ProtoBuf.DiscriminatedUnion32Object.Reset(ref __pbn__test_oneof, 4);
-        }
-
-        private global::ProtoBuf.DiscriminatedUnion32Object __pbn__test_oneof;
+        public string Name { get; set; }
 
         [global::ProtoBuf.ProtoMember(9, Name = @"sub_message")]
-        [global::System.Obsolete]
-        public bool SubMessage
-        {
-            get { return __pbn__test_oneof.Is(9) ? __pbn__test_oneof.Boolean : default(bool); }
-            set { __pbn__test_oneof = new global::ProtoBuf.DiscriminatedUnion32Object(9, value); }
-        }
-        public bool ShouldSerializeSubMessage()
-        {
-            return __pbn__test_oneof.Is(9);
-        }
-        public void ResetSubMessage()
-        {
-            global::ProtoBuf.DiscriminatedUnion32Object.Reset(ref __pbn__test_oneof, 9);
-        }
+        public bool SubMessage { get; set; }
 
         [global::ProtoBuf.ProtoMember(5, Name = @"name2")]
-        [global::System.ComponentModel.DefaultValue(@"abc")]
-        public string Name2
-        {
-            get { return __pbn__another_one_of.Is(5) ? ((string)__pbn__another_one_of.Object) : @"abc"; }
-            set { __pbn__another_one_of = new global::ProtoBuf.DiscriminatedUnion32Object(5, value); }
-        }
-        public bool ShouldSerializeName2()
-        {
-            return __pbn__another_one_of.Is(5);
-        }
-        public void ResetName2()
-        {
-            global::ProtoBuf.DiscriminatedUnion32Object.Reset(ref __pbn__another_one_of, 5);
-        }
-
-        private global::ProtoBuf.DiscriminatedUnion32Object __pbn__another_one_of;
+        public string Name2 { get; set; }
 
         [global::ProtoBuf.ProtoMember(10, Name = @"sub_message2")]
-        [global::System.Obsolete]
-        public bool SubMessage2
-        {
-            get { return __pbn__another_one_of.Is(10) ? __pbn__another_one_of.Boolean : default(bool); }
-            set { __pbn__another_one_of = new global::ProtoBuf.DiscriminatedUnion32Object(10, value); }
-        }
-        public bool ShouldSerializeSubMessage2()
-        {
-            return __pbn__another_one_of.Is(10);
-        }
-        public void ResetSubMessage2()
-        {
-            global::ProtoBuf.DiscriminatedUnion32Object.Reset(ref __pbn__another_one_of, 10);
-        }
+        public bool SubMessage2 { get; set; }
 
         [global::ProtoBuf.ProtoMember(12, Name = @"bar_name")]
-        [global::System.ComponentModel.DefaultValue(@"abc\def""ghi'jklmno
-pqr	stu")]
-        public string BarName
-        {
-            get { return __pbn__BarName ?? @"abc\def""ghi'jklmno
-pqr	stu"; }
-            set { __pbn__BarName = value; }
-        }
-        public bool ShouldSerializeBarName()
-        {
-            return __pbn__BarName != null;
-        }
-        public void ResetBarName()
-        {
-            __pbn__BarName = null;
-        }
-        private string __pbn__BarName;
+        public string BarName { get; set; }
 
     }
 
@@ -302,68 +92,19 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public SearchRequest()
-        {
-            OnConstructor();
-        }
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        partial void OnConstructor();
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"query", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(1, Name = @"query")]
         public string Query { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"page_number")]
-        public int PageNumber
-        {
-            get { return __pbn__PageNumber.GetValueOrDefault(); }
-            set { __pbn__PageNumber = value; }
-        }
-        public bool ShouldSerializePageNumber()
-        {
-            return __pbn__PageNumber != null;
-        }
-        public void ResetPageNumber()
-        {
-            __pbn__PageNumber = null;
-        }
-        private int? __pbn__PageNumber;
+        public int PageNumber { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"result_per_page")]
-        [global::System.ComponentModel.DefaultValue(10)]
-        public int ResultPerPage
-        {
-            get { return __pbn__ResultPerPage ?? 10; }
-            set { __pbn__ResultPerPage = value; }
-        }
-        public bool ShouldSerializeResultPerPage()
-        {
-            return __pbn__ResultPerPage != null;
-        }
-        public void ResetResultPerPage()
-        {
-            __pbn__ResultPerPage = null;
-        }
-        private int? __pbn__ResultPerPage;
+        public int ResultPerPage { get; set; }
 
-        [global::ProtoBuf.ProtoMember(4)]
-        [global::System.ComponentModel.DefaultValue(Corpus.Universal)]
-        public Corpus corpus
-        {
-            get { return __pbn__corpus ?? Corpus.Universal; }
-            set { __pbn__corpus = value; }
-        }
-        public bool ShouldSerializecorpus()
-        {
-            return __pbn__corpus != null;
-        }
-        public void Resetcorpus()
-        {
-            __pbn__corpus = null;
-        }
-        private Corpus? __pbn__corpus;
+        [global::ProtoBuf.ProtoMember(4, Name = @"corpus")]
+        public global::AllTheThings.SearchRequest.Corpus CorpusValue { get; set; }
 
         [global::ProtoBuf.ProtoContract()]
         public enum Corpus
@@ -391,108 +132,50 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public SearchResponse()
-        {
-            Results = new global::System.Collections.Generic.List<Result>();
-            Groupeds = new global::System.Collections.Generic.List<Grouped>();
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        public global::System.Collections.Generic.List<Result> Results { get; private set; }
+        public global::AllTheThings.SearchResponse.Result Results { get; set; }
 
-        [global::ProtoBuf.ProtoMember(10, Name = @"grouped", DataFormat = global::ProtoBuf.DataFormat.Group)]
-        public global::System.Collections.Generic.List<Grouped> Groupeds { get; private set; }
+        [global::ProtoBuf.ProtoMember(10, Name = @"grouped")]
+        public global::AllTheThings.SearchResponse.Grouped Groupeds { get; set; }
 
-        [global::ProtoBuf.ProtoMember(12, DataFormat = global::ProtoBuf.DataFormat.Group)]
-        public Upper upper { get; set; }
+        [global::ProtoBuf.ProtoMember(12, Name = @"upper")]
+        public global::AllTheThings.SearchResponse.Upper UpperValue { get; set; }
 
         [global::ProtoBuf.ProtoContract()]
         public partial class Result : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            {
-                return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-            }
-            public Result()
-            {
-                Snippets = new global::System.Collections.Generic.List<string>();
-                OnConstructor();
-            }
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-            partial void OnConstructor();
-
-            [global::ProtoBuf.ProtoMember(1, Name = @"url", IsRequired = true)]
+            [global::ProtoBuf.ProtoMember(1, Name = @"url")]
             public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue("")]
-            public string Title
-            {
-                get { return __pbn__Title ?? ""; }
-                set { __pbn__Title = value; }
-            }
-            public bool ShouldSerializeTitle()
-            {
-                return __pbn__Title != null;
-            }
-            public void ResetTitle()
-            {
-                __pbn__Title = null;
-            }
-            private string __pbn__Title;
+            public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"snippets")]
-            public global::System.Collections.Generic.List<string> Snippets { get; private set; }
+            public string Snippets { get; set; }
 
         }
 
         [global::ProtoBuf.ProtoContract()]
-        [global::System.Obsolete]
         public partial class Grouped : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            {
-                return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-            }
-            public Grouped()
-            {
-                Snippets = new global::System.Collections.Generic.List<string>();
-                OnConstructor();
-            }
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-            partial void OnConstructor();
-
-            [global::ProtoBuf.ProtoMember(2, Name = @"url", IsRequired = true)]
-            [global::System.Obsolete]
+            [global::ProtoBuf.ProtoMember(2, Name = @"url")]
             public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue("")]
-            public string Title
-            {
-                get { return __pbn__Title ?? ""; }
-                set { __pbn__Title = value; }
-            }
-            public bool ShouldSerializeTitle()
-            {
-                return __pbn__Title != null;
-            }
-            public void ResetTitle()
-            {
-                __pbn__Title = null;
-            }
-            private string __pbn__Title;
+            public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            public global::System.Collections.Generic.List<string> Snippets { get; private set; }
+            public string Snippets { get; set; }
 
         }
 
@@ -501,39 +184,16 @@ pqr	stu"; }
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            {
-                return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-            }
-            public Upper()
-            {
-                Snippets = new global::System.Collections.Generic.List<string>();
-                OnConstructor();
-            }
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-            partial void OnConstructor();
-
-            [global::ProtoBuf.ProtoMember(2, Name = @"url", IsRequired = true)]
+            [global::ProtoBuf.ProtoMember(2, Name = @"url")]
             public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue("")]
-            public string Title
-            {
-                get { return __pbn__Title ?? ""; }
-                set { __pbn__Title = value; }
-            }
-            public bool ShouldSerializeTitle()
-            {
-                return __pbn__Title != null;
-            }
-            public void ResetTitle()
-            {
-                __pbn__Title = null;
-            }
-            private string __pbn__Title;
+            public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            public global::System.Collections.Generic.List<string> Snippets { get; private set; }
+            public string Snippets { get; set; }
 
         }
 
@@ -544,75 +204,63 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public Outer()
-        {
-            MapField1s = new global::System.Collections.Generic.Dictionary<int, string>();
-            MapField2s = new global::System.Collections.Generic.Dictionary<string, Outer>();
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(7, Name = @"map_field1")]
-        [global::System.Obsolete]
-        [global::ProtoBuf.ProtoMap(KeyFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        public global::System.Collections.Generic.Dictionary<int, string> MapField1s { get; private set; }
+        public global::AllTheThings.Outer.MapField1Entry MapField1s { get; set; }
 
         [global::ProtoBuf.ProtoMember(8, Name = @"map_field2")]
-        [global::ProtoBuf.ProtoMap]
-        public global::System.Collections.Generic.Dictionary<string, Outer> MapField2s { get; private set; }
+        public global::AllTheThings.Outer.MapField2Entry MapField2s { get; set; }
+
+        [global::ProtoBuf.ProtoContract()]
+        public partial class MapField1Entry : global::ProtoBuf.IExtensible
+        {
+            private global::ProtoBuf.IExtension __pbn__extensionData;
+            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+            [global::ProtoBuf.ProtoMember(1, Name = @"key", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
+            public int Key { get; set; }
+
+            [global::ProtoBuf.ProtoMember(2, Name = @"value")]
+            public string Value { get; set; }
+
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public partial class MapField2Entry : global::ProtoBuf.IExtensible
+        {
+            private global::ProtoBuf.IExtension __pbn__extensionData;
+            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+            [global::ProtoBuf.ProtoMember(1, Name = @"key")]
+            public string Key { get; set; }
+
+            [global::ProtoBuf.ProtoMember(2, Name = @"value")]
+            public global::AllTheThings.Outer Value { get; set; }
+
+        }
 
         [global::ProtoBuf.ProtoContract()]
         public partial class MiddleAA : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            {
-                return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-            }
-            public MiddleAA()
-            {
-                OnConstructor();
-            }
-
-            partial void OnConstructor();
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoContract()]
             public partial class Inner : global::ProtoBuf.IExtensible
             {
                 private global::ProtoBuf.IExtension __pbn__extensionData;
                 global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-                {
-                    return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-                }
-                public Inner()
-                {
-                    OnConstructor();
-                }
+                    => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-                partial void OnConstructor();
-
-                [global::ProtoBuf.ProtoMember(1, Name = @"ival", IsRequired = true)]
+                [global::ProtoBuf.ProtoMember(1, Name = @"ival")]
                 public long Ival { get; set; }
 
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
-                public bool Booly
-                {
-                    get { return __pbn__Booly.GetValueOrDefault(); }
-                    set { __pbn__Booly = value; }
-                }
-                public bool ShouldSerializeBooly()
-                {
-                    return __pbn__Booly != null;
-                }
-                public void ResetBooly()
-                {
-                    __pbn__Booly = null;
-                }
-                private bool? __pbn__Booly;
+                public bool Booly { get; set; }
 
             }
 
@@ -623,49 +271,20 @@ pqr	stu"; }
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            {
-                return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-            }
-            public MiddleBB()
-            {
-                OnConstructor();
-            }
-
-            partial void OnConstructor();
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoContract()]
             public partial class Inner : global::ProtoBuf.IExtensible
             {
                 private global::ProtoBuf.IExtension __pbn__extensionData;
                 global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-                {
-                    return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-                }
-                public Inner()
-                {
-                    OnConstructor();
-                }
+                    => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-                partial void OnConstructor();
-
-                [global::ProtoBuf.ProtoMember(1, Name = @"ival", IsRequired = true)]
+                [global::ProtoBuf.ProtoMember(1, Name = @"ival")]
                 public int Ival { get; set; }
 
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
-                public bool Booly
-                {
-                    get { return __pbn__Booly.GetValueOrDefault(); }
-                    set { __pbn__Booly = value; }
-                }
-                public bool ShouldSerializeBooly()
-                {
-                    return __pbn__Booly != null;
-                }
-                public void ResetBooly()
-                {
-                    __pbn__Booly = null;
-                }
-                private bool? __pbn__Booly;
+                public bool Booly { get; set; }
 
             }
 
@@ -678,32 +297,10 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public SomeOtherMessage()
-        {
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        [global::System.ComponentModel.DefaultValue("")]
-        public string Result
-        {
-            get { return __pbn__Result ?? ""; }
-            set { __pbn__Result = value; }
-        }
-        public bool ShouldSerializeResult()
-        {
-            return __pbn__Result != null;
-        }
-        public void ResetResult()
-        {
-            __pbn__Result = null;
-        }
-        private string __pbn__Result;
+        public string Result { get; set; }
 
     }
 
@@ -712,40 +309,19 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public FieldRules()
-        {
-            OnConstructor();
-        }
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        partial void OnConstructor();
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"required", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(1, Name = @"required")]
         public int Required { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"optional")]
-        public int Optional
-        {
-            get { return __pbn__Optional.GetValueOrDefault(); }
-            set { __pbn__Optional = value; }
-        }
-        public bool ShouldSerializeOptional()
-        {
-            return __pbn__Optional != null;
-        }
-        public void ResetOptional()
-        {
-            __pbn__Optional = null;
-        }
-        private int? __pbn__Optional;
+        public int Optional { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"repeated")]
-        public int[] Repeateds { get; set; }
+        public int Repeateds { get; set; }
 
-        [global::ProtoBuf.ProtoMember(4, Name = @"packed", IsPacked = true)]
-        public int[] Packeds { get; set; }
+        [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
+        public int Packeds { get; set; }
 
     }
 
@@ -754,36 +330,13 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public TagRanges()
-        {
-            His = new global::System.Collections.Generic.List<string>();
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(536870911, Name = @"hi")]
-        public global::System.Collections.Generic.List<string> His { get; private set; }
+        public string His { get; set; }
 
         [global::ProtoBuf.ProtoMember(1, Name = @"lo")]
-        [global::System.ComponentModel.DefaultValue("")]
-        public string Lo
-        {
-            get { return __pbn__Lo ?? ""; }
-            set { __pbn__Lo = value; }
-        }
-        public bool ShouldSerializeLo()
-        {
-            return __pbn__Lo != null;
-        }
-        public void ResetLo()
-        {
-            __pbn__Lo = null;
-        }
-        private string __pbn__Lo;
+        public string Lo { get; set; }
 
     }
 
@@ -792,15 +345,7 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public Foo()
-        {
-            OnConstructor();
-        }
-
-        partial void OnConstructor();
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
     }
 
@@ -809,39 +354,8 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public Baz()
-        {
-            OnConstructor();
-        }
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        partial void OnConstructor();
-
-        public static partial class Extensions
-        {
-            public static int GetBar(Foo obj)
-            {
-                return obj == null ? default(int) : global::ProtoBuf.Extensible.GetValue<int>(obj, 126);
-            }
-
-            public static void SetBar(Foo obj, int value)
-            {
-                global::ProtoBuf.Extensible.AppendValue<int>(obj, 126, value);
-            }
-
-            public static Baz GetFooExt(Foo obj)
-            {
-                return obj == null ? default(Baz) : global::ProtoBuf.Extensible.GetValue<Baz>(obj, 127);
-            }
-
-            public static void SetFooExt(Foo obj, Baz value)
-            {
-                global::ProtoBuf.Extensible.AppendValue<Baz>(obj, 127, value);
-            }
-
-        }
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -849,59 +363,51 @@ pqr	stu"; }
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-        {
-            return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-        }
-        public PrimitiveFieldTypes()
-        {
-            OnConstructor();
-        }
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        partial void OnConstructor();
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"double", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(1, Name = @"double")]
         public double Double { get; set; }
 
-        [global::ProtoBuf.ProtoMember(2, Name = @"float", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(2, Name = @"float")]
         public float Float { get; set; }
 
-        [global::ProtoBuf.ProtoMember(3, Name = @"int32", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(3, Name = @"int32")]
         public int Int32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(4, Name = @"int64", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(4, Name = @"int64")]
         public long Int64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(5, Name = @"uint32", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(5, Name = @"uint32")]
         public uint Uint32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(6, Name = @"uint64", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(6, Name = @"uint64")]
         public ulong Uint64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(7, Name = @"sint32", DataFormat = global::ProtoBuf.DataFormat.ZigZag, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(7, Name = @"sint32", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
         public int Sint32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(8, Name = @"sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(8, Name = @"sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
         public long Sint64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(9, Name = @"fixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(9, Name = @"fixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
         public uint Fixed32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(10, Name = @"fixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(10, Name = @"fixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
         public ulong Fixed64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(11, Name = @"sfixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(11, Name = @"sfixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
         public int Sfixed32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(12, Name = @"sfixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(12, Name = @"sfixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
         public long Sfixed64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(13, Name = @"bool", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(13, Name = @"bool")]
         public bool Bool { get; set; }
 
-        [global::ProtoBuf.ProtoMember(14, Name = @"string", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(14, Name = @"string")]
         public string String { get; set; }
 
-        [global::ProtoBuf.ProtoMember(15, Name = @"bytes", IsRequired = true)]
+        [global::ProtoBuf.ProtoMember(15, Name = @"bytes")]
         public byte[] Bytes { get; set; }
 
     }
@@ -909,8 +415,9 @@ pqr	stu"; }
     [global::ProtoBuf.ProtoContract()]
     public enum RootEnum
     {
+        [global::ProtoBuf.ProtoEnum()]
         A = 0,
-        [global::System.Obsolete]
+        [global::ProtoBuf.ProtoEnum()]
         B = 1,
     }
 
@@ -934,29 +441,7 @@ pqr	stu"; }
         EnaaStarted = 1,
     }
 
-    [global::System.ServiceModel.ServiceContract(Name = @"AllTheThings.SearchService")]
-    [global::System.Obsolete]
-    public partial interface ISearchService
-    {
-        global::System.Threading.Tasks.ValueTask<SearchResponse> SearchAsync(global::System.Collections.Generic.IAsyncEnumerable<SearchRequest> values, global::ProtoBuf.Grpc.CallContext context);
-        [global::System.Obsolete]
-        global::System.Collections.Generic.IAsyncEnumerable<SearchResponse> OldMethodAsync(SearchRequest value, global::ProtoBuf.Grpc.CallContext context);
-    }
-
-    public static partial class Extensions
-    {
-        public static int GetBlap(this Foo obj)
-        {
-            return obj == null ? default(int) : global::ProtoBuf.Extensible.GetValue<int>(obj, 125);
-        }
-
-        public static void SetBlap(this Foo obj, int value)
-        {
-            global::ProtoBuf.Extensible.AppendValue<int>(obj, 125, value);
-        }
-
-    }
 }
 
-#pragma warning restore 0612, 0618, 1591, 3021
+#pragma warning restore CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 #endregion

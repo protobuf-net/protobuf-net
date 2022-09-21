@@ -17,6 +17,8 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))
         {
+            var (_, originalName, dataFormat) = GetProtoMemberAttributeData(protoMemberAttribute);
+            var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
             var fullyQualifiedPrefix = symbol.GetFullyQualifiedPrefix();
             var fullyQualifiedName = fullyQualifiedPrefix + symbol.Name;
 
