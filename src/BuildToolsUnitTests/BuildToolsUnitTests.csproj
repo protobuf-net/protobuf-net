@@ -39,5 +39,8 @@
     <None Update="AOT\Schemas\Enums.pjson">
       <DependentUpon>Enums.proto</DependentUpon>
     </None>
+    <None Update="AOT\Schemas\everything.json">
+      <DependentUpon>everything.proto</DependentUpon>
+    </None>
   </ItemGroup>
 </Project>
