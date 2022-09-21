@@ -10,18 +10,24 @@ using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class NamespaceCodeGenModelParser : ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile>
+internal sealed class NamespaceCodeGenModelParser : SymbolCodeGenModelParserBase<INamespaceSymbol, CodeGenFile>
 {
+    public NamespaceCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    {
+    }
+    
     /// <summary>
     /// Dives into members of a Roslyn defined symbol to parse the internals and output a codeGenModel representation of a symbol
     /// </summary>
     /// <param name="symbol">namespace symbol of a file - the upper element in Roslyn API available for a file</param>
-    /// <param name="parseContext">includes other information about current parse execution</param>
     /// <returns></returns>
-    public CodeGenFile Parse(INamespaceSymbol symbol, NamespaceParseContext parseContext)
+    public override CodeGenFile Parse(INamespaceSymbol symbol)
     {
         var codeGenFile = InitializeFile(symbol);
         
+        // loading namespace data as well
+        var namespaceContext = new CodeGenNamespaceParseContext(symbol.Name);
+
         var childSymbols = symbol.GetMembers();
         foreach (var childSymbol in childSymbols)
         {
@@ -31,26 +37,20 @@ internal sealed class NamespaceCodeGenModelParser : ISymbolCodeGenModelParser<IN
                 {
                     case TypeKind.Struct:
                     case TypeKind.Class:
-                        var messageParser = SymbolCodeGenModelParserProvider.GetMessageParser();
-                        var codeGenMessage = messageParser.Parse(typedChildSymbol, parseContext);
+                        var messageParser = ParserProvider.GetMessageParser(namespaceContext);
+                        var codeGenMessage = messageParser.Parse(typedChildSymbol);
                         codeGenFile.Messages.Add(codeGenMessage);
                         break;
                     
                     case TypeKind.Enum:
-                        var enumParser = SymbolCodeGenModelParserProvider.GetEnumParser();
-                        var codeGenEnum = enumParser.Parse(typedChildSymbol, parseContext);
+                        var enumParser = ParserProvider.GetEnumParser();
+                        var codeGenEnum = enumParser.Parse(typedChildSymbol);
                         codeGenFile.Enums.Add(codeGenEnum);
                         break; 
                         
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-            }
-            
-            if (childSymbol.IsNamespace)
-            {
-                // inner namespace - can it happen ?
-                // I guess 1 namespace = 1 CodeGenFile so no
             }
         }
 

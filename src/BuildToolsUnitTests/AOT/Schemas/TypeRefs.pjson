@@ -32,6 +32,7 @@
           ],
           "Name": "MsgA",
           "OriginalName": "msg_a",
+          "Package": "TypeRefs",
           "FullyQualifiedPrefix": "TypeRefs."
         },
         {
@@ -65,6 +66,7 @@
               ],
               "Name": "MsgC",
               "OriginalName": "msg_c",
+              "Package": "TypeRefs",
               "FullyQualifiedPrefix": "TypeRefs.MsgB+"
             }
           ],
@@ -96,6 +98,7 @@
           ],
           "Name": "MsgB",
           "OriginalName": "msg_b",
+          "Package": "TypeRefs",
           "FullyQualifiedPrefix": "TypeRefs."
         },
         {
@@ -127,6 +130,7 @@
           ],
           "Name": "MsgD",
           "OriginalName": "msg_d",
+          "Package": "TypeRefs",
           "FullyQualifiedPrefix": "TypeRefs."
         }
       ]

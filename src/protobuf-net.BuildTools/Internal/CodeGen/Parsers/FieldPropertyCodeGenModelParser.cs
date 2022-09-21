@@ -1,14 +1,17 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers.Common;
+using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class FieldPropertyCodeGenModelParser : PropertyCodeGenModelParserBase<CodeGenField>
 {
-    public override CodeGenField Parse(IPropertySymbol symbol, NamespaceParseContext parseContext)
+    public FieldPropertyCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    {
+    }
+    
+    public override CodeGenField Parse(IPropertySymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))

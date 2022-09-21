@@ -1,16 +1,18 @@
-﻿using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers.Common;
+using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParserBase<CodeGenEnum>
 {
-    public override CodeGenEnum Parse(IPropertySymbol symbol, NamespaceParseContext parseContext)
+    public EnumPropertyCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    {
+    }
+    
+    public override CodeGenEnum Parse(IPropertySymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))

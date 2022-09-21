@@ -4,14 +4,16 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Models;
+using ProtoBuf.Internal.CodeGen.Providers;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers.Common;
 
-internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : ISymbolCodeGenModelParser<IPropertySymbol, TCodeGenModel>
+internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCodeGenModelParserBase<IPropertySymbol, TCodeGenModel>
 {
-    public abstract TCodeGenModel Parse(IPropertySymbol symbol, NamespaceParseContext parseContext);
-
+    protected PropertyCodeGenModelParserBase(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    {
+    }
+    
     protected bool IsProtoMember(ImmutableArray<AttributeData> attributes, out AttributeData protoMemberAttributeData)
     {
         foreach (var attribute in attributes)

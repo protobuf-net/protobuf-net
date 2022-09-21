@@ -10,9 +10,17 @@ namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<CodeGenMessage>
 {
-    public override CodeGenMessage Parse(ITypeSymbol symbol, NamespaceParseContext parseContext)
+    private readonly CodeGenNamespaceParseContext _namespaceParseContext;
+    
+    public MessageCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider, CodeGenNamespaceParseContext namespaceParseContext) 
+        : base(parserProvider)
     {
-        var codeGenMessage = InitializeCodeGenMessage(symbol, parseContext);
+        _namespaceParseContext = namespaceParseContext;
+    }
+    
+    public override CodeGenMessage Parse(ITypeSymbol symbol)
+    {
+        var codeGenMessage = InitializeCodeGenMessage(symbol);
         
         // go through child nodes and attach nested members
         var childSymbols = symbol.GetMembers();
@@ -24,14 +32,14 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
                 {
                     case TypeKind.Struct:
                     case TypeKind.Class:
-                        var fieldParser = SymbolCodeGenModelParserProvider.GetFieldParser();
-                        var codeGenField = fieldParser.Parse(propertySymbol, parseContext);
+                        var fieldParser = ParserProvider.GetFieldParser();
+                        var codeGenField = fieldParser.Parse(propertySymbol);
                         codeGenMessage.Fields.Add(codeGenField);
                         break;
                     
                     case TypeKind.Enum:
-                        var enumPropertyParser = SymbolCodeGenModelParserProvider.GetEnumPropertyParser();
-                        var codeGenEnum = enumPropertyParser.Parse(propertySymbol, parseContext);
+                        var enumPropertyParser = ParserProvider.GetEnumPropertyParser();
+                        var codeGenEnum = enumPropertyParser.Parse(propertySymbol);
                         codeGenMessage.Enums.Add(codeGenEnum);
                         break;
                 }
@@ -43,14 +51,14 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
                 {
                     case TypeKind.Struct:
                     case TypeKind.Class:
-                        var messageParser = SymbolCodeGenModelParserProvider.GetMessageParser();
-                        var nestedMessage = messageParser.Parse(typeSymbol, parseContext);
+                        var messageParser = ParserProvider.GetMessageParser(_namespaceParseContext);
+                        var nestedMessage = messageParser.Parse(typeSymbol);
                         codeGenMessage.Messages.Add(nestedMessage);
                         break;
                     
                     case TypeKind.Enum:
-                        var enumParser = SymbolCodeGenModelParserProvider.GetEnumParser();
-                        var nestedEnum = enumParser.Parse(typeSymbol, parseContext);
+                        var enumParser = ParserProvider.GetEnumParser();
+                        var nestedEnum = enumParser.Parse(typeSymbol);
                         codeGenMessage.Enums.Add(nestedEnum);
                         break;
                 }
@@ -60,22 +68,22 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
         return codeGenMessage;
     }
 
-    private CodeGenMessage InitializeCodeGenMessage(ITypeSymbol symbol, NamespaceParseContext parseContext)
+    private CodeGenMessage InitializeCodeGenMessage(ITypeSymbol symbol)
     {
         var symbolAttributes = symbol.GetAttributes();
         if (IsProtoContract(symbolAttributes, out var protoContractAttributeData))
         {
-            return ParseMessage(symbol, protoContractAttributeData, parseContext);
+            return ParseMessage(symbol, protoContractAttributeData);
         }
         
         return null;
     }
 
-    private static CodeGenMessage ParseMessage(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData, NamespaceParseContext parseContext)
+    private CodeGenMessage ParseMessage(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
         var codeGenMessage = new CodeGenMessage(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {
-            Package = parseContext.NamespaceName
+            Package = _namespaceParseContext.NamespaceName
         };
 
         var protoContractAttributeClass = protoContractAttributeData.AttributeClass!;

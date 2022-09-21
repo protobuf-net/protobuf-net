@@ -11,6 +11,7 @@ internal class CodeGenParseContext
     public NameNormalizer NameNormalizer { get; set; } = NameNormalizer.Default;
 
     private readonly Dictionary<string, CodeGenType> _contractTypes = new Dictionary<string, CodeGenType>();
+
     public CodeGenType GetContractType(string fqn)
     {
         if (string.IsNullOrWhiteSpace(fqn)) return CodeGenType.Unknown;

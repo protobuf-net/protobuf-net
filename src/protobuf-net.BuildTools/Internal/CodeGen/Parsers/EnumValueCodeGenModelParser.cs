@@ -3,14 +3,18 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Models;
+using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class EnumValueCodeGenModelParser : ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue>
+internal sealed class EnumValueCodeGenModelParser : SymbolCodeGenModelParserBase<IFieldSymbol, CodeGenEnumValue>
 {
-    public CodeGenEnumValue Parse(IFieldSymbol symbol, NamespaceParseContext parseContext)
+    public EnumValueCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    {
+    }
+    
+    public override CodeGenEnumValue Parse(IFieldSymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoEnum(propertyAttributes, out var protoEnumAttributeData))

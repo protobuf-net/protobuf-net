@@ -1,39 +1,54 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.Internal.CodeGen.Abstractions;
+using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Providers;
 
-internal static class SymbolCodeGenModelParserProvider
+internal class SymbolCodeGenModelParserProvider
 {
-    public static ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile> GetFileParser()
+    private ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile> _namespaceParser; 
+    private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> _messageParser; 
+    private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> _enumParser;
+    private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenEnum> _enumPropertyParser;
+    private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> _fieldPropertyParser; 
+    private ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> _enumValueParser; 
+    
+    public CodeGenParseContext CodeGenParseContext { get; }
+    
+    public SymbolCodeGenModelParserProvider()
     {
-        return new NamespaceCodeGenModelParser();
+        CodeGenParseContext = new CodeGenParseContext();
+    }
+    
+    public ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile> GetNamespaceParser()
+    {
+        return _namespaceParser ??= new NamespaceCodeGenModelParser(this);
     }
 
-    public static ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> GetMessageParser()
+    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> GetMessageParser(CodeGenNamespaceParseContext namespaceParseContext)
     {
-        return new MessageCodeGenModelParser();
+        return _messageParser ??= new MessageCodeGenModelParser(this, namespaceParseContext);
     }
     
-    public static ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> GetEnumParser()
+    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> GetEnumParser()
     {
-        return new EnumCodeGenModelParser();
+        return _enumParser ??= new EnumCodeGenModelParser(this);
     }
     
-    public static ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> GetFieldParser()
+    public ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> GetFieldParser()
     {
-        return new FieldPropertyCodeGenModelParser();
+        return _fieldPropertyParser ??= new FieldPropertyCodeGenModelParser(this);
     }
     
-    public static ISymbolCodeGenModelParser<IPropertySymbol, CodeGenEnum> GetEnumPropertyParser()
+    public ISymbolCodeGenModelParser<IPropertySymbol, CodeGenEnum> GetEnumPropertyParser()
     {
-        return new EnumPropertyCodeGenModelParser();
+        return _enumPropertyParser ??= new EnumPropertyCodeGenModelParser(this);
     }
     
-    public static ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> GetEnumValueParser()
+    public ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> GetEnumValueParser()
     {
-        return new EnumValueCodeGenModelParser();
+        return _enumValueParser ??= new EnumValueCodeGenModelParser(this);
     }
 }
