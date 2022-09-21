@@ -11,7 +11,7 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
     public EnumPropertyCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
     {
     }
-    
+
     public override CodeGenEnum Parse(IPropertySymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
@@ -19,14 +19,9 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
         {
             var (_, originalName, dataFormat) = GetProtoMemberAttributeData(protoMemberAttribute);
             var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
-            var fullyQualifiedPrefix = symbol.GetFullyQualifiedPrefix();
-            var fullyQualifiedName = fullyQualifiedPrefix + symbol.Name;
-
-            var (_, originalName) = GetProtoMemberAttributeData(protoMemberAttribute);
-            var codeGenField = new CodeGenEnum(symbol.Name, fullyQualifiedPrefix)
             {
                 OriginalName = originalName,
-                Type = ParseContext.GetContractType(fullyQualifiedName)
+                Type = symbol.ResolveCodeGenType(dataFormat)
             };
         
             return codeGenField;
