@@ -25,6 +25,7 @@
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     <Compile Include="../protobuf-net.Reflection/**/*.cs" Link="protobuf-net.Reflection" />
     <Compile Remove="../protobuf-net.Reflection/obj/**/*.cs" />
+    <Compile Update="Internal\CodeGenSemanticModelParser.*.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -151,7 +151,11 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     /// <inheritdoc/>
     protected override void WriteNamespaceHeader(CodeGenGeneratorContext ctx, string @namespace)
     {
-        ctx.WriteLine($"namespace {@namespace}");
+        if (!string.IsNullOrEmpty(@namespace))
+        {
+            ctx.WriteLine($"namespace {@namespace.TrimEnd('.')}");    
+        }
+
         ctx.WriteLine("{").Indent().WriteLine();
     }
 
@@ -188,6 +192,20 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     }
     /// <summary>
     /// End an enum
+    /// </summary>
+    
+    /// <summary>
+    /// Start an enum value
+    /// </summary>
+    protected override void WriteEnumValue(CodeGenGeneratorContext ctx, CodeGenEnumValue enumValue, ref object state)
+    {
+        var tw = ctx.Write("[global::ProtoBuf.ProtoEnum(");
+        if (enumValue.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{enumValue.OriginalName}""");
+        tw.WriteLine(")]");
+        ctx.WriteLine($"{Escape(enumValue.Name)} = {enumValue.Value},");
+    }
+    /// <summary>
+    /// End an enum value
     /// </summary>
 
     protected override void WriteEnumFooter(CodeGenGeneratorContext ctx, CodeGenEnum @enum, ref object state)
@@ -846,6 +864,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         sb.Append("global::");
         foreach (var token in tokens)
         {
+            if (string.IsNullOrEmpty(token)) continue;
             sb.Append(Escape(token)).Append('.');
         }
         sb.Append(Escape(type.Name));

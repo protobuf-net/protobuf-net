@@ -26,11 +26,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="AOT\Schemas\Enums.cs" />
     <None Update="AOT/Schemas/**/*.proto" CopyToOutputDirectory="PreserveNewest" />
     <None Update="AOT/Schemas/**/*.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
     <None Update="AOT/Schemas/**/*.pjson" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
 
     <Compile Remove="AOT/Schemas/**/*.cs" />
     <None Include="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+    <Compile Update="AOT\Schemas\Enums.cs">
+      <DependentUpon>Enums.proto</DependentUpon>
+    </Compile>
+    <None Update="AOT\Schemas\Enums.pjson">
+      <DependentUpon>Enums.proto</DependentUpon>
+    </None>
   </ItemGroup>
 </Project>

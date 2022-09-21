@@ -278,10 +278,10 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     {
         object state = null;
         WriteEnumHeader(ctx, obj, ref state);
-        //foreach (var inner in obj.Values)
-        //{
-        //    // WriteEnumValue(ctx, inner, ref state);
-        //}
+        foreach (var enumValue in obj.EnumValues)
+        {
+            WriteEnumValue(ctx, enumValue, ref state);
+        }
         // WriteEnumSerializer(...);
         WriteEnumFooter(ctx, obj, ref state);
     }
@@ -315,10 +315,10 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// </summary>
     protected abstract void WriteEnumHeader(CodeGenGeneratorContext ctx, CodeGenEnum @enum, ref object state);
 
-    ///// <summary>
-    ///// Emit code representing an enum value
-    ///// </summary>
-    //protected abstract void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto @enum, ref object state);
+    /// <summary>
+    /// Emit code representing an enum value
+    /// </summary>
+    protected abstract void WriteEnumValue(CodeGenGeneratorContext ctx, CodeGenEnumValue enumValue, ref object state);
 
     /// <summary>
     /// Emit code following a set of enum values

@@ -6,7 +6,7 @@
 
 #region Designer generated code
 #pragma warning disable CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
-namespace 
+namespace TypeRefs
 {
 
     [global::ProtoBuf.ProtoContract(Name = @"msg_a")]
@@ -17,16 +17,16 @@ namespace
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public global::MsgA A { get; set; }
+        public global::TypeRefs.MsgA A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public global::MsgB B { get; set; }
+        public global::TypeRefs.MsgB B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public global::MsgB.MsgC C { get; set; }
+        public global::TypeRefs.MsgB.MsgC C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public global::MsgD D { get; set; }
+        public global::TypeRefs.MsgD D { get; set; }
 
     }
 
@@ -38,16 +38,16 @@ namespace
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public global::MsgA A { get; set; }
+        public global::TypeRefs.MsgA A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public global::MsgB B { get; set; }
+        public global::TypeRefs.MsgB B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public global::MsgB.MsgC C { get; set; }
+        public global::TypeRefs.MsgB.MsgC C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public global::MsgD D { get; set; }
+        public global::TypeRefs.MsgD D { get; set; }
 
         [global::ProtoBuf.ProtoContract(Name = @"msg_c")]
         public partial class MsgC : global::ProtoBuf.IExtensible
@@ -57,16 +57,16 @@ namespace
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-            public global::MsgA A { get; set; }
+            public global::TypeRefs.MsgA A { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-            public global::MsgB B { get; set; }
+            public global::TypeRefs.MsgB B { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-            public global::MsgB.MsgC C { get; set; }
+            public global::TypeRefs.MsgB.MsgC C { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-            public global::MsgD D { get; set; }
+            public global::TypeRefs.MsgD D { get; set; }
 
         }
 
@@ -80,16 +80,16 @@ namespace
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public global::MsgA A { get; set; }
+        public global::TypeRefs.MsgA A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public global::MsgB B { get; set; }
+        public global::TypeRefs.MsgB B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public global::MsgB.MsgC C { get; set; }
+        public global::TypeRefs.MsgB.MsgC C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public global::MsgD D { get; set; }
+        public global::TypeRefs.MsgD D { get; set; }
 
     }
 

@@ -25,7 +25,7 @@
 
     <!-- cross-reference the analyzer code -->
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal" />
-    <Compile Remove="../protobuf-net.BuildTools/Internal/CodeGenSemanticModelParser.cs" />
+    <Compile Remove="../protobuf-net.BuildTools/Internal/CodeGen/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
   </ItemGroup>

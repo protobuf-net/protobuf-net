@@ -7,6 +7,7 @@ internal enum CodeGenWellKnownType
     None,
     String,
     Fixed64,
+    Int32,
     UInt64,
     Bytes,
 }

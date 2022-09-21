@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using ProtoBuf;
-using ProtoBuf.BuildTools.Internal;
+using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Collections.Generic;
 using System.IO;
@@ -36,6 +36,7 @@ public class AOTSchemaTests
             yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "")  };
         }
     }
+
     private static JsonSerializerSettings JsonSettings { get; } = new JsonSerializerSettings
     {
         Formatting = Formatting.Indented,
@@ -47,16 +48,17 @@ public class AOTSchemaTests
         Converters = { new StringEnumConverter() },
     };
 
-
     [Theory]
     [MemberData(nameof(GetSchemas))]
     public void ParseProtoToModel(string protoPath)
     {
+        // load .proto file
         var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
         _output.WriteLine(protoPath);
         var file = Path.GetFileName(protoPath);
         _output.WriteLine($"{file} in {Path.GetDirectoryName(Path.Combine(schemaPath, protoPath).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar))}");
 
+        // build FDS out of proto definition
         var fds = new FileDescriptorSet();
         fds.AddImportPath(schemaPath);
         Assert.True(fds.Add(file, true));
@@ -68,9 +70,9 @@ public class AOTSchemaTests
         }
         Assert.Empty(errors);
 
+        // build CodeGenSet out of FDS and check expected json equality
         var context = new CodeGenParseContext();
         var parsed = CodeGenSet.Parse(fds, context);
-
         var json = JsonConvert.SerializeObject(parsed, JsonSettings);
         _output.WriteLine(json);
 
@@ -80,12 +82,12 @@ public class AOTSchemaTests
         _output.WriteLine($"updating {target}...");
         File.WriteAllText(target, json);
 #else
-
         Assert.True(File.Exists(jsonPath), $"{jsonPath} does not exist");
         var expectedJson = File.ReadAllText(jsonPath);
         Assert.Equal(expectedJson, json);
 #endif
 
+        // generate C# model out of Code-Gen model
         var codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed));
         Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "cs"), codeFile.Name);
         Assert.NotNull(codeFile);
@@ -132,13 +134,14 @@ public class AOTSchemaTests
 #endif
         var model = compilation.GetSemanticModel(syntaxTree, false);
         Assert.NotNull(model);
+
         CodeGenSet parsedFromCode = new();
         foreach (var symbol in model.LookupNamespacesAndTypes(0))
         {
             var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if (firstRef is not null && firstRef.SyntaxTree == syntaxTree)
             {
-                CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
+                parsedFromCode = CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
             }
         }
 
@@ -154,11 +157,10 @@ public class AOTSchemaTests
         expectedJson = File.ReadAllText(jsonPath);
         Assert.Equal(expectedJson, json);
 #endif
-
-
-        static MetadataReference GetLib<T>()
-            => MetadataReference.CreateFromFile(typeof(T).Assembly.Location);
     }
+
+    static MetadataReference GetLib<T>()
+        => MetadataReference.CreateFromFile(typeof(T).Assembly.Location);
 
     private string CallerFilePath([CallerFilePath] string path = "") => path;
 }

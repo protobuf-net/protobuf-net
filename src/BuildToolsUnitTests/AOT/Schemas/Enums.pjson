@@ -1,0 +1,31 @@
+{
+  "Files": [
+    {
+      "Name": "Enums.cs",
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Query",
+              "OriginalName": "query"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "EnumCorpus",
+              "Name": "Corpus",
+              "OriginalName": "corpus"
+            }
+          ],
+          "Name": "SearchRequest",
+          "FullyQualifiedPrefix": "BasicPackage."
+        },
+        {
+          "Name": "Corpus",
+          "FullyQualifiedPrefix": "BasicPackage."
+        }
+      ]
+    }
+  ]
+}
