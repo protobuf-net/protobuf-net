@@ -6,6 +6,7 @@ internal partial class CodeGenCSharpCodeGenerator
 {
     protected override void WriteMessageSerializer(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
     {
+        if (1 == 1) return;
         // very much work-in-progress; not much of this is expected to work at all!
         const string NanoNS = "global::ProtoBuf.Nano.";
 

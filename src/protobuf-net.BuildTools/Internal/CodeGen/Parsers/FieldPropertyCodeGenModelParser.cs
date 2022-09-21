@@ -13,14 +13,14 @@ internal sealed class FieldPropertyCodeGenModelParser : PropertyCodeGenModelPars
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))
         {
-            var (fieldNumber, originalName) = GetProtoMemberAttributeData(protoMemberAttribute);
+            var (fieldNumber, originalName, dataFormat) = GetProtoMemberAttributeData(protoMemberAttribute);
             var codeGenField = new CodeGenField(fieldNumber, symbol.Name)
             {
                 OriginalName = originalName,
-                Type = symbol.GetCodeGenType()
+                Type = symbol.GetCodeGenType(dataFormat),
             };
         
-            return codeGenField;   
+            return codeGenField;
         }
 
         // throw exception here ?
