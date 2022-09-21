@@ -17,11 +17,14 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))
         {
+            var fullyQualifiedPrefix = symbol.GetFullyQualifiedPrefix();
+            var fullyQualifiedName = fullyQualifiedPrefix + symbol.Name;
+
             var (_, originalName) = GetProtoMemberAttributeData(protoMemberAttribute);
-            var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
+            var codeGenField = new CodeGenEnum(symbol.Name, fullyQualifiedPrefix)
             {
                 OriginalName = originalName,
-                Type = symbol.GetCodeGenType()
+                Type = ParseContext.GetContractType(fullyQualifiedName)
             };
         
             return codeGenField;

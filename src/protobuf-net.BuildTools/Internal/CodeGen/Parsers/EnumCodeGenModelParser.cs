@@ -35,7 +35,9 @@ internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGe
         var symbolAttributes = symbol.GetAttributes();
         if (IsProtoContract(symbolAttributes, out var protoContractAttributeData))
         {
-            return ParseEnum(symbol, protoContractAttributeData);
+            var codeGenEnum = ParseEnum(symbol, protoContractAttributeData);
+            ParseContext.Register(symbol.GetFullyQualifiedType(), codeGenEnum);
+            return codeGenEnum;
         }
         
         return null;

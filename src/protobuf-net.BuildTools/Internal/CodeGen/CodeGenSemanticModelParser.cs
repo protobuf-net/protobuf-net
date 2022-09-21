@@ -15,7 +15,6 @@ internal static class CodeGenSemanticModelParser
     public static CodeGenSet Parse(CodeGenSet set, ISymbol symbol)
     {
         var symbolCodeGenModelParserProvider = new SymbolCodeGenModelParserProvider();
-
         if (symbol is INamespaceSymbol namespaceSymbol)
         {
             var namespaceParser = symbolCodeGenModelParserProvider.GetNamespaceParser();
@@ -23,7 +22,8 @@ internal static class CodeGenSemanticModelParser
             
             set.Files.Add(codeGenFile);
         }
-
+        
+        symbolCodeGenModelParserProvider.CodeGenParseContext.FixupPlaceholders();
         return set;
     }
 }

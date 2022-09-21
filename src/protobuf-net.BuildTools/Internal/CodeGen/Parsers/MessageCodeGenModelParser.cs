@@ -73,7 +73,9 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
         var symbolAttributes = symbol.GetAttributes();
         if (IsProtoContract(symbolAttributes, out var protoContractAttributeData))
         {
-            return ParseMessage(symbol, protoContractAttributeData);
+            var codeGenMessage = ParseMessage(symbol, protoContractAttributeData);
+            ParseContext.Register(symbol.GetFullyQualifiedType(), codeGenMessage);
+            return codeGenMessage;
         }
         
         return null;
@@ -110,7 +112,6 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
                 break;
         }
         
-            
         return codeGenMessage;
     }
 }

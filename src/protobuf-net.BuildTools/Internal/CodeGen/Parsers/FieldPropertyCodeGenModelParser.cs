@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Parsers.Common;
 using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
@@ -20,7 +21,7 @@ internal sealed class FieldPropertyCodeGenModelParser : PropertyCodeGenModelPars
             var codeGenField = new CodeGenField(fieldNumber, symbol.Name)
             {
                 OriginalName = originalName,
-                Type = symbol.GetCodeGenType()
+                Type = ParseContext.GetContractType(symbol.GetFullyQualifiedType())
             };
         
             return codeGenField;   

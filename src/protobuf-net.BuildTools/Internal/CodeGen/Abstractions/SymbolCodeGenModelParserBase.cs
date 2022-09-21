@@ -9,7 +9,7 @@ internal abstract class SymbolCodeGenModelParserBase<TSymbol, TCodeGenModel>
 {
     protected SymbolCodeGenModelParserProvider ParserProvider { get; }
 
-    protected CodeGenParseContext CodeGenParseContext => ParserProvider.CodeGenParseContext;
+    protected CodeGenParseContext ParseContext => ParserProvider.CodeGenParseContext;
     
     public SymbolCodeGenModelParserBase(SymbolCodeGenModelParserProvider parserProvider)
     {
