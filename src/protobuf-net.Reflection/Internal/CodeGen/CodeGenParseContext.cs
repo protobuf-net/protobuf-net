@@ -16,11 +16,17 @@ internal class CodeGenParseContext
         if (string.IsNullOrWhiteSpace(fqn)) return CodeGenType.Unknown;
         if (!_contractTypes.TryGetValue(fqn, out var found))
         {
-            found = new CodeGenPlaceholderType(fqn);
+            found = TryFindWellKnown(fqn) ?? new CodeGenPlaceholderType(fqn);
             _contractTypes.Add(fqn, found);
         }
         return found;
     }
+
+    private CodeGenType? TryFindWellKnown(string fqn) => fqn switch
+        {
+            ".bcl.NetObjectProxy" => CodeGenSimpleType.NetObjectProxy,
+            _ => null,
+        };
 
     public CodeGenType GetMapEntryType(string fqn, CodeGenType key, CodeGenType value)
     {

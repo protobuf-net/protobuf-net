@@ -5,9 +5,22 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 internal enum CodeGenWellKnownType
 {
     None,
-    String,
-    Fixed64,
-    Int32,
-    UInt64,
+    Boolean,
+    Float,
+    Double,
     Bytes,
+    String,
+
+    Int32,
+    SInt32,
+    UInt32,
+    Fixed32,
+    SFixed32,
+
+    Int64,
+    SInt64,
+    UInt64,
+    Fixed64,
+    SFixed64,
+    NetObjectProxy,
 }

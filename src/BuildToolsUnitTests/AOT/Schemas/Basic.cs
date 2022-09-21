@@ -19,6 +19,45 @@ namespace BasicPackage
         [global::ProtoBuf.ProtoMember(1, Name = @"basic_field")]
         public string BasicField { get; set; }
 
+        internal static void Serialize(BasicMessage value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.BasicField is string s && s.Length > 0)
+            {
+                writer.WriteTag(10); // field 1, string
+                writer.WriteWithLengthPrefix(s);
+            }
+        }
+
+        internal static ulong Measure(BasicMessage value)
+        {
+            ulong len = 0;
+            if (value.BasicField is string s && s.Length > 0)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            return len;
+        }
+
+        internal static BasicMessage Merge(BasicMessage value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 10: // field 1, string
+                        value.BasicField = reader.ReadString();
+                        break;
+                    default:
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+            return value;
+        }
+
     }
 
 }

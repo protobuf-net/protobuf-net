@@ -52,7 +52,22 @@ internal class CodeGenField
             Type = field.type switch
             {
                 FieldDescriptorProto.Type.TypeString => CodeGenSimpleType.String,
-                FieldDescriptorProto.Type.TypeEnum or FieldDescriptorProto.Type.TypeMessage => context.GetContractType(field.TypeName),
+                FieldDescriptorProto.Type.TypeFloat => CodeGenSimpleType.Float,
+                FieldDescriptorProto.Type.TypeDouble => CodeGenSimpleType.Double,
+                FieldDescriptorProto.Type.TypeInt32 => CodeGenSimpleType.Int32,
+                FieldDescriptorProto.Type.TypeSint32 => CodeGenSimpleType.SInt32,
+                FieldDescriptorProto.Type.TypeUint32=> CodeGenSimpleType.UInt32,
+                FieldDescriptorProto.Type.TypeInt64 => CodeGenSimpleType.Int64,
+                FieldDescriptorProto.Type.TypeSint64 => CodeGenSimpleType.SInt64,
+                FieldDescriptorProto.Type.TypeUint64 => CodeGenSimpleType.UInt64,
+                FieldDescriptorProto.Type.TypeBool => CodeGenSimpleType.Boolean,
+                FieldDescriptorProto.Type.TypeBytes => CodeGenSimpleType.Bytes,
+                FieldDescriptorProto.Type.TypeFixed32 => CodeGenSimpleType.Fixed32,
+                FieldDescriptorProto.Type.TypeSfixed32 => CodeGenSimpleType.SFixed32,
+                FieldDescriptorProto.Type.TypeFixed64 => CodeGenSimpleType.Fixed64,
+                FieldDescriptorProto.Type.TypeSfixed64 => CodeGenSimpleType.SFixed64,
+                FieldDescriptorProto.Type.TypeEnum or FieldDescriptorProto.Type.TypeMessage or FieldDescriptorProto.Type.TypeGroup
+                    => context.GetContractType(field.TypeName),
                 _ => throw new NotImplementedException($"type not handled: {field.type}"),
             },
         };
