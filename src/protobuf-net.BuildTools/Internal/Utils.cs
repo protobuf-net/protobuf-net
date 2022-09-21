@@ -262,5 +262,7 @@ namespace ProtoBuf.BuildTools.Internal
         
             return result;
         }
+
+        internal static int GetConstantValue(this IFieldSymbol symbol) => symbol.ConstantValue is int constantInteger ? constantInteger : default;
     }
 }
