@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
 using System.Text;
-using ProtoBuf.Internal.CodeGen;
-using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -216,17 +214,6 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
             return null;
-        }
-
-        internal static CodeGenType GetCodeGenType(this IPropertySymbol symbol)
-        {
-            var symbolTypeName = symbol.Type.Name;
-            if (Enum.TryParse<CodeGenWellKnownType>(symbolTypeName, ignoreCase: true, out var wellKnownType))
-            {
-                return new CodeGenSimpleType.WellKnown(wellKnownType, symbolTypeName, "System.");    
-            }
-
-            return new CodeGenCustomType(symbolTypeName, symbol.Type?.BaseType?.Name ?? string.Empty);
         }
         
         internal static string GetFullyQualifiedPrefix(this ISymbol type)

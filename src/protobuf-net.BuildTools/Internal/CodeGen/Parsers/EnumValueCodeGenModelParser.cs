@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGenSemantic.Abstractions;
-using ProtoBuf.Internal.CodeGenSemantic.Models;
+using ProtoBuf.Internal.CodeGen.Abstractions;
+using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Parsers;
+namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class EnumValueCodeGenModelParser : ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue>
 {

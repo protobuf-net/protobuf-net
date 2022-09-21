@@ -3,12 +3,12 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGenSemantic.Abstractions;
-using ProtoBuf.Internal.CodeGenSemantic.Models;
-using ProtoBuf.Internal.CodeGenSemantic.Providers;
+using ProtoBuf.Internal.CodeGen.Abstractions;
+using ProtoBuf.Internal.CodeGen.Models;
+using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Parsers;
+namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class NamespaceCodeGenModelParser : ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile>
 {

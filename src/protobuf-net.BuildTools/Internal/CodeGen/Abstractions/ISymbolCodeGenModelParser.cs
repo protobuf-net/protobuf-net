@@ -1,8 +1,8 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGenSemantic.Models;
+using ProtoBuf.Internal.CodeGen.Models;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Abstractions;
+namespace ProtoBuf.Internal.CodeGen.Abstractions;
 
 internal interface ISymbolCodeGenModelParser<TSymbol, TCodeGenModel> where TSymbol : ISymbol
 {

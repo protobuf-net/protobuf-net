@@ -1,4 +1,4 @@
-﻿namespace ProtoBuf.Internal.CodeGenSemantic.Models;
+﻿namespace ProtoBuf.Internal.CodeGen.Models;
 
 internal sealed class NamespaceParseContext
 {

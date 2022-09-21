@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGenSemantic.Models;
-using ProtoBuf.Internal.CodeGenSemantic.Providers;
+using ProtoBuf.Internal.CodeGen.Models;
+using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
-namespace ProtoBuf.Internal.CodeGenSemantic;
+namespace ProtoBuf.Internal.CodeGen;
 
 internal static class CodeGenSemanticModelParser
 {

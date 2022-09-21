@@ -1,12 +1,12 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGenSemantic.Models;
-using ProtoBuf.Internal.CodeGenSemantic.Parsers.Common;
-using ProtoBuf.Internal.CodeGenSemantic.Providers;
+using ProtoBuf.Internal.CodeGen.Models;
+using ProtoBuf.Internal.CodeGen.Parsers.Common;
+using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Parsers;
+namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGenEnum>
 {

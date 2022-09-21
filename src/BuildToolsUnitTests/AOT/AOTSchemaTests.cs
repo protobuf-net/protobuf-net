@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using ProtoBuf;
+using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Collections.Generic;
 using System.IO;
@@ -140,7 +141,7 @@ public class AOTSchemaTests
             var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if (firstRef is not null && firstRef.SyntaxTree == syntaxTree)
             {
-                parsedFromCode = ProtoBuf.Internal.CodeGenSemantic.CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
+                parsedFromCode = CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
             }
         }
 

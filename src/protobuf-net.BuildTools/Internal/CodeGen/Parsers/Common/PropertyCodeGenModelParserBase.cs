@@ -3,10 +3,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGenSemantic.Abstractions;
-using ProtoBuf.Internal.CodeGenSemantic.Models;
+using ProtoBuf.Internal.CodeGen.Abstractions;
+using ProtoBuf.Internal.CodeGen.Models;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Parsers.Common;
+namespace ProtoBuf.Internal.CodeGen.Parsers.Common;
 
 internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : ISymbolCodeGenModelParser<IPropertySymbol, TCodeGenModel>
 {

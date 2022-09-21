@@ -1,9 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGenSemantic.Abstractions;
-using ProtoBuf.Internal.CodeGenSemantic.Parsers;
+using ProtoBuf.Internal.CodeGen.Abstractions;
+using ProtoBuf.Internal.CodeGen.Parsers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
-namespace ProtoBuf.Internal.CodeGenSemantic.Providers;
+namespace ProtoBuf.Internal.CodeGen.Providers;
 
 internal static class SymbolCodeGenModelParserProvider
 {
