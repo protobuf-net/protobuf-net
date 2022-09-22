@@ -21,7 +21,7 @@ internal sealed class FieldPropertyCodeGenModelParser : PropertyCodeGenModelPars
             var codeGenField = new CodeGenField(fieldNumber, symbol.Name)
             {
                 OriginalName = originalName,
-                Type = ResolveCodeGenType(symbol, dataFormat)
+                Type = symbol.ResolveCodeGenType(dataFormat, ParseContext)
             };
         
             return codeGenField;
@@ -29,11 +29,5 @@ internal sealed class FieldPropertyCodeGenModelParser : PropertyCodeGenModelPars
 
         // throw exception here ?
         return null;
-    }
-
-    private CodeGenType ResolveCodeGenType(IPropertySymbol symbol, DataFormat? dataFormat)
-    {
-        var simpleCodeGenType = symbol.ResolveCodeGenType(dataFormat);
-        return simpleCodeGenType ?? ParseContext.GetContractType(symbol.GetFullyQualifiedType());
     }
 }

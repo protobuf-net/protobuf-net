@@ -1,0 +1,35 @@
+{
+  "Files": [
+    {
+      "Name": "Services.cs",
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Name",
+              "OriginalName": "name"
+            }
+          ],
+          "Name": "HelloRequest",
+          "Package": "GrpcGreeter",
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Message",
+              "OriginalName": "message"
+            }
+          ],
+          "Name": "HelloReply",
+          "Package": "GrpcGreeter",
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        }
+      ]
+    }
+  ]
+}
