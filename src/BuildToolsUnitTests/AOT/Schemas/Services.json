@@ -1,0 +1,81 @@
+{
+  "Files": [
+    {
+      "Name": "Services.proto",
+      "Services": [
+        {
+          "Name": "IGreeter",
+          "OriginalName": "Greeter",
+          "Package": "greet",
+          "ServiceMethods": [
+            {
+              "Name": "SayHello",
+              "OriginalName": "SayHello",
+              "Request": {
+                "IsStreamed": true,
+                "Type": {
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Name",
+                      "OriginalName": "name"
+                    }
+                  ],
+                  "Name": "HelloRequest",
+                  "Package": "greet",
+                  "FullyQualifiedPrefix": "GrpcGreeter."
+                }
+              },
+              "Response": {
+                "IsStreamed": true,
+                "Type": {
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Message",
+                      "OriginalName": "message"
+                    }
+                  ],
+                  "Name": "HelloReply",
+                  "Package": "greet",
+                  "FullyQualifiedPrefix": "GrpcGreeter."
+                }
+              }
+            }
+          ],
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        }
+      ],
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Name",
+              "OriginalName": "name"
+            }
+          ],
+          "Name": "HelloRequest",
+          "Package": "greet",
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Message",
+              "OriginalName": "message"
+            }
+          ],
+          "Name": "HelloReply",
+          "Package": "greet",
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        }
+      ]
+    }
+  ]
+}

@@ -212,6 +212,28 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     {
         ctx.Outdent().WriteLine("}").WriteLine();
     }
+
+    protected override void WriteServiceHeader(CodeGenGeneratorContext ctx, CodeGenService service, ref object state)
+    {
+        var tw = ctx.Write("[global::System.ServiceModel.ServiceContract(");
+        if (service.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{service.OriginalName}""");
+        tw.WriteLine(")]");
+        // if (message.IsDeprecated) WriteDeprecated(ctx);
+        ctx.WriteLine($"{GetAccess(service.Access)} partial interface I{Escape(service.Name)}");
+        ctx.WriteLine("{").Indent();
+    }
+
+    protected override void WriteServiceMethod(CodeGenGeneratorContext ctx, CodeGenServiceMethod method, ref object state)
+    {
+        ctx.WriteLine($"{method.Response} {method.Name}Async({method.Request} value, global::ProtoBuf.Grpc.CallContext context = default);");
+        ctx.WriteLine();
+    }
+    
+    protected override void WriteServiceFooter(CodeGenGeneratorContext ctx, CodeGenService service, ref object state)
+    {
+        ctx.Outdent().WriteLine("}").WriteLine();
+    }
+    
     ///// <summary>
     ///// Write an enum value
     ///// </summary>

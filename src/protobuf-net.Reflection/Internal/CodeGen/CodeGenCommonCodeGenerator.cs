@@ -77,6 +77,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
 
         var messagesByNamespace = file.Messages.ToLookup(x => x.FullyQualifiedPrefix);
         var enumsByNamespace = file.Enums.ToLookup(x => x.FullyQualifiedPrefix);
+        var servicesByNamespace = file.Services.ToLookup(x => x.FullyQualifiedPrefix);
         var namespaces = messagesByNamespace.Select(x => x.Key).Union(enumsByNamespace.Select(x => x.Key));
 
         void WriteMessagesAndEnums(string grp)
@@ -88,6 +89,10 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             foreach (var inner in enumsByNamespace[grp])
             {
                 WriteEnum(ctx, inner);
+            }
+            foreach (var inner in servicesByNamespace[grp])
+            {
+                WriteService(ctx, inner);
             }
         }
 
@@ -285,6 +290,21 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         // WriteEnumSerializer(...);
         WriteEnumFooter(ctx, obj, ref state);
     }
+    
+    /// <summary>
+    /// Emit code representing an service type
+    /// </summary>
+    protected virtual void WriteService(CodeGenGeneratorContext ctx, CodeGenService obj)
+    {
+        object state = null;
+        WriteServiceHeader(ctx, obj, ref state);
+        foreach (var serviceMethod in obj.ServiceMethods)
+        {
+            WriteServiceMethod(ctx, serviceMethod, ref state);
+        }
+        // WriteServiceSerializer(...);
+        WriteServiceFooter(ctx, obj, ref state);
+    }
 
     ///// <summary>
     ///// Emit code representing 'oneof' elements as an enum discriminator
@@ -324,6 +344,21 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// Emit code following a set of enum values
     /// </summary>
     protected abstract void WriteEnumFooter(CodeGenGeneratorContext ctx, CodeGenEnum @enum, ref object state);
+    
+    /// <summary>
+    /// Emit code preceding a set of service methods
+    /// </summary>
+    protected abstract void WriteServiceHeader(CodeGenGeneratorContext ctx, CodeGenService service, ref object state);
+    
+    /// <summary>
+    /// Emit code representing a single service method
+    /// </summary>
+    protected abstract void WriteServiceMethod(CodeGenGeneratorContext ctx, CodeGenServiceMethod method, ref object state);
+    
+    /// <summary>
+    /// Emit code following service methods
+    /// </summary>
+    protected abstract void WriteServiceFooter(CodeGenGeneratorContext ctx, CodeGenService service, ref object state);
 
     /// <summary>
     /// Emit code at the start of a file

@@ -21,7 +21,7 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
             var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
             {
                 OriginalName = originalName,
-                Type = symbol.ResolveCodeGenType(dataFormat)
+                Type = symbol.ResolveKnownCodeGenType(dataFormat)
             };
         
             return codeGenField;
