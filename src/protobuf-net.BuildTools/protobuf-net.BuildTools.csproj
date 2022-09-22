@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <!-- build time deps -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0" Pack="false" PrivateAssets="all" />
 
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="protobuf-net.BuildTools.props" Pack="true" PackagePath="build" />
@@ -69,5 +69,4 @@
     <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/bcl.proto" Link="protobuf-net/bcl.proto" />
     <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/protogen.proto" Link="protobuf-net/protogen.proto" />
   </ItemGroup>
-
 </Project>

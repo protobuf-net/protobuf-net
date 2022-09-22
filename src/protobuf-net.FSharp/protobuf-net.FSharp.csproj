@@ -6,11 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="5.0.2" />
+    <PackageReference Include="FSharp.Core" Version="6.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
-
 </Project>

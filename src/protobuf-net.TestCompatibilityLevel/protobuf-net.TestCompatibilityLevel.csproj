@@ -10,5 +10,4 @@
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
-
 </Project>

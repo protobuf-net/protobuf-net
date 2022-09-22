@@ -14,13 +14,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.3.1" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0" Pack="false" PrivateAssets="all" />
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
-    <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core"/>
+    <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core" />
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
 
     <!-- cross-reference the analyzer code -->

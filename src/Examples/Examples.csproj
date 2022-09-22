@@ -17,12 +17,12 @@
     <ProjectReference Include="..\protobuf-net.MessagePipes\protobuf-net.MessagePipes.csproj" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
-    <PackageReference Include="Google.Protobuf" Version="3.19.3">
+    <PackageReference Include="Google.Protobuf" Version="3.21.6">
       <Aliases>gpb</Aliases>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -35,7 +35,7 @@
   <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" Version="[4.1.1.4000]" />
     <PackageReference Include="Iesi.Collections" Version="4.0.4" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
@@ -50,8 +50,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net6.0'">
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
   </ItemGroup>

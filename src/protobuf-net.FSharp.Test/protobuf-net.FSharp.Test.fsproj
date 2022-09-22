@@ -13,14 +13,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
+        <PackageReference Update="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="xunit" Version="2.4.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="coverlet.collector" Version="1.2.0" />
-        <!--<PackageReference Include="System.ValueTuple" Version="4.5.0" />-->
     </ItemGroup>
 
     <ItemGroup>
@@ -28,5 +28,4 @@
         <ProjectReference Include="..\protobuf-net.FSharp\protobuf-net.FSharp.csproj" />
         <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     </ItemGroup>
-
 </Project>
