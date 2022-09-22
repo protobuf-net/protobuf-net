@@ -7,7 +7,13 @@ namespace ProtoBuf.Internal.CodeGen;
 
 internal static class CodeGenUtils
 {
-    internal static CodeGenType ResolveCodeGenType(this IPropertySymbol symbol, DataFormat? dataFormat)
+    internal static CodeGenType ResolveCodeGenType(this IPropertySymbol symbol, DataFormat? dataFormat, CodeGenParseContext parseContext)
+    {
+        var simpleCodeGenType = symbol.ResolveKnownCodeGenType(dataFormat);
+        return simpleCodeGenType ?? parseContext.GetContractType(symbol.GetFullyQualifiedType());
+    }
+    
+    internal static CodeGenType ResolveKnownCodeGenType(this IPropertySymbol symbol, DataFormat? dataFormat)
     {
         if (symbol.Type is INamedTypeSymbol named && named.InNamespace("System"))
         {

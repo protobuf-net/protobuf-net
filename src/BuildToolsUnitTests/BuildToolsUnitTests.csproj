@@ -42,5 +42,11 @@
     <None Update="AOT\Schemas\everything.json">
       <DependentUpon>everything.proto</DependentUpon>
     </None>
+    <None Update="AOT\Schemas\everything.pjson">
+      <DependentUpon>everything.proto</DependentUpon>
+    </None>
+    <None Update="AOT\Schemas\Services.json">
+      <DependentUpon>Services.proto</DependentUpon>
+    </None>
   </ItemGroup>
 </Project>

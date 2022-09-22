@@ -27,6 +27,10 @@ internal class CodeGenSet
             {
                 newFile.Enums.Add(CodeGenEnum.Parse(type, namespacePrefix, context, file.Package));
             }
+            foreach (var service in file.Services)
+            {
+                newFile.Services.Add(CodeGenService.Parse(service, namespacePrefix, context, file.Package));
+            }
             set.Files.Add(newFile);
         }
 
