@@ -7,13 +7,13 @@
           "Fields": [
             {
               "FieldNumber": 1,
-              "TypeName": "ObjectTestNetObject",
+              "TypeName": "AllTheThings.TestNetObject",
               "Name": "Foo",
               "OriginalName": "foo"
             },
             {
               "FieldNumber": 2,
-              "TypeName": "ObjectTestNetObject",
+              "TypeName": "AllTheThings.TestNetObject",
               "Name": "barRef"
             },
             {
@@ -23,6 +23,7 @@
             }
           ],
           "Name": "TestNetObject",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -76,6 +77,7 @@
             }
           ],
           "Name": "MagicValues",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -118,25 +120,52 @@
             }
           ],
           "Name": "SampleMessage",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
           "Enums": [
             {
               "OriginalName": "corpus",
-              "TypeName": "EnumCorpus",
               "Name": "CorpusValue",
               "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
             },
             {
               "EnumValues": [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
+                {
+                  "Name": "Universal",
+                  "OriginalName": "UNIVERSAL"
+                },
+                {
+                  "Name": "Web",
+                  "Value": 1,
+                  "OriginalName": "WEB"
+                },
+                {
+                  "Name": "Images",
+                  "Value": 2,
+                  "OriginalName": "IMAGES"
+                },
+                {
+                  "Name": "Local",
+                  "Value": 3,
+                  "OriginalName": "LOCAL"
+                },
+                {
+                  "Name": "News",
+                  "Value": 4,
+                  "OriginalName": "NEWS"
+                },
+                {
+                  "Name": "Products",
+                  "Value": 5,
+                  "OriginalName": "PRODUCTS"
+                },
+                {
+                  "Name": "Video",
+                  "Value": 6,
+                  "OriginalName": "VIDEO"
+                }
               ],
               "TypeName": "int32",
               "Name": "Corpus",
@@ -164,6 +193,7 @@
             }
           ],
           "Name": "SearchRequest",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -190,6 +220,7 @@
                 }
               ],
               "Name": "Result",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             },
             {
@@ -214,6 +245,7 @@
                 }
               ],
               "Name": "Grouped",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             },
             {
@@ -239,30 +271,32 @@
               ],
               "Name": "Upper",
               "OriginalName": "UPPER",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             }
           ],
           "Fields": [
             {
               "FieldNumber": 1,
-              "TypeName": "ObjectResult",
+              "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
               "OriginalName": "result"
             },
             {
               "FieldNumber": 10,
-              "TypeName": "ObjectGrouped",
+              "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
               "OriginalName": "grouped"
             },
             {
               "FieldNumber": 12,
-              "TypeName": "ObjectUpper",
+              "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
               "OriginalName": "upper"
             }
           ],
           "Name": "SearchResponse",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -283,6 +317,7 @@
                 }
               ],
               "Name": "MapField1Entry",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             },
             {
@@ -295,12 +330,13 @@
                 },
                 {
                   "FieldNumber": 2,
-                  "TypeName": "ObjectOuter",
+                  "TypeName": "AllTheThings.Outer",
                   "Name": "Value",
                   "OriginalName": "value"
                 }
               ],
               "Name": "MapField2Entry",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             },
             {
@@ -321,10 +357,12 @@
                     }
                   ],
                   "Name": "Inner",
+                  "Package": "AllTheThings",
                   "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleAA+"
                 }
               ],
               "Name": "MiddleAA",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             },
             {
@@ -345,28 +383,31 @@
                     }
                   ],
                   "Name": "Inner",
+                  "Package": "AllTheThings",
                   "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleBB+"
                 }
               ],
               "Name": "MiddleBB",
+              "Package": "AllTheThings",
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             }
           ],
           "Fields": [
             {
               "FieldNumber": 7,
-              "TypeName": "ObjectMapField1Entry",
+              "TypeName": "AllTheThings.Outer+MapField1Entry",
               "Name": "MapField1s",
               "OriginalName": "map_field1"
             },
             {
               "FieldNumber": 8,
-              "TypeName": "ObjectMapField2Entry",
+              "TypeName": "AllTheThings.Outer+MapField2Entry",
               "Name": "MapField2s",
               "OriginalName": "map_field2"
             }
           ],
           "Name": "Outer",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -379,6 +420,7 @@
             }
           ],
           "Name": "SomeOtherMessage",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -409,6 +451,7 @@
             }
           ],
           "Name": "FieldRules",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -427,14 +470,17 @@
             }
           ],
           "Name": "TagRanges",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
           "Name": "Foo",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
           "Name": "Baz",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
@@ -525,14 +571,20 @@
             }
           ],
           "Name": "PrimitiveFieldTypes",
+          "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         }
       ],
       "Enums": [
         {
           "EnumValues": [
-            null,
-            null
+            {
+              "Name": "A"
+            },
+            {
+              "Name": "B",
+              "Value": 1
+            }
           ],
           "TypeName": "int32",
           "Name": "RootEnum",
@@ -540,9 +592,20 @@
         },
         {
           "EnumValues": [
-            null,
-            null,
-            null
+            {
+              "Name": "EaaUnknown",
+              "OriginalName": "EAA_UNKNOWN"
+            },
+            {
+              "Name": "EaaStarted",
+              "Value": 1,
+              "OriginalName": "EAA_STARTED"
+            },
+            {
+              "Name": "EaaRunning",
+              "Value": 1,
+              "OriginalName": "EAA_RUNNING"
+            }
           ],
           "TypeName": "int32",
           "Name": "EnumAllowingAlias",
@@ -550,8 +613,15 @@
         },
         {
           "EnumValues": [
-            null,
-            null
+            {
+              "Name": "EnaaUnknown",
+              "OriginalName": "ENAA_UNKNOWN"
+            },
+            {
+              "Name": "EnaaStarted",
+              "Value": 1,
+              "OriginalName": "ENAA_STARTED"
+            }
           ],
           "TypeName": "int32",
           "Name": "EnumNotAllowingAlias",

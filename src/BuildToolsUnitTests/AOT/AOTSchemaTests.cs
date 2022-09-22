@@ -1,6 +1,6 @@
 ﻿// uncomment this to cause the source folder to be updated with the current outputs;
 // this makes changes visible in the source repo, for comparison
-// #define UPDATE_FILES
+#define UPDATE_FILES
 
 using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;

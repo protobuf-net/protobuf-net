@@ -67,7 +67,7 @@ public sealed class ForwardRequest
     {
         if (value._traceId is { Length: > 0 })
         {
-            writer.WriteTag((1 << 3) | (int)WireType.String);
+            writer.WriteVarint((1 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._traceId);
         }
         if (value._itemRequests.Count > 0)
@@ -78,14 +78,14 @@ public sealed class ForwardRequest
             foreach (var item in value._itemRequests)
 #endif
             {
-                writer.WriteTag((2 << 3) | (int)WireType.String);
-                writer.WriteVarintUInt64(ForwardPerItemRequest.Measure(item));
+                writer.WriteVarint((2 << 3) | (int)WireType.String);
+                writer.WriteVarint(ForwardPerItemRequest.Measure(item));
                 ForwardPerItemRequest.WriteSingle(in item, ref writer);
             }
         }
         if (value._requestContextInfo is { Length: > 0 })
         {
-            writer.WriteTag((3 << 3) | (int)WireType.String);
+            writer.WriteVarint((3 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._requestContextInfo);
         }
     }
@@ -268,12 +268,12 @@ public readonly struct ForwardPerItemRequest
     {
         if (value._itemId is { Length: > 0 })
         {
-            writer.WriteTag((1 << 3) | (int)WireType.String);
+            writer.WriteVarint((1 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._itemId);
         }
         if (value._itemContext is { Length:>0 })
         {
-            writer.WriteTag((2 << 3) | (int)WireType.String);
+            writer.WriteVarint((2 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._itemContext);
         }
     }
@@ -337,12 +337,12 @@ public readonly struct ForwardPerItemResponse
     {
         if (value._result != 0)
         {
-            writer.WriteTag((1 << 3) | (int)WireType.Fixed32);
+            writer.WriteVarint((1 << 3) | (int)WireType.Fixed32);
             writer.WriteSingle(value._result);
         }
         if (value._extraResult is { Length: > 0 })
         {
-            writer.WriteTag((2 << 3) | (int)WireType.String);
+            writer.WriteVarint((2 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._extraResult);
         }
     }
@@ -397,20 +397,20 @@ public sealed class ForwardResponse
             foreach (var item in value._itemResponses)
 #endif
             {
-                writer.WriteTag((1 << 3) | (int)WireType.String);
-                writer.WriteVarintUInt64(ForwardPerItemResponse.Measure(item));
+                writer.WriteVarint((1 << 3) | (int)WireType.String);
+                writer.WriteVarint(ForwardPerItemResponse.Measure(item));
                 ForwardPerItemResponse.WriteSingle(in item, ref writer);
             }
         }
         if (value._routeLatencyInUs != 0)
         {
-            writer.WriteTag((2 << 3) | (int)WireType.Varint);
-            writer.WriteVarintUInt64((ulong)value._routeLatencyInUs);
+            writer.WriteVarint((2 << 3) | (int)WireType.Varint);
+            writer.WriteVarint((ulong)value._routeLatencyInUs);
         }
         if (value._routeStartTimeInTicks != 0)
         {
-            writer.WriteTag((3 << 3) | (int)WireType.Varint);
-            writer.WriteVarintUInt64((ulong)value._routeStartTimeInTicks);
+            writer.WriteVarint((3 << 3) | (int)WireType.Varint);
+            writer.WriteVarint((ulong)value._routeStartTimeInTicks);
         }
     }
 

@@ -68,21 +68,21 @@ public sealed class ForwardRequest : IDisposable
     {
         if (!value._traceId.IsEmpty)
         {
-            writer.WriteTag((1 << 3) | (int)WireType.String);
+            writer.WriteVarint((1 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._traceId);
         }
         if (!value._itemRequests.IsEmpty)
         {
             foreach (ref readonly var item in value._itemRequests.Span)
             {
-                writer.WriteTag((2 << 3) | (int)WireType.String);
-                writer.WriteVarintUInt64(ForwardPerItemRequest.Measure(item));
+                writer.WriteVarint((2 << 3) | (int)WireType.String);
+                writer.WriteVarint(ForwardPerItemRequest.Measure(item));
                 ForwardPerItemRequest.WriteSingle(in item, ref writer);
             }
         }
         if (!value._requestContextInfo.IsEmpty)
         {
-            writer.WriteTag((3 << 3) | (int)WireType.String);
+            writer.WriteVarint((3 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._requestContextInfo);
         }
     }
@@ -268,12 +268,12 @@ public readonly struct ForwardPerItemRequest : IDisposable
     {
         if (!value._itemId.IsEmpty)
         {
-            writer.WriteTag((1 << 3) | (int)WireType.String);
+            writer.WriteVarint((1 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._itemId);
         }
         if (!value._itemContext.IsEmpty)
         {
-            writer.WriteTag((2 << 3) | (int)WireType.String);
+            writer.WriteVarint((2 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._itemContext);
         }
     }
@@ -342,12 +342,12 @@ public readonly struct ForwardPerItemResponse : IDisposable
     {
         if (value._result != 0)
         {
-            writer.WriteTag((1 << 3) | (int)WireType.Fixed32);
+            writer.WriteVarint((1 << 3) | (int)WireType.Fixed32);
             writer.WriteSingle(value._result);
         }
         if (!value._extraResult.IsEmpty)
         {
-            writer.WriteTag((2 << 3) | (int)WireType.String);
+            writer.WriteVarint((2 << 3) | (int)WireType.String);
             writer.WriteWithLengthPrefix(value._extraResult);
         }
     }
@@ -394,20 +394,20 @@ public sealed class ForwardResponse : IDisposable
         {
             foreach (ref readonly var item in value._itemResponses.Span)
             {
-                writer.WriteTag((1 << 3) | (int)WireType.String);
-                writer.WriteVarintUInt64(ForwardPerItemResponse.Measure(item));
+                writer.WriteVarint((1 << 3) | (int)WireType.String);
+                writer.WriteVarint(ForwardPerItemResponse.Measure(item));
                 ForwardPerItemResponse.WriteSingle(in item, ref writer);
             }
         }
         if (value._routeLatencyInUs != 0)
         {
-            writer.WriteTag((2 << 3) | (int)WireType.Varint);
-            writer.WriteVarintUInt64((ulong)value._routeLatencyInUs);
+            writer.WriteVarint((2 << 3) | (int)WireType.Varint);
+            writer.WriteVarint((ulong)value._routeLatencyInUs);
         }
         if (value._routeStartTimeInTicks != 0)
         {
-            writer.WriteTag((3 << 3) | (int)WireType.Varint);
-            writer.WriteVarintUInt64((ulong)value._routeStartTimeInTicks);
+            writer.WriteVarint((3 << 3) | (int)WireType.Varint);
+            writer.WriteVarint((ulong)value._routeStartTimeInTicks);
         }
     }
 

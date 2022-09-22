@@ -663,5 +663,24 @@ public ref struct Reader
     /// Read an signed 64-bit varint value
     /// </summary>
     public long ReadVarintInt64() => (long)ReadVarintUInt64();
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void UnhandledTag(uint tag)
+        => throw new InvalidOperationException($"Field {tag >> 3} was not expected with wire-type {tag & 7}; this may indicate a tooling error - please report as an issue");
+
+    int _lastGroup;
+    public void PushGroup(int tag)
+    {
+        var group = tag >> 3;
+        if ((tag & 7) != 4 || group <= 0) throw new ArgumentOutOfRangeException(nameof(tag));
+        if (_lastGroup != 0) throw new InvalidOperationException($"Group {_lastGroup} was already being terminated, while terminating {group}");
+        _lastGroup = group;
+    }
+    public void PopGroup(int group)
+    {
+        if (group < 0) throw new ArgumentOutOfRangeException(nameof(group));
+        if (_lastGroup != group) throw new InvalidOperationException($"While terminating group {group}, group {_lastGroup} was found instead");
+        _lastGroup = 0;
+    }
 }
 

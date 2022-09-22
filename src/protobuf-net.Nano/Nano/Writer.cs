@@ -168,17 +168,18 @@ public ref struct Writer
     public static ulong MeasureWithLengthPrefix(ReadOnlyMemory<byte> value)
         => MeasureWithLengthPrefix((uint)value.Length);
 
-    /// <summary>
-    /// Writes a new tag (field-header)
-    /// </summary>
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteTag(uint value) => WriteVarintUInt32(value);
+    public static uint Zig(int value) => (uint)((value << 1) ^ (value >> 31));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static ulong Zig(long value) => (ulong)((value << 1) ^ (value >> 63));
 
     /// <summary>
-    /// Writes a new tag (field-header)
+    /// Write an unsigned integer with varint encoding
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteTag(byte value)
+    public void WriteVarint(byte value)
     {
         if (_index < _end & (value & 0x80) == 0)
         {
@@ -186,7 +187,23 @@ public ref struct Writer
         }
         else
         {
-            WriteVarintUInt32(value);
+            WriteVarint((uint)value);
+        }
+    }
+
+    /// <summary>
+    /// Writes a new tag (field-header)
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteVarint(bool value)
+    {
+        if (_index < _end)
+        {
+            _buffer[_index++] = value ? (byte)1 : (byte)0;
+        }
+        else
+        {
+            WriteVarint((uint)(value ? (byte)1 : (byte)0));
         }
     }
 
@@ -194,7 +211,7 @@ public ref struct Writer
     /// Write an unsigned integer with varint encoding
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteVarintUInt32(uint value)
+    public void WriteVarint(uint value)
     {
         if (_index + 5 <= _end)
         {
@@ -280,7 +297,7 @@ public ref struct Writer
     private void WriteWithLengthPrefix(ReadOnlySpan<char> value)
     {
         var bytes = Reader.UTF8.GetByteCount(value);
-        WriteVarintUInt32((uint)bytes);
+        WriteVarint((uint)bytes);
         if (_index + bytes <= _end)
         {
 #if USE_SPAN_BUFFER
@@ -303,9 +320,9 @@ public ref struct Writer
     /// Write an unsigned integer with varint encoding
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteVarintUInt64(ulong value)
+    public void WriteVarint(ulong value)
     {
-        if ((value >> 32) == 0) WriteVarintUInt32((uint)value);
+        if ((value >> 32) == 0) WriteVarint((uint)value);
         else WriteVarintUInt64Full(value);
     }
     private void WriteVarintUInt64Full(ulong value)
@@ -430,7 +447,7 @@ public ref struct Writer
     private void WriteWithLengthPrefix(ReadOnlySpan<byte> value)
     {
         var bytes = value.Length;
-        WriteVarintUInt32((uint)bytes);
+        WriteVarint((uint)bytes);
         if (_index + bytes <= _end)
         {
 #if USE_SPAN_BUFFER

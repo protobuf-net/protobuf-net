@@ -7,25 +7,25 @@
           "Fields": [
             {
               "FieldNumber": 1,
-              "TypeName": "ObjectMsgA",
+              "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
               "FieldNumber": 2,
-              "TypeName": "ObjectMsgB",
+              "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
               "FieldNumber": 3,
-              "TypeName": "ObjectMsgC",
+              "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
               "FieldNumber": 4,
-              "TypeName": "ObjectMsgD",
+              "TypeName": "TypeRefs.MsgD",
               "Name": "D",
               "OriginalName": "d"
             }
@@ -41,25 +41,25 @@
               "Fields": [
                 {
                   "FieldNumber": 1,
-                  "TypeName": "ObjectMsgA",
+                  "TypeName": "TypeRefs.MsgA",
                   "Name": "A",
                   "OriginalName": "a"
                 },
                 {
                   "FieldNumber": 2,
-                  "TypeName": "ObjectMsgB",
+                  "TypeName": "TypeRefs.MsgB",
                   "Name": "B",
                   "OriginalName": "b"
                 },
                 {
                   "FieldNumber": 3,
-                  "TypeName": "ObjectMsgC",
+                  "TypeName": "TypeRefs.MsgB+MsgC",
                   "Name": "C",
                   "OriginalName": "c"
                 },
                 {
                   "FieldNumber": 4,
-                  "TypeName": "ObjectMsgD",
+                  "TypeName": "TypeRefs.MsgD",
                   "Name": "D",
                   "OriginalName": "d"
                 }
@@ -73,25 +73,25 @@
           "Fields": [
             {
               "FieldNumber": 1,
-              "TypeName": "ObjectMsgA",
+              "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
               "FieldNumber": 2,
-              "TypeName": "ObjectMsgB",
+              "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
               "FieldNumber": 3,
-              "TypeName": "ObjectMsgC",
+              "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
               "FieldNumber": 4,
-              "TypeName": "ObjectMsgD",
+              "TypeName": "TypeRefs.MsgD",
               "Name": "D",
               "OriginalName": "d"
             }
@@ -105,25 +105,25 @@
           "Fields": [
             {
               "FieldNumber": 1,
-              "TypeName": "ObjectMsgA",
+              "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
               "FieldNumber": 2,
-              "TypeName": "ObjectMsgB",
+              "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
               "FieldNumber": 3,
-              "TypeName": "ObjectMsgC",
+              "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
               "FieldNumber": 4,
-              "TypeName": "ObjectMsgD",
+              "TypeName": "TypeRefs.MsgD",
               "Name": "D",
               "OriginalName": "d"
             }

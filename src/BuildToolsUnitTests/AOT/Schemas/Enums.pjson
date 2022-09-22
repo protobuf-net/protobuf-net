@@ -7,7 +7,6 @@
           "Enums": [
             {
               "OriginalName": "corpus",
-              "TypeName": "EnumCorpus",
               "Name": "Corpus",
               "FullyQualifiedPrefix": "BasicPackage.SearchRequest+"
             }

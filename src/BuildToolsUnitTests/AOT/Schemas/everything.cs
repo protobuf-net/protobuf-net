@@ -25,6 +25,97 @@ namespace AllTheThings
         [global::ProtoBuf.ProtoMember(3)]
         public object barDyn { get; set; }
 
+        internal static void Serialize(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.Foo is global::AllTheThings.TestNetObject obj1)
+            {
+                writer.WriteVarint(10); // field 1, string
+                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(obj1);
+                global::AllTheThings.TestNetObject.Write(obj1, ref writer);
+            }
+            if (value.barRef is global::AllTheThings.TestNetObject obj2)
+            {
+                writer.WriteVarint(18); // field 2, string
+                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(obj2);
+                global::AllTheThings.TestNetObject.Write(obj2, ref writer);
+            }
+            if (value.barDyn is not null)
+            {
+                throw new global::System.NotSupportedException("dynamic types/reference-tracking is not supported");
+            }
+        }
+
+        internal static ulong Measure(TestNetObject value)
+        {
+            ulong len = 0;
+            if (value.Foo is global::AllTheThings.TestNetObject obj1)
+            {
+                len += 1 + global::AllTheThings.TestNetObject.Measure(obj1);
+            }
+            if (value.barRef is global::AllTheThings.TestNetObject obj2)
+            {
+                len += 1 + global::AllTheThings.TestNetObject.Measure(obj2);
+            }
+            if (value.barDyn is not null)
+            {
+                throw new global::System.NotSupportedException("dynamic types/reference-tracking is not supported");
+            }
+            return len;
+        }
+
+        internal static TestNetObject Merge(TestNetObject value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 10: // field 1, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.Foo = global::AllTheThings.TestNetObject.Merge(value.Foo, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 11: // field 1, group
+                        value.Foo = global::AllTheThings.TestNetObject.Merge(value.Foo, ref reader);
+                        reader.PopGroup(1);
+                        break;
+                    case 18: // field 2, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.barRef = global::AllTheThings.TestNetObject.Merge(value.barRef, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 19: // field 2, group
+                        value.barRef = global::AllTheThings.TestNetObject.Merge(value.barRef, ref reader);
+                        reader.PopGroup(2);
+                        break;
+                    case 26: // field 3, string
+                    case 27: // field 3, group
+                        throw new global::System.NotSupportedException("dynamic types/reference-tracking is not supported");
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 2:
+                            case 3:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -58,6 +149,91 @@ namespace AllTheThings
         [global::ProtoBuf.ProtoMember(8)]
         public int requiredWithDefault { get; set; }
 
+        internal static void Serialize(MagicValues value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            writer.WriteVarint(13); // field 1, fixed32
+            writer.WriteFixed(value.A);
+            writer.WriteVarint(21); // field 2, fixed32
+            writer.WriteFixed(value.B);
+            writer.WriteVarint(29); // field 3, fixed32
+            writer.WriteFixed(value.C);
+            writer.WriteVarint(37); // field 4, fixed32
+            writer.WriteFixed(value.D);
+            writer.WriteVarint(45); // field 5, fixed32
+            writer.WriteFixed(value.E);
+            writer.WriteVarint(53); // field 6, fixed32
+            writer.WriteFixed(value.F);
+            writer.WriteVarint(56); // field 7, varint
+            writer.WriteVarint(value.G);
+            writer.WriteVarint(64); // field 8, varint
+            writer.WriteVarint(unchecked((uint)value.requiredWithDefault));
+        }
+
+        internal static ulong Measure(MagicValues value)
+        {
+            ulong len = 0;
+            len += 5;
+            len += 5;
+            len += 5;
+            len += 5;
+            len += 5;
+            len += 5;
+            len += 2;
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.requiredWithDefault));
+            return len;
+        }
+
+        internal static MagicValues Merge(MagicValues value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 13: // field 1, fixed32
+                        value.A = reader.ReadFixedSingle();
+                    case 21: // field 2, fixed32
+                        value.B = reader.ReadFixedSingle();
+                    case 29: // field 3, fixed32
+                        value.C = reader.ReadFixedSingle();
+                    case 37: // field 4, fixed32
+                        value.D = reader.ReadFixedSingle();
+                    case 45: // field 5, fixed32
+                        value.E = reader.ReadFixedSingle();
+                    case 53: // field 6, fixed32
+                        value.F = reader.ReadFixedSingle();
+                    value.G = reader.ReadVarint32() != 0;
+                    case 64: // field 8, varint
+                        value.requiredWithDefault = unchecked((int)reader.ReadVarint32());
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 7:
+                            case 8:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -84,6 +260,106 @@ namespace AllTheThings
 
         [global::ProtoBuf.ProtoMember(12, Name = @"bar_name")]
         public string BarName { get; set; }
+
+        internal static void Serialize(SampleMessage value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.FooName is { Length: > 0} s)
+            {
+                writer.WriteVarint(10); // field 1, string
+                writer.WriteWithLengthPrefix(s);
+            }
+            if (value.Name is { Length: > 0} s)
+            {
+                writer.WriteVarint(34); // field 4, string
+                writer.WriteWithLengthPrefix(s);
+            }
+            writer.WriteVarint(72); // field 9, varint
+            writer.WriteVarint(value.SubMessage);
+            if (value.Name2 is { Length: > 0} s)
+            {
+                writer.WriteVarint(42); // field 5, string
+                writer.WriteWithLengthPrefix(s);
+            }
+            writer.WriteVarint(80); // field 10, varint
+            writer.WriteVarint(value.SubMessage2);
+            if (value.BarName is { Length: > 0} s)
+            {
+                writer.WriteVarint(98); // field 12, string
+                writer.WriteWithLengthPrefix(s);
+            }
+        }
+
+        internal static ulong Measure(SampleMessage value)
+        {
+            ulong len = 0;
+            if (value.FooName is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            if (value.Name is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            len += 2;
+            if (value.Name2 is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            len += 2;
+            if (value.BarName is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            return len;
+        }
+
+        internal static SampleMessage Merge(SampleMessage value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 10: // field 1, string
+                        value.FooName = reader.ReadString();
+                        break;
+                    case 34: // field 4, string
+                        value.Name = reader.ReadString();
+                        break;
+                    value.SubMessage = reader.ReadVarint32() != 0;
+                    case 42: // field 5, string
+                        value.Name2 = reader.ReadString();
+                        break;
+                    value.SubMessage2 = reader.ReadVarint32() != 0;
+                    case 98: // field 12, string
+                        value.BarName = reader.ReadString();
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 4:
+                            case 9:
+                            case 5:
+                            case 10:
+                            case 12:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
 
     }
 
@@ -125,6 +401,89 @@ namespace AllTheThings
             Video = 6,
         }
 
+        internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.Query is { Length: > 0} s)
+            {
+                writer.WriteVarint(10); // field 1, string
+                writer.WriteWithLengthPrefix(s);
+            }
+            writer.WriteVarint(16); // field 2, varint
+            writer.WriteVarint(unchecked((uint)value.PageNumber));
+            writer.WriteVarint(24); // field 3, varint
+            writer.WriteVarint(unchecked((uint)value.ResultPerPage));
+            if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
+            {
+                writer.WriteVarint(34); // field 4, string
+                writer.WriteVarintUInt64(global::AllTheThings.SearchRequest.Corpus.Measure(obj4);
+                global::AllTheThings.SearchRequest.Corpus.Write(obj4, ref writer);
+            }
+        }
+
+        internal static ulong Measure(SearchRequest value)
+        {
+            ulong len = 0;
+            if (value.Query is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.PageNumber));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.ResultPerPage));
+            if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
+            {
+                len += 1 + global::AllTheThings.SearchRequest.Corpus.Measure(obj4);
+            }
+            return len;
+        }
+
+        internal static SearchRequest Merge(SearchRequest value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 10: // field 1, string
+                        value.Query = reader.ReadString();
+                        break;
+                    case 16: // field 2, varint
+                        value.PageNumber = unchecked((int)reader.ReadVarint32());
+                    case 24: // field 3, varint
+                        value.ResultPerPage = unchecked((int)reader.ReadVarint32());
+                    case 34: // field 4, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.CorpusValue = global::AllTheThings.SearchRequest.Corpus.Merge(value.CorpusValue, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 35: // field 4, group
+                        value.CorpusValue = global::AllTheThings.SearchRequest.Corpus.Merge(value.CorpusValue, ref reader);
+                        reader.PopGroup(4);
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -159,6 +518,83 @@ namespace AllTheThings
             [global::ProtoBuf.ProtoMember(3, Name = @"snippets")]
             public string Snippets { get; set; }
 
+            internal static void Serialize(Result value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+                if (value.Url is { Length: > 0} s)
+                {
+                    writer.WriteVarint(10); // field 1, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Title is { Length: > 0} s)
+                {
+                    writer.WriteVarint(18); // field 2, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Snippets is { Length: > 0} s)
+                {
+                    writer.WriteVarint(26); // field 3, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+            }
+
+            internal static ulong Measure(Result value)
+            {
+                ulong len = 0;
+                if (value.Url is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Title is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Snippets is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                return len;
+            }
+
+            internal static Result Merge(Result value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        case 10: // field 1, string
+                            value.Url = reader.ReadString();
+                            break;
+                        case 18: // field 2, string
+                            value.Title = reader.ReadString();
+                            break;
+                        case 26: // field 3, string
+                            value.Snippets = reader.ReadString();
+                            break;
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            switch (tag >> 3)
+                            {
+                                case 1:
+                                case 2:
+                                case 3:
+                                    reader.UnhandledTag(tag); // throws
+                                    break;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
+            }
+
         }
 
         [global::ProtoBuf.ProtoContract()]
@@ -176,6 +612,83 @@ namespace AllTheThings
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
             public string Snippets { get; set; }
+
+            internal static void Serialize(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+                if (value.Url is { Length: > 0} s)
+                {
+                    writer.WriteVarint(18); // field 2, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Title is { Length: > 0} s)
+                {
+                    writer.WriteVarint(26); // field 3, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Snippets is { Length: > 0} s)
+                {
+                    writer.WriteVarint(34); // field 4, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+            }
+
+            internal static ulong Measure(Grouped value)
+            {
+                ulong len = 0;
+                if (value.Url is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Title is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Snippets is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                return len;
+            }
+
+            internal static Grouped Merge(Grouped value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        case 18: // field 2, string
+                            value.Url = reader.ReadString();
+                            break;
+                        case 26: // field 3, string
+                            value.Title = reader.ReadString();
+                            break;
+                        case 34: // field 4, string
+                            value.Snippets = reader.ReadString();
+                            break;
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            switch (tag >> 3)
+                            {
+                                case 2:
+                                case 3:
+                                case 4:
+                                    reader.UnhandledTag(tag); // throws
+                                    break;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
+            }
 
         }
 
@@ -195,6 +708,181 @@ namespace AllTheThings
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
             public string Snippets { get; set; }
 
+            internal static void Serialize(Upper value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+                if (value.Url is { Length: > 0} s)
+                {
+                    writer.WriteVarint(18); // field 2, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Title is { Length: > 0} s)
+                {
+                    writer.WriteVarint(26); // field 3, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Snippets is { Length: > 0} s)
+                {
+                    writer.WriteVarint(34); // field 4, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+            }
+
+            internal static ulong Measure(Upper value)
+            {
+                ulong len = 0;
+                if (value.Url is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Title is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Snippets is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                return len;
+            }
+
+            internal static Upper Merge(Upper value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        case 18: // field 2, string
+                            value.Url = reader.ReadString();
+                            break;
+                        case 26: // field 3, string
+                            value.Title = reader.ReadString();
+                            break;
+                        case 34: // field 4, string
+                            value.Snippets = reader.ReadString();
+                            break;
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            switch (tag >> 3)
+                            {
+                                case 2:
+                                case 3:
+                                case 4:
+                                    reader.UnhandledTag(tag); // throws
+                                    break;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
+            }
+
+        }
+
+        internal static void Serialize(SearchResponse value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.Results is global::AllTheThings.SearchResponse.Result obj1)
+            {
+                writer.WriteVarint(10); // field 1, string
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Result.Measure(obj1);
+                global::AllTheThings.SearchResponse.Result.Write(obj1, ref writer);
+            }
+            if (value.Groupeds is global::AllTheThings.SearchResponse.Grouped obj10)
+            {
+                writer.WriteVarint(82); // field 10, string
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Grouped.Measure(obj10);
+                global::AllTheThings.SearchResponse.Grouped.Write(obj10, ref writer);
+            }
+            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+            {
+                writer.WriteVarint(98); // field 12, string
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(obj12);
+                global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
+            }
+        }
+
+        internal static ulong Measure(SearchResponse value)
+        {
+            ulong len = 0;
+            if (value.Results is global::AllTheThings.SearchResponse.Result obj1)
+            {
+                len += 1 + global::AllTheThings.SearchResponse.Result.Measure(obj1);
+            }
+            if (value.Groupeds is global::AllTheThings.SearchResponse.Grouped obj10)
+            {
+                len += 1 + global::AllTheThings.SearchResponse.Grouped.Measure(obj10);
+            }
+            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+            {
+                len += 1 + global::AllTheThings.SearchResponse.Upper.Measure(obj12);
+            }
+            return len;
+        }
+
+        internal static SearchResponse Merge(SearchResponse value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 10: // field 1, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.Results = global::AllTheThings.SearchResponse.Result.Merge(value.Results, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 11: // field 1, group
+                        value.Results = global::AllTheThings.SearchResponse.Result.Merge(value.Results, ref reader);
+                        reader.PopGroup(1);
+                        break;
+                    case 82: // field 10, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.Groupeds = global::AllTheThings.SearchResponse.Grouped.Merge(value.Groupeds, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 83: // field 10, group
+                        value.Groupeds = global::AllTheThings.SearchResponse.Grouped.Merge(value.Groupeds, ref reader);
+                        reader.PopGroup(10);
+                        break;
+                    case 98: // field 12, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.UpperValue = global::AllTheThings.SearchResponse.Upper.Merge(value.UpperValue, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 99: // field 12, group
+                        value.UpperValue = global::AllTheThings.SearchResponse.Upper.Merge(value.UpperValue, ref reader);
+                        reader.PopGroup(12);
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 10:
+                            case 12:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
         }
 
     }
@@ -225,6 +913,63 @@ namespace AllTheThings
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
             public string Value { get; set; }
 
+            internal static void Serialize(MapField1Entry value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+                writer.WriteVarint(8); // field 1, varint
+                writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key));
+                if (value.Value is { Length: > 0} s)
+                {
+                    writer.WriteVarint(18); // field 2, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+            }
+
+            internal static ulong Measure(MapField1Entry value)
+            {
+                ulong len = 0;
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key));
+                if (value.Value is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                return len;
+            }
+
+            internal static MapField1Entry Merge(MapField1Entry value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        case 8: // field 1, varint
+                            value.Key = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32());
+                        case 18: // field 2, string
+                            value.Value = reader.ReadString();
+                            break;
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            switch (tag >> 3)
+                            {
+                                case 1:
+                                case 2:
+                                    reader.UnhandledTag(tag); // throws
+                                    break;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
+            }
+
         }
 
         [global::ProtoBuf.ProtoContract()]
@@ -239,6 +984,77 @@ namespace AllTheThings
 
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
             public global::AllTheThings.Outer Value { get; set; }
+
+            internal static void Serialize(MapField2Entry value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+                if (value.Key is { Length: > 0} s)
+                {
+                    writer.WriteVarint(10); // field 1, string
+                    writer.WriteWithLengthPrefix(s);
+                }
+                if (value.Value is global::AllTheThings.Outer obj2)
+                {
+                    writer.WriteVarint(18); // field 2, string
+                    writer.WriteVarintUInt64(global::AllTheThings.Outer.Measure(obj2);
+                    global::AllTheThings.Outer.Write(obj2, ref writer);
+                }
+            }
+
+            internal static ulong Measure(MapField2Entry value)
+            {
+                ulong len = 0;
+                if (value.Key is { Length: > 0} s)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                }
+                if (value.Value is global::AllTheThings.Outer obj2)
+                {
+                    len += 1 + global::AllTheThings.Outer.Measure(obj2);
+                }
+                return len;
+            }
+
+            internal static MapField2Entry Merge(MapField2Entry value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        case 10: // field 1, string
+                            value.Key = reader.ReadString();
+                            break;
+                        case 18: // field 2, string
+                            oldEnd = reader.ConstrainByLengthPrefix();
+                            value.Value = global::AllTheThings.Outer.Merge(value.Value, ref reader);
+                            reader.Unconstrain(oldEnd);
+                            break;
+                        case 19: // field 2, group
+                            value.Value = global::AllTheThings.Outer.Merge(value.Value, ref reader);
+                            reader.PopGroup(2);
+                            break;
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            switch (tag >> 3)
+                            {
+                                case 1:
+                                case 2:
+                                    reader.UnhandledTag(tag); // throws
+                                    break;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
+            }
 
         }
 
@@ -262,6 +1078,88 @@ namespace AllTheThings
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
                 public bool Booly { get; set; }
 
+                internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
+                {
+                    writer.WriteVarint(8); // field 1, varint
+                    writer.WriteVarint(unchecked((ulong)value.Ival));
+                    writer.WriteVarint(16); // field 2, varint
+                    writer.WriteVarint(value.Booly);
+                }
+
+                internal static ulong Measure(Inner value)
+                {
+                    ulong len = 0;
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Ival));
+                    len += 2;
+                    return len;
+                }
+
+                internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
+                {
+                    ulong oldEnd;
+                    if (value is null) value = new();
+                    uint tag;
+                    while ((tag = reader.ReadTag()) != 0)
+                    {
+                        switch (tag)
+                        {
+                            case 8: // field 1, varint
+                                value.Ival = unchecked((int)reader.ReadVarint64());
+                            value.Booly = reader.ReadVarint32() != 0;
+                            default:
+                                if ((tag & 7) == 4) // end-group
+                                {
+                                    reader.PushGroup(tag);
+                                    goto ExitLoop;
+                                }
+                                switch (tag >> 3)
+                                {
+                                    case 1:
+                                    case 2:
+                                        reader.UnhandledTag(tag); // throws
+                                        break;
+                                }
+                                reader.Skip(tag);
+                                break;
+                        }
+                    }
+                ExitLoop:
+                    return value;
+                }
+
+            }
+
+            internal static void Serialize(MiddleAA value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+            }
+
+            internal static ulong Measure(MiddleAA value)
+            {
+                ulong len = 0;
+                return len;
+            }
+
+            internal static MiddleAA Merge(MiddleAA value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
             }
 
         }
@@ -286,8 +1184,168 @@ namespace AllTheThings
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
                 public bool Booly { get; set; }
 
+                internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
+                {
+                    writer.WriteVarint(8); // field 1, varint
+                    writer.WriteVarint(unchecked((uint)value.Ival));
+                    writer.WriteVarint(16); // field 2, varint
+                    writer.WriteVarint(value.Booly);
+                }
+
+                internal static ulong Measure(Inner value)
+                {
+                    ulong len = 0;
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Ival));
+                    len += 2;
+                    return len;
+                }
+
+                internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
+                {
+                    ulong oldEnd;
+                    if (value is null) value = new();
+                    uint tag;
+                    while ((tag = reader.ReadTag()) != 0)
+                    {
+                        switch (tag)
+                        {
+                            case 8: // field 1, varint
+                                value.Ival = unchecked((int)reader.ReadVarint32());
+                            value.Booly = reader.ReadVarint32() != 0;
+                            default:
+                                if ((tag & 7) == 4) // end-group
+                                {
+                                    reader.PushGroup(tag);
+                                    goto ExitLoop;
+                                }
+                                switch (tag >> 3)
+                                {
+                                    case 1:
+                                    case 2:
+                                        reader.UnhandledTag(tag); // throws
+                                        break;
+                                }
+                                reader.Skip(tag);
+                                break;
+                        }
+                    }
+                ExitLoop:
+                    return value;
+                }
+
             }
 
+            internal static void Serialize(MiddleBB value, ref global::ProtoBuf.Nano.Writer writer)
+            {
+            }
+
+            internal static ulong Measure(MiddleBB value)
+            {
+                ulong len = 0;
+                return len;
+            }
+
+            internal static MiddleBB Merge(MiddleBB value, ref global::ProtoBuf.Nano.Reader reader)
+            {
+                ulong oldEnd;
+                if (value is null) value = new();
+                uint tag;
+                while ((tag = reader.ReadTag()) != 0)
+                {
+                    switch (tag)
+                    {
+                        default:
+                            if ((tag & 7) == 4) // end-group
+                            {
+                                reader.PushGroup(tag);
+                                goto ExitLoop;
+                            }
+                            reader.Skip(tag);
+                            break;
+                    }
+                }
+            ExitLoop:
+                return value;
+            }
+
+        }
+
+        internal static void Serialize(Outer value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.MapField1s is global::AllTheThings.Outer.MapField1Entry obj7)
+            {
+                writer.WriteVarint(58); // field 7, string
+                writer.WriteVarintUInt64(global::AllTheThings.Outer.MapField1Entry.Measure(obj7);
+                global::AllTheThings.Outer.MapField1Entry.Write(obj7, ref writer);
+            }
+            if (value.MapField2s is global::AllTheThings.Outer.MapField2Entry obj8)
+            {
+                writer.WriteVarint(66); // field 8, string
+                writer.WriteVarintUInt64(global::AllTheThings.Outer.MapField2Entry.Measure(obj8);
+                global::AllTheThings.Outer.MapField2Entry.Write(obj8, ref writer);
+            }
+        }
+
+        internal static ulong Measure(Outer value)
+        {
+            ulong len = 0;
+            if (value.MapField1s is global::AllTheThings.Outer.MapField1Entry obj7)
+            {
+                len += 1 + global::AllTheThings.Outer.MapField1Entry.Measure(obj7);
+            }
+            if (value.MapField2s is global::AllTheThings.Outer.MapField2Entry obj8)
+            {
+                len += 1 + global::AllTheThings.Outer.MapField2Entry.Measure(obj8);
+            }
+            return len;
+        }
+
+        internal static Outer Merge(Outer value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 58: // field 7, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.MapField1s = global::AllTheThings.Outer.MapField1Entry.Merge(value.MapField1s, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 59: // field 7, group
+                        value.MapField1s = global::AllTheThings.Outer.MapField1Entry.Merge(value.MapField1s, ref reader);
+                        reader.PopGroup(7);
+                        break;
+                    case 66: // field 8, string
+                        oldEnd = reader.ConstrainByLengthPrefix();
+                        value.MapField2s = global::AllTheThings.Outer.MapField2Entry.Merge(value.MapField2s, ref reader);
+                        reader.Unconstrain(oldEnd);
+                        break;
+                    case 67: // field 8, group
+                        value.MapField2s = global::AllTheThings.Outer.MapField2Entry.Merge(value.MapField2s, ref reader);
+                        reader.PopGroup(8);
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 7:
+                            case 8:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
         }
 
     }
@@ -301,6 +1359,57 @@ namespace AllTheThings
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
         public string Result { get; set; }
+
+        internal static void Serialize(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.Result is { Length: > 0} s)
+            {
+                writer.WriteVarint(10); // field 1, string
+                writer.WriteWithLengthPrefix(s);
+            }
+        }
+
+        internal static ulong Measure(SomeOtherMessage value)
+        {
+            ulong len = 0;
+            if (value.Result is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            return len;
+        }
+
+        internal static SomeOtherMessage Merge(SomeOtherMessage value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 10: // field 1, string
+                        value.Result = reader.ReadString();
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
 
     }
 
@@ -323,6 +1432,68 @@ namespace AllTheThings
         [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
         public int Packeds { get; set; }
 
+        internal static void Serialize(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            writer.WriteVarint(8); // field 1, varint
+            writer.WriteVarint(unchecked((uint)value.Required));
+            writer.WriteVarint(16); // field 2, varint
+            writer.WriteVarint(unchecked((uint)value.Optional));
+            writer.WriteVarint(24); // field 3, varint
+            writer.WriteVarint(unchecked((uint)value.Repeateds));
+            writer.WriteVarint(32); // field 4, varint
+            writer.WriteVarint(unchecked((uint)value.Packeds));
+        }
+
+        internal static ulong Measure(FieldRules value)
+        {
+            ulong len = 0;
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Required));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Optional));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Repeateds));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Packeds));
+            return len;
+        }
+
+        internal static FieldRules Merge(FieldRules value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 8: // field 1, varint
+                        value.Required = unchecked((int)reader.ReadVarint32());
+                    case 16: // field 2, varint
+                        value.Optional = unchecked((int)reader.ReadVarint32());
+                    case 24: // field 3, varint
+                        value.Repeateds = unchecked((int)reader.ReadVarint32());
+                    case 32: // field 4, varint
+                        value.Packeds = unchecked((int)reader.ReadVarint32());
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -338,6 +1509,70 @@ namespace AllTheThings
         [global::ProtoBuf.ProtoMember(1, Name = @"lo")]
         public string Lo { get; set; }
 
+        internal static void Serialize(TagRanges value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            if (value.His is { Length: > 0} s)
+            {
+                writer.WriteVarint(4294967290); // field 536870911, string
+                writer.WriteWithLengthPrefix(s);
+            }
+            if (value.Lo is { Length: > 0} s)
+            {
+                writer.WriteVarint(10); // field 1, string
+                writer.WriteWithLengthPrefix(s);
+            }
+        }
+
+        internal static ulong Measure(TagRanges value)
+        {
+            ulong len = 0;
+            if (value.His is { Length: > 0} s)
+            {
+                len += 5 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            if (value.Lo is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            return len;
+        }
+
+        internal static TagRanges Merge(TagRanges value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 4294967290: // field 536870911, string
+                        value.His = reader.ReadString();
+                        break;
+                    case 10: // field 1, string
+                        value.Lo = reader.ReadString();
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 536870911:
+                            case 1:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -347,6 +1582,39 @@ namespace AllTheThings
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+        internal static void Serialize(Foo value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+        }
+
+        internal static ulong Measure(Foo value)
+        {
+            ulong len = 0;
+            return len;
+        }
+
+        internal static Foo Merge(Foo value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
@@ -355,6 +1623,39 @@ namespace AllTheThings
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+        internal static void Serialize(Baz value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+        }
+
+        internal static ulong Measure(Baz value)
+        {
+            ulong len = 0;
+            return len;
+        }
+
+        internal static Baz Merge(Baz value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
 
     }
 
@@ -409,6 +1710,147 @@ namespace AllTheThings
 
         [global::ProtoBuf.ProtoMember(15, Name = @"bytes")]
         public byte[] Bytes { get; set; }
+
+        internal static void Serialize(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
+        {
+            writer.WriteVarint(9); // field 1, fixed64
+            writer.WriteFixed(value.Double);
+            writer.WriteVarint(21); // field 2, fixed32
+            writer.WriteFixed(value.Float);
+            writer.WriteVarint(24); // field 3, varint
+            writer.WriteVarint(unchecked((uint)value.Int32));
+            writer.WriteVarint(32); // field 4, varint
+            writer.WriteVarint(unchecked((ulong)value.Int64));
+            writer.WriteVarint(40); // field 5, varint
+            writer.WriteVarint(value.Uint32);
+            writer.WriteVarint(48); // field 6, varint
+            writer.WriteVarint(value.Uint64);
+            writer.WriteVarint(56); // field 7, varint
+            writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint32));
+            writer.WriteVarint(64); // field 8, varint
+            writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint64));
+            writer.WriteVarint(77); // field 9, fixed32
+            writer.WriteFixed(value.Fixed32);
+            writer.WriteVarint(81); // field 10, fixed64
+            writer.WriteFixed(value.Fixed64);
+            writer.WriteVarint(93); // field 11, fixed32
+            writer.WriteFixed(unchecked((uint)value.Sfixed32));
+            writer.WriteVarint(97); // field 12, fixed64
+            writer.WriteFixed(unchecked((ulong)value.Sfixed64));
+            writer.WriteVarint(104); // field 13, varint
+            writer.WriteVarint(value.Bool);
+            if (value.String is { Length: > 0} s)
+            {
+                writer.WriteVarint(114); // field 14, string
+                writer.WriteWithLengthPrefix(s);
+            }
+            if (value.Bytes is { Length: > 0} s)
+            {
+                writer.WriteVarint(122); // field 15, string
+                writer.WriteWithLengthPrefix(s);
+            }
+        }
+
+        internal static ulong Measure(PrimitiveFieldTypes value)
+        {
+            ulong len = 0;
+            len += 9;
+            len += 5;
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Int32));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Int64));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint32);
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint64);
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint32));
+            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint64));
+            len += 5;
+            len += 9;
+            len += 5;
+            len += 9;
+            len += 2;
+            if (value.String is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            if (value.Bytes is { Length: > 0} s)
+            {
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+            }
+            return len;
+        }
+
+        internal static PrimitiveFieldTypes Merge(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Reader reader)
+        {
+            ulong oldEnd;
+            if (value is null) value = new();
+            uint tag;
+            while ((tag = reader.ReadTag()) != 0)
+            {
+                switch (tag)
+                {
+                    case 9: // field 1, fixed64
+                        value.Double = reader.ReadFixedDouble();
+                    case 21: // field 2, fixed32
+                        value.Float = reader.ReadFixedSingle();
+                    case 24: // field 3, varint
+                        value.Int32 = unchecked((int)reader.ReadVarint32());
+                    case 32: // field 4, varint
+                        value.Int64 = unchecked((int)reader.ReadVarint64());
+                    case 40: // field 5, varint
+                        value.Uint32 = reader.ReadVarint32();
+                    case 48: // field 6, varint
+                        value.Uint64 = reader.ReadVarint64();
+                    case 56: // field 7, varint
+                        value.Sint32 = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32());
+                    case 64: // field 8, varint
+                        value.Sint64 = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint64());
+                    case 77: // field 9, fixed32
+                        value.Fixed32 = reader.ReadFixed32();
+                    case 81: // field 10, fixed64
+                        value.Fixed64 = reader.ReadFixed64();
+                    case 93: // field 11, fixed32
+                        value.Sfixed32 = unchecked((int)reader.ReadFixed32());
+                    case 97: // field 12, fixed64
+                        value.Sfixed64 = unchecked((long)reader.ReadFixed64());
+                    value.Bool = reader.ReadVarint32() != 0;
+                    case 114: // field 14, string
+                        value.String = reader.ReadString();
+                        break;
+                    case 122: // field 15, string
+                        value.Bytes = reader.ReadBytes();
+                        break;
+                    default:
+                        if ((tag & 7) == 4) // end-group
+                        {
+                            reader.PushGroup(tag);
+                            goto ExitLoop;
+                        }
+                        switch (tag >> 3)
+                        {
+                            case 1:
+                            case 2:
+                            case 3:
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 7:
+                            case 8:
+                            case 9:
+                            case 10:
+                            case 11:
+                            case 12:
+                            case 13:
+                            case 14:
+                            case 15:
+                                reader.UnhandledTag(tag); // throws
+                                break;
+                        }
+                        reader.Skip(tag);
+                        break;
+                }
+            }
+        ExitLoop:
+            return value;
+        }
 
     }
 
