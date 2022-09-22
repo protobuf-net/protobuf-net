@@ -26,6 +26,7 @@
     <Compile Include="../protobuf-net.Reflection/**/*.cs" Link="protobuf-net.Reflection" />
     <Compile Remove="../protobuf-net.Reflection/obj/**/*.cs" />
     <Compile Update="Internal\CodeGenSemanticModelParser.*.cs" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
   </ItemGroup>
 
   <ItemGroup>
