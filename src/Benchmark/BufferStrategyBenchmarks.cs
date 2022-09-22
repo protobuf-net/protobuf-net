@@ -127,7 +127,6 @@ namespace Benchmark
                 var tmp = Value;
                 Value = default;
                 RefCountedMemory.Release(tmp);
-
                 s_Spare = this;
             }
 

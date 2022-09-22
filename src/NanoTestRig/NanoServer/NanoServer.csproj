@@ -7,11 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" Version="2.40.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Benchmark\Benchmark.csproj" />
   </ItemGroup>
-
 </Project>
