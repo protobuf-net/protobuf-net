@@ -26,7 +26,6 @@
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
   </ItemGroup>
 

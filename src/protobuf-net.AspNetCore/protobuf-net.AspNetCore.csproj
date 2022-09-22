@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>ProtoBuf.AspNetCore</RootNamespace>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.AspNetCore</AssemblyName>
     <Title>protobuf-net.AspNetCore</Title>
     <Description>Provides ASP.NET Core specific utilities for protobuf-net</Description>

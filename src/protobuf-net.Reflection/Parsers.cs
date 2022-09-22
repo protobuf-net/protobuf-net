@@ -934,7 +934,7 @@ namespace Google.Protobuf.Reflection
         internal void ParseSchema(TextReader schema, List<Error> errors, string file)
         {
             Syntax = "";
-            using var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors);
+            using var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace(), errors), errors);
             var tokens = ctx.Tokens;
             tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
 
@@ -1831,10 +1831,16 @@ namespace Google.Protobuf.Reflection
                                     else
                                     {
                                         using var ms = new MemoryStream(value.AggregateValue.Length);
-                                        if (!LoadBytes(ms, value.AggregateValue))
+                                        if (!LoadBytes(ms, value.AggregateValue, out bool haveRawUnicode))
                                         {
                                             ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
+                                            state.WriteBytes(Array.Empty<byte>()); // just to silence the writer, so the real error is surfaced
                                             continue;
+                                        }
+
+                                        if (field.type == FieldDescriptorProto.Type.TypeString && haveRawUnicode)
+                                        {
+                                            TokenExtensions.ValidateUtf8(option.Token, ms, ctx.Errors); // still written, note
                                         }
                                         state.WriteBytes(new ReadOnlyMemory<byte>(ms.GetBuffer(), 0, (int)ms.Length));
                                     }
@@ -1850,25 +1856,43 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        private static unsafe bool LoadBytes(Stream ms, string value)
+        private static unsafe bool LoadBytes(Stream ms, string value, out bool haveRawUnicode)
         {
-            bool isEscaped = false;
+            bool isEscaped = haveRawUnicode = false;
             byte* b = stackalloc byte[10];
+            int octalCount = 0;
+            uint pendingOctal = 0;
             foreach (char c in value)
             {
                 if (isEscaped)
                 {
-                    isEscaped = false;
                     // only a few things remain escaped after ConsumeString:
-                    switch (c)
+                    if (octalCount != 0 || c >= '0' && c <= '7')
+                    {   // always written as 3 chars
+                        if (!TokenExtensions.GetHexValue(c, out uint val, ref octalCount)) return false;
+                        pendingOctal = (pendingOctal << 3) | val;
+                        if (octalCount == 3)
+                        {
+                            ms.WriteByte(checked((byte)pendingOctal));
+                            if (pendingOctal > 127) haveRawUnicode = true;
+                            octalCount = 0;
+                            pendingOctal = 0;
+                            isEscaped = false;
+                        }
+                    }
+                    else
                     {
-                        case '\\': ms.WriteByte((byte)'\\'); break;
-                        case '\'': ms.WriteByte((byte)'\''); break;
-                        case '"': ms.WriteByte((byte)'"'); break;
-                        case 'r': ms.WriteByte((byte)'\r'); break;
-                        case 'n': ms.WriteByte((byte)'\n'); break;
-                        case 't': ms.WriteByte((byte)'\t'); break;
-                        default: return false;
+                        switch (c)
+                        {
+                            case '\\': ms.WriteByte((byte)'\\'); break;
+                            case '\'': ms.WriteByte((byte)'\''); break;
+                            case '"': ms.WriteByte((byte)'"'); break;
+                            case 'r': ms.WriteByte((byte)'\r'); break;
+                            case 'n': ms.WriteByte((byte)'\n'); break;
+                            case 't': ms.WriteByte((byte)'\t'); break;
+                            default: return false;
+                        }
+                        isEscaped = false;
                     }
                 }
                 else if (c == '\\')
@@ -2931,7 +2955,14 @@ namespace ProtoBuf.Reflection
                     ReadOption(ref obj, parent, nameParts);
                     any = true;
 
-                    tokens.ConsumeIf(TokenType.Symbol, ","); // comma between elements is optional
+                    // comma between elements is optional
+                    var consumedComma = tokens.ConsumeIf(TokenType.Symbol, ",");
+
+                    // alternatively, semicolons are also valid element separators
+                    if (!consumedComma)
+                    {
+                        tokens.ConsumeIf(TokenType.Symbol, ";");
+                    }
                 }
                 if (!any)
                 {
@@ -2971,7 +3002,7 @@ namespace ProtoBuf.Reflection
                     {
                         var newOption = new UninterpretedOption
                         {
-                            AggregateValue = tokens.ConsumeString(),
+                            AggregateValue = tokens.ConsumeString(true),
                             Token = tokens.Previous
                         };
                         newOption.Names.AddRange(nameParts);

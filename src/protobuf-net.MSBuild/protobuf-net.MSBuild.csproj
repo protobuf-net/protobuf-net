@@ -6,7 +6,7 @@
     <!-- we copy the output manually below-->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>protobuf-net.MSBuild</PackageId>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
     <NoWarn>$(NoWarn);CS1591;NU5105;NU5128</NoWarn>
   </PropertyGroup>
 

@@ -66,7 +66,7 @@ public ref struct Reader
         _buffer = buffer;
         _index = offset;
         _end = offset + count;
-        _positionBase = 0;
+        _positionBase = _lastGroup = 0;
         _objectEnd = _end;
     }
 
@@ -98,7 +98,7 @@ public ref struct Reader
             _returnToArrayPool = true;
         }
 #endif
-        _positionBase = 0;
+        _positionBase = _lastGroup = 0;
         _objectEnd = _end;
     }
 
