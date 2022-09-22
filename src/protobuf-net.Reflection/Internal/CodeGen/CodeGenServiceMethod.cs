@@ -52,8 +52,8 @@ internal class CodeGenServiceMethod
         public override string ToString()
         {
             return IsStreamed 
-                ? $"global::System.Threading.Tasks.IAsyncEnumerable<{Type}>" 
-                : $"global::System.Threading.Tasks.ValueTask<{Type}>";
+                ? $"global::System.Collections.Generic.<global::{Type}>" 
+                : $"global::System.Threading.Tasks.ValueTask<global::{Type}>";
         }
     }
 
@@ -66,8 +66,8 @@ internal class CodeGenServiceMethod
         public override string ToString()
         {
             return IsStreamed 
-                ? $"global::System.Threading.Tasks.IAsyncEnumerable<{Type}>" 
-                : $"global::System.Threading.Tasks.ValueTask<{Type}>";
+                ? $"global::System.Collections.Generic.<global::{Type}>" 
+                : $"global::System.Threading.Tasks.ValueTask<global::{Type}>";
         }
     }
 }

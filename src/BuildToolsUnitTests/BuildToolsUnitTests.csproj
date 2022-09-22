@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Build" Version="16.8.0" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.8.0" />
     <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
@@ -27,6 +28,7 @@
 
   <ItemGroup>
     <Compile Include="AOT\Schemas\Enums.cs" />
+    <Compile Include="AOT\Schemas\Services.cs" />
     <None Update="AOT/Schemas/**/*.proto" CopyToOutputDirectory="PreserveNewest" />
     <None Update="AOT/Schemas/**/*.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
     <None Update="AOT/Schemas/**/*.pjson" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
@@ -48,5 +50,8 @@
     <None Update="AOT\Schemas\Services.json">
       <DependentUpon>Services.proto</DependentUpon>
     </None>
+    <Compile Update="AOT\Schemas\Services.cs">
+      <DependentUpon>Services.proto</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

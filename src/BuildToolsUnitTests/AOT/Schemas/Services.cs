@@ -33,6 +33,13 @@ namespace GrpcGreeter
 
     }
 
+    [global::System.ServiceModel.ServiceContract(Name = @"Greeter")]
+    public partial interface IIGreeter
+    {
+        global::System.Collections.Generic.IAsyncEnumerable<global::GrpcGreeter.HelloReply> SayHelloAsync(global::System.Collections.Generic.IAsyncEnumerable<GrpcGreeter.HelloRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
+
+    }
+
 }
 
 #pragma warning restore CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
