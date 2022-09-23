@@ -41,17 +41,34 @@ namespace ProtoBuf.BuildTools.Internal
         }
 
         internal const string ProtoBufNamespace = "ProtoBuf";
+        internal const string GenericCollectionsNamespace = "System.Collections.Generic";
+        internal const string ThreadingNamespace = "System.Threading";
+        internal const string ThreadingTasksNamespace = "System.Threading.Tasks";
 
-        internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
+        internal static bool InGenericCollectionsNamespace(this ISymbol symbol)
+            => InNamespace(symbol, GenericCollectionsNamespace);
+        
+        internal static bool InThreadingNamespace(this ISymbol symbol)
+            => InNamespace(symbol, ThreadingNamespace);
+        
+        internal static bool InThreadingTasksNamespace(this ISymbol symbol)
+            => InNamespace(symbol, ThreadingTasksNamespace);
+        
+        internal static bool InProtoBufNamespace(this ISymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
 
-        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
+        internal static bool InNamespace(this ISymbol symbol, string ns0)
         {
-            var cs = symbol.ContainingNamespace;
-            return cs.Name == ns0 && cs.ContainingNamespace.IsGlobalNamespace;
+            var namespaceSymbol = symbol.ContainingNamespace;
+            do
+            {
+                if (namespaceSymbol.ToString() == ns0) return true;
+            } while ((namespaceSymbol = namespaceSymbol.ContainingNamespace) is not null);
+
+            return false;
         }
 
-        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1)
+        internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1)
         {
             var ns = symbol.ContainingNamespace;
             if (ns.Name != ns1) return false;
@@ -59,7 +76,7 @@ namespace ProtoBuf.BuildTools.Internal
             return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
         }
 
-        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1, string ns2)
+        internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1, string ns2)
         {
             var ns = symbol.ContainingNamespace;
             if (ns.Name != ns2) return false;
