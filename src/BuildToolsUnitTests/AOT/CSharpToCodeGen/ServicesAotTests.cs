@@ -22,7 +22,9 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
         
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
         Assert.NotNull(serviceMethod);
+        Assert.Equal(CodeGenTypeRepresentation.Raw, serviceMethod.RequestType.Representation);
         Assert.Equal(CodeGenTypeRepresentation.Raw, serviceMethod.ResponseType.Representation);
+        Assert.Equal(CodeGenServiceMethodParametersDescriptor.HasCallContext | CodeGenServiceMethodParametersDescriptor.HasCancellationToken, serviceMethod.ParametersDescriptor);
     }
     
     [Fact]
@@ -33,7 +35,9 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
 
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
         Assert.NotNull(serviceMethod);
+        Assert.Equal(CodeGenTypeRepresentation.AsyncEnumerable, serviceMethod.RequestType.Representation);
         Assert.Equal(CodeGenTypeRepresentation.AsyncEnumerable, serviceMethod.ResponseType.Representation);
+        Assert.Equal(CodeGenServiceMethodParametersDescriptor.HasCallContext | CodeGenServiceMethodParametersDescriptor.HasCancellationToken, serviceMethod.ParametersDescriptor);
     }
     
     [Fact]
@@ -44,7 +48,9 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
 
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
         Assert.NotNull(serviceMethod);
+        Assert.Equal(CodeGenTypeRepresentation.Raw, serviceMethod.RequestType.Representation);
         Assert.Equal(CodeGenTypeRepresentation.Task, serviceMethod.ResponseType.Representation);
+        Assert.Equal(CodeGenServiceMethodParametersDescriptor.HasCallContext | CodeGenServiceMethodParametersDescriptor.HasCancellationToken, serviceMethod.ParametersDescriptor);
     }
     
     [Fact]
@@ -55,6 +61,8 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
 
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
         Assert.NotNull(serviceMethod);
+        Assert.Equal(CodeGenTypeRepresentation.Raw, serviceMethod.RequestType.Representation);
         Assert.Equal(CodeGenTypeRepresentation.ValueTask, serviceMethod.ResponseType.Representation);
+        Assert.Equal(CodeGenServiceMethodParametersDescriptor.HasCallContext | CodeGenServiceMethodParametersDescriptor.HasCancellationToken, serviceMethod.ParametersDescriptor);
     }
 }

@@ -34,7 +34,10 @@ namespace ValueTaskTestPackage
     [global::System.ServiceModel.ServiceContract(Name = @"Greeter")]
     public partial interface IIGreeter
     {
-        global::System.Threading.Tasks.ValueTask<ValueTaskTestPackage.HelloReply> SayHelloAsync(global::ValueTaskTestPackage.HelloRequest value, global::ProtoBuf.Grpc.CallContext context = default);
+        global::System.Threading.Tasks.ValueTask<ValueTaskTestPackage.HelloReply> SayHelloAsync(
+            global::ValueTaskTestPackage.HelloRequest value, 
+            global::ProtoBuf.Grpc.CallContext context = default,
+            global::System.Threading.CancellationToken cancellationToken = default);
 
     }
 

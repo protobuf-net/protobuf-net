@@ -34,7 +34,7 @@ namespace TaskTestPackage
     [global::System.ServiceModel.ServiceContract(Name = @"Greeter")]
     public partial interface IIGreeter
     {
-        global::System.Threading.Tasks.Task<TaskTestPackage.HelloReply> SayHelloAsync(global::TaskTestPackage.HelloRequest value, global::ProtoBuf.Grpc.CallContext context = default);
+        global::System.Threading.Tasks.Task<TaskTestPackage.HelloReply> SayHelloAsync(global::TaskTestPackage.HelloRequest value, global::ProtoBuf.Grpc.CallContext context = default, global::System.Threading.CancellationToken cancellationToken = default);
 
     }
 

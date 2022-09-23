@@ -34,7 +34,10 @@ namespace StreamableTestPackage
     [global::System.ServiceModel.ServiceContract(Name = @"Greeter")]
     public partial interface IIGreeter
     {
-        global::System.Collections.Generic.IAsyncEnumerable<global::StreamableTestPackage.HelloReply> SayHelloAsync(global::System.Collections.Generic.IAsyncEnumerable<global::StreamableTestPackage.HelloRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
+        global::System.Collections.Generic.IAsyncEnumerable<global::StreamableTestPackage.HelloReply> SayHelloAsync(
+            global::System.Collections.Generic.IAsyncEnumerable<global::StreamableTestPackage.HelloRequest> value, 
+            global::ProtoBuf.Grpc.CallContext context = default,
+            global::System.Threading.CancellationToken cancellationToken = default);
 
     }
 

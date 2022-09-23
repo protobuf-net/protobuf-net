@@ -27,6 +27,9 @@ internal class CodeGenServiceMethod
         set => _responseType = value;
     }
 
+    public CodeGenServiceMethodParametersDescriptor ParametersDescriptor { get; set; }
+        = CodeGenServiceMethodParametersDescriptor.None;
+
     internal void FixupPlaceholders(CodeGenParseContext context)
     {
     }
