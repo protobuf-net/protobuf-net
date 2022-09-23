@@ -138,7 +138,7 @@ namespace GrpcGreeter
     [global::System.ServiceModel.ServiceContract(Name = @"Greeter")]
     public partial interface IIGreeter
     {
-        global::System.Collections.Generic.<global::GrpcGreeter.HelloReply> SayHelloAsync(global::System.Collections.Generic.<global::GrpcGreeter.HelloRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
+        global::System.Collections.Generic.IAsyncEnumerable<global::GrpcGreeter.HelloReply> SayHelloAsync(global::System.Collections.Generic.IAsyncEnumerable<global::GrpcGreeter.HelloRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
 
     }
 
