@@ -3,6 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
     <AssemblyName>protobuf-net.BuildTools.Legacy</AssemblyName>
+    <LangVersion>10</LangVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
@@ -20,11 +21,11 @@
 
   <ItemGroup>
     <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
-    <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core"/>
+    <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core" />
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     
     <!-- cross-reference the analyzer code -->
-    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal"/>
+    <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
   </ItemGroup>

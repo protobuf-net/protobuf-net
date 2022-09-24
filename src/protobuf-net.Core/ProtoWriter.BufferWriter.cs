@@ -136,7 +136,7 @@ namespace ProtoBuf
             private void GetBuffer(ref State state)
             {
                 TryFlush(ref state);
-                state.Init(_writer.GetMemory(model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize));
+                state.Init(_writer.GetMemory(_model is null ? BufferPool.BUFFER_LENGTH : _model.BufferSize));
             }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> bytes)

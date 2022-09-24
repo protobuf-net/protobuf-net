@@ -1,8 +1,11 @@
-﻿using ProtoBuf.Internal;
+﻿#nullable enable
+
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -19,10 +22,10 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
         [Obsolete(PreferStateAPI, false)]
-        public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
-            => Create(source, model, (object)context, length);
+        public static ProtoReader Create(Stream source, TypeModel model, SerializationContext? context = null, long length = TO_EOF)
+            => Create(source, model, (object?)context, length);
 
-        internal static ProtoReader Create(Stream source, TypeModel model, object userState, long length)
+        internal static ProtoReader Create(Stream source, TypeModel model, object? userState, long length)
         {
             var reader = Pool<StreamProtoReader>.TryGet() ?? new StreamProtoReader();
             reader.Init(source, model ?? TypeModel.DefaultModel, userState, length);
@@ -38,7 +41,7 @@ namespace ProtoBuf
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
             /// <param name="userState">Additional context about this serialization operation</param>
             /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-            public static State Create(Stream source, TypeModel model, object userState = null, long length = TO_EOF)
+            public static State Create(Stream source, TypeModel model, object? userState = null, long length = TO_EOF)
             {
 #if PREFER_SPANS
                 if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
@@ -54,16 +57,18 @@ namespace ProtoBuf
             }
         }
 
-        private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
-            s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo
+            s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance)!,
+            s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
         private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
         {
             if (s_origin is not null && s_buffer is not null && ms.GetType() == typeof(MemoryStream)) // don't consider subclasses
             {
                 try
                 {
-                    int offset = (int)s_origin.GetValue(ms);
-                    byte[] arr = (byte[])s_buffer.GetValue(ms);
+                    int offset = (int)s_origin.GetValue(ms)!;
+                    byte[] arr = (byte[])s_buffer.GetValue(ms)!;
                     buffer = new ArraySegment<byte>(arr, offset, checked((int)ms.Length));
                     return true;
                 }
@@ -86,7 +91,7 @@ namespace ProtoBuf
                 {   // make sure we apply a length limit
                     count = (int)length;
                 }
-                data = new ArraySegment<byte>(segment.Array, offset, count);
+                data = new ArraySegment<byte>(segment.Array!, offset, count);
                 // skip the data in the source
                 ms.Seek(count, SeekOrigin.Current);
                 return true;
@@ -99,7 +104,7 @@ namespace ProtoBuf
         {
             protected internal override State DefaultState() => new State(this);
 
-            private Stream _source;
+            private Stream? _source;
             private byte[] _ioBuffer;
             private bool _isFixedLength;
             private int _ioIndex, _available;
@@ -127,7 +132,9 @@ namespace ProtoBuf
             public StreamProtoReader(Stream source, TypeModel model, SerializationContext context, long length)
                 => Init(source, model, context, length);
 
+#nullable disable
             internal StreamProtoReader() { }
+#nullable enable
 
             /// <summary>
             /// Creates a new reader against a stream
@@ -139,7 +146,8 @@ namespace ProtoBuf
             public StreamProtoReader(Stream source, TypeModel model, SerializationContext context)
                 => Init(source, model, context, TO_EOF);
 
-            internal void Init(Stream source, TypeModel model, object userState, long length)
+            [MemberNotNull(nameof(_ioBuffer))]
+            internal void Init(Stream source, TypeModel model, object? userState, long length)
             {
                 base.Init(model, userState);
                 if (source is null) ThrowHelper.ThrowArgumentNullException(nameof(source));
@@ -147,7 +155,7 @@ namespace ProtoBuf
 
                 if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
                 {
-                    _ioBuffer = segment.Array;
+                    _ioBuffer = segment.Array!;
 #pragma warning disable IDE0059 // Unnecessary assignment of a value - kept here for clarity
                     length = _available = segment.Count;
 #pragma warning restore IDE0059 // Unnecessary assignment of a value
@@ -180,7 +188,7 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    _ioBuffer = null;
+                    _ioBuffer = null!;
                 }
                 Pool<StreamProtoReader>.Put(this);
             }

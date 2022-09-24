@@ -757,6 +757,7 @@ namespace ProtoBuf
             [MethodImpl(HotPath)]
             public void Hint(WireType wireType) => _reader.Hint(wireType);
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowWireTypeException()
             {
@@ -764,22 +765,25 @@ namespace ProtoBuf
                 ThrowProtoException(message);
             }
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowProtoException(string message)
             {
                 throw AddErrorData(new ProtoException(message), _reader, ref this);
             }
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowEoF()
             {
                 throw AddErrorData(new EndOfStreamException(), _reader, ref this);
             }
 
-
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowTooDeep() => ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + _reader._depth.ToString());
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidOperationException(string message = null)
             {
@@ -787,15 +791,18 @@ namespace ProtoBuf
                 throw AddErrorData(ex, _reader, ref this);
             }
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidLength(long length) => ThrowInvalidOperationException("Invalid length: " + length.ToString());
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowArgumentException(string message)
             {
                 throw AddErrorData(new ArgumentException(message), _reader, ref this);
             }
 
+            [DoesNotReturn]
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowOverflow()
             {

@@ -1,12 +1,15 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
@@ -26,8 +29,8 @@ namespace ProtoBuf
 
         internal const string PreferWriteMessage = "If possible, please use the WriteMessage API; this API may not work correctly with all writers";
 
-        private TypeModel model;
-        private int packedFieldNumber;
+        private TypeModel? _model;
+        private int _packedFieldNumber;
 
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - no intention of supporting finalizers here
         void IDisposable.Dispose() => Dispose();
@@ -86,10 +89,10 @@ namespace ProtoBuf
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
             => writer.DefaultState().StartSubItem(instance, PrefixStyle.Base128);
 
-        private void PreSubItem(ref State state, object instance)
+        private void PreSubItem(ref State state, object? instance)
         {
             if (_depth < 0) state.ThrowInvalidSerializationOperation();
-            if (++_depth >= (model is null ? TypeModel.DefaultMaxDepth : model.MaxDepth))
+            if (++_depth >= (_model is null ? TypeModel.DefaultMaxDepth : _model.MaxDepth))
             {
                 state.ThrowTooDeep(_depth);
             }
@@ -97,28 +100,33 @@ namespace ProtoBuf
             {
                 CheckRecursionStackAndPush(instance);
             }
-            if (packedFieldNumber != 0) ThrowHelper.ThrowInvalidOperationException("Cannot begin a sub-item while performing packed encoding");
+            if (_packedFieldNumber != 0) ThrowHelper.ThrowInvalidOperationException("Cannot begin a sub-item while performing packed encoding");
         }
 
-        private List<object> recursionStack;
-        private void CheckRecursionStackAndPush(object instance)
+        private List<object?>? _recursionStack;
+
+        private void CheckRecursionStackAndPush(object? instance)
         {
-            if (recursionStack is null) { recursionStack = new List<object>(); }
+            if (_recursionStack is null) 
+            {
+                _recursionStack = new(); 
+            }
             else if (instance is not null)
             {
                 int hitLevel = 0;
-                foreach (var obj in recursionStack)
+                foreach (var obj in _recursionStack)
                 {
                     if (obj == instance)
                     {
-                        ThrowHelper.ThrowProtoException($"Possible recursion detected (offset: {(recursionStack.Count - hitLevel)} level(s)): {instance}");
+                        ThrowHelper.ThrowProtoException($"Possible recursion detected (offset: {(_recursionStack.Count - hitLevel)} level(s)): {instance}");
                     }
                     hitLevel++;
                 }
             }
-            recursionStack.Add(instance);
+            _recursionStack.Add(instance);
         }
-        private void PopRecursionStack() { recursionStack.RemoveAt(recursionStack.Count - 1); }
+
+        private void PopRecursionStack() { _recursionStack!.RemoveAt(_recursionStack.Count - 1); }
 
         /// <summary>
         /// Indicates the end of a nested record.
@@ -138,7 +146,7 @@ namespace ProtoBuf
             {
                 PopRecursionStack();
             }
-            packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
+            _packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
         }
 
         protected private ProtoWriter()
@@ -153,15 +161,15 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="userState">Additional context about this serialization operation</param>
         /// <param name="impactCount">Whether this initialization should impact usage counters (to check for double-usage)</param>
-        internal virtual void Init(TypeModel model, object userState, bool impactCount)
+        internal virtual void Init(TypeModel model, object? userState, bool impactCount)
         {
             OnInit(impactCount);
             _position64 = 0;
             _needFlush = false;
-            this.packedFieldNumber = 0;
+            _packedFieldNumber = 0;
             _depth = 0;
             fieldNumber = 0;
-            this.model = model;
+            _model = model;
             WireType = WireType.None;
             if (userState is SerializationContext context) context.Freeze();
             UserState = userState;
@@ -180,6 +188,7 @@ namespace ProtoBuf
             internal readonly WireType WireType;
             internal readonly int FieldNumber;
         }
+
         internal WriteState ResetWriteState()
         {
             var state = new WriteState(_position64, fieldNumber, WireType);
@@ -188,6 +197,7 @@ namespace ProtoBuf
             WireType = WireType.None;
             return state;
         }
+
         internal void SetWriteState(WriteState state)
         {
             _position64 = state.Position;
@@ -204,20 +214,20 @@ namespace ProtoBuf
         /// <summary>
         /// Addition information about this serialization operation.
         /// </summary>
-        public object UserState { get; private set; }
+        public object? UserState { get; private set; }
 
 #if DEBUG || TRACK_USAGE
         int _usageCount;
         partial void OnDispose()
         {
-            int count = System.Threading.Interlocked.Decrement(ref _usageCount);
+            int count = Interlocked.Decrement(ref _usageCount);
             if (count != 0) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 0, was {count}");
         }
         partial void OnInit(bool impactCount)
         {
             if (impactCount)
             {
-                int count = System.Threading.Interlocked.Increment(ref _usageCount);
+                int count = Interlocked.Increment(ref _usageCount);
                 if (count != 1) ThrowHelper.ThrowInvalidOperationException($"Usage count - expected 1, was {count}");
             }
             else
@@ -242,24 +252,23 @@ namespace ProtoBuf
             {
                 ThrowHelper.ThrowInvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
-            recursionStack?.Clear();
+            _recursionStack?.Clear();
             ClearKnownObjects();
-            model = null;
+            _model = null!;
             UserState = null;
         }
 
         protected private virtual void ClearKnownObjects()
             => netCache?.Clear();
 
-
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+        protected internal virtual void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISerializer<T>? serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
-            var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
+            var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & recursionCheck ? (object?)value : null, style);
+            (serializer ?? TypeModel.GetSerializer<T>(_model)).Write(ref state, value);
             state.EndSubItem(tok, style);
 #pragma warning restore CS0618
         }
@@ -319,10 +328,10 @@ namespace ProtoBuf
         /// <summary>
         /// Get the TypeModel associated with this writer
         /// </summary>
-        public TypeModel Model
+        public TypeModel? Model
         {
-            get => model;
-            internal set => model = value;
+            get => _model;
+            internal set => _model = value;
         }
 
         /// <summary>
@@ -356,7 +365,7 @@ namespace ProtoBuf
         protected private abstract void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data);
         protected private abstract void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data);
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
-        private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
+        private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);
         protected private abstract bool ImplDemandFlushOnDispose { get; }
 
@@ -487,7 +496,7 @@ namespace ProtoBuf
 
         internal string SerializeType(Type type)
         {
-            return TypeModel.SerializeType(model, type);
+            return TypeModel.SerializeType(_model, type);
         }
 
         /// <summary>
@@ -535,7 +544,7 @@ namespace ProtoBuf
         internal static long Measure<T>(NullProtoWriter writer, T value, ISerializer<T> serializer)
         {
             long length;
-            object obj = default;
+            object? obj = null;
             if (TypeHelper<T>.IsReferenceType)
             {
                 obj = value;
@@ -554,7 +563,7 @@ namespace ProtoBuf
             // cache it if we can
             if (TypeHelper<T>.IsReferenceType)
             {   // we know it isn't null; we'd have exited above
-                writer.netCache.SetKnownLength(obj, null, length);
+                writer.netCache.SetKnownLength(obj!, null, length);
             }
             return length;
         }

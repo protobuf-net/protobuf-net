@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -22,9 +24,9 @@ namespace ProtoBuf
         /// </summary>
         internal static IEnumerable<TValue> GetExtendedValues<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
-            foreach (TValue value in GetExtendedValues(model, typeof(TValue), instance, tag, format, singleton, allowDefinedTag))
+            foreach (TValue? value in GetExtendedValues(model, typeof(TValue), instance, tag, format, singleton, allowDefinedTag))
             {
-                yield return value;
+                yield return value!;
             }
         }
 
@@ -42,7 +44,7 @@ namespace ProtoBuf
             return GetExtendedValues(model, type, instance.GetExtensionObject(false), tag, format, singleton);
         }
 
-        internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtension extn, int tag, DataFormat format, bool singleton)
+        internal static IEnumerable GetExtendedValues(TypeModel? model, Type type, IExtension extn, int tag, DataFormat format, bool singleton)
         {
             model ??= TypeModel.DefaultModel;
 
@@ -54,8 +56,8 @@ namespace ProtoBuf
             Stream stream = extn.BeginQuery();
             try
             {
-                object value = null;
-                SerializationContext ctx = new SerializationContext();
+                object? value = null;
+                var ctx = new SerializationContext();
                 var state = ProtoReader.State.Create(stream, model, ctx, ProtoReader.TO_EOF).Solidify();
                 try
                 {
@@ -91,7 +93,8 @@ namespace ProtoBuf
             // obtain the extension object and prepare to write
             AppendExtendValue(model, instance.GetExtensionObject(true), tag, format, value);
         }
-        internal static void AppendExtendValue(TypeModel model, IExtension extn, int tag, DataFormat format, object value)
+
+        internal static void AppendExtendValue(TypeModel? model, IExtension extn, int tag, DataFormat format, object value)
         {
             model ??= TypeModel.DefaultModel;
             

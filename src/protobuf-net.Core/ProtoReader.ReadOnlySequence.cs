@@ -1,3 +1,5 @@
+#nullable enable
+
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
@@ -18,7 +20,7 @@ namespace ProtoBuf
             /// <param name="source">The source buffer</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
             /// <param name="userState">Additional context about this serialization operation</param>
-            public static State Create(ReadOnlySequence<byte> source, TypeModel model, object userState = null)
+            public static State Create(ReadOnlySequence<byte> source, TypeModel model, object? userState = null)
             {
                 var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
                 reader.Init(source, model, userState);
@@ -31,7 +33,7 @@ namespace ProtoBuf
             /// <param name="source">The source buffer</param>
             /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
             /// <param name="userState">Additional context about this serialization operation</param>
-            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, object userState = null)
+            public static State Create(ReadOnlyMemory<byte> source, TypeModel model, object? userState = null)
                 => Create(new ReadOnlySequence<byte>(source), model, userState);
 
 #if FEAT_DYNAMIC_REF
@@ -151,7 +153,7 @@ namespace ProtoBuf
                 Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
-            internal void Init(ReadOnlySequence<byte> source, TypeModel model, object userState)
+            internal void Init(ReadOnlySequence<byte> source, TypeModel model, object? userState)
             {
                 base.Init(model, userState);
                 _source = source.GetEnumerator();

@@ -374,8 +374,8 @@ namespace ProtoBuf.BuildTools.Internal
                         && access.Expression.ToString() == checkType.Name)
                     {
                         string fieldName = access.Name.Identifier.ValueText;
-                        IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
-                        if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
+                        IFieldSymbol? field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name.Equals(fieldName, StringComparison.Ordinal));
+                        if (field != null && field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
                         {
                             defaultValue = $"{checkType.Name}.{fieldName}";
                             return true;

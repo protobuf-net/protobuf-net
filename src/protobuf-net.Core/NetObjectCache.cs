@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -13,9 +15,9 @@ namespace ProtoBuf
         private readonly struct ObjectKey : IEquatable<ObjectKey>
         {
             private readonly object _obj;
-            private readonly Type _subTypeLevel; // null means "root type" (from the perspective of the serializer)
+            private readonly Type? _subTypeLevel; // null means "root type" (from the perspective of the serializer)
             [MethodImpl(ProtoReader.HotPath)]
-            public ObjectKey(object obj, Type subTypeLevel)
+            public ObjectKey(object obj, Type? subTypeLevel)
             {
                 _obj = obj;
                 _subTypeLevel = subTypeLevel;
@@ -24,8 +26,10 @@ namespace ProtoBuf
 
             [MethodImpl(ProtoReader.HotPath)]
             public override int GetHashCode() => RuntimeHelpers.GetHashCode(_obj) ^ (_subTypeLevel?.GetHashCode() ?? 0);
+
             [MethodImpl(ProtoReader.HotPath)]
-            public override bool Equals(object obj) => obj is ObjectKey key && Equals(key);
+            public override bool Equals(object? obj) => obj is ObjectKey other && Equals(other);
+            
             [MethodImpl(ProtoReader.HotPath)]
             public bool Equals(ObjectKey other) => this._obj == other._obj & this._subTypeLevel == other._subTypeLevel;
         }
@@ -33,7 +37,7 @@ namespace ProtoBuf
         int _hit, _miss;
 
         [MethodImpl(ProtoReader.HotPath)]
-        public bool TryGetKnownLength(object obj, Type subTypeLevel, out long length)
+        public bool TryGetKnownLength(object obj, Type? subTypeLevel, out long length)
         {
             if (_knownLengths.TryGetValue(new ObjectKey(obj, subTypeLevel), out length))
             {
@@ -48,7 +52,7 @@ namespace ProtoBuf
             }
         }
 
-        public void SetKnownLength(object obj, Type subTypeLevel, long length)
+        public void SetKnownLength(object obj, Type? subTypeLevel, long length)
         {
             var key = new ObjectKey(obj, subTypeLevel);
             _knownLengths[key] = length;
@@ -239,7 +243,7 @@ namespace ProtoBuf
         internal int LengthHits => _hit;
         internal int LengthMisses => _miss;
 
-        internal void InitializeFrom(NetObjectCache obj)
+        internal void InitializeFrom(NetObjectCache? obj)
         {
             if (obj is not null)
             {
@@ -249,7 +253,7 @@ namespace ProtoBuf
             }
         }
 
-        internal void CopyBack(NetObjectCache obj)
+        internal void CopyBack(NetObjectCache? obj)
         {
             if (obj is not null)
             {

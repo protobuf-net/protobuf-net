@@ -1,3 +1,5 @@
+#nullable enable
+
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
@@ -76,9 +78,9 @@ namespace ProtoBuf
                 if (position > _abortAfter) CheckOversized(_abortAfter, position);
             }
 
-            protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+            protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T>? serializer, PrefixStyle style, bool recursionCheck)
             {
-                if (serializer is null) serializer = TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.GetSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
                 AdvanceSubMessage(ref state, len, style);
             }
@@ -120,14 +122,14 @@ namespace ProtoBuf
                 CheckOversized(ref state);
                 WireType = WireType.None;
             }
-            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
+            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T>? serializer)
             {
-                if (serializer is null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
+                serializer ??= TypeModel.GetSubTypeSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
                 AdvanceSubMessage(ref state, len, PrefixStyle.Base128);
             }
 
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object? instance, PrefixStyle style)
             {
                 WireType = WireType.None;
                 return new SubItemToken(_position64);

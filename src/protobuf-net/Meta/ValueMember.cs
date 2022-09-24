@@ -720,9 +720,9 @@ namespace ProtoBuf.Meta
                     IProtoTypeSerializer serializer;
                     if (meta.HasSurrogate && (serializer = meta.Serializer).Features.GetCategory() == SerializerFeatures.CategoryScalar)
                     {
-                        dataFormat = meta.surrogateDataFormat;
+                        dataFormat = meta._surrogateDataFormat;
                         // this checks for an overriding wire-type/data-format combo
-                        if (TryGetCoreSerializer(model, dataFormat, meta.CompatibilityLevel, meta.surrogateType, out defaultWireType, false, false, false, false) is null)
+                        if (TryGetCoreSerializer(model, dataFormat, meta.CompatibilityLevel, meta._surrogateType, out defaultWireType, false, false, false, false) is null)
                         {   // otherwise, defer to the serializer
                             defaultWireType = serializer.Features.GetWireType();
                         }
