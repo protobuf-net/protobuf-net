@@ -11,9 +11,9 @@
             {
               "Name": "SayHello",
               "OriginalName": "SayHello",
-              "Request": {
-                "IsStreamed": true,
-                "Type": {
+              "RequestType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
                   "Fields": [
                     {
                       "FieldNumber": 1,
@@ -28,9 +28,9 @@
                   "FullyQualifiedPrefix": "GrpcGreeter."
                 }
               },
-              "Response": {
-                "IsStreamed": true,
-                "Type": {
+              "ResponseType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
                   "Fields": [
                     {
                       "FieldNumber": 1,

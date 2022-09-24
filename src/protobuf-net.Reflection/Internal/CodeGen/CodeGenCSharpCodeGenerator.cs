@@ -225,7 +225,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 
     protected override void WriteServiceMethod(CodeGenGeneratorContext ctx, CodeGenServiceMethod method, ref object state)
     {
-        ctx.WriteLine($"{method.Response} {method.Name}Async({method.Request} value, global::ProtoBuf.Grpc.CallContext context = default);");
+        ctx.WriteLine($"{method.ResponseType} {method.Name}Async({method.RequestType} value, global::ProtoBuf.Grpc.CallContext context = default);");
         ctx.WriteLine();
     }
     

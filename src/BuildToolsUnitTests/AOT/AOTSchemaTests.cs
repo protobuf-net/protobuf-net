@@ -16,6 +16,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using ProtoBuf.Grpc;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -110,6 +111,7 @@ public class AOTSchemaTests
         {
             GetLib<object>(),
             GetLib<ProtoWriter>(),
+            GetLib<CallContext>(),
             MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=4.2.2.0").Location),
         };

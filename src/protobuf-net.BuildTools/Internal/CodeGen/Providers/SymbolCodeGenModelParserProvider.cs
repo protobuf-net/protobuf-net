@@ -11,6 +11,8 @@ internal class SymbolCodeGenModelParserProvider
     private ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile> _namespaceParser; 
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> _messageParser; 
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> _enumParser;
+    private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenService> _serviceParser;
+    private ISymbolCodeGenModelParser<IMethodSymbol, CodeGenServiceMethod> _serviceMethodParser;
     private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenEnum> _enumPropertyParser;
     private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> _fieldPropertyParser; 
     private ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> _enumValueParser; 
@@ -50,5 +52,15 @@ internal class SymbolCodeGenModelParserProvider
     public ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> GetEnumValueParser()
     {
         return _enumValueParser ??= new EnumValueCodeGenModelParser(this);
+    }
+    
+    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenService> GetServiceParser(CodeGenNamespaceParseContext namespaceParseContext)
+    {
+        return _serviceParser ??= new ServiceCodeGenModelParser(this, namespaceParseContext);
+    }
+
+    public ISymbolCodeGenModelParser<IMethodSymbol, CodeGenServiceMethod> GetServiceMethodParser()
+    {
+        return _serviceMethodParser ??= new ServiceMethodCodeGenModelParser(this);
     }
 }

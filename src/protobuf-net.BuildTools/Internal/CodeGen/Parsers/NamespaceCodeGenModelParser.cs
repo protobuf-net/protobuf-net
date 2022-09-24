@@ -46,10 +46,13 @@ internal sealed class NamespaceCodeGenModelParser : SymbolCodeGenModelParserBase
                         var enumParser = ParserProvider.GetEnumParser();
                         var codeGenEnum = enumParser.Parse(typedChildSymbol);
                         codeGenFile.Enums.Add(codeGenEnum);
-                        break; 
-                        
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                        break;
+                    
+                    case TypeKind.Interface:
+                        var serviceParser = ParserProvider.GetServiceParser(namespaceContext);
+                        var codeGenService = serviceParser.Parse(typedChildSymbol);
+                        codeGenFile.Services.Add(codeGenService);
+                        break;
                 }
             }
         }
