@@ -17,16 +17,20 @@ namespace TypeRefs
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public global::TypeRefs.MsgA A { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
+        public global::TypeRefs.MsgA A { get; set; } = /* invalid type / value: TypeRefs.MsgA= */;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public global::TypeRefs.MsgB B { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
+        public global::TypeRefs.MsgB B { get; set; } = /* invalid type / value: TypeRefs.MsgB= */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public global::TypeRefs.MsgB.MsgC C { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
+        public global::TypeRefs.MsgB.MsgC C { get; set; } = /* invalid type / value: TypeRefs.MsgB+MsgC= */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public global::TypeRefs.MsgD D { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
+        public global::TypeRefs.MsgD D { get; set; } = /* invalid type / value: TypeRefs.MsgD= */;
 
         internal static void Serialize(MsgA value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -156,16 +160,20 @@ namespace TypeRefs
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public global::TypeRefs.MsgA A { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
+        public global::TypeRefs.MsgA A { get; set; } = /* invalid type / value: TypeRefs.MsgA= */;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public global::TypeRefs.MsgB B { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
+        public global::TypeRefs.MsgB B { get; set; } = /* invalid type / value: TypeRefs.MsgB= */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public global::TypeRefs.MsgB.MsgC C { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
+        public global::TypeRefs.MsgB.MsgC C { get; set; } = /* invalid type / value: TypeRefs.MsgB+MsgC= */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public global::TypeRefs.MsgD D { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
+        public global::TypeRefs.MsgD D { get; set; } = /* invalid type / value: TypeRefs.MsgD= */;
 
         [global::ProtoBuf.ProtoContract(Name = @"msg_c")]
         public partial class MsgC : global::ProtoBuf.IExtensible
@@ -175,16 +183,20 @@ namespace TypeRefs
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-            public global::TypeRefs.MsgA A { get; set; }
+            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
+            public global::TypeRefs.MsgA A { get; set; } = /* invalid type / value: TypeRefs.MsgA= */;
 
             [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-            public global::TypeRefs.MsgB B { get; set; }
+            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
+            public global::TypeRefs.MsgB B { get; set; } = /* invalid type / value: TypeRefs.MsgB= */;
 
             [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-            public global::TypeRefs.MsgB.MsgC C { get; set; }
+            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
+            public global::TypeRefs.MsgB.MsgC C { get; set; } = /* invalid type / value: TypeRefs.MsgB+MsgC= */;
 
             [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-            public global::TypeRefs.MsgD D { get; set; }
+            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
+            public global::TypeRefs.MsgD D { get; set; } = /* invalid type / value: TypeRefs.MsgD= */;
 
             internal static void Serialize(MsgC value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -434,16 +446,20 @@ namespace TypeRefs
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public global::TypeRefs.MsgA A { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
+        public global::TypeRefs.MsgA A { get; set; } = /* invalid type / value: TypeRefs.MsgA= */;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public global::TypeRefs.MsgB B { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
+        public global::TypeRefs.MsgB B { get; set; } = /* invalid type / value: TypeRefs.MsgB= */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public global::TypeRefs.MsgB.MsgC C { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
+        public global::TypeRefs.MsgB.MsgC C { get; set; } = /* invalid type / value: TypeRefs.MsgB+MsgC= */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public global::TypeRefs.MsgD D { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
+        public global::TypeRefs.MsgD D { get; set; } = /* invalid type / value: TypeRefs.MsgD= */;
 
         internal static void Serialize(MsgD value, ref global::ProtoBuf.Nano.Writer writer)
         {

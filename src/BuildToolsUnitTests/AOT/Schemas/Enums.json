@@ -9,7 +9,8 @@
               "FieldNumber": 2,
               "TypeName": "BasicPackage.Corpus",
               "Name": "Corpus",
-              "OriginalName": "corpus"
+              "OriginalName": "corpus",
+              "DefaultValue": ""
             }
           ],
           "Name": "SearchRequest",

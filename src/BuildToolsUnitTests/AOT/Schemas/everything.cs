@@ -17,13 +17,16 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"foo")]
-        public global::AllTheThings.TestNetObject Foo { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.TestNetObject= */)]
+        public global::AllTheThings.TestNetObject Foo { get; set; } = /* invalid type / value: AllTheThings.TestNetObject= */;
 
         [global::ProtoBuf.ProtoMember(2)]
-        public global::AllTheThings.TestNetObject barRef { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.TestNetObject= */)]
+        public global::AllTheThings.TestNetObject barRef { get; set; } = /* invalid type / value: AllTheThings.TestNetObject= */;
 
         [global::ProtoBuf.ProtoMember(3)]
-        public object barDyn { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: :NetObjectProxy= */)]
+        public object barDyn { get; set; } = /* invalid type / value: :NetObjectProxy= */;
 
         internal static void Serialize(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -126,28 +129,36 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        public float A { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=inf */)]
+        public float A { get; set; } = /* invalid type / value: float=inf */;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        public float B { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=-inf */)]
+        public float B { get; set; } = /* invalid type / value: float=-inf */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        public float C { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=nan */)]
+        public float C { get; set; } = /* invalid type / value: float=nan */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        public float D { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=0 */)]
+        public float D { get; set; } = /* invalid type / value: float=0 */;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"e")]
-        public float E { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=0 */)]
+        public float E { get; set; } = /* invalid type / value: float=0 */;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"f")]
-        public float F { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=0 */)]
+        public float F { get; set; } = /* invalid type / value: float=0 */;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"g")]
-        public bool G { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool=true */)]
+        public bool G { get; set; } = /* invalid type / value: bool=true */;
 
         [global::ProtoBuf.ProtoMember(8)]
-        public int requiredWithDefault { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32=12 */)]
+        public int requiredWithDefault { get; set; } = /* invalid type / value: int32=12 */;
 
         internal static void Serialize(MagicValues value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -244,22 +255,30 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"foo_name")]
-        public string FooName { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"abc")]
+        public string FooName { get; set; } = @"abc";
 
         [global::ProtoBuf.ProtoMember(4, Name = @"name")]
-        public string Name { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"abc")]
+        public string Name { get; set; } = @"abc";
 
         [global::ProtoBuf.ProtoMember(9, Name = @"sub_message")]
-        public bool SubMessage { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
+        public bool SubMessage { get; set; } = /* invalid type / value: bool= */;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"name2")]
-        public string Name2 { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"abc")]
+        public string Name2 { get; set; } = @"abc";
 
         [global::ProtoBuf.ProtoMember(10, Name = @"sub_message2")]
-        public bool SubMessage2 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
+        public bool SubMessage2 { get; set; } = /* invalid type / value: bool= */;
 
         [global::ProtoBuf.ProtoMember(12, Name = @"bar_name")]
-        public string BarName { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"abc\def""ghi'jklmno
+pqr	stu")]
+        public string BarName { get; set; } = @"abc\def""ghi'jklmno
+pqr	stu";
 
         internal static void Serialize(SampleMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -371,16 +390,20 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"query")]
-        public string Query { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"")]
+        public string Query { get; set; } = @"";
 
         [global::ProtoBuf.ProtoMember(2, Name = @"page_number")]
-        public int PageNumber { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+        public int PageNumber { get; set; } = /* invalid type / value: int32= */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"result_per_page")]
-        public int ResultPerPage { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32=10 */)]
+        public int ResultPerPage { get; set; } = /* invalid type / value: int32=10 */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"corpus")]
-        public global::AllTheThings.SearchRequest.Corpus CorpusValue { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */)]
+        public global::AllTheThings.SearchRequest.Corpus CorpusValue { get; set; } = /* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */;
 
         [global::ProtoBuf.ProtoContract()]
         public enum Corpus
@@ -494,13 +517,16 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        public global::AllTheThings.SearchResponse.Result Results { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Result= */)]
+        public global::AllTheThings.SearchResponse.Result Results { get; set; } = /* invalid type / value: AllTheThings.SearchResponse+Result= */;
 
         [global::ProtoBuf.ProtoMember(10, Name = @"grouped")]
-        public global::AllTheThings.SearchResponse.Grouped Groupeds { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Grouped= */)]
+        public global::AllTheThings.SearchResponse.Grouped Groupeds { get; set; } = /* invalid type / value: AllTheThings.SearchResponse+Grouped= */;
 
         [global::ProtoBuf.ProtoMember(12, Name = @"upper")]
-        public global::AllTheThings.SearchResponse.Upper UpperValue { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Upper= */)]
+        public global::AllTheThings.SearchResponse.Upper UpperValue { get; set; } = /* invalid type / value: AllTheThings.SearchResponse+Upper= */;
 
         [global::ProtoBuf.ProtoContract()]
         public partial class Result : global::ProtoBuf.IExtensible
@@ -510,13 +536,16 @@ namespace AllTheThings
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"url")]
-            public string Url { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Url { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(2, Name = @"title")]
-            public string Title { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Title { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(3, Name = @"snippets")]
-            public string Snippets { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Snippets { get; set; } = @"";
 
             internal static void Serialize(Result value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -605,13 +634,16 @@ namespace AllTheThings
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(2, Name = @"url")]
-            public string Url { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Url { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            public string Title { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Title { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            public string Snippets { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Snippets { get; set; } = @"";
 
             internal static void Serialize(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -700,13 +732,16 @@ namespace AllTheThings
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(2, Name = @"url")]
-            public string Url { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Url { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            public string Title { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Title { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            public string Snippets { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Snippets { get; set; } = @"";
 
             internal static void Serialize(Upper value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -895,10 +930,12 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(7, Name = @"map_field1")]
-        public global::AllTheThings.Outer.MapField1Entry MapField1s { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer+MapField1Entry= */)]
+        public global::AllTheThings.Outer.MapField1Entry MapField1s { get; set; } = /* invalid type / value: AllTheThings.Outer+MapField1Entry= */;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"map_field2")]
-        public global::AllTheThings.Outer.MapField2Entry MapField2s { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer+MapField2Entry= */)]
+        public global::AllTheThings.Outer.MapField2Entry MapField2s { get; set; } = /* invalid type / value: AllTheThings.Outer+MapField2Entry= */;
 
         [global::ProtoBuf.ProtoContract()]
         public partial class MapField1Entry : global::ProtoBuf.IExtensible
@@ -908,10 +945,12 @@ namespace AllTheThings
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"key", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-            public int Key { get; set; }
+            [global::System.ComponentModel.DefaultValue(/* invalid type / value: sint32= */)]
+            public int Key { get; set; } = /* invalid type / value: sint32= */;
 
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
-            public string Value { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Value { get; set; } = @"";
 
             internal static void Serialize(MapField1Entry value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -980,10 +1019,12 @@ namespace AllTheThings
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"key")]
-            public string Key { get; set; }
+            [global::System.ComponentModel.DefaultValue(@"")]
+            public string Key { get; set; } = @"";
 
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
-            public global::AllTheThings.Outer Value { get; set; }
+            [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer= */)]
+            public global::AllTheThings.Outer Value { get; set; } = /* invalid type / value: AllTheThings.Outer= */;
 
             internal static void Serialize(MapField2Entry value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -1073,10 +1114,12 @@ namespace AllTheThings
                     => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
                 [global::ProtoBuf.ProtoMember(1, Name = @"ival")]
-                public long Ival { get; set; }
+                [global::System.ComponentModel.DefaultValue(/* invalid type / value: int64= */)]
+                public long Ival { get; set; } = /* invalid type / value: int64= */;
 
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
-                public bool Booly { get; set; }
+                [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
+                public bool Booly { get; set; } = /* invalid type / value: bool= */;
 
                 internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
@@ -1179,10 +1222,12 @@ namespace AllTheThings
                     => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
                 [global::ProtoBuf.ProtoMember(1, Name = @"ival")]
-                public int Ival { get; set; }
+                [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+                public int Ival { get; set; } = /* invalid type / value: int32= */;
 
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
-                public bool Booly { get; set; }
+                [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
+                public bool Booly { get; set; } = /* invalid type / value: bool= */;
 
                 internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
@@ -1358,7 +1403,8 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        public string Result { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"")]
+        public string Result { get; set; } = @"";
 
         internal static void Serialize(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1421,16 +1467,20 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"required")]
-        public int Required { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+        public int Required { get; set; } = /* invalid type / value: int32= */;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"optional")]
-        public int Optional { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+        public int Optional { get; set; } = /* invalid type / value: int32= */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"repeated")]
-        public int Repeateds { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+        public int Repeateds { get; set; } = /* invalid type / value: int32= */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
-        public int Packeds { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+        public int Packeds { get; set; } = /* invalid type / value: int32= */;
 
         internal static void Serialize(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1504,10 +1554,12 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(536870911, Name = @"hi")]
-        public string His { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"")]
+        public string His { get; set; } = @"";
 
         [global::ProtoBuf.ProtoMember(1, Name = @"lo")]
-        public string Lo { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"")]
+        public string Lo { get; set; } = @"";
 
         internal static void Serialize(TagRanges value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1667,49 +1719,64 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"double")]
-        public double Double { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: double= */)]
+        public double Double { get; set; } = /* invalid type / value: double= */;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"float")]
-        public float Float { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float= */)]
+        public float Float { get; set; } = /* invalid type / value: float= */;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"int32")]
-        public int Int32 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
+        public int Int32 { get; set; } = /* invalid type / value: int32= */;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"int64")]
-        public long Int64 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int64= */)]
+        public long Int64 { get; set; } = /* invalid type / value: int64= */;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"uint32")]
-        public uint Uint32 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: uint32= */)]
+        public uint Uint32 { get; set; } = /* invalid type / value: uint32= */;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"uint64")]
-        public ulong Uint64 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: uint64= */)]
+        public ulong Uint64 { get; set; } = /* invalid type / value: uint64= */;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"sint32", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        public int Sint32 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sint32= */)]
+        public int Sint32 { get; set; } = /* invalid type / value: sint32= */;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        public long Sint64 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sint64= */)]
+        public long Sint64 { get; set; } = /* invalid type / value: sint64= */;
 
         [global::ProtoBuf.ProtoMember(9, Name = @"fixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public uint Fixed32 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: fixed32= */)]
+        public uint Fixed32 { get; set; } = /* invalid type / value: fixed32= */;
 
         [global::ProtoBuf.ProtoMember(10, Name = @"fixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public ulong Fixed64 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: fixed64= */)]
+        public ulong Fixed64 { get; set; } = /* invalid type / value: fixed64= */;
 
         [global::ProtoBuf.ProtoMember(11, Name = @"sfixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public int Sfixed32 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sfixed32= */)]
+        public int Sfixed32 { get; set; } = /* invalid type / value: sfixed32= */;
 
         [global::ProtoBuf.ProtoMember(12, Name = @"sfixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public long Sfixed64 { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sfixed64= */)]
+        public long Sfixed64 { get; set; } = /* invalid type / value: sfixed64= */;
 
         [global::ProtoBuf.ProtoMember(13, Name = @"bool")]
-        public bool Bool { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
+        public bool Bool { get; set; } = /* invalid type / value: bool= */;
 
         [global::ProtoBuf.ProtoMember(14, Name = @"string")]
-        public string String { get; set; }
+        [global::System.ComponentModel.DefaultValue(@"")]
+        public string String { get; set; } = @"";
 
         [global::ProtoBuf.ProtoMember(15, Name = @"bytes")]
-        public byte[] Bytes { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bytes= */)]
+        public byte[] Bytes { get; set; } = /* invalid type / value: bytes= */;
 
         internal static void Serialize(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {

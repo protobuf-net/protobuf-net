@@ -9,7 +9,8 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "BasicField",
-              "OriginalName": "basic_field"
+              "OriginalName": "basic_field",
+              "DefaultValue": ""
             }
           ],
           "Name": "BasicMessage",

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -6,7 +7,16 @@ internal partial class CodeGenCSharpCodeGenerator
 {
     protected override void WriteMessageSerializer(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
     {
+
         // very much work-in-progress; not much of this is expected to work at all!
+        // not yet implemented:
+        // repeated
+        // extension data
+        // constructor usage
+        // inheritance
+        // down-level langver
+        // consideration of value-swap for sub-messages
+
         const string NanoNS = "global::ProtoBuf.Nano";
 
         static ulong GetTag(CodeGenField field, WireType wireType)
@@ -28,21 +38,35 @@ internal partial class CodeGenCSharpCodeGenerator
         }
 
         ctx.WriteLine($"internal static void Serialize({Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
-
         foreach (var field in message.Fields)
         {
             field.Type.IsWellKnownType(out var knownType);
 
-            // not yet implemented:
-            // repeated
-            // optional/conditional/defaults
-            // inheritance
-            // groups
-            // extension data
-            // lots of well-known types
-            // constructor usage
-            // down-level langver
-            // consideration of value-swap for sub-messages
+            bool isConditional = field.Conditional != ConditionalKind.Always;
+            if (isConditional)
+            {
+                switch (field.Conditional)
+                {
+                    case ConditionalKind.NonDefault when knownType == CodeGenWellKnownType.Boolean && TryParseBoolean(field.DefaultValue, out var bDefault):
+                        ctx.WriteLine($"if ({(bDefault ? "!" : "")}value.{field.BackingName})");
+                        break;
+                    case ConditionalKind.NonDefault:
+                        ctx.WriteLine($"if (value.{field.BackingName} != {FormatDefaultValue(field)})");
+                        break;
+                    case ConditionalKind.ShouldSerializeMethod:
+                        ctx.WriteLine($"if (value.ShouldSerialize{field.Name}())");
+                        break;
+                    default:
+                        ctx.WriteLine($"#warning conditional mode for {message.Name}.{field.Name} not supported: {field.Conditional}");
+                        isConditional = false;
+                        break;
+                }
+            }
+            if (isConditional) // assume we've just written an "if"
+            {
+                ctx.WriteLine("{").Indent();
+            }
+
             switch (knownType)
             {
                 case CodeGenWellKnownType.None:
@@ -105,6 +129,10 @@ internal partial class CodeGenCSharpCodeGenerator
                     break;
                 default:
                     throw new NotImplementedException($"type not yet supported in {nameof(WriteMessageSerializer)}: {knownType}");
+            }
+            if (isConditional) // we heed to close the "if"
+            {
+                ctx.Outdent().WriteLine("}");
             }
         }
         ctx.Outdent().WriteLine("}").WriteLine();
@@ -290,7 +318,27 @@ internal partial class CodeGenCSharpCodeGenerator
             .WriteLine("return value;").Outdent().WriteLine("}").WriteLine();
     }
 
+    private static string FormatDefaultValue(CodeGenField field)
+    {
+        if (field.Type.IsWellKnownType(out var wellKnown) && field.DefaultValue is not null)
+        {
+            switch (wellKnown)
+            {
+                case CodeGenWellKnownType.Boolean when TryParseBoolean(field.DefaultValue, out var boolValue):
+                    return boolValue ? "true" : "false";
+                case CodeGenWellKnownType.String:
+                    return @"@""" + field.DefaultValue.Replace(@"""", @"""""") + @"""";
 
+            }
+        }
+        return $"/* invalid type / value: {field.TypeName}={field.DefaultValue} */";
+    }
+
+    private static bool TryParseBoolean(string value, out bool result)
+    {
+        result = default;
+        return string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out result);
+    }
 
     string Type(CodeGenType type) => "global::" + type.ToString().Replace('+', '.'); // lazy
 }

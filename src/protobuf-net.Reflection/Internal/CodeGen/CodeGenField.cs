@@ -40,6 +40,10 @@ internal class CodeGenField
     [DefaultValue(Access.Public)]
     public Access Access { get; set; } = Access.Public;
 
+    [DefaultValue(ConditionalKind.Always)]
+    public ConditionalKind Conditional { get; set; } = ConditionalKind.Always;
+    public string? DefaultValue { get; set; }
+
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     public bool ShouldSerializeBackingName() => BackingName != Name;
 
@@ -70,8 +74,21 @@ internal class CodeGenField
                     => context.GetContractType(field.TypeName),
                 _ => throw new NotImplementedException($"type not handled: {field.type}"),
             },
+            DefaultValue = field.DefaultValue,
         };
 
         return newField;
     }
+}
+
+internal enum ConditionalKind
+{
+    /// <summary>The value is always written (unless not possible)</summary>
+    Always,
+    /// <summary>The corresponding <c>ShouldSerialize*()</c> method is used for conditionality</summary>
+    ShouldSerializeMethod,
+    /// <summary>The value is written only if it differs from the default value</summary>
+    NonDefault,
+    /// <summary>Active assignment is tracked and used for conditionality</summary>
+    FieldPresence,
 }

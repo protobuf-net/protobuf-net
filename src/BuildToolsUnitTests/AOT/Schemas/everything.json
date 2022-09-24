@@ -62,25 +62,29 @@
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Query",
-                      "OriginalName": "query"
+                      "OriginalName": "query",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 2,
                       "TypeName": "int32",
                       "Name": "PageNumber",
-                      "OriginalName": "page_number"
+                      "OriginalName": "page_number",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 3,
                       "TypeName": "int32",
                       "Name": "ResultPerPage",
-                      "OriginalName": "result_per_page"
+                      "OriginalName": "result_per_page",
+                      "DefaultValue": "10"
                     },
                     {
                       "FieldNumber": 4,
                       "TypeName": "AllTheThings.SearchRequest+Corpus",
                       "Name": "CorpusValue",
-                      "OriginalName": "corpus"
+                      "OriginalName": "corpus",
+                      "DefaultValue": "UNIVERSAL"
                     }
                   ],
                   "Name": "SearchRequest",
@@ -97,19 +101,22 @@
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
-                          "OriginalName": "title"
+                          "OriginalName": "title",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Snippets",
-                          "OriginalName": "snippets"
+                          "OriginalName": "snippets",
+                          "DefaultValue": ""
                         }
                       ],
                       "Name": "Result",
@@ -122,19 +129,22 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
-                          "OriginalName": "title"
+                          "OriginalName": "title",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
-                          "OriginalName": "snippets"
+                          "OriginalName": "snippets",
+                          "DefaultValue": ""
                         }
                       ],
                       "Name": "Grouped",
@@ -147,19 +157,22 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
-                          "OriginalName": "title"
+                          "OriginalName": "title",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
-                          "OriginalName": "snippets"
+                          "OriginalName": "snippets",
+                          "DefaultValue": ""
                         }
                       ],
                       "Name": "Upper",
@@ -173,19 +186,22 @@
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
-                      "OriginalName": "result"
+                      "OriginalName": "result",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
-                      "OriginalName": "grouped"
+                      "OriginalName": "grouped",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
-                      "OriginalName": "upper"
+                      "OriginalName": "upper",
+                      "DefaultValue": ""
                     }
                   ],
                   "Name": "SearchResponse",
@@ -247,25 +263,29 @@
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Query",
-                      "OriginalName": "query"
+                      "OriginalName": "query",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 2,
                       "TypeName": "int32",
                       "Name": "PageNumber",
-                      "OriginalName": "page_number"
+                      "OriginalName": "page_number",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 3,
                       "TypeName": "int32",
                       "Name": "ResultPerPage",
-                      "OriginalName": "result_per_page"
+                      "OriginalName": "result_per_page",
+                      "DefaultValue": "10"
                     },
                     {
                       "FieldNumber": 4,
                       "TypeName": "AllTheThings.SearchRequest+Corpus",
                       "Name": "CorpusValue",
-                      "OriginalName": "corpus"
+                      "OriginalName": "corpus",
+                      "DefaultValue": "UNIVERSAL"
                     }
                   ],
                   "Name": "SearchRequest",
@@ -283,19 +303,22 @@
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
-                          "OriginalName": "title"
+                          "OriginalName": "title",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Snippets",
-                          "OriginalName": "snippets"
+                          "OriginalName": "snippets",
+                          "DefaultValue": ""
                         }
                       ],
                       "Name": "Result",
@@ -308,19 +331,22 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
-                          "OriginalName": "title"
+                          "OriginalName": "title",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
-                          "OriginalName": "snippets"
+                          "OriginalName": "snippets",
+                          "DefaultValue": ""
                         }
                       ],
                       "Name": "Grouped",
@@ -333,19 +359,22 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
-                          "OriginalName": "title"
+                          "OriginalName": "title",
+                          "DefaultValue": ""
                         },
                         {
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
-                          "OriginalName": "snippets"
+                          "OriginalName": "snippets",
+                          "DefaultValue": ""
                         }
                       ],
                       "Name": "Upper",
@@ -359,19 +388,22 @@
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
-                      "OriginalName": "result"
+                      "OriginalName": "result",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
-                      "OriginalName": "grouped"
+                      "OriginalName": "grouped",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
-                      "OriginalName": "upper"
+                      "OriginalName": "upper",
+                      "DefaultValue": ""
                     }
                   ],
                   "Name": "SearchResponse",
@@ -391,17 +423,20 @@
               "FieldNumber": 1,
               "TypeName": "AllTheThings.TestNetObject",
               "Name": "Foo",
-              "OriginalName": "foo"
+              "OriginalName": "foo",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "AllTheThings.TestNetObject",
-              "Name": "barRef"
+              "Name": "barRef",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": ":NetObjectProxy",
-              "Name": "barDyn"
+              "Name": "barDyn",
+              "DefaultValue": ""
             }
           ],
           "Name": "TestNetObject",
@@ -414,48 +449,56 @@
               "FieldNumber": 1,
               "TypeName": "float",
               "Name": "A",
-              "OriginalName": "a"
+              "OriginalName": "a",
+              "DefaultValue": "inf"
             },
             {
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "B",
-              "OriginalName": "b"
+              "OriginalName": "b",
+              "DefaultValue": "-inf"
             },
             {
               "FieldNumber": 3,
               "TypeName": "float",
               "Name": "C",
-              "OriginalName": "c"
+              "OriginalName": "c",
+              "DefaultValue": "nan"
             },
             {
               "FieldNumber": 4,
               "TypeName": "float",
               "Name": "D",
-              "OriginalName": "d"
+              "OriginalName": "d",
+              "DefaultValue": "0"
             },
             {
               "FieldNumber": 5,
               "TypeName": "float",
               "Name": "E",
-              "OriginalName": "e"
+              "OriginalName": "e",
+              "DefaultValue": "0"
             },
             {
               "FieldNumber": 6,
               "TypeName": "float",
               "Name": "F",
-              "OriginalName": "f"
+              "OriginalName": "f",
+              "DefaultValue": "0"
             },
             {
               "FieldNumber": 7,
               "TypeName": "bool",
               "Name": "G",
-              "OriginalName": "g"
+              "OriginalName": "g",
+              "DefaultValue": "true"
             },
             {
               "FieldNumber": 8,
               "TypeName": "int32",
-              "Name": "requiredWithDefault"
+              "Name": "requiredWithDefault",
+              "DefaultValue": "12"
             }
           ],
           "Name": "MagicValues",
@@ -468,37 +511,43 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "FooName",
-              "OriginalName": "foo_name"
+              "OriginalName": "foo_name",
+              "DefaultValue": "abc"
             },
             {
               "FieldNumber": 4,
               "TypeName": "string",
               "Name": "Name",
-              "OriginalName": "name"
+              "OriginalName": "name",
+              "DefaultValue": "abc"
             },
             {
               "FieldNumber": 9,
               "TypeName": "bool",
               "Name": "SubMessage",
-              "OriginalName": "sub_message"
+              "OriginalName": "sub_message",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 5,
               "TypeName": "string",
               "Name": "Name2",
-              "OriginalName": "name2"
+              "OriginalName": "name2",
+              "DefaultValue": "abc"
             },
             {
               "FieldNumber": 10,
               "TypeName": "bool",
               "Name": "SubMessage2",
-              "OriginalName": "sub_message2"
+              "OriginalName": "sub_message2",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 12,
               "TypeName": "string",
               "Name": "BarName",
-              "OriginalName": "bar_name"
+              "OriginalName": "bar_name",
+              "DefaultValue": "abc\\def\"ghi'jkl\rmno\npqr\tstu"
             }
           ],
           "Name": "SampleMessage",
@@ -554,25 +603,29 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Query",
-              "OriginalName": "query"
+              "OriginalName": "query",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "int32",
               "Name": "PageNumber",
-              "OriginalName": "page_number"
+              "OriginalName": "page_number",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "ResultPerPage",
-              "OriginalName": "result_per_page"
+              "OriginalName": "result_per_page",
+              "DefaultValue": "10"
             },
             {
               "FieldNumber": 4,
               "TypeName": "AllTheThings.SearchRequest+Corpus",
               "Name": "CorpusValue",
-              "OriginalName": "corpus"
+              "OriginalName": "corpus",
+              "DefaultValue": "UNIVERSAL"
             }
           ],
           "Name": "SearchRequest",
@@ -587,19 +640,22 @@
                   "FieldNumber": 1,
                   "TypeName": "string",
                   "Name": "Url",
-                  "OriginalName": "url"
+                  "OriginalName": "url",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Title",
-                  "OriginalName": "title"
+                  "OriginalName": "title",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Snippets",
-                  "OriginalName": "snippets"
+                  "OriginalName": "snippets",
+                  "DefaultValue": ""
                 }
               ],
               "Name": "Result",
@@ -612,19 +668,22 @@
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
-                  "OriginalName": "url"
+                  "OriginalName": "url",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
-                  "OriginalName": "title"
+                  "OriginalName": "title",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 4,
                   "TypeName": "string",
                   "Name": "Snippets",
-                  "OriginalName": "snippets"
+                  "OriginalName": "snippets",
+                  "DefaultValue": ""
                 }
               ],
               "Name": "Grouped",
@@ -637,19 +696,22 @@
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
-                  "OriginalName": "url"
+                  "OriginalName": "url",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
-                  "OriginalName": "title"
+                  "OriginalName": "title",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 4,
                   "TypeName": "string",
                   "Name": "Snippets",
-                  "OriginalName": "snippets"
+                  "OriginalName": "snippets",
+                  "DefaultValue": ""
                 }
               ],
               "Name": "Upper",
@@ -663,19 +725,22 @@
               "FieldNumber": 1,
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
-              "OriginalName": "result"
+              "OriginalName": "result",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 10,
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
-              "OriginalName": "grouped"
+              "OriginalName": "grouped",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 12,
               "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
-              "OriginalName": "upper"
+              "OriginalName": "upper",
+              "DefaultValue": ""
             }
           ],
           "Name": "SearchResponse",
@@ -690,13 +755,15 @@
                   "FieldNumber": 1,
                   "TypeName": "sint32",
                   "Name": "Key",
-                  "OriginalName": "key"
+                  "OriginalName": "key",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Value",
-                  "OriginalName": "value"
+                  "OriginalName": "value",
+                  "DefaultValue": ""
                 }
               ],
               "Name": "MapField1Entry",
@@ -709,13 +776,15 @@
                   "FieldNumber": 1,
                   "TypeName": "string",
                   "Name": "Key",
-                  "OriginalName": "key"
+                  "OriginalName": "key",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 2,
                   "TypeName": "AllTheThings.Outer",
                   "Name": "Value",
-                  "OriginalName": "value"
+                  "OriginalName": "value",
+                  "DefaultValue": ""
                 }
               ],
               "Name": "MapField2Entry",
@@ -730,13 +799,15 @@
                       "FieldNumber": 1,
                       "TypeName": "int64",
                       "Name": "Ival",
-                      "OriginalName": "ival"
+                      "OriginalName": "ival",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 2,
                       "TypeName": "bool",
                       "Name": "Booly",
-                      "OriginalName": "booly"
+                      "OriginalName": "booly",
+                      "DefaultValue": ""
                     }
                   ],
                   "Name": "Inner",
@@ -756,13 +827,15 @@
                       "FieldNumber": 1,
                       "TypeName": "int32",
                       "Name": "Ival",
-                      "OriginalName": "ival"
+                      "OriginalName": "ival",
+                      "DefaultValue": ""
                     },
                     {
                       "FieldNumber": 2,
                       "TypeName": "bool",
                       "Name": "Booly",
-                      "OriginalName": "booly"
+                      "OriginalName": "booly",
+                      "DefaultValue": ""
                     }
                   ],
                   "Name": "Inner",
@@ -780,13 +853,15 @@
               "FieldNumber": 7,
               "TypeName": "AllTheThings.Outer+MapField1Entry",
               "Name": "MapField1s",
-              "OriginalName": "map_field1"
+              "OriginalName": "map_field1",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 8,
               "TypeName": "AllTheThings.Outer+MapField2Entry",
               "Name": "MapField2s",
-              "OriginalName": "map_field2"
+              "OriginalName": "map_field2",
+              "DefaultValue": ""
             }
           ],
           "Name": "Outer",
@@ -799,7 +874,8 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Result",
-              "OriginalName": "result"
+              "OriginalName": "result",
+              "DefaultValue": ""
             }
           ],
           "Name": "SomeOtherMessage",
@@ -812,25 +888,29 @@
               "FieldNumber": 1,
               "TypeName": "int32",
               "Name": "Required",
-              "OriginalName": "required"
+              "OriginalName": "required",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "int32",
               "Name": "Optional",
-              "OriginalName": "optional"
+              "OriginalName": "optional",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Repeateds",
-              "OriginalName": "repeated"
+              "OriginalName": "repeated",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 4,
               "TypeName": "int32",
               "Name": "Packeds",
-              "OriginalName": "packed"
+              "OriginalName": "packed",
+              "DefaultValue": ""
             }
           ],
           "Name": "FieldRules",
@@ -843,13 +923,15 @@
               "FieldNumber": 536870911,
               "TypeName": "string",
               "Name": "His",
-              "OriginalName": "hi"
+              "OriginalName": "hi",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Lo",
-              "OriginalName": "lo"
+              "OriginalName": "lo",
+              "DefaultValue": ""
             }
           ],
           "Name": "TagRanges",
@@ -872,91 +954,106 @@
               "FieldNumber": 1,
               "TypeName": "double",
               "Name": "Double",
-              "OriginalName": "double"
+              "OriginalName": "double",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "Float",
-              "OriginalName": "float"
+              "OriginalName": "float",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Int32",
-              "OriginalName": "int32"
+              "OriginalName": "int32",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 4,
               "TypeName": "int64",
               "Name": "Int64",
-              "OriginalName": "int64"
+              "OriginalName": "int64",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 5,
               "TypeName": "uint32",
               "Name": "Uint32",
-              "OriginalName": "uint32"
+              "OriginalName": "uint32",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 6,
               "TypeName": "uint64",
               "Name": "Uint64",
-              "OriginalName": "uint64"
+              "OriginalName": "uint64",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 7,
               "TypeName": "sint32",
               "Name": "Sint32",
-              "OriginalName": "sint32"
+              "OriginalName": "sint32",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 8,
               "TypeName": "sint64",
               "Name": "Sint64",
-              "OriginalName": "sint64"
+              "OriginalName": "sint64",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 9,
               "TypeName": "fixed32",
               "Name": "Fixed32",
-              "OriginalName": "fixed32"
+              "OriginalName": "fixed32",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 10,
               "TypeName": "fixed64",
               "Name": "Fixed64",
-              "OriginalName": "fixed64"
+              "OriginalName": "fixed64",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 11,
               "TypeName": "sfixed32",
               "Name": "Sfixed32",
-              "OriginalName": "sfixed32"
+              "OriginalName": "sfixed32",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 12,
               "TypeName": "sfixed64",
               "Name": "Sfixed64",
-              "OriginalName": "sfixed64"
+              "OriginalName": "sfixed64",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 13,
               "TypeName": "bool",
               "Name": "Bool",
-              "OriginalName": "bool"
+              "OriginalName": "bool",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 14,
               "TypeName": "string",
               "Name": "String",
-              "OriginalName": "string"
+              "OriginalName": "string",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 15,
               "TypeName": "bytes",
               "Name": "Bytes",
-              "OriginalName": "bytes"
+              "OriginalName": "bytes",
+              "DefaultValue": ""
             }
           ],
           "Name": "PrimitiveFieldTypes",

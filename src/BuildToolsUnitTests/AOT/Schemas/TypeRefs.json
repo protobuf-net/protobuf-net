@@ -9,25 +9,29 @@
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
-              "OriginalName": "a"
+              "OriginalName": "a",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
-              "OriginalName": "b"
+              "OriginalName": "b",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
-              "OriginalName": "c"
+              "OriginalName": "c",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
-              "OriginalName": "d"
+              "OriginalName": "d",
+              "DefaultValue": ""
             }
           ],
           "Name": "MsgA",
@@ -42,25 +46,29 @@
                   "FieldNumber": 1,
                   "TypeName": "TypeRefs.MsgA",
                   "Name": "A",
-                  "OriginalName": "a"
+                  "OriginalName": "a",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 2,
                   "TypeName": "TypeRefs.MsgB",
                   "Name": "B",
-                  "OriginalName": "b"
+                  "OriginalName": "b",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "TypeRefs.MsgB+MsgC",
                   "Name": "C",
-                  "OriginalName": "c"
+                  "OriginalName": "c",
+                  "DefaultValue": ""
                 },
                 {
                   "FieldNumber": 4,
                   "TypeName": "TypeRefs.MsgD",
                   "Name": "D",
-                  "OriginalName": "d"
+                  "OriginalName": "d",
+                  "DefaultValue": ""
                 }
               ],
               "Name": "MsgC",
@@ -73,25 +81,29 @@
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
-              "OriginalName": "a"
+              "OriginalName": "a",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
-              "OriginalName": "b"
+              "OriginalName": "b",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
-              "OriginalName": "c"
+              "OriginalName": "c",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
-              "OriginalName": "d"
+              "OriginalName": "d",
+              "DefaultValue": ""
             }
           ],
           "Name": "MsgB",
@@ -104,25 +116,29 @@
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
-              "OriginalName": "a"
+              "OriginalName": "a",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
-              "OriginalName": "b"
+              "OriginalName": "b",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
-              "OriginalName": "c"
+              "OriginalName": "c",
+              "DefaultValue": ""
             },
             {
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
-              "OriginalName": "d"
+              "OriginalName": "d",
+              "DefaultValue": ""
             }
           ],
           "Name": "MsgD",

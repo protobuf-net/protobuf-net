@@ -17,7 +17,8 @@ namespace BasicPackage
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(2, Name = @"corpus")]
-        public global::BasicPackage.Corpus Corpus { get; set; }
+        [global::System.ComponentModel.DefaultValue(/* invalid type / value: BasicPackage.Corpus= */)]
+        public global::BasicPackage.Corpus Corpus { get; set; } = /* invalid type / value: BasicPackage.Corpus= */;
 
         internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {

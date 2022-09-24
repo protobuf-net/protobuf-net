@@ -19,7 +19,8 @@
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Name",
-                      "OriginalName": "name"
+                      "OriginalName": "name",
+                      "DefaultValue": ""
                     }
                   ],
                   "Name": "HelloRequest",
@@ -35,7 +36,8 @@
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Message",
-                      "OriginalName": "message"
+                      "OriginalName": "message",
+                      "DefaultValue": ""
                     }
                   ],
                   "Name": "HelloReply",
@@ -55,7 +57,8 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Name",
-              "OriginalName": "name"
+              "OriginalName": "name",
+              "DefaultValue": ""
             }
           ],
           "Name": "HelloRequest",
@@ -68,7 +71,8 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Message",
-              "OriginalName": "message"
+              "OriginalName": "message",
+              "DefaultValue": ""
             }
           ],
           "Name": "HelloReply",

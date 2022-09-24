@@ -367,8 +367,6 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     /// </summary>
     protected override void WriteInitField(CodeGenGeneratorContext ctx, CodeGenField field, ref object state)
     {
-        string defaultValue = null; // GetDefaultValue(ctx, field, typeName);
-
         if (field.IsRepeated)
         {
             if (field.Type is CodeGenMapEntryType mapMsgType)
@@ -384,9 +382,9 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         }
         else if (!field.TrackFieldPresence)
         {
-            if (!string.IsNullOrWhiteSpace(defaultValue))
+            if (field.DefaultValue is not null)
             {
-                ctx.WriteLine($"{Escape(field.BackingName)} = {defaultValue};");
+                ctx.WriteLine($"{Escape(field.BackingName)} = {FormatDefaultValue(field)};");
             }
         }
     }
@@ -480,7 +478,6 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 
         bool suppressDefaultAttribute = field.IsRequired;
         var typeName = GetEscapedTypeName(ctx, field.Type, out var dataFormat);
-        string defaultValue = null; // GetDefaultValue(ctx, field, typeName);
 
         if (dataFormat.HasValue)
         {
@@ -495,16 +492,9 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
             tw.Write($", IsRequired = true");
         }
         tw.WriteLine(")]");
-        if (!field.IsRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
+        if (!field.IsRepeated && field.DefaultValue is not null  && !suppressDefaultAttribute)
         {
-            if (field.Type.IsWellKnownType(out var found) && (found == CodeGenWellKnownType.Fixed64 || found == CodeGenWellKnownType.UInt64))
-            {
-                ctx.WriteLine($"[global::System.ComponentModel.DefaultValue(typeof(ulong), \"{defaultValue}\")]");
-            }
-            else
-            {
-                ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
-            }
+            ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({FormatDefaultValue(field)})]");
         }
         if (field.IsDeprecated) WriteDeprecated(ctx);
         var escapedName = Escape(field.Name);
@@ -611,10 +601,10 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
             ctx.WriteLine($"{GetAccess(field.Access)} {typeName} {escapedName}").WriteLine("{").Indent();
             tw = ctx.Write(PropGetPrefix());
             tw.Write(fieldName);
-            if (!string.IsNullOrWhiteSpace(defaultValue))
+            if (field.DefaultValue is not null)
             {
                 tw.Write(" ?? ");
-                tw.Write(defaultValue);
+                tw.Write(FormatDefaultValue(field));
             }
             else if (!isRef)
             {
@@ -642,7 +632,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         else
         {
             tw = ctx.Write($"{GetAccess(field.Access)} {typeName} {escapedName} {{ get; set; }}");
-            if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
+            if (field.DefaultValue is not null && ctx.Supports(CSharp6)) tw.Write($" = {FormatDefaultValue(field)};");
             tw.WriteLine();
         }
         ctx.WriteLine();
