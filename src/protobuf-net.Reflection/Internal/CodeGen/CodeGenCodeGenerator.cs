@@ -1,10 +1,8 @@
 ﻿using Google.Protobuf.Reflection;
-using ProtoBuf.Reflection;
-using ProtoBuf.Reflection.Internal;
-using ProtoBuf.Reflection.Internal.CodeGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ReflectionError = ProtoBuf.Reflection.Error;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -57,7 +55,7 @@ internal abstract class CodeGenCodeGenerator
         catch (Exception ex)
         {
             var errorCode = ex is ParserException pe ? pe.ErrorCode : ErrorCode.Undefined;
-            set.Errors.Add(new Error(default, ex.Message, true, errorCode));
+            set.Errors.Add(new ReflectionError(default, ex.Message, true, errorCode));
         }
         var errors = set.GetErrors();
 

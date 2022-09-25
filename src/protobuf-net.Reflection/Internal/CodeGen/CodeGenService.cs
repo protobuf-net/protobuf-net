@@ -2,6 +2,7 @@
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel;
+using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -21,8 +22,8 @@ internal class CodeGenService : CodeGenType
     public string OriginalName { get; set; }
     public string Package { get; set; } = string.Empty;
 
-    private List<CodeGenServiceMethod> _serviceMethods;
-    public List<CodeGenServiceMethod> ServiceMethods => _serviceMethods ??= new();
+    private NonNullableList<CodeGenServiceMethod> _serviceMethods;
+    public ICollection<CodeGenServiceMethod> ServiceMethods => _serviceMethods ??= new();
     
     [DefaultValue(Access.Public)]
     public Access Access { get; set; } = Access.Public;

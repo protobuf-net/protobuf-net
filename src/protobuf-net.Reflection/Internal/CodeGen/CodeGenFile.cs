@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System.Collections.Generic;
+using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -11,13 +12,13 @@ internal class CodeGenFile
         Name = name;
     }
 
-    private List<CodeGenService>? _services;
-    private List<CodeGenMessage>? _messages;
-    private List<CodeGenEnum>? _enums;
+    private NonNullableList<CodeGenService>? _services;
+    private NonNullableList<CodeGenMessage>? _messages;
+    private NonNullableList<CodeGenEnum>? _enums;
 
-    public List<CodeGenService> Services => _services ??= new();
-    public List<CodeGenMessage> Messages => _messages ??= new();
-    public List<CodeGenEnum> Enums => _enums ??= new();
+    public ICollection<CodeGenService> Services => _services ??= new();
+    public ICollection<CodeGenMessage> Messages => _messages ??= new();
+    public ICollection<CodeGenEnum> Enums => _enums ??= new();
 
     public bool ShouldSerializeServices() => _services is { Count: > 0 };
     public bool ShouldSerializeMessages() => _messages is { Count: > 0 };

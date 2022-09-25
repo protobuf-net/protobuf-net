@@ -15,6 +15,7 @@ internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGe
     public override CodeGenEnum Parse(ITypeSymbol symbol)
     {
         var codeGenEnum = InitializeCodeGenEnum(symbol);
+        if (codeGenEnum is null) return null;
         
         var childSymbols = symbol.GetMembers();
         foreach (var childSymbol in childSymbols)
@@ -40,14 +41,22 @@ internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGe
             return codeGenEnum;
         }
         
-        return null;
+        return ErrorContainer.SaveWarning<CodeGenEnum>(
+            $"Failed to find a '{nameof(ProtoContractAttribute)}' attribute within enum type definition", 
+            symbol.GetFullTypeName(), 
+            symbol.GetLocation());
     }
     
     private CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
         var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix());
-        // add enum inherit type here
-        // codeGenEnum.Type = new WellKnown ...
+        
+        // enum can have an underlying type such as
+        // 'public enum MyValues : byte'
+        if (typeSymbol is INamedTypeSymbol enumNamedSymbol)
+        {
+            codeGenEnum.Type = enumNamedSymbol.EnumUnderlyingType.ResolveKnownCodeGenType(DataFormat.Default);
+        }
         
         return codeGenEnum;
     }

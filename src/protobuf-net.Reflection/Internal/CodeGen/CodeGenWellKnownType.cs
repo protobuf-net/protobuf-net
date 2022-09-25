@@ -8,6 +8,7 @@ internal enum CodeGenWellKnownType
     Boolean,
     Float,
     Double,
+    Byte,
     Bytes,
     String,
 

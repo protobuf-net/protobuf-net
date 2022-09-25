@@ -2,6 +2,7 @@
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel;
+using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -14,8 +15,8 @@ internal class CodeGenEnum : CodeGenType
 
     public string OriginalName { get; set; }
     
-    private List<CodeGenEnumValue>? _enumValues;
-    public List<CodeGenEnumValue> EnumValues => _enumValues ??= new();
+    private NonNullableList<CodeGenEnumValue>? _enumValues;
+    public ICollection<CodeGenEnumValue> EnumValues => _enumValues ??= new();
     
     public CodeGenType Type { get; set; } = CodeGenSimpleType.Int32;
     public bool ShouldSerializeType() => false;

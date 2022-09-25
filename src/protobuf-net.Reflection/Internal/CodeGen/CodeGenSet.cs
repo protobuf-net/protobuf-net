@@ -2,11 +2,17 @@
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.IO;
+using ProtoBuf.Reflection.Internal.CodeGen.Collections;
+using ProtoBuf.Reflection.Internal.CodeGen.Error;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenSet
 {
+    public CodeGenErrorContainer ErrorContainer { get; set; }
+    public ICollection<CodeGenFile> Files { get; } = new NonNullableList<CodeGenFile>();
+    public bool ShouldSerializeFiles() => Files.Count > 0;
+    
     public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenParseContext context)
     {
         var set = new CodeGenSet();
@@ -41,7 +47,4 @@ internal class CodeGenSet
 
         return set;
     }
-
-    public List<CodeGenFile> Files { get; } = new List<CodeGenFile>();
-    public bool ShouldSerializeFiles() => Files.Count > 0;
 }
