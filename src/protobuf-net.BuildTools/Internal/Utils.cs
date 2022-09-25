@@ -300,6 +300,8 @@ namespace ProtoBuf.BuildTools.Internal
             return symbol.Locations.First().GetLineSpan().ToString();
         }
 
+        internal static string GetFullTypeName(this IPropertySymbol symbol) => symbol.ToString();
+        
         internal static string GetFullTypeName(this IFieldSymbol symbol) => symbol.ToString();
         
         internal static string GetFullTypeName(this ITypeSymbol symbol) => symbol.ToString();

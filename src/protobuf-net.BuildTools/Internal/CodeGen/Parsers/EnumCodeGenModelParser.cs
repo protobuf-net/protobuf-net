@@ -3,7 +3,6 @@ using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Parsers.Common;
 using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
-using ProtoBuf.Reflection.Internal.CodeGen.Error;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 

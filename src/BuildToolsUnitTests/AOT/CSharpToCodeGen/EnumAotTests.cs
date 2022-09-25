@@ -70,4 +70,19 @@ public class EnumAotTests : CSharpToCodeGenTestsBase
         Assert.Contains("NoProtoEnum.cs", noProtoEnumError.Location);
         Assert.Contains("CorpusUnspecified", noProtoEnumError.SymbolType);
     }
+    
+    [Fact]
+    public void NoProtoMember_SavesWarning()
+    {
+        var codeGenSet = GetCodeGenSet("NoProtoMember.cs") as CodeGenSet;
+        Assert.NotNull(codeGenSet);
+
+        var errors = codeGenSet.ErrorContainer.Errors;
+        Assert.NotEmpty(errors);
+
+        var noProtoMember = errors.First();
+        Assert.Equal(CodeGenErrorLevel.Warning, noProtoMember.Level);
+        Assert.Contains("NoProtoMember.cs", noProtoMember.Location);
+        Assert.Contains("CorpusProperty", noProtoMember.SymbolType);
+    }
 }
