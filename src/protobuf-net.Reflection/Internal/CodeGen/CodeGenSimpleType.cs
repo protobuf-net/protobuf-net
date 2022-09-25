@@ -17,6 +17,7 @@ internal class CodeGenSimpleType : CodeGenType
     public static CodeGenSimpleType UInt32 { get; } = new WellKnown(CodeGenWellKnownType.UInt32, "UInt32", "System.");
     public static CodeGenSimpleType UInt64 { get; } = new WellKnown(CodeGenWellKnownType.UInt64, "UInt64", "System.");
     public static CodeGenSimpleType Boolean { get; } = new WellKnown(CodeGenWellKnownType.Boolean, "Boolean", "System.");
+    public static CodeGenSimpleType Byte { get; } = new WellKnown(CodeGenWellKnownType.Byte, "Byte", "System.");
     public static CodeGenSimpleType Bytes { get; } = new WellKnown(CodeGenWellKnownType.Bytes, "Byte[]", "System.");
     public static CodeGenSimpleType Fixed32 { get; } = new WellKnown(CodeGenWellKnownType.Fixed32, "UInt32", "System.");
     public static CodeGenSimpleType Fixed64 { get; } = new WellKnown(CodeGenWellKnownType.Fixed64, "UInt64", "System.");

@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -285,5 +286,22 @@ namespace ProtoBuf.BuildTools.Internal
         internal static string GetFullyQualifiedType(this IPropertySymbol symbol) => symbol.Type.ToString();
 
         internal static int GetConstantValue(this IFieldSymbol symbol) => symbol.ConstantValue is int constantInteger ? constantInteger : default;
+
+        internal static string GetLocation(this ISymbol? symbol)
+        {
+            if (symbol is null) return string.Empty;
+            if (symbol.Locations.IsDefaultOrEmpty) return string.Empty;
+            
+            // most of times it will be a single location
+            // so let's assume we dont need to search for another location of symbol
+            // ---
+            // also it can show location not very precisely.
+            // but at least some kind of help in search is useful
+            return symbol.Locations.First().GetLineSpan().ToString();
+        }
+
+        internal static string GetFullTypeName(this IFieldSymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullTypeName(this ITypeSymbol symbol) => symbol.ToString();
     }
 }

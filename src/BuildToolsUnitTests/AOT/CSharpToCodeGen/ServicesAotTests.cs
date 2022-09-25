@@ -8,9 +8,9 @@ namespace BuildToolsUnitTests.AOT.CSharpToCodeGen;
 
 public class ServicesAotTests : CSharpToCodeGenTestsBase
 {
-    private const string ServicesSchemaType = "Services";
+    private const string SchemaType = "Services";
 
-    public ServicesAotTests(ITestOutputHelper output) : base(output, ServicesSchemaType)
+    public ServicesAotTests(ITestOutputHelper output) : base(output, SchemaType)
     {
     }
     
