@@ -41,7 +41,6 @@ namespace BasicPackage
 
         internal static BasicMessage Merge(BasicMessage value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)

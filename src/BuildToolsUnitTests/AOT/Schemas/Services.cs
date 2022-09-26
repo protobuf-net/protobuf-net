@@ -41,7 +41,6 @@ namespace GrpcGreeter
 
         internal static HelloRequest Merge(HelloRequest value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -105,7 +104,6 @@ namespace GrpcGreeter
 
         internal static HelloReply Merge(HelloReply value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)

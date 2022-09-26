@@ -859,7 +859,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     //}
 
     private static readonly char[] NamespaceSplitTokens = new[] { '.', '+' };
-    private string GetEscapedTypeName(CodeGenGeneratorContext ctx, CodeGenType type, out DataFormat? dataFormat)
+    private string GetEscapedTypeName(CodeGenGeneratorContext? ctx, CodeGenType type, out DataFormat? dataFormat)
     {
         dataFormat = null;
         //isMap = false;

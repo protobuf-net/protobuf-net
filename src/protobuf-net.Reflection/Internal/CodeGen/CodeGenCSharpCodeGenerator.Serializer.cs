@@ -94,19 +94,32 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 WriteForeach(field, ctx, ref source);
             }
+            GetEnumSource(field, ctx, ref knownType, ref source);
 
             switch (knownType)
             {
-                case CodeGenWellKnownType.None when field.IsRepeated: // no null-test
+                case CodeGenWellKnownType.None when field.IsGroup && (field.IsRepeated || IsValueType(field)): // no null-test
+                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.StartGroup)}); // field {field.FieldNumber}, group")
+                       .WriteLine($"{Type(field.Type)}.Write({source}, ref writer);")
+                       .WriteLine($"writer.WriteVarint({GetTag(field, WireType.EndGroup)}); // field {field.FieldNumber}, end-group");
+                    break;
+                case CodeGenWellKnownType.None when field.IsGroup:
+                    ctx.WriteLine($"if ({source} is {Type(field.Type)} __obj{field.FieldNumber})").WriteLine("{").Indent()
+                        .WriteLine($"writer.WriteVarint({GetTag(field, WireType.StartGroup)}); // field {field.FieldNumber}, group")
+                        .WriteLine($"{Type(field.Type)}.Write(__obj{field.FieldNumber}, ref writer);")
+                        .WriteLine($"writer.WriteVarint({GetTag(field, WireType.EndGroup)}); // field {field.FieldNumber}, end-group")
+                        .Outdent().WriteLine("}");
+                    break;
+                case CodeGenWellKnownType.None when (field.IsRepeated || IsValueType(field)): // no null-test
                     ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.String)}); // field {field.FieldNumber}, string")
-                       .WriteLine($"writer.WriteVarintUInt64({Type(field.Type)}.Measure(obj{field.FieldNumber});")
-                       .WriteLine($"{Type(field.Type)}.Write(obj{field.FieldNumber}, ref writer);");
+                       .WriteLine($"writer.WriteVarintUInt64({Type(field.Type)}.Measure({source});")
+                       .WriteLine($"{Type(field.Type)}.Write({source}, ref writer);");
                     break;
                 case CodeGenWellKnownType.None:
-                    ctx.WriteLine($"if ({source} is {Type(field.Type)} obj{field.FieldNumber})").WriteLine("{").Indent()
+                    ctx.WriteLine($"if ({source} is {Type(field.Type)} __obj{field.FieldNumber})").WriteLine("{").Indent()
                         .WriteLine($"writer.WriteVarint({GetTag(field, WireType.String)}); // field {field.FieldNumber}, string")
-                        .WriteLine($"writer.WriteVarintUInt64({Type(field.Type)}.Measure(obj{field.FieldNumber});")
-                        .WriteLine($"{Type(field.Type)}.Write(obj{field.FieldNumber}, ref writer);")
+                        .WriteLine($"writer.WriteVarintUInt64({Type(field.Type)}.Measure(__obj{field.FieldNumber});")
+                        .WriteLine($"{Type(field.Type)}.Write(__obj{field.FieldNumber}, ref writer);")
                         .Outdent().WriteLine("}");
                     break;
                 case CodeGenWellKnownType.String when field.IsRepeated: // no null/empty test
@@ -199,13 +212,14 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 WriteForeach(field, ctx, ref source);
             }
+            GetEnumSource(field, ctx, ref knownType, ref source);
 
             switch (knownType)
             {
-                case CodeGenWellKnownType.None when field.IsGroup && field.IsRepeated: // no null-test
+                case CodeGenWellKnownType.None when field.IsGroup && (field.IsRepeated || IsValueType(field)): // no null-test
                     ctx.WriteLine($"len += {2 * HeaderLength(field)} + {Type(field.Type)}.Measure(obj{field.FieldNumber});");
                     break;
-                case CodeGenWellKnownType.None when field.IsRepeated: // no null-test
+                case CodeGenWellKnownType.None when (field.IsRepeated || IsValueType(field)): // no null-test
                     ctx.WriteLine($"len += {HeaderLength(field)} + {NanoNS}.Writer.MeasureWithLengthPrefix({Type(field.Type)}.Measure(obj{field.FieldNumber}));");
                     break;
                 case CodeGenWellKnownType.None when field.IsGroup:
@@ -313,9 +327,21 @@ internal partial class CodeGenCSharpCodeGenerator
         }
         ctx.Outdent().WriteLine("}").WriteLine();
 
-        ctx.WriteLine($"internal static {Escape(message.Name)} Merge({Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent()
-            .WriteLine("ulong oldEnd;");
-        ctx.WriteLine($"if (value is null) value = new();").WriteLine("uint tag;").WriteLine("while ((tag = reader.ReadTag()) != 0)").WriteLine("{").Indent().WriteLine("switch (tag)").WriteLine("{").Indent();
+        ctx.WriteLine($"internal static {Escape(message.Name)} Merge({Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent();
+        foreach (var field in message.Fields)
+        {
+            if (field.Type is CodeGenMessage)
+            {
+                // we're going to need this for someone, then
+                ctx.WriteLine("ulong oldEnd;");
+                break;
+            }
+        }
+        if (!message.IsValueType)
+        {
+            ctx.WriteLine($"if (value is null) value = new();");
+        }
+        ctx.WriteLine("uint tag;").WriteLine("while ((tag = reader.ReadTag()) != 0)").WriteLine("{").Indent().WriteLine("switch (tag)").WriteLine("{").Indent();
 
         foreach (var field in message.Fields)
         {
@@ -472,7 +498,7 @@ internal partial class CodeGenCSharpCodeGenerator
         ctx.Outdent().WriteLine("ExitLoop:").Indent()
             .WriteLine("return value;").Outdent().WriteLine("}").WriteLine();
 
-
+        static bool IsValueType(CodeGenField field) => field.Type is CodeGenMessage msg && msg.IsValueType;
         static void WriteForeach(CodeGenField field, CodeGenGeneratorContext ctx, ref string source)
         {
             var iter = GetIteratorName(field);
@@ -581,5 +607,23 @@ internal partial class CodeGenCSharpCodeGenerator
         return string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out result);
     }
 
-    string Type(CodeGenType type) => "global::" + type.ToString().Replace('+', '.'); // lazy
+    string Type(CodeGenType type, CodeGenGeneratorContext? ctx = null)
+    {
+        if (type.IsWellKnownType(out var known))
+        {
+            return GetEscapedTypeName(ctx, type, out _);
+        }
+        return "global::" + type.ToString().Replace('+', '.'); // lazy
+    }
+
+    void GetEnumSource(CodeGenField field, CodeGenGeneratorContext ctx, ref CodeGenWellKnownType knownType, ref string source)
+    {
+        if (field.Type is CodeGenEnum enm)
+        {
+            if (enm.Type.IsWellKnownType(out knownType))
+            {
+                source = $"({Type(enm.Type, ctx)}){source}";
+            }
+        }
+    }
 }

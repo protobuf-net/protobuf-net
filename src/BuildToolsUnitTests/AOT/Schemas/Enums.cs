@@ -24,12 +24,8 @@ namespace BasicPackage
         {
             if (value.Corpus != /* invalid type / value: BasicPackage.Corpus= */)
             {
-                if (value.Corpus is global::BasicPackage.Corpus obj2)
-                {
-                    writer.WriteVarint(18); // field 2, string
-                    writer.WriteVarintUInt64(global::BasicPackage.Corpus.Measure(obj2);
-                    global::BasicPackage.Corpus.Write(obj2, ref writer);
-                }
+                writer.WriteVarint(16); // field 2, varint
+                writer.WriteVarint(unchecked((uint)(int)value.Corpus));
             }
         }
 
@@ -38,17 +34,13 @@ namespace BasicPackage
             ulong len = 0;
             if (value.Corpus != /* invalid type / value: BasicPackage.Corpus= */)
             {
-                if (value.Corpus is global::BasicPackage.Corpus obj2)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::BasicPackage.Corpus.Measure(obj2));
-                }
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)(int)value.Corpus)) + 1;
             }
             return len;
         }
 
         internal static SearchRequest Merge(SearchRequest value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)

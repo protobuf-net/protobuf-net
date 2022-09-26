@@ -30,17 +30,17 @@ namespace AllTheThings
 
         internal static void Serialize(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Foo is global::AllTheThings.TestNetObject obj1)
+            if (value.Foo is global::AllTheThings.TestNetObject __obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(obj1);
-                global::AllTheThings.TestNetObject.Write(obj1, ref writer);
+                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(__obj1);
+                global::AllTheThings.TestNetObject.Write(__obj1, ref writer);
             }
-            if (value.barRef is global::AllTheThings.TestNetObject obj2)
+            if (value.barRef is global::AllTheThings.TestNetObject __obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(obj2);
-                global::AllTheThings.TestNetObject.Write(obj2, ref writer);
+                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(__obj2);
+                global::AllTheThings.TestNetObject.Write(__obj2, ref writer);
             }
             if (value.barDyn is not null)
             {
@@ -287,7 +287,6 @@ namespace AllTheThings
 
         internal static MagicValues Merge(MagicValues value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -461,7 +460,6 @@ pqr	stu";
 
         internal static SampleMessage Merge(SampleMessage value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -595,12 +593,8 @@ pqr	stu";
             }
             if ((value.__pbn_field_presence_0 & 4) != 0)
             {
-                if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
-                {
-                    writer.WriteVarint(34); // field 4, string
-                    writer.WriteVarintUInt64(global::AllTheThings.SearchRequest.Corpus.Measure(obj4);
-                    global::AllTheThings.SearchRequest.Corpus.Write(obj4, ref writer);
-                }
+                writer.WriteVarint(32); // field 4, varint
+                writer.WriteVarint(unchecked((uint)(int)value.CorpusValue));
             }
         }
 
@@ -621,17 +615,13 @@ pqr	stu";
             }
             if ((value.__pbn_field_presence_0 & 4) != 0)
             {
-                if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchRequest.Corpus.Measure(obj4));
-                }
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)(int)value.CorpusValue)) + 1;
             }
             return len;
         }
 
         internal static SearchRequest Merge(SearchRequest value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -762,7 +752,6 @@ pqr	stu";
 
             internal static Result Merge(Result value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong oldEnd;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -870,7 +859,6 @@ pqr	stu";
 
             internal static Grouped Merge(Grouped value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong oldEnd;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -978,7 +966,6 @@ pqr	stu";
 
             internal static Upper Merge(Upper value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong oldEnd;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -1031,8 +1018,8 @@ pqr	stu";
         #endif
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Result.Measure(obj1);
-                global::AllTheThings.SearchResponse.Result.Write(obj1, ref writer);
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Result.Measure(__pbn_item);
+                global::AllTheThings.SearchResponse.Result.Write(__pbn_item, ref writer);
             }
         #if NET5_0_OR_GREATER
             foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Groupeds))
@@ -1041,14 +1028,14 @@ pqr	stu";
         #endif
             {
                 writer.WriteVarint(82); // field 10, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Grouped.Measure(obj10);
-                global::AllTheThings.SearchResponse.Grouped.Write(obj10, ref writer);
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Grouped.Measure(__pbn_item);
+                global::AllTheThings.SearchResponse.Grouped.Write(__pbn_item, ref writer);
             }
-            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper __obj12)
             {
                 writer.WriteVarint(98); // field 12, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(obj12);
-                global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(__obj12);
+                global::AllTheThings.SearchResponse.Upper.Write(__obj12, ref writer);
             }
         }
 
@@ -1222,7 +1209,6 @@ pqr	stu";
 
                 internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
                 {
-                    ulong oldEnd;
                     if (value is null) value = new();
                     uint tag;
                     while ((tag = reader.ReadTag()) != 0)
@@ -1270,7 +1256,6 @@ pqr	stu";
 
             internal static MiddleAA Merge(MiddleAA value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong oldEnd;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -1346,7 +1331,6 @@ pqr	stu";
 
                 internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
                 {
-                    ulong oldEnd;
                     if (value is null) value = new();
                     uint tag;
                     while ((tag = reader.ReadTag()) != 0)
@@ -1394,7 +1378,6 @@ pqr	stu";
 
             internal static MiddleBB Merge(MiddleBB value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong oldEnd;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -1423,15 +1406,15 @@ pqr	stu";
             foreach (var __pbn_item in value.MapField1s)
             {
                 writer.WriteVarint(58); // field 7, string
-                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField1Entry.Measure(obj7);
-                global::.AllTheThings.Outer.MapField1Entry.Write(obj7, ref writer);
+                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField1Entry.Measure(__pbn_item);
+                global::.AllTheThings.Outer.MapField1Entry.Write(__pbn_item, ref writer);
             }
             #error maps not implemented yet
             foreach (var __pbn_item in value.MapField2s)
             {
                 writer.WriteVarint(66); // field 8, string
-                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField2Entry.Measure(obj8);
-                global::.AllTheThings.Outer.MapField2Entry.Write(obj8, ref writer);
+                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField2Entry.Measure(__pbn_item);
+                global::.AllTheThings.Outer.MapField2Entry.Write(__pbn_item, ref writer);
             }
         }
 
@@ -1453,7 +1436,6 @@ pqr	stu";
 
         internal static Outer Merge(Outer value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -1549,7 +1531,6 @@ pqr	stu";
 
         internal static SomeOtherMessage Merge(SomeOtherMessage value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -1651,7 +1632,6 @@ pqr	stu";
 
         internal static FieldRules Merge(FieldRules value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -1755,7 +1735,6 @@ pqr	stu";
 
         internal static TagRanges Merge(TagRanges value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -1814,7 +1793,6 @@ pqr	stu";
 
         internal static Foo Merge(Foo value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -1856,7 +1834,6 @@ pqr	stu";
 
         internal static Baz Merge(Baz value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -1993,7 +1970,6 @@ pqr	stu";
 
         internal static PrimitiveFieldTypes Merge(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
