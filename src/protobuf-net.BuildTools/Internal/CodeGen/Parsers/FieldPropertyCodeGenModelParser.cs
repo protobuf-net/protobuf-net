@@ -20,7 +20,8 @@ internal sealed class FieldPropertyCodeGenModelParser : PropertyCodeGenModelPars
             var codeGenField = new CodeGenField(fieldNumber, symbol.Name)
             {
                 OriginalName = originalName,
-                Type = symbol.ResolveCodeGenType(dataFormat, ParseContext),
+                Type = symbol.Type.ResolveCodeGenType(dataFormat, ParseContext, out var repeated),
+                Repeated = repeated,
                 IsRequired = isRequired,
             };
 

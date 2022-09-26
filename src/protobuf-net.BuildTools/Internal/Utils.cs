@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -41,31 +42,23 @@ namespace ProtoBuf.BuildTools.Internal
         }
 
         internal const string ProtoBufNamespace = "ProtoBuf";
-        internal const string GenericCollectionsNamespace = "System.Collections.Generic";
-        internal const string ThreadingNamespace = "System.Threading";
-        internal const string ThreadingTasksNamespace = "System.Threading.Tasks";
 
         internal static bool InGenericCollectionsNamespace(this ISymbol symbol)
-            => InNamespace(symbol, GenericCollectionsNamespace);
+            => InNamespace(symbol, "System", "Collections", "Generic");
         
         internal static bool InThreadingNamespace(this ISymbol symbol)
-            => InNamespace(symbol, ThreadingNamespace);
+            => InNamespace(symbol, "System", "Threading");
         
         internal static bool InThreadingTasksNamespace(this ISymbol symbol)
-            => InNamespace(symbol, ThreadingTasksNamespace);
+            => InNamespace(symbol, "System", "Threading", "Tasks");
         
         internal static bool InProtoBufNamespace(this ISymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
 
         internal static bool InNamespace(this ISymbol symbol, string ns0)
         {
-            var namespaceSymbol = symbol.ContainingNamespace;
-            do
-            {
-                if (namespaceSymbol.ToString() == ns0) return true;
-            } while ((namespaceSymbol = namespaceSymbol.ContainingNamespace) is not null);
-
-            return false;
+            var ns = symbol.ContainingNamespace;
+            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
         }
 
         internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1)
@@ -297,5 +290,24 @@ namespace ProtoBuf.BuildTools.Internal
         internal static string GetFullyQualifiedType(this IPropertySymbol symbol) => symbol.Type.ToString();
 
         internal static int GetConstantValue(this IFieldSymbol symbol) => symbol.ConstantValue is int constantInteger ? constantInteger : default;
+
+        internal static string GetLocation(this ISymbol? symbol)
+        {
+            if (symbol is null) return string.Empty;
+            if (symbol.Locations.IsDefaultOrEmpty) return string.Empty;
+            
+            // most of times it will be a single location
+            // so let's assume we dont need to search for another location of symbol
+            // ---
+            // also it can show location not very precisely.
+            // but at least some kind of help in search is useful
+            return symbol.Locations.First().GetLineSpan().ToString();
+        }
+
+        internal static string GetFullTypeName(this IPropertySymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullTypeName(this IFieldSymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullTypeName(this ITypeSymbol symbol) => symbol.ToString();
     }
 }

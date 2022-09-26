@@ -125,7 +125,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
-                          "IsRepeated": true,
+                          "Repeated": "List",
                           "DefaultValue": ""
                         }
                       ],
@@ -155,7 +155,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
-                          "IsRepeated": true,
+                          "Repeated": "List",
                           "DefaultValue": ""
                         }
                       ],
@@ -185,7 +185,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
-                          "IsRepeated": true,
+                          "Repeated": "List",
                           "DefaultValue": ""
                         }
                       ],
@@ -201,7 +201,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
                       "OriginalName": "result",
-                      "IsRepeated": true,
+                      "Repeated": "List",
                       "DefaultValue": ""
                     },
                     {
@@ -209,7 +209,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
                       "OriginalName": "grouped",
-                      "IsRepeated": true,
+                      "Repeated": "List",
                       "DefaultValue": ""
                     },
                     {
@@ -345,7 +345,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
-                          "IsRepeated": true,
+                          "Repeated": "List",
                           "DefaultValue": ""
                         }
                       ],
@@ -375,7 +375,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
-                          "IsRepeated": true,
+                          "Repeated": "List",
                           "DefaultValue": ""
                         }
                       ],
@@ -405,7 +405,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
-                          "IsRepeated": true,
+                          "Repeated": "List",
                           "DefaultValue": ""
                         }
                       ],
@@ -421,7 +421,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
                       "OriginalName": "result",
-                      "IsRepeated": true,
+                      "Repeated": "List",
                       "DefaultValue": ""
                     },
                     {
@@ -429,7 +429,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
                       "OriginalName": "grouped",
-                      "IsRepeated": true,
+                      "Repeated": "List",
                       "DefaultValue": ""
                     },
                     {
@@ -718,7 +718,7 @@
                   "TypeName": "string",
                   "Name": "Snippets",
                   "OriginalName": "snippets",
-                  "IsRepeated": true,
+                  "Repeated": "List",
                   "DefaultValue": ""
                 }
               ],
@@ -748,7 +748,7 @@
                   "TypeName": "string",
                   "Name": "Snippets",
                   "OriginalName": "snippets",
-                  "IsRepeated": true,
+                  "Repeated": "List",
                   "DefaultValue": ""
                 }
               ],
@@ -778,7 +778,7 @@
                   "TypeName": "string",
                   "Name": "Snippets",
                   "OriginalName": "snippets",
-                  "IsRepeated": true,
+                  "Repeated": "List",
                   "DefaultValue": ""
                 }
               ],
@@ -794,7 +794,7 @@
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
               "OriginalName": "result",
-              "IsRepeated": true,
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -802,7 +802,7 @@
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
               "OriginalName": "grouped",
-              "IsRepeated": true,
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -934,7 +934,7 @@
               "TypeName": "AllTheThings.Outer+MapField1Entry",
               "Name": "MapField1s",
               "OriginalName": "map_field1",
-              "IsRepeated": true,
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -942,7 +942,7 @@
               "TypeName": "AllTheThings.Outer+MapField2Entry",
               "Name": "MapField2s",
               "OriginalName": "map_field2",
-              "IsRepeated": true,
+              "Repeated": "List",
               "DefaultValue": ""
             }
           ],
@@ -988,7 +988,7 @@
               "TypeName": "int32",
               "Name": "Repeateds",
               "OriginalName": "repeated",
-              "IsRepeated": true,
+              "Repeated": "Array",
               "DefaultValue": ""
             },
             {
@@ -996,7 +996,7 @@
               "TypeName": "int32",
               "Name": "Packeds",
               "OriginalName": "packed",
-              "IsRepeated": true,
+              "Repeated": "Array",
               "DefaultValue": ""
             }
           ],
@@ -1011,7 +1011,7 @@
               "TypeName": "string",
               "Name": "His",
               "OriginalName": "hi",
-              "IsRepeated": true,
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {

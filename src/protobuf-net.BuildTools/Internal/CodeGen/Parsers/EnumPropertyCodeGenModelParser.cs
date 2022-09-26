@@ -21,13 +21,15 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
             var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
             {
                 OriginalName = originalName,
-                Type = symbol.ResolveKnownCodeGenType(dataFormat)
+                Type = symbol.Type.TryResolveKnownCodeGenType(dataFormat),
             };
         
             return codeGenField;
         }
 
-        // throw exception here ?
-        return null;
+        return ErrorContainer.SaveWarning<CodeGenEnum>(
+            $"Failed to find a '{nameof(protoMemberAttribute)}' attribute within enum property definition", 
+            symbol.GetFullTypeName(), 
+            symbol.GetLocation());
     }
 }

@@ -1,4 +1,7 @@
 {
+  "ErrorContainer": {
+    "Errors": []
+  },
   "Files": [
     {
       "Name": "Services.cs",
@@ -10,19 +13,8 @@
             {
               "Name": "SayHelloAsync",
               "RequestType": {
-                "Representation": "AsyncEnumerable",
                 "RawType": {
-                  "Fields": [
-                    {
-                      "FieldNumber": 1,
-                      "TypeName": "string",
-                      "Name": "Name",
-                      "OriginalName": "name"
-                    }
-                  ],
-                  "Name": "HelloRequest",
-                  "Package": "GrpcGreeter",
-                  "FullyQualifiedPrefix": "GrpcGreeter."
+                  "Name": "ProtoBuf.Grpc.CallContext"
                 }
               },
               "ResponseType": {
@@ -40,8 +32,7 @@
                   "Package": "GrpcGreeter",
                   "FullyQualifiedPrefix": "GrpcGreeter."
                 }
-              },
-              "ParametersDescriptor": "HasCallContext"
+              }
             }
           ],
           "FullyQualifiedPrefix": "GrpcGreeter."

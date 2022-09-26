@@ -369,15 +369,21 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     {
         if (field.IsRepeated)
         {
-            if (field.Type is CodeGenMapEntryType mapMsgType)
+            switch (field.Repeated)
             {
-                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out _);
-                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out _);
-                ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
-            }
-            else if (!UseArray(field.Type))
-            {
-                ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.List<{GetEscapedTypeName(ctx, field.Type, out _)}>();");
+                case RepeatedKind.List when field.Type is CodeGenMapEntryType mapMsgType:
+                    var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out _);
+                    var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out _);
+                    ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                    break;
+                case RepeatedKind.List:
+                    ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.List<{GetEscapedTypeName(ctx, field.Type, out _)}>();");
+                    break;
+                case RepeatedKind.Array:
+                    break; // no init; perhaps Array.Empty?
+                default:
+                    ctx.WriteLine($"#warn repeated kind {field.Repeated} not handled for {field.Name}");
+                    break;
             }
         }
         else if (field.Conditional is not ConditionalKind.FieldPresence or ConditionalKind.NullableT && !string.IsNullOrEmpty(field.DefaultValue))

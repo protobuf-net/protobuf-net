@@ -26,8 +26,14 @@ internal class CodeGenField
     public string Name { get; set; }
     public string BackingName { get; set; } // the name to use when generating an explicit field
     public string OriginalName { get; set; } // the name in the schema (not used in code, except in the [ProtoMember(..., Name = ...)]
-    [DefaultValue(false)]
-    public bool IsRepeated { get; set; }
+
+    [DefaultValue(RepeatedKind.Single)]
+    public RepeatedKind Repeated { get; set; }
+
+    public bool IsRepeated => Repeated != RepeatedKind.Single;
+
+    public bool ShouldSerializeIsRepeated() => false;
+    
     [DefaultValue(false)]
     public bool AsReference { get; set; }
     [DefaultValue(false)]
@@ -97,7 +103,29 @@ internal class CodeGenField
                 newField.Conditional = IsRefType(newField.Type) ? ConditionalKind.Always : ConditionalKind.NonDefault;
                 break;
             case FieldDescriptorProto.Label.LabelRepeated:
-                newField.IsRepeated = true;
+                newField.Repeated = RepeatedKind.List;
+                if (newField.Type.IsWellKnownType(out var type))
+                {
+                    switch (field.type)
+                    {
+                        case FieldDescriptorProto.Type.TypeBool:
+                        case FieldDescriptorProto.Type.TypeDouble:
+                        case FieldDescriptorProto.Type.TypeFixed32:
+                        case FieldDescriptorProto.Type.TypeFixed64:
+                        case FieldDescriptorProto.Type.TypeFloat:
+                        case FieldDescriptorProto.Type.TypeInt32:
+                        case FieldDescriptorProto.Type.TypeInt64:
+                        case FieldDescriptorProto.Type.TypeSfixed32:
+                        case FieldDescriptorProto.Type.TypeSfixed64:
+                        case FieldDescriptorProto.Type.TypeSint32:
+                        case FieldDescriptorProto.Type.TypeSint64:
+                        case FieldDescriptorProto.Type.TypeUint32:
+                        case FieldDescriptorProto.Type.TypeUint64:
+                            newField.Repeated = RepeatedKind.Array;
+                            break;
+                    }
+                }
+                
                 break;
         }
 
@@ -158,4 +186,11 @@ internal enum ConditionalKind
     /// <summary>Active assignment is tracked and used for conditionality</summary>
     FieldPresence,
     NullableT,
+}
+
+internal enum RepeatedKind
+{
+    Single,
+    List,
+    Array,
 }

@@ -28,8 +28,10 @@ internal sealed class EnumValueCodeGenModelParser : SymbolCodeGenModelParserBase
             return codeGenEnumValue;   
         }
 
-        // throw exception here ?
-        return null;
+        return ErrorContainer.SaveWarning<CodeGenEnumValue>(
+            $"Failed to find a '{nameof(ProtoEnumAttribute)}' attribute within enum value definition", 
+            symbol.GetFullTypeName(), 
+            symbol.GetLocation());
     }
 
     private static string GetProtoEnumAttributeNameValue(AttributeData protoEnumAttributeData)

@@ -2,6 +2,7 @@
 using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel;
+using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -12,12 +13,12 @@ internal class CodeGenMessage : CodeGenType
         OriginalName = base.Name;
     }
 
-    private List<CodeGenMessage>? _messages;
-    private List<CodeGenEnum>? _enums;
-    private List<CodeGenField>? _fields;
-    public List<CodeGenMessage> Messages => _messages ??= new();
-    public List<CodeGenEnum> Enums => _enums ??= new();
-    public List<CodeGenField> Fields => _fields ??= new();
+    private NonNullableList<CodeGenMessage>? _messages;
+    private NonNullableList<CodeGenEnum>? _enums;
+    private NonNullableList<CodeGenField>? _fields;
+    public ICollection<CodeGenMessage> Messages => _messages ??= new();
+    public ICollection<CodeGenEnum> Enums => _enums ??= new();
+    public ICollection<CodeGenField> Fields => _fields ??= new();
 
     public bool ShouldSerializeMessages() => _messages is { Count: > 0 };
     public bool ShouldSerializeEnums() => _enums is { Count: > 0 };

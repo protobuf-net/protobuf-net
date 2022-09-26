@@ -1,4 +1,7 @@
 {
+  "ErrorContainer": {
+    "Errors": []
+  },
   "Files": [
     {
       "Name": "everything.cs",
@@ -10,79 +13,8 @@
             {
               "Name": "SearchAsync",
               "RequestType": {
-                "Representation": "AsyncEnumerable",
                 "RawType": {
-                  "Enums": [
-                    {
-                      "OriginalName": "corpus",
-                      "Name": "CorpusValue",
-                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
-                    },
-                    {
-                      "EnumValues": [
-                        {
-                          "Name": "Universal",
-                          "OriginalName": "UNIVERSAL"
-                        },
-                        {
-                          "Name": "Web",
-                          "Value": 1,
-                          "OriginalName": "WEB"
-                        },
-                        {
-                          "Name": "Images",
-                          "Value": 2,
-                          "OriginalName": "IMAGES"
-                        },
-                        {
-                          "Name": "Local",
-                          "Value": 3,
-                          "OriginalName": "LOCAL"
-                        },
-                        {
-                          "Name": "News",
-                          "Value": 4,
-                          "OriginalName": "NEWS"
-                        },
-                        {
-                          "Name": "Products",
-                          "Value": 5,
-                          "OriginalName": "PRODUCTS"
-                        },
-                        {
-                          "Name": "Video",
-                          "Value": 6,
-                          "OriginalName": "VIDEO"
-                        }
-                      ],
-                      "TypeName": "int32",
-                      "Name": "Corpus",
-                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
-                    }
-                  ],
-                  "Fields": [
-                    {
-                      "FieldNumber": 1,
-                      "TypeName": "string",
-                      "Name": "Query",
-                      "OriginalName": "query"
-                    },
-                    {
-                      "FieldNumber": 2,
-                      "TypeName": "int32",
-                      "Name": "PageNumber",
-                      "OriginalName": "page_number"
-                    },
-                    {
-                      "FieldNumber": 3,
-                      "TypeName": "int32",
-                      "Name": "ResultPerPage",
-                      "OriginalName": "result_per_page"
-                    }
-                  ],
-                  "Name": "SearchRequest",
-                  "Package": "AllTheThings",
-                  "FullyQualifiedPrefix": "AllTheThings."
+                  "Name": "ProtoBuf.Grpc.CallContext"
                 }
               },
               "ResponseType": {
@@ -95,19 +27,14 @@
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "IsRequired": true
                         },
                         {
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
-                        },
-                        {
-                          "FieldNumber": 3,
-                          "TypeName": "string",
-                          "Name": "Snippets",
-                          "OriginalName": "snippets"
                         }
                       ],
                       "Name": "Result",
@@ -120,19 +47,14 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "IsRequired": true
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
-                        },
-                        {
-                          "FieldNumber": 4,
-                          "TypeName": "string",
-                          "Name": "Snippets",
-                          "OriginalName": "snippets"
                         }
                       ],
                       "Name": "Grouped",
@@ -145,19 +67,14 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "IsRequired": true
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
-                        },
-                        {
-                          "FieldNumber": 4,
-                          "TypeName": "string",
-                          "Name": "Snippets",
-                          "OriginalName": "snippets"
                         }
                       ],
                       "Name": "Upper",
@@ -190,85 +107,13 @@
                   "Package": "AllTheThings",
                   "FullyQualifiedPrefix": "AllTheThings."
                 }
-              },
-              "ParametersDescriptor": "HasCallContext"
+              }
             },
             {
               "Name": "OldMethodAsync",
               "RequestType": {
-                "Representation": "ValueTask",
                 "RawType": {
-                  "Enums": [
-                    {
-                      "OriginalName": "corpus",
-                      "Name": "CorpusValue",
-                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
-                    },
-                    {
-                      "EnumValues": [
-                        {
-                          "Name": "Universal",
-                          "OriginalName": "UNIVERSAL"
-                        },
-                        {
-                          "Name": "Web",
-                          "Value": 1,
-                          "OriginalName": "WEB"
-                        },
-                        {
-                          "Name": "Images",
-                          "Value": 2,
-                          "OriginalName": "IMAGES"
-                        },
-                        {
-                          "Name": "Local",
-                          "Value": 3,
-                          "OriginalName": "LOCAL"
-                        },
-                        {
-                          "Name": "News",
-                          "Value": 4,
-                          "OriginalName": "NEWS"
-                        },
-                        {
-                          "Name": "Products",
-                          "Value": 5,
-                          "OriginalName": "PRODUCTS"
-                        },
-                        {
-                          "Name": "Video",
-                          "Value": 6,
-                          "OriginalName": "VIDEO"
-                        }
-                      ],
-                      "TypeName": "int32",
-                      "Name": "Corpus",
-                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
-                    }
-                  ],
-                  "Fields": [
-                    {
-                      "FieldNumber": 1,
-                      "TypeName": "string",
-                      "Name": "Query",
-                      "OriginalName": "query"
-                    },
-                    {
-                      "FieldNumber": 2,
-                      "TypeName": "int32",
-                      "Name": "PageNumber",
-                      "OriginalName": "page_number"
-                    },
-                    {
-                      "FieldNumber": 3,
-                      "TypeName": "int32",
-                      "Name": "ResultPerPage",
-                      "OriginalName": "result_per_page"
-                    }
-                  ],
-                  "Name": "SearchRequest",
-                  "Package": "AllTheThings",
-                  "FullyQualifiedPrefix": "AllTheThings."
+                  "Name": "ProtoBuf.Grpc.CallContext"
                 }
               },
               "ResponseType": {
@@ -281,19 +126,14 @@
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "IsRequired": true
                         },
                         {
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
-                        },
-                        {
-                          "FieldNumber": 3,
-                          "TypeName": "string",
-                          "Name": "Snippets",
-                          "OriginalName": "snippets"
                         }
                       ],
                       "Name": "Result",
@@ -306,19 +146,14 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "IsRequired": true
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
-                        },
-                        {
-                          "FieldNumber": 4,
-                          "TypeName": "string",
-                          "Name": "Snippets",
-                          "OriginalName": "snippets"
                         }
                       ],
                       "Name": "Grouped",
@@ -331,19 +166,14 @@
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
-                          "OriginalName": "url"
+                          "OriginalName": "url",
+                          "IsRequired": true
                         },
                         {
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
-                        },
-                        {
-                          "FieldNumber": 4,
-                          "TypeName": "string",
-                          "Name": "Snippets",
-                          "OriginalName": "snippets"
                         }
                       ],
                       "Name": "Upper",
@@ -376,8 +206,7 @@
                   "Package": "AllTheThings",
                   "FullyQualifiedPrefix": "AllTheThings."
                 }
-              },
-              "ParametersDescriptor": "HasCallContext"
+              }
             }
           ],
           "FullyQualifiedPrefix": "AllTheThings."
@@ -454,7 +283,8 @@
             {
               "FieldNumber": 8,
               "TypeName": "int32",
-              "Name": "requiredWithDefault"
+              "Name": "requiredWithDefault",
+              "IsRequired": true
             }
           ],
           "Name": "MagicValues",
@@ -558,7 +388,8 @@
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Query",
-              "OriginalName": "query"
+              "OriginalName": "query",
+              "IsRequired": true
             },
             {
               "FieldNumber": 2,
@@ -585,19 +416,14 @@
                   "FieldNumber": 1,
                   "TypeName": "string",
                   "Name": "Url",
-                  "OriginalName": "url"
+                  "OriginalName": "url",
+                  "IsRequired": true
                 },
                 {
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
-                },
-                {
-                  "FieldNumber": 3,
-                  "TypeName": "string",
-                  "Name": "Snippets",
-                  "OriginalName": "snippets"
                 }
               ],
               "Name": "Result",
@@ -610,19 +436,14 @@
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
-                  "OriginalName": "url"
+                  "OriginalName": "url",
+                  "IsRequired": true
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
-                },
-                {
-                  "FieldNumber": 4,
-                  "TypeName": "string",
-                  "Name": "Snippets",
-                  "OriginalName": "snippets"
                 }
               ],
               "Name": "Grouped",
@@ -635,19 +456,14 @@
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
-                  "OriginalName": "url"
+                  "OriginalName": "url",
+                  "IsRequired": true
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
-                },
-                {
-                  "FieldNumber": 4,
-                  "TypeName": "string",
-                  "Name": "Snippets",
-                  "OriginalName": "snippets"
                 }
               ],
               "Name": "Upper",
@@ -728,7 +544,8 @@
                       "FieldNumber": 1,
                       "TypeName": "int64",
                       "Name": "Ival",
-                      "OriginalName": "ival"
+                      "OriginalName": "ival",
+                      "IsRequired": true
                     },
                     {
                       "FieldNumber": 2,
@@ -754,7 +571,8 @@
                       "FieldNumber": 1,
                       "TypeName": "int32",
                       "Name": "Ival",
-                      "OriginalName": "ival"
+                      "OriginalName": "ival",
+                      "IsRequired": true
                     },
                     {
                       "FieldNumber": 2,
@@ -810,7 +628,8 @@
               "FieldNumber": 1,
               "TypeName": "int32",
               "Name": "Required",
-              "OriginalName": "required"
+              "OriginalName": "required",
+              "IsRequired": true
             },
             {
               "FieldNumber": 2,
@@ -838,12 +657,6 @@
         {
           "Fields": [
             {
-              "FieldNumber": 536870911,
-              "TypeName": "string",
-              "Name": "His",
-              "OriginalName": "hi"
-            },
-            {
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Lo",
@@ -870,85 +683,99 @@
               "FieldNumber": 1,
               "TypeName": "double",
               "Name": "Double",
-              "OriginalName": "double"
+              "OriginalName": "double",
+              "IsRequired": true
             },
             {
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "Float",
-              "OriginalName": "float"
+              "OriginalName": "float",
+              "IsRequired": true
             },
             {
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Int32",
-              "OriginalName": "int32"
+              "OriginalName": "int32",
+              "IsRequired": true
             },
             {
               "FieldNumber": 4,
               "TypeName": "int64",
               "Name": "Int64",
-              "OriginalName": "int64"
+              "OriginalName": "int64",
+              "IsRequired": true
             },
             {
               "FieldNumber": 5,
               "TypeName": "uint32",
               "Name": "Uint32",
-              "OriginalName": "uint32"
+              "OriginalName": "uint32",
+              "IsRequired": true
             },
             {
               "FieldNumber": 6,
               "TypeName": "uint64",
               "Name": "Uint64",
-              "OriginalName": "uint64"
+              "OriginalName": "uint64",
+              "IsRequired": true
             },
             {
               "FieldNumber": 7,
               "TypeName": "sint32",
               "Name": "Sint32",
-              "OriginalName": "sint32"
+              "OriginalName": "sint32",
+              "IsRequired": true
             },
             {
               "FieldNumber": 8,
               "TypeName": "sint64",
               "Name": "Sint64",
-              "OriginalName": "sint64"
+              "OriginalName": "sint64",
+              "IsRequired": true
             },
             {
               "FieldNumber": 9,
               "TypeName": "fixed32",
               "Name": "Fixed32",
-              "OriginalName": "fixed32"
+              "OriginalName": "fixed32",
+              "IsRequired": true
             },
             {
               "FieldNumber": 10,
               "TypeName": "fixed64",
               "Name": "Fixed64",
-              "OriginalName": "fixed64"
+              "OriginalName": "fixed64",
+              "IsRequired": true
             },
             {
               "FieldNumber": 11,
               "TypeName": "sfixed32",
               "Name": "Sfixed32",
-              "OriginalName": "sfixed32"
+              "OriginalName": "sfixed32",
+              "IsRequired": true
             },
             {
               "FieldNumber": 12,
               "TypeName": "sfixed64",
               "Name": "Sfixed64",
-              "OriginalName": "sfixed64"
+              "OriginalName": "sfixed64",
+              "IsRequired": true
             },
             {
               "FieldNumber": 13,
               "TypeName": "bool",
               "Name": "Bool",
-              "OriginalName": "bool"
+              "OriginalName": "bool",
+              "IsRequired": true
             },
             {
               "FieldNumber": 14,
               "TypeName": "string",
               "Name": "String",
-              "OriginalName": "string"
+              "OriginalName": "string",
+              "IsRequired": true
             }
           ],
           "Name": "PrimitiveFieldTypes",
