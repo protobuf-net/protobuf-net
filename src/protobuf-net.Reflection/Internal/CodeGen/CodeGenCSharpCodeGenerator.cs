@@ -697,7 +697,8 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         CSharp4 = new Version(4, 0), // optional parameters
         CSharp6 = new Version(6, 0), // pragma prefixes, method expressions, property initializers
         CSharp7 = new Version(7, 0), // property expressions
-        CSharp7_1 = new Version(7, 1); // default literals
+        CSharp7_1 = new Version(7, 1), // default literals
+        CSharp7_3 = new Version(7, 3); // ref-foreach
 
     ///// <summary>
     ///// Starts an extensions block
