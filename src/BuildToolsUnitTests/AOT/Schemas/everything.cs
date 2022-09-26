@@ -673,7 +673,6 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        int __pbn_field_presence_0;
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
         public global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Result> Results { get; } = new global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Result>();
 
@@ -682,14 +681,7 @@ pqr	stu";
 
         [global::ProtoBuf.ProtoMember(12, Name = @"upper")]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Upper= */)]
-        public global::AllTheThings.SearchResponse.Upper UpperValue
-        {
-            get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__UpperValue : /* invalid type / value: AllTheThings.SearchResponse+Upper= */;
-            set { __pbn__UpperValue = value; __pbn_field_presence_0 |= 1; }
-        }
-        public bool ShouldSerializeUpperValue() => (__pbn_field_presence_0 & 1) != 0;
-        public void ResetUpperValue() => __pbn_field_presence_0 &= ~1;
-        private global::AllTheThings.SearchResponse.Upper __pbn__UpperValue;
+        public global::AllTheThings.SearchResponse.Upper UpperValue { get; set; }
 
         [global::ProtoBuf.ProtoContract()]
         public partial class Result : global::ProtoBuf.IExtensible
@@ -706,7 +698,7 @@ pqr	stu";
             public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"snippets")]
-            public string[] Snippets { get; set; }
+            public global::System.Collections.Generic.List<string> Snippets { get; } = new global::System.Collections.Generic.List<string>();
 
             internal static void Serialize(Result value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -802,7 +794,7 @@ pqr	stu";
             public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            public string[] Snippets { get; set; }
+            public global::System.Collections.Generic.List<string> Snippets { get; } = new global::System.Collections.Generic.List<string>();
 
             internal static void Serialize(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -898,7 +890,7 @@ pqr	stu";
             public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            public string[] Snippets { get; set; }
+            public global::System.Collections.Generic.List<string> Snippets { get; } = new global::System.Collections.Generic.List<string>();
 
             internal static void Serialize(Upper value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -993,14 +985,11 @@ pqr	stu";
                 writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Grouped.Measure(obj10);
                 global::AllTheThings.SearchResponse.Grouped.Write(obj10, ref writer);
             }
-            if ((value.__pbn_field_presence_0 & 1) != 0)
+            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
             {
-                if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
-                {
-                    writer.WriteVarint(98); // field 12, string
-                    writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(obj12);
-                    global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
-                }
+                writer.WriteVarint(98); // field 12, string
+                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(obj12);
+                global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
             }
         }
 
@@ -1015,12 +1004,9 @@ pqr	stu";
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Grouped.Measure(obj10));
             }
-            if ((value.__pbn_field_presence_0 & 1) != 0)
+            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
             {
-                if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Upper.Measure(obj12));
-                }
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Upper.Measure(obj12));
             }
             return len;
         }
@@ -1093,186 +1079,12 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(7, Name = @"map_field1")]
-        public global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField1Entry> MapField1s { get; } = new global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField1Entry>();
+        [global::ProtoBuf.ProtoMap(KeyFormat = global::ProtoBuf.DataFormat.ZigZag)]
+        public global::System.Collections.Generic.Dictionary<int, string> MapField1s { get; } = new global::System.Collections.Generic.Dictionary<int, string>();
 
         [global::ProtoBuf.ProtoMember(8, Name = @"map_field2")]
-        public global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField2Entry> MapField2s { get; } = new global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField2Entry>();
-
-        [global::ProtoBuf.ProtoContract()]
-        public partial class MapField1Entry : global::ProtoBuf.IExtensible
-        {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
-            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-            int __pbn_field_presence_0;
-            [global::ProtoBuf.ProtoMember(1, Name = @"key", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-            [global::System.ComponentModel.DefaultValue(0)]
-            public int Key
-            {
-                get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__Key : 0;
-                set { __pbn__Key = value; __pbn_field_presence_0 |= 1; }
-            }
-            public bool ShouldSerializeKey() => (__pbn_field_presence_0 & 1) != 0;
-            public void ResetKey() => __pbn_field_presence_0 &= ~1;
-            private int __pbn__Key;
-
-            [global::ProtoBuf.ProtoMember(2, Name = @"value")]
-            [global::System.ComponentModel.DefaultValue()]
-            public string Value { get; set; }
-
-            internal static void Serialize(MapField1Entry value, ref global::ProtoBuf.Nano.Writer writer)
-            {
-                if ((value.__pbn_field_presence_0 & 1) != 0)
-                {
-                    writer.WriteVarint(8); // field 1, varint
-                    writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key));
-                }
-                if (value.Value is { Length: > 0} s)
-                {
-                    writer.WriteVarint(18); // field 2, string
-                    writer.WriteWithLengthPrefix(s);
-                }
-            }
-
-            internal static ulong Measure(MapField1Entry value)
-            {
-                ulong len = 0;
-                if ((value.__pbn_field_presence_0 & 1) != 0)
-                {
-                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key)) + 1;
-                }
-                if (value.Value is { Length: > 0} s)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
-                }
-                return len;
-            }
-
-            internal static MapField1Entry Merge(MapField1Entry value, ref global::ProtoBuf.Nano.Reader reader)
-            {
-                ulong oldEnd;
-                if (value is null) value = new();
-                uint tag;
-                while ((tag = reader.ReadTag()) != 0)
-                {
-                    switch (tag)
-                    {
-                        case 8: // field 1, varint
-                            value.Key = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32());
-                        case 18: // field 2, string
-                            value.Value = reader.ReadString();
-                            break;
-                        default:
-                            if ((tag & 7) == 4) // end-group
-                            {
-                                reader.PushGroup(tag);
-                                goto ExitLoop;
-                            }
-                            switch (tag >> 3)
-                            {
-                                case 1:
-                                case 2:
-                                    reader.UnhandledTag(tag); // throws
-                                    break;
-                            }
-                            reader.Skip(tag);
-                            break;
-                    }
-                }
-            ExitLoop:
-                return value;
-            }
-
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public partial class MapField2Entry : global::ProtoBuf.IExtensible
-        {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
-            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-            [global::ProtoBuf.ProtoMember(1, Name = @"key")]
-            [global::System.ComponentModel.DefaultValue()]
-            public string Key { get; set; }
-
-            [global::ProtoBuf.ProtoMember(2, Name = @"value")]
-            [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer= */)]
-            public global::AllTheThings.Outer Value { get; set; }
-
-            internal static void Serialize(MapField2Entry value, ref global::ProtoBuf.Nano.Writer writer)
-            {
-                if (value.Key is { Length: > 0} s)
-                {
-                    writer.WriteVarint(10); // field 1, string
-                    writer.WriteWithLengthPrefix(s);
-                }
-                if (value.Value is global::AllTheThings.Outer obj2)
-                {
-                    writer.WriteVarint(18); // field 2, string
-                    writer.WriteVarintUInt64(global::AllTheThings.Outer.Measure(obj2);
-                    global::AllTheThings.Outer.Write(obj2, ref writer);
-                }
-            }
-
-            internal static ulong Measure(MapField2Entry value)
-            {
-                ulong len = 0;
-                if (value.Key is { Length: > 0} s)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
-                }
-                if (value.Value is global::AllTheThings.Outer obj2)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.Outer.Measure(obj2));
-                }
-                return len;
-            }
-
-            internal static MapField2Entry Merge(MapField2Entry value, ref global::ProtoBuf.Nano.Reader reader)
-            {
-                ulong oldEnd;
-                if (value is null) value = new();
-                uint tag;
-                while ((tag = reader.ReadTag()) != 0)
-                {
-                    switch (tag)
-                    {
-                        case 10: // field 1, string
-                            value.Key = reader.ReadString();
-                            break;
-                        case 18: // field 2, string
-                            oldEnd = reader.ConstrainByLengthPrefix();
-                            value.Value = global::AllTheThings.Outer.Merge(value.Value, ref reader);
-                            reader.Unconstrain(oldEnd);
-                            break;
-                        case 19: // field 2, group
-                            value.Value = global::AllTheThings.Outer.Merge(value.Value, ref reader);
-                            reader.PopGroup(2);
-                            break;
-                        default:
-                            if ((tag & 7) == 4) // end-group
-                            {
-                                reader.PushGroup(tag);
-                                goto ExitLoop;
-                            }
-                            switch (tag >> 3)
-                            {
-                                case 1:
-                                case 2:
-                                    reader.UnhandledTag(tag); // throws
-                                    break;
-                            }
-                            reader.Skip(tag);
-                            break;
-                    }
-                }
-            ExitLoop:
-                return value;
-            }
-
-        }
+        [global::ProtoBuf.ProtoMap]
+        public global::System.Collections.Generic.Dictionary<string, global::AllTheThings.Outer> MapField2s { get; } = new global::System.Collections.Generic.Dictionary<string, global::AllTheThings.Outer>();
 
         [global::ProtoBuf.ProtoContract()]
         public partial class MiddleAA : global::ProtoBuf.IExtensible
@@ -1518,30 +1330,30 @@ pqr	stu";
 
         internal static void Serialize(Outer value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.MapField1s is global::AllTheThings.Outer.MapField1Entry obj7)
+            if (value.MapField1s is global::.AllTheThings.Outer.MapField1Entry obj7)
             {
                 writer.WriteVarint(58); // field 7, string
-                writer.WriteVarintUInt64(global::AllTheThings.Outer.MapField1Entry.Measure(obj7);
-                global::AllTheThings.Outer.MapField1Entry.Write(obj7, ref writer);
+                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField1Entry.Measure(obj7);
+                global::.AllTheThings.Outer.MapField1Entry.Write(obj7, ref writer);
             }
-            if (value.MapField2s is global::AllTheThings.Outer.MapField2Entry obj8)
+            if (value.MapField2s is global::.AllTheThings.Outer.MapField2Entry obj8)
             {
                 writer.WriteVarint(66); // field 8, string
-                writer.WriteVarintUInt64(global::AllTheThings.Outer.MapField2Entry.Measure(obj8);
-                global::AllTheThings.Outer.MapField2Entry.Write(obj8, ref writer);
+                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField2Entry.Measure(obj8);
+                global::.AllTheThings.Outer.MapField2Entry.Write(obj8, ref writer);
             }
         }
 
         internal static ulong Measure(Outer value)
         {
             ulong len = 0;
-            if (value.MapField1s is global::AllTheThings.Outer.MapField1Entry obj7)
+            if (value.MapField1s is global::.AllTheThings.Outer.MapField1Entry obj7)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.Outer.MapField1Entry.Measure(obj7));
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::.AllTheThings.Outer.MapField1Entry.Measure(obj7));
             }
-            if (value.MapField2s is global::AllTheThings.Outer.MapField2Entry obj8)
+            if (value.MapField2s is global::.AllTheThings.Outer.MapField2Entry obj8)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.Outer.MapField2Entry.Measure(obj8));
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::.AllTheThings.Outer.MapField2Entry.Measure(obj8));
             }
             return len;
         }
@@ -1557,20 +1369,20 @@ pqr	stu";
                 {
                     case 58: // field 7, string
                         oldEnd = reader.ConstrainByLengthPrefix();
-                        value.MapField1s = global::AllTheThings.Outer.MapField1Entry.Merge(value.MapField1s, ref reader);
+                        value.MapField1s = global::.AllTheThings.Outer.MapField1Entry.Merge(value.MapField1s, ref reader);
                         reader.Unconstrain(oldEnd);
                         break;
                     case 59: // field 7, group
-                        value.MapField1s = global::AllTheThings.Outer.MapField1Entry.Merge(value.MapField1s, ref reader);
+                        value.MapField1s = global::.AllTheThings.Outer.MapField1Entry.Merge(value.MapField1s, ref reader);
                         reader.PopGroup(7);
                         break;
                     case 66: // field 8, string
                         oldEnd = reader.ConstrainByLengthPrefix();
-                        value.MapField2s = global::AllTheThings.Outer.MapField2Entry.Merge(value.MapField2s, ref reader);
+                        value.MapField2s = global::.AllTheThings.Outer.MapField2Entry.Merge(value.MapField2s, ref reader);
                         reader.Unconstrain(oldEnd);
                         break;
                     case 67: // field 8, group
-                        value.MapField2s = global::AllTheThings.Outer.MapField2Entry.Merge(value.MapField2s, ref reader);
+                        value.MapField2s = global::.AllTheThings.Outer.MapField2Entry.Merge(value.MapField2s, ref reader);
                         reader.PopGroup(8);
                         break;
                     default:
@@ -1683,10 +1495,10 @@ pqr	stu";
         private int __pbn__Optional;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"repeated")]
-        public global::System.Collections.Generic.List<int> Repeateds { get; } = new global::System.Collections.Generic.List<int>();
+        public int[] Repeateds { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
-        public global::System.Collections.Generic.List<int> Packeds { get; } = new global::System.Collections.Generic.List<int>();
+        public int[] Packeds { get; set; }
 
         internal static void Serialize(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1766,7 +1578,7 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(536870911, Name = @"hi")]
-        public string[] His { get; set; }
+        public global::System.Collections.Generic.List<string> His { get; } = new global::System.Collections.Generic.List<string>();
 
         [global::ProtoBuf.ProtoMember(1, Name = @"lo")]
         [global::System.ComponentModel.DefaultValue()]

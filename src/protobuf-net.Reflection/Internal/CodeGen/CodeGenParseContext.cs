@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using Google.Protobuf.Reflection;
 using ProtoBuf.Internal.CodeGen;
 using System;
 using System.Collections.Generic;
@@ -74,6 +75,22 @@ internal class CodeGenParseContext
             throw new InvalidOperationException($"No non-placeholder was registered for '{placeholder.Name}'");
         }
         value = type;
+        return false;
+    }
+
+    internal bool AddMapEntry(DescriptorProto type)
+    {
+        if (type.Options?.MapEntry == true && type.Fields.Count == 2)
+        {
+            if (!_contractTypes.TryGetValue(type.FullyQualifiedName, out var found)
+                || found is CodeGenPlaceholderType)
+            {
+                GetMapEntryType(type.FullyQualifiedName,
+                    CodeGenField.Parse(type.Fields[0], this).Type,
+                    CodeGenField.Parse(type.Fields[1], this).Type);
+            }
+            return true;
+        }
         return false;
     }
 }

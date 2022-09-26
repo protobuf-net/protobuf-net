@@ -27,7 +27,10 @@ internal class CodeGenSet
             
             foreach (var type in file.MessageTypes)
             {
-                newFile.Messages.Add(CodeGenMessage.Parse(type, namespacePrefix, context, file.Package));
+                if (!context.AddMapEntry(type))
+                {
+                    newFile.Messages.Add(CodeGenMessage.Parse(type, namespacePrefix, context, file.Package));
+                }
             }
             foreach (var type in file.EnumTypes)
             {

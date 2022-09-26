@@ -208,7 +208,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         int maxFP = -1;
         foreach (var inner in message.Fields)
         {
-            if (inner.FieldPresenceIndex > maxFP) maxFP = inner.FieldPresenceIndex;
+            if (inner.Conditional == ConditionalKind.FieldPresence && inner.FieldPresenceIndex > maxFP) maxFP = inner.FieldPresenceIndex;
         }
         if (maxFP >= 0)
         {

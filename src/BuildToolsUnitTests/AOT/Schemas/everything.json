@@ -217,8 +217,6 @@
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
                       "OriginalName": "upper",
-                      "Conditional": "FieldPresence",
-                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     }
                   ],
@@ -437,8 +435,6 @@
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
                       "OriginalName": "upper",
-                      "Conditional": "FieldPresence",
-                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     }
                   ],
@@ -810,8 +806,6 @@
               "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
               "OriginalName": "upper",
-              "Conditional": "FieldPresence",
-              "FieldPresenceIndex": 0,
               "DefaultValue": ""
             }
           ],
@@ -821,50 +815,6 @@
         },
         {
           "Messages": [
-            {
-              "Fields": [
-                {
-                  "FieldNumber": 1,
-                  "TypeName": "sint32",
-                  "Name": "Key",
-                  "OriginalName": "key",
-                  "Conditional": "FieldPresence",
-                  "FieldPresenceIndex": 0,
-                  "DefaultValue": ""
-                },
-                {
-                  "FieldNumber": 2,
-                  "TypeName": "string",
-                  "Name": "Value",
-                  "OriginalName": "value",
-                  "DefaultValue": ""
-                }
-              ],
-              "Name": "MapField1Entry",
-              "Package": "AllTheThings",
-              "FullyQualifiedPrefix": "AllTheThings.Outer+"
-            },
-            {
-              "Fields": [
-                {
-                  "FieldNumber": 1,
-                  "TypeName": "string",
-                  "Name": "Key",
-                  "OriginalName": "key",
-                  "DefaultValue": ""
-                },
-                {
-                  "FieldNumber": 2,
-                  "TypeName": "AllTheThings.Outer",
-                  "Name": "Value",
-                  "OriginalName": "value",
-                  "DefaultValue": ""
-                }
-              ],
-              "Name": "MapField2Entry",
-              "Package": "AllTheThings",
-              "FullyQualifiedPrefix": "AllTheThings.Outer+"
-            },
             {
               "Messages": [
                 {
@@ -931,18 +881,18 @@
           "Fields": [
             {
               "FieldNumber": 7,
-              "TypeName": "AllTheThings.Outer+MapField1Entry",
+              "TypeName": "sint32, string",
               "Name": "MapField1s",
               "OriginalName": "map_field1",
-              "Repeated": "List",
+              "Repeated": "Dictionary",
               "DefaultValue": ""
             },
             {
               "FieldNumber": 8,
-              "TypeName": "AllTheThings.Outer+MapField2Entry",
+              "TypeName": "string, AllTheThings.Outer",
               "Name": "MapField2s",
               "OriginalName": "map_field2",
-              "Repeated": "List",
+              "Repeated": "Dictionary",
               "DefaultValue": ""
             }
           ],

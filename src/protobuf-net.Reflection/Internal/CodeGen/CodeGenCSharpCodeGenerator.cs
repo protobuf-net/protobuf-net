@@ -371,7 +371,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         {
             switch (field.Repeated)
             {
-                case RepeatedKind.List when field.Type is CodeGenMapEntryType mapMsgType:
+                case RepeatedKind.Dictionary when field.Type is CodeGenMapEntryType mapMsgType:
                     var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out _);
                     var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out _);
                     ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
@@ -504,44 +504,50 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         if (field.IsRepeated)
         {
             bool allowSet = ctx.EmitListSetters;
-            if (field.Type is CodeGenMapEntryType mapMsgType)
+            switch (field.Repeated)
             {
-                var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out var keyDataFormat);
-                var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out var valueDataFormat);
+                case RepeatedKind.Dictionary when field.Type is CodeGenMapEntryType mapMsgType:
+                    var keyTypeName = GetEscapedTypeName(ctx, mapMsgType.KeyType, out var keyDataFormat);
+                    var valueTypeName = GetEscapedTypeName(ctx, mapMsgType.ValueType, out var valueDataFormat);
 
-                bool first = true;
-                tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
-                if (keyDataFormat.HasValue)
-                {
-                    tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");
-                    first = false;
-                }
-                if (valueDataFormat.HasValue)
-                {
-                    tw.Write($"{(first ? "(" : ", ")}ValueFormat = global::ProtoBuf.DataFormat.{valueDataFormat}");
-                    first = false;
-                }
-                tw.WriteLine(first ? "]" : ")]");
-                if (ctx.Supports(CSharp6))
-                {
-                    ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {escapedName} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
-                }
-                else
-                {
-                    ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {escapedName} {{ get; {(allowSet ? "" : "private ")}set; }}");
-                }
-            }
-            else if (UseArray(field.Type))
-            {
-                ctx.WriteLine($"{GetAccess(field.Access)} {typeName}[] {escapedName} {{ get; set; }}");
-            }
-            else if (ctx.Supports(CSharp6))
-            {
-                ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.List<{typeName}> {escapedName} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.List<{typeName}>();");
-            }
-            else
-            {
-                ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.List<{typeName}> {escapedName} {{ get; {(allowSet ? "" : "private ")}set; }}");
+                    bool first = true;
+                    tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
+                    if (keyDataFormat.HasValue)
+                    {
+                        tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");
+                        first = false;
+                    }
+                    if (valueDataFormat.HasValue)
+                    {
+                        tw.Write($"{(first ? "(" : ", ")}ValueFormat = global::ProtoBuf.DataFormat.{valueDataFormat}");
+                        first = false;
+                    }
+                    tw.WriteLine(first ? "]" : ")]");
+                    if (ctx.Supports(CSharp6))
+                    {
+                        ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {escapedName} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                    }
+                    else
+                    {
+                        ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {escapedName} {{ get; {(allowSet ? "" : "private ")}set; }}");
+                    }
+                    break;
+                case RepeatedKind.List:
+                    if (ctx.Supports(CSharp6))
+                    {
+                        ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.List<{typeName}> {escapedName} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.List<{typeName}>();");
+                    }
+                    else
+                    {
+                        ctx.WriteLine($"{GetAccess(field.Access)} global::System.Collections.Generic.List<{typeName}> {escapedName} {{ get; {(allowSet ? "" : "private ")}set; }}");
+                    }
+                    break;
+                case RepeatedKind.Array:
+                    ctx.WriteLine($"{GetAccess(field.Access)} {typeName}[] {escapedName} {{ get; set; }}");
+                    break;
+                default:
+                    ctx.WriteLine($"#error unsupported repeated kind for {field.Name}: {field.Repeated}");
+                    break;
             }
         }
         //else if (oneOf is object)
@@ -832,36 +838,6 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     //            .Outdent().WriteLine("}");
     //    }
     //}
-
-    /// <summary>
-    /// Indicate which types will commonly use arrays
-    /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
-    protected virtual bool UseArray(CodeGenType type)
-    {
-        if (type.IsWellKnownType(out var known))
-        {
-            switch (known)
-            {
-                case CodeGenWellKnownType.String:
-                //case FieldDescriptorProto.Type.TypeBool:
-                //case FieldDescriptorProto.Type.TypeDouble:
-                //case FieldDescriptorProto.Type.TypeFixed32:
-                //case FieldDescriptorProto.Type.TypeFixed64:
-                //case FieldDescriptorProto.Type.TypeFloat:
-                //case FieldDescriptorProto.Type.TypeInt32:
-                //case FieldDescriptorProto.Type.TypeInt64:
-                //case FieldDescriptorProto.Type.TypeSfixed32:
-                //case FieldDescriptorProto.Type.TypeSfixed64:
-                //case FieldDescriptorProto.Type.TypeSint32:
-                //case FieldDescriptorProto.Type.TypeSint64:
-                //case FieldDescriptorProto.Type.TypeUint32:
-                //case FieldDescriptorProto.Type.TypeUint64:
-                    return true;
-            }
-        }
-        return false;
-    }
 
     ///// <summary>
     ///// Obtain a relative name from a type name

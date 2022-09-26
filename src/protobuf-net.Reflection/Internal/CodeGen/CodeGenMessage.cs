@@ -3,6 +3,7 @@ using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel;
 using ProtoBuf.Reflection.Internal.CodeGen.Collections;
+using ProtoBuf.Internal.CodeGen;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -55,15 +56,9 @@ internal class CodeGenMessage : CodeGenType
 
         if (message.Fields.Count > 0)
         {
-            int nextFieldTrackingIndex = 0;
             foreach (var field in message.Fields)
             {
-                var parsed = CodeGenField.Parse(field, context);
-                if (parsed.Conditional == ConditionalKind.FieldPresence)
-                {
-                    parsed.FieldPresenceIndex = nextFieldTrackingIndex++;
-                }
-                newMessage.Fields.Add(parsed);
+                newMessage.Fields.Add(CodeGenField.Parse(field, context));
             }
         }
 
@@ -72,7 +67,10 @@ internal class CodeGenMessage : CodeGenType
             var prefix = newMessage.FullyQualifiedPrefix + newMessage.Name + "+";
             foreach (var type in message.NestedTypes)
             {
-                newMessage.Messages.Add(CodeGenMessage.Parse(type, prefix, context, package));
+                if (!context.AddMapEntry(type))
+                {
+                    newMessage.Messages.Add(CodeGenMessage.Parse(type, prefix, context, package));
+                }
             }
             foreach (var type in message.EnumTypes)
             {
@@ -87,11 +85,27 @@ internal class CodeGenMessage : CodeGenType
     {
         if (ShouldSerializeFields())
         {
+            int nextTrackingIndex = 0;
             foreach (var field in Fields)
             {
                 if (context.FixupPlaceholder(field.Type, out var found))
                 {
                     field.Type = found;
+                }
+                if (field.Conditional == ConditionalKind.FieldPresence)
+                {
+                    if (field.Type is CodeGenMessage msg && !msg.IsValueType)
+                    {
+                        field.Conditional = ConditionalKind.Always; // uses null for tracking
+                    }
+                    else
+                    {
+                        field.FieldPresenceIndex = nextTrackingIndex++;
+                    }
+                }
+                if (field.IsRepeated && field.Type is CodeGenMapEntryType)
+                {
+                    field.Repeated = RepeatedKind.Dictionary;
                 }
             }
         }

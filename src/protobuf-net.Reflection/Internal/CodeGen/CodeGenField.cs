@@ -193,4 +193,5 @@ internal enum RepeatedKind
     Single,
     List,
     Array,
+    Dictionary,
 }

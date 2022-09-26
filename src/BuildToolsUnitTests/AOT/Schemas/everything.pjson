@@ -35,6 +35,13 @@
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
                         }
                       ],
                       "Name": "Result",
@@ -55,6 +62,13 @@
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
                         }
                       ],
                       "Name": "Grouped",
@@ -75,6 +89,13 @@
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
                         }
                       ],
                       "Name": "Upper",
@@ -88,13 +109,15 @@
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
-                      "OriginalName": "result"
+                      "OriginalName": "result",
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
-                      "OriginalName": "grouped"
+                      "OriginalName": "grouped",
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 12,
@@ -134,6 +157,13 @@
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
                         }
                       ],
                       "Name": "Result",
@@ -154,6 +184,13 @@
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
                         }
                       ],
                       "Name": "Grouped",
@@ -174,6 +211,13 @@
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
                         }
                       ],
                       "Name": "Upper",
@@ -187,13 +231,15 @@
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
-                      "OriginalName": "result"
+                      "OriginalName": "result",
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
-                      "OriginalName": "grouped"
+                      "OriginalName": "grouped",
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 12,
@@ -424,6 +470,13 @@
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets",
+                  "Repeated": "List"
                 }
               ],
               "Name": "Result",
@@ -444,6 +497,13 @@
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets",
+                  "Repeated": "List"
                 }
               ],
               "Name": "Grouped",
@@ -464,6 +524,13 @@
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets",
+                  "Repeated": "List"
                 }
               ],
               "Name": "Upper",
@@ -477,13 +544,15 @@
               "FieldNumber": 1,
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
-              "OriginalName": "result"
+              "OriginalName": "result",
+              "Repeated": "List"
             },
             {
               "FieldNumber": 10,
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
-              "OriginalName": "grouped"
+              "OriginalName": "grouped",
+              "Repeated": "List"
             },
             {
               "FieldNumber": 12,
@@ -498,44 +567,6 @@
         },
         {
           "Messages": [
-            {
-              "Fields": [
-                {
-                  "FieldNumber": 1,
-                  "TypeName": "sint32",
-                  "Name": "Key",
-                  "OriginalName": "key"
-                },
-                {
-                  "FieldNumber": 2,
-                  "TypeName": "string",
-                  "Name": "Value",
-                  "OriginalName": "value"
-                }
-              ],
-              "Name": "MapField1Entry",
-              "Package": "AllTheThings",
-              "FullyQualifiedPrefix": "AllTheThings.Outer+"
-            },
-            {
-              "Fields": [
-                {
-                  "FieldNumber": 1,
-                  "TypeName": "string",
-                  "Name": "Key",
-                  "OriginalName": "key"
-                },
-                {
-                  "FieldNumber": 2,
-                  "TypeName": "AllTheThings.Outer",
-                  "Name": "Value",
-                  "OriginalName": "value"
-                }
-              ],
-              "Name": "MapField2Entry",
-              "Package": "AllTheThings",
-              "FullyQualifiedPrefix": "AllTheThings.Outer+"
-            },
             {
               "Messages": [
                 {
@@ -594,15 +625,17 @@
           "Fields": [
             {
               "FieldNumber": 7,
-              "TypeName": "AllTheThings.Outer+MapField1Entry",
+              "TypeName": "int32, string",
               "Name": "MapField1s",
-              "OriginalName": "map_field1"
+              "OriginalName": "map_field1",
+              "Repeated": "Dictionary"
             },
             {
               "FieldNumber": 8,
-              "TypeName": "AllTheThings.Outer+MapField2Entry",
+              "TypeName": "string, AllTheThings.Outer",
               "Name": "MapField2s",
-              "OriginalName": "map_field2"
+              "OriginalName": "map_field2",
+              "Repeated": "Dictionary"
             }
           ],
           "Name": "Outer",
@@ -636,18 +669,6 @@
               "TypeName": "int32",
               "Name": "Optional",
               "OriginalName": "optional"
-            },
-            {
-              "FieldNumber": 3,
-              "TypeName": "int32",
-              "Name": "Repeateds",
-              "OriginalName": "repeated"
-            },
-            {
-              "FieldNumber": 4,
-              "TypeName": "int32",
-              "Name": "Packeds",
-              "OriginalName": "packed"
             }
           ],
           "Name": "FieldRules",
@@ -656,6 +677,13 @@
         },
         {
           "Fields": [
+            {
+              "FieldNumber": 536870911,
+              "TypeName": "string",
+              "Name": "His",
+              "OriginalName": "hi",
+              "Repeated": "List"
+            },
             {
               "FieldNumber": 1,
               "TypeName": "string",
