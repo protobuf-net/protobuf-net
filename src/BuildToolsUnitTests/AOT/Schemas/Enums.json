@@ -10,6 +10,7 @@
               "TypeName": "BasicPackage.Corpus",
               "Name": "Corpus",
               "OriginalName": "corpus",
+              "Conditional": "NonDefault",
               "DefaultValue": ""
             }
           ],

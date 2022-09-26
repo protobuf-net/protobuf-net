@@ -164,5 +164,5 @@ public class AOTSchemaTests
     static MetadataReference GetLib<T>()
         => MetadataReference.CreateFromFile(typeof(T).Assembly.Location);
 
-    private string CallerFilePath([CallerFilePath] string path = "") => path;
+    private static string CallerFilePath([CallerFilePath] string path = "") => path;
 }

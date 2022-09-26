@@ -156,6 +156,18 @@ namespace ProtoBuf.BuildTools.Internal
             return false;
         }
 
+        internal static bool TryGetBoolean(this TypedConstant constant, out bool value)
+        {
+            if (constant.Kind is TypedConstantKind.Primitive or TypedConstantKind.Enum && constant.Value is bool val)
+            {
+                value = val;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
         internal static bool TryGetStringByName(this AttributeData attributeData, string name, out string value)
         {
             if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is string s)

@@ -30,14 +30,15 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
         return false;
     }
 
-    protected (int fieldNumber, string originalName, DataFormat? dataFormat) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
+    protected (int fieldNumber, string originalName, DataFormat? dataFormat, bool isRequired) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
     {
         int fieldNumber = default;
         string originalName = null;
         DataFormat? dataFormat = null;
+        bool isRequired = false;
 
         var attributeClass = protoMemberAttribute.AttributeClass;
-        if (attributeClass is null) return (fieldNumber, originalName, dataFormat);
+        if (attributeClass is null) return (fieldNumber, originalName, dataFormat, isRequired);
         if (attributeClass.InProtoBufNamespace())
         {
             // default constructor parameters
@@ -65,12 +66,15 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
                     case nameof(ProtoMemberAttribute.DataFormat) when namedArgument.Value.TryGetInt32(out var dataFormat32):
                         dataFormat = (DataFormat)dataFormat32;
                         break;
+                    case nameof(ProtoMemberAttribute.IsRequired) when namedArgument.Value.TryGetBoolean(out var boolValue):
+                        isRequired = boolValue;
+                        break;
                     default:
                         throw new InvalidOperationException($"Unexpected named arg: {attributeClass.Name}.{namedArgument.Key}");
                 }
             }
         }
 
-        return (fieldNumber, originalName, dataFormat);
+        return (fieldNumber, originalName, dataFormat, isRequired);
     }
 }

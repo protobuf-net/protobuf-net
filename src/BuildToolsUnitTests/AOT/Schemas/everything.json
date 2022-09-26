@@ -11,9 +11,9 @@
             {
               "Name": "Search",
               "OriginalName": "Search",
-              "Request": {
-                "IsStreamed": true,
-                "Type": {
+              "RequestType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
                   "Enums": [
                     {
                       "EnumValues": [
@@ -63,6 +63,7 @@
                       "TypeName": "string",
                       "Name": "Query",
                       "OriginalName": "query",
+                      "IsRequired": true,
                       "DefaultValue": ""
                     },
                     {
@@ -70,6 +71,8 @@
                       "TypeName": "int32",
                       "Name": "PageNumber",
                       "OriginalName": "page_number",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     },
                     {
@@ -77,6 +80,8 @@
                       "TypeName": "int32",
                       "Name": "ResultPerPage",
                       "OriginalName": "result_per_page",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 1,
                       "DefaultValue": "10"
                     },
                     {
@@ -84,6 +89,8 @@
                       "TypeName": "AllTheThings.SearchRequest+Corpus",
                       "Name": "CorpusValue",
                       "OriginalName": "corpus",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 2,
                       "DefaultValue": "UNIVERSAL"
                     }
                   ],
@@ -92,8 +99,9 @@
                   "FullyQualifiedPrefix": "AllTheThings."
                 }
               },
-              "Response": {
-                "Type": {
+              "ResponseType": {
+                "Representation": "ValueTask",
+                "RawType": {
                   "Messages": [
                     {
                       "Fields": [
@@ -102,6 +110,7 @@
                           "TypeName": "string",
                           "Name": "Url",
                           "OriginalName": "url",
+                          "IsRequired": true,
                           "DefaultValue": ""
                         },
                         {
@@ -116,6 +125,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
+                          "IsRepeated": true,
                           "DefaultValue": ""
                         }
                       ],
@@ -130,6 +140,7 @@
                           "TypeName": "string",
                           "Name": "Url",
                           "OriginalName": "url",
+                          "IsRequired": true,
                           "DefaultValue": ""
                         },
                         {
@@ -144,6 +155,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
+                          "IsRepeated": true,
                           "DefaultValue": ""
                         }
                       ],
@@ -158,6 +170,7 @@
                           "TypeName": "string",
                           "Name": "Url",
                           "OriginalName": "url",
+                          "IsRequired": true,
                           "DefaultValue": ""
                         },
                         {
@@ -172,6 +185,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
+                          "IsRepeated": true,
                           "DefaultValue": ""
                         }
                       ],
@@ -187,6 +201,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
                       "OriginalName": "result",
+                      "IsRepeated": true,
                       "DefaultValue": ""
                     },
                     {
@@ -194,6 +209,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
                       "OriginalName": "grouped",
+                      "IsRepeated": true,
                       "DefaultValue": ""
                     },
                     {
@@ -201,6 +217,8 @@
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
                       "OriginalName": "upper",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     }
                   ],
@@ -213,8 +231,9 @@
             {
               "Name": "OldMethod",
               "OriginalName": "OldMethod",
-              "Request": {
-                "Type": {
+              "RequestType": {
+                "Representation": "ValueTask",
+                "RawType": {
                   "Enums": [
                     {
                       "EnumValues": [
@@ -264,6 +283,7 @@
                       "TypeName": "string",
                       "Name": "Query",
                       "OriginalName": "query",
+                      "IsRequired": true,
                       "DefaultValue": ""
                     },
                     {
@@ -271,6 +291,8 @@
                       "TypeName": "int32",
                       "Name": "PageNumber",
                       "OriginalName": "page_number",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     },
                     {
@@ -278,6 +300,8 @@
                       "TypeName": "int32",
                       "Name": "ResultPerPage",
                       "OriginalName": "result_per_page",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 1,
                       "DefaultValue": "10"
                     },
                     {
@@ -285,6 +309,8 @@
                       "TypeName": "AllTheThings.SearchRequest+Corpus",
                       "Name": "CorpusValue",
                       "OriginalName": "corpus",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 2,
                       "DefaultValue": "UNIVERSAL"
                     }
                   ],
@@ -293,9 +319,9 @@
                   "FullyQualifiedPrefix": "AllTheThings."
                 }
               },
-              "Response": {
-                "IsStreamed": true,
-                "Type": {
+              "ResponseType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
                   "Messages": [
                     {
                       "Fields": [
@@ -304,6 +330,7 @@
                           "TypeName": "string",
                           "Name": "Url",
                           "OriginalName": "url",
+                          "IsRequired": true,
                           "DefaultValue": ""
                         },
                         {
@@ -318,6 +345,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
+                          "IsRepeated": true,
                           "DefaultValue": ""
                         }
                       ],
@@ -332,6 +360,7 @@
                           "TypeName": "string",
                           "Name": "Url",
                           "OriginalName": "url",
+                          "IsRequired": true,
                           "DefaultValue": ""
                         },
                         {
@@ -346,6 +375,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
+                          "IsRepeated": true,
                           "DefaultValue": ""
                         }
                       ],
@@ -360,6 +390,7 @@
                           "TypeName": "string",
                           "Name": "Url",
                           "OriginalName": "url",
+                          "IsRequired": true,
                           "DefaultValue": ""
                         },
                         {
@@ -374,6 +405,7 @@
                           "TypeName": "string",
                           "Name": "Snippets",
                           "OriginalName": "snippets",
+                          "IsRepeated": true,
                           "DefaultValue": ""
                         }
                       ],
@@ -389,6 +421,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
                       "OriginalName": "result",
+                      "IsRepeated": true,
                       "DefaultValue": ""
                     },
                     {
@@ -396,6 +429,7 @@
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
                       "OriginalName": "grouped",
+                      "IsRepeated": true,
                       "DefaultValue": ""
                     },
                     {
@@ -403,6 +437,8 @@
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
                       "OriginalName": "upper",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     }
                   ],
@@ -450,6 +486,8 @@
               "TypeName": "float",
               "Name": "A",
               "OriginalName": "a",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 0,
               "DefaultValue": "inf"
             },
             {
@@ -457,6 +495,8 @@
               "TypeName": "float",
               "Name": "B",
               "OriginalName": "b",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 1,
               "DefaultValue": "-inf"
             },
             {
@@ -464,6 +504,8 @@
               "TypeName": "float",
               "Name": "C",
               "OriginalName": "c",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 2,
               "DefaultValue": "nan"
             },
             {
@@ -471,6 +513,8 @@
               "TypeName": "float",
               "Name": "D",
               "OriginalName": "d",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 3,
               "DefaultValue": "0"
             },
             {
@@ -478,6 +522,8 @@
               "TypeName": "float",
               "Name": "E",
               "OriginalName": "e",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 4,
               "DefaultValue": "0"
             },
             {
@@ -485,6 +531,8 @@
               "TypeName": "float",
               "Name": "F",
               "OriginalName": "f",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 5,
               "DefaultValue": "0"
             },
             {
@@ -492,12 +540,15 @@
               "TypeName": "bool",
               "Name": "G",
               "OriginalName": "g",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 6,
               "DefaultValue": "true"
             },
             {
               "FieldNumber": 8,
               "TypeName": "int32",
               "Name": "requiredWithDefault",
+              "IsRequired": true,
               "DefaultValue": "12"
             }
           ],
@@ -526,6 +577,8 @@
               "TypeName": "bool",
               "Name": "SubMessage",
               "OriginalName": "sub_message",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 0,
               "DefaultValue": ""
             },
             {
@@ -540,6 +593,8 @@
               "TypeName": "bool",
               "Name": "SubMessage2",
               "OriginalName": "sub_message2",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 1,
               "DefaultValue": ""
             },
             {
@@ -604,6 +659,7 @@
               "TypeName": "string",
               "Name": "Query",
               "OriginalName": "query",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -611,6 +667,8 @@
               "TypeName": "int32",
               "Name": "PageNumber",
               "OriginalName": "page_number",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 0,
               "DefaultValue": ""
             },
             {
@@ -618,6 +676,8 @@
               "TypeName": "int32",
               "Name": "ResultPerPage",
               "OriginalName": "result_per_page",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 1,
               "DefaultValue": "10"
             },
             {
@@ -625,6 +685,8 @@
               "TypeName": "AllTheThings.SearchRequest+Corpus",
               "Name": "CorpusValue",
               "OriginalName": "corpus",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 2,
               "DefaultValue": "UNIVERSAL"
             }
           ],
@@ -641,6 +703,7 @@
                   "TypeName": "string",
                   "Name": "Url",
                   "OriginalName": "url",
+                  "IsRequired": true,
                   "DefaultValue": ""
                 },
                 {
@@ -655,6 +718,7 @@
                   "TypeName": "string",
                   "Name": "Snippets",
                   "OriginalName": "snippets",
+                  "IsRepeated": true,
                   "DefaultValue": ""
                 }
               ],
@@ -669,6 +733,7 @@
                   "TypeName": "string",
                   "Name": "Url",
                   "OriginalName": "url",
+                  "IsRequired": true,
                   "DefaultValue": ""
                 },
                 {
@@ -683,6 +748,7 @@
                   "TypeName": "string",
                   "Name": "Snippets",
                   "OriginalName": "snippets",
+                  "IsRepeated": true,
                   "DefaultValue": ""
                 }
               ],
@@ -697,6 +763,7 @@
                   "TypeName": "string",
                   "Name": "Url",
                   "OriginalName": "url",
+                  "IsRequired": true,
                   "DefaultValue": ""
                 },
                 {
@@ -711,6 +778,7 @@
                   "TypeName": "string",
                   "Name": "Snippets",
                   "OriginalName": "snippets",
+                  "IsRepeated": true,
                   "DefaultValue": ""
                 }
               ],
@@ -726,6 +794,7 @@
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
               "OriginalName": "result",
+              "IsRepeated": true,
               "DefaultValue": ""
             },
             {
@@ -733,6 +802,7 @@
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
               "OriginalName": "grouped",
+              "IsRepeated": true,
               "DefaultValue": ""
             },
             {
@@ -740,6 +810,8 @@
               "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
               "OriginalName": "upper",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 0,
               "DefaultValue": ""
             }
           ],
@@ -756,6 +828,8 @@
                   "TypeName": "sint32",
                   "Name": "Key",
                   "OriginalName": "key",
+                  "Conditional": "FieldPresence",
+                  "FieldPresenceIndex": 0,
                   "DefaultValue": ""
                 },
                 {
@@ -800,6 +874,7 @@
                       "TypeName": "int64",
                       "Name": "Ival",
                       "OriginalName": "ival",
+                      "IsRequired": true,
                       "DefaultValue": ""
                     },
                     {
@@ -807,6 +882,8 @@
                       "TypeName": "bool",
                       "Name": "Booly",
                       "OriginalName": "booly",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     }
                   ],
@@ -828,6 +905,7 @@
                       "TypeName": "int32",
                       "Name": "Ival",
                       "OriginalName": "ival",
+                      "IsRequired": true,
                       "DefaultValue": ""
                     },
                     {
@@ -835,6 +913,8 @@
                       "TypeName": "bool",
                       "Name": "Booly",
                       "OriginalName": "booly",
+                      "Conditional": "FieldPresence",
+                      "FieldPresenceIndex": 0,
                       "DefaultValue": ""
                     }
                   ],
@@ -854,6 +934,7 @@
               "TypeName": "AllTheThings.Outer+MapField1Entry",
               "Name": "MapField1s",
               "OriginalName": "map_field1",
+              "IsRepeated": true,
               "DefaultValue": ""
             },
             {
@@ -861,6 +942,7 @@
               "TypeName": "AllTheThings.Outer+MapField2Entry",
               "Name": "MapField2s",
               "OriginalName": "map_field2",
+              "IsRepeated": true,
               "DefaultValue": ""
             }
           ],
@@ -889,6 +971,7 @@
               "TypeName": "int32",
               "Name": "Required",
               "OriginalName": "required",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -896,6 +979,8 @@
               "TypeName": "int32",
               "Name": "Optional",
               "OriginalName": "optional",
+              "Conditional": "FieldPresence",
+              "FieldPresenceIndex": 0,
               "DefaultValue": ""
             },
             {
@@ -903,6 +988,7 @@
               "TypeName": "int32",
               "Name": "Repeateds",
               "OriginalName": "repeated",
+              "IsRepeated": true,
               "DefaultValue": ""
             },
             {
@@ -910,6 +996,7 @@
               "TypeName": "int32",
               "Name": "Packeds",
               "OriginalName": "packed",
+              "IsRepeated": true,
               "DefaultValue": ""
             }
           ],
@@ -924,6 +1011,7 @@
               "TypeName": "string",
               "Name": "His",
               "OriginalName": "hi",
+              "IsRepeated": true,
               "DefaultValue": ""
             },
             {
@@ -955,6 +1043,7 @@
               "TypeName": "double",
               "Name": "Double",
               "OriginalName": "double",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -962,6 +1051,7 @@
               "TypeName": "float",
               "Name": "Float",
               "OriginalName": "float",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -969,6 +1059,7 @@
               "TypeName": "int32",
               "Name": "Int32",
               "OriginalName": "int32",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -976,6 +1067,7 @@
               "TypeName": "int64",
               "Name": "Int64",
               "OriginalName": "int64",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -983,6 +1075,7 @@
               "TypeName": "uint32",
               "Name": "Uint32",
               "OriginalName": "uint32",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -990,6 +1083,7 @@
               "TypeName": "uint64",
               "Name": "Uint64",
               "OriginalName": "uint64",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -997,6 +1091,7 @@
               "TypeName": "sint32",
               "Name": "Sint32",
               "OriginalName": "sint32",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1004,6 +1099,7 @@
               "TypeName": "sint64",
               "Name": "Sint64",
               "OriginalName": "sint64",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1011,6 +1107,7 @@
               "TypeName": "fixed32",
               "Name": "Fixed32",
               "OriginalName": "fixed32",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1018,6 +1115,7 @@
               "TypeName": "fixed64",
               "Name": "Fixed64",
               "OriginalName": "fixed64",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1025,6 +1123,7 @@
               "TypeName": "sfixed32",
               "Name": "Sfixed32",
               "OriginalName": "sfixed32",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1032,6 +1131,7 @@
               "TypeName": "sfixed64",
               "Name": "Sfixed64",
               "OriginalName": "sfixed64",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1039,6 +1139,7 @@
               "TypeName": "bool",
               "Name": "Bool",
               "OriginalName": "bool",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1046,6 +1147,7 @@
               "TypeName": "string",
               "Name": "String",
               "OriginalName": "string",
+              "IsRequired": true,
               "DefaultValue": ""
             },
             {
@@ -1053,6 +1155,7 @@
               "TypeName": "bytes",
               "Name": "Bytes",
               "OriginalName": "bytes",
+              "IsRequired": true,
               "DefaultValue": ""
             }
           ],

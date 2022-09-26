@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using ProtoBuf.Internal.CodeGen;
-using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 

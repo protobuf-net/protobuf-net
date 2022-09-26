@@ -18,15 +18,15 @@ namespace AllTheThings
 
         [global::ProtoBuf.ProtoMember(1, Name = @"foo")]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.TestNetObject= */)]
-        public global::AllTheThings.TestNetObject Foo { get; set; } = /* invalid type / value: AllTheThings.TestNetObject= */;
+        public global::AllTheThings.TestNetObject Foo { get; set; }
 
         [global::ProtoBuf.ProtoMember(2)]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.TestNetObject= */)]
-        public global::AllTheThings.TestNetObject barRef { get; set; } = /* invalid type / value: AllTheThings.TestNetObject= */;
+        public global::AllTheThings.TestNetObject barRef { get; set; }
 
         [global::ProtoBuf.ProtoMember(3)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: :NetObjectProxy= */)]
-        public object barDyn { get; set; } = /* invalid type / value: :NetObjectProxy= */;
+        [global::System.ComponentModel.DefaultValue(null)]
+        public object barDyn { get; set; }
 
         internal static void Serialize(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -53,11 +53,11 @@ namespace AllTheThings
             ulong len = 0;
             if (value.Foo is global::AllTheThings.TestNetObject obj1)
             {
-                len += 1 + global::AllTheThings.TestNetObject.Measure(obj1);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.TestNetObject.Measure(obj1));
             }
             if (value.barRef is global::AllTheThings.TestNetObject obj2)
             {
-                len += 1 + global::AllTheThings.TestNetObject.Measure(obj2);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.TestNetObject.Measure(obj2));
             }
             if (value.barDyn is not null)
             {
@@ -128,54 +128,124 @@ namespace AllTheThings
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+        int __pbn_field_presence_0;
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=inf */)]
-        public float A { get; set; } = /* invalid type / value: float=inf */;
+        [global::System.ComponentModel.DefaultValue(float.PositiveInfinity)]
+        public float A
+        {
+            get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__A : float.PositiveInfinity;
+            set { __pbn__A = value; __pbn_field_presence_0 |= 1; }
+        }
+        public bool ShouldSerializeA() => (__pbn_field_presence_0 & 1) != 0;
+        public void ResetA() => __pbn_field_presence_0 &= ~1;
+        private float __pbn__A;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=-inf */)]
-        public float B { get; set; } = /* invalid type / value: float=-inf */;
+        [global::System.ComponentModel.DefaultValue(float.NegativeInfinity)]
+        public float B
+        {
+            get => (__pbn_field_presence_0 & 2) != 0 ? __pbn__B : float.NegativeInfinity;
+            set { __pbn__B = value; __pbn_field_presence_0 |= 2; }
+        }
+        public bool ShouldSerializeB() => (__pbn_field_presence_0 & 2) != 0;
+        public void ResetB() => __pbn_field_presence_0 &= ~2;
+        private float __pbn__B;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=nan */)]
-        public float C { get; set; } = /* invalid type / value: float=nan */;
+        [global::System.ComponentModel.DefaultValue(float.NaN)]
+        public float C
+        {
+            get => (__pbn_field_presence_0 & 4) != 0 ? __pbn__C : float.NaN;
+            set { __pbn__C = value; __pbn_field_presence_0 |= 4; }
+        }
+        public bool ShouldSerializeC() => (__pbn_field_presence_0 & 4) != 0;
+        public void ResetC() => __pbn_field_presence_0 &= ~4;
+        private float __pbn__C;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=0 */)]
-        public float D { get; set; } = /* invalid type / value: float=0 */;
+        [global::System.ComponentModel.DefaultValue(0F)]
+        public float D
+        {
+            get => (__pbn_field_presence_0 & 8) != 0 ? __pbn__D : 0F;
+            set { __pbn__D = value; __pbn_field_presence_0 |= 8; }
+        }
+        public bool ShouldSerializeD() => (__pbn_field_presence_0 & 8) != 0;
+        public void ResetD() => __pbn_field_presence_0 &= ~8;
+        private float __pbn__D;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"e")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=0 */)]
-        public float E { get; set; } = /* invalid type / value: float=0 */;
+        [global::System.ComponentModel.DefaultValue(0F)]
+        public float E
+        {
+            get => (__pbn_field_presence_0 & 16) != 0 ? __pbn__E : 0F;
+            set { __pbn__E = value; __pbn_field_presence_0 |= 16; }
+        }
+        public bool ShouldSerializeE() => (__pbn_field_presence_0 & 16) != 0;
+        public void ResetE() => __pbn_field_presence_0 &= ~16;
+        private float __pbn__E;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"f")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float=0 */)]
-        public float F { get; set; } = /* invalid type / value: float=0 */;
+        [global::System.ComponentModel.DefaultValue(0F)]
+        public float F
+        {
+            get => (__pbn_field_presence_0 & 32) != 0 ? __pbn__F : 0F;
+            set { __pbn__F = value; __pbn_field_presence_0 |= 32; }
+        }
+        public bool ShouldSerializeF() => (__pbn_field_presence_0 & 32) != 0;
+        public void ResetF() => __pbn_field_presence_0 &= ~32;
+        private float __pbn__F;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"g")]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool=true */)]
-        public bool G { get; set; } = /* invalid type / value: bool=true */;
+        public bool G
+        {
+            get => (__pbn_field_presence_0 & 64) != 0 ? __pbn__G : /* invalid type / value: bool=true */;
+            set { __pbn__G = value; __pbn_field_presence_0 |= 64; }
+        }
+        public bool ShouldSerializeG() => (__pbn_field_presence_0 & 64) != 0;
+        public void ResetG() => __pbn_field_presence_0 &= ~64;
+        private bool __pbn__G;
 
-        [global::ProtoBuf.ProtoMember(8)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32=12 */)]
-        public int requiredWithDefault { get; set; } = /* invalid type / value: int32=12 */;
+        [global::ProtoBuf.ProtoMember(8, IsRequired = true)]
+        public int requiredWithDefault { get; set; } = 12;
 
         internal static void Serialize(MagicValues value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            writer.WriteVarint(13); // field 1, fixed32
-            writer.WriteFixed(value.A);
-            writer.WriteVarint(21); // field 2, fixed32
-            writer.WriteFixed(value.B);
-            writer.WriteVarint(29); // field 3, fixed32
-            writer.WriteFixed(value.C);
-            writer.WriteVarint(37); // field 4, fixed32
-            writer.WriteFixed(value.D);
-            writer.WriteVarint(45); // field 5, fixed32
-            writer.WriteFixed(value.E);
-            writer.WriteVarint(53); // field 6, fixed32
-            writer.WriteFixed(value.F);
-            writer.WriteVarint(56); // field 7, varint
-            writer.WriteVarint(value.G);
+            if ((value.__pbn_field_presence_0 & 1) != 0)
+            {
+                writer.WriteVarint(13); // field 1, fixed32
+                writer.WriteFixed(value.A);
+            }
+            if ((value.__pbn_field_presence_0 & 2) != 0)
+            {
+                writer.WriteVarint(21); // field 2, fixed32
+                writer.WriteFixed(value.B);
+            }
+            if ((value.__pbn_field_presence_0 & 4) != 0)
+            {
+                writer.WriteVarint(29); // field 3, fixed32
+                writer.WriteFixed(value.C);
+            }
+            if ((value.__pbn_field_presence_0 & 8) != 0)
+            {
+                writer.WriteVarint(37); // field 4, fixed32
+                writer.WriteFixed(value.D);
+            }
+            if ((value.__pbn_field_presence_0 & 16) != 0)
+            {
+                writer.WriteVarint(45); // field 5, fixed32
+                writer.WriteFixed(value.E);
+            }
+            if ((value.__pbn_field_presence_0 & 32) != 0)
+            {
+                writer.WriteVarint(53); // field 6, fixed32
+                writer.WriteFixed(value.F);
+            }
+            if ((value.__pbn_field_presence_0 & 64) != 0)
+            {
+                writer.WriteVarint(56); // field 7, varint
+                writer.WriteVarint(value.G);
+            }
             writer.WriteVarint(64); // field 8, varint
             writer.WriteVarint(unchecked((uint)value.requiredWithDefault));
         }
@@ -183,15 +253,36 @@ namespace AllTheThings
         internal static ulong Measure(MagicValues value)
         {
             ulong len = 0;
-            len += 5;
-            len += 5;
-            len += 5;
-            len += 5;
-            len += 5;
-            len += 5;
-            len += 2;
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.requiredWithDefault));
-            return len;
+            if ((value.__pbn_field_presence_0 & 1) != 0)
+            {
+                len += 5;
+            }
+            if ((value.__pbn_field_presence_0 & 2) != 0)
+            {
+                len += 5;
+            }
+            if ((value.__pbn_field_presence_0 & 4) != 0)
+            {
+                len += 5;
+            }
+            if ((value.__pbn_field_presence_0 & 8) != 0)
+            {
+                len += 5;
+            }
+            if ((value.__pbn_field_presence_0 & 16) != 0)
+            {
+                len += 5;
+            }
+            if ((value.__pbn_field_presence_0 & 32) != 0)
+            {
+                len += 5;
+            }
+            if ((value.__pbn_field_presence_0 & 64) != 0)
+            {
+                len += 2;
+            }
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.requiredWithDefault));
+            return len + 1;
         }
 
         internal static MagicValues Merge(MagicValues value, ref global::ProtoBuf.Nano.Reader reader)
@@ -254,6 +345,7 @@ namespace AllTheThings
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+        int __pbn_field_presence_0;
         [global::ProtoBuf.ProtoMember(1, Name = @"foo_name")]
         [global::System.ComponentModel.DefaultValue(@"abc")]
         public string FooName { get; set; } = @"abc";
@@ -263,16 +355,30 @@ namespace AllTheThings
         public string Name { get; set; } = @"abc";
 
         [global::ProtoBuf.ProtoMember(9, Name = @"sub_message")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
-        public bool SubMessage { get; set; } = /* invalid type / value: bool= */;
+        [global::System.ComponentModel.DefaultValue(false)]
+        public bool SubMessage
+        {
+            get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__SubMessage : false;
+            set { __pbn__SubMessage = value; __pbn_field_presence_0 |= 1; }
+        }
+        public bool ShouldSerializeSubMessage() => (__pbn_field_presence_0 & 1) != 0;
+        public void ResetSubMessage() => __pbn_field_presence_0 &= ~1;
+        private bool __pbn__SubMessage;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"name2")]
         [global::System.ComponentModel.DefaultValue(@"abc")]
         public string Name2 { get; set; } = @"abc";
 
         [global::ProtoBuf.ProtoMember(10, Name = @"sub_message2")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
-        public bool SubMessage2 { get; set; } = /* invalid type / value: bool= */;
+        [global::System.ComponentModel.DefaultValue(false)]
+        public bool SubMessage2
+        {
+            get => (__pbn_field_presence_0 & 2) != 0 ? __pbn__SubMessage2 : false;
+            set { __pbn__SubMessage2 = value; __pbn_field_presence_0 |= 2; }
+        }
+        public bool ShouldSerializeSubMessage2() => (__pbn_field_presence_0 & 2) != 0;
+        public void ResetSubMessage2() => __pbn_field_presence_0 &= ~2;
+        private bool __pbn__SubMessage2;
 
         [global::ProtoBuf.ProtoMember(12, Name = @"bar_name")]
         [global::System.ComponentModel.DefaultValue(@"abc\def""ghi'jklmno
@@ -292,15 +398,21 @@ pqr	stu";
                 writer.WriteVarint(34); // field 4, string
                 writer.WriteWithLengthPrefix(s);
             }
-            writer.WriteVarint(72); // field 9, varint
-            writer.WriteVarint(value.SubMessage);
+            if ((value.__pbn_field_presence_0 & 1) != 0)
+            {
+                writer.WriteVarint(72); // field 9, varint
+                writer.WriteVarint(value.SubMessage);
+            }
             if (value.Name2 is { Length: > 0} s)
             {
                 writer.WriteVarint(42); // field 5, string
                 writer.WriteWithLengthPrefix(s);
             }
-            writer.WriteVarint(80); // field 10, varint
-            writer.WriteVarint(value.SubMessage2);
+            if ((value.__pbn_field_presence_0 & 2) != 0)
+            {
+                writer.WriteVarint(80); // field 10, varint
+                writer.WriteVarint(value.SubMessage2);
+            }
             if (value.BarName is { Length: > 0} s)
             {
                 writer.WriteVarint(98); // field 12, string
@@ -319,12 +431,18 @@ pqr	stu";
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
             }
-            len += 2;
+            if ((value.__pbn_field_presence_0 & 1) != 0)
+            {
+                len += 2;
+            }
             if (value.Name2 is { Length: > 0} s)
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
             }
-            len += 2;
+            if ((value.__pbn_field_presence_0 & 2) != 0)
+            {
+                len += 2;
+            }
             if (value.BarName is { Length: > 0} s)
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
@@ -389,21 +507,42 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        [global::ProtoBuf.ProtoMember(1, Name = @"query")]
-        [global::System.ComponentModel.DefaultValue(@"")]
-        public string Query { get; set; } = @"";
+        int __pbn_field_presence_0;
+        [global::ProtoBuf.ProtoMember(1, Name = @"query", IsRequired = true)]
+        public string Query { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"page_number")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-        public int PageNumber { get; set; } = /* invalid type / value: int32= */;
+        [global::System.ComponentModel.DefaultValue(0)]
+        public int PageNumber
+        {
+            get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__PageNumber : 0;
+            set { __pbn__PageNumber = value; __pbn_field_presence_0 |= 1; }
+        }
+        public bool ShouldSerializePageNumber() => (__pbn_field_presence_0 & 1) != 0;
+        public void ResetPageNumber() => __pbn_field_presence_0 &= ~1;
+        private int __pbn__PageNumber;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"result_per_page")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32=10 */)]
-        public int ResultPerPage { get; set; } = /* invalid type / value: int32=10 */;
+        [global::System.ComponentModel.DefaultValue(10)]
+        public int ResultPerPage
+        {
+            get => (__pbn_field_presence_0 & 2) != 0 ? __pbn__ResultPerPage : 10;
+            set { __pbn__ResultPerPage = value; __pbn_field_presence_0 |= 2; }
+        }
+        public bool ShouldSerializeResultPerPage() => (__pbn_field_presence_0 & 2) != 0;
+        public void ResetResultPerPage() => __pbn_field_presence_0 &= ~2;
+        private int __pbn__ResultPerPage;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"corpus")]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */)]
-        public global::AllTheThings.SearchRequest.Corpus CorpusValue { get; set; } = /* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */;
+        public global::AllTheThings.SearchRequest.Corpus CorpusValue
+        {
+            get => (__pbn_field_presence_0 & 4) != 0 ? __pbn__CorpusValue : /* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */;
+            set { __pbn__CorpusValue = value; __pbn_field_presence_0 |= 4; }
+        }
+        public bool ShouldSerializeCorpusValue() => (__pbn_field_presence_0 & 4) != 0;
+        public void ResetCorpusValue() => __pbn_field_presence_0 &= ~4;
+        private global::AllTheThings.SearchRequest.Corpus __pbn__CorpusValue;
 
         [global::ProtoBuf.ProtoContract()]
         public enum Corpus
@@ -431,15 +570,24 @@ pqr	stu";
                 writer.WriteVarint(10); // field 1, string
                 writer.WriteWithLengthPrefix(s);
             }
-            writer.WriteVarint(16); // field 2, varint
-            writer.WriteVarint(unchecked((uint)value.PageNumber));
-            writer.WriteVarint(24); // field 3, varint
-            writer.WriteVarint(unchecked((uint)value.ResultPerPage));
-            if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
+            if ((value.__pbn_field_presence_0 & 1) != 0)
             {
-                writer.WriteVarint(34); // field 4, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchRequest.Corpus.Measure(obj4);
-                global::AllTheThings.SearchRequest.Corpus.Write(obj4, ref writer);
+                writer.WriteVarint(16); // field 2, varint
+                writer.WriteVarint(unchecked((uint)value.PageNumber));
+            }
+            if ((value.__pbn_field_presence_0 & 2) != 0)
+            {
+                writer.WriteVarint(24); // field 3, varint
+                writer.WriteVarint(unchecked((uint)value.ResultPerPage));
+            }
+            if ((value.__pbn_field_presence_0 & 4) != 0)
+            {
+                if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
+                {
+                    writer.WriteVarint(34); // field 4, string
+                    writer.WriteVarintUInt64(global::AllTheThings.SearchRequest.Corpus.Measure(obj4);
+                    global::AllTheThings.SearchRequest.Corpus.Write(obj4, ref writer);
+                }
             }
         }
 
@@ -450,11 +598,20 @@ pqr	stu";
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
             }
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.PageNumber));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.ResultPerPage));
-            if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
+            if ((value.__pbn_field_presence_0 & 1) != 0)
             {
-                len += 1 + global::AllTheThings.SearchRequest.Corpus.Measure(obj4);
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.PageNumber)) + 1;
+            }
+            if ((value.__pbn_field_presence_0 & 2) != 0)
+            {
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.ResultPerPage)) + 1;
+            }
+            if ((value.__pbn_field_presence_0 & 4) != 0)
+            {
+                if (value.CorpusValue is global::AllTheThings.SearchRequest.Corpus obj4)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchRequest.Corpus.Measure(obj4));
+                }
             }
             return len;
         }
@@ -516,17 +673,23 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+        int __pbn_field_presence_0;
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Result= */)]
-        public global::AllTheThings.SearchResponse.Result Results { get; set; } = /* invalid type / value: AllTheThings.SearchResponse+Result= */;
+        public global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Result> Results { get; } = new global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Result>();
 
         [global::ProtoBuf.ProtoMember(10, Name = @"grouped")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Grouped= */)]
-        public global::AllTheThings.SearchResponse.Grouped Groupeds { get; set; } = /* invalid type / value: AllTheThings.SearchResponse+Grouped= */;
+        public global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Grouped> Groupeds { get; } = new global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Grouped>();
 
         [global::ProtoBuf.ProtoMember(12, Name = @"upper")]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Upper= */)]
-        public global::AllTheThings.SearchResponse.Upper UpperValue { get; set; } = /* invalid type / value: AllTheThings.SearchResponse+Upper= */;
+        public global::AllTheThings.SearchResponse.Upper UpperValue
+        {
+            get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__UpperValue : /* invalid type / value: AllTheThings.SearchResponse+Upper= */;
+            set { __pbn__UpperValue = value; __pbn_field_presence_0 |= 1; }
+        }
+        public bool ShouldSerializeUpperValue() => (__pbn_field_presence_0 & 1) != 0;
+        public void ResetUpperValue() => __pbn_field_presence_0 &= ~1;
+        private global::AllTheThings.SearchResponse.Upper __pbn__UpperValue;
 
         [global::ProtoBuf.ProtoContract()]
         public partial class Result : global::ProtoBuf.IExtensible
@@ -535,17 +698,15 @@ pqr	stu";
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-            [global::ProtoBuf.ProtoMember(1, Name = @"url")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Url { get; set; } = @"";
+            [global::ProtoBuf.ProtoMember(1, Name = @"url", IsRequired = true)]
+            public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Title { get; set; } = @"";
+            [global::System.ComponentModel.DefaultValue()]
+            public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"snippets")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Snippets { get; set; } = @"";
+            public string[] Snippets { get; set; }
 
             internal static void Serialize(Result value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -633,17 +794,15 @@ pqr	stu";
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-            [global::ProtoBuf.ProtoMember(2, Name = @"url")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Url { get; set; } = @"";
+            [global::ProtoBuf.ProtoMember(2, Name = @"url", IsRequired = true)]
+            public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Title { get; set; } = @"";
+            [global::System.ComponentModel.DefaultValue()]
+            public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Snippets { get; set; } = @"";
+            public string[] Snippets { get; set; }
 
             internal static void Serialize(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -731,17 +890,15 @@ pqr	stu";
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-            [global::ProtoBuf.ProtoMember(2, Name = @"url")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Url { get; set; } = @"";
+            [global::ProtoBuf.ProtoMember(2, Name = @"url", IsRequired = true)]
+            public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Title { get; set; } = @"";
+            [global::System.ComponentModel.DefaultValue()]
+            public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Snippets { get; set; } = @"";
+            public string[] Snippets { get; set; }
 
             internal static void Serialize(Upper value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -836,11 +993,14 @@ pqr	stu";
                 writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Grouped.Measure(obj10);
                 global::AllTheThings.SearchResponse.Grouped.Write(obj10, ref writer);
             }
-            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+            if ((value.__pbn_field_presence_0 & 1) != 0)
             {
-                writer.WriteVarint(98); // field 12, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(obj12);
-                global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
+                if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+                {
+                    writer.WriteVarint(98); // field 12, string
+                    writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(obj12);
+                    global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
+                }
             }
         }
 
@@ -849,15 +1009,18 @@ pqr	stu";
             ulong len = 0;
             if (value.Results is global::AllTheThings.SearchResponse.Result obj1)
             {
-                len += 1 + global::AllTheThings.SearchResponse.Result.Measure(obj1);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Result.Measure(obj1));
             }
             if (value.Groupeds is global::AllTheThings.SearchResponse.Grouped obj10)
             {
-                len += 1 + global::AllTheThings.SearchResponse.Grouped.Measure(obj10);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Grouped.Measure(obj10));
             }
-            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+            if ((value.__pbn_field_presence_0 & 1) != 0)
             {
-                len += 1 + global::AllTheThings.SearchResponse.Upper.Measure(obj12);
+                if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Upper.Measure(obj12));
+                }
             }
             return len;
         }
@@ -930,12 +1093,10 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(7, Name = @"map_field1")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer+MapField1Entry= */)]
-        public global::AllTheThings.Outer.MapField1Entry MapField1s { get; set; } = /* invalid type / value: AllTheThings.Outer+MapField1Entry= */;
+        public global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField1Entry> MapField1s { get; } = new global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField1Entry>();
 
         [global::ProtoBuf.ProtoMember(8, Name = @"map_field2")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer+MapField2Entry= */)]
-        public global::AllTheThings.Outer.MapField2Entry MapField2s { get; set; } = /* invalid type / value: AllTheThings.Outer+MapField2Entry= */;
+        public global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField2Entry> MapField2s { get; } = new global::System.Collections.Generic.List<global::AllTheThings.Outer.MapField2Entry>();
 
         [global::ProtoBuf.ProtoContract()]
         public partial class MapField1Entry : global::ProtoBuf.IExtensible
@@ -944,18 +1105,29 @@ pqr	stu";
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+            int __pbn_field_presence_0;
             [global::ProtoBuf.ProtoMember(1, Name = @"key", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-            [global::System.ComponentModel.DefaultValue(/* invalid type / value: sint32= */)]
-            public int Key { get; set; } = /* invalid type / value: sint32= */;
+            [global::System.ComponentModel.DefaultValue(0)]
+            public int Key
+            {
+                get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__Key : 0;
+                set { __pbn__Key = value; __pbn_field_presence_0 |= 1; }
+            }
+            public bool ShouldSerializeKey() => (__pbn_field_presence_0 & 1) != 0;
+            public void ResetKey() => __pbn_field_presence_0 &= ~1;
+            private int __pbn__Key;
 
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Value { get; set; } = @"";
+            [global::System.ComponentModel.DefaultValue()]
+            public string Value { get; set; }
 
             internal static void Serialize(MapField1Entry value, ref global::ProtoBuf.Nano.Writer writer)
             {
-                writer.WriteVarint(8); // field 1, varint
-                writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key));
+                if ((value.__pbn_field_presence_0 & 1) != 0)
+                {
+                    writer.WriteVarint(8); // field 1, varint
+                    writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key));
+                }
                 if (value.Value is { Length: > 0} s)
                 {
                     writer.WriteVarint(18); // field 2, string
@@ -966,7 +1138,10 @@ pqr	stu";
             internal static ulong Measure(MapField1Entry value)
             {
                 ulong len = 0;
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key));
+                if ((value.__pbn_field_presence_0 & 1) != 0)
+                {
+                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Key)) + 1;
+                }
                 if (value.Value is { Length: > 0} s)
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
@@ -1019,12 +1194,12 @@ pqr	stu";
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"key")]
-            [global::System.ComponentModel.DefaultValue(@"")]
-            public string Key { get; set; } = @"";
+            [global::System.ComponentModel.DefaultValue()]
+            public string Key { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"value")]
             [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.Outer= */)]
-            public global::AllTheThings.Outer Value { get; set; } = /* invalid type / value: AllTheThings.Outer= */;
+            public global::AllTheThings.Outer Value { get; set; }
 
             internal static void Serialize(MapField2Entry value, ref global::ProtoBuf.Nano.Writer writer)
             {
@@ -1050,7 +1225,7 @@ pqr	stu";
                 }
                 if (value.Value is global::AllTheThings.Outer obj2)
                 {
-                    len += 1 + global::AllTheThings.Outer.Measure(obj2);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.Outer.Measure(obj2));
                 }
                 return len;
             }
@@ -1113,28 +1288,41 @@ pqr	stu";
                 global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                     => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-                [global::ProtoBuf.ProtoMember(1, Name = @"ival")]
-                [global::System.ComponentModel.DefaultValue(/* invalid type / value: int64= */)]
-                public long Ival { get; set; } = /* invalid type / value: int64= */;
+                int __pbn_field_presence_0;
+                [global::ProtoBuf.ProtoMember(1, Name = @"ival", IsRequired = true)]
+                public long Ival { get; set; }
 
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
-                [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
-                public bool Booly { get; set; } = /* invalid type / value: bool= */;
+                [global::System.ComponentModel.DefaultValue(false)]
+                public bool Booly
+                {
+                    get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__Booly : false;
+                    set { __pbn__Booly = value; __pbn_field_presence_0 |= 1; }
+                }
+                public bool ShouldSerializeBooly() => (__pbn_field_presence_0 & 1) != 0;
+                public void ResetBooly() => __pbn_field_presence_0 &= ~1;
+                private bool __pbn__Booly;
 
                 internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
                     writer.WriteVarint(unchecked((ulong)value.Ival));
-                    writer.WriteVarint(16); // field 2, varint
-                    writer.WriteVarint(value.Booly);
+                    if ((value.__pbn_field_presence_0 & 1) != 0)
+                    {
+                        writer.WriteVarint(16); // field 2, varint
+                        writer.WriteVarint(value.Booly);
+                    }
                 }
 
                 internal static ulong Measure(Inner value)
                 {
                     ulong len = 0;
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Ival));
-                    len += 2;
-                    return len;
+                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Ival));
+                    if ((value.__pbn_field_presence_0 & 1) != 0)
+                    {
+                        len += 2;
+                    }
+                    return len + 1;
                 }
 
                 internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
@@ -1221,28 +1409,41 @@ pqr	stu";
                 global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
                     => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-                [global::ProtoBuf.ProtoMember(1, Name = @"ival")]
-                [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-                public int Ival { get; set; } = /* invalid type / value: int32= */;
+                int __pbn_field_presence_0;
+                [global::ProtoBuf.ProtoMember(1, Name = @"ival", IsRequired = true)]
+                public int Ival { get; set; }
 
                 [global::ProtoBuf.ProtoMember(2, Name = @"booly")]
-                [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
-                public bool Booly { get; set; } = /* invalid type / value: bool= */;
+                [global::System.ComponentModel.DefaultValue(false)]
+                public bool Booly
+                {
+                    get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__Booly : false;
+                    set { __pbn__Booly = value; __pbn_field_presence_0 |= 1; }
+                }
+                public bool ShouldSerializeBooly() => (__pbn_field_presence_0 & 1) != 0;
+                public void ResetBooly() => __pbn_field_presence_0 &= ~1;
+                private bool __pbn__Booly;
 
                 internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
                     writer.WriteVarint(unchecked((uint)value.Ival));
-                    writer.WriteVarint(16); // field 2, varint
-                    writer.WriteVarint(value.Booly);
+                    if ((value.__pbn_field_presence_0 & 1) != 0)
+                    {
+                        writer.WriteVarint(16); // field 2, varint
+                        writer.WriteVarint(value.Booly);
+                    }
                 }
 
                 internal static ulong Measure(Inner value)
                 {
                     ulong len = 0;
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Ival));
-                    len += 2;
-                    return len;
+                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Ival));
+                    if ((value.__pbn_field_presence_0 & 1) != 0)
+                    {
+                        len += 2;
+                    }
+                    return len + 1;
                 }
 
                 internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
@@ -1336,11 +1537,11 @@ pqr	stu";
             ulong len = 0;
             if (value.MapField1s is global::AllTheThings.Outer.MapField1Entry obj7)
             {
-                len += 1 + global::AllTheThings.Outer.MapField1Entry.Measure(obj7);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.Outer.MapField1Entry.Measure(obj7));
             }
             if (value.MapField2s is global::AllTheThings.Outer.MapField2Entry obj8)
             {
-                len += 1 + global::AllTheThings.Outer.MapField2Entry.Measure(obj8);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.Outer.MapField2Entry.Measure(obj8));
             }
             return len;
         }
@@ -1403,8 +1604,8 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        [global::System.ComponentModel.DefaultValue(@"")]
-        public string Result { get; set; } = @"";
+        [global::System.ComponentModel.DefaultValue()]
+        public string Result { get; set; }
 
         internal static void Serialize(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1466,28 +1667,36 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        [global::ProtoBuf.ProtoMember(1, Name = @"required")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-        public int Required { get; set; } = /* invalid type / value: int32= */;
+        int __pbn_field_presence_0;
+        [global::ProtoBuf.ProtoMember(1, Name = @"required", IsRequired = true)]
+        public int Required { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"optional")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-        public int Optional { get; set; } = /* invalid type / value: int32= */;
+        [global::System.ComponentModel.DefaultValue(0)]
+        public int Optional
+        {
+            get => (__pbn_field_presence_0 & 1) != 0 ? __pbn__Optional : 0;
+            set { __pbn__Optional = value; __pbn_field_presence_0 |= 1; }
+        }
+        public bool ShouldSerializeOptional() => (__pbn_field_presence_0 & 1) != 0;
+        public void ResetOptional() => __pbn_field_presence_0 &= ~1;
+        private int __pbn__Optional;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"repeated")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-        public int Repeateds { get; set; } = /* invalid type / value: int32= */;
+        public global::System.Collections.Generic.List<int> Repeateds { get; } = new global::System.Collections.Generic.List<int>();
 
         [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-        public int Packeds { get; set; } = /* invalid type / value: int32= */;
+        public global::System.Collections.Generic.List<int> Packeds { get; } = new global::System.Collections.Generic.List<int>();
 
         internal static void Serialize(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(8); // field 1, varint
             writer.WriteVarint(unchecked((uint)value.Required));
-            writer.WriteVarint(16); // field 2, varint
-            writer.WriteVarint(unchecked((uint)value.Optional));
+            if ((value.__pbn_field_presence_0 & 1) != 0)
+            {
+                writer.WriteVarint(16); // field 2, varint
+                writer.WriteVarint(unchecked((uint)value.Optional));
+            }
             writer.WriteVarint(24); // field 3, varint
             writer.WriteVarint(unchecked((uint)value.Repeateds));
             writer.WriteVarint(32); // field 4, varint
@@ -1497,11 +1706,14 @@ pqr	stu";
         internal static ulong Measure(FieldRules value)
         {
             ulong len = 0;
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Required));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Optional));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Repeateds));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Packeds));
-            return len;
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Required));
+            if ((value.__pbn_field_presence_0 & 1) != 0)
+            {
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Optional)) + 1;
+            }
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Repeateds));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Packeds));
+            return len + 3;
         }
 
         internal static FieldRules Merge(FieldRules value, ref global::ProtoBuf.Nano.Reader reader)
@@ -1554,12 +1766,11 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(536870911, Name = @"hi")]
-        [global::System.ComponentModel.DefaultValue(@"")]
-        public string His { get; set; } = @"";
+        public string[] His { get; set; }
 
         [global::ProtoBuf.ProtoMember(1, Name = @"lo")]
-        [global::System.ComponentModel.DefaultValue(@"")]
-        public string Lo { get; set; } = @"";
+        [global::System.ComponentModel.DefaultValue()]
+        public string Lo { get; set; }
 
         internal static void Serialize(TagRanges value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1718,65 +1929,50 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        [global::ProtoBuf.ProtoMember(1, Name = @"double")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: double= */)]
-        public double Double { get; set; } = /* invalid type / value: double= */;
+        [global::ProtoBuf.ProtoMember(1, Name = @"double", IsRequired = true)]
+        public double Double { get; set; }
 
-        [global::ProtoBuf.ProtoMember(2, Name = @"float")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: float= */)]
-        public float Float { get; set; } = /* invalid type / value: float= */;
+        [global::ProtoBuf.ProtoMember(2, Name = @"float", IsRequired = true)]
+        public float Float { get; set; }
 
-        [global::ProtoBuf.ProtoMember(3, Name = @"int32")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int32= */)]
-        public int Int32 { get; set; } = /* invalid type / value: int32= */;
+        [global::ProtoBuf.ProtoMember(3, Name = @"int32", IsRequired = true)]
+        public int Int32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(4, Name = @"int64")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: int64= */)]
-        public long Int64 { get; set; } = /* invalid type / value: int64= */;
+        [global::ProtoBuf.ProtoMember(4, Name = @"int64", IsRequired = true)]
+        public long Int64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(5, Name = @"uint32")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: uint32= */)]
-        public uint Uint32 { get; set; } = /* invalid type / value: uint32= */;
+        [global::ProtoBuf.ProtoMember(5, Name = @"uint32", IsRequired = true)]
+        public uint Uint32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(6, Name = @"uint64")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: uint64= */)]
-        public ulong Uint64 { get; set; } = /* invalid type / value: uint64= */;
+        [global::ProtoBuf.ProtoMember(6, Name = @"uint64", IsRequired = true)]
+        public ulong Uint64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(7, Name = @"sint32", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sint32= */)]
-        public int Sint32 { get; set; } = /* invalid type / value: sint32= */;
+        [global::ProtoBuf.ProtoMember(7, Name = @"sint32", DataFormat = global::ProtoBuf.DataFormat.ZigZag, IsRequired = true)]
+        public int Sint32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(8, Name = @"sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sint64= */)]
-        public long Sint64 { get; set; } = /* invalid type / value: sint64= */;
+        [global::ProtoBuf.ProtoMember(8, Name = @"sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag, IsRequired = true)]
+        public long Sint64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(9, Name = @"fixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: fixed32= */)]
-        public uint Fixed32 { get; set; } = /* invalid type / value: fixed32= */;
+        [global::ProtoBuf.ProtoMember(9, Name = @"fixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        public uint Fixed32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(10, Name = @"fixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: fixed64= */)]
-        public ulong Fixed64 { get; set; } = /* invalid type / value: fixed64= */;
+        [global::ProtoBuf.ProtoMember(10, Name = @"fixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        public ulong Fixed64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(11, Name = @"sfixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sfixed32= */)]
-        public int Sfixed32 { get; set; } = /* invalid type / value: sfixed32= */;
+        [global::ProtoBuf.ProtoMember(11, Name = @"sfixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        public int Sfixed32 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(12, Name = @"sfixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: sfixed64= */)]
-        public long Sfixed64 { get; set; } = /* invalid type / value: sfixed64= */;
+        [global::ProtoBuf.ProtoMember(12, Name = @"sfixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize, IsRequired = true)]
+        public long Sfixed64 { get; set; }
 
-        [global::ProtoBuf.ProtoMember(13, Name = @"bool")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool= */)]
-        public bool Bool { get; set; } = /* invalid type / value: bool= */;
+        [global::ProtoBuf.ProtoMember(13, Name = @"bool", IsRequired = true)]
+        public bool Bool { get; set; }
 
-        [global::ProtoBuf.ProtoMember(14, Name = @"string")]
-        [global::System.ComponentModel.DefaultValue(@"")]
-        public string String { get; set; } = @"";
+        [global::ProtoBuf.ProtoMember(14, Name = @"string", IsRequired = true)]
+        public string String { get; set; }
 
-        [global::ProtoBuf.ProtoMember(15, Name = @"bytes")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bytes= */)]
-        public byte[] Bytes { get; set; } = /* invalid type / value: bytes= */;
+        [global::ProtoBuf.ProtoMember(15, Name = @"bytes", IsRequired = true)]
+        public byte[] Bytes { get; set; }
 
         internal static void Serialize(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
@@ -1821,19 +2017,12 @@ pqr	stu";
         internal static ulong Measure(PrimitiveFieldTypes value)
         {
             ulong len = 0;
-            len += 9;
-            len += 5;
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Int32));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Int64));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint32);
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint64);
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint32));
-            len += 1 + global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint64));
-            len += 5;
-            len += 9;
-            len += 5;
-            len += 9;
-            len += 2;
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Int32));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Int64));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint32);
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint64);
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint32));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint64));
             if (value.String is { Length: > 0} s)
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
@@ -1842,7 +2031,7 @@ pqr	stu";
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
             }
-            return len;
+            return len + 50;
         }
 
         internal static PrimitiveFieldTypes Merge(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Reader reader)
@@ -1953,9 +2142,9 @@ pqr	stu";
     [global::System.ServiceModel.ServiceContract(Name = @"SearchService")]
     public partial interface IISearchService
     {
-        global::System.Threading.Tasks.ValueTask<global::AllTheThings.SearchResponse> SearchAsync(global::System.Collections.Generic.<global::AllTheThings.SearchRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
+        global::System.Threading.Tasks.ValueTask<global::AllTheThings.SearchResponse> SearchAsync(global::System.Collections.Generic.IAsyncEnumerable<global::AllTheThings.SearchRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
 
-        global::System.Collections.Generic.<global::AllTheThings.SearchResponse> OldMethodAsync(global::System.Threading.Tasks.ValueTask<global::AllTheThings.SearchRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
+        global::System.Collections.Generic.IAsyncEnumerable<global::AllTheThings.SearchResponse> OldMethodAsync(global::System.Threading.Tasks.ValueTask<global::AllTheThings.SearchRequest> value, global::ProtoBuf.Grpc.CallContext context = default);
 
     }
 

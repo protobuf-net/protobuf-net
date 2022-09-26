@@ -34,6 +34,9 @@ internal class CodeGenMessage : CodeGenType
     [DefaultValue(false)]
     public bool IsDeprecated { get; set; }
 
+    [DefaultValue(false)]
+    public bool IsValueType { get; set; }
+
     [DefaultValue(Access.Public)]
     public Access Access { get; set; } = Access.Public;
 
@@ -51,9 +54,15 @@ internal class CodeGenMessage : CodeGenType
 
         if (message.Fields.Count > 0)
         {
+            int nextFieldTrackingIndex = 0;
             foreach (var field in message.Fields)
             {
-                newMessage.Fields.Add(CodeGenField.Parse(field, context));
+                var parsed = CodeGenField.Parse(field, context);
+                if (parsed.Conditional == ConditionalKind.FieldPresence)
+                {
+                    parsed.FieldPresenceIndex = nextFieldTrackingIndex++;
+                }
+                newMessage.Fields.Add(parsed);
             }
         }
 

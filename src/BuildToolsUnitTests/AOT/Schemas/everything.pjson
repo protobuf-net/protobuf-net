@@ -2,6 +2,387 @@
   "Files": [
     {
       "Name": "everything.cs",
+      "Services": [
+        {
+          "Name": "IISearchService",
+          "Package": "AllTheThings",
+          "ServiceMethods": [
+            {
+              "Name": "SearchAsync",
+              "RequestType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
+                  "Enums": [
+                    {
+                      "OriginalName": "corpus",
+                      "Name": "CorpusValue",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    },
+                    {
+                      "EnumValues": [
+                        {
+                          "Name": "Universal",
+                          "OriginalName": "UNIVERSAL"
+                        },
+                        {
+                          "Name": "Web",
+                          "Value": 1,
+                          "OriginalName": "WEB"
+                        },
+                        {
+                          "Name": "Images",
+                          "Value": 2,
+                          "OriginalName": "IMAGES"
+                        },
+                        {
+                          "Name": "Local",
+                          "Value": 3,
+                          "OriginalName": "LOCAL"
+                        },
+                        {
+                          "Name": "News",
+                          "Value": 4,
+                          "OriginalName": "NEWS"
+                        },
+                        {
+                          "Name": "Products",
+                          "Value": 5,
+                          "OriginalName": "PRODUCTS"
+                        },
+                        {
+                          "Name": "Video",
+                          "Value": 6,
+                          "OriginalName": "VIDEO"
+                        }
+                      ],
+                      "TypeName": "int32",
+                      "Name": "Corpus",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Query",
+                      "OriginalName": "query"
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "int32",
+                      "Name": "PageNumber",
+                      "OriginalName": "page_number"
+                    },
+                    {
+                      "FieldNumber": 3,
+                      "TypeName": "int32",
+                      "Name": "ResultPerPage",
+                      "OriginalName": "result_per_page"
+                    }
+                  ],
+                  "Name": "SearchRequest",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ResponseType": {
+                "Representation": "ValueTask",
+                "RawType": {
+                  "Messages": [
+                    {
+                      "Fields": [
+                        {
+                          "FieldNumber": 1,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url"
+                        },
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets"
+                        }
+                      ],
+                      "Name": "Result",
+                      "Package": "AllTheThings",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets"
+                        }
+                      ],
+                      "Name": "Grouped",
+                      "Package": "AllTheThings",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets"
+                        }
+                      ],
+                      "Name": "Upper",
+                      "OriginalName": "UPPER",
+                      "Package": "AllTheThings",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "AllTheThings.SearchResponse+Result",
+                      "Name": "Results",
+                      "OriginalName": "result"
+                    },
+                    {
+                      "FieldNumber": 10,
+                      "TypeName": "AllTheThings.SearchResponse+Grouped",
+                      "Name": "Groupeds",
+                      "OriginalName": "grouped"
+                    },
+                    {
+                      "FieldNumber": 12,
+                      "TypeName": "AllTheThings.SearchResponse+Upper",
+                      "Name": "UpperValue",
+                      "OriginalName": "upper"
+                    }
+                  ],
+                  "Name": "SearchResponse",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ParametersDescriptor": "HasCallContext"
+            },
+            {
+              "Name": "OldMethodAsync",
+              "RequestType": {
+                "Representation": "ValueTask",
+                "RawType": {
+                  "Enums": [
+                    {
+                      "OriginalName": "corpus",
+                      "Name": "CorpusValue",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    },
+                    {
+                      "EnumValues": [
+                        {
+                          "Name": "Universal",
+                          "OriginalName": "UNIVERSAL"
+                        },
+                        {
+                          "Name": "Web",
+                          "Value": 1,
+                          "OriginalName": "WEB"
+                        },
+                        {
+                          "Name": "Images",
+                          "Value": 2,
+                          "OriginalName": "IMAGES"
+                        },
+                        {
+                          "Name": "Local",
+                          "Value": 3,
+                          "OriginalName": "LOCAL"
+                        },
+                        {
+                          "Name": "News",
+                          "Value": 4,
+                          "OriginalName": "NEWS"
+                        },
+                        {
+                          "Name": "Products",
+                          "Value": 5,
+                          "OriginalName": "PRODUCTS"
+                        },
+                        {
+                          "Name": "Video",
+                          "Value": 6,
+                          "OriginalName": "VIDEO"
+                        }
+                      ],
+                      "TypeName": "int32",
+                      "Name": "Corpus",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Query",
+                      "OriginalName": "query"
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "int32",
+                      "Name": "PageNumber",
+                      "OriginalName": "page_number"
+                    },
+                    {
+                      "FieldNumber": 3,
+                      "TypeName": "int32",
+                      "Name": "ResultPerPage",
+                      "OriginalName": "result_per_page"
+                    }
+                  ],
+                  "Name": "SearchRequest",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ResponseType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
+                  "Messages": [
+                    {
+                      "Fields": [
+                        {
+                          "FieldNumber": 1,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url"
+                        },
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets"
+                        }
+                      ],
+                      "Name": "Result",
+                      "Package": "AllTheThings",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets"
+                        }
+                      ],
+                      "Name": "Grouped",
+                      "Package": "AllTheThings",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets"
+                        }
+                      ],
+                      "Name": "Upper",
+                      "OriginalName": "UPPER",
+                      "Package": "AllTheThings",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "AllTheThings.SearchResponse+Result",
+                      "Name": "Results",
+                      "OriginalName": "result"
+                    },
+                    {
+                      "FieldNumber": 10,
+                      "TypeName": "AllTheThings.SearchResponse+Grouped",
+                      "Name": "Groupeds",
+                      "OriginalName": "grouped"
+                    },
+                    {
+                      "FieldNumber": 12,
+                      "TypeName": "AllTheThings.SearchResponse+Upper",
+                      "Name": "UpperValue",
+                      "OriginalName": "upper"
+                    }
+                  ],
+                  "Name": "SearchResponse",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ParametersDescriptor": "HasCallContext"
+            }
+          ],
+          "FullyQualifiedPrefix": "AllTheThings."
+        }
+      ],
       "Messages": [
         {
           "Fields": [

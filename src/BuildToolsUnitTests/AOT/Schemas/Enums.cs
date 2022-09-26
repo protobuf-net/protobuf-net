@@ -18,24 +18,30 @@ namespace BasicPackage
 
         [global::ProtoBuf.ProtoMember(2, Name = @"corpus")]
         [global::System.ComponentModel.DefaultValue(/* invalid type / value: BasicPackage.Corpus= */)]
-        public global::BasicPackage.Corpus Corpus { get; set; } = /* invalid type / value: BasicPackage.Corpus= */;
+        public global::BasicPackage.Corpus Corpus { get; set; }
 
         internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Corpus is global::BasicPackage.Corpus obj2)
+            if (value.Corpus != /* invalid type / value: BasicPackage.Corpus= */)
             {
-                writer.WriteVarint(18); // field 2, string
-                writer.WriteVarintUInt64(global::BasicPackage.Corpus.Measure(obj2);
-                global::BasicPackage.Corpus.Write(obj2, ref writer);
+                if (value.Corpus is global::BasicPackage.Corpus obj2)
+                {
+                    writer.WriteVarint(18); // field 2, string
+                    writer.WriteVarintUInt64(global::BasicPackage.Corpus.Measure(obj2);
+                    global::BasicPackage.Corpus.Write(obj2, ref writer);
+                }
             }
         }
 
         internal static ulong Measure(SearchRequest value)
         {
             ulong len = 0;
-            if (value.Corpus is global::BasicPackage.Corpus obj2)
+            if (value.Corpus != /* invalid type / value: BasicPackage.Corpus= */)
             {
-                len += 1 + global::BasicPackage.Corpus.Measure(obj2);
+                if (value.Corpus is global::BasicPackage.Corpus obj2)
+                {
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::BasicPackage.Corpus.Measure(obj2));
+                }
             }
             return len;
         }

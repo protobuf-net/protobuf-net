@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-/// <summary>
+/// <summary>FormatDefaultValue
 /// A code generator that writes C#
 /// </summary>
 internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
@@ -380,12 +380,9 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
                 ctx.WriteLine($"{Escape(field.BackingName)} = new global::System.Collections.Generic.List<{GetEscapedTypeName(ctx, field.Type, out _)}>();");
             }
         }
-        else if (!field.TrackFieldPresence)
+        else if (field.Conditional is not ConditionalKind.FieldPresence or ConditionalKind.NullableT && !string.IsNullOrEmpty(field.DefaultValue))
         {
-            if (field.DefaultValue is not null)
-            {
-                ctx.WriteLine($"{Escape(field.BackingName)} = {FormatDefaultValue(field)};");
-            }
+            ctx.WriteLine($"{Escape(field.BackingName)} = {FormatDefaultValue(field)};");
         }
     }
 
@@ -584,19 +581,46 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         //        ctx.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
         //    }
         //}
-        else if (field.TrackFieldPresence)
+        else if (field.Conditional == ConditionalKind.FieldPresence)
         {
-            string fieldName = FieldPrefix + escapedName, fieldType;
-            bool isRef = false;
-            if (field.Type.IsWellKnownType(out var known) && (known == CodeGenWellKnownType.String || known == CodeGenWellKnownType.Bytes))
+            if (!field.TryGetPresence(out var fieldIndex, out var mask))
             {
-                fieldType = typeName;
-                isRef = true;
+                ctx.WriteLine($"#warning field presence not configured for {field.Name}");
+            }
+            string fieldName = FieldPrefix + escapedName;
+            ctx.WriteLine($"{GetAccess(field.Access)} {typeName} {escapedName}").WriteLine("{").Indent();
+            tw = ctx.Write(PropGetPrefix());
+            tw.Write($"({CodeGenField.PresenceTrackingFieldName}{fieldIndex} & {mask}) != 0 ? {fieldName} : ");
+            if (field.DefaultValue is not null)
+            {
+                tw.Write(FormatDefaultValue(field));
             }
             else
             {
-                fieldType = typeName + "?";
+                tw.Write("default");
             }
+            tw.Write(";");
+            tw.WriteLine(PropSuffix());
+
+            ctx.WriteLine($"set {{ {fieldName} = value; {CodeGenField.PresenceTrackingFieldName}{fieldIndex} |= {mask}; }}")
+                .Outdent().WriteLine("}");
+            if (ctx.Supports(CSharp6))
+            {
+                ctx.WriteLine($"{GetAccess(field.Access)} bool ShouldSerialize{escapedName}() => ({CodeGenField.PresenceTrackingFieldName}{fieldIndex} & {mask}) != 0;")
+                .WriteLine($"{GetAccess(field.Access)} void Reset{escapedName}() => {CodeGenField.PresenceTrackingFieldName}{fieldIndex} &= ~{mask};");
+            }
+            else
+            {
+                ctx.WriteLine($"{GetAccess(field.Access)} bool ShouldSerialize{escapedName}()").WriteLine("{").Indent()
+                    .WriteLine($"return ({CodeGenField.PresenceTrackingFieldName}{fieldIndex} & {mask}) != 0;").Outdent().WriteLine("}")
+                    .WriteLine($"{GetAccess(field.Access)} void Reset{escapedName}()").WriteLine("{").Indent()
+                    .WriteLine($"{CodeGenField.PresenceTrackingFieldName}{fieldIndex} &= ~{mask};").Outdent().WriteLine("}");
+            }
+            ctx.WriteLine($"private {typeName} {fieldName};");
+        }
+        else if (field.Conditional == ConditionalKind.NullableT)
+        {
+            string fieldName = FieldPrefix + escapedName;
 
             ctx.WriteLine($"{GetAccess(field.Access)} {typeName} {escapedName}").WriteLine("{").Indent();
             tw = ctx.Write(PropGetPrefix());
@@ -606,7 +630,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
                 tw.Write(" ?? ");
                 tw.Write(FormatDefaultValue(field));
             }
-            else if (!isRef)
+            else
             {
                 tw.Write(".GetValueOrDefault()");
             }
@@ -627,12 +651,12 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
                     .WriteLine($"{GetAccess(field.Access)} void Reset{escapedName}()").WriteLine("{").Indent()
                     .WriteLine($"{fieldName} = null;").Outdent().WriteLine("}");
             }
-            ctx.WriteLine($"private {fieldType} {fieldName};");
+            ctx.WriteLine($"private {typeName}? {fieldName};");
         }
         else
         {
             tw = ctx.Write($"{GetAccess(field.Access)} {typeName} {escapedName} {{ get; set; }}");
-            if (field.DefaultValue is not null && ctx.Supports(CSharp6)) tw.Write($" = {FormatDefaultValue(field)};");
+            if (!string.IsNullOrEmpty(field.DefaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {FormatDefaultValue(field)};");
             tw.WriteLine();
         }
         ctx.WriteLine();
@@ -640,6 +664,18 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         string PropGetPrefix() => ctx.Supports(CSharp7) ? "get => " : "get { return ";
         string PropSetPrefix() => ctx.Supports(CSharp7) ? "set => " : "set { ";
         string PropSuffix() => ctx.Supports(CSharp7) ? "" : " }";
+    }
+
+    protected override void WriteFieldPresence(CodeGenGeneratorContext ctx, int maxFieldPresenceIndex)
+    {
+        if (maxFieldPresenceIndex < 0) return;
+        var maxField = maxFieldPresenceIndex >> 5;
+        var tw = ctx.Write($"int {CodeGenField.PresenceTrackingFieldName}0");
+        for (int i = 1; i < maxField; i++)
+        {
+            tw.Write($", {CodeGenField.PresenceTrackingFieldName}{i}");
+        }
+        tw.WriteLine(";");
     }
 
     //private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;

@@ -1,8 +1,10 @@
 ﻿#nullable enable
 
 using Google.Protobuf.Reflection;
+using ProtoBuf.Meta;
 using System;
 using System.ComponentModel;
+using System.Text;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -13,6 +15,7 @@ internal class CodeGenField
         FieldNumber = fieldNumber;
         BackingName = OriginalName = Name = name?.Trim() ?? "";;
     }
+    public const string PresenceTrackingFieldName = "__pbn_field_presence_";
     public int FieldNumber { get; }
     public CodeGenType Type { get; set; } = CodeGenUnknownType.Instance;
 
@@ -25,8 +28,6 @@ internal class CodeGenField
     public string OriginalName { get; set; } // the name in the schema (not used in code, except in the [ProtoMember(..., Name = ...)]
     [DefaultValue(false)]
     public bool IsRepeated { get; set; }
-    [DefaultValue(false)]
-    public bool TrackFieldPresence { get; set; }
     [DefaultValue(false)]
     public bool AsReference { get; set; }
     [DefaultValue(false)]
@@ -42,7 +43,12 @@ internal class CodeGenField
 
     [DefaultValue(ConditionalKind.Always)]
     public ConditionalKind Conditional { get; set; } = ConditionalKind.Always;
+
+    [DefaultValue(-1)]
+    public int FieldPresenceIndex { get; set; } = -1;
     public string? DefaultValue { get; set; }
+    [DefaultValue(false)]
+    public bool IsGroup { get; set; }
 
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     public bool ShouldSerializeBackingName() => BackingName != Name;
@@ -76,8 +82,68 @@ internal class CodeGenField
             },
             DefaultValue = field.DefaultValue,
         };
+        
+        switch (field.label)
+        {
+            case FieldDescriptorProto.Label.LabelRequired:
+                newField.IsRequired = true;
+                break;
+            case FieldDescriptorProto.Label.LabelOptional when (field.Proto3Optional || IsProto2(field.Parent as IType)):
+                newField.IsRequired = false;
+                newField.Conditional = IsRefType(newField.Type) ? ConditionalKind.Always : ConditionalKind.FieldPresence;
+                break;
+            case FieldDescriptorProto.Label.LabelOptional:
+                newField.IsRequired = false;
+                newField.Conditional = IsRefType(newField.Type) ? ConditionalKind.Always : ConditionalKind.NonDefault;
+                break;
+            case FieldDescriptorProto.Label.LabelRepeated:
+                newField.IsRepeated = true;
+                break;
+        }
+
+        static bool IsRefType(CodeGenType type)
+        {
+            if (type.IsWellKnownType(out var known))
+            {
+                return known switch
+                {
+                    CodeGenWellKnownType.String or CodeGenWellKnownType.Bytes or CodeGenWellKnownType.NetObjectProxy => true,
+                    _ => false,
+                };
+            }
+            return type is CodeGenMessage msg && !msg.IsValueType;
+        }
 
         return newField;
+
+        static bool IsProto2(IType? obj)
+        {
+            while (obj != null)
+            {
+                if (obj is FileDescriptorProto fdp)
+                {
+                    return string.IsNullOrWhiteSpace(fdp.Syntax) || fdp.Syntax == FileDescriptorProto.SyntaxProto2;
+                }
+                obj = obj.Parent;
+            }
+            return false;
+        }
+    }
+
+    internal bool TryGetPresence(out int fieldIndex, out int mask)
+    {
+        var fpi = FieldPresenceIndex;
+        if (fpi >= 0)
+        {
+            fieldIndex = fpi >> 5;
+            mask = 1 << (fpi & 0b11111);
+            return true;
+        }
+        else
+        {
+            fieldIndex = mask = 0;
+            return false;
+        }
     }
 }
 
@@ -91,4 +157,5 @@ internal enum ConditionalKind
     NonDefault,
     /// <summary>Active assignment is tracked and used for conditionality</summary>
     FieldPresence,
+    NullableT,
 }

@@ -205,6 +205,15 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             }
             WriteConstructorFooter(ctx, message, ref state);
         }
+        int maxFP = -1;
+        foreach (var inner in message.Fields)
+        {
+            if (inner.FieldPresenceIndex > maxFP) maxFP = inner.FieldPresenceIndex;
+        }
+        if (maxFP >= 0)
+        {
+            WriteFieldPresence(ctx, maxFP);
+        }
         foreach (var inner in message.Fields)
         {
             WriteField(ctx, inner, ref state);
@@ -260,6 +269,11 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// Emit code representing a message field
     /// </summary>
     protected abstract void WriteField(CodeGenGeneratorContext ctx, CodeGenField field, ref object state);
+
+    /// <summary>
+    /// Emit code defining field-presence tracking fields
+    /// </summary>
+    protected abstract void WriteFieldPresence(CodeGenGeneratorContext ctx, int maxFieldPresenceIndex);
 
     /// <summary>
     /// Emit code following a set of message fields

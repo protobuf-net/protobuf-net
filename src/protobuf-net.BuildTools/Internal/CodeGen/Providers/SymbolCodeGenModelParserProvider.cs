@@ -2,6 +2,7 @@
 using ProtoBuf.Internal.CodeGen.Abstractions;
 using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers;
+using ProtoBuf.Meta;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Providers;
@@ -16,9 +17,9 @@ internal class SymbolCodeGenModelParserProvider
     private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenEnum> _enumPropertyParser;
     private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> _fieldPropertyParser; 
     private ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> _enumValueParser; 
-    
+
     public CodeGenParseContext CodeGenParseContext { get; }
-    
+
     public SymbolCodeGenModelParserProvider()
     {
         CodeGenParseContext = new CodeGenParseContext();
