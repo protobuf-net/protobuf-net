@@ -7,8 +7,10 @@
       "Name": "Enums.cs",
       "Messages": [
         {
+          "Emit": "DataContract, DataSerializer",
           "Enums": [
             {
+              "Emit": "None",
               "OriginalName": "corpus",
               "Name": "Corpus",
               "FullyQualifiedPrefix": "BasicPackage.SearchRequest+"
@@ -21,6 +23,7 @@
       ],
       "Enums": [
         {
+          "Emit": "None",
           "EnumValues": [
             {
               "Name": "CorpusUnspecified",

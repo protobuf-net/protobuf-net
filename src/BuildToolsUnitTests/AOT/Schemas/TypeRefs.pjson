@@ -7,6 +7,7 @@
       "Name": "TypeRefs.cs",
       "Messages": [
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -39,8 +40,10 @@
           "FullyQualifiedPrefix": "TypeRefs."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Messages": [
             {
+              "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
                   "FieldNumber": 1,
@@ -105,6 +108,7 @@
           "FullyQualifiedPrefix": "TypeRefs."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,

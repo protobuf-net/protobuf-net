@@ -22,6 +22,7 @@ internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParse
             {
                 OriginalName = originalName,
                 Type = symbol.Type.TryResolveKnownCodeGenType(dataFormat),
+                Emit = CodeGenGenerate.None, // nothing to emit
             };
         
             return codeGenField;

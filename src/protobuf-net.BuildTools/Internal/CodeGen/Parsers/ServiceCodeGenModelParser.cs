@@ -54,7 +54,8 @@ internal sealed class ServiceCodeGenModelParser : SymbolCodeGenModelParserBase<I
     {
         var codeGenMessage = new CodeGenService(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {
-            Package = _namespaceParseContext.NamespaceName
+            Package = _namespaceParseContext.NamespaceName,
+            Emit = CodeGenGenerate.ServiceContract | CodeGenGenerate.ServiceProxy, // everything else is in the existing code
         };
 
         // var protoContractAttributeClass = protoContractAttributeData.AttributeClass!;
@@ -80,7 +81,7 @@ internal sealed class ServiceCodeGenModelParser : SymbolCodeGenModelParserBase<I
         //         }
         //         break;
         // }
-        
+
         return codeGenMessage;
     }
     

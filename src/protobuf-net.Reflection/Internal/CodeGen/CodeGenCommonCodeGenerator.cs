@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System;
 using System.Linq;
+using System.ComponentModel;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -192,40 +193,48 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// </summary>
     protected virtual void WriteMessage(CodeGenGeneratorContext ctx, CodeGenMessage message)
     {
+        if (!ctx.ShouldEmit(CodeGenGenerate.DataContract, message.Emit)) return;
+        
         object state = null;
 
         WriteMessageHeader(ctx, message, ref state);
         //var oneOfs = OneOfStub.Build(message);
 
-        if (WriteContructorHeader(ctx, message, ref state))
+        if (ctx.ShouldEmit(CodeGenGenerate.DataConstructor, message.Emit))
         {
+            if (WriteContructorHeader(ctx, message, ref state))
+            {
+                foreach (var inner in message.Fields)
+                {
+                    WriteInitField(ctx, inner, ref state);
+                }
+                WriteConstructorFooter(ctx, message, ref state);
+            }
+        }
+        if (ctx.ShouldEmit(CodeGenGenerate.DataField, message.Emit))
+        {
+            int maxFP = -1;
             foreach (var inner in message.Fields)
             {
-                WriteInitField(ctx, inner, ref state);
+                if (inner.Conditional == ConditionalKind.FieldPresence && inner.FieldPresenceIndex > maxFP) maxFP = inner.FieldPresenceIndex;
             }
-            WriteConstructorFooter(ctx, message, ref state);
-        }
-        int maxFP = -1;
-        foreach (var inner in message.Fields)
-        {
-            if (inner.Conditional == ConditionalKind.FieldPresence && inner.FieldPresenceIndex > maxFP) maxFP = inner.FieldPresenceIndex;
-        }
-        if (maxFP >= 0)
-        {
-            WriteFieldPresence(ctx, maxFP);
-        }
-        foreach (var inner in message.Fields)
-        {
-            WriteField(ctx, inner, ref state);
-        }
+            if (maxFP >= 0)
+            {
+                WriteFieldPresence(ctx, maxFP);
+            }
+            foreach (var inner in message.Fields)
+            {
+                WriteField(ctx, inner, ref state);
+            }
 
-        //if (oneOfs != null)
-        //{
-        //    foreach (var stub in oneOfs)
-        //    {
-        //        WriteOneOf(ctx, stub);
-        //    }
-        //}
+            //if (oneOfs != null)
+            //{
+            //    foreach (var stub in oneOfs)
+            //    {
+            //        WriteOneOf(ctx, stub);
+            //    }
+            //}
+        }
 
         foreach (var inner in message.Messages)
         {
@@ -245,7 +254,10 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         //    }
         //    WriteExtensionsFooter(ctx, message, ref extState);
         //}
-        WriteMessageSerializer(ctx, message, ref state);
+        if (ctx.ShouldEmit(CodeGenGenerate.DataSerializer, message.Emit))
+        {
+            WriteMessageSerializer(ctx, message, ref state);
+        }
         WriteMessageFooter(ctx, message, ref state);
     }
 
@@ -295,14 +307,17 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// </summary>
     protected virtual void WriteEnum(CodeGenGeneratorContext ctx, CodeGenEnum obj)
     {
-        object state = null;
-        WriteEnumHeader(ctx, obj, ref state);
-        foreach (var enumValue in obj.EnumValues)
+        if (ctx.ShouldEmit(CodeGenGenerate.DataContract, obj.Emit))
         {
-            WriteEnumValue(ctx, enumValue, ref state);
+            object state = null;
+            WriteEnumHeader(ctx, obj, ref state);
+            foreach (var enumValue in obj.EnumValues)
+            {
+                WriteEnumValue(ctx, enumValue, ref state);
+            }
+            // WriteEnumSerializer(...);
+            WriteEnumFooter(ctx, obj, ref state);
         }
-        // WriteEnumSerializer(...);
-        WriteEnumFooter(ctx, obj, ref state);
     }
     
     /// <summary>
@@ -310,13 +325,21 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// </summary>
     protected virtual void WriteService(CodeGenGeneratorContext ctx, CodeGenService obj)
     {
+        if (!ctx.ShouldEmit(CodeGenGenerate.ServiceContract, obj.Emit)) return;
+
         object state = null;
         WriteServiceHeader(ctx, obj, ref state);
-        foreach (var serviceMethod in obj.ServiceMethods)
+        if (ctx.ShouldEmit(CodeGenGenerate.ServiceOperation, obj.Emit))
         {
-            WriteServiceMethod(ctx, serviceMethod, ref state);
+            foreach (var serviceMethod in obj.ServiceMethods)
+            {
+                WriteServiceMethod(ctx, serviceMethod, ref state);
+            }
         }
-        // WriteServiceSerializer(...);
+        if (ctx.ShouldEmit(CodeGenGenerate.ServiceProxy, obj.Emit))
+        {
+            // WriteServiceSerializer(...);
+        }
         WriteServiceFooter(ctx, obj, ref state);
     }
 
@@ -440,6 +463,12 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// </summary>
     protected class CodeGenGeneratorContext
     {
+        [DefaultValue(CodeGenGenerate.All)]
+        public CodeGenGenerate Emit { get; set; } = CodeGenGenerate.All;
+
+        internal bool ShouldEmit(CodeGenGenerate demand, CodeGenGenerate value)
+            => (demand & value & Emit) != 0;
+
         /// <summary>
         /// The file being processed
         /// </summary>
@@ -472,11 +501,18 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             if (options != null) options.TryGetValue("langver", out langver); // explicit option first
             if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
 
+            var emit = CodeGenGenerate.All;
+            if (options is not null && options.TryGetValue("emit", out var emitRaw) && Enum.TryParse<CodeGenGenerate>(emitRaw, true, out var emitParsed))
+            {
+                emit = emitParsed;
+            }
+
             File = file;
             Output = output;
             IndentToken = indentToken;
 
             LanguageVersion = ParseVersion(langver);
+            Emit = emit;
             EmitRequiredDefaults = false; // file.Options.GetOptions()?.EmitRequiredDefaults ?? false;
             _options = options;
 

@@ -4,11 +4,32 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 using ProtoBuf.Internal.CodeGen;
+using System;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
+[Flags]
+internal enum CodeGenGenerate
+{
+    None = 0,
+
+    DataContract = 1 << 0, // anything at all
+    DataContractFeatures = 1 << 1, // attribs etc
+    DataField = 1 << 2,
+    DataSerializer = 1 << 3,
+    DataConstructor = 1 << 4,
+
+    ServiceContract = 1 << 16, // anything at all
+    ServiceContractFeatures = 1 << 17, // attribs etc
+    ServiceOperation = 1 << 18, // methods
+    ServiceProxy = 1 << 19,
+
+    All = ~None,
+}
 internal class CodeGenMessage : CodeGenType
 {
+    [DefaultValue(CodeGenGenerate.All)]
+    public CodeGenGenerate Emit { get; set; } = CodeGenGenerate.All;
     internal CodeGenMessage(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
     {
         OriginalName = base.Name;

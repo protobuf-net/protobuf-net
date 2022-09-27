@@ -49,7 +49,10 @@ internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGe
     
     private CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
-        var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix());
+        var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
+        {
+            Emit = CodeGenGenerate.None, // nothing to emit
+        };
         
         // enum can have an underlying type such as
         // 'public enum MyValues : byte'

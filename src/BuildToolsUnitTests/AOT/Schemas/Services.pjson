@@ -7,6 +7,7 @@
       "Name": "Services.cs",
       "Services": [
         {
+          "Emit": "ServiceContract, ServiceProxy",
           "Name": "IIGreeter",
           "Package": "GrpcGreeter",
           "ServiceMethods": [
@@ -20,6 +21,7 @@
               "ResponseType": {
                 "Representation": "AsyncEnumerable",
                 "RawType": {
+                  "Emit": "DataContract, DataSerializer",
                   "Fields": [
                     {
                       "FieldNumber": 1,
@@ -40,6 +42,7 @@
       ],
       "Messages": [
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -53,6 +56,7 @@
           "FullyQualifiedPrefix": "GrpcGreeter."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,

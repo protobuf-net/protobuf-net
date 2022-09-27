@@ -7,6 +7,7 @@
       "Name": "everything.cs",
       "Services": [
         {
+          "Emit": "ServiceContract, ServiceProxy",
           "Name": "IISearchService",
           "Package": "AllTheThings",
           "ServiceMethods": [
@@ -20,8 +21,10 @@
               "ResponseType": {
                 "Representation": "ValueTask",
                 "RawType": {
+                  "Emit": "DataContract, DataSerializer",
                   "Messages": [
                     {
+                      "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
                           "FieldNumber": 1,
@@ -49,6 +52,7 @@
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
+                      "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
                           "FieldNumber": 2,
@@ -76,6 +80,7 @@
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
+                      "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
                           "FieldNumber": 2,
@@ -142,8 +147,10 @@
               "ResponseType": {
                 "Representation": "AsyncEnumerable",
                 "RawType": {
+                  "Emit": "DataContract, DataSerializer",
                   "Messages": [
                     {
+                      "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
                           "FieldNumber": 1,
@@ -171,6 +178,7 @@
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
+                      "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
                           "FieldNumber": 2,
@@ -198,6 +206,7 @@
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
+                      "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
                           "FieldNumber": 2,
@@ -260,6 +269,7 @@
       ],
       "Messages": [
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -283,6 +293,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -338,6 +349,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -381,13 +393,16 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Enums": [
             {
+              "Emit": "None",
               "OriginalName": "corpus",
               "Name": "CorpusValue",
               "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
             },
             {
+              "Emit": "None",
               "EnumValues": [
                 {
                   "Name": "Universal",
@@ -455,8 +470,10 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Messages": [
             {
+              "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
                   "FieldNumber": 1,
@@ -484,6 +501,7 @@
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             },
             {
+              "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
                   "FieldNumber": 2,
@@ -511,6 +529,7 @@
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             },
             {
+              "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
                   "FieldNumber": 2,
@@ -566,10 +585,13 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Messages": [
             {
+              "Emit": "DataContract, DataSerializer",
               "Messages": [
                 {
+                  "Emit": "DataContract, DataSerializer",
                   "Fields": [
                     {
                       "FieldNumber": 1,
@@ -595,8 +617,10 @@
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             },
             {
+              "Emit": "DataContract, DataSerializer",
               "Messages": [
                 {
+                  "Emit": "DataContract, DataSerializer",
                   "Fields": [
                     {
                       "FieldNumber": 1,
@@ -643,6 +667,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -656,6 +681,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -690,6 +716,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 536870911,
@@ -710,16 +737,19 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Name": "Foo",
           "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Name": "Baz",
           "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -825,6 +855,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
               "FieldNumber": 1,
@@ -939,6 +970,7 @@
       ],
       "Enums": [
         {
+          "Emit": "None",
           "EnumValues": [
             {
               "Name": "A"
@@ -953,6 +985,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "None",
           "EnumValues": [
             {
               "Name": "EaaUnknown",
@@ -974,6 +1007,7 @@
           "FullyQualifiedPrefix": "AllTheThings."
         },
         {
+          "Emit": "None",
           "EnumValues": [
             {
               "Name": "EnaaUnknown",

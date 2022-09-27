@@ -133,11 +133,7 @@ public class AOTSchemaTests
             }
         }
 
-        // ******************************************
-        // TODO: un #if this! if this fails, the code is invalid, so the parse step is not very valid
-// #if RELEASE
         Assert.True(result.Success, "generated code does not compile");
-// #endif
         var model = compilation.GetSemanticModel(syntaxTree, false);
         Assert.NotNull(model);
 

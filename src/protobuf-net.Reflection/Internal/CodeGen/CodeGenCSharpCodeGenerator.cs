@@ -215,11 +215,18 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 
     protected override void WriteServiceHeader(CodeGenGeneratorContext ctx, CodeGenService service, ref object state)
     {
-        var tw = ctx.Write("[global::System.ServiceModel.ServiceContract(");
-        if (service.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{service.OriginalName}""");
-        tw.WriteLine(")]");
-        // if (message.IsDeprecated) WriteDeprecated(ctx);
-        ctx.WriteLine($"{GetAccess(service.Access)} partial interface I{Escape(service.Name)}");
+        if (ctx.ShouldEmit(CodeGenGenerate.ServiceContractFeatures, service.Emit))
+        {
+            var tw = ctx.Write("[global::System.ServiceModel.ServiceContract(");
+            if (service.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{service.OriginalName}""");
+            tw.WriteLine(")]");
+            // if (message.IsDeprecated) WriteDeprecated(ctx);
+            ctx.WriteLine($"{GetAccess(service.Access)} partial interface I{Escape(service.Name)}");
+        }
+        else
+        {
+            ctx.WriteLine($"partial interface I{Escape(service.Name)}");
+        }
         ctx.WriteLine("{").Indent();
     }
 
@@ -282,17 +289,24 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     /// </summary>
     protected override void WriteMessageHeader(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
     {
-        var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
-        if (message.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{message.OriginalName}""");
-        tw.WriteLine(")]");
-        if (message.IsDeprecated) WriteDeprecated(ctx);
-        tw = ctx.Write($"{GetAccess(message.Access)} partial class {Escape(message.Name)}");
-        tw.Write(" : global::ProtoBuf.IExtensible");
-        //if (UsePooledMemory(ctx, message))
-        //{
-        //    tw.Write(", global::System.IDisposable");
-        //}
-        tw.WriteLine();
+        if (ctx.ShouldEmit(CodeGenGenerate.DataContractFeatures, message.Emit))
+        {
+            var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
+            if (message.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{message.OriginalName}""");
+            tw.WriteLine(")]");
+            if (message.IsDeprecated) WriteDeprecated(ctx);
+            tw = ctx.Write($"{GetAccess(message.Access)} partial class {Escape(message.Name)}");
+            tw.Write(" : global::ProtoBuf.IExtensible");
+            //if (UsePooledMemory(ctx, message))
+            //{
+            //    tw.Write(", global::System.IDisposable");
+            //}
+            tw.WriteLine();
+        }
+        else
+        {
+            ctx.WriteLine($"partial class {Escape(message.Name)}");
+        }
         ctx.WriteLine("{").Indent();
         //if (message.Options?.MessageSetWireFormat == true)
         //{

@@ -8,6 +8,9 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenService : CodeGenType
 {
+    [DefaultValue(CodeGenGenerate.All)]
+    public CodeGenGenerate Emit { get; set; } = CodeGenGenerate.All;
+
     public CodeGenService(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
     {
         OriginalName = base.Name;

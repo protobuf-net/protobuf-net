@@ -85,7 +85,8 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
     {
         var codeGenMessage = new CodeGenMessage(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {
-            Package = _namespaceParseContext.NamespaceName
+            Package = _namespaceParseContext.NamespaceName,
+            Emit = CodeGenGenerate.DataContract | CodeGenGenerate.DataSerializer, // everything else is in the existing code
         };
 
         var protoContractAttributeClass = protoContractAttributeData.AttributeClass!;
