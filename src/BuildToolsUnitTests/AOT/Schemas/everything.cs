@@ -17,29 +17,27 @@ namespace AllTheThings
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"foo")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.TestNetObject= */)]
         public global::AllTheThings.TestNetObject Foo { get; set; }
 
         [global::ProtoBuf.ProtoMember(2)]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.TestNetObject= */)]
         public global::AllTheThings.TestNetObject barRef { get; set; }
 
         [global::ProtoBuf.ProtoMember(3)]
         [global::System.ComponentModel.DefaultValue(null)]
         public object barDyn { get; set; }
 
-        internal static void Serialize(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Foo is global::AllTheThings.TestNetObject __obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(__obj1);
+                writer.WriteVarint(global::AllTheThings.TestNetObject.Measure(__obj1));
                 global::AllTheThings.TestNetObject.Write(__obj1, ref writer);
             }
             if (value.barRef is global::AllTheThings.TestNetObject __obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarintUInt64(global::AllTheThings.TestNetObject.Measure(__obj2);
+                writer.WriteVarint(global::AllTheThings.TestNetObject.Measure(__obj2));
                 global::AllTheThings.TestNetObject.Write(__obj2, ref writer);
             }
             if (value.barDyn is not null)
@@ -209,7 +207,7 @@ namespace AllTheThings
         [global::ProtoBuf.ProtoMember(8, IsRequired = true)]
         public int requiredWithDefault { get; set; } = 12;
 
-        internal static void Serialize(MagicValues value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(MagicValues value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
@@ -301,58 +299,58 @@ namespace AllTheThings
                 switch (tag)
                 {
                     case 13: // field 1, fixed32
-                        value.A = reader.ReadFixedSingle();
+                        value.A = reader.ReadFixed32Single();
                         break;
                     case 9: // field 1, fixed64
-                        value.A = (float)reader.ReadFixedDouble();
+                        value.A = reader.ReadFixed64Single();
                         break;
                     case 21: // field 2, fixed32
-                        value.B = reader.ReadFixedSingle();
+                        value.B = reader.ReadFixed32Single();
                         break;
                     case 17: // field 2, fixed64
-                        value.B = (float)reader.ReadFixedDouble();
+                        value.B = reader.ReadFixed64Single();
                         break;
                     case 29: // field 3, fixed32
-                        value.C = reader.ReadFixedSingle();
+                        value.C = reader.ReadFixed32Single();
                         break;
                     case 25: // field 3, fixed64
-                        value.C = (float)reader.ReadFixedDouble();
+                        value.C = reader.ReadFixed64Single();
                         break;
                     case 37: // field 4, fixed32
-                        value.D = reader.ReadFixedSingle();
+                        value.D = reader.ReadFixed32Single();
                         break;
                     case 33: // field 4, fixed64
-                        value.D = (float)reader.ReadFixedDouble();
+                        value.D = reader.ReadFixed64Single();
                         break;
                     case 45: // field 5, fixed32
-                        value.E = reader.ReadFixedSingle();
+                        value.E = reader.ReadFixed32Single();
                         break;
                     case 41: // field 5, fixed64
-                        value.E = (float)reader.ReadFixedDouble();
+                        value.E = reader.ReadFixed64Single();
                         break;
                     case 53: // field 6, fixed32
-                        value.F = reader.ReadFixedSingle();
+                        value.F = reader.ReadFixed32Single();
                         break;
                     case 49: // field 6, fixed64
-                        value.F = (float)reader.ReadFixedDouble();
+                        value.F = reader.ReadFixed64Single();
                         break;
                     case 56: // field 7, varint
-                        value.G = reader.ReadVarint32() != 0;
+                        value.G = reader.ReadVarintBoolean();
                         break;
                     case 61: // field 7, fixed32
-                        value.G = reader.ReadFixed32() != 0;
+                        value.G = reader.ReadFixed32Boolean();
                         break;
                     case 57: // field 7, fixed64
-                        value.G = reader.ReadFixed64() != 0;
+                        value.G = reader.ReadFixed64Boolean();
                         break;
                     case 64: // field 8, varint
-                        value.requiredWithDefault = unchecked((int)reader.ReadVarint32());
+                        value.requiredWithDefault = reader.ReadVarintInt32();
                         break;
                     case 69: // field 8, fixed32
-                        value.requiredWithDefault = unchecked((int)reader.ReadFixed32());
+                        value.requiredWithDefault = reader.ReadFixed32Int32();
                         break;
                     case 65: // field 8, fixed64
-                        value.requiredWithDefault = checked((int)unchedked((long)reader.ReadFixed64()));
+                        value.requiredWithDefault = reader.ReadFixed64Int32();
                         break;
                     default:
                         if ((tag & 7) == 4) // end-group
@@ -431,7 +429,7 @@ pqr	stu")]
         public string BarName { get; set; } = @"abc\def""ghi'jklmno
 pqr	stu";
 
-        internal static void Serialize(SampleMessage value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(SampleMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.FooName is { Length: > 0} s)
             {
@@ -512,25 +510,25 @@ pqr	stu";
                         value.Name = reader.ReadString();
                         break;
                     case 72: // field 9, varint
-                        value.SubMessage = reader.ReadVarint32() != 0;
+                        value.SubMessage = reader.ReadVarintBoolean();
                         break;
                     case 77: // field 9, fixed32
-                        value.SubMessage = reader.ReadFixed32() != 0;
+                        value.SubMessage = reader.ReadFixed32Boolean();
                         break;
                     case 73: // field 9, fixed64
-                        value.SubMessage = reader.ReadFixed64() != 0;
+                        value.SubMessage = reader.ReadFixed64Boolean();
                         break;
                     case 42: // field 5, string
                         value.Name2 = reader.ReadString();
                         break;
                     case 80: // field 10, varint
-                        value.SubMessage2 = reader.ReadVarint32() != 0;
+                        value.SubMessage2 = reader.ReadVarintBoolean();
                         break;
                     case 85: // field 10, fixed32
-                        value.SubMessage2 = reader.ReadFixed32() != 0;
+                        value.SubMessage2 = reader.ReadFixed32Boolean();
                         break;
                     case 81: // field 10, fixed64
-                        value.SubMessage2 = reader.ReadFixed64() != 0;
+                        value.SubMessage2 = reader.ReadFixed64Boolean();
                         break;
                     case 98: // field 12, string
                         value.BarName = reader.ReadString();
@@ -625,7 +623,7 @@ pqr	stu";
             Video = 6,
         }
 
-        internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Query is { Length: > 0} s)
             {
@@ -683,31 +681,31 @@ pqr	stu";
                         value.Query = reader.ReadString();
                         break;
                     case 16: // field 2, varint
-                        value.PageNumber = unchecked((int)reader.ReadVarint32());
+                        value.PageNumber = reader.ReadVarintInt32();
                         break;
                     case 21: // field 2, fixed32
-                        value.PageNumber = unchecked((int)reader.ReadFixed32());
+                        value.PageNumber = reader.ReadFixed32Int32();
                         break;
                     case 17: // field 2, fixed64
-                        value.PageNumber = checked((int)unchedked((long)reader.ReadFixed64()));
+                        value.PageNumber = reader.ReadFixed64Int32();
                         break;
                     case 24: // field 3, varint
-                        value.ResultPerPage = unchecked((int)reader.ReadVarint32());
+                        value.ResultPerPage = reader.ReadVarintInt32();
                         break;
                     case 29: // field 3, fixed32
-                        value.ResultPerPage = unchecked((int)reader.ReadFixed32());
+                        value.ResultPerPage = reader.ReadFixed32Int32();
                         break;
                     case 25: // field 3, fixed64
-                        value.ResultPerPage = checked((int)unchedked((long)reader.ReadFixed64()));
+                        value.ResultPerPage = reader.ReadFixed64Int32();
                         break;
-                    case 34: // field 4, string
-                        oldEnd = reader.ConstrainByLengthPrefix();
-                        value.CorpusValue = global::AllTheThings.SearchRequest.Corpus.Merge(value.CorpusValue, ref reader);
-                        reader.Unconstrain(oldEnd);
+                    case 32: // field 4, varint
+                        value.CorpusValue = (global::AllTheThings.SearchRequest.Corpus)reader.ReadVarintInt32();
                         break;
-                    case 35: // field 4, group
-                        value.CorpusValue = global::AllTheThings.SearchRequest.Corpus.Merge(value.CorpusValue, ref reader);
-                        reader.PopGroup(4);
+                    case 37: // field 4, fixed32
+                        value.CorpusValue = (global::AllTheThings.SearchRequest.Corpus)reader.ReadFixed32Int32();
+                        break;
+                    case 33: // field 4, fixed64
+                        value.CorpusValue = (global::AllTheThings.SearchRequest.Corpus)reader.ReadFixed64Int32();
                         break;
                     default:
                         if ((tag & 7) == 4) // end-group
@@ -748,7 +746,6 @@ pqr	stu";
         public global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Grouped> Groupeds { get; } = new global::System.Collections.Generic.List<global::AllTheThings.SearchResponse.Grouped>();
 
         [global::ProtoBuf.ProtoMember(12, Name = @"upper")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchResponse+Upper= */)]
         public global::AllTheThings.SearchResponse.Upper UpperValue { get; set; }
 
         [global::ProtoBuf.ProtoContract()]
@@ -762,13 +759,13 @@ pqr	stu";
             public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue()]
+            [global::System.ComponentModel.DefaultValue("")]
             public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"snippets")]
             public global::System.Collections.Generic.List<string> Snippets { get; } = new global::System.Collections.Generic.List<string>();
 
-            internal static void Serialize(Result value, ref global::ProtoBuf.Nano.Writer writer)
+            internal static void Write(Result value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.Url is { Length: > 0} s)
                 {
@@ -871,13 +868,13 @@ pqr	stu";
             public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue()]
+            [global::System.ComponentModel.DefaultValue("")]
             public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
             public global::System.Collections.Generic.List<string> Snippets { get; } = new global::System.Collections.Generic.List<string>();
 
-            internal static void Serialize(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
+            internal static void Write(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.Url is { Length: > 0} s)
                 {
@@ -980,13 +977,13 @@ pqr	stu";
             public string Url { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"title")]
-            [global::System.ComponentModel.DefaultValue()]
+            [global::System.ComponentModel.DefaultValue("")]
             public string Title { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"snippets")]
             public global::System.Collections.Generic.List<string> Snippets { get; } = new global::System.Collections.Generic.List<string>();
 
-            internal static void Serialize(Upper value, ref global::ProtoBuf.Nano.Writer writer)
+            internal static void Write(Upper value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.Url is { Length: > 0} s)
                 {
@@ -1078,7 +1075,7 @@ pqr	stu";
 
         }
 
-        internal static void Serialize(SearchResponse value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(SearchResponse value, ref global::ProtoBuf.Nano.Writer writer)
         {
         #if NET5_0_OR_GREATER
             foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Results))
@@ -1103,7 +1100,7 @@ pqr	stu";
             if (value.UpperValue is global::AllTheThings.SearchResponse.Upper __obj12)
             {
                 writer.WriteVarint(98); // field 12, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Upper.Measure(__obj12);
+                writer.WriteVarint(global::AllTheThings.SearchResponse.Upper.Measure(__obj12));
                 global::AllTheThings.SearchResponse.Upper.Write(__obj12, ref writer);
             }
         }
@@ -1256,7 +1253,7 @@ pqr	stu";
                 public void ResetBooly() => __pbn_field_presence_0 &= ~1;
                 private bool __pbn__Booly;
 
-                internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
+                internal static void Write(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
                     writer.WriteVarint(unchecked((ulong)value.Ival));
@@ -1288,22 +1285,22 @@ pqr	stu";
                         switch (tag)
                         {
                             case 8: // field 1, varint
-                                value.Ival = unchecked((long)reader.ReadVarint64());
+                                value.Ival = reader.ReadVarintInt64();
                                 break;
                             case 13: // field 1, fixed32
-                                value.Ival = unchecked((long)(int)reader.ReadFixed32());
+                                value.Ival = reader.ReadFixed32Int64();
                                 break;
                             case 9: // field 1, fixed64
-                                value.Ival = unchedked((long)reader.ReadFixed64());
+                                value.Ival = reader.ReadFixed64Int64();
                                 break;
                             case 16: // field 2, varint
-                                value.Booly = reader.ReadVarint32() != 0;
+                                value.Booly = reader.ReadVarintBoolean();
                                 break;
                             case 21: // field 2, fixed32
-                                value.Booly = reader.ReadFixed32() != 0;
+                                value.Booly = reader.ReadFixed32Boolean();
                                 break;
                             case 17: // field 2, fixed64
-                                value.Booly = reader.ReadFixed64() != 0;
+                                value.Booly = reader.ReadFixed64Boolean();
                                 break;
                             default:
                                 if ((tag & 7) == 4) // end-group
@@ -1328,7 +1325,7 @@ pqr	stu";
 
             }
 
-            internal static void Serialize(MiddleAA value, ref global::ProtoBuf.Nano.Writer writer)
+            internal static void Write(MiddleAA value, ref global::ProtoBuf.Nano.Writer writer)
             {
             }
 
@@ -1391,7 +1388,7 @@ pqr	stu";
                 public void ResetBooly() => __pbn_field_presence_0 &= ~1;
                 private bool __pbn__Booly;
 
-                internal static void Serialize(Inner value, ref global::ProtoBuf.Nano.Writer writer)
+                internal static void Write(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
                     writer.WriteVarint(unchecked((uint)value.Ival));
@@ -1423,22 +1420,22 @@ pqr	stu";
                         switch (tag)
                         {
                             case 8: // field 1, varint
-                                value.Ival = unchecked((int)reader.ReadVarint32());
+                                value.Ival = reader.ReadVarintInt32();
                                 break;
                             case 13: // field 1, fixed32
-                                value.Ival = unchecked((int)reader.ReadFixed32());
+                                value.Ival = reader.ReadFixed32Int32();
                                 break;
                             case 9: // field 1, fixed64
-                                value.Ival = checked((int)unchedked((long)reader.ReadFixed64()));
+                                value.Ival = reader.ReadFixed64Int32();
                                 break;
                             case 16: // field 2, varint
-                                value.Booly = reader.ReadVarint32() != 0;
+                                value.Booly = reader.ReadVarintBoolean();
                                 break;
                             case 21: // field 2, fixed32
-                                value.Booly = reader.ReadFixed32() != 0;
+                                value.Booly = reader.ReadFixed32Boolean();
                                 break;
                             case 17: // field 2, fixed64
-                                value.Booly = reader.ReadFixed64() != 0;
+                                value.Booly = reader.ReadFixed64Boolean();
                                 break;
                             default:
                                 if ((tag & 7) == 4) // end-group
@@ -1463,7 +1460,7 @@ pqr	stu";
 
             }
 
-            internal static void Serialize(MiddleBB value, ref global::ProtoBuf.Nano.Writer writer)
+            internal static void Write(MiddleBB value, ref global::ProtoBuf.Nano.Writer writer)
             {
             }
 
@@ -1497,7 +1494,7 @@ pqr	stu";
 
         }
 
-        internal static void Serialize(Outer value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(Outer value, ref global::ProtoBuf.Nano.Writer writer)
         {
             #error maps not implemented yet
             foreach (var __pbn_item in value.MapField1s)
@@ -1607,10 +1604,10 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"result")]
-        [global::System.ComponentModel.DefaultValue()]
+        [global::System.ComponentModel.DefaultValue("")]
         public string Result { get; set; }
 
-        internal static void Serialize(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Result is { Length: > 0} s)
             {
@@ -1690,7 +1687,7 @@ pqr	stu";
         [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
         public int[] Packeds { get; set; }
 
-        internal static void Serialize(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(8); // field 1, varint
             writer.WriteVarint(unchecked((uint)value.Required));
@@ -1740,27 +1737,27 @@ pqr	stu";
                 switch (tag)
                 {
                     case 8: // field 1, varint
-                        value.Required = unchecked((int)reader.ReadVarint32());
+                        value.Required = reader.ReadVarintInt32();
                         break;
                     case 13: // field 1, fixed32
-                        value.Required = unchecked((int)reader.ReadFixed32());
+                        value.Required = reader.ReadFixed32Int32();
                         break;
                     case 9: // field 1, fixed64
-                        value.Required = checked((int)unchedked((long)reader.ReadFixed64()));
+                        value.Required = reader.ReadFixed64Int32();
                         break;
                     case 16: // field 2, varint
-                        value.Optional = unchecked((int)reader.ReadVarint32());
+                        value.Optional = reader.ReadVarintInt32();
                         break;
                     case 21: // field 2, fixed32
-                        value.Optional = unchecked((int)reader.ReadFixed32());
+                        value.Optional = reader.ReadFixed32Int32();
                         break;
                     case 17: // field 2, fixed64
-                        value.Optional = checked((int)unchedked((long)reader.ReadFixed64()));
+                        value.Optional = reader.ReadFixed64Int32();
                         break;
                     case 24: // field 3, varint
                         do
                         {
-                            value.Repeateds.Add(unchecked((int)reader.ReadVarint32()));
+                            value.Repeateds.Add(reader.ReadVarintInt32());
                         }
                         while (reader.TryReadTag(24));
                         break;
@@ -1768,27 +1765,27 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Repeateds.Add(unchecked((int)reader.ReadVarint32()));
+                            value.Repeateds.Add(reader.ReadVarintInt32());
                         }
                         break;
                     case 29: // field 3, fixed32
                         do
                         {
-                            value.Repeateds.Add(unchecked((int)reader.ReadFixed32()));
+                            value.Repeateds.Add(reader.ReadFixed32Int32());
                         }
                         while (reader.TryReadTag(29));
                         break;
                     case 25: // field 3, fixed64
                         do
                         {
-                            value.Repeateds.Add(checked((int)unchedked((long)reader.ReadFixed64())));
+                            value.Repeateds.Add(reader.ReadFixed64Int32());
                         }
                         while (reader.TryReadTag(25));
                         break;
                     case 32: // field 4, varint
                         do
                         {
-                            value.Packeds.Add(unchecked((int)reader.ReadVarint32()));
+                            value.Packeds.Add(reader.ReadVarintInt32());
                         }
                         while (reader.TryReadTag(32));
                         break;
@@ -1796,20 +1793,20 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Packeds.Add(unchecked((int)reader.ReadVarint32()));
+                            value.Packeds.Add(reader.ReadVarintInt32());
                         }
                         break;
                     case 37: // field 4, fixed32
                         do
                         {
-                            value.Packeds.Add(unchecked((int)reader.ReadFixed32()));
+                            value.Packeds.Add(reader.ReadFixed32Int32());
                         }
                         while (reader.TryReadTag(37));
                         break;
                     case 33: // field 4, fixed64
                         do
                         {
-                            value.Packeds.Add(checked((int)unchedked((long)reader.ReadFixed64())));
+                            value.Packeds.Add(reader.ReadFixed64Int32());
                         }
                         while (reader.TryReadTag(33));
                         break;
@@ -1849,10 +1846,10 @@ pqr	stu";
         public global::System.Collections.Generic.List<string> His { get; } = new global::System.Collections.Generic.List<string>();
 
         [global::ProtoBuf.ProtoMember(1, Name = @"lo")]
-        [global::System.ComponentModel.DefaultValue()]
+        [global::System.ComponentModel.DefaultValue("")]
         public string Lo { get; set; }
 
-        internal static void Serialize(TagRanges value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(TagRanges value, ref global::ProtoBuf.Nano.Writer writer)
         {
         #if NET5_0_OR_GREATER
             foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.His))
@@ -1938,7 +1935,7 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        internal static void Serialize(Foo value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(Foo value, ref global::ProtoBuf.Nano.Writer writer)
         {
         }
 
@@ -1979,7 +1976,7 @@ pqr	stu";
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-        internal static void Serialize(Baz value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(Baz value, ref global::ProtoBuf.Nano.Writer writer)
         {
         }
 
@@ -2065,7 +2062,7 @@ pqr	stu";
         [global::ProtoBuf.ProtoMember(15, Name = @"bytes", IsRequired = true)]
         public byte[] Bytes { get; set; }
 
-        internal static void Serialize(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(9); // field 1, fixed64
             writer.WriteFixed(value.Double);
@@ -2134,52 +2131,52 @@ pqr	stu";
                 switch (tag)
                 {
                     case 9: // field 1, fixed64
-                        value.Double = reader.ReadFixedDouble();
+                        value.Double = reader.ReadFixed64SDouble();
                         break;
                     case 13: // field 1, fixed32
-                        value.Double = (double)reader.ReadFixedSingle();
+                        value.Double = reader.ReadFixed64Double();
                         break;
                     case 21: // field 2, fixed32
-                        value.Float = reader.ReadFixedSingle();
+                        value.Float = reader.ReadFixed32Single();
                         break;
                     case 17: // field 2, fixed64
-                        value.Float = (float)reader.ReadFixedDouble();
+                        value.Float = reader.ReadFixed64Single();
                         break;
                     case 24: // field 3, varint
-                        value.Int32 = unchecked((int)reader.ReadVarint32());
+                        value.Int32 = reader.ReadVarintInt32();
                         break;
                     case 29: // field 3, fixed32
-                        value.Int32 = unchecked((int)reader.ReadFixed32());
+                        value.Int32 = reader.ReadFixed32Int32();
                         break;
                     case 25: // field 3, fixed64
-                        value.Int32 = checked((int)unchedked((long)reader.ReadFixed64()));
+                        value.Int32 = reader.ReadFixed64Int32();
                         break;
                     case 32: // field 4, varint
-                        value.Int64 = unchecked((long)reader.ReadVarint64());
+                        value.Int64 = reader.ReadVarintInt64();
                         break;
                     case 37: // field 4, fixed32
-                        value.Int64 = unchecked((long)(int)reader.ReadFixed32());
+                        value.Int64 = reader.ReadFixed32Int64();
                         break;
                     case 33: // field 4, fixed64
-                        value.Int64 = unchedked((long)reader.ReadFixed64());
+                        value.Int64 = reader.ReadFixed64Int64();
                         break;
                     case 40: // field 5, varint
-                        value.Uint32 = reader.ReadVarint32();
+                        value.Uint32 = reader.ReadVarintUInt32();
                         break;
                     case 45: // field 5, fixed32
-                        value.Uint32 = reader.ReadFixed32();
+                        value.Uint32 = reader.ReadFixed32UInt32();
                         break;
                     case 41: // field 5, fixed64
-                        value.Uint32 = checked((uint)reader.ReadFixed64());
+                        value.Uint32 = reader.ReadFixed64UInt32();
                         break;
                     case 48: // field 6, varint
-                        value.Uint64 = reader.ReadVarint64();
+                        value.Uint64 = reader.ReadVarintUInt64();
                         break;
                     case 53: // field 6, fixed32
-                        value.Uint64 = (ulong)reader.ReadFixed32();
+                        value.Uint64 = reader.ReadFixed32UInt64();
                         break;
                     case 49: // field 6, fixed64
-                        value.Uint64 = reader.ReadFixed64();
+                        value.Uint64 = reader.ReadFixed64UInt64();
                         break;
                     case 56: // field 7, varint
                         value.Sint32 = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32());
@@ -2188,37 +2185,37 @@ pqr	stu";
                         value.Sint64 = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint64());
                         break;
                     case 77: // field 9, fixed32
-                        value.Fixed32 = reader.ReadFixed32();
+                        value.Fixed32 = reader.ReadFixed32UInt32();
                         break;
                     case 73: // field 9, fixed64
-                        value.Fixed32 = checked((uint)reader.ReadFixed64());
+                        value.Fixed32 = reader.ReadFixed64UInt32();
                         break;
                     case 81: // field 10, fixed64
-                        value.Fixed64 = reader.ReadFixed64();
+                        value.Fixed64 = reader.ReadFixed64UInt64();
                         break;
                     case 85: // field 10, fixed32
-                        value.Fixed64 = (ulong)reader.ReadFixed32();
+                        value.Fixed64 = reader.ReadFixed32UInt64();
                         break;
                     case 93: // field 11, fixed32
-                        value.Sfixed32 = unchecked((int)reader.ReadFixed32());
+                        value.Sfixed32 = reader.ReadFixed32Int32();
                         break;
                     case 89: // field 11, fixed64
-                        value.Sfixed32 = checked((int)unchecked((long)reader.ReadFixed64()));
+                        value.Sfixed32 = reader.ReadFixed64Int32();
                         break;
                     case 97: // field 12, fixed64
-                        value.Sfixed64 = unchecked((long)reader.ReadFixed64());
+                        value.Sfixed64 = reader.ReadFixed64Int64();
                         break;
                     case 101: // field 12, fixed32
-                        value.Sfixed64 = unchecked((long)(ulong)reader.ReadFixed32());
+                        value.Sfixed64 = reader.ReadFixed32Int64();
                         break;
                     case 104: // field 13, varint
-                        value.Bool = reader.ReadVarint32() != 0;
+                        value.Bool = reader.ReadVarintBoolean();
                         break;
                     case 109: // field 13, fixed32
-                        value.Bool = reader.ReadFixed32() != 0;
+                        value.Bool = reader.ReadFixed32Boolean();
                         break;
                     case 105: // field 13, fixed64
-                        value.Bool = reader.ReadFixed64() != 0;
+                        value.Bool = reader.ReadFixed64Boolean();
                         break;
                     case 114: // field 14, string
                         value.String = reader.ReadString();
@@ -2314,7 +2311,7 @@ pqr	stu";
         [global::ProtoBuf.ProtoMember(15, Name = @"bytes")]
         public global::System.Collections.Generic.List<byte[]> Bytes { get; } = new global::System.Collections.Generic.List<byte[]>();
 
-        internal static void Serialize(RepeatedPrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(RepeatedPrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
             foreach (var __pbn_item in value.Doubles)
             {
@@ -2489,7 +2486,7 @@ pqr	stu";
                     case 9: // field 1, fixed64
                         do
                         {
-                            value.Doubles.Add(reader.ReadFixedDouble());
+                            value.Doubles.Add(reader.ReadFixed64SDouble());
                         }
                         while (reader.TryReadTag(9));
                         break;
@@ -2499,20 +2496,20 @@ pqr	stu";
                         packed >>= 3;
                         while (packed-- != 0)
                         {
-                            value.Doubles.Add(reader.ReadFixedDouble());
+                            value.Doubles.Add(reader.ReadFixed64SDouble());
                         }
                         break;
                     case 13: // field 1, fixed32
                         do
                         {
-                            value.Doubles.Add((double)reader.ReadFixedSingle());
+                            value.Doubles.Add(reader.ReadFixed64Double());
                         }
                         while (reader.TryReadTag(13));
                         break;
                     case 21: // field 2, fixed32
                         do
                         {
-                            value.Floats.Add(reader.ReadFixedSingle());
+                            value.Floats.Add(reader.ReadFixed32Single());
                         }
                         while (reader.TryReadTag(21));
                         break;
@@ -2522,20 +2519,20 @@ pqr	stu";
                         packed >>= 2;
                         while (packed-- != 0)
                         {
-                            value.Floats.Add(reader.ReadFixedSingle());
+                            value.Floats.Add(reader.ReadFixed32Single());
                         }
                         break;
                     case 17: // field 2, fixed64
                         do
                         {
-                            value.Floats.Add((float)reader.ReadFixedDouble());
+                            value.Floats.Add(reader.ReadFixed64Single());
                         }
                         while (reader.TryReadTag(17));
                         break;
                     case 24: // field 3, varint
                         do
                         {
-                            value.Int32s.Add(unchecked((int)reader.ReadVarint32()));
+                            value.Int32s.Add(reader.ReadVarintInt32());
                         }
                         while (reader.TryReadTag(24));
                         break;
@@ -2543,27 +2540,27 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Int32s.Add(unchecked((int)reader.ReadVarint32()));
+                            value.Int32s.Add(reader.ReadVarintInt32());
                         }
                         break;
                     case 29: // field 3, fixed32
                         do
                         {
-                            value.Int32s.Add(unchecked((int)reader.ReadFixed32()));
+                            value.Int32s.Add(reader.ReadFixed32Int32());
                         }
                         while (reader.TryReadTag(29));
                         break;
                     case 25: // field 3, fixed64
                         do
                         {
-                            value.Int32s.Add(checked((int)unchedked((long)reader.ReadFixed64())));
+                            value.Int32s.Add(reader.ReadFixed64Int32());
                         }
                         while (reader.TryReadTag(25));
                         break;
                     case 32: // field 4, varint
                         do
                         {
-                            value.Int64s.Add(unchecked((long)reader.ReadVarint64()));
+                            value.Int64s.Add(reader.ReadVarintInt64());
                         }
                         while (reader.TryReadTag(32));
                         break;
@@ -2571,27 +2568,27 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Int64s.Add(unchecked((long)reader.ReadVarint64()));
+                            value.Int64s.Add(reader.ReadVarintInt64());
                         }
                         break;
                     case 37: // field 4, fixed32
                         do
                         {
-                            value.Int64s.Add(unchecked((long)(int)reader.ReadFixed32()));
+                            value.Int64s.Add(reader.ReadFixed32Int64());
                         }
                         while (reader.TryReadTag(37));
                         break;
                     case 33: // field 4, fixed64
                         do
                         {
-                            value.Int64s.Add(unchedked((long)reader.ReadFixed64()));
+                            value.Int64s.Add(reader.ReadFixed64Int64());
                         }
                         while (reader.TryReadTag(33));
                         break;
                     case 40: // field 5, varint
                         do
                         {
-                            value.Uint32s.Add(reader.ReadVarint32());
+                            value.Uint32s.Add(reader.ReadVarintUInt32());
                         }
                         while (reader.TryReadTag(40));
                         break;
@@ -2599,27 +2596,27 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Uint32s.Add(reader.ReadVarint32());
+                            value.Uint32s.Add(reader.ReadVarintUInt32());
                         }
                         break;
                     case 45: // field 5, fixed32
                         do
                         {
-                            value.Uint32s.Add(reader.ReadFixed32());
+                            value.Uint32s.Add(reader.ReadFixed32UInt32());
                         }
                         while (reader.TryReadTag(45));
                         break;
                     case 41: // field 5, fixed64
                         do
                         {
-                            value.Uint32s.Add(checked((uint)reader.ReadFixed64()));
+                            value.Uint32s.Add(reader.ReadFixed64UInt32());
                         }
                         while (reader.TryReadTag(41));
                         break;
                     case 48: // field 6, varint
                         do
                         {
-                            value.Uint64s.Add(reader.ReadVarint64());
+                            value.Uint64s.Add(reader.ReadVarintUInt64());
                         }
                         while (reader.TryReadTag(48));
                         break;
@@ -2627,20 +2624,20 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Uint64s.Add(reader.ReadVarint64());
+                            value.Uint64s.Add(reader.ReadVarintUInt64());
                         }
                         break;
                     case 53: // field 6, fixed32
                         do
                         {
-                            value.Uint64s.Add((ulong)reader.ReadFixed32());
+                            value.Uint64s.Add(reader.ReadFixed32UInt64());
                         }
                         while (reader.TryReadTag(53));
                         break;
                     case 49: // field 6, fixed64
                         do
                         {
-                            value.Uint64s.Add(reader.ReadFixed64());
+                            value.Uint64s.Add(reader.ReadFixed64UInt64());
                         }
                         while (reader.TryReadTag(49));
                         break;
@@ -2675,7 +2672,7 @@ pqr	stu";
                     case 77: // field 9, fixed32
                         do
                         {
-                            value.Fixed32s.Add(reader.ReadFixed32());
+                            value.Fixed32s.Add(reader.ReadFixed32UInt32());
                         }
                         while (reader.TryReadTag(77));
                         break;
@@ -2685,20 +2682,20 @@ pqr	stu";
                         packed >>= 2;
                         while (packed-- != 0)
                         {
-                            value.Fixed32s.Add(reader.ReadFixed32());
+                            value.Fixed32s.Add(reader.ReadFixed32UInt32());
                         }
                         break;
                     case 73: // field 9, fixed64
                         do
                         {
-                            value.Fixed32s.Add(checked((uint)reader.ReadFixed64()));
+                            value.Fixed32s.Add(reader.ReadFixed64UInt32());
                         }
                         while (reader.TryReadTag(73));
                         break;
                     case 81: // field 10, fixed64
                         do
                         {
-                            value.Fixed64s.Add(reader.ReadFixed64());
+                            value.Fixed64s.Add(reader.ReadFixed64UInt64());
                         }
                         while (reader.TryReadTag(81));
                         break;
@@ -2708,20 +2705,20 @@ pqr	stu";
                         packed >>= 3;
                         while (packed-- != 0)
                         {
-                            value.Fixed64s.Add(reader.ReadFixed64());
+                            value.Fixed64s.Add(reader.ReadFixed64UInt64());
                         }
                         break;
                     case 85: // field 10, fixed32
                         do
                         {
-                            value.Fixed64s.Add((ulong)reader.ReadFixed32());
+                            value.Fixed64s.Add(reader.ReadFixed32UInt64());
                         }
                         while (reader.TryReadTag(85));
                         break;
                     case 93: // field 11, fixed32
                         do
                         {
-                            value.Sfixed32s.Add(unchecked((int)reader.ReadFixed32()));
+                            value.Sfixed32s.Add(reader.ReadFixed32Int32());
                         }
                         while (reader.TryReadTag(93));
                         break;
@@ -2731,20 +2728,20 @@ pqr	stu";
                         packed >>= 2;
                         while (packed-- != 0)
                         {
-                            value.Sfixed32s.Add(unchecked((int)reader.ReadFixed32()));
+                            value.Sfixed32s.Add(reader.ReadFixed32Int32());
                         }
                         break;
                     case 89: // field 11, fixed64
                         do
                         {
-                            value.Sfixed32s.Add(checked((int)unchecked((long)reader.ReadFixed64())));
+                            value.Sfixed32s.Add(reader.ReadFixed64Int32());
                         }
                         while (reader.TryReadTag(89));
                         break;
                     case 97: // field 12, fixed64
                         do
                         {
-                            value.Sfixed64s.Add(unchecked((long)reader.ReadFixed64()));
+                            value.Sfixed64s.Add(reader.ReadFixed64Int64());
                         }
                         while (reader.TryReadTag(97));
                         break;
@@ -2754,20 +2751,20 @@ pqr	stu";
                         packed >>= 3;
                         while (packed-- != 0)
                         {
-                            value.Sfixed64s.Add(unchecked((long)reader.ReadFixed64()));
+                            value.Sfixed64s.Add(reader.ReadFixed64Int64());
                         }
                         break;
                     case 101: // field 12, fixed32
                         do
                         {
-                            value.Sfixed64s.Add(unchecked((long)(ulong)reader.ReadFixed32()));
+                            value.Sfixed64s.Add(reader.ReadFixed32Int64());
                         }
                         while (reader.TryReadTag(101));
                         break;
                     case 104: // field 13, varint
                         do
                         {
-                            value.Bools.Add(reader.ReadVarint32() != 0);
+                            value.Bools.Add(reader.ReadVarintBoolean());
                         }
                         while (reader.TryReadTag(104));
                         break;
@@ -2775,20 +2772,20 @@ pqr	stu";
                         packed = reader.ReadVarint64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Bools.Add(reader.ReadVarint32() != 0);
+                            value.Bools.Add(reader.ReadVarintBoolean());
                         }
                         break;
                     case 109: // field 13, fixed32
                         do
                         {
-                            value.Bools.Add(reader.ReadFixed32() != 0);
+                            value.Bools.Add(reader.ReadFixed32Boolean());
                         }
                         while (reader.TryReadTag(109));
                         break;
                     case 105: // field 13, fixed64
                         do
                         {
-                            value.Bools.Add(reader.ReadFixed64() != 0);
+                            value.Bools.Add(reader.ReadFixed64Boolean());
                         }
                         while (reader.TryReadTag(105));
                         break;

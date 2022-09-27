@@ -2,12 +2,12 @@
 
 package basic_package;
 
-enum Corpus {
+enum Corpus2 {
   CORPUS_UNSPECIFIED = 0;
   CORPUS_UNIVERSAL = 1;
   CORPUS_WEB = 2;
 }
 
 message SearchRequest {
-  Corpus corpus = 2;
+  Corpus2 corpus = 2;
 }

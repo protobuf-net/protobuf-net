@@ -17,55 +17,42 @@ namespace TypeRefs
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
         public global::TypeRefs.MsgA A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
         public global::TypeRefs.MsgB B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
         public global::TypeRefs.MsgB.MsgC C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
         public global::TypeRefs.MsgD D { get; set; }
 
-        internal static void Serialize(MsgA value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(MsgA value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.A is global::TypeRefs.MsgA __obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgA.Measure(__obj1);
+                writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
                 global::TypeRefs.MsgA.Write(__obj1, ref writer);
             }
-            if (value.B != /* invalid type / value: TypeRefs.MsgB= */)
+            if (value.B is global::TypeRefs.MsgB __obj2)
             {
-                if (value.B is global::TypeRefs.MsgB __obj2)
-                {
-                    writer.WriteVarint(18); // field 2, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgB.Measure(__obj2);
-                    global::TypeRefs.MsgB.Write(__obj2, ref writer);
-                }
+                writer.WriteVarint(18); // field 2, string
+                writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
+                global::TypeRefs.MsgB.Write(__obj2, ref writer);
             }
-            if (value.C != /* invalid type / value: TypeRefs.MsgB+MsgC= */)
+            if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
             {
-                if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
-                {
-                    writer.WriteVarint(26); // field 3, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgB.MsgC.Measure(__obj3);
-                    global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
-                }
+                writer.WriteVarint(26); // field 3, string
+                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
+                global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
             }
-            if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
+            if (value.D is global::TypeRefs.MsgD __obj4)
             {
-                if (value.D is global::TypeRefs.MsgD __obj4)
-                {
-                    writer.WriteVarint(34); // field 4, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgD.Measure(__obj4);
-                    global::TypeRefs.MsgD.Write(__obj4, ref writer);
-                }
+                writer.WriteVarint(34); // field 4, string
+                writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
+                global::TypeRefs.MsgD.Write(__obj4, ref writer);
             }
         }
 
@@ -76,29 +63,17 @@ namespace TypeRefs
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgA.Measure(obj1));
             }
-            if (value.B != /* invalid type / value: TypeRefs.MsgB= */)
+            if (value.B is global::TypeRefs.MsgB obj2)
             {
-                if (value.B is global::TypeRefs.MsgB obj2)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.Measure(obj2));
-                }
-                len += 0;
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.Measure(obj2));
             }
-            if (value.C != /* invalid type / value: TypeRefs.MsgB+MsgC= */)
+            if (value.C is global::TypeRefs.MsgB.MsgC obj3)
             {
-                if (value.C is global::TypeRefs.MsgB.MsgC obj3)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
-                }
-                len += 0;
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
             }
-            if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
+            if (value.D is global::TypeRefs.MsgD obj4)
             {
-                if (value.D is global::TypeRefs.MsgD obj4)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
-                }
-                len += 0;
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
             }
             return len;
         }
@@ -181,19 +156,15 @@ namespace TypeRefs
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
         public global::TypeRefs.MsgA A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
         public global::TypeRefs.MsgB B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
         public global::TypeRefs.MsgB.MsgC C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
         public global::TypeRefs.MsgD D { get; set; }
 
         [global::ProtoBuf.ProtoContract(Name = @"msg_c")]
@@ -204,49 +175,42 @@ namespace TypeRefs
                 => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
             [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
             public global::TypeRefs.MsgA A { get; set; }
 
             [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
             public global::TypeRefs.MsgB B { get; set; }
 
             [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
             public global::TypeRefs.MsgB.MsgC C { get; set; }
 
             [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-            [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
             public global::TypeRefs.MsgD D { get; set; }
 
-            internal static void Serialize(MsgC value, ref global::ProtoBuf.Nano.Writer writer)
+            internal static void Write(MsgC value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.A is global::TypeRefs.MsgA __obj1)
                 {
                     writer.WriteVarint(10); // field 1, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgA.Measure(__obj1);
+                    writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
                     global::TypeRefs.MsgA.Write(__obj1, ref writer);
                 }
                 if (value.B is global::TypeRefs.MsgB __obj2)
                 {
                     writer.WriteVarint(18); // field 2, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgB.Measure(__obj2);
+                    writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
                     global::TypeRefs.MsgB.Write(__obj2, ref writer);
                 }
                 if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
                 {
                     writer.WriteVarint(26); // field 3, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgB.MsgC.Measure(__obj3);
+                    writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
                     global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
                 }
-                if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
+                if (value.D is global::TypeRefs.MsgD __obj4)
                 {
-                    if (value.D is global::TypeRefs.MsgD __obj4)
-                    {
-                        writer.WriteVarint(34); // field 4, string
-                        writer.WriteVarintUInt64(global::TypeRefs.MsgD.Measure(__obj4);
-                        global::TypeRefs.MsgD.Write(__obj4, ref writer);
-                    }
+                    writer.WriteVarint(34); // field 4, string
+                    writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
+                    global::TypeRefs.MsgD.Write(__obj4, ref writer);
                 }
             }
 
@@ -265,13 +229,9 @@ namespace TypeRefs
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
                 }
-                if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
+                if (value.D is global::TypeRefs.MsgD obj4)
                 {
-                    if (value.D is global::TypeRefs.MsgD obj4)
-                    {
-                        len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
-                    }
-                    len += 0;
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
                 }
                 return len;
             }
@@ -346,37 +306,31 @@ namespace TypeRefs
 
         }
 
-        internal static void Serialize(MsgB value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(MsgB value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.A is global::TypeRefs.MsgA __obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgA.Measure(__obj1);
+                writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
                 global::TypeRefs.MsgA.Write(__obj1, ref writer);
             }
             if (value.B is global::TypeRefs.MsgB __obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgB.Measure(__obj2);
+                writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
                 global::TypeRefs.MsgB.Write(__obj2, ref writer);
             }
-            if (value.C != /* invalid type / value: TypeRefs.MsgB+MsgC= */)
+            if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
             {
-                if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
-                {
-                    writer.WriteVarint(26); // field 3, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgB.MsgC.Measure(__obj3);
-                    global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
-                }
+                writer.WriteVarint(26); // field 3, string
+                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
+                global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
             }
-            if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
+            if (value.D is global::TypeRefs.MsgD __obj4)
             {
-                if (value.D is global::TypeRefs.MsgD __obj4)
-                {
-                    writer.WriteVarint(34); // field 4, string
-                    writer.WriteVarintUInt64(global::TypeRefs.MsgD.Measure(__obj4);
-                    global::TypeRefs.MsgD.Write(__obj4, ref writer);
-                }
+                writer.WriteVarint(34); // field 4, string
+                writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
+                global::TypeRefs.MsgD.Write(__obj4, ref writer);
             }
         }
 
@@ -391,21 +345,13 @@ namespace TypeRefs
             {
                 len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.Measure(obj2));
             }
-            if (value.C != /* invalid type / value: TypeRefs.MsgB+MsgC= */)
+            if (value.C is global::TypeRefs.MsgB.MsgC obj3)
             {
-                if (value.C is global::TypeRefs.MsgB.MsgC obj3)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
-                }
-                len += 0;
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
             }
-            if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
+            if (value.D is global::TypeRefs.MsgD obj4)
             {
-                if (value.D is global::TypeRefs.MsgD obj4)
-                {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
-                }
-                len += 0;
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
             }
             return len;
         }
@@ -488,45 +434,41 @@ namespace TypeRefs
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"a")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgA= */)]
         public global::TypeRefs.MsgA A { get; set; }
 
         [global::ProtoBuf.ProtoMember(2, Name = @"b")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB= */)]
         public global::TypeRefs.MsgB B { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"c")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgB+MsgC= */)]
         public global::TypeRefs.MsgB.MsgC C { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"d")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: TypeRefs.MsgD= */)]
         public global::TypeRefs.MsgD D { get; set; }
 
-        internal static void Serialize(MsgD value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(MsgD value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.A is global::TypeRefs.MsgA __obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgA.Measure(__obj1);
+                writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
                 global::TypeRefs.MsgA.Write(__obj1, ref writer);
             }
             if (value.B is global::TypeRefs.MsgB __obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgB.Measure(__obj2);
+                writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
                 global::TypeRefs.MsgB.Write(__obj2, ref writer);
             }
             if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
             {
                 writer.WriteVarint(26); // field 3, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgB.MsgC.Measure(__obj3);
+                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
                 global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
             }
             if (value.D is global::TypeRefs.MsgD __obj4)
             {
                 writer.WriteVarint(34); // field 4, string
-                writer.WriteVarintUInt64(global::TypeRefs.MsgD.Measure(__obj4);
+                writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
                 global::TypeRefs.MsgD.Write(__obj4, ref writer);
             }
         }

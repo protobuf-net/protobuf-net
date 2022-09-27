@@ -85,79 +85,79 @@ public class NanoBenchmarks
 
         _hwRequest = Prepare(_requestBA, buffer =>
         {
-            var reader = new Reader(buffer);
+            var reader = new PrepReader(buffer);
             var obj = HandWrittenPool.ForwardRequest.Merge(null, ref reader);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
         {
-            var writer = new Writer(bw);
+            var writer = new PrepWriter(bw);
             HandWrittenPool.ForwardRequest.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenPool.ForwardRequest.Measure(obj), obj => obj.Dispose());
 
         _hwResponse = Prepare(_responseBA, buffer =>
         {
-            var reader = new Reader(buffer);
+            var reader = new PrepReader(buffer);
             var obj = HandWrittenPool.ForwardResponse.Merge(null, ref reader);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
         {
-            var writer = new Writer(bw);
+            var writer = new PrepWriter(bw);
             HandWrittenPool.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenPool.ForwardResponse.Measure(obj), obj => obj.Dispose());
 
         _hwnpRequest = Prepare(_requestBA, buffer =>
         {
-            var reader = new Reader(buffer);
+            var reader = new PrepReader(buffer);
             HandWrittenNoPool.ForwardRequest obj = default;
             HandWrittenNoPool.ForwardRequest.Merge(ref obj, ref reader, true);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
         {
-            var writer = new Writer(bw);
+            var writer = new PrepWriter(bw);
             HandWrittenNoPool.ForwardRequest.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenNoPool.ForwardRequest.Measure(obj), null);
 
         _hwnpResponse = Prepare(_responseBA, buffer =>
         {
-            var reader = new Reader(buffer);
+            var reader = new PrepReader(buffer);
             var obj = HandWrittenNoPool.ForwardResponse.Merge(null, ref reader);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
         {
-            var writer = new Writer(bw);
+            var writer = new PrepWriter(bw);
             HandWrittenNoPool.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenNoPool.ForwardResponse.Measure(obj), null);
 
         _hwsRequest = Prepare(_requestBA, buffer =>
         {
-            var reader = new Reader(buffer);
+            var reader = new PrepReader(buffer);
             var obj = HandWrittenSlab.ForwardRequest.Merge(null, ref reader);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
         {
-            var writer = new Writer(bw);
+            var writer = new PrepWriter(bw);
             HandWrittenSlab.ForwardRequest.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenSlab.ForwardRequest.Measure(obj), obj => obj.Dispose());
 
         _hwsResponse = Prepare(_responseBA, buffer =>
         {
-            var reader = new Reader(buffer);
+            var reader = new PrepReader(buffer);
             var obj = HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
             reader.Dispose();
             return obj;
         }, (obj, bw) =>
         {
-            var writer = new Writer(bw);
+            var writer = new PrepWriter(bw);
             HandWrittenSlab.ForwardResponse.WriteSingle(obj, ref writer);
             writer.Dispose();
         }, Empty(), obj => (long)HandWrittenSlab.ForwardResponse.Measure(obj), obj => obj.Dispose());
@@ -260,7 +260,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNano()
     {
-        var writer = new Writer(Empty());
+        var writer = new PrepWriter(Empty());
         HandWrittenPool.ForwardRequest.WriteSingle(_hwRequest, ref writer);
         writer.Dispose();
     }
@@ -269,7 +269,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNano()
     {
-        var writer = new Writer(Empty());
+        var writer = new PrepWriter(Empty());
         HandWrittenPool.ForwardResponse.WriteSingle(_hwResponse, ref writer);
         writer.Dispose();
     }
@@ -278,7 +278,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNanoNoPool()
     {
-        var writer = new Writer(Empty());
+        var writer = new PrepWriter(Empty());
         HandWrittenNoPool.ForwardRequest.WriteSingle(_hwnpRequest, ref writer);
         writer.Dispose();
     }
@@ -287,7 +287,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNanoNoPool()
     {
-        var writer = new Writer(Empty());
+        var writer = new PrepWriter(Empty());
         HandWrittenNoPool.ForwardResponse.WriteSingle(_hwnpResponse, ref writer);
         writer.Dispose();
     }
@@ -296,7 +296,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategorySerialize, CategoryRequest)]
     public void SerializeRequestNanoSlab()
     {
-        var writer = new Writer(Empty());
+        var writer = new PrepWriter(Empty());
         HandWrittenSlab.ForwardRequest.WriteSingle(_hwsRequest, ref writer);
         writer.Dispose();
     }
@@ -305,7 +305,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategorySerialize, CategoryResponse)]
     public void SerializeResponseNanoSlab()
     {
-        var writer = new Writer(Empty());
+        var writer = new PrepWriter(Empty());
         HandWrittenSlab.ForwardResponse.WriteSingle(_hwsResponse, ref writer);
         writer.Dispose();
     }
@@ -343,7 +343,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNano()
     {
-        var reader = new Reader(_requestBA);
+        var reader = new PrepReader(_requestBA);
         var obj = HandWrittenPool.ForwardRequest.Merge(null, ref reader);
         reader.Dispose();
         obj.Dispose();
@@ -353,7 +353,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNano()
     {
-        var reader = new Reader(_responseBA);
+        var reader = new PrepReader(_responseBA);
         var obj = HandWrittenPool.ForwardResponse.Merge(null, ref reader);
         reader.Dispose();
         obj.Dispose();
@@ -363,7 +363,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNanoNoPool()
     {
-        var reader = new Reader(_requestBA);
+        var reader = new PrepReader(_requestBA);
         HandWrittenNoPool.ForwardRequest obj = default;
         HandWrittenNoPool.ForwardRequest.Merge(ref obj, ref reader, true);
         reader.Dispose();
@@ -373,7 +373,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNanoNoPool()
     {
-        var reader = new Reader(_responseBA);
+        var reader = new PrepReader(_responseBA);
         HandWrittenNoPool.ForwardResponse.Merge(null, ref reader);
         reader.Dispose();
     }
@@ -382,7 +382,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategoryDeserialize, CategoryRequest)]
     public void DeserializeRequestNanoSlab()
     {
-        var reader = new Reader(_requestBA);
+        var reader = new PrepReader(_requestBA);
         var obj = HandWrittenSlab.ForwardRequest.Merge(null, ref reader);
         reader.Dispose();
         obj.Dispose();
@@ -392,7 +392,7 @@ public class NanoBenchmarks
     [BenchmarkCategory(CategoryDeserialize, CategoryResponse)]
     public void DeserializeResponseNanoSlab()
     {
-        var reader = new Reader(_responseBA);
+        var reader = new PrepReader(_responseBA);
         var obj = HandWrittenSlab.ForwardResponse.Merge(null, ref reader);
         reader.Dispose();
         obj.Dispose();

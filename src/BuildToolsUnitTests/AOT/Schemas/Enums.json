@@ -7,7 +7,7 @@
           "Fields": [
             {
               "FieldNumber": 2,
-              "TypeName": "BasicPackage.Corpus",
+              "TypeName": "BasicPackage.Corpus2",
               "Name": "Corpus",
               "OriginalName": "corpus",
               "Conditional": "NonDefault",
@@ -38,7 +38,7 @@
             }
           ],
           "TypeName": "int32",
-          "Name": "Corpus",
+          "Name": "Corpus2",
           "FullyQualifiedPrefix": "BasicPackage."
         }
       ]

@@ -19,6 +19,8 @@ using System.Text.RegularExpressions;
 using ProtoBuf.Grpc;
 using Xunit;
 using Xunit.Abstractions;
+using ProtoBuf.Nano;
+using System.ServiceModel;
 
 namespace BuildToolsUnitTests.AOT;
 
@@ -75,7 +77,7 @@ public class AOTSchemaTests
         var context = new CodeGenParseContext();
         var parsed = CodeGenSet.Parse(fds, context);
         var json = JsonConvert.SerializeObject(parsed, JsonSettings);
-        _output.WriteLine(json);
+        // _output.WriteLine(json);
 
         var jsonPath = Path.ChangeExtension(protoPath, ".json");
 #if UPDATE_FILES
@@ -111,7 +113,9 @@ public class AOTSchemaTests
         {
             GetLib<object>(),
             GetLib<ProtoWriter>(),
+            GetLib<INanoSerializer<int>>(),
             GetLib<CallContext>(),
+            GetLib<ServiceContractAttribute>(),
             MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=4.2.2.0").Location),
         };
@@ -131,9 +135,9 @@ public class AOTSchemaTests
 
         // ******************************************
         // TODO: un #if this! if this fails, the code is invalid, so the parse step is not very valid
-#if RELEASE
+// #if RELEASE
         Assert.True(result.Success, "generated code does not compile");
-#endif
+// #endif
         var model = compilation.GetSemanticModel(syntaxTree, false);
         Assert.NotNull(model);
 
@@ -148,7 +152,7 @@ public class AOTSchemaTests
         }
 
         json = JsonConvert.SerializeObject(parsedFromCode, JsonSettings);
-        _output.WriteLine(json);
+        // _output.WriteLine(json);
         jsonPath = Path.ChangeExtension(protoPath, ".pjson");
 #if UPDATE_FILES
         target = Path.Combine(Path.GetDirectoryName(CallerFilePath())!, "..", jsonPath).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);

@@ -107,6 +107,14 @@ internal class CodeGenMessage : CodeGenType
                 {
                     field.Repeated = RepeatedKind.Dictionary;
                 }
+                if (field.DefaultValue == "" && field.Type is CodeGenMessage)
+                {
+                    field.DefaultValue = null;
+                    if (field.Conditional == ConditionalKind.NonDefault)
+                    {
+                        field.Conditional = ConditionalKind.Always; // uses null for tracking
+                    }
+                }
             }
         }
     }

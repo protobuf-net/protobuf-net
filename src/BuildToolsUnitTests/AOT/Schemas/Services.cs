@@ -17,7 +17,7 @@ namespace GrpcGreeter
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
-        [global::System.ComponentModel.DefaultValue()]
+        [global::System.ComponentModel.DefaultValue("")]
         public string Name { get; set; }
 
         internal static void Serialize(HelloRequest value, ref global::ProtoBuf.Nano.Writer writer)
@@ -80,7 +80,7 @@ namespace GrpcGreeter
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"message")]
-        [global::System.ComponentModel.DefaultValue()]
+        [global::System.ComponentModel.DefaultValue("")]
         public string Message { get; set; }
 
         internal static void Serialize(HelloReply value, ref global::ProtoBuf.Nano.Writer writer)

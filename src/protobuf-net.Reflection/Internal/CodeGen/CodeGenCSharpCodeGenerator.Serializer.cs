@@ -46,7 +46,7 @@ internal partial class CodeGenCSharpCodeGenerator
         }
         static string GetIteratorName(CodeGenField field) => "__pbn_item";
 
-        static bool IsConditional(CodeGenField field, CodeGenGeneratorContext ctx)
+        static bool IsConditional(CodeGenField field, CodeGenGeneratorContext ctx, CodeGenCSharpCodeGenerator @this)
         {
             bool isConditional = field.Conditional != ConditionalKind.Always;
             if (isConditional)
@@ -58,7 +58,7 @@ internal partial class CodeGenCSharpCodeGenerator
                         ctx.WriteLine($"if ({(bDefault ? "!" : "")}value.{field.BackingName})");
                         break;
                     case ConditionalKind.NonDefault:
-                        ctx.WriteLine($"if (value.{field.BackingName} != {FormatDefaultValue(field)})");
+                        ctx.WriteLine($"if (value.{field.BackingName} != {@this.FormatDefaultValue(field)})");
                         break;
                     case ConditionalKind.ShouldSerializeMethod:
                         ctx.WriteLine($"if (value.ShouldSerialize{field.Name}())");
@@ -77,12 +77,12 @@ internal partial class CodeGenCSharpCodeGenerator
             }
             return isConditional;
         }
-        ctx.WriteLine($"internal static void Serialize({Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
+        ctx.WriteLine($"internal static void Write({Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
         foreach (var field in message.Fields)
         {
             field.Type.IsWellKnownType(out var knownType);
 
-            bool isConditional = IsConditional(field, ctx);
+            bool isConditional = IsConditional(field, ctx, this);
             if (isConditional) // assume we've just written an "if"
             {
                 ctx.WriteLine("{").Indent();
@@ -118,7 +118,7 @@ internal partial class CodeGenCSharpCodeGenerator
                 case CodeGenWellKnownType.None:
                     ctx.WriteLine($"if ({source} is {Type(field.Type)} __obj{field.FieldNumber})").WriteLine("{").Indent()
                         .WriteLine($"writer.WriteVarint({GetTag(field, WireType.String)}); // field {field.FieldNumber}, string")
-                        .WriteLine($"writer.WriteVarintUInt64({Type(field.Type)}.Measure(__obj{field.FieldNumber});")
+                        .WriteLine($"writer.WriteVarint({Type(field.Type)}.Measure(__obj{field.FieldNumber}));")
                         .WriteLine($"{Type(field.Type)}.Write(__obj{field.FieldNumber}, ref writer);")
                         .Outdent().WriteLine("}");
                     break;
@@ -198,7 +198,7 @@ internal partial class CodeGenCSharpCodeGenerator
         foreach (var field in message.Fields)
         {
             field.Type.IsWellKnownType(out var knownType);
-            bool isConditional = IsConditional(field, ctx);
+            bool isConditional = IsConditional(field, ctx, this);
             if (isConditional) // assume we've just written an "if"
             {
                 ctx.WriteLine("{").Indent();
@@ -374,9 +374,10 @@ internal partial class CodeGenCSharpCodeGenerator
                 WireType.StartGroup => "group",
                 _ => wireType.ToString(),
             };
-            static void WriteCase(CodeGenField field, WireType wireType, CodeGenGeneratorContext ctx, string value, bool allowPacked = false)
+            static void WriteCase(CodeGenField field, WireType wireType, CodeGenGeneratorContext ctx, string value, CodeGenCSharpCodeGenerator @this, bool allowPacked = false)
             {
                 var tag = GetTag(field, wireType);
+                @this.GetEnumTarget(field, ctx, ref value);
                 ctx.WriteLine($"case {tag}: // field {field.FieldNumber}, {Format(wireType)}").Indent();
                 if (field.IsRepeated)
                 {
@@ -459,13 +460,15 @@ internal partial class CodeGenCSharpCodeGenerator
                 ctx.WriteLine("break;").Outdent();
             }
 
+            string source = "";
+            GetEnumSource(field, ctx, ref knownType, ref source);
             switch (knownType)
             {
                 case CodeGenWellKnownType.String:
-                    WriteCase(field, WireType.String, ctx, "reader.ReadString()");
+                    WriteCase(field, WireType.String, ctx, "reader.ReadString()", this);
                     break;
                 case CodeGenWellKnownType.Bytes:
-                    WriteCase(field, WireType.String, ctx, "reader.ReadBytes()");
+                    WriteCase(field, WireType.String, ctx, "reader.ReadBytes()", this);
                     break;
                 case CodeGenWellKnownType.None when field.IsGroup:
                     WriteMessageCase(field, WireType.StartGroup, ctx, Type(field.Type));
@@ -476,85 +479,85 @@ internal partial class CodeGenCSharpCodeGenerator
                     if (!ctx.Strict) WriteMessageCase(field, WireType.StartGroup, ctx, Type(field.Type));
                     break;
                 case CodeGenWellKnownType.UInt32:
-                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint32()", true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintUInt32()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32()");
-                        WriteCase(field, WireType.Fixed64, ctx, "checked((uint)reader.ReadFixed64())");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32UInt32()", this);
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64UInt32()", this);
                     }
                     break;
                 case CodeGenWellKnownType.UInt64:
-                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint64()", true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintUInt64()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "(ulong)reader.ReadFixed32()");
-                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64()");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32UInt64()", this);
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64UInt64()", this);
                     }
                     break;
                 case CodeGenWellKnownType.Int32:
-                    WriteCase(field, WireType.Varint, ctx, "unchecked((int)reader.ReadVarint32())", true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintInt32()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "unchecked((int)reader.ReadFixed32())");
-                        WriteCase(field, WireType.Fixed64, ctx, "checked((int)unchedked((long)reader.ReadFixed64()))");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Int32()", this);
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Int32()", this);
                     }
                     break;
                 case CodeGenWellKnownType.Int64:
-                    WriteCase(field, WireType.Varint, ctx, "unchecked((long)reader.ReadVarint64())", true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintInt64()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "unchecked((long)(int)reader.ReadFixed32())");
-                        WriteCase(field, WireType.Fixed64, ctx, "unchedked((long)reader.ReadFixed64())");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Int64()", this);
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Int64()", this);
                     }
                     break;
                 case CodeGenWellKnownType.SInt32:
-                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint32())", true);
+                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint32())", this, true);
                     break;
                 case CodeGenWellKnownType.SInt64:
-                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint64())", true);
+                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint64())", this, true);
                     break;
                 case CodeGenWellKnownType.Float:
-                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixedSingle()", true);
-                    if (!ctx.Strict) WriteCase(field, WireType.Fixed64, ctx, "(float)reader.ReadFixedDouble()");
+                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Single()", this, true);
+                    if (!ctx.Strict) WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Single()", this);
                     break;
                 case CodeGenWellKnownType.Double:
-                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixedDouble()", true);
-                    if (!ctx.Strict) WriteCase(field, WireType.Fixed32, ctx, "(double)reader.ReadFixedSingle()");
+                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64SDouble()", this, true);
+                    if (!ctx.Strict) WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed64Double()", this);
                     break;
                 case CodeGenWellKnownType.Boolean:
-                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint32() != 0", true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintBoolean()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32() != 0");
-                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64() != 0");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Boolean()", this);
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Boolean()", this);
                     }
                     break;
                 case CodeGenWellKnownType.Fixed32:
-                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32()", true);
+                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32UInt32()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed64, ctx, "checked((uint)reader.ReadFixed64())");
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64UInt32()", this);
                     }
                     break;
                 case CodeGenWellKnownType.Fixed64:
-                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64()", true);
+                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64UInt64()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "(ulong)reader.ReadFixed32()");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32UInt64()", this);
                     }
                     break;
                 case CodeGenWellKnownType.SFixed32:
-                    WriteCase(field, WireType.Fixed32, ctx, "unchecked((int)reader.ReadFixed32())", true);
+                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Int32()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed64, ctx, "checked((int)unchecked((long)reader.ReadFixed64()))");
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Int32()", this);
                     }
                     break;
                 case CodeGenWellKnownType.SFixed64:
-                    WriteCase(field, WireType.Fixed64, ctx, "unchecked((long)reader.ReadFixed64())", true);
+                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Int64()", this, true);
                     if (!ctx.Strict)
                     {
-                        WriteCase(field, WireType.Fixed32, ctx, "unchecked((long)(ulong)reader.ReadFixed32())");
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Int64()", this);
                     }
                     break;
                 case CodeGenWellKnownType.NetObjectProxy:
@@ -622,7 +625,7 @@ internal partial class CodeGenCSharpCodeGenerator
         }
     }
 
-    private static string FormatDefaultValue(CodeGenField field)
+    private string FormatDefaultValue(CodeGenField field)
     {
         if (field.Type.IsWellKnownType(out var wellKnown))
         {
@@ -668,7 +671,7 @@ internal partial class CodeGenCSharpCodeGenerator
                     case CodeGenWellKnownType.Boolean: return "false";
                     case CodeGenWellKnownType.Double: return "0D";
                     case CodeGenWellKnownType.Float: return "0F";
-                    case CodeGenWellKnownType.String: return "";
+                    case CodeGenWellKnownType.String: return @"""""";
                     case CodeGenWellKnownType.NetObjectProxy: return "null";
                     case CodeGenWellKnownType.Int32:
                     case CodeGenWellKnownType.SInt32:
@@ -685,6 +688,13 @@ internal partial class CodeGenCSharpCodeGenerator
                     case CodeGenWellKnownType.UInt64:
                         return "0UL";
                 }
+            }
+        }
+        if (field.Type is CodeGenEnum enm && enm.EnumValues.Count != 0)
+        {
+            if (string.IsNullOrEmpty(field.DefaultValue))
+            {
+                return $"{Type(enm)}.{Escape(enm.EnumValues[0].Name)}";
             }
         }
         return $"/* invalid type / value: {field.TypeName}={field.DefaultValue} */";
@@ -713,6 +723,13 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 source = $"({Type(enm.Type, ctx)}){source}";
             }
+        }
+    }
+    private void GetEnumTarget(CodeGenField field, CodeGenGeneratorContext ctx, ref string target)
+    {
+        if (field.Type is CodeGenEnum enm)
+        {
+            target = $"({Type(enm, ctx)}){target}";
         }
     }
 }

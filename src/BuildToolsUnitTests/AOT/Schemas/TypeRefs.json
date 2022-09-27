@@ -9,32 +9,25 @@
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
-              "OriginalName": "a",
-              "DefaultValue": ""
+              "OriginalName": "a"
             },
             {
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
-              "OriginalName": "b",
-              "Conditional": "NonDefault",
-              "DefaultValue": ""
+              "OriginalName": "b"
             },
             {
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
-              "OriginalName": "c",
-              "Conditional": "NonDefault",
-              "DefaultValue": ""
+              "OriginalName": "c"
             },
             {
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
-              "OriginalName": "d",
-              "Conditional": "NonDefault",
-              "DefaultValue": ""
+              "OriginalName": "d"
             }
           ],
           "Name": "MsgA",
@@ -49,30 +42,25 @@
                   "FieldNumber": 1,
                   "TypeName": "TypeRefs.MsgA",
                   "Name": "A",
-                  "OriginalName": "a",
-                  "DefaultValue": ""
+                  "OriginalName": "a"
                 },
                 {
                   "FieldNumber": 2,
                   "TypeName": "TypeRefs.MsgB",
                   "Name": "B",
-                  "OriginalName": "b",
-                  "DefaultValue": ""
+                  "OriginalName": "b"
                 },
                 {
                   "FieldNumber": 3,
                   "TypeName": "TypeRefs.MsgB+MsgC",
                   "Name": "C",
-                  "OriginalName": "c",
-                  "DefaultValue": ""
+                  "OriginalName": "c"
                 },
                 {
                   "FieldNumber": 4,
                   "TypeName": "TypeRefs.MsgD",
                   "Name": "D",
-                  "OriginalName": "d",
-                  "Conditional": "NonDefault",
-                  "DefaultValue": ""
+                  "OriginalName": "d"
                 }
               ],
               "Name": "MsgC",
@@ -85,31 +73,25 @@
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
-              "OriginalName": "a",
-              "DefaultValue": ""
+              "OriginalName": "a"
             },
             {
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
-              "OriginalName": "b",
-              "DefaultValue": ""
+              "OriginalName": "b"
             },
             {
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
-              "OriginalName": "c",
-              "Conditional": "NonDefault",
-              "DefaultValue": ""
+              "OriginalName": "c"
             },
             {
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
-              "OriginalName": "d",
-              "Conditional": "NonDefault",
-              "DefaultValue": ""
+              "OriginalName": "d"
             }
           ],
           "Name": "MsgB",
@@ -122,29 +104,25 @@
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
-              "OriginalName": "a",
-              "DefaultValue": ""
+              "OriginalName": "a"
             },
             {
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
-              "OriginalName": "b",
-              "DefaultValue": ""
+              "OriginalName": "b"
             },
             {
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
-              "OriginalName": "c",
-              "DefaultValue": ""
+              "OriginalName": "c"
             },
             {
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
-              "OriginalName": "d",
-              "DefaultValue": ""
+              "OriginalName": "d"
             }
           ],
           "Name": "MsgD",

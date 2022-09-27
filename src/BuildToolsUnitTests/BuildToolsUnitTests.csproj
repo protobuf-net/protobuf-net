@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
+    <ProjectReference Include="../protobuf-net.Nano/protobuf-net.Nano.csproj" ReferenceOutputAssembly="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,23 +44,6 @@
 
     <Compile Remove="AOT/Schemas/**/*.cs" />
     <None Include="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
-    <Compile Update="AOT\Schemas\Enums.cs">
-      <DependentUpon>Enums.proto</DependentUpon>
-    </Compile>
-    <None Update="AOT\Schemas\Enums.pjson">
-      <DependentUpon>Enums.proto</DependentUpon>
-    </None>
-    <None Update="AOT\Schemas\everything.json">
-      <DependentUpon>everything.proto</DependentUpon>
-    </None>
-    <None Update="AOT\Schemas\everything.pjson">
-      <DependentUpon>everything.proto</DependentUpon>
-    </None>
-    <None Update="AOT\Schemas\Services.json">
-      <DependentUpon>Services.proto</DependentUpon>
-    </None>
-    <Compile Update="AOT\Schemas\Services.cs">
-      <DependentUpon>Services.proto</DependentUpon>
-    </Compile>
+    <!--<Compile Include="AOT\Schemas\Basic.cs" />-->
   </ItemGroup>
 </Project>

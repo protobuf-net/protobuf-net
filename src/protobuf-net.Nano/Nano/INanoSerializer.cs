@@ -8,7 +8,7 @@ public interface INanoSerializer<T>
     /// <summary>
     /// Parse a message
     /// </summary>
-    T Read(ref Reader reader);
+    T Read(ref PrepReader reader);
     /// <summary>
     /// Measure a message
     /// </summary>
@@ -16,5 +16,5 @@ public interface INanoSerializer<T>
     /// <summary>
     /// Write a message
     /// </summary>
-    void Write(in T value, ref Writer writer);
+    void Write(in T value, ref PrepWriter writer);
 }

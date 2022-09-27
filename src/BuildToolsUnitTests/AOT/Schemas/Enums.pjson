@@ -38,7 +38,7 @@
             }
           ],
           "TypeName": "int32",
-          "Name": "Corpus",
+          "Name": "Corpus2",
           "FullyQualifiedPrefix": "BasicPackage."
         }
       ]

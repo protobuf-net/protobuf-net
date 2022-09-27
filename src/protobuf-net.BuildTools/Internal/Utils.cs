@@ -45,38 +45,38 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static bool InGenericCollectionsNamespace(this ISymbol symbol)
             => InNamespace(symbol, "System", "Collections", "Generic");
-        
+
         internal static bool InThreadingNamespace(this ISymbol symbol)
             => InNamespace(symbol, "System", "Threading");
-        
+
         internal static bool InThreadingTasksNamespace(this ISymbol symbol)
             => InNamespace(symbol, "System", "Threading", "Tasks");
-        
+
         internal static bool InProtoBufNamespace(this ISymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
 
         internal static bool InNamespace(this ISymbol symbol, string ns0)
         {
             var ns = symbol.ContainingNamespace;
-            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+            return ns?.Name == ns0 && ns.ContainingNamespace?.IsGlobalNamespace == true;
         }
 
         internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1)
         {
             var ns = symbol.ContainingNamespace;
-            if (ns.Name != ns1) return false;
+            if (ns is null || ns.Name != ns1) return false;
             ns = ns.ContainingNamespace;
-            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+            return ns?.Name == ns0 && ns.ContainingNamespace?.IsGlobalNamespace == true;
         }
 
         internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1, string ns2)
         {
             var ns = symbol.ContainingNamespace;
-            if (ns.Name != ns2) return false;
+            if (ns is null || ns.Name != ns2) return false;
             ns = ns.ContainingNamespace;
-            if (ns.Name != ns1) return false;
+            if (ns is null ||  ns.Name != ns1) return false;
             ns = ns.ContainingNamespace;
-            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+            return ns?.Name == ns0 && ns.ContainingNamespace?.IsGlobalNamespace == true;
         }
 
         internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame

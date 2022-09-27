@@ -14,9 +14,9 @@ internal class CodeGenEnum : CodeGenType
     }
 
     public string OriginalName { get; set; }
-    
+
     private NonNullableList<CodeGenEnumValue>? _enumValues;
-    public ICollection<CodeGenEnumValue> EnumValues => _enumValues ??= new();
+    public IList<CodeGenEnumValue> EnumValues => _enumValues ??= new();
     
     public CodeGenType Type { get; set; } = CodeGenSimpleType.Int32;
     public bool ShouldSerializeType() => false;

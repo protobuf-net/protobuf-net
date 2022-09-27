@@ -17,7 +17,7 @@ namespace BasicPackage
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"basic_field")]
-        [global::System.ComponentModel.DefaultValue()]
+        [global::System.ComponentModel.DefaultValue("")]
         public string BasicField { get; set; }
 
         internal static void Serialize(BasicMessage value, ref global::ProtoBuf.Nano.Writer writer)

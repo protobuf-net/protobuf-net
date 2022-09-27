@@ -15,6 +15,15 @@ internal static class CodeGenUtils
         var simpleCodeGenType = TryResolveKnownCodeGenType(symbol, dataFormat);
         if (simpleCodeGenType is not null) return simpleCodeGenType;
 
+        if (symbol is IArrayTypeSymbol arr && arr.Rank == 1)
+        {
+            var inner = ResolveCodeGenType(arr.ElementType, dataFormat, parseContext, out var innerRepeated);
+            if (inner is not null && innerRepeated == RepeatedKind.Single)
+            {
+                repeated = RepeatedKind.Array;
+                return inner;
+            }
+        }
         if (symbol.InGenericCollectionsNamespace() && symbol is INamedTypeSymbol named)
         {
             switch (symbol.Name)
@@ -45,7 +54,18 @@ internal static class CodeGenUtils
 
     internal static CodeGenType? TryResolveKnownCodeGenType(this ITypeSymbol symbol, DataFormat? dataFormat)
     {
-        if (symbol.InNamespace("System"))
+        if (symbol is IArrayTypeSymbol arr)
+        {
+            if (arr.Rank == 1 && arr.ElementType.InNamespace("System") && arr.ElementType.Name == nameof(Byte))
+            {
+                return dataFormat switch
+                {
+                    DataFormat.Default or null => CodeGenSimpleType.Bytes,
+                    _ => Invalid(),
+                };
+            }
+        }
+        else if (symbol.InNamespace("System"))
         {
             return symbol.Name switch
             {
@@ -105,8 +125,6 @@ internal static class CodeGenUtils
             };
         }
         return null;
-        CodeGenType Invalid() =>
-            throw new InvalidOperationException(
-                $"{symbol.Name} with format {dataFormat?.ToString() ?? "(null)"} is not supported");
+        CodeGenType Invalid() => throw new InvalidOperationException($"{symbol.Name} with format {dataFormat?.ToString() ?? "(null)"} is not supported");
     }
 }

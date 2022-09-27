@@ -809,6 +809,27 @@
           "Name": "PrimitiveFieldTypes",
           "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 14,
+              "TypeName": "string",
+              "Name": "Strings",
+              "OriginalName": "string",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 15,
+              "TypeName": "bytes",
+              "Name": "Bytes",
+              "OriginalName": "bytes",
+              "Repeated": "List"
+            }
+          ],
+          "Name": "RepeatedPrimitiveFieldTypes",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
         }
       ],
       "Enums": [

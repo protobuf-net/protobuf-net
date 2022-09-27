@@ -17,12 +17,12 @@ namespace BasicPackage
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(2, Name = @"corpus")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: BasicPackage.Corpus= */)]
-        public global::BasicPackage.Corpus Corpus { get; set; }
+        [global::System.ComponentModel.DefaultValue(global::BasicPackage.Corpus2.CorpusUnspecified)]
+        public global::BasicPackage.Corpus2 Corpus { get; set; }
 
         internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Corpus != /* invalid type / value: BasicPackage.Corpus= */)
+            if (value.Corpus != global::BasicPackage.Corpus2.CorpusUnspecified)
             {
                 writer.WriteVarint(16); // field 2, varint
                 writer.WriteVarint(unchecked((uint)(int)value.Corpus));
@@ -32,7 +32,7 @@ namespace BasicPackage
         internal static ulong Measure(SearchRequest value)
         {
             ulong len = 0;
-            if (value.Corpus != /* invalid type / value: BasicPackage.Corpus= */)
+            if (value.Corpus != global::BasicPackage.Corpus2.CorpusUnspecified)
             {
                 len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)(int)value.Corpus)) + 1;
             }
@@ -47,14 +47,14 @@ namespace BasicPackage
             {
                 switch (tag)
                 {
-                    case 18: // field 2, string
-                        oldEnd = reader.ConstrainByLengthPrefix();
-                        value.Corpus = global::BasicPackage.Corpus.Merge(value.Corpus, ref reader);
-                        reader.Unconstrain(oldEnd);
+                    case 16: // field 2, varint
+                        value.Corpus = (global::BasicPackage.Corpus2)reader.ReadVarintInt32();
                         break;
-                    case 19: // field 2, group
-                        value.Corpus = global::BasicPackage.Corpus.Merge(value.Corpus, ref reader);
-                        reader.PopGroup(2);
+                    case 21: // field 2, fixed32
+                        value.Corpus = (global::BasicPackage.Corpus2)reader.ReadFixed32Int32();
+                        break;
+                    case 17: // field 2, fixed64
+                        value.Corpus = (global::BasicPackage.Corpus2)reader.ReadFixed64Int32();
                         break;
                     default:
                         if ((tag & 7) == 4) // end-group
@@ -79,7 +79,7 @@ namespace BasicPackage
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public enum Corpus
+    public enum Corpus2
     {
         [global::ProtoBuf.ProtoEnum(Name = @"CORPUS_UNSPECIFIED")]
         CorpusUnspecified = 0,

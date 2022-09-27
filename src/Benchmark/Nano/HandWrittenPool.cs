@@ -23,7 +23,7 @@ internal sealed class HCSerializer : INanoSerializer<ForwardRequest>, INanoSeria
     public static HCSerializer Instance { get; } = new HCSerializer();
     private HCSerializer() { }
 
-    ForwardRequest INanoSerializer<ForwardRequest>.Read(ref Reader reader)
+    ForwardRequest INanoSerializer<ForwardRequest>.Read(ref PrepReader reader)
     {
         throw new NotImplementedException();
     }
@@ -33,12 +33,12 @@ internal sealed class HCSerializer : INanoSerializer<ForwardRequest>, INanoSeria
         throw new NotImplementedException();
     }
 
-    void INanoSerializer<ForwardRequest>.Write(in ForwardRequest value, ref Writer writer)
+    void INanoSerializer<ForwardRequest>.Write(in ForwardRequest value, ref PrepWriter writer)
     {
         throw new NotImplementedException();
     }
 
-    ForwardResponse INanoSerializer<ForwardResponse>.Read(ref Reader reader)
+    ForwardResponse INanoSerializer<ForwardResponse>.Read(ref PrepReader reader)
     {
         throw new NotImplementedException();
     }
@@ -48,7 +48,7 @@ internal sealed class HCSerializer : INanoSerializer<ForwardRequest>, INanoSeria
         throw new NotImplementedException();
     }
 
-    void INanoSerializer<ForwardResponse>.Write(in ForwardResponse value, ref Writer writer)
+    void INanoSerializer<ForwardResponse>.Write(in ForwardResponse value, ref PrepWriter writer)
     {
         throw new NotImplementedException();
     }
@@ -61,10 +61,10 @@ public sealed class ForwardRequest : IDisposable
     private ReadOnlyMemory<byte> _requestContextInfo;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ForwardRequest ReadSingle(ref Reader reader) => Merge(null, ref reader);
+    private static ForwardRequest ReadSingle(ref PrepReader reader) => Merge(null, ref reader);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void WriteSingle(ForwardRequest value, ref Writer writer)
+    internal static void WriteSingle(ForwardRequest value, ref PrepWriter writer)
     {
         if (!value._traceId.IsEmpty)
         {
@@ -88,7 +88,7 @@ public sealed class ForwardRequest : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ForwardRequest Merge(ForwardRequest? value, ref Reader reader)
+    internal static ForwardRequest Merge(ForwardRequest? value, ref PrepReader reader)
     {
         value ??= new(default, default, default);
         uint tag;
@@ -136,7 +136,7 @@ public sealed class ForwardRequest : IDisposable
     {
         var len = checked((int)Measure(value));
         ctx.SetPayloadLength(len);
-        var writer = new Writer(ctx.GetBufferWriter());
+        var writer = new PrepWriter(ctx.GetBufferWriter());
         WriteSingle(value, ref writer);
         writer.Dispose();
         ctx.Complete();
@@ -147,7 +147,7 @@ public sealed class ForwardRequest : IDisposable
         var ros = ctx.PayloadAsReadOnlySequence();
         if (!ros.IsSingleSegment) return Slow(ros);
 
-        var reader = new Reader(ros.First);
+        var reader = new PrepReader(ros.First);
         var value = ReadSingle(ref reader);
         reader.Dispose();
         return value;
@@ -158,7 +158,7 @@ public sealed class ForwardRequest : IDisposable
             var oversized = ArrayPool<byte>.Shared.Rent(len);
             payload.CopyTo(oversized);
 
-            var reader = new Reader(oversized, 0, len);
+            var reader = new PrepReader(oversized, 0, len);
             var value = ReadSingle(ref reader);
             reader.Dispose();
             ArrayPool<byte>.Shared.Return(oversized);
@@ -179,19 +179,19 @@ public sealed class ForwardRequest : IDisposable
         ulong length = 0;
         if (!value._traceId.IsEmpty)
         {
-            length += 1 + Writer.MeasureWithLengthPrefix(value._traceId);
+            length += 1 + PrepWriter.MeasureWithLengthPrefix(value._traceId);
         }
         if (!value._itemRequests.IsEmpty)
         {
             length += 1 * (uint)value._itemRequests.Length;
             foreach (ref readonly var item in value._itemRequests.Span)
             {
-                length += Writer.MeasureWithLengthPrefix(ForwardPerItemRequest.Measure(item));
+                length += PrepWriter.MeasureWithLengthPrefix(ForwardPerItemRequest.Measure(item));
             }
         }
         if (!value._requestContextInfo.IsEmpty)
         {
-            length += 1 + Writer.MeasureWithLengthPrefix((uint)value._requestContextInfo.Length);
+            length += 1 + PrepWriter.MeasureWithLengthPrefix((uint)value._requestContextInfo.Length);
         }
         return length;
     }
@@ -217,7 +217,7 @@ public readonly struct ForwardPerItemRequest : IDisposable
     private readonly ReadOnlyMemory<byte> _itemContext;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void Merge(ref ForwardPerItemRequest value, ref Reader reader, bool reset)
+    internal static void Merge(ref ForwardPerItemRequest value, ref PrepReader reader, bool reset)
     {
         if (reset) value = default;
         uint tag;
@@ -255,16 +255,16 @@ public readonly struct ForwardPerItemRequest : IDisposable
         ulong length = 0;
         if (!value._itemId.IsEmpty)
         {
-            length += 1 + Writer.MeasureWithLengthPrefix((uint)value._itemId.Length);
+            length += 1 + PrepWriter.MeasureWithLengthPrefix((uint)value._itemId.Length);
         }
         if (!value._itemContext.IsEmpty)
         {
-            length += 1 + Writer.MeasureWithLengthPrefix((uint)value._itemContext.Length);
+            length += 1 + PrepWriter.MeasureWithLengthPrefix((uint)value._itemContext.Length);
         }
         return length;
     }
 
-    internal static void WriteSingle(in ForwardPerItemRequest value, ref Writer writer)
+    internal static void WriteSingle(in ForwardPerItemRequest value, ref PrepWriter writer)
     {
         if (!value._itemId.IsEmpty)
         {
@@ -291,7 +291,7 @@ public readonly struct ForwardPerItemResponse : IDisposable
     private readonly ReadOnlyMemory<byte> _extraResult;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void Merge(ref ForwardPerItemResponse value, ref Reader reader, bool reset)
+    internal static void Merge(ref ForwardPerItemResponse value, ref PrepReader reader, bool reset)
     {
         if (reset) value = default;
         uint tag;
@@ -319,7 +319,7 @@ public readonly struct ForwardPerItemResponse : IDisposable
         }
         if (!value._extraResult.IsEmpty)
         {
-            length += 1 + Writer.MeasureWithLengthPrefix((uint)value._extraResult.Length);
+            length += 1 + PrepWriter.MeasureWithLengthPrefix((uint)value._extraResult.Length);
         }
         return length;
     }
@@ -338,7 +338,7 @@ public readonly struct ForwardPerItemResponse : IDisposable
         RefCountedMemory.Release(_extraResult);
     }
 
-    internal static void WriteSingle(in ForwardPerItemResponse value, ref Writer writer)
+    internal static void WriteSingle(in ForwardPerItemResponse value, ref PrepWriter writer)
     {
         if (value._result != 0)
         {
@@ -374,21 +374,21 @@ public sealed class ForwardResponse : IDisposable
             length += 1 * (uint)value.ItemResponses.Length;
             foreach (ref readonly var item in value._itemResponses.Span)
             {
-                length += Writer.MeasureWithLengthPrefix(ForwardPerItemResponse.Measure(item));
+                length += PrepWriter.MeasureWithLengthPrefix(ForwardPerItemResponse.Measure(item));
             }
         }
         if (value._routeLatencyInUs != 0)
         {
-            length += 1 + Writer.MeasureVarint64((ulong)value._routeLatencyInUs);
+            length += 1 + PrepWriter.MeasureVarint64((ulong)value._routeLatencyInUs);
         }
         if (value._routeStartTimeInTicks != 0)
         {
-            length += 1 + Writer.MeasureVarint64((ulong)value._routeStartTimeInTicks);
+            length += 1 + PrepWriter.MeasureVarint64((ulong)value._routeStartTimeInTicks);
         }
         return length;
     }
 
-    internal static void WriteSingle(ForwardResponse value, ref Writer writer)
+    internal static void WriteSingle(ForwardResponse value, ref PrepWriter writer)
     {
         if (!value.ItemResponses.IsEmpty)
         {
@@ -412,10 +412,10 @@ public sealed class ForwardResponse : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ForwardResponse ReadSingle(ref Reader reader) => Merge(null, ref reader);
+    private static ForwardResponse ReadSingle(ref PrepReader reader) => Merge(null, ref reader);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ForwardResponse Merge(ForwardResponse? value, ref Reader reader)
+    internal static ForwardResponse Merge(ForwardResponse? value, ref PrepReader reader)
     {
         value ??= new(default, 0, 0);
         uint tag;
@@ -455,7 +455,7 @@ public sealed class ForwardResponse : IDisposable
     {
         var len = checked((int)Measure(value));
         ctx.SetPayloadLength(len);
-        var writer = new Writer(ctx.GetBufferWriter());
+        var writer = new PrepWriter(ctx.GetBufferWriter());
         WriteSingle(value, ref writer);
         writer.Dispose();
         ctx.Complete();
@@ -466,7 +466,7 @@ public sealed class ForwardResponse : IDisposable
         var ros = ctx.PayloadAsReadOnlySequence();
         if (!ros.IsSingleSegment) return Slow(ros);
 
-        var reader = new Reader(ros.First);
+        var reader = new PrepReader(ros.First);
         var value = ReadSingle(ref reader);
         reader.Dispose();
         return value;
@@ -477,7 +477,7 @@ public sealed class ForwardResponse : IDisposable
             var oversized = ArrayPool<byte>.Shared.Rent(len);
             payload.CopyTo(oversized);
 
-            var reader = new Reader(oversized, 0, len);
+            var reader = new PrepReader(oversized, 0, len);
             var value = ReadSingle(ref reader);
             reader.Dispose();
             ArrayPool<byte>.Shared.Return(oversized);

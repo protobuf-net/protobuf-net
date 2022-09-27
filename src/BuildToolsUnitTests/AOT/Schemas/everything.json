@@ -201,23 +201,20 @@
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
                       "OriginalName": "result",
-                      "Repeated": "List",
-                      "DefaultValue": ""
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
                       "OriginalName": "grouped",
-                      "Repeated": "List",
-                      "DefaultValue": ""
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
-                      "OriginalName": "upper",
-                      "DefaultValue": ""
+                      "OriginalName": "upper"
                     }
                   ],
                   "Name": "SearchResponse",
@@ -419,23 +416,20 @@
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
                       "OriginalName": "result",
-                      "Repeated": "List",
-                      "DefaultValue": ""
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
                       "OriginalName": "grouped",
-                      "Repeated": "List",
-                      "DefaultValue": ""
+                      "Repeated": "List"
                     },
                     {
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
-                      "OriginalName": "upper",
-                      "DefaultValue": ""
+                      "OriginalName": "upper"
                     }
                   ],
                   "Name": "SearchResponse",
@@ -455,14 +449,12 @@
               "FieldNumber": 1,
               "TypeName": "AllTheThings.TestNetObject",
               "Name": "Foo",
-              "OriginalName": "foo",
-              "DefaultValue": ""
+              "OriginalName": "foo"
             },
             {
               "FieldNumber": 2,
               "TypeName": "AllTheThings.TestNetObject",
-              "Name": "barRef",
-              "DefaultValue": ""
+              "Name": "barRef"
             },
             {
               "FieldNumber": 3,
@@ -790,23 +782,20 @@
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
               "OriginalName": "result",
-              "Repeated": "List",
-              "DefaultValue": ""
+              "Repeated": "List"
             },
             {
               "FieldNumber": 10,
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
               "OriginalName": "grouped",
-              "Repeated": "List",
-              "DefaultValue": ""
+              "Repeated": "List"
             },
             {
               "FieldNumber": 12,
               "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
-              "OriginalName": "upper",
-              "DefaultValue": ""
+              "OriginalName": "upper"
             }
           ],
           "Name": "SearchResponse",
