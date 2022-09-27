@@ -104,7 +104,7 @@ internal class CodeGenField
                 break;
             case FieldDescriptorProto.Label.LabelRepeated:
                 newField.Repeated = RepeatedKind.List;
-                if (newField.Type.IsWellKnownType(out var type))
+                if (context.UseLegacyArrayStyle && newField.Type.IsWellKnownType(out _))
                 {
                     switch (field.type)
                     {

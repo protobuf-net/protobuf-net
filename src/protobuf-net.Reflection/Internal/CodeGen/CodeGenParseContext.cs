@@ -8,6 +8,7 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenParseContext
 {
+    public bool UseLegacyArrayStyle { get; set; }
     public NameNormalizer NameNormalizer { get; set; } = NameNormalizer.Default;
 
     private readonly Dictionary<string, CodeGenType> _contractTypes = new Dictionary<string, CodeGenType>();

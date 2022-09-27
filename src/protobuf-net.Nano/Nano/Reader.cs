@@ -18,13 +18,14 @@ public ref partial struct Reader
 
     public uint ReadFixed32UInt32() => throw new NotImplementedException();
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public int ReadFixed32Int32() => unchecked((int)ReadFixed32UInt32());
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public long ReadFixed32Int64() => (long)ReadFixed32Int32();
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public ulong ReadFixed32UInt64() => (ulong)ReadFixed32UInt32();
 
     public uint ReadVarintUInt32() => throw new NotImplementedException();
     public ulong ReadVarintUInt64() => throw new NotImplementedException();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public int ReadVarintInt64() => unchecked((int)ReadVarintUInt64());
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public int ReadVarintInt32() => unchecked((int)ReadVarintUInt32());
-
-
 
 
     public ulong ReadFixed64UInt64() => throw new NotImplementedException();
@@ -53,9 +54,27 @@ public ref partial struct Reader
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public double ReadFixed32Double() => (double)ReadFixed32Single();
     [MethodImpl(MethodImplOptions.AggressiveInlining)] public float ReadFixed64Single() => (float)ReadFixed64Double();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReadVarintInt32Signed()
+    {
+        const int Int32Msb = 1 << 31;
 
+        int value = unchecked((int)ReadVarintUInt32());
+        return (-(value & 0x01)) ^ ((value >> 1) & ~Int32Msb);
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ReadVarintInt64Signed()
+    {
+        const long Int64Msb = 1L << 63;
+
+        long value = unchecked((long)ReadVarintUInt64());
+        return (-(value & 0x01L)) ^ ((value >> 1) & ~Int64Msb);
+    }
 
     uint _lastGroup;
+
+    public ulong Position => throw new NotImplementedException();
+
     public void PushGroup(uint tag)
     {
         var group = tag >> 3;

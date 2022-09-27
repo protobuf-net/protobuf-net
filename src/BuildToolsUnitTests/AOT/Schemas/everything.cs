@@ -28,17 +28,17 @@ namespace AllTheThings
 
         internal static void Write(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Foo is global::AllTheThings.TestNetObject __obj1)
+            if (value.Foo is global::AllTheThings.TestNetObject obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarint(global::AllTheThings.TestNetObject.Measure(__obj1));
-                global::AllTheThings.TestNetObject.Write(__obj1, ref writer);
+                writer.WriteVarint(global::AllTheThings.TestNetObject.Measure(obj1));
+                global::AllTheThings.TestNetObject.Write(obj1, ref writer);
             }
-            if (value.barRef is global::AllTheThings.TestNetObject __obj2)
+            if (value.barRef is global::AllTheThings.TestNetObject obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarint(global::AllTheThings.TestNetObject.Measure(__obj2));
-                global::AllTheThings.TestNetObject.Write(__obj2, ref writer);
+                writer.WriteVarint(global::AllTheThings.TestNetObject.Measure(obj2));
+                global::AllTheThings.TestNetObject.Write(obj2, ref writer);
             }
             if (value.barDyn is not null)
             {
@@ -194,10 +194,10 @@ namespace AllTheThings
         private float __pbn__F;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"g")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: bool=true */)]
+        [global::System.ComponentModel.DefaultValue(true)]
         public bool G
         {
-            get => (__pbn_field_presence_0 & 64) != 0 ? __pbn__G : /* invalid type / value: bool=true */;
+            get => (__pbn_field_presence_0 & 64) != 0 ? __pbn__G : true;
             set { __pbn__G = value; __pbn_field_presence_0 |= 64; }
         }
         public bool ShouldSerializeG() => (__pbn_field_presence_0 & 64) != 0;
@@ -212,32 +212,32 @@ namespace AllTheThings
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
                 writer.WriteVarint(13); // field 1, fixed32
-                writer.WriteFixed(value.A);
+                writer.WriteFixed32(value.A);
             }
             if ((value.__pbn_field_presence_0 & 2) != 0)
             {
                 writer.WriteVarint(21); // field 2, fixed32
-                writer.WriteFixed(value.B);
+                writer.WriteFixed32(value.B);
             }
             if ((value.__pbn_field_presence_0 & 4) != 0)
             {
                 writer.WriteVarint(29); // field 3, fixed32
-                writer.WriteFixed(value.C);
+                writer.WriteFixed32(value.C);
             }
             if ((value.__pbn_field_presence_0 & 8) != 0)
             {
                 writer.WriteVarint(37); // field 4, fixed32
-                writer.WriteFixed(value.D);
+                writer.WriteFixed32(value.D);
             }
             if ((value.__pbn_field_presence_0 & 16) != 0)
             {
                 writer.WriteVarint(45); // field 5, fixed32
-                writer.WriteFixed(value.E);
+                writer.WriteFixed32(value.E);
             }
             if ((value.__pbn_field_presence_0 & 32) != 0)
             {
                 writer.WriteVarint(53); // field 6, fixed32
-                writer.WriteFixed(value.F);
+                writer.WriteFixed32(value.F);
             }
             if ((value.__pbn_field_presence_0 & 64) != 0)
             {
@@ -245,7 +245,7 @@ namespace AllTheThings
                 writer.WriteVarint(value.G);
             }
             writer.WriteVarint(64); // field 8, varint
-            writer.WriteVarint(unchecked((uint)value.requiredWithDefault));
+            writer.WriteVarint(value.requiredWithDefault);
         }
 
         internal static ulong Measure(MagicValues value)
@@ -286,7 +286,7 @@ namespace AllTheThings
                 len += 2;
                 len += 0;
             }
-            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.requiredWithDefault));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.requiredWithDefault);
             return len + 1;
         }
 
@@ -431,66 +431,66 @@ pqr	stu";
 
         internal static void Write(SampleMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.FooName is { Length: > 0} s)
+            if (value.FooName is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
-            if (value.Name is { Length: > 0} s)
+            if (value.Name is { Length: > 0 } obj4)
             {
                 writer.WriteVarint(34); // field 4, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj4);
             }
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
                 writer.WriteVarint(72); // field 9, varint
                 writer.WriteVarint(value.SubMessage);
             }
-            if (value.Name2 is { Length: > 0} s)
+            if (value.Name2 is { Length: > 0 } obj5)
             {
                 writer.WriteVarint(42); // field 5, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj5);
             }
             if ((value.__pbn_field_presence_0 & 2) != 0)
             {
                 writer.WriteVarint(80); // field 10, varint
                 writer.WriteVarint(value.SubMessage2);
             }
-            if (value.BarName is { Length: > 0} s)
+            if (value.BarName is { Length: > 0 } obj12)
             {
                 writer.WriteVarint(98); // field 12, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj12);
             }
         }
 
         internal static ulong Measure(SampleMessage value)
         {
             ulong len = 0;
-            if (value.FooName is { Length: > 0} s)
+            if (value.FooName is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
-            if (value.Name is { Length: > 0} s)
+            if (value.Name is { Length: > 0 } obj4)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj4);
             }
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
                 len += 2;
                 len += 0;
             }
-            if (value.Name2 is { Length: > 0} s)
+            if (value.Name2 is { Length: > 0 } obj5)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj5);
             }
             if ((value.__pbn_field_presence_0 & 2) != 0)
             {
                 len += 2;
                 len += 0;
             }
-            if (value.BarName is { Length: > 0} s)
+            if (value.BarName is { Length: > 0 } obj12)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj12);
             }
             return len;
         }
@@ -594,10 +594,10 @@ pqr	stu";
         private int __pbn__ResultPerPage;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"corpus")]
-        [global::System.ComponentModel.DefaultValue(/* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */)]
+        [global::System.ComponentModel.DefaultValue(global::AllTheThings.SearchRequest.Corpus.Universal)]
         public global::AllTheThings.SearchRequest.Corpus CorpusValue
         {
-            get => (__pbn_field_presence_0 & 4) != 0 ? __pbn__CorpusValue : /* invalid type / value: AllTheThings.SearchRequest+Corpus=UNIVERSAL */;
+            get => (__pbn_field_presence_0 & 4) != 0 ? __pbn__CorpusValue : global::AllTheThings.SearchRequest.Corpus.Universal;
             set { __pbn__CorpusValue = value; __pbn_field_presence_0 |= 4; }
         }
         public bool ShouldSerializeCorpusValue() => (__pbn_field_presence_0 & 4) != 0;
@@ -625,46 +625,46 @@ pqr	stu";
 
         internal static void Write(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Query is { Length: > 0} s)
+            if (value.Query is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
                 writer.WriteVarint(16); // field 2, varint
-                writer.WriteVarint(unchecked((uint)value.PageNumber));
+                writer.WriteVarint(value.PageNumber);
             }
             if ((value.__pbn_field_presence_0 & 2) != 0)
             {
                 writer.WriteVarint(24); // field 3, varint
-                writer.WriteVarint(unchecked((uint)value.ResultPerPage));
+                writer.WriteVarint(value.ResultPerPage);
             }
             if ((value.__pbn_field_presence_0 & 4) != 0)
             {
                 writer.WriteVarint(32); // field 4, varint
-                writer.WriteVarint(unchecked((uint)(int)value.CorpusValue));
+                writer.WriteVarint((int)value.CorpusValue);
             }
         }
 
         internal static ulong Measure(SearchRequest value)
         {
             ulong len = 0;
-            if (value.Query is { Length: > 0} s)
+            if (value.Query is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.PageNumber)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.PageNumber) + 1;
             }
             if ((value.__pbn_field_presence_0 & 2) != 0)
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.ResultPerPage)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.ResultPerPage) + 1;
             }
             if ((value.__pbn_field_presence_0 & 4) != 0)
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)(int)value.CorpusValue)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint((int)value.CorpusValue) + 1;
             }
             return len;
         }
@@ -767,15 +767,15 @@ pqr	stu";
 
             internal static void Write(Result value, ref global::ProtoBuf.Nano.Writer writer)
             {
-                if (value.Url is { Length: > 0} s)
+                if (value.Url is { Length: > 0 } obj1)
                 {
                     writer.WriteVarint(10); // field 1, string
-                    writer.WriteWithLengthPrefix(s);
+                    writer.WriteWithLengthPrefix(obj1);
                 }
-                if (value.Title is { Length: > 0} s)
+                if (value.Title is { Length: > 0 } obj2)
                 {
                     writer.WriteVarint(18); // field 2, string
-                    writer.WriteWithLengthPrefix(s);
+                    writer.WriteWithLengthPrefix(obj2);
                 }
             #if NET5_0_OR_GREATER
                 foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Snippets))
@@ -791,13 +791,13 @@ pqr	stu";
             internal static ulong Measure(Result value)
             {
                 ulong len = 0;
-                if (value.Url is { Length: > 0} s)
+                if (value.Url is { Length: > 0 } obj1)
                 {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
                 }
-                if (value.Title is { Length: > 0} s)
+                if (value.Title is { Length: > 0 } obj2)
                 {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj2);
                 }
             #if NET5_0_OR_GREATER
                 foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Snippets))
@@ -813,7 +813,6 @@ pqr	stu";
 
             internal static Result Merge(Result value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong packed;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -876,15 +875,15 @@ pqr	stu";
 
             internal static void Write(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
             {
-                if (value.Url is { Length: > 0} s)
+                if (value.Url is { Length: > 0 } obj2)
                 {
                     writer.WriteVarint(18); // field 2, string
-                    writer.WriteWithLengthPrefix(s);
+                    writer.WriteWithLengthPrefix(obj2);
                 }
-                if (value.Title is { Length: > 0} s)
+                if (value.Title is { Length: > 0 } obj3)
                 {
                     writer.WriteVarint(26); // field 3, string
-                    writer.WriteWithLengthPrefix(s);
+                    writer.WriteWithLengthPrefix(obj3);
                 }
             #if NET5_0_OR_GREATER
                 foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Snippets))
@@ -900,13 +899,13 @@ pqr	stu";
             internal static ulong Measure(Grouped value)
             {
                 ulong len = 0;
-                if (value.Url is { Length: > 0} s)
+                if (value.Url is { Length: > 0 } obj2)
                 {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj2);
                 }
-                if (value.Title is { Length: > 0} s)
+                if (value.Title is { Length: > 0 } obj3)
                 {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj3);
                 }
             #if NET5_0_OR_GREATER
                 foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Snippets))
@@ -922,7 +921,6 @@ pqr	stu";
 
             internal static Grouped Merge(Grouped value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong packed;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -985,15 +983,15 @@ pqr	stu";
 
             internal static void Write(Upper value, ref global::ProtoBuf.Nano.Writer writer)
             {
-                if (value.Url is { Length: > 0} s)
+                if (value.Url is { Length: > 0 } obj2)
                 {
                     writer.WriteVarint(18); // field 2, string
-                    writer.WriteWithLengthPrefix(s);
+                    writer.WriteWithLengthPrefix(obj2);
                 }
-                if (value.Title is { Length: > 0} s)
+                if (value.Title is { Length: > 0 } obj3)
                 {
                     writer.WriteVarint(26); // field 3, string
-                    writer.WriteWithLengthPrefix(s);
+                    writer.WriteWithLengthPrefix(obj3);
                 }
             #if NET5_0_OR_GREATER
                 foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Snippets))
@@ -1009,13 +1007,13 @@ pqr	stu";
             internal static ulong Measure(Upper value)
             {
                 ulong len = 0;
-                if (value.Url is { Length: > 0} s)
+                if (value.Url is { Length: > 0 } obj2)
                 {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj2);
                 }
-                if (value.Title is { Length: > 0} s)
+                if (value.Title is { Length: > 0 } obj3)
                 {
-                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                    len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj3);
                 }
             #if NET5_0_OR_GREATER
                 foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Snippets))
@@ -1031,7 +1029,6 @@ pqr	stu";
 
             internal static Upper Merge(Upper value, ref global::ProtoBuf.Nano.Reader reader)
             {
-                ulong packed;
                 if (value is null) value = new();
                 uint tag;
                 while ((tag = reader.ReadTag()) != 0)
@@ -1084,7 +1081,7 @@ pqr	stu";
         #endif
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Result.Measure(__pbn_item);
+                writer.WriteVarint(global::AllTheThings.SearchResponse.Result.Measure(__pbn_item));
                 global::AllTheThings.SearchResponse.Result.Write(__pbn_item, ref writer);
             }
         #if NET5_0_OR_GREATER
@@ -1094,14 +1091,14 @@ pqr	stu";
         #endif
             {
                 writer.WriteVarint(82); // field 10, string
-                writer.WriteVarintUInt64(global::AllTheThings.SearchResponse.Grouped.Measure(__pbn_item);
+                writer.WriteVarint(global::AllTheThings.SearchResponse.Grouped.Measure(__pbn_item));
                 global::AllTheThings.SearchResponse.Grouped.Write(__pbn_item, ref writer);
             }
-            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper __obj12)
+            if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
             {
                 writer.WriteVarint(98); // field 12, string
-                writer.WriteVarint(global::AllTheThings.SearchResponse.Upper.Measure(__obj12));
-                global::AllTheThings.SearchResponse.Upper.Write(__obj12, ref writer);
+                writer.WriteVarint(global::AllTheThings.SearchResponse.Upper.Measure(obj12));
+                global::AllTheThings.SearchResponse.Upper.Write(obj12, ref writer);
             }
         }
 
@@ -1114,7 +1111,7 @@ pqr	stu";
             foreach (var __pbn_item in value.Results)
         #endif
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Result.Measure(obj1));
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Result.Measure(__pbn_item));
                 len += 0;
             }
         #if NET5_0_OR_GREATER
@@ -1123,7 +1120,7 @@ pqr	stu";
             foreach (var __pbn_item in value.Groupeds)
         #endif
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Grouped.Measure(obj10));
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::AllTheThings.SearchResponse.Grouped.Measure(__pbn_item));
                 len += 0;
             }
             if (value.UpperValue is global::AllTheThings.SearchResponse.Upper obj12)
@@ -1256,7 +1253,7 @@ pqr	stu";
                 internal static void Write(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
-                    writer.WriteVarint(unchecked((ulong)value.Ival));
+                    writer.WriteVarint(value.Ival);
                     if ((value.__pbn_field_presence_0 & 1) != 0)
                     {
                         writer.WriteVarint(16); // field 2, varint
@@ -1267,7 +1264,7 @@ pqr	stu";
                 internal static ulong Measure(Inner value)
                 {
                     ulong len = 0;
-                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Ival));
+                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Ival);
                     if ((value.__pbn_field_presence_0 & 1) != 0)
                     {
                         len += 2;
@@ -1391,7 +1388,7 @@ pqr	stu";
                 internal static void Write(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
-                    writer.WriteVarint(unchecked((uint)value.Ival));
+                    writer.WriteVarint(value.Ival);
                     if ((value.__pbn_field_presence_0 & 1) != 0)
                     {
                         writer.WriteVarint(16); // field 2, varint
@@ -1402,7 +1399,7 @@ pqr	stu";
                 internal static ulong Measure(Inner value)
                 {
                     ulong len = 0;
-                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Ival));
+                    len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Ival);
                     if ((value.__pbn_field_presence_0 & 1) != 0)
                     {
                         len += 2;
@@ -1496,83 +1493,29 @@ pqr	stu";
 
         internal static void Write(Outer value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            #error maps not implemented yet
-            foreach (var __pbn_item in value.MapField1s)
-            {
-                writer.WriteVarint(58); // field 7, string
-                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField1Entry.Measure(__pbn_item);
-                global::.AllTheThings.Outer.MapField1Entry.Write(__pbn_item, ref writer);
-            }
-            #error maps not implemented yet
-            foreach (var __pbn_item in value.MapField2s)
-            {
-                writer.WriteVarint(66); // field 8, string
-                writer.WriteVarintUInt64(global::.AllTheThings.Outer.MapField2Entry.Measure(__pbn_item);
-                global::.AllTheThings.Outer.MapField2Entry.Write(__pbn_item, ref writer);
-            }
+            #warning maps not implemented yet
+            #warning maps not implemented yet
         }
 
         internal static ulong Measure(Outer value)
         {
             ulong len = 0;
-            #error maps not implemented yet
-            foreach (var __pbn_item in value.MapField1s)
-            {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::.AllTheThings.Outer.MapField1Entry.Measure(obj7));
-                len += 0;
-            }
-            #error maps not implemented yet
-            foreach (var __pbn_item in value.MapField2s)
-            {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::.AllTheThings.Outer.MapField2Entry.Measure(obj8));
-                len += 0;
-            }
+            #warning maps not implemented yet
+            #warning maps not implemented yet
             return len;
         }
 
         internal static Outer Merge(Outer value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong packed;
+            ulong oldEnd;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
             {
                 switch (tag)
                 {
-                    case 58: // field 7, string
-                        do
-                        {
-                            oldEnd = reader.ConstrainByLengthPrefix();
-                            value.MapField1s.Add(global::.AllTheThings.Outer.MapField1Entry.Merge(default, ref reader));
-                            reader.Unconstrain(oldEnd);
-                        }
-                        while (reader.TryReadTag(58));
-                        break;
-                    case 59: // field 7, group
-                        do
-                        {
-                            value.MapField1s.Add(global::.AllTheThings.Outer.MapField1Entry.Merge(default, ref reader));
-                            reader.PopGroup(7);
-                        }
-                        while (reader.TryReadTag(59));
-                        break;
-                    case 66: // field 8, string
-                        do
-                        {
-                            oldEnd = reader.ConstrainByLengthPrefix();
-                            value.MapField2s.Add(global::.AllTheThings.Outer.MapField2Entry.Merge(default, ref reader));
-                            reader.Unconstrain(oldEnd);
-                        }
-                        while (reader.TryReadTag(66));
-                        break;
-                    case 67: // field 8, group
-                        do
-                        {
-                            value.MapField2s.Add(global::.AllTheThings.Outer.MapField2Entry.Merge(default, ref reader));
-                            reader.PopGroup(8);
-                        }
-                        while (reader.TryReadTag(67));
-                        break;
+                    #warning maps not implemented yet
+                    #warning maps not implemented yet
                     default:
                         if ((tag & 7) == 4) // end-group
                         {
@@ -1609,19 +1552,19 @@ pqr	stu";
 
         internal static void Write(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Result is { Length: > 0} s)
+            if (value.Result is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
         }
 
         internal static ulong Measure(SomeOtherMessage value)
         {
             ulong len = 0;
-            if (value.Result is { Length: > 0} s)
+            if (value.Result is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
             return len;
         }
@@ -1682,47 +1625,63 @@ pqr	stu";
         private int __pbn__Optional;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"repeated")]
-        public int[] Repeateds { get; set; }
+        public global::System.Collections.Generic.List<int> Repeateds { get; } = new global::System.Collections.Generic.List<int>();
 
         [global::ProtoBuf.ProtoMember(4, Name = @"packed")]
-        public int[] Packeds { get; set; }
+        public global::System.Collections.Generic.List<int> Packeds { get; } = new global::System.Collections.Generic.List<int>();
 
         internal static void Write(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(8); // field 1, varint
-            writer.WriteVarint(unchecked((uint)value.Required));
+            writer.WriteVarint(value.Required);
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
                 writer.WriteVarint(16); // field 2, varint
-                writer.WriteVarint(unchecked((uint)value.Optional));
+                writer.WriteVarint(value.Optional);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Repeateds))
+        #else
             foreach (var __pbn_item in value.Repeateds)
+        #endif
             {
                 writer.WriteVarint(24); // field 3, varint
-                writer.WriteVarint(unchecked((uint)__pbn_item));
+                writer.WriteVarint(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Packeds))
+        #else
             foreach (var __pbn_item in value.Packeds)
+        #endif
             {
                 writer.WriteVarint(32); // field 4, varint
-                writer.WriteVarint(unchecked((uint)__pbn_item));
+                writer.WriteVarint(__pbn_item);
             }
         }
 
         internal static ulong Measure(FieldRules value)
         {
             ulong len = 0;
-            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Required));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Required);
             if ((value.__pbn_field_presence_0 & 1) != 0)
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Optional)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Optional) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Repeateds))
+        #else
             foreach (var __pbn_item in value.Repeateds)
+        #endif
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)__pbn_item)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Packeds))
+        #else
             foreach (var __pbn_item in value.Packeds)
+        #endif
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)__pbn_item)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(__pbn_item) + 1;
             }
             return len + 1;
         }
@@ -1762,7 +1721,7 @@ pqr	stu";
                         while (reader.TryReadTag(24));
                         break;
                     case 26: // field 3, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Repeateds.Add(reader.ReadVarintInt32());
@@ -1790,7 +1749,7 @@ pqr	stu";
                         while (reader.TryReadTag(32));
                         break;
                     case 34: // field 4, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Packeds.Add(reader.ReadVarintInt32());
@@ -1860,10 +1819,10 @@ pqr	stu";
                 writer.WriteVarint(4294967290); // field 536870911, string
                 writer.WriteWithLengthPrefix(__pbn_item);
             }
-            if (value.Lo is { Length: > 0} s)
+            if (value.Lo is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
         }
 
@@ -1879,16 +1838,15 @@ pqr	stu";
                 len += 5 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(__pbn_item);
                 len += 0;
             }
-            if (value.Lo is { Length: > 0} s)
+            if (value.Lo is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
             return len;
         }
 
         internal static TagRanges Merge(TagRanges value, ref global::ProtoBuf.Nano.Reader reader)
         {
-            ulong packed;
             if (value is null) value = new();
             uint tag;
             while ((tag = reader.ReadTag()) != 0)
@@ -2065,59 +2023,59 @@ pqr	stu";
         internal static void Write(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(9); // field 1, fixed64
-            writer.WriteFixed(value.Double);
+            writer.WriteFixed64(value.Double);
             writer.WriteVarint(21); // field 2, fixed32
-            writer.WriteFixed(value.Float);
+            writer.WriteFixed32(value.Float);
             writer.WriteVarint(24); // field 3, varint
-            writer.WriteVarint(unchecked((uint)value.Int32));
+            writer.WriteVarint(value.Int32);
             writer.WriteVarint(32); // field 4, varint
-            writer.WriteVarint(unchecked((ulong)value.Int64));
+            writer.WriteVarint(value.Int64);
             writer.WriteVarint(40); // field 5, varint
             writer.WriteVarint(value.Uint32);
             writer.WriteVarint(48); // field 6, varint
             writer.WriteVarint(value.Uint64);
             writer.WriteVarint(56); // field 7, varint
-            writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint32));
+            writer.WriteVarintSigned(value.Sint32);
             writer.WriteVarint(64); // field 8, varint
-            writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint64));
+            writer.WriteVarintSigned(value.Sint64);
             writer.WriteVarint(77); // field 9, fixed32
-            writer.WriteFixed(value.Fixed32);
+            writer.WriteFixed32(value.Fixed32);
             writer.WriteVarint(81); // field 10, fixed64
-            writer.WriteFixed(value.Fixed64);
+            writer.WriteFixed64(value.Fixed64);
             writer.WriteVarint(93); // field 11, fixed32
-            writer.WriteFixed(unchecked((uint)value.Sfixed32));
+            writer.WriteFixed32(value.Sfixed32);
             writer.WriteVarint(97); // field 12, fixed64
-            writer.WriteFixed(unchecked((ulong)value.Sfixed64));
+            writer.WriteFixed64(value.Sfixed64);
             writer.WriteVarint(104); // field 13, varint
             writer.WriteVarint(value.Bool);
-            if (value.String is { Length: > 0} s)
+            if (value.String is { Length: > 0 } obj14)
             {
                 writer.WriteVarint(114); // field 14, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj14);
             }
-            if (value.Bytes is { Length: > 0} s)
+            if (value.Bytes is { Length: > 0 } obj15)
             {
                 writer.WriteVarint(122); // field 15, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj15);
             }
         }
 
         internal static ulong Measure(PrimitiveFieldTypes value)
         {
             ulong len = 0;
-            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)value.Int32));
-            len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)value.Int64));
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Int32);
+            len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Int64);
             len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint32);
             len += global::ProtoBuf.Nano.Writer.MeasureVarint(value.Uint64);
-            len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint32));
-            len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(value.Sint64));
-            if (value.String is { Length: > 0} s)
+            len += global::ProtoBuf.Nano.Writer.MeasureVarintSigned(value.Sint32);
+            len += global::ProtoBuf.Nano.Writer.MeasureVarintSigned(value.Sint64);
+            if (value.String is { Length: > 0 } obj14)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj14);
             }
-            if (value.Bytes is { Length: > 0} s)
+            if (value.Bytes is { Length: > 0 } obj15)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj15);
             }
             return len + 50;
         }
@@ -2131,7 +2089,7 @@ pqr	stu";
                 switch (tag)
                 {
                     case 9: // field 1, fixed64
-                        value.Double = reader.ReadFixed64SDouble();
+                        value.Double = reader.ReadFixed64Double();
                         break;
                     case 13: // field 1, fixed32
                         value.Double = reader.ReadFixed64Double();
@@ -2179,10 +2137,10 @@ pqr	stu";
                         value.Uint64 = reader.ReadFixed64UInt64();
                         break;
                     case 56: // field 7, varint
-                        value.Sint32 = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32());
+                        value.Sint32 = reader.ReadVarintInt32Signed();
                         break;
                     case 64: // field 8, varint
-                        value.Sint64 = global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint64());
+                        value.Sint64 = reader.ReadVarintInt64Signed();
                         break;
                     case 77: // field 9, fixed32
                         value.Fixed32 = reader.ReadFixed32UInt32();
@@ -2267,43 +2225,43 @@ pqr	stu";
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
         [global::ProtoBuf.ProtoMember(1, Name = @"double")]
-        public double[] Doubles { get; set; }
+        public global::System.Collections.Generic.List<double> Doubles { get; } = new global::System.Collections.Generic.List<double>();
 
         [global::ProtoBuf.ProtoMember(2, Name = @"float")]
-        public float[] Floats { get; set; }
+        public global::System.Collections.Generic.List<float> Floats { get; } = new global::System.Collections.Generic.List<float>();
 
         [global::ProtoBuf.ProtoMember(3, Name = @"int32")]
-        public int[] Int32s { get; set; }
+        public global::System.Collections.Generic.List<int> Int32s { get; } = new global::System.Collections.Generic.List<int>();
 
         [global::ProtoBuf.ProtoMember(4, Name = @"int64")]
-        public long[] Int64s { get; set; }
+        public global::System.Collections.Generic.List<long> Int64s { get; } = new global::System.Collections.Generic.List<long>();
 
         [global::ProtoBuf.ProtoMember(5, Name = @"uint32")]
-        public uint[] Uint32s { get; set; }
+        public global::System.Collections.Generic.List<uint> Uint32s { get; } = new global::System.Collections.Generic.List<uint>();
 
         [global::ProtoBuf.ProtoMember(6, Name = @"uint64")]
-        public ulong[] Uint64s { get; set; }
+        public global::System.Collections.Generic.List<ulong> Uint64s { get; } = new global::System.Collections.Generic.List<ulong>();
 
         [global::ProtoBuf.ProtoMember(7, Name = @"sint32", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        public int[] Sint32s { get; set; }
+        public global::System.Collections.Generic.List<int> Sint32s { get; } = new global::System.Collections.Generic.List<int>();
 
         [global::ProtoBuf.ProtoMember(8, Name = @"sint64", DataFormat = global::ProtoBuf.DataFormat.ZigZag)]
-        public long[] Sint64s { get; set; }
+        public global::System.Collections.Generic.List<long> Sint64s { get; } = new global::System.Collections.Generic.List<long>();
 
         [global::ProtoBuf.ProtoMember(9, Name = @"fixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public uint[] Fixed32s { get; set; }
+        public global::System.Collections.Generic.List<uint> Fixed32s { get; } = new global::System.Collections.Generic.List<uint>();
 
         [global::ProtoBuf.ProtoMember(10, Name = @"fixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public ulong[] Fixed64s { get; set; }
+        public global::System.Collections.Generic.List<ulong> Fixed64s { get; } = new global::System.Collections.Generic.List<ulong>();
 
         [global::ProtoBuf.ProtoMember(11, Name = @"sfixed32", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public int[] Sfixed32s { get; set; }
+        public global::System.Collections.Generic.List<int> Sfixed32s { get; } = new global::System.Collections.Generic.List<int>();
 
         [global::ProtoBuf.ProtoMember(12, Name = @"sfixed64", DataFormat = global::ProtoBuf.DataFormat.FixedSize)]
-        public long[] Sfixed64s { get; set; }
+        public global::System.Collections.Generic.List<long> Sfixed64s { get; } = new global::System.Collections.Generic.List<long>();
 
         [global::ProtoBuf.ProtoMember(13, Name = @"bool")]
-        public bool[] Bools { get; set; }
+        public global::System.Collections.Generic.List<bool> Bools { get; } = new global::System.Collections.Generic.List<bool>();
 
         [global::ProtoBuf.ProtoMember(14, Name = @"string")]
         public global::System.Collections.Generic.List<string> Strings { get; } = new global::System.Collections.Generic.List<string>();
@@ -2313,67 +2271,119 @@ pqr	stu";
 
         internal static void Write(RepeatedPrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Doubles))
+        #else
             foreach (var __pbn_item in value.Doubles)
+        #endif
             {
                 writer.WriteVarint(9); // field 1, fixed64
-                writer.WriteFixed(__pbn_item);
+                writer.WriteFixed64(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Floats))
+        #else
             foreach (var __pbn_item in value.Floats)
+        #endif
             {
                 writer.WriteVarint(21); // field 2, fixed32
-                writer.WriteFixed(__pbn_item);
+                writer.WriteFixed32(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Int32s))
+        #else
             foreach (var __pbn_item in value.Int32s)
+        #endif
             {
                 writer.WriteVarint(24); // field 3, varint
-                writer.WriteVarint(unchecked((uint)__pbn_item));
+                writer.WriteVarint(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Int64s))
+        #else
             foreach (var __pbn_item in value.Int64s)
+        #endif
             {
                 writer.WriteVarint(32); // field 4, varint
-                writer.WriteVarint(unchecked((ulong)__pbn_item));
+                writer.WriteVarint(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Uint32s))
+        #else
             foreach (var __pbn_item in value.Uint32s)
+        #endif
             {
                 writer.WriteVarint(40); // field 5, varint
                 writer.WriteVarint(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Uint64s))
+        #else
             foreach (var __pbn_item in value.Uint64s)
+        #endif
             {
                 writer.WriteVarint(48); // field 6, varint
                 writer.WriteVarint(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sint32s))
+        #else
             foreach (var __pbn_item in value.Sint32s)
+        #endif
             {
                 writer.WriteVarint(56); // field 7, varint
-                writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(__pbn_item));
+                writer.WriteVarintSigned(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sint64s))
+        #else
             foreach (var __pbn_item in value.Sint64s)
+        #endif
             {
                 writer.WriteVarint(64); // field 8, varint
-                writer.WriteVarint(global::ProtoBuf.Nano.Writer.Zig(__pbn_item));
+                writer.WriteVarintSigned(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Fixed32s))
+        #else
             foreach (var __pbn_item in value.Fixed32s)
+        #endif
             {
                 writer.WriteVarint(77); // field 9, fixed32
-                writer.WriteFixed(__pbn_item);
+                writer.WriteFixed32(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Fixed64s))
+        #else
             foreach (var __pbn_item in value.Fixed64s)
+        #endif
             {
                 writer.WriteVarint(81); // field 10, fixed64
-                writer.WriteFixed(__pbn_item);
+                writer.WriteFixed64(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sfixed32s))
+        #else
             foreach (var __pbn_item in value.Sfixed32s)
+        #endif
             {
                 writer.WriteVarint(93); // field 11, fixed32
-                writer.WriteFixed(unchecked((uint)__pbn_item));
+                writer.WriteFixed32(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sfixed64s))
+        #else
             foreach (var __pbn_item in value.Sfixed64s)
+        #endif
             {
                 writer.WriteVarint(97); // field 12, fixed64
-                writer.WriteFixed(unchecked((ulong)__pbn_item));
+                writer.WriteFixed64(__pbn_item);
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Bools))
+        #else
             foreach (var __pbn_item in value.Bools)
+        #endif
             {
                 writer.WriteVarint(104); // field 13, varint
                 writer.WriteVarint(__pbn_item);
@@ -2401,55 +2411,107 @@ pqr	stu";
         internal static ulong Measure(RepeatedPrimitiveFieldTypes value)
         {
             ulong len = 0;
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Doubles))
+        #else
             foreach (var __pbn_item in value.Doubles)
+        #endif
             {
                 len += 9;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Floats))
+        #else
             foreach (var __pbn_item in value.Floats)
+        #endif
             {
                 len += 5;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Int32s))
+        #else
             foreach (var __pbn_item in value.Int32s)
+        #endif
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)__pbn_item)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Int64s))
+        #else
             foreach (var __pbn_item in value.Int64s)
+        #endif
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((ulong)__pbn_item)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Uint32s))
+        #else
             foreach (var __pbn_item in value.Uint32s)
+        #endif
             {
                 len += global::ProtoBuf.Nano.Writer.MeasureVarint(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Uint64s))
+        #else
             foreach (var __pbn_item in value.Uint64s)
+        #endif
             {
                 len += global::ProtoBuf.Nano.Writer.MeasureVarint(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sint32s))
+        #else
             foreach (var __pbn_item in value.Sint32s)
+        #endif
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(__pbn_item)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarintSigned(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sint64s))
+        #else
             foreach (var __pbn_item in value.Sint64s)
+        #endif
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(global::ProtoBuf.Nano.Writer.Zig(__pbn_item)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarintSigned(__pbn_item) + 1;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Fixed32s))
+        #else
             foreach (var __pbn_item in value.Fixed32s)
+        #endif
             {
                 len += 5;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Fixed64s))
+        #else
             foreach (var __pbn_item in value.Fixed64s)
+        #endif
             {
                 len += 9;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sfixed32s))
+        #else
             foreach (var __pbn_item in value.Sfixed32s)
+        #endif
             {
                 len += 5;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Sfixed64s))
+        #else
             foreach (var __pbn_item in value.Sfixed64s)
+        #endif
             {
                 len += 9;
             }
+        #if NET5_0_OR_GREATER
+            foreach (var __pbn_item in System.Runtime.InteropServices.CollectionsMarshal.AsSpan(value.Bools))
+        #else
             foreach (var __pbn_item in value.Bools)
+        #endif
             {
                 len += 2;
             }
@@ -2486,17 +2548,17 @@ pqr	stu";
                     case 9: // field 1, fixed64
                         do
                         {
-                            value.Doubles.Add(reader.ReadFixed64SDouble());
+                            value.Doubles.Add(reader.ReadFixed64Double());
                         }
                         while (reader.TryReadTag(9));
                         break;
                     case 10: // field 1, string (packed)
-                        packed = reader.ReadVarint64();
+                        packed = reader.ReadVarintUInt64();
                         if ((packed & 7) != 0) reader.ThrowInvalidPackedLength(tag, packed);
                         packed >>= 3;
                         while (packed-- != 0)
                         {
-                            value.Doubles.Add(reader.ReadFixed64SDouble());
+                            value.Doubles.Add(reader.ReadFixed64Double());
                         }
                         break;
                     case 13: // field 1, fixed32
@@ -2514,7 +2576,7 @@ pqr	stu";
                         while (reader.TryReadTag(21));
                         break;
                     case 18: // field 2, string (packed)
-                        packed = reader.ReadVarint64();
+                        packed = reader.ReadVarintUInt64();
                         if ((packed & 3) != 0) reader.ThrowInvalidPackedLength(tag, packed);
                         packed >>= 2;
                         while (packed-- != 0)
@@ -2537,7 +2599,7 @@ pqr	stu";
                         while (reader.TryReadTag(24));
                         break;
                     case 26: // field 3, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Int32s.Add(reader.ReadVarintInt32());
@@ -2565,7 +2627,7 @@ pqr	stu";
                         while (reader.TryReadTag(32));
                         break;
                     case 34: // field 4, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Int64s.Add(reader.ReadVarintInt64());
@@ -2593,7 +2655,7 @@ pqr	stu";
                         while (reader.TryReadTag(40));
                         break;
                     case 42: // field 5, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Uint32s.Add(reader.ReadVarintUInt32());
@@ -2621,7 +2683,7 @@ pqr	stu";
                         while (reader.TryReadTag(48));
                         break;
                     case 50: // field 6, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Uint64s.Add(reader.ReadVarintUInt64());
@@ -2644,29 +2706,29 @@ pqr	stu";
                     case 56: // field 7, varint
                         do
                         {
-                            value.Sint32s.Add(global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32()));
+                            value.Sint32s.Add(reader.ReadVarintInt32Signed());
                         }
                         while (reader.TryReadTag(56));
                         break;
                     case 58: // field 7, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Sint32s.Add(global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint32()));
+                            value.Sint32s.Add(reader.ReadVarintInt32Signed());
                         }
                         break;
                     case 64: // field 8, varint
                         do
                         {
-                            value.Sint64s.Add(global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint64()));
+                            value.Sint64s.Add(reader.ReadVarintInt64Signed());
                         }
                         while (reader.TryReadTag(64));
                         break;
                     case 66: // field 8, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
-                            value.Sint64s.Add(global::ProtoBuf.Nano.Reader.Zag(reader.ReadVarint64()));
+                            value.Sint64s.Add(reader.ReadVarintInt64Signed());
                         }
                         break;
                     case 77: // field 9, fixed32
@@ -2677,7 +2739,7 @@ pqr	stu";
                         while (reader.TryReadTag(77));
                         break;
                     case 74: // field 9, string (packed)
-                        packed = reader.ReadVarint64();
+                        packed = reader.ReadVarintUInt64();
                         if ((packed & 3) != 0) reader.ThrowInvalidPackedLength(tag, packed);
                         packed >>= 2;
                         while (packed-- != 0)
@@ -2700,7 +2762,7 @@ pqr	stu";
                         while (reader.TryReadTag(81));
                         break;
                     case 82: // field 10, string (packed)
-                        packed = reader.ReadVarint64();
+                        packed = reader.ReadVarintUInt64();
                         if ((packed & 7) != 0) reader.ThrowInvalidPackedLength(tag, packed);
                         packed >>= 3;
                         while (packed-- != 0)
@@ -2723,7 +2785,7 @@ pqr	stu";
                         while (reader.TryReadTag(93));
                         break;
                     case 90: // field 11, string (packed)
-                        packed = reader.ReadVarint64();
+                        packed = reader.ReadVarintUInt64();
                         if ((packed & 3) != 0) reader.ThrowInvalidPackedLength(tag, packed);
                         packed >>= 2;
                         while (packed-- != 0)
@@ -2746,7 +2808,7 @@ pqr	stu";
                         while (reader.TryReadTag(97));
                         break;
                     case 98: // field 12, string (packed)
-                        packed = reader.ReadVarint64();
+                        packed = reader.ReadVarintUInt64();
                         if ((packed & 7) != 0) reader.ThrowInvalidPackedLength(tag, packed);
                         packed >>= 3;
                         while (packed-- != 0)
@@ -2769,7 +2831,7 @@ pqr	stu";
                         while (reader.TryReadTag(104));
                         break;
                     case 106: // field 13, string (packed)
-                        packed = reader.ReadVarint64() + reader.Position;
+                        packed = reader.ReadVarintUInt64() + reader.Position;
                         while (reader.Position < packed)
                         {
                             value.Bools.Add(reader.ReadVarintBoolean());

@@ -20,12 +20,12 @@ namespace BasicPackage
         [global::System.ComponentModel.DefaultValue(global::BasicPackage.Corpus2.CorpusUnspecified)]
         public global::BasicPackage.Corpus2 Corpus { get; set; }
 
-        internal static void Serialize(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Corpus != global::BasicPackage.Corpus2.CorpusUnspecified)
             {
                 writer.WriteVarint(16); // field 2, varint
-                writer.WriteVarint(unchecked((uint)(int)value.Corpus));
+                writer.WriteVarint((int)value.Corpus);
             }
         }
 
@@ -34,7 +34,7 @@ namespace BasicPackage
             ulong len = 0;
             if (value.Corpus != global::BasicPackage.Corpus2.CorpusUnspecified)
             {
-                len += global::ProtoBuf.Nano.Writer.MeasureVarint(unchecked((uint)(int)value.Corpus)) + 1;
+                len += global::ProtoBuf.Nano.Writer.MeasureVarint((int)value.Corpus) + 1;
             }
             return len;
         }

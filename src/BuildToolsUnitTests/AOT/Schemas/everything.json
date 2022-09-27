@@ -927,7 +927,7 @@
               "TypeName": "int32",
               "Name": "Repeateds",
               "OriginalName": "repeated",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -935,7 +935,7 @@
               "TypeName": "int32",
               "Name": "Packeds",
               "OriginalName": "packed",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             }
           ],
@@ -1109,7 +1109,7 @@
               "TypeName": "double",
               "Name": "Doubles",
               "OriginalName": "double",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1117,7 +1117,7 @@
               "TypeName": "float",
               "Name": "Floats",
               "OriginalName": "float",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1125,7 +1125,7 @@
               "TypeName": "int32",
               "Name": "Int32s",
               "OriginalName": "int32",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1133,7 +1133,7 @@
               "TypeName": "int64",
               "Name": "Int64s",
               "OriginalName": "int64",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1141,7 +1141,7 @@
               "TypeName": "uint32",
               "Name": "Uint32s",
               "OriginalName": "uint32",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1149,7 +1149,7 @@
               "TypeName": "uint64",
               "Name": "Uint64s",
               "OriginalName": "uint64",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1157,7 +1157,7 @@
               "TypeName": "sint32",
               "Name": "Sint32s",
               "OriginalName": "sint32",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1165,7 +1165,7 @@
               "TypeName": "sint64",
               "Name": "Sint64s",
               "OriginalName": "sint64",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1173,7 +1173,7 @@
               "TypeName": "fixed32",
               "Name": "Fixed32s",
               "OriginalName": "fixed32",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1181,7 +1181,7 @@
               "TypeName": "fixed64",
               "Name": "Fixed64s",
               "OriginalName": "fixed64",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1189,7 +1189,7 @@
               "TypeName": "sfixed32",
               "Name": "Sfixed32s",
               "OriginalName": "sfixed32",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1197,7 +1197,7 @@
               "TypeName": "sfixed64",
               "Name": "Sfixed64s",
               "OriginalName": "sfixed64",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {
@@ -1205,7 +1205,7 @@
               "TypeName": "bool",
               "Name": "Bools",
               "OriginalName": "bool",
-              "Repeated": "Array",
+              "Repeated": "List",
               "DefaultValue": ""
             },
             {

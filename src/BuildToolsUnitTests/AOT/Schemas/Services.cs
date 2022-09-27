@@ -20,21 +20,21 @@ namespace GrpcGreeter
         [global::System.ComponentModel.DefaultValue("")]
         public string Name { get; set; }
 
-        internal static void Serialize(HelloRequest value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(HelloRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Name is { Length: > 0} s)
+            if (value.Name is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
         }
 
         internal static ulong Measure(HelloRequest value)
         {
             ulong len = 0;
-            if (value.Name is { Length: > 0} s)
+            if (value.Name is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
             return len;
         }
@@ -83,21 +83,21 @@ namespace GrpcGreeter
         [global::System.ComponentModel.DefaultValue("")]
         public string Message { get; set; }
 
-        internal static void Serialize(HelloReply value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(HelloReply value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.Message is { Length: > 0} s)
+            if (value.Message is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
         }
 
         internal static ulong Measure(HelloReply value)
         {
             ulong len = 0;
-            if (value.Message is { Length: > 0} s)
+            if (value.Message is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
             return len;
         }

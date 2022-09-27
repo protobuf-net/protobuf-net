@@ -44,6 +44,6 @@
 
     <Compile Remove="AOT/Schemas/**/*.cs" />
     <None Include="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
-    <!--<Compile Include="AOT\Schemas\Basic.cs" />-->
+    <!--<Compile Include="AOT\Schemas\Everything.cs" />-->
   </ItemGroup>
 </Project>

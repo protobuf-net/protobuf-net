@@ -30,29 +30,29 @@ namespace TypeRefs
 
         internal static void Write(MsgA value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.A is global::TypeRefs.MsgA __obj1)
+            if (value.A is global::TypeRefs.MsgA obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
-                global::TypeRefs.MsgA.Write(__obj1, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgA.Measure(obj1));
+                global::TypeRefs.MsgA.Write(obj1, ref writer);
             }
-            if (value.B is global::TypeRefs.MsgB __obj2)
+            if (value.B is global::TypeRefs.MsgB obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
-                global::TypeRefs.MsgB.Write(__obj2, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgB.Measure(obj2));
+                global::TypeRefs.MsgB.Write(obj2, ref writer);
             }
-            if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
+            if (value.C is global::TypeRefs.MsgB.MsgC obj3)
             {
                 writer.WriteVarint(26); // field 3, string
-                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
-                global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(obj3));
+                global::TypeRefs.MsgB.MsgC.Write(obj3, ref writer);
             }
-            if (value.D is global::TypeRefs.MsgD __obj4)
+            if (value.D is global::TypeRefs.MsgD obj4)
             {
                 writer.WriteVarint(34); // field 4, string
-                writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
-                global::TypeRefs.MsgD.Write(__obj4, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgD.Measure(obj4));
+                global::TypeRefs.MsgD.Write(obj4, ref writer);
             }
         }
 
@@ -188,29 +188,29 @@ namespace TypeRefs
 
             internal static void Write(MsgC value, ref global::ProtoBuf.Nano.Writer writer)
             {
-                if (value.A is global::TypeRefs.MsgA __obj1)
+                if (value.A is global::TypeRefs.MsgA obj1)
                 {
                     writer.WriteVarint(10); // field 1, string
-                    writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
-                    global::TypeRefs.MsgA.Write(__obj1, ref writer);
+                    writer.WriteVarint(global::TypeRefs.MsgA.Measure(obj1));
+                    global::TypeRefs.MsgA.Write(obj1, ref writer);
                 }
-                if (value.B is global::TypeRefs.MsgB __obj2)
+                if (value.B is global::TypeRefs.MsgB obj2)
                 {
                     writer.WriteVarint(18); // field 2, string
-                    writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
-                    global::TypeRefs.MsgB.Write(__obj2, ref writer);
+                    writer.WriteVarint(global::TypeRefs.MsgB.Measure(obj2));
+                    global::TypeRefs.MsgB.Write(obj2, ref writer);
                 }
-                if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
+                if (value.C is global::TypeRefs.MsgB.MsgC obj3)
                 {
                     writer.WriteVarint(26); // field 3, string
-                    writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
-                    global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
+                    writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(obj3));
+                    global::TypeRefs.MsgB.MsgC.Write(obj3, ref writer);
                 }
-                if (value.D is global::TypeRefs.MsgD __obj4)
+                if (value.D is global::TypeRefs.MsgD obj4)
                 {
                     writer.WriteVarint(34); // field 4, string
-                    writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
-                    global::TypeRefs.MsgD.Write(__obj4, ref writer);
+                    writer.WriteVarint(global::TypeRefs.MsgD.Measure(obj4));
+                    global::TypeRefs.MsgD.Write(obj4, ref writer);
                 }
             }
 
@@ -308,29 +308,29 @@ namespace TypeRefs
 
         internal static void Write(MsgB value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.A is global::TypeRefs.MsgA __obj1)
+            if (value.A is global::TypeRefs.MsgA obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
-                global::TypeRefs.MsgA.Write(__obj1, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgA.Measure(obj1));
+                global::TypeRefs.MsgA.Write(obj1, ref writer);
             }
-            if (value.B is global::TypeRefs.MsgB __obj2)
+            if (value.B is global::TypeRefs.MsgB obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
-                global::TypeRefs.MsgB.Write(__obj2, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgB.Measure(obj2));
+                global::TypeRefs.MsgB.Write(obj2, ref writer);
             }
-            if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
+            if (value.C is global::TypeRefs.MsgB.MsgC obj3)
             {
                 writer.WriteVarint(26); // field 3, string
-                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
-                global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(obj3));
+                global::TypeRefs.MsgB.MsgC.Write(obj3, ref writer);
             }
-            if (value.D is global::TypeRefs.MsgD __obj4)
+            if (value.D is global::TypeRefs.MsgD obj4)
             {
                 writer.WriteVarint(34); // field 4, string
-                writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
-                global::TypeRefs.MsgD.Write(__obj4, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgD.Measure(obj4));
+                global::TypeRefs.MsgD.Write(obj4, ref writer);
             }
         }
 
@@ -447,29 +447,29 @@ namespace TypeRefs
 
         internal static void Write(MsgD value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.A is global::TypeRefs.MsgA __obj1)
+            if (value.A is global::TypeRefs.MsgA obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteVarint(global::TypeRefs.MsgA.Measure(__obj1));
-                global::TypeRefs.MsgA.Write(__obj1, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgA.Measure(obj1));
+                global::TypeRefs.MsgA.Write(obj1, ref writer);
             }
-            if (value.B is global::TypeRefs.MsgB __obj2)
+            if (value.B is global::TypeRefs.MsgB obj2)
             {
                 writer.WriteVarint(18); // field 2, string
-                writer.WriteVarint(global::TypeRefs.MsgB.Measure(__obj2));
-                global::TypeRefs.MsgB.Write(__obj2, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgB.Measure(obj2));
+                global::TypeRefs.MsgB.Write(obj2, ref writer);
             }
-            if (value.C is global::TypeRefs.MsgB.MsgC __obj3)
+            if (value.C is global::TypeRefs.MsgB.MsgC obj3)
             {
                 writer.WriteVarint(26); // field 3, string
-                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(__obj3));
-                global::TypeRefs.MsgB.MsgC.Write(__obj3, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgB.MsgC.Measure(obj3));
+                global::TypeRefs.MsgB.MsgC.Write(obj3, ref writer);
             }
-            if (value.D is global::TypeRefs.MsgD __obj4)
+            if (value.D is global::TypeRefs.MsgD obj4)
             {
                 writer.WriteVarint(34); // field 4, string
-                writer.WriteVarint(global::TypeRefs.MsgD.Measure(__obj4));
-                global::TypeRefs.MsgD.Write(__obj4, ref writer);
+                writer.WriteVarint(global::TypeRefs.MsgD.Measure(obj4));
+                global::TypeRefs.MsgD.Write(obj4, ref writer);
             }
         }
 

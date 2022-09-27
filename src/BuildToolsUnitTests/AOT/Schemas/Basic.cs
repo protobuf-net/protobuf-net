@@ -20,21 +20,21 @@ namespace BasicPackage
         [global::System.ComponentModel.DefaultValue("")]
         public string BasicField { get; set; }
 
-        internal static void Serialize(BasicMessage value, ref global::ProtoBuf.Nano.Writer writer)
+        internal static void Write(BasicMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            if (value.BasicField is { Length: > 0} s)
+            if (value.BasicField is { Length: > 0 } obj1)
             {
                 writer.WriteVarint(10); // field 1, string
-                writer.WriteWithLengthPrefix(s);
+                writer.WriteWithLengthPrefix(obj1);
             }
         }
 
         internal static ulong Measure(BasicMessage value)
         {
             ulong len = 0;
-            if (value.BasicField is { Length: > 0} s)
+            if (value.BasicField is { Length: > 0 } obj1)
             {
-                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(s);
+                len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(obj1);
             }
             return len;
         }

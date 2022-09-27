@@ -669,6 +669,20 @@
               "TypeName": "int32",
               "Name": "Optional",
               "OriginalName": "optional"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Repeateds",
+              "OriginalName": "repeated",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int32",
+              "Name": "Packeds",
+              "OriginalName": "packed",
+              "Repeated": "List"
             }
           ],
           "Name": "FieldRules",
@@ -812,6 +826,97 @@
         },
         {
           "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "double",
+              "Name": "Doubles",
+              "OriginalName": "double",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "Floats",
+              "OriginalName": "float",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Int32s",
+              "OriginalName": "int32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int64",
+              "Name": "Int64s",
+              "OriginalName": "int64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "uint32",
+              "Name": "Uint32s",
+              "OriginalName": "uint32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "uint64",
+              "Name": "Uint64s",
+              "OriginalName": "uint64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "sint32",
+              "Name": "Sint32s",
+              "OriginalName": "sint32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "sint64",
+              "Name": "Sint64s",
+              "OriginalName": "sint64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "fixed32",
+              "Name": "Fixed32s",
+              "OriginalName": "fixed32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "fixed64",
+              "Name": "Fixed64s",
+              "OriginalName": "fixed64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 11,
+              "TypeName": "sfixed32",
+              "Name": "Sfixed32s",
+              "OriginalName": "sfixed32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "sfixed64",
+              "Name": "Sfixed64s",
+              "OriginalName": "sfixed64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 13,
+              "TypeName": "bool",
+              "Name": "Bools",
+              "OriginalName": "bool",
+              "Repeated": "List"
+            },
             {
               "FieldNumber": 14,
               "TypeName": "string",

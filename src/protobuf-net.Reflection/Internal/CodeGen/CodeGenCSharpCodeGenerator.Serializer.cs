@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ProtoBuf.Internal.CodeGen;
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,6 +9,32 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal partial class CodeGenCSharpCodeGenerator
 {
+    static bool CanPack(CodeGenField field)
+    {
+        if (field.Type.IsWellKnownType(out var known))
+        {
+            switch (known)
+            {
+                case CodeGenWellKnownType.Boolean:
+                case CodeGenWellKnownType.Byte:
+                case CodeGenWellKnownType.Double:
+                case CodeGenWellKnownType.Fixed32:
+                case CodeGenWellKnownType.Fixed64:
+                case CodeGenWellKnownType.Float:
+                case CodeGenWellKnownType.Int32:
+                case CodeGenWellKnownType.Int64:
+                case CodeGenWellKnownType.SFixed32:
+                case CodeGenWellKnownType.SFixed64:
+                case CodeGenWellKnownType.SInt32:
+                case CodeGenWellKnownType.SInt64:
+                case CodeGenWellKnownType.UInt32:
+                case CodeGenWellKnownType.UInt64:
+                    return true;
+            }
+        }
+        return false;
+    }
+
     protected override void WriteMessageSerializer(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
     {
 
@@ -77,9 +105,16 @@ internal partial class CodeGenCSharpCodeGenerator
             }
             return isConditional;
         }
+
         ctx.WriteLine($"internal static void Write({Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
         foreach (var field in message.Fields)
         {
+            if (field.Repeated == RepeatedKind.Dictionary)
+            {
+                ctx.WriteLine($"#warning maps not implemented yet");
+                continue;
+            }
+
             field.Type.IsWellKnownType(out var knownType);
 
             bool isConditional = IsConditional(field, ctx, this);
@@ -89,7 +124,6 @@ internal partial class CodeGenCSharpCodeGenerator
             }
 
             var source = GetSource(field);
-
             if (field.IsRepeated)
             {
                 WriteForeach(field, ctx, ref source);
@@ -104,22 +138,22 @@ internal partial class CodeGenCSharpCodeGenerator
                        .WriteLine($"writer.WriteVarint({GetTag(field, WireType.EndGroup)}); // field {field.FieldNumber}, end-group");
                     break;
                 case CodeGenWellKnownType.None when field.IsGroup:
-                    ctx.WriteLine($"if ({source} is {Type(field.Type)} __obj{field.FieldNumber})").WriteLine("{").Indent()
+                    ctx.WriteLine($"if ({source} is {Type(field.Type)} obj{field.FieldNumber})").WriteLine("{").Indent()
                         .WriteLine($"writer.WriteVarint({GetTag(field, WireType.StartGroup)}); // field {field.FieldNumber}, group")
-                        .WriteLine($"{Type(field.Type)}.Write(__obj{field.FieldNumber}, ref writer);")
+                        .WriteLine($"{Type(field.Type)}.Write(obj{field.FieldNumber}, ref writer);")
                         .WriteLine($"writer.WriteVarint({GetTag(field, WireType.EndGroup)}); // field {field.FieldNumber}, end-group")
                         .Outdent().WriteLine("}");
                     break;
                 case CodeGenWellKnownType.None when (field.IsRepeated || IsValueType(field)): // no null-test
                     ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.String)}); // field {field.FieldNumber}, string")
-                       .WriteLine($"writer.WriteVarintUInt64({Type(field.Type)}.Measure({source});")
+                       .WriteLine($"writer.WriteVarint({Type(field.Type)}.Measure({source}));")
                        .WriteLine($"{Type(field.Type)}.Write({source}, ref writer);");
                     break;
                 case CodeGenWellKnownType.None:
-                    ctx.WriteLine($"if ({source} is {Type(field.Type)} __obj{field.FieldNumber})").WriteLine("{").Indent()
+                    ctx.WriteLine($"if ({source} is {Type(field.Type)} obj{field.FieldNumber})").WriteLine("{").Indent()
                         .WriteLine($"writer.WriteVarint({GetTag(field, WireType.String)}); // field {field.FieldNumber}, string")
-                        .WriteLine($"writer.WriteVarint({Type(field.Type)}.Measure(__obj{field.FieldNumber}));")
-                        .WriteLine($"{Type(field.Type)}.Write(__obj{field.FieldNumber}, ref writer);")
+                        .WriteLine($"writer.WriteVarint({Type(field.Type)}.Measure(obj{field.FieldNumber}));")
+                        .WriteLine($"{Type(field.Type)}.Write(obj{field.FieldNumber}, ref writer);")
                         .Outdent().WriteLine("}");
                     break;
                 case CodeGenWellKnownType.String when field.IsRepeated: // no null/empty test
@@ -129,50 +163,35 @@ internal partial class CodeGenCSharpCodeGenerator
                     break;
                 case CodeGenWellKnownType.String:
                 case CodeGenWellKnownType.Bytes:
-                    ctx.WriteLine($"if ({source} is {{ Length: > 0}} s)").WriteLine("{").Indent()
+                    ctx.WriteLine($"if ({source} is {{ Length: > 0 }} obj{field.FieldNumber})").WriteLine("{").Indent()
                         .WriteLine($"writer.WriteVarint({GetTag(field, WireType.String)}); // field {field.FieldNumber}, string")
-                        .WriteLine($"writer.WriteWithLengthPrefix(s);")
+                        .WriteLine($"writer.WriteWithLengthPrefix(obj{field.FieldNumber});")
                         .Outdent().WriteLine("}");
                     break;
                 case CodeGenWellKnownType.UInt32:
                 case CodeGenWellKnownType.UInt64:
-                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Varint)}); // field {field.FieldNumber}, varint")
-                        .WriteLine($"writer.WriteVarint({source});");
-                    break;
                 case CodeGenWellKnownType.Int32:
-                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Varint)}); // field {field.FieldNumber}, varint")
-                        .WriteLine($"writer.WriteVarint(unchecked((uint){source}));");
-                    break;
                 case CodeGenWellKnownType.Int64:
-                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Varint)}); // field {field.FieldNumber}, varint")
-                        .WriteLine($"writer.WriteVarint(unchecked((ulong){source}));");
-                    break;
-                case CodeGenWellKnownType.SInt32:
-                case CodeGenWellKnownType.SInt64:
-                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Varint)}); // field {field.FieldNumber}, varint")
-                        .WriteLine($"writer.WriteVarint({NanoNS}.Writer.Zig({source}));");
-                    break;
                 case CodeGenWellKnownType.Boolean:
                     ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Varint)}); // field {field.FieldNumber}, varint")
                         .WriteLine($"writer.WriteVarint({source});");
                     break;
+                case CodeGenWellKnownType.SInt32:
+                case CodeGenWellKnownType.SInt64:
+                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Varint)}); // field {field.FieldNumber}, varint")
+                        .WriteLine($"writer.WriteVarintSigned({source});");
+                    break;
                 case CodeGenWellKnownType.Float:
                 case CodeGenWellKnownType.Fixed32:
+                case CodeGenWellKnownType.SFixed32:
                     ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Fixed32)}); // field {field.FieldNumber}, fixed32")
-                        .WriteLine($"writer.WriteFixed({source});");
+                        .WriteLine($"writer.WriteFixed32({source});");
                     break;
                 case CodeGenWellKnownType.Double:
                 case CodeGenWellKnownType.Fixed64:
-                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Fixed64)}); // field {field.FieldNumber}, fixed64")
-                        .WriteLine($"writer.WriteFixed({source});");
-                    break;
-                case CodeGenWellKnownType.SFixed32:
-                    ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Fixed32)}); // field {field.FieldNumber}, fixed32")
-                        .WriteLine($"writer.WriteFixed(unchecked((uint){source}));");
-                    break;
                 case CodeGenWellKnownType.SFixed64:
                     ctx.WriteLine($"writer.WriteVarint({GetTag(field, WireType.Fixed64)}); // field {field.FieldNumber}, fixed64")
-                        .WriteLine($"writer.WriteFixed(unchecked((ulong){source}));");
+                        .WriteLine($"writer.WriteFixed64({source});");
                     break;
                 case CodeGenWellKnownType.NetObjectProxy:
                     ctx.WriteLine($"if ({source} is not null)").WriteLine("{").Indent()
@@ -197,6 +216,12 @@ internal partial class CodeGenCSharpCodeGenerator
 
         foreach (var field in message.Fields)
         {
+            if (field.Repeated == RepeatedKind.Dictionary)
+            {
+                ctx.WriteLine($"#warning maps not implemented yet");
+                continue;
+            }
+
             field.Type.IsWellKnownType(out var knownType);
             bool isConditional = IsConditional(field, ctx, this);
             if (isConditional) // assume we've just written an "if"
@@ -218,10 +243,10 @@ internal partial class CodeGenCSharpCodeGenerator
             switch (knownType)
             {
                 case CodeGenWellKnownType.None when field.IsGroup && (field.IsRepeated || IsValueType(field)): // no null-test
-                    ctx.WriteLine($"len += {2 * HeaderLength(field)} + {Type(field.Type)}.Measure(obj{field.FieldNumber});");
+                    ctx.WriteLine($"len += {2 * HeaderLength(field)} + {Type(field.Type)}.Measure({source});");
                     break;
                 case CodeGenWellKnownType.None when (field.IsRepeated || IsValueType(field)): // no null-test
-                    ctx.WriteLine($"len += {HeaderLength(field)} + {NanoNS}.Writer.MeasureWithLengthPrefix({Type(field.Type)}.Measure(obj{field.FieldNumber}));");
+                    ctx.WriteLine($"len += {HeaderLength(field)} + {NanoNS}.Writer.MeasureWithLengthPrefix({Type(field.Type)}.Measure({source}));");
                     break;
                 case CodeGenWellKnownType.None when field.IsGroup:
                     ctx.WriteLine($"if ({source} is {Type(field.Type)} obj{field.FieldNumber})").WriteLine("{").Indent()
@@ -239,26 +264,20 @@ internal partial class CodeGenCSharpCodeGenerator
                     break;
                 case CodeGenWellKnownType.String: // no null/empty test
                 case CodeGenWellKnownType.Bytes: // no null/empty test
-                    ctx.WriteLine($"if ({source} is {{ Length: > 0}} s)").WriteLine("{").Indent()
-                        .WriteLine($"len += {HeaderLength(field)} + {NanoNS}.Writer.MeasureWithLengthPrefix(s);")
+                    ctx.WriteLine($"if ({source} is {{ Length: > 0 }} obj{field.FieldNumber})").WriteLine("{").Indent()
+                        .WriteLine($"len += {HeaderLength(field)} + {NanoNS}.Writer.MeasureWithLengthPrefix(obj{field.FieldNumber});")
                         .Outdent().WriteLine("}");
                     break;
                 case CodeGenWellKnownType.UInt32:
                 case CodeGenWellKnownType.UInt64:
-                    tw = ctx.Write($"len += {NanoNS}.Writer.MeasureVarint({source})");
-                    addHeaderLength = true;
-                    break;
                 case CodeGenWellKnownType.Int32:
-                    tw = ctx.Write($"len += {NanoNS}.Writer.MeasureVarint(unchecked((uint){source}))");
-                    addHeaderLength = true;
-                    break;
                 case CodeGenWellKnownType.Int64:
-                    tw = ctx.Write($"len += {NanoNS}.Writer.MeasureVarint(unchecked((ulong){source}))");
+                    tw = ctx.Write($"len += {NanoNS}.Writer.MeasureVarint({source})");
                     addHeaderLength = true;
                     break;
                 case CodeGenWellKnownType.SInt32:
                 case CodeGenWellKnownType.SInt64:
-                    tw = ctx.Write($"len += {NanoNS}.Writer.MeasureVarint({NanoNS}.Writer.Zig({source}))");
+                    tw = ctx.Write($"len += {NanoNS}.Writer.MeasureVarintSigned({source})");
                     addHeaderLength = true;
                     break;
                 case CodeGenWellKnownType.Boolean when isConditional:
@@ -341,10 +360,11 @@ internal partial class CodeGenCSharpCodeGenerator
 
         ctx.WriteLine($"internal static {Escape(message.Name)} Merge({Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent();
         bool needOldEnd = false, needPacked = false;
+
         foreach (var field in message.Fields)
         {
-            if (field.Type is CodeGenMessage) needOldEnd = true;
-            else if (field.IsRepeated && (field.IsPacked || !ctx.Strict)) needPacked = true;
+            if (field.Type is CodeGenMessage or CodeGenMapEntryType) needOldEnd = true;
+            else if (field.IsRepeated && CanPack(field) && (field.IsPacked || !ctx.Strict)) needPacked = true;
         }
         if (needOldEnd && needPacked)
         {
@@ -364,6 +384,12 @@ internal partial class CodeGenCSharpCodeGenerator
 
         foreach (var field in message.Fields)
         {
+            if (field.Repeated == RepeatedKind.Dictionary)
+            {
+                ctx.WriteLine($"#warning maps not implemented yet");
+                continue;
+            }
+
             field.Type.IsWellKnownType(out var knownType);
             static string Format(WireType wireType) => wireType switch
             {
@@ -393,19 +419,20 @@ internal partial class CodeGenCSharpCodeGenerator
 
                 if (allowPacked && field.IsRepeated && (field.IsPacked || !ctx.Strict))
                 {
+                    Debug.Assert(CanPack(field), "CanPack reported no");
                     tag = GetTag(field, WireType.String);
                     ctx.WriteLine($"case {tag}: // field {field.FieldNumber}, {Format(WireType.String)} (packed)").Indent();
                     switch (wireType)
                     {
                         case WireType.Varint:
-                            ctx.WriteLine("packed = reader.ReadVarint64() + reader.Position;")
+                            ctx.WriteLine("packed = reader.ReadVarintUInt64() + reader.Position;")
                                .WriteLine("while (reader.Position < packed)").WriteLine("{").Indent()
                                .WriteLine($"value.{field.BackingName}.Add({value});")
                                .Outdent().WriteLine("}");
                             break;
                         case WireType.Fixed32:
                         case WireType.Fixed64:
-                            ctx.WriteLine("packed = reader.ReadVarint64();")
+                            ctx.WriteLine("packed = reader.ReadVarintUInt64();")
                                 .WriteLine($"if ((packed & {(wireType == WireType.Fixed32 ? 3 : 7)}) != 0) reader.ThrowInvalidPackedLength(tag, packed);")
                                 .WriteLine($"packed >>= {(wireType == WireType.Fixed32 ? 2 : 3)};")
                                 .WriteLine("while (packed-- != 0)").WriteLine("{").Indent()
@@ -511,17 +538,17 @@ internal partial class CodeGenCSharpCodeGenerator
                     }
                     break;
                 case CodeGenWellKnownType.SInt32:
-                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint32())", this, true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintInt32Signed()", this, true);
                     break;
                 case CodeGenWellKnownType.SInt64:
-                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint64())", this, true);
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarintInt64Signed()", this, true);
                     break;
                 case CodeGenWellKnownType.Float:
                     WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32Single()", this, true);
                     if (!ctx.Strict) WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Single()", this);
                     break;
                 case CodeGenWellKnownType.Double:
-                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64SDouble()", this, true);
+                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64Double()", this, true);
                     if (!ctx.Strict) WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed64Double()", this);
                     break;
                 case CodeGenWellKnownType.Boolean:
@@ -696,6 +723,13 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 return $"{Type(enm)}.{Escape(enm.EnumValues[0].Name)}";
             }
+            foreach (var value in enm.EnumValues)
+            {
+                if (value.OriginalName == field.DefaultValue)
+                {
+                    return $"{Type(enm)}.{Escape(enm.EnumValues[0].Name)}";
+                }
+            }
         }
         return $"/* invalid type / value: {field.TypeName}={field.DefaultValue} */";
     }
@@ -703,7 +737,7 @@ internal partial class CodeGenCSharpCodeGenerator
     private static bool TryParseBoolean(string value, out bool result)
     {
         result = default;
-        return string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out result);
+        return !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out result);
     }
 
     string Type(CodeGenType type, CodeGenGeneratorContext? ctx = null)
