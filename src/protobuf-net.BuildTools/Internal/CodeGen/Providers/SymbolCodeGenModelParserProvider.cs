@@ -9,14 +9,14 @@ namespace ProtoBuf.Internal.CodeGen.Providers;
 
 internal class SymbolCodeGenModelParserProvider
 {
-    private ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile> _namespaceParser; 
-    private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> _messageParser; 
+    private ISymbolCodeGenModelParser<INamespaceOrTypeSymbol, CodeGenFile> _namespaceParser;
+    private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> _messageParser;
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> _enumParser;
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenService> _serviceParser;
     private ISymbolCodeGenModelParser<IMethodSymbol, CodeGenServiceMethod> _serviceMethodParser;
     private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenEnum> _enumPropertyParser;
-    private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> _fieldPropertyParser; 
-    private ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> _enumValueParser; 
+    private ISymbolCodeGenModelParser<IPropertySymbol, CodeGenField> _fieldPropertyParser;
+    private ISymbolCodeGenModelParser<IFieldSymbol, CodeGenEnumValue> _enumValueParser;
 
     public CodeGenParseContext ParseContext { get; }
     public CodeGenErrorContainer ErrorContainer { get; }
@@ -27,7 +27,7 @@ internal class SymbolCodeGenModelParserProvider
         ErrorContainer = new();
     }
     
-    public ISymbolCodeGenModelParser<INamespaceSymbol, CodeGenFile> GetNamespaceParser()
+    public ISymbolCodeGenModelParser<INamespaceOrTypeSymbol, CodeGenFile> GetNamespaceParser()
     {
         return _namespaceParser ??= new NamespaceCodeGenModelParser(this);
     }

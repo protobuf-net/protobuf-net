@@ -15,14 +15,14 @@ internal static class CodeGenSemanticModelParser
     public static CodeGenSet Parse(CodeGenSet set, ISymbol symbol)
     {
         var symbolCodeGenModelParserProvider = new SymbolCodeGenModelParserProvider();
-        if (symbol is INamespaceSymbol namespaceSymbol)
+        if (symbol is INamespaceOrTypeSymbol typed)
         {
             var namespaceParser = symbolCodeGenModelParserProvider.GetNamespaceParser();
-            var codeGenFile = namespaceParser.Parse(namespaceSymbol);
-            
+            var codeGenFile = namespaceParser.Parse(typed);
+
             set.Files.Add(codeGenFile);
         }
-        
+
         // note: if message/enum type is consumed before it is defined, we simplify things
         // by using a place-holder initially (via the protobuf FQN); we need to go back over the
         // tree, and substitute out any such place-holders for the final types

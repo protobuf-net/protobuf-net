@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +16,8 @@ namespace BuildToolsUnitTests
 {
     public abstract class GeneratorTestBase<TGenerator> where TGenerator : ISourceGenerator
     {
+        public SyntaxTree Code(string fileName, string source) => CSharpSyntaxTree.ParseText(source).WithFilePath(fileName);
+
         protected static AdditionalText[] Text(string path, string content) => new[] { new InMemoryAdditionalText(path, content) };
         protected static AdditionalText[] Texts(params (string path, string content)[] pairs) => pairs.Select(pair => new InMemoryAdditionalText(pair.path, pair.content)).ToArray();
 
@@ -39,8 +42,8 @@ namespace BuildToolsUnitTests
             }
         }
 
-        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
-            Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
+        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[]? additionalTexts = null, SyntaxTree[]? source = null, ImmutableDictionary<string, string>? globalOptions = null,
+            [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
             {
@@ -67,7 +70,7 @@ namespace BuildToolsUnitTests
             }
 
             GeneratorDriver driver = CSharpGeneratorDriver.Create(new ISourceGenerator[] { Generator }, additionalTexts, parseOptions: parseOptions, optionsProvider: optionsProvider);
-            (var project, var compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
+            var compilation = await ObtainCompilationAsync(source ?? Array.Empty<SyntaxTree>());
             var result = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
             if (_testOutputHelper is object)
             {
@@ -81,34 +84,17 @@ namespace BuildToolsUnitTests
 
         protected virtual bool ReferenceProtoBuf => true;
 
-        protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null)
+        protected async Task<Compilation> ObtainCompilationAsync(SyntaxTree[] source, [CallerMemberName] string? callerMemberName = null)
         {
-            _ = callerMemberName;
-            var workspace = new AdhocWorkspace();
-            var project = workspace.AddProject("protobuf-net.BuildTools.GeneratorTests", LanguageNames.CSharp);
-            project = project
-                .WithCompilationOptions(project.CompilationOptions!.WithOutputKind(OutputKind.DynamicallyLinkedLibrary))
-                .AddMetadataReference(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
-
-            project = SetupProject(project);
-
+            List<MetadataReference> refs = new();
+            refs.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
             if (ReferenceProtoBuf)
             {
-                project = project
-                    .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location));
+                refs.Add(MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location));
+                refs.Add(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location));
+                refs.Add(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location));
             }
-
-            project = projectModifier?.Invoke(project) ?? project;
-
-            var compilation = await project.GetCompilationAsync();
-            return (project, compilation!);
+            return CSharpCompilation.Create("", source, refs, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
         }
-
-        protected virtual Project SetupProject(Project project) => project;
-
-
-        
     }
 }
