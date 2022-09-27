@@ -586,6 +586,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         /// The specified language version (null if not specified)
         /// </summary>
         public Version LanguageVersion { get; }
+        public bool Strict { get; set; }
 
         /// <summary>
         /// Ends the current line

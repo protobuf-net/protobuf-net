@@ -59,7 +59,7 @@ namespace BasicPackage
                         switch (tag >> 3)
                         {
                             case 1:
-                                reader.UnhandledTag(tag); // throws
+                                reader.ThrowUnhandledWireType(tag);
                                 break;
                         }
                         reader.Skip(tag);

@@ -82,6 +82,7 @@ namespace TypeRefs
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.Measure(obj2));
                 }
+                len += 0;
             }
             if (value.C != /* invalid type / value: TypeRefs.MsgB+MsgC= */)
             {
@@ -89,6 +90,7 @@ namespace TypeRefs
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
                 }
+                len += 0;
             }
             if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
             {
@@ -96,6 +98,7 @@ namespace TypeRefs
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
                 }
+                len += 0;
             }
             return len;
         }
@@ -157,7 +160,7 @@ namespace TypeRefs
                             case 2:
                             case 3:
                             case 4:
-                                reader.UnhandledTag(tag); // throws
+                                reader.ThrowUnhandledWireType(tag);
                                 break;
                         }
                         reader.Skip(tag);
@@ -268,6 +271,7 @@ namespace TypeRefs
                     {
                         len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
                     }
+                    len += 0;
                 }
                 return len;
             }
@@ -329,7 +333,7 @@ namespace TypeRefs
                                 case 2:
                                 case 3:
                                 case 4:
-                                    reader.UnhandledTag(tag); // throws
+                                    reader.ThrowUnhandledWireType(tag);
                                     break;
                             }
                             reader.Skip(tag);
@@ -393,6 +397,7 @@ namespace TypeRefs
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgB.MsgC.Measure(obj3));
                 }
+                len += 0;
             }
             if (value.D != /* invalid type / value: TypeRefs.MsgD= */)
             {
@@ -400,6 +405,7 @@ namespace TypeRefs
                 {
                     len += 1 + global::ProtoBuf.Nano.Writer.MeasureWithLengthPrefix(global::TypeRefs.MsgD.Measure(obj4));
                 }
+                len += 0;
             }
             return len;
         }
@@ -461,7 +467,7 @@ namespace TypeRefs
                             case 2:
                             case 3:
                             case 4:
-                                reader.UnhandledTag(tag); // throws
+                                reader.ThrowUnhandledWireType(tag);
                                 break;
                         }
                         reader.Skip(tag);
@@ -604,7 +610,7 @@ namespace TypeRefs
                             case 2:
                             case 3:
                             case 4:
-                                reader.UnhandledTag(tag); // throws
+                                reader.ThrowUnhandledWireType(tag);
                                 break;
                         }
                         reader.Skip(tag);

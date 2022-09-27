@@ -1112,6 +1112,133 @@
           "Name": "PrimitiveFieldTypes",
           "Package": "AllTheThings",
           "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "double",
+              "Name": "Doubles",
+              "OriginalName": "double",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "Floats",
+              "OriginalName": "float",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Int32s",
+              "OriginalName": "int32",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int64",
+              "Name": "Int64s",
+              "OriginalName": "int64",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "uint32",
+              "Name": "Uint32s",
+              "OriginalName": "uint32",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "uint64",
+              "Name": "Uint64s",
+              "OriginalName": "uint64",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "sint32",
+              "Name": "Sint32s",
+              "OriginalName": "sint32",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "sint64",
+              "Name": "Sint64s",
+              "OriginalName": "sint64",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "fixed32",
+              "Name": "Fixed32s",
+              "OriginalName": "fixed32",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "fixed64",
+              "Name": "Fixed64s",
+              "OriginalName": "fixed64",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 11,
+              "TypeName": "sfixed32",
+              "Name": "Sfixed32s",
+              "OriginalName": "sfixed32",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "sfixed64",
+              "Name": "Sfixed64s",
+              "OriginalName": "sfixed64",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 13,
+              "TypeName": "bool",
+              "Name": "Bools",
+              "OriginalName": "bool",
+              "Repeated": "Array",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 14,
+              "TypeName": "string",
+              "Name": "Strings",
+              "OriginalName": "string",
+              "Repeated": "List",
+              "DefaultValue": ""
+            },
+            {
+              "FieldNumber": 15,
+              "TypeName": "bytes",
+              "Name": "Bytes",
+              "OriginalName": "bytes",
+              "Repeated": "List",
+              "DefaultValue": ""
+            }
+          ],
+          "Name": "RepeatedPrimitiveFieldTypes",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
         }
       ],
       "Enums": [

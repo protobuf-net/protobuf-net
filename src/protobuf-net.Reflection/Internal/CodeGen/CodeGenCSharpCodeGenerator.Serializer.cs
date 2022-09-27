@@ -214,6 +214,7 @@ internal partial class CodeGenCSharpCodeGenerator
             }
             GetEnumSource(field, ctx, ref knownType, ref source);
 
+            long itemFixedLength = 0;
             switch (knownType)
             {
                 case CodeGenWellKnownType.None when field.IsGroup && (field.IsRepeated || IsValueType(field)): // no null-test
@@ -264,7 +265,7 @@ internal partial class CodeGenCSharpCodeGenerator
                     ctx.WriteLine($"len += {HeaderLength(field) + 1};");
                     break;
                 case CodeGenWellKnownType.Boolean:
-                    fixedLength += HeaderLength(field) + 1;
+                    itemFixedLength += HeaderLength(field) + 1;
                     break;
                 case CodeGenWellKnownType.Float when isConditional:
                 case CodeGenWellKnownType.Fixed32 when isConditional:
@@ -274,7 +275,7 @@ internal partial class CodeGenCSharpCodeGenerator
                 case CodeGenWellKnownType.Float:
                 case CodeGenWellKnownType.Fixed32:
                 case CodeGenWellKnownType.SFixed32:
-                    fixedLength += HeaderLength(field) + 4;
+                    itemFixedLength += HeaderLength(field) + 4;
                     break;
                 case CodeGenWellKnownType.Double when isConditional:
                 case CodeGenWellKnownType.Fixed64 when isConditional:
@@ -284,7 +285,7 @@ internal partial class CodeGenCSharpCodeGenerator
                 case CodeGenWellKnownType.Double:
                 case CodeGenWellKnownType.Fixed64:
                 case CodeGenWellKnownType.SFixed64:
-                    fixedLength += HeaderLength(field) + 8;
+                    itemFixedLength += HeaderLength(field) + 8;
                     break;
                 case CodeGenWellKnownType.NetObjectProxy when field.IsRepeated: // no null-test
                     ctx.WriteLine(@"throw new global::System.NotSupportedException(""dynamic types/reference-tracking is not supported"");");
@@ -305,6 +306,17 @@ internal partial class CodeGenCSharpCodeGenerator
                 else
                 {
                     fixedLength += HeaderLength(field);
+                }
+            }
+            else
+            {
+                if (isConditional || field.IsRepeated)
+                {
+                    ctx.WriteLine($"len += {itemFixedLength};");
+                }
+                else
+                {
+                    fixedLength += itemFixedLength;
                 }
             }
             tw?.WriteLine(";");
@@ -328,15 +340,22 @@ internal partial class CodeGenCSharpCodeGenerator
         ctx.Outdent().WriteLine("}").WriteLine();
 
         ctx.WriteLine($"internal static {Escape(message.Name)} Merge({Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent();
+        bool needOldEnd = false, needPacked = false;
         foreach (var field in message.Fields)
         {
-            if (field.Type is CodeGenMessage)
-            {
-                // we're going to need this for someone, then
-                ctx.WriteLine("ulong oldEnd;");
-                break;
-            }
+            if (field.Type is CodeGenMessage) needOldEnd = true;
+            else if (field.IsRepeated && (field.IsPacked || !ctx.Strict)) needPacked = true;
         }
+        if (needOldEnd && needPacked)
+        {
+            ctx.WriteLine("ulong oldEnd, packed;");
+        }
+        else
+        {
+            if (needOldEnd) ctx.WriteLine("ulong oldEnd;");
+            if (needPacked) ctx.WriteLine("ulong packed;");
+        }
+
         if (!message.IsValueType)
         {
             ctx.WriteLine($"if (value is null) value = new();");
@@ -355,7 +374,7 @@ internal partial class CodeGenCSharpCodeGenerator
                 WireType.StartGroup => "group",
                 _ => wireType.ToString(),
             };
-            static void WriteCase(CodeGenField field, WireType wireType, CodeGenGeneratorContext ctx, string value)
+            static void WriteCase(CodeGenField field, WireType wireType, CodeGenGeneratorContext ctx, string value, bool allowPacked = false)
             {
                 var tag = GetTag(field, wireType);
                 ctx.WriteLine($"case {tag}: // field {field.FieldNumber}, {Format(wireType)}").Indent();
@@ -370,6 +389,34 @@ internal partial class CodeGenCSharpCodeGenerator
                     ctx.WriteLine($"value.{field.BackingName} = {value};");
                 }
                 ctx.WriteLine("break;").Outdent();
+
+                if (allowPacked && field.IsRepeated && (field.IsPacked || !ctx.Strict))
+                {
+                    tag = GetTag(field, WireType.String);
+                    ctx.WriteLine($"case {tag}: // field {field.FieldNumber}, {Format(WireType.String)} (packed)").Indent();
+                    switch (wireType)
+                    {
+                        case WireType.Varint:
+                            ctx.WriteLine("packed = reader.ReadVarint64() + reader.Position;")
+                               .WriteLine("while (reader.Position < packed)").WriteLine("{").Indent()
+                               .WriteLine($"value.{field.BackingName}.Add({value});")
+                               .Outdent().WriteLine("}");
+                            break;
+                        case WireType.Fixed32:
+                        case WireType.Fixed64:
+                            ctx.WriteLine("packed = reader.ReadVarint64();")
+                                .WriteLine($"if ((packed & {(wireType == WireType.Fixed32 ? 3 : 7)}) != 0) reader.ThrowInvalidPackedLength(tag, packed);")
+                                .WriteLine($"packed >>= {(wireType == WireType.Fixed32 ? 2 : 3)};")
+                                .WriteLine("while (packed-- != 0)").WriteLine("{").Indent()
+                                .WriteLine($"value.{field.BackingName}.Add({value});")
+                                .Outdent().WriteLine("}");
+                            break;
+                        default:
+                            ctx.WriteLine($"#error packed implementation missing for {field.Name}, wire-type {wireType}");
+                            break;
+                    }
+                    ctx.WriteLine("break;").Outdent();
+                }
             }
 
             static void WriteMessageCase(CodeGenField field, WireType wireType, CodeGenGeneratorContext ctx, string type)
@@ -422,57 +469,99 @@ internal partial class CodeGenCSharpCodeGenerator
                     break;
                 case CodeGenWellKnownType.None when field.IsGroup:
                     WriteMessageCase(field, WireType.StartGroup, ctx, Type(field.Type));
-                    WriteMessageCase(field, WireType.String, ctx, Type(field.Type));
+                    if (!ctx.Strict) WriteMessageCase(field, WireType.String, ctx, Type(field.Type));
                     break;
                 case CodeGenWellKnownType.None:
                     WriteMessageCase(field, WireType.String, ctx, Type(field.Type));
-                    WriteMessageCase(field, WireType.StartGroup, ctx, Type(field.Type));
+                    if (!ctx.Strict) WriteMessageCase(field, WireType.StartGroup, ctx, Type(field.Type));
                     break;
                 case CodeGenWellKnownType.UInt32:
-                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint32()");
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint32()", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32()");
+                        WriteCase(field, WireType.Fixed64, ctx, "checked((uint)reader.ReadFixed64())");
+                    }
                     break;
                 case CodeGenWellKnownType.UInt64:
-                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint64()");
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint64()", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "(ulong)reader.ReadFixed32()");
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64()");
+                    }
                     break;
                 case CodeGenWellKnownType.Int32:
-                    WriteCase(field, WireType.Varint, ctx, "unchecked((int)reader.ReadVarint32())");
+                    WriteCase(field, WireType.Varint, ctx, "unchecked((int)reader.ReadVarint32())", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "unchecked((int)reader.ReadFixed32())");
+                        WriteCase(field, WireType.Fixed64, ctx, "checked((int)unchedked((long)reader.ReadFixed64()))");
+                    }
                     break;
                 case CodeGenWellKnownType.Int64:
-                    WriteCase(field, WireType.Varint, ctx, "unchecked((long)reader.ReadVarint64())");
+                    WriteCase(field, WireType.Varint, ctx, "unchecked((long)reader.ReadVarint64())", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "unchecked((long)(int)reader.ReadFixed32())");
+                        WriteCase(field, WireType.Fixed64, ctx, "unchedked((long)reader.ReadFixed64())");
+                    }
                     break;
                 case CodeGenWellKnownType.SInt32:
-                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint32())");
+                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint32())", true);
                     break;
                 case CodeGenWellKnownType.SInt64:
-                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint64())");
+                    WriteCase(field, WireType.Varint, ctx, NanoNS + ".Reader.Zag(reader.ReadVarint64())", true);
                     break;
                 case CodeGenWellKnownType.Float:
-                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixedSingle()");
+                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixedSingle()", true);
+                    if (!ctx.Strict) WriteCase(field, WireType.Fixed64, ctx, "(float)reader.ReadFixedDouble()");
                     break;
                 case CodeGenWellKnownType.Double:
-                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixedDouble()");
+                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixedDouble()", true);
+                    if (!ctx.Strict) WriteCase(field, WireType.Fixed32, ctx, "(double)reader.ReadFixedSingle()");
                     break;
                 case CodeGenWellKnownType.Boolean:
-                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint32() != 0");
+                    WriteCase(field, WireType.Varint, ctx, "reader.ReadVarint32() != 0", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32() != 0");
+                        WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64() != 0");
+                    }
                     break;
                 case CodeGenWellKnownType.Fixed32:
-                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32()");
+                    WriteCase(field, WireType.Fixed32, ctx, "reader.ReadFixed32()", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed64, ctx, "checked((uint)reader.ReadFixed64())");
+                    }
                     break;
                 case CodeGenWellKnownType.Fixed64:
-                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64()");
+                    WriteCase(field, WireType.Fixed64, ctx, "reader.ReadFixed64()", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "(ulong)reader.ReadFixed32()");
+                    }
                     break;
                 case CodeGenWellKnownType.SFixed32:
-                    WriteCase(field, WireType.Fixed32, ctx, "unchecked((int)reader.ReadFixed32())");
+                    WriteCase(field, WireType.Fixed32, ctx, "unchecked((int)reader.ReadFixed32())", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed64, ctx, "checked((int)unchecked((long)reader.ReadFixed64()))");
+                    }
                     break;
                 case CodeGenWellKnownType.SFixed64:
-                    WriteCase(field, WireType.Fixed64, ctx, "unchecked((long)reader.ReadFixed64())");
+                    WriteCase(field, WireType.Fixed64, ctx, "unchecked((long)reader.ReadFixed64())", true);
+                    if (!ctx.Strict)
+                    {
+                        WriteCase(field, WireType.Fixed32, ctx, "unchecked((long)(ulong)reader.ReadFixed32())");
+                    }
                     break;
                 case CodeGenWellKnownType.NetObjectProxy:
                     // we always write both string and group decoder, because protobuf-net has always been forgiving
-                    ctx.WriteLine($"case {GetTag(field, WireType.String)}: // field {field.FieldNumber}, string")
-                       .WriteLine($"case {GetTag(field, WireType.StartGroup)}: // field {field.FieldNumber}, group").Indent()
-                       .WriteLine(@"throw new global::System.NotSupportedException(""dynamic types/reference-tracking is not supported"");")
-                       .WriteLine("break;").Outdent();
+                    if (!field.IsGroup || !ctx.Strict) ctx.WriteLine($"case {GetTag(field, WireType.String)}: // field {field.FieldNumber}, string");
+                    if (field.IsGroup || !ctx.Strict) ctx.WriteLine($"case {GetTag(field, WireType.StartGroup)}: // field {field.FieldNumber}, group");
+                    ctx.Indent().WriteLine(@"reader.ThrowNetObjectProxy();").WriteLine("break;").Outdent();
                     break;
                 default:
                     throw new NotImplementedException($"type not yet supported in {nameof(WriteMessageSerializer)}: {knownType}");
@@ -490,7 +579,7 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 ctx.WriteLine($"case {field.FieldNumber}:");
             }
-            ctx.Indent().WriteLine($"reader.UnhandledTag(tag); // throws").WriteLine("break;").Outdent().Outdent().WriteLine("}");
+            ctx.Indent().WriteLine($"reader.ThrowUnhandledWireType(tag);").WriteLine("break;").Outdent().Outdent().WriteLine("}");
         }
         ctx.WriteLine("reader.Skip(tag);").WriteLine("break;").Outdent();
         ctx.Outdent().WriteLine("}").Outdent().WriteLine("}");

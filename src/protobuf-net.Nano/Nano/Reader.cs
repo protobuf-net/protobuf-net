@@ -665,8 +665,20 @@ public ref struct Reader
     public long ReadVarintInt64() => (long)ReadVarintUInt64();
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public void UnhandledTag(uint tag)
+    public void ThrowUnhandledWireType(uint tag)
+        => throw new NotSupportedException($"Field {tag >> 3} was not expected with wire-type {tag & 7}; this may indicate a tooling error - please report as an issue");
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void ThrowNetObjectProxy()
+        => throw new NotSupportedException("dynamic types/reference-tracking is not supported");
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void ThrowUnhandledTag(uint tag)
         => throw new InvalidOperationException($"Field {tag >> 3} was not expected with wire-type {tag & 7}; this may indicate a tooling error - please report as an issue");
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void ThrowInvalidPackedLength(uint tag, ulong len)
+    => throw new InvalidOperationException($"Field {tag >> 3} has invalid packed-length {len}, which is an incomplete number of elements");
 
     int _lastGroup;
     public void PushGroup(int tag)
