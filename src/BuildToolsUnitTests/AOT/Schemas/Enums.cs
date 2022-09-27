@@ -20,6 +20,9 @@ namespace BasicPackage
         [global::System.ComponentModel.DefaultValue(global::BasicPackage.Corpus2.CorpusUnspecified)]
         public global::BasicPackage.Corpus2 Corpus { get; set; }
 
+        [global::System.Runtime.CompilerServices.CompilerGenerated]
+        [global::System.Diagnostics.DebuggerNonUserCode]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Corpus != global::BasicPackage.Corpus2.CorpusUnspecified)
@@ -29,6 +32,9 @@ namespace BasicPackage
             }
         }
 
+        [global::System.Runtime.CompilerServices.CompilerGenerated]
+        [global::System.Diagnostics.DebuggerNonUserCode]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(SearchRequest value)
         {
             ulong len = 0;
@@ -39,6 +45,9 @@ namespace BasicPackage
             return len;
         }
 
+        [global::System.Runtime.CompilerServices.CompilerGenerated]
+        [global::System.Diagnostics.DebuggerNonUserCode]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static SearchRequest Merge(SearchRequest value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();

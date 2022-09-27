@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Internal.CodeGen;
 using System;
+using System.CodeDom.Compiler;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -106,6 +107,7 @@ internal partial class CodeGenCSharpCodeGenerator
             return isConditional;
         }
 
+        WriteCompilerGenerated(ctx);
         ctx.WriteLine($"internal static void Write({Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
         foreach (var field in message.Fields)
         {
@@ -212,6 +214,7 @@ internal partial class CodeGenCSharpCodeGenerator
         ctx.Outdent().WriteLine("}").WriteLine();
 
         long fixedLength = 0;
+        WriteCompilerGenerated(ctx);
         ctx.WriteLine($"internal static ulong Measure({Escape(message.Name)} value)").WriteLine("{").Indent().WriteLine($"ulong len = 0;");
 
         foreach (var field in message.Fields)
@@ -358,6 +361,7 @@ internal partial class CodeGenCSharpCodeGenerator
         }
         ctx.Outdent().WriteLine("}").WriteLine();
 
+        WriteCompilerGenerated(ctx);
         ctx.WriteLine($"internal static {Escape(message.Name)} Merge({Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent();
         bool needOldEnd = false, needPacked = false;
 
@@ -650,6 +654,13 @@ internal partial class CodeGenCSharpCodeGenerator
 
             source = iter;
         }
+    }
+
+    private static void WriteCompilerGenerated(CodeGenGeneratorContext ctx)
+    {
+        ctx.WriteLine("[global::System.Runtime.CompilerServices.CompilerGenerated]");
+        ctx.WriteLine("[global::System.Diagnostics.DebuggerNonUserCode]");
+        ctx.WriteLine($@"[global::System.CodeDom.Compiler.GeneratedCode(""protogen"", ""{ctx.ToolVersion}"")]");
     }
 
     private string FormatDefaultValue(CodeGenField field)

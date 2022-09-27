@@ -313,16 +313,19 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
         //    ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
         //}
 
-        ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
+        if (ctx.ShouldEmit(CodeGenGenerate.DataContractFeatures, message.Emit))
+        {
+            ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
             .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
-        if (ctx.Supports(CSharp6))
-        {
-            ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
-        }
-        else
-        {
-            ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
+            if (ctx.Supports(CSharp6))
+            {
+                ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
+            }
+            else
+            {
+                ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
+            }
         }
     }
 

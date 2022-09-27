@@ -6,6 +6,7 @@ using System.IO;
 using System;
 using System.Linq;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -502,9 +503,16 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
 
             var emit = CodeGenGenerate.All;
-            if (options is not null && options.TryGetValue("emit", out var emitRaw) && Enum.TryParse<CodeGenGenerate>(emitRaw, true, out var emitParsed))
+            if (options is not null)
             {
-                emit = emitParsed;
+                if (options.TryGetValue("emit", out var raw) && Enum.TryParse<CodeGenGenerate>(raw, true, out var emitParsed))
+                {
+                    emit = emitParsed;
+                }
+                if (options.TryGetValue("toolversion", out raw))
+                {
+                    ToolVersion = raw;
+                }
             }
 
             File = file;
@@ -623,6 +631,15 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         /// </summary>
         public Version LanguageVersion { get; }
         public bool Strict { get; set; }
+
+        internal string ToolVersion { get; } = s_AssemblyVersion;
+
+        private static readonly string s_AssemblyVersion = GetAssemblyVersion();
+        static string GetAssemblyVersion()
+        {
+            var ver = ((AssemblyFileVersionAttribute)typeof(CodeGenGeneratorContext).Assembly.GetCustomAttribute(typeof(AssemblyFileVersionAttribute)))?.Version;
+            return string.IsNullOrWhiteSpace(ver) ? "n/a" : ver.Trim();
+        }
 
         /// <summary>
         /// Ends the current line

@@ -36,7 +36,7 @@ public class AOTSchemaTests
     {
         foreach (var file in Directory.GetFiles(SchemaPath, "*.proto", SearchOption.AllDirectories))
         {
-            yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "")  };
+            yield return new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "") };
         }
     }
 
@@ -91,7 +91,11 @@ public class AOTSchemaTests
 #endif
 
         // generate C# model out of Code-Gen model
-        var codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed));
+        var generateOptions = new Dictionary<string, string>
+        {
+            { "toolversion", "test" }
+        };
+        var codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed, generateOptions));
         Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "cs"), codeFile.Name);
         Assert.NotNull(codeFile);
 
@@ -101,14 +105,16 @@ public class AOTSchemaTests
         _output.WriteLine($"updating {target}...");
         File.WriteAllText(target, codeFile.Text);
 #else
-
         Assert.True(File.Exists(csPath), $"{csPath} does not exist");
         var expectedCs = File.ReadAllText(csPath);
         Assert.Equal(expectedCs, codeFile.Text);
 #endif
 
-        // now we run the *generated* code through Roslyn, and see if we can parse it again
-        var syntaxTree = CSharpSyntaxTree.ParseText(codeFile.Text, new CSharpParseOptions(LanguageVersion.Preview), path: Path.GetFileName(csPath));
+        // now we run the *generated* code (minus the serializers) through Roslyn, and see if we can parse it again
+        const CodeGenGenerate options = ~(CodeGenGenerate.DataSerializer | CodeGenGenerate.ServiceProxy);
+        generateOptions["emit"] = options.ToString();
+        codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed, generateOptions));
+        var dataContractSyntaxTree = CSharpSyntaxTree.ParseText(codeFile.Text, new CSharpParseOptions(LanguageVersion.Preview), path: Path.GetFileName(csPath));
         var libs = new[]
         {
             GetLib<object>(),
@@ -120,7 +126,7 @@ public class AOTSchemaTests
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=4.2.2.0").Location),
         };
         var compilation = CSharpCompilation.Create("MyCompilation.dll",
-            syntaxTrees: new[] { syntaxTree }, references: libs, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            syntaxTrees: new[] { dataContractSyntaxTree }, references: libs, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         // try the compile; if it doesn't look good here, everything else is broken
         using var ms = new MemoryStream();
@@ -134,14 +140,14 @@ public class AOTSchemaTests
         }
 
         Assert.True(result.Success, "generated code does not compile");
-        var model = compilation.GetSemanticModel(syntaxTree, false);
+        var model = compilation.GetSemanticModel(dataContractSyntaxTree, false);
         Assert.NotNull(model);
 
         CodeGenSet parsedFromCode = new();
         foreach (var symbol in model.LookupNamespacesAndTypes(0))
         {
             var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-            if (firstRef is not null && firstRef.SyntaxTree == syntaxTree)
+            if (firstRef is not null && firstRef.SyntaxTree == dataContractSyntaxTree)
             {
                 parsedFromCode = CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
             }
@@ -159,6 +165,40 @@ public class AOTSchemaTests
         expectedJson = File.ReadAllText(jsonPath);
         Assert.Equal(expectedJson, json);
 #endif
+
+        // generate C# model out of Code-Gen model
+        codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsedFromCode));
+        Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "cs"), codeFile.Name);
+        Assert.NotNull(codeFile);
+
+        csPath = Path.ChangeExtension(protoPath, ".pcs");
+#if UPDATE_FILES
+        target = Path.Combine(Path.GetDirectoryName(CallerFilePath())!, "..", csPath).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        _output.WriteLine($"updating {target}...");
+        File.WriteAllText(target, codeFile.Text);
+#else
+        Assert.True(File.Exists(csPath), $"{csPath} does not exist");
+        var expectedCs = File.ReadAllText(csPath);
+        Assert.Equal(expectedCs, codeFile.Text);
+#endif
+
+        var serializerSyntaxTree = CSharpSyntaxTree.ParseText(codeFile.Text, new CSharpParseOptions(LanguageVersion.Preview), path: Path.GetFileName(csPath));
+        compilation = CSharpCompilation.Create("MyCompilation.dll",
+            syntaxTrees: new[] { serializerSyntaxTree, dataContractSyntaxTree }, references: libs, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        // try the compile; if it doesn't look good here, everything else is broken
+        ms.Position = 0; // reset
+        ms.SetLength(0);
+        result = compilation.Emit(ms);
+        foreach (var diag in result.Diagnostics)
+        {
+            if (diag.Severity == DiagnosticSeverity.Error)
+            {
+                _output.WriteLine(diag.ToString());
+            }
+        }
+
+        Assert.True(result.Success, "generated code (from parse) does not compile");
     }
 
     static MetadataReference GetLib<T>()
