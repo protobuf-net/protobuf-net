@@ -43,7 +43,19 @@ public class AOTGeneratorTests : GeneratorTestBase<DataContractGenerator>
     [Fact]
     public async Task NotContractNoTrees()
     {
-        var result = await RunAsync(Code("my.cs", @"partial class Foo {}"));
+        var result = await RunAsync(@"partial class Foo {}");
+        Assert.Empty(result.GeneratedTrees);
+    }
+
+    [Fact]
+    public async Task HazMap()
+    {
+        var result = await RunAsync(@"
+[ProtoBuf.ProtoContract]
+partial class Foo {
+    [ProtoBuf.ProtoMember(1)]
+    public System.Collections.Generic.Dictionary<int, string> Values {get;} = new();
+}");
         Assert.Empty(result.GeneratedTrees);
     }
 

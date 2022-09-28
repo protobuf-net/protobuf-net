@@ -1,20 +1,30 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
+using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Parsers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ProtoBuf.Internal.CodeGen;
 
-internal class CodeGenSemanticModelParser
+internal class CodeGenSemanticModelParser : IDiagnosticSource
 {
     //public static CodeGenSet Parse(ISymbol symbol)
     //{
     //    var codeGenSet = new CodeGenSet();
     //    return Parse(codeGenSet, symbol);
     //}
+
+    public CodeGenSemanticModelParser() { }
+    public CodeGenSemanticModelParser(in GeneratorExecutionContext executionContext)
+        => _executionContext = executionContext;
+
+    private readonly GeneratorExecutionContext? _executionContext;
+
     private readonly CodeGenParseContext codeGenParseContext = new CodeGenParseContext();
     internal CodeGenParseContext Context => codeGenParseContext;
     private readonly CodeGenSet set = new CodeGenSet();
@@ -122,6 +132,36 @@ internal class CodeGenSemanticModelParser
     // is this a new symbol?
     internal bool HasConsidered(ISymbol symbol)
         => !(_seen ??= new HashSet<ISymbol>(SymbolEqualityComparer.Default)).Add(symbol);
+
+    internal void ReportDiagnostic(DiagnosticDescriptor diagnostic, ISymbol source, params object[] messageArgs)
+    {
+        if (_executionContext.HasValue)
+        {
+            var loc = source.Locations.FirstOrDefault();
+            _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(diagnostic, loc, messageArgs));
+        }
+    }
+
+    void IDiagnosticSource.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
+    {
+        if (_executionContext.HasValue)
+        {
+            var loc = (located.Location as ISymbol)?.Locations.FirstOrDefault();
+            var mapped = MapDescriptor(diagnostic);
+            _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(mapped, loc, messageArgs));
+        }
+    }
+
+    private DiagnosticDescriptor MapDescriptor(CodeGenDiagnostic diagnostic)
+    {
+        if (!s_MappedDescriptors.TryGetValue(diagnostic.Id, out var found))
+        {
+            found = new DiagnosticDescriptor(diagnostic.Id, diagnostic.Title, diagnostic.MessageFormat, Literals.CategoryUsage, (DiagnosticSeverity)diagnostic.Severity, true);
+            s_MappedDescriptors[diagnostic.Id] = found;
+        }
+        return found;
+    }
+    private static readonly ConcurrentDictionary<string, DiagnosticDescriptor> s_MappedDescriptors = new();
 
     private HashSet<ISymbol>? _seen;
 }

@@ -97,7 +97,7 @@ internal partial class CodeGenCSharpCodeGenerator
                         ctx.WriteLine($"if (value.{field.BackingName}.HasValue)");
                         break;
                     default:
-                        ctx.WriteLine($"#warning conditional mode for {field.Name} not supported: {field.Conditional}");
+                        ctx.ReportDiagnostic(CodeGenDiagnostic.FeatureNotImplemented, field, field.Conditional);
                         isConditional = false;
                         break;
                 }
@@ -106,12 +106,12 @@ internal partial class CodeGenCSharpCodeGenerator
         }
 
         WriteCompilerGenerated(ctx);
-        ctx.WriteLine($"internal static void Write({Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
+        ctx.WriteLine($"internal static void Write({CallStyle(message)}{Escape(message.Name)} value, ref {NanoNS}.Writer writer)").WriteLine("{").Indent();
         foreach (var field in message.Fields)
         {
             if (field.Repeated == RepeatedKind.Dictionary)
             {
-                ctx.WriteLine($"#warning maps not implemented yet");
+                ctx.ReportDiagnostic(CodeGenDiagnostic.FeatureNotImplemented, field, field.Repeated);
                 continue;
             }
 
@@ -213,13 +213,13 @@ internal partial class CodeGenCSharpCodeGenerator
 
         long fixedLength = 0;
         WriteCompilerGenerated(ctx);
-        ctx.WriteLine($"internal static ulong Measure({Escape(message.Name)} value)").WriteLine("{").Indent().WriteLine($"ulong len = 0;");
+        ctx.WriteLine($"internal static ulong Measure({CallStyle(message)}{Escape(message.Name)} value)").WriteLine("{").Indent().WriteLine($"ulong len = 0;");
 
         foreach (var field in message.Fields)
         {
             if (field.Repeated == RepeatedKind.Dictionary)
             {
-                ctx.WriteLine($"#warning maps not implemented yet");
+                ctx.ReportDiagnostic(CodeGenDiagnostic.FeatureNotImplemented, field, field.Repeated);
                 continue;
             }
 
@@ -360,7 +360,7 @@ internal partial class CodeGenCSharpCodeGenerator
         ctx.Outdent().WriteLine("}").WriteLine();
 
         WriteCompilerGenerated(ctx);
-        ctx.WriteLine($"internal static {Escape(message.Name)} Merge({Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent();
+        ctx.WriteLine($"internal static {Escape(message.Name)} Merge({CallStyle(message, true)}{Escape(message.Name)} value, ref {NanoNS}.Reader reader)").WriteLine("{").Indent();
         bool needOldEnd = false, needPacked = false;
 
         foreach (var field in message.Fields)
@@ -388,7 +388,7 @@ internal partial class CodeGenCSharpCodeGenerator
         {
             if (field.Repeated == RepeatedKind.Dictionary)
             {
-                ctx.WriteLine($"#warning maps not implemented yet");
+                ctx.ReportDiagnostic(CodeGenDiagnostic.FeatureNotImplemented, field, field.Repeated);
                 continue;
             }
 
@@ -652,6 +652,18 @@ internal partial class CodeGenCSharpCodeGenerator
 
             source = iter;
         }
+    }
+
+    private static string CallStyle(CodeGenMessage message, bool forMerge = false)
+    {
+        if (message.IsValueType)
+        {
+            // merging value-types requires ref inherently; all ops on non-readonly
+            // value-types should use ref to avoid defensive copy via in
+            if (forMerge || !message.IsReadOnly) return "ref ";
+            return "in ";
+        }
+        return "";
     }
 
     private static void WriteCompilerGenerated(CodeGenGeneratorContext ctx)

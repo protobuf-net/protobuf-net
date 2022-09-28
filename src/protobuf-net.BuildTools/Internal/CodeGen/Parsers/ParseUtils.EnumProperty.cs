@@ -5,9 +5,9 @@ using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal static class EnumPropertyCodeGenModelParser
+internal static partial class ParseUtils
 {
-    public static CodeGenEnum? Parse(in CodeGenFileParseContext ctx, IPropertySymbol symbol)
+    public static CodeGenEnum? ParseEnumProperty(in CodeGenFileParseContext ctx, IPropertySymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
         if (ParseUtils.IsProtoMember(propertyAttributes, out var protoMemberAttribute))
@@ -23,9 +23,7 @@ internal static class EnumPropertyCodeGenModelParser
             return codeGenField;
         }
 
-        ctx.SaveWarning(
-            $"Failed to find a '{nameof(protoMemberAttribute)}' attribute within enum property definition", 
-            symbol);
+        ctx.ReportDiagnostic(EnumPropertyLacksAttribute, symbol);
         return null;
     }
 }

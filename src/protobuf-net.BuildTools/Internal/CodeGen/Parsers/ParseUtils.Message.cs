@@ -31,7 +31,7 @@ internal static partial class ParseUtils
                         break;
                     
                     case TypeKind.Enum:
-                        var codeGenEnum = EnumPropertyCodeGenModelParser.Parse(in ctx, propertySymbol);
+                        var codeGenEnum = ParseEnumProperty(in ctx, propertySymbol);
                         if (codeGenEnum is not null)
                         {
                             codeGenMessage.Enums.Add(codeGenEnum);

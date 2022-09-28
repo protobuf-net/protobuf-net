@@ -59,6 +59,13 @@
                   ],
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "query",
+                        "Number": 1,
+                        "label": "LabelRequired",
+                        "type": "TypeString",
+                        "JsonName": "query"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Query",
@@ -67,6 +74,12 @@
                       "DefaultValue": ""
                     },
                     {
+                      "Location": {
+                        "Name": "page_number",
+                        "Number": 2,
+                        "type": "TypeInt32",
+                        "JsonName": "pageNumber"
+                      },
                       "FieldNumber": 2,
                       "TypeName": "int32",
                       "Name": "PageNumber",
@@ -76,6 +89,13 @@
                       "DefaultValue": ""
                     },
                     {
+                      "Location": {
+                        "Name": "result_per_page",
+                        "Number": 3,
+                        "type": "TypeInt32",
+                        "DefaultValue": "10",
+                        "JsonName": "resultPerPage"
+                      },
                       "FieldNumber": 3,
                       "TypeName": "int32",
                       "Name": "ResultPerPage",
@@ -85,6 +105,14 @@
                       "DefaultValue": "10"
                     },
                     {
+                      "Location": {
+                        "Name": "corpus",
+                        "Number": 4,
+                        "type": "TypeEnum",
+                        "TypeName": ".AllTheThings.SearchRequest.Corpus",
+                        "DefaultValue": "UNIVERSAL",
+                        "JsonName": "corpus"
+                      },
                       "FieldNumber": 4,
                       "TypeName": "AllTheThings.SearchRequest+Corpus",
                       "Name": "CorpusValue",
@@ -106,6 +134,13 @@
                     {
                       "Fields": [
                         {
+                          "Location": {
+                            "Name": "url",
+                            "Number": 1,
+                            "label": "LabelRequired",
+                            "type": "TypeString",
+                            "JsonName": "url"
+                          },
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
@@ -114,6 +149,12 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "title",
+                            "Number": 2,
+                            "type": "TypeString",
+                            "JsonName": "title"
+                          },
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
@@ -121,6 +162,13 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "snippets",
+                            "Number": 3,
+                            "label": "LabelRepeated",
+                            "type": "TypeString",
+                            "JsonName": "snippets"
+                          },
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -136,6 +184,17 @@
                     {
                       "Fields": [
                         {
+                          "Location": {
+                            "Name": "url",
+                            "Number": 2,
+                            "label": "LabelRequired",
+                            "type": "TypeString",
+                            "JsonName": "url",
+                            "Options": {
+                              "Deprecated": true,
+                              "UninterpretedOptions": []
+                            }
+                          },
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -144,6 +203,12 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "title",
+                            "Number": 3,
+                            "type": "TypeString",
+                            "JsonName": "title"
+                          },
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
@@ -151,6 +216,13 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "snippets",
+                            "Number": 4,
+                            "label": "LabelRepeated",
+                            "type": "TypeString",
+                            "JsonName": "snippets"
+                          },
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -166,6 +238,13 @@
                     {
                       "Fields": [
                         {
+                          "Location": {
+                            "Name": "url",
+                            "Number": 2,
+                            "label": "LabelRequired",
+                            "type": "TypeString",
+                            "JsonName": "url"
+                          },
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -174,6 +253,12 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "title",
+                            "Number": 3,
+                            "type": "TypeString",
+                            "JsonName": "title"
+                          },
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
@@ -181,6 +266,13 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "snippets",
+                            "Number": 4,
+                            "label": "LabelRepeated",
+                            "type": "TypeString",
+                            "JsonName": "snippets"
+                          },
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -197,6 +289,14 @@
                   ],
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "result",
+                        "Number": 1,
+                        "label": "LabelRepeated",
+                        "type": "TypeMessage",
+                        "TypeName": ".AllTheThings.SearchResponse.Result",
+                        "JsonName": "result"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
@@ -204,6 +304,14 @@
                       "Repeated": "List"
                     },
                     {
+                      "Location": {
+                        "Name": "grouped",
+                        "Number": 10,
+                        "label": "LabelRepeated",
+                        "type": "TypeGroup",
+                        "TypeName": ".AllTheThings.SearchResponse.Grouped",
+                        "JsonName": "grouped"
+                      },
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
@@ -211,6 +319,13 @@
                       "Repeated": "List"
                     },
                     {
+                      "Location": {
+                        "Name": "upper",
+                        "Number": 12,
+                        "type": "TypeGroup",
+                        "TypeName": ".AllTheThings.SearchResponse.UPPER",
+                        "JsonName": "upper"
+                      },
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
@@ -274,6 +389,13 @@
                   ],
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "query",
+                        "Number": 1,
+                        "label": "LabelRequired",
+                        "type": "TypeString",
+                        "JsonName": "query"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Query",
@@ -282,6 +404,12 @@
                       "DefaultValue": ""
                     },
                     {
+                      "Location": {
+                        "Name": "page_number",
+                        "Number": 2,
+                        "type": "TypeInt32",
+                        "JsonName": "pageNumber"
+                      },
                       "FieldNumber": 2,
                       "TypeName": "int32",
                       "Name": "PageNumber",
@@ -291,6 +419,13 @@
                       "DefaultValue": ""
                     },
                     {
+                      "Location": {
+                        "Name": "result_per_page",
+                        "Number": 3,
+                        "type": "TypeInt32",
+                        "DefaultValue": "10",
+                        "JsonName": "resultPerPage"
+                      },
                       "FieldNumber": 3,
                       "TypeName": "int32",
                       "Name": "ResultPerPage",
@@ -300,6 +435,14 @@
                       "DefaultValue": "10"
                     },
                     {
+                      "Location": {
+                        "Name": "corpus",
+                        "Number": 4,
+                        "type": "TypeEnum",
+                        "TypeName": ".AllTheThings.SearchRequest.Corpus",
+                        "DefaultValue": "UNIVERSAL",
+                        "JsonName": "corpus"
+                      },
                       "FieldNumber": 4,
                       "TypeName": "AllTheThings.SearchRequest+Corpus",
                       "Name": "CorpusValue",
@@ -321,6 +464,13 @@
                     {
                       "Fields": [
                         {
+                          "Location": {
+                            "Name": "url",
+                            "Number": 1,
+                            "label": "LabelRequired",
+                            "type": "TypeString",
+                            "JsonName": "url"
+                          },
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
@@ -329,6 +479,12 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "title",
+                            "Number": 2,
+                            "type": "TypeString",
+                            "JsonName": "title"
+                          },
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
@@ -336,6 +492,13 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "snippets",
+                            "Number": 3,
+                            "label": "LabelRepeated",
+                            "type": "TypeString",
+                            "JsonName": "snippets"
+                          },
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -351,6 +514,17 @@
                     {
                       "Fields": [
                         {
+                          "Location": {
+                            "Name": "url",
+                            "Number": 2,
+                            "label": "LabelRequired",
+                            "type": "TypeString",
+                            "JsonName": "url",
+                            "Options": {
+                              "Deprecated": true,
+                              "UninterpretedOptions": []
+                            }
+                          },
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -359,6 +533,12 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "title",
+                            "Number": 3,
+                            "type": "TypeString",
+                            "JsonName": "title"
+                          },
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
@@ -366,6 +546,13 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "snippets",
+                            "Number": 4,
+                            "label": "LabelRepeated",
+                            "type": "TypeString",
+                            "JsonName": "snippets"
+                          },
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -381,6 +568,13 @@
                     {
                       "Fields": [
                         {
+                          "Location": {
+                            "Name": "url",
+                            "Number": 2,
+                            "label": "LabelRequired",
+                            "type": "TypeString",
+                            "JsonName": "url"
+                          },
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -389,6 +583,12 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "title",
+                            "Number": 3,
+                            "type": "TypeString",
+                            "JsonName": "title"
+                          },
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
@@ -396,6 +596,13 @@
                           "DefaultValue": ""
                         },
                         {
+                          "Location": {
+                            "Name": "snippets",
+                            "Number": 4,
+                            "label": "LabelRepeated",
+                            "type": "TypeString",
+                            "JsonName": "snippets"
+                          },
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -412,6 +619,14 @@
                   ],
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "result",
+                        "Number": 1,
+                        "label": "LabelRepeated",
+                        "type": "TypeMessage",
+                        "TypeName": ".AllTheThings.SearchResponse.Result",
+                        "JsonName": "result"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
@@ -419,6 +634,14 @@
                       "Repeated": "List"
                     },
                     {
+                      "Location": {
+                        "Name": "grouped",
+                        "Number": 10,
+                        "label": "LabelRepeated",
+                        "type": "TypeGroup",
+                        "TypeName": ".AllTheThings.SearchResponse.Grouped",
+                        "JsonName": "grouped"
+                      },
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
@@ -426,6 +649,13 @@
                       "Repeated": "List"
                     },
                     {
+                      "Location": {
+                        "Name": "upper",
+                        "Number": 12,
+                        "type": "TypeGroup",
+                        "TypeName": ".AllTheThings.SearchResponse.UPPER",
+                        "JsonName": "upper"
+                      },
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
@@ -446,17 +676,50 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "foo",
+                "Number": 1,
+                "type": "TypeMessage",
+                "TypeName": ".AllTheThings.TestNetObject",
+                "JsonName": "foo",
+                "Options": {
+                  "UninterpretedOptions": [],
+                  "ExtensionData": "6kACGAE="
+                }
+              },
               "FieldNumber": 1,
               "TypeName": "AllTheThings.TestNetObject",
               "Name": "Foo",
               "OriginalName": "foo"
             },
             {
+              "Location": {
+                "Name": "barRef",
+                "Number": 2,
+                "type": "TypeMessage",
+                "TypeName": ".AllTheThings.TestNetObject",
+                "JsonName": "barRef",
+                "Options": {
+                  "UninterpretedOptions": [],
+                  "ExtensionData": "6kACGAE="
+                }
+              },
               "FieldNumber": 2,
               "TypeName": "AllTheThings.TestNetObject",
               "Name": "barRef"
             },
             {
+              "Location": {
+                "Name": "barDyn",
+                "Number": 3,
+                "type": "TypeMessage",
+                "TypeName": ".bcl.NetObjectProxy",
+                "JsonName": "barDyn",
+                "Options": {
+                  "UninterpretedOptions": [],
+                  "ExtensionData": "6kACIAE="
+                }
+              },
               "FieldNumber": 3,
               "TypeName": ":NetObjectProxy",
               "Name": "barDyn",
@@ -470,6 +733,13 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "a",
+                "Number": 1,
+                "type": "TypeFloat",
+                "DefaultValue": "inf",
+                "JsonName": "a"
+              },
               "FieldNumber": 1,
               "TypeName": "float",
               "Name": "A",
@@ -479,6 +749,13 @@
               "DefaultValue": "inf"
             },
             {
+              "Location": {
+                "Name": "b",
+                "Number": 2,
+                "type": "TypeFloat",
+                "DefaultValue": "-inf",
+                "JsonName": "b"
+              },
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "B",
@@ -488,6 +765,13 @@
               "DefaultValue": "-inf"
             },
             {
+              "Location": {
+                "Name": "c",
+                "Number": 3,
+                "type": "TypeFloat",
+                "DefaultValue": "nan",
+                "JsonName": "c"
+              },
               "FieldNumber": 3,
               "TypeName": "float",
               "Name": "C",
@@ -497,6 +781,13 @@
               "DefaultValue": "nan"
             },
             {
+              "Location": {
+                "Name": "d",
+                "Number": 4,
+                "type": "TypeFloat",
+                "DefaultValue": "0",
+                "JsonName": "d"
+              },
               "FieldNumber": 4,
               "TypeName": "float",
               "Name": "D",
@@ -506,6 +797,13 @@
               "DefaultValue": "0"
             },
             {
+              "Location": {
+                "Name": "e",
+                "Number": 5,
+                "type": "TypeFloat",
+                "DefaultValue": "0",
+                "JsonName": "e"
+              },
               "FieldNumber": 5,
               "TypeName": "float",
               "Name": "E",
@@ -515,6 +813,13 @@
               "DefaultValue": "0"
             },
             {
+              "Location": {
+                "Name": "f",
+                "Number": 6,
+                "type": "TypeFloat",
+                "DefaultValue": "0",
+                "JsonName": "f"
+              },
               "FieldNumber": 6,
               "TypeName": "float",
               "Name": "F",
@@ -524,6 +829,13 @@
               "DefaultValue": "0"
             },
             {
+              "Location": {
+                "Name": "g",
+                "Number": 7,
+                "type": "TypeBool",
+                "DefaultValue": "true",
+                "JsonName": "g"
+              },
               "FieldNumber": 7,
               "TypeName": "bool",
               "Name": "G",
@@ -533,6 +845,14 @@
               "DefaultValue": "true"
             },
             {
+              "Location": {
+                "Name": "requiredWithDefault",
+                "Number": 8,
+                "label": "LabelRequired",
+                "type": "TypeInt32",
+                "DefaultValue": "12",
+                "JsonName": "requiredWithDefault"
+              },
               "FieldNumber": 8,
               "TypeName": "int32",
               "Name": "requiredWithDefault",
@@ -547,6 +867,13 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "foo_name",
+                "Number": 1,
+                "type": "TypeString",
+                "DefaultValue": "abc",
+                "JsonName": "none"
+              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "FooName",
@@ -554,6 +881,13 @@
               "DefaultValue": "abc"
             },
             {
+              "Location": {
+                "Name": "name",
+                "Number": 4,
+                "type": "TypeString",
+                "DefaultValue": "abc",
+                "JsonName": "name"
+              },
               "FieldNumber": 4,
               "TypeName": "string",
               "Name": "Name",
@@ -561,6 +895,16 @@
               "DefaultValue": "abc"
             },
             {
+              "Location": {
+                "Name": "sub_message",
+                "Number": 9,
+                "type": "TypeBool",
+                "JsonName": "subMessage",
+                "Options": {
+                  "Deprecated": true,
+                  "UninterpretedOptions": []
+                }
+              },
               "FieldNumber": 9,
               "TypeName": "bool",
               "Name": "SubMessage",
@@ -570,6 +914,14 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "name2",
+                "Number": 5,
+                "type": "TypeString",
+                "DefaultValue": "abc",
+                "OneofIndex": 1,
+                "JsonName": "name2"
+              },
               "FieldNumber": 5,
               "TypeName": "string",
               "Name": "Name2",
@@ -577,6 +929,17 @@
               "DefaultValue": "abc"
             },
             {
+              "Location": {
+                "Name": "sub_message2",
+                "Number": 10,
+                "type": "TypeBool",
+                "OneofIndex": 1,
+                "JsonName": "subMessage2",
+                "Options": {
+                  "Deprecated": true,
+                  "UninterpretedOptions": []
+                }
+              },
               "FieldNumber": 10,
               "TypeName": "bool",
               "Name": "SubMessage2",
@@ -586,6 +949,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "bar_name",
+                "Number": 12,
+                "type": "TypeString",
+                "DefaultValue": "abc\\def\"ghi'jkl\rmno\npqr\tstu",
+                "JsonName": "barName"
+              },
               "FieldNumber": 12,
               "TypeName": "string",
               "Name": "BarName",
@@ -643,6 +1013,13 @@
           ],
           "Fields": [
             {
+              "Location": {
+                "Name": "query",
+                "Number": 1,
+                "label": "LabelRequired",
+                "type": "TypeString",
+                "JsonName": "query"
+              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Query",
@@ -651,6 +1028,12 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "page_number",
+                "Number": 2,
+                "type": "TypeInt32",
+                "JsonName": "pageNumber"
+              },
               "FieldNumber": 2,
               "TypeName": "int32",
               "Name": "PageNumber",
@@ -660,6 +1043,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "result_per_page",
+                "Number": 3,
+                "type": "TypeInt32",
+                "DefaultValue": "10",
+                "JsonName": "resultPerPage"
+              },
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "ResultPerPage",
@@ -669,6 +1059,14 @@
               "DefaultValue": "10"
             },
             {
+              "Location": {
+                "Name": "corpus",
+                "Number": 4,
+                "type": "TypeEnum",
+                "TypeName": ".AllTheThings.SearchRequest.Corpus",
+                "DefaultValue": "UNIVERSAL",
+                "JsonName": "corpus"
+              },
               "FieldNumber": 4,
               "TypeName": "AllTheThings.SearchRequest+Corpus",
               "Name": "CorpusValue",
@@ -687,6 +1085,13 @@
             {
               "Fields": [
                 {
+                  "Location": {
+                    "Name": "url",
+                    "Number": 1,
+                    "label": "LabelRequired",
+                    "type": "TypeString",
+                    "JsonName": "url"
+                  },
                   "FieldNumber": 1,
                   "TypeName": "string",
                   "Name": "Url",
@@ -695,6 +1100,12 @@
                   "DefaultValue": ""
                 },
                 {
+                  "Location": {
+                    "Name": "title",
+                    "Number": 2,
+                    "type": "TypeString",
+                    "JsonName": "title"
+                  },
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Title",
@@ -702,6 +1113,13 @@
                   "DefaultValue": ""
                 },
                 {
+                  "Location": {
+                    "Name": "snippets",
+                    "Number": 3,
+                    "label": "LabelRepeated",
+                    "type": "TypeString",
+                    "JsonName": "snippets"
+                  },
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Snippets",
@@ -717,6 +1135,17 @@
             {
               "Fields": [
                 {
+                  "Location": {
+                    "Name": "url",
+                    "Number": 2,
+                    "label": "LabelRequired",
+                    "type": "TypeString",
+                    "JsonName": "url",
+                    "Options": {
+                      "Deprecated": true,
+                      "UninterpretedOptions": []
+                    }
+                  },
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
@@ -725,6 +1154,12 @@
                   "DefaultValue": ""
                 },
                 {
+                  "Location": {
+                    "Name": "title",
+                    "Number": 3,
+                    "type": "TypeString",
+                    "JsonName": "title"
+                  },
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
@@ -732,6 +1167,13 @@
                   "DefaultValue": ""
                 },
                 {
+                  "Location": {
+                    "Name": "snippets",
+                    "Number": 4,
+                    "label": "LabelRepeated",
+                    "type": "TypeString",
+                    "JsonName": "snippets"
+                  },
                   "FieldNumber": 4,
                   "TypeName": "string",
                   "Name": "Snippets",
@@ -747,6 +1189,13 @@
             {
               "Fields": [
                 {
+                  "Location": {
+                    "Name": "url",
+                    "Number": 2,
+                    "label": "LabelRequired",
+                    "type": "TypeString",
+                    "JsonName": "url"
+                  },
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
@@ -755,6 +1204,12 @@
                   "DefaultValue": ""
                 },
                 {
+                  "Location": {
+                    "Name": "title",
+                    "Number": 3,
+                    "type": "TypeString",
+                    "JsonName": "title"
+                  },
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
@@ -762,6 +1217,13 @@
                   "DefaultValue": ""
                 },
                 {
+                  "Location": {
+                    "Name": "snippets",
+                    "Number": 4,
+                    "label": "LabelRepeated",
+                    "type": "TypeString",
+                    "JsonName": "snippets"
+                  },
                   "FieldNumber": 4,
                   "TypeName": "string",
                   "Name": "Snippets",
@@ -778,6 +1240,14 @@
           ],
           "Fields": [
             {
+              "Location": {
+                "Name": "result",
+                "Number": 1,
+                "label": "LabelRepeated",
+                "type": "TypeMessage",
+                "TypeName": ".AllTheThings.SearchResponse.Result",
+                "JsonName": "result"
+              },
               "FieldNumber": 1,
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
@@ -785,6 +1255,14 @@
               "Repeated": "List"
             },
             {
+              "Location": {
+                "Name": "grouped",
+                "Number": 10,
+                "label": "LabelRepeated",
+                "type": "TypeGroup",
+                "TypeName": ".AllTheThings.SearchResponse.Grouped",
+                "JsonName": "grouped"
+              },
               "FieldNumber": 10,
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
@@ -792,6 +1270,13 @@
               "Repeated": "List"
             },
             {
+              "Location": {
+                "Name": "upper",
+                "Number": 12,
+                "type": "TypeGroup",
+                "TypeName": ".AllTheThings.SearchResponse.UPPER",
+                "JsonName": "upper"
+              },
               "FieldNumber": 12,
               "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
@@ -809,6 +1294,13 @@
                 {
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "ival",
+                        "Number": 1,
+                        "label": "LabelRequired",
+                        "type": "TypeInt64",
+                        "JsonName": "ival"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "int64",
                       "Name": "Ival",
@@ -817,6 +1309,12 @@
                       "DefaultValue": ""
                     },
                     {
+                      "Location": {
+                        "Name": "booly",
+                        "Number": 2,
+                        "type": "TypeBool",
+                        "JsonName": "booly"
+                      },
                       "FieldNumber": 2,
                       "TypeName": "bool",
                       "Name": "Booly",
@@ -840,6 +1338,13 @@
                 {
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "ival",
+                        "Number": 1,
+                        "label": "LabelRequired",
+                        "type": "TypeInt32",
+                        "JsonName": "ival"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "int32",
                       "Name": "Ival",
@@ -848,6 +1353,12 @@
                       "DefaultValue": ""
                     },
                     {
+                      "Location": {
+                        "Name": "booly",
+                        "Number": 2,
+                        "type": "TypeBool",
+                        "JsonName": "booly"
+                      },
                       "FieldNumber": 2,
                       "TypeName": "bool",
                       "Name": "Booly",
@@ -869,6 +1380,18 @@
           ],
           "Fields": [
             {
+              "Location": {
+                "Name": "map_field1",
+                "Number": 7,
+                "label": "LabelRepeated",
+                "type": "TypeMessage",
+                "TypeName": ".AllTheThings.Outer.MapField1Entry",
+                "JsonName": "mapField1",
+                "Options": {
+                  "Deprecated": true,
+                  "UninterpretedOptions": []
+                }
+              },
               "FieldNumber": 7,
               "TypeName": "sint32, string",
               "Name": "MapField1s",
@@ -877,6 +1400,14 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "map_field2",
+                "Number": 8,
+                "label": "LabelRepeated",
+                "type": "TypeMessage",
+                "TypeName": ".AllTheThings.Outer.MapField2Entry",
+                "JsonName": "mapField2"
+              },
               "FieldNumber": 8,
               "TypeName": "string, AllTheThings.Outer",
               "Name": "MapField2s",
@@ -892,6 +1423,12 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "result",
+                "Number": 1,
+                "type": "TypeString",
+                "JsonName": "result"
+              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Result",
@@ -906,6 +1443,13 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "required",
+                "Number": 1,
+                "label": "LabelRequired",
+                "type": "TypeInt32",
+                "JsonName": "required"
+              },
               "FieldNumber": 1,
               "TypeName": "int32",
               "Name": "Required",
@@ -914,6 +1458,12 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "optional",
+                "Number": 2,
+                "type": "TypeInt32",
+                "JsonName": "optional"
+              },
               "FieldNumber": 2,
               "TypeName": "int32",
               "Name": "Optional",
@@ -923,6 +1473,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "repeated",
+                "Number": 3,
+                "label": "LabelRepeated",
+                "type": "TypeInt32",
+                "JsonName": "repeated"
+              },
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Repeateds",
@@ -931,6 +1488,17 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "packed",
+                "Number": 4,
+                "label": "LabelRepeated",
+                "type": "TypeInt32",
+                "JsonName": "packed",
+                "Options": {
+                  "Packed": true,
+                  "UninterpretedOptions": []
+                }
+              },
               "FieldNumber": 4,
               "TypeName": "int32",
               "Name": "Packeds",
@@ -946,6 +1514,13 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "hi",
+                "Number": 536870911,
+                "label": "LabelRepeated",
+                "type": "TypeString",
+                "JsonName": "hi"
+              },
               "FieldNumber": 536870911,
               "TypeName": "string",
               "Name": "His",
@@ -954,6 +1529,12 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "lo",
+                "Number": 1,
+                "type": "TypeString",
+                "JsonName": "lo"
+              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Lo",
@@ -978,6 +1559,12 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "double",
+                "Number": 1,
+                "label": "LabelRequired",
+                "JsonName": "double"
+              },
               "FieldNumber": 1,
               "TypeName": "double",
               "Name": "Double",
@@ -986,6 +1573,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "float",
+                "Number": 2,
+                "label": "LabelRequired",
+                "type": "TypeFloat",
+                "JsonName": "float"
+              },
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "Float",
@@ -994,6 +1588,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "int32",
+                "Number": 3,
+                "label": "LabelRequired",
+                "type": "TypeInt32",
+                "JsonName": "int32"
+              },
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Int32",
@@ -1002,6 +1603,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "int64",
+                "Number": 4,
+                "label": "LabelRequired",
+                "type": "TypeInt64",
+                "JsonName": "int64"
+              },
               "FieldNumber": 4,
               "TypeName": "int64",
               "Name": "Int64",
@@ -1010,6 +1618,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "uint32",
+                "Number": 5,
+                "label": "LabelRequired",
+                "type": "TypeUint32",
+                "JsonName": "uint32"
+              },
               "FieldNumber": 5,
               "TypeName": "uint32",
               "Name": "Uint32",
@@ -1018,6 +1633,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "uint64",
+                "Number": 6,
+                "label": "LabelRequired",
+                "type": "TypeUint64",
+                "JsonName": "uint64"
+              },
               "FieldNumber": 6,
               "TypeName": "uint64",
               "Name": "Uint64",
@@ -1026,6 +1648,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sint32",
+                "Number": 7,
+                "label": "LabelRequired",
+                "type": "TypeSint32",
+                "JsonName": "sint32"
+              },
               "FieldNumber": 7,
               "TypeName": "sint32",
               "Name": "Sint32",
@@ -1034,6 +1663,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sint64",
+                "Number": 8,
+                "label": "LabelRequired",
+                "type": "TypeSint64",
+                "JsonName": "sint64"
+              },
               "FieldNumber": 8,
               "TypeName": "sint64",
               "Name": "Sint64",
@@ -1042,6 +1678,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "fixed32",
+                "Number": 9,
+                "label": "LabelRequired",
+                "type": "TypeFixed32",
+                "JsonName": "fixed32"
+              },
               "FieldNumber": 9,
               "TypeName": "fixed32",
               "Name": "Fixed32",
@@ -1050,6 +1693,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "fixed64",
+                "Number": 10,
+                "label": "LabelRequired",
+                "type": "TypeFixed64",
+                "JsonName": "fixed64"
+              },
               "FieldNumber": 10,
               "TypeName": "fixed64",
               "Name": "Fixed64",
@@ -1058,6 +1708,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sfixed32",
+                "Number": 11,
+                "label": "LabelRequired",
+                "type": "TypeSfixed32",
+                "JsonName": "sfixed32"
+              },
               "FieldNumber": 11,
               "TypeName": "sfixed32",
               "Name": "Sfixed32",
@@ -1066,6 +1723,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sfixed64",
+                "Number": 12,
+                "label": "LabelRequired",
+                "type": "TypeSfixed64",
+                "JsonName": "sfixed64"
+              },
               "FieldNumber": 12,
               "TypeName": "sfixed64",
               "Name": "Sfixed64",
@@ -1074,6 +1738,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "bool",
+                "Number": 13,
+                "label": "LabelRequired",
+                "type": "TypeBool",
+                "JsonName": "bool"
+              },
               "FieldNumber": 13,
               "TypeName": "bool",
               "Name": "Bool",
@@ -1082,6 +1753,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "string",
+                "Number": 14,
+                "label": "LabelRequired",
+                "type": "TypeString",
+                "JsonName": "string"
+              },
               "FieldNumber": 14,
               "TypeName": "string",
               "Name": "String",
@@ -1090,6 +1768,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "bytes",
+                "Number": 15,
+                "label": "LabelRequired",
+                "type": "TypeBytes",
+                "JsonName": "bytes"
+              },
               "FieldNumber": 15,
               "TypeName": "bytes",
               "Name": "Bytes",
@@ -1105,6 +1790,12 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "double",
+                "Number": 1,
+                "label": "LabelRepeated",
+                "JsonName": "double"
+              },
               "FieldNumber": 1,
               "TypeName": "double",
               "Name": "Doubles",
@@ -1113,6 +1804,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "float",
+                "Number": 2,
+                "label": "LabelRepeated",
+                "type": "TypeFloat",
+                "JsonName": "float"
+              },
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "Floats",
@@ -1121,6 +1819,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "int32",
+                "Number": 3,
+                "label": "LabelRepeated",
+                "type": "TypeInt32",
+                "JsonName": "int32"
+              },
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Int32s",
@@ -1129,6 +1834,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "int64",
+                "Number": 4,
+                "label": "LabelRepeated",
+                "type": "TypeInt64",
+                "JsonName": "int64"
+              },
               "FieldNumber": 4,
               "TypeName": "int64",
               "Name": "Int64s",
@@ -1137,6 +1849,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "uint32",
+                "Number": 5,
+                "label": "LabelRepeated",
+                "type": "TypeUint32",
+                "JsonName": "uint32"
+              },
               "FieldNumber": 5,
               "TypeName": "uint32",
               "Name": "Uint32s",
@@ -1145,6 +1864,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "uint64",
+                "Number": 6,
+                "label": "LabelRepeated",
+                "type": "TypeUint64",
+                "JsonName": "uint64"
+              },
               "FieldNumber": 6,
               "TypeName": "uint64",
               "Name": "Uint64s",
@@ -1153,6 +1879,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sint32",
+                "Number": 7,
+                "label": "LabelRepeated",
+                "type": "TypeSint32",
+                "JsonName": "sint32"
+              },
               "FieldNumber": 7,
               "TypeName": "sint32",
               "Name": "Sint32s",
@@ -1161,6 +1894,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sint64",
+                "Number": 8,
+                "label": "LabelRepeated",
+                "type": "TypeSint64",
+                "JsonName": "sint64"
+              },
               "FieldNumber": 8,
               "TypeName": "sint64",
               "Name": "Sint64s",
@@ -1169,6 +1909,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "fixed32",
+                "Number": 9,
+                "label": "LabelRepeated",
+                "type": "TypeFixed32",
+                "JsonName": "fixed32"
+              },
               "FieldNumber": 9,
               "TypeName": "fixed32",
               "Name": "Fixed32s",
@@ -1177,6 +1924,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "fixed64",
+                "Number": 10,
+                "label": "LabelRepeated",
+                "type": "TypeFixed64",
+                "JsonName": "fixed64"
+              },
               "FieldNumber": 10,
               "TypeName": "fixed64",
               "Name": "Fixed64s",
@@ -1185,6 +1939,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sfixed32",
+                "Number": 11,
+                "label": "LabelRepeated",
+                "type": "TypeSfixed32",
+                "JsonName": "sfixed32"
+              },
               "FieldNumber": 11,
               "TypeName": "sfixed32",
               "Name": "Sfixed32s",
@@ -1193,6 +1954,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "sfixed64",
+                "Number": 12,
+                "label": "LabelRepeated",
+                "type": "TypeSfixed64",
+                "JsonName": "sfixed64"
+              },
               "FieldNumber": 12,
               "TypeName": "sfixed64",
               "Name": "Sfixed64s",
@@ -1201,6 +1969,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "bool",
+                "Number": 13,
+                "label": "LabelRepeated",
+                "type": "TypeBool",
+                "JsonName": "bool"
+              },
               "FieldNumber": 13,
               "TypeName": "bool",
               "Name": "Bools",
@@ -1209,6 +1984,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "string",
+                "Number": 14,
+                "label": "LabelRepeated",
+                "type": "TypeString",
+                "JsonName": "string"
+              },
               "FieldNumber": 14,
               "TypeName": "string",
               "Name": "Strings",
@@ -1217,6 +1999,13 @@
               "DefaultValue": ""
             },
             {
+              "Location": {
+                "Name": "bytes",
+                "Number": 15,
+                "label": "LabelRepeated",
+                "type": "TypeBytes",
+                "JsonName": "bytes"
+              },
               "FieldNumber": 15,
               "TypeName": "bytes",
               "Name": "Bytes",

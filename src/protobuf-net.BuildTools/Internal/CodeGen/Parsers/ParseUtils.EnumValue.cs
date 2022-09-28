@@ -24,9 +24,7 @@ internal static partial class ParseUtils
             return codeGenEnumValue;   
         }
 
-        ctx.SaveWarning(
-            $"Failed to find a '{nameof(ProtoEnumAttribute)}' attribute within enum value definition", 
-            symbol);
+        ctx.ReportDiagnostic(EnumValueLacksAttribute, symbol);
         return null;
     }
 

@@ -12,7 +12,7 @@ internal static partial class ParseUtils
         if (ParseUtils.IsProtoMember(propertyAttributes, out var protoMemberAttribute))
         {
             var (fieldNumber, originalName, dataFormat, isRequired) = ParseUtils.GetProtoMemberAttributeData(protoMemberAttribute);
-            var codeGenField = new CodeGenField(fieldNumber, symbol.Name)
+            var codeGenField = new CodeGenField(fieldNumber, symbol.Name, symbol)
             {
                 OriginalName = originalName,
                 Type = symbol.Type.ResolveCodeGenType(dataFormat, ctx.Context, out var repeated),

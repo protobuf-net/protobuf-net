@@ -95,7 +95,7 @@ public class AOTSchemaTests
         {
             { "toolversion", "test" }
         };
-        var codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed, generateOptions));
+        var codeFile = Assert.Single(new CodeGenCSharpCodeGenerator().Generate(parsed, generateOptions));
         Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "cs"), codeFile.Name);
         Assert.NotNull(codeFile);
 
@@ -113,7 +113,7 @@ public class AOTSchemaTests
         // now we run the *generated* code (minus the serializers) through Roslyn, and see if we can parse it again
         const CodeGenGenerate options = ~(CodeGenGenerate.DataSerializer | CodeGenGenerate.ServiceProxy);
         generateOptions["emit"] = options.ToString();
-        codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsed, generateOptions));
+        codeFile = Assert.Single(new CodeGenCSharpCodeGenerator().Generate(parsed, generateOptions));
         var dataContractSyntaxTree = CSharpSyntaxTree.ParseText(codeFile.Text, new CSharpParseOptions(LanguageVersion.Preview), path: Path.GetFileName(csPath));
         var libs = new[]
         {
@@ -160,7 +160,7 @@ public class AOTSchemaTests
 
         // generate C# model out of Code-Gen model
         generateOptions.Remove("emit");
-        codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsedFromCode, generateOptions));
+        codeFile = Assert.Single(new CodeGenCSharpCodeGenerator().Generate(parsedFromCode, generateOptions));
         Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "generated.cs"), codeFile.Name);
         Assert.NotNull(codeFile);
 

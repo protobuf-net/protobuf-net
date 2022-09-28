@@ -16,6 +16,12 @@
                 "RawType": {
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "name",
+                        "Number": 1,
+                        "type": "TypeString",
+                        "JsonName": "name"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Name",
@@ -33,6 +39,12 @@
                 "RawType": {
                   "Fields": [
                     {
+                      "Location": {
+                        "Name": "message",
+                        "Number": 1,
+                        "type": "TypeString",
+                        "JsonName": "message"
+                      },
                       "FieldNumber": 1,
                       "TypeName": "string",
                       "Name": "Message",
@@ -54,6 +66,12 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "name",
+                "Number": 1,
+                "type": "TypeString",
+                "JsonName": "name"
+              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Name",
@@ -68,6 +86,12 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "message",
+                "Number": 1,
+                "type": "TypeString",
+                "JsonName": "message"
+              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Message",

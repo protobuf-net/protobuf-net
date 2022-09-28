@@ -7,24 +7,28 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
+              "Location": {},
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
+              "Location": {},
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
+              "Location": {},
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
+              "Location": {},
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
@@ -43,24 +47,28 @@
               "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
+                  "Location": {},
                   "FieldNumber": 1,
                   "TypeName": "TypeRefs.MsgA",
                   "Name": "A",
                   "OriginalName": "a"
                 },
                 {
+                  "Location": {},
                   "FieldNumber": 2,
                   "TypeName": "TypeRefs.MsgB",
                   "Name": "B",
                   "OriginalName": "b"
                 },
                 {
+                  "Location": {},
                   "FieldNumber": 3,
                   "TypeName": "TypeRefs.MsgB+MsgC",
                   "Name": "C",
                   "OriginalName": "c"
                 },
                 {
+                  "Location": {},
                   "FieldNumber": 4,
                   "TypeName": "TypeRefs.MsgD",
                   "Name": "D",
@@ -75,24 +83,28 @@
           ],
           "Fields": [
             {
+              "Location": {},
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
+              "Location": {},
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
+              "Location": {},
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
+              "Location": {},
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
@@ -108,24 +120,28 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
+              "Location": {},
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
+              "Location": {},
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
+              "Location": {},
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
+              "Location": {},
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",

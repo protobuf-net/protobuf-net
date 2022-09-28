@@ -1,20 +1,21 @@
 ﻿#nullable enable
 
 using Google.Protobuf.Reflection;
-using ProtoBuf.Meta;
+using ProtoBuf.Internal.CodeGen;
 using System;
 using System.ComponentModel;
-using System.Text;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenField
+internal class CodeGenField : ILocated
 {
-    public CodeGenField(int fieldNumber, string name)
+    public CodeGenField(int fieldNumber, string name, object? location)
     {
         FieldNumber = fieldNumber;
-        BackingName = OriginalName = Name = name?.Trim() ?? "";;
+        BackingName = OriginalName = Name = name?.Trim() ?? "";
+        Location = location;
     }
+    public object? Location { get; }
     public const string PresenceTrackingFieldName = "__pbn_field_presence_";
     public int FieldNumber { get; }
     public CodeGenType Type { get; set; } = CodeGenUnknownType.Instance;
@@ -62,7 +63,7 @@ internal class CodeGenField
     internal static CodeGenField Parse(FieldDescriptorProto field, CodeGenParseContext context)
     {
         var name = context.NameNormalizer.GetName(field);
-        var newField = new CodeGenField(field.Number, name)
+        var newField = new CodeGenField(field.Number, name, field)
         {
             OriginalName = field.Name,
             Type = field.type switch

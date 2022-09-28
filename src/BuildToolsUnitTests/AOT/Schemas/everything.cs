@@ -1604,8 +1604,6 @@ pqr	stu";
         [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(Outer value, ref global::ProtoBuf.Nano.Writer writer)
         {
-            #warning maps not implemented yet
-            #warning maps not implemented yet
         }
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
@@ -1614,8 +1612,6 @@ pqr	stu";
         internal static ulong Measure(Outer value)
         {
             ulong len = 0;
-            #warning maps not implemented yet
-            #warning maps not implemented yet
             return len;
         }
 
@@ -1631,8 +1627,6 @@ pqr	stu";
             {
                 switch (tag)
                 {
-                    #warning maps not implemented yet
-                    #warning maps not implemented yet
                     default:
                         if ((tag & 7) == 4) // end-group
                         {

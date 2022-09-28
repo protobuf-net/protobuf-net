@@ -6,24 +6,52 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "a",
+                "Number": 1,
+                "type": "TypeMessage",
+                "TypeName": ".msg_a",
+                "JsonName": "a"
+              },
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
+              "Location": {
+                "Name": "b",
+                "Number": 2,
+                "type": "TypeMessage",
+                "TypeName": ".msg_b",
+                "JsonName": "b"
+              },
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
+              "Location": {
+                "Name": "c",
+                "Number": 3,
+                "type": "TypeMessage",
+                "TypeName": ".msg_b.msg_c",
+                "JsonName": "c"
+              },
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
+              "Location": {
+                "Name": "d",
+                "Number": 4,
+                "type": "TypeMessage",
+                "TypeName": ".msg_d",
+                "JsonName": "d"
+              },
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
@@ -39,24 +67,52 @@
             {
               "Fields": [
                 {
+                  "Location": {
+                    "Name": "a",
+                    "Number": 1,
+                    "type": "TypeMessage",
+                    "TypeName": ".msg_a",
+                    "JsonName": "a"
+                  },
                   "FieldNumber": 1,
                   "TypeName": "TypeRefs.MsgA",
                   "Name": "A",
                   "OriginalName": "a"
                 },
                 {
+                  "Location": {
+                    "Name": "b",
+                    "Number": 2,
+                    "type": "TypeMessage",
+                    "TypeName": ".msg_b",
+                    "JsonName": "b"
+                  },
                   "FieldNumber": 2,
                   "TypeName": "TypeRefs.MsgB",
                   "Name": "B",
                   "OriginalName": "b"
                 },
                 {
+                  "Location": {
+                    "Name": "c",
+                    "Number": 3,
+                    "type": "TypeMessage",
+                    "TypeName": ".msg_b.msg_c",
+                    "JsonName": "c"
+                  },
                   "FieldNumber": 3,
                   "TypeName": "TypeRefs.MsgB+MsgC",
                   "Name": "C",
                   "OriginalName": "c"
                 },
                 {
+                  "Location": {
+                    "Name": "d",
+                    "Number": 4,
+                    "type": "TypeMessage",
+                    "TypeName": ".msg_d",
+                    "JsonName": "d"
+                  },
                   "FieldNumber": 4,
                   "TypeName": "TypeRefs.MsgD",
                   "Name": "D",
@@ -70,24 +126,52 @@
           ],
           "Fields": [
             {
+              "Location": {
+                "Name": "a",
+                "Number": 1,
+                "type": "TypeMessage",
+                "TypeName": ".msg_a",
+                "JsonName": "a"
+              },
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
+              "Location": {
+                "Name": "b",
+                "Number": 2,
+                "type": "TypeMessage",
+                "TypeName": ".msg_b",
+                "JsonName": "b"
+              },
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
+              "Location": {
+                "Name": "c",
+                "Number": 3,
+                "type": "TypeMessage",
+                "TypeName": ".msg_b.msg_c",
+                "JsonName": "c"
+              },
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
+              "Location": {
+                "Name": "d",
+                "Number": 4,
+                "type": "TypeMessage",
+                "TypeName": ".msg_d",
+                "JsonName": "d"
+              },
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",
@@ -101,24 +185,52 @@
         {
           "Fields": [
             {
+              "Location": {
+                "Name": "a",
+                "Number": 1,
+                "type": "TypeMessage",
+                "TypeName": ".msg_a",
+                "JsonName": "a"
+              },
               "FieldNumber": 1,
               "TypeName": "TypeRefs.MsgA",
               "Name": "A",
               "OriginalName": "a"
             },
             {
+              "Location": {
+                "Name": "b",
+                "Number": 2,
+                "type": "TypeMessage",
+                "TypeName": ".msg_b",
+                "JsonName": "b"
+              },
               "FieldNumber": 2,
               "TypeName": "TypeRefs.MsgB",
               "Name": "B",
               "OriginalName": "b"
             },
             {
+              "Location": {
+                "Name": "c",
+                "Number": 3,
+                "type": "TypeMessage",
+                "TypeName": ".msg_b.msg_c",
+                "JsonName": "c"
+              },
               "FieldNumber": 3,
               "TypeName": "TypeRefs.MsgB+MsgC",
               "Name": "C",
               "OriginalName": "c"
             },
             {
+              "Location": {
+                "Name": "d",
+                "Number": 4,
+                "type": "TypeMessage",
+                "TypeName": ".msg_d",
+                "JsonName": "d"
+              },
               "FieldNumber": 4,
               "TypeName": "TypeRefs.MsgD",
               "Name": "D",

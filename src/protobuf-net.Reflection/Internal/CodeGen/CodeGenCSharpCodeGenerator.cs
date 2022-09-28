@@ -11,10 +11,9 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// </summary>
 internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 {
-    /// <summary>
-    /// Reusable code-generator instance
-    /// </summary>
-    public static CodeGenCSharpCodeGenerator Default { get; } = new CodeGenCSharpCodeGenerator();
+
+    public CodeGenCSharpCodeGenerator(IDiagnosticSource? diagnosticSource = null) : base(diagnosticSource) { }
+
     /// <summary>
     /// Create a new CSharpCodeGenerator instance
     /// </summary>
@@ -288,13 +287,18 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     /// </summary>
     protected override void WriteMessageHeader(CodeGenGeneratorContext ctx, CodeGenMessage message, ref object state)
     {
+        static string TypeLabel(CodeGenMessage message)
+        {
+            if (message.IsValueType) return message.IsReadOnly ? "readonly struct" : "struct";
+            return "class";
+        }
         if (ctx.ShouldEmit(CodeGenGenerate.DataContractFeatures, message.Emit))
         {
             var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
             if (message.ShouldSerializeOriginalName()) tw.Write($@"Name = @""{message.OriginalName}""");
             tw.WriteLine(")]");
             if (message.IsDeprecated) WriteDeprecated(ctx);
-            tw = ctx.Write($"{GetAccess(message.Access)} partial class {Escape(message.Name)}");
+            tw = ctx.Write($"{GetAccess(message.Access)} partial {TypeLabel(message)} {Escape(message.Name)}");
             tw.Write(" : global::ProtoBuf.IExtensible");
             //if (UsePooledMemory(ctx, message))
             //{
@@ -562,7 +566,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
                     ctx.WriteLine($"{GetAccess(field.Access)} {typeName}[] {escapedName} {{ get; set; }}");
                     break;
                 default:
-                    ctx.WriteLine($"#error unsupported repeated kind for {field.Name}: {field.Repeated}");
+                    ctx.ReportDiagnostic(CodeGenDiagnostic.FeatureNotImplemented, field, field.Repeated);
                     break;
             }
         }

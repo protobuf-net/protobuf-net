@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Internal.CodeGen;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +12,11 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// </summary>
 internal abstract class CodeGenCodeGenerator
 {
+    public CodeGenCodeGenerator(IDiagnosticSource diagnosticSource = null)
+    {
+        DiagnosticSource = diagnosticSource;
+    }
+    public IDiagnosticSource? DiagnosticSource { get; }
     /// <summary>
     /// The logical name of this code generator
     /// </summary>

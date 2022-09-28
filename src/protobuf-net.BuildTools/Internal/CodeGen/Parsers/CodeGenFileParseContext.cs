@@ -19,8 +19,8 @@ internal readonly struct CodeGenFileParseContext
         Parser = parser;
     }
 
-    internal void SaveWarning(string message, ISymbol source)
-    {
-        //
-    }
+    internal void ReportDiagnostic(DiagnosticDescriptor diagnostic, ISymbol source)
+        => Parser.ReportDiagnostic(diagnostic, source, Array.Empty<object>());
+    internal void ReportDiagnostic(DiagnosticDescriptor diagnostic, ISymbol source, params object[] messageArgs)
+        => Parser.ReportDiagnostic(diagnostic, source, messageArgs);
 }

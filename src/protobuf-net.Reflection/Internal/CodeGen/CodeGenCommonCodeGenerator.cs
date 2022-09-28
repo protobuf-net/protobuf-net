@@ -1,11 +1,10 @@
-﻿using ProtoBuf.Reflection.Internal.CodeGen;
-using ProtoBuf.Reflection;
+﻿using ProtoBuf.Internal.CodeGen;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System;
 using System.Linq;
-using System.ComponentModel;
 using System.Reflection;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
@@ -15,6 +14,8 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// </summary>
 internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerator
 {
+    public CodeGenCommonCodeGenerator(IDiagnosticSource diagnosticSource = null) : base(diagnosticSource) { }
+
     /// <summary>
     /// The file extension of the files generatred by this generator
     /// </summary>
@@ -478,6 +479,8 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         /// The token to use for indentation
         /// </summary>
         public string IndentToken { get; }
+        public IDiagnosticSource DiagnosticSource { get; }
+
         /// <summary>
         /// The current indent level
         /// </summary>
@@ -518,7 +521,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             File = file;
             Output = output;
             IndentToken = indentToken;
-
+            DiagnosticSource = generator.DiagnosticSource;
             LanguageVersion = ParseVersion(langver);
             Emit = emit;
             EmitRequiredDefaults = false; // file.Options.GetOptions()?.EmitRequiredDefaults ?? false;
@@ -693,6 +696,11 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             IndentLevel--;
             return this;
         }
+
+        internal void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated source)
+            => DiagnosticSource?.ReportDiagnostic(diagnostic, source, Array.Empty<object>());
+        internal void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated source, params object[] messageArgs)
+            => DiagnosticSource?.ReportDiagnostic(diagnostic, source, messageArgs);
     }
 
     /// <summary>
