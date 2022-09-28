@@ -51,20 +51,9 @@ public abstract class CSharpToCodeGenTestsBase
             }
         }
         
-        var model = compilation.GetSemanticModel(syntaxTree, false);
-        Assert.NotNull(model);
-
-        CodeGenSet parsedFromCode = new();
-        foreach (var symbol in model.LookupNamespacesAndTypes(0))
-        {
-            var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-            if (firstRef is not null && firstRef.SyntaxTree == syntaxTree)
-            {
-                parsedFromCode = CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
-            }
-        }
-
-        return parsedFromCode;
+        var parser = new CodeGenSemanticModelParser();
+        parser.Parse(compilation, syntaxTree);
+        return parser.Process();
     }
     
     private (string csFilePath, string csFileText) LoadCSharpFile(string csFileName)

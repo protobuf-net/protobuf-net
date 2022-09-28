@@ -238,7 +238,7 @@ namespace ProtoBuf.BuildTools.Internal
             return null;
         }
         
-        internal static string GetFullyQualifiedPrefix(this ISymbol type)
+        internal static string GetFullyQualifiedPrefix(this ISymbol type, bool trimFinal = false)
         {
             static bool IsAnticipated(SymbolKind kind)
                 => kind == SymbolKind.Namespace || kind == SymbolKind.NamedType;
@@ -268,14 +268,18 @@ namespace ProtoBuf.BuildTools.Internal
                     break;
                 case 1:
                     var tmp = stack.Pop();
-                    result = tmp.Name + tmp.Token;
+                    result = trimFinal ? tmp.Name : (tmp.Name + tmp.Token);
                     break;
                 default:
                     var sb = new StringBuilder(len);
                     while (stack.Count > 0)
                     {
                         tmp = stack.Pop();
-                        sb.Append(tmp.Name).Append(tmp.Token);
+                        sb.Append(tmp.Name);
+                        if (!(trimFinal && stack.Count == 0))
+                        {
+                            sb.Append(tmp.Token);
+                        }
                     }
 
                     result = sb.ToString();

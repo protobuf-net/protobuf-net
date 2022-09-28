@@ -1,22 +1,17 @@
-﻿using System;
-using System.ServiceModel;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
+using System.ServiceModel;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class ServiceCodeGenModelParser : SymbolCodeGenModelParserBase<ITypeSymbol, CodeGenService>
 {
-    private readonly CodeGenNamespaceParseContext _namespaceParseContext;
-    
-    public ServiceCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider, CodeGenNamespaceParseContext namespaceParseContext) 
+    public ServiceCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) 
         : base(parserProvider)
     {
-        _namespaceParseContext = namespaceParseContext;
     }
 
     public override CodeGenService Parse(ITypeSymbol symbol)
@@ -54,7 +49,7 @@ internal sealed class ServiceCodeGenModelParser : SymbolCodeGenModelParserBase<I
     {
         var codeGenMessage = new CodeGenService(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {
-            Package = _namespaceParseContext.NamespaceName,
+            Package = typeSymbol.GetFullyQualifiedPrefix(trimFinal: true),
             Emit = CodeGenGenerate.ServiceContract | CodeGenGenerate.ServiceProxy, // everything else is in the existing code
         };
 

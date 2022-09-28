@@ -1,7 +1,6 @@
 ﻿using System;
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers.Common;
 using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
@@ -10,12 +9,9 @@ namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<CodeGenMessage>
 {
-    private readonly CodeGenNamespaceParseContext _namespaceParseContext;
-    
-    public MessageCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider, CodeGenNamespaceParseContext namespaceParseContext) 
+    public MessageCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) 
         : base(parserProvider)
     {
-        _namespaceParseContext = namespaceParseContext;
     }
     
     public override CodeGenMessage Parse(ITypeSymbol symbol)
@@ -51,7 +47,7 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
                 {
                     case TypeKind.Struct:
                     case TypeKind.Class:
-                        var messageParser = ParserProvider.GetMessageParser(_namespaceParseContext);
+                        var messageParser = ParserProvider.GetMessageParser();
                         var nestedMessage = messageParser.Parse(typeSymbol);
                         codeGenMessage.Messages.Add(nestedMessage);
                         break;
@@ -85,7 +81,7 @@ internal sealed class MessageCodeGenModelParser : TypeCodeGenModelParserBase<Cod
     {
         var codeGenMessage = new CodeGenMessage(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {
-            Package = _namespaceParseContext.NamespaceName,
+            Package = typeSymbol.GetFullyQualifiedPrefix(trimFinal: true),
             Emit = CodeGenGenerate.DataContract | CodeGenGenerate.DataSerializer, // everything else is in the existing code
         };
 

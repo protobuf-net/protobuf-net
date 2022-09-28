@@ -140,18 +140,10 @@ public class AOTSchemaTests
         }
 
         Assert.True(result.Success, "generated code does not compile");
-        var model = compilation.GetSemanticModel(dataContractSyntaxTree, false);
-        Assert.NotNull(model);
 
-        CodeGenSet parsedFromCode = new();
-        foreach (var symbol in model.LookupNamespacesAndTypes(0))
-        {
-            var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-            if (firstRef is not null && firstRef.SyntaxTree == dataContractSyntaxTree)
-            {
-                parsedFromCode = CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
-            }
-        }
+        var parser = new CodeGenSemanticModelParser();
+        parser.Parse(compilation, dataContractSyntaxTree);
+        var parsedFromCode = parser.Process();
 
         json = JsonConvert.SerializeObject(parsedFromCode, JsonSettings);
         // _output.WriteLine(json);

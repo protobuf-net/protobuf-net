@@ -16,6 +16,17 @@ internal class CodeGenFile
     private NonNullableList<CodeGenMessage>? _messages;
     private NonNullableList<CodeGenEnum>? _enums;
 
+    public bool IsEmpty
+    {
+        get
+        {
+            if (_services is not null && _services.Count > 0) return false;
+            if (_messages is not null && _messages.Count > 0) return false;
+            if (_enums is not null && _enums.Count > 0) return false;
+            return true;
+        }
+    }
+
     public ICollection<CodeGenService> Services => _services ??= new();
     public ICollection<CodeGenMessage> Messages => _messages ??= new();
     public ICollection<CodeGenEnum> Enums => _enums ??= new();

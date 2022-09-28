@@ -1,11 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Collections.Generic;
-using System;
-using System.Threading;
-using ProtoBuf.Reflection.Internal.CodeGen;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProtoBuf.Internal.CodeGen;
+using ProtoBuf.Reflection.Internal.CodeGen;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ProtoBuf.BuildTools.Analyzers;
@@ -26,8 +24,8 @@ public sealed class DataContractGenerator : ISourceGenerator
 
     sealed class DataContractSyntaxReceiver : ISyntaxReceiver
     {
-        public bool IsEmpty => _trees.Count == 0;
-        private readonly HashSet<SyntaxTree> _trees = new();
+        public bool IsEmpty => _types.Count == 0;
+        private readonly HashSet<TypeDeclarationSyntax> _types = new();
 
         public DataContractSyntaxReceiver() { }
 
@@ -39,7 +37,7 @@ public sealed class DataContractGenerator : ISourceGenerator
                 && type.Modifiers.Any(SyntaxKind.PartialKeyword) // only look at partials
                 && HasAttribute(type, "ProtoContract"))
             {
-                _trees.Add(type.SyntaxTree);
+                _types.Add(type);
             }
 
             static bool HasAttribute(TypeDeclarationSyntax type, string name)
@@ -66,19 +64,13 @@ public sealed class DataContractGenerator : ISourceGenerator
 
         internal void Execute(in GeneratorExecutionContext context)
         {
-            var parsedFromCode = new CodeGenSet();
-            foreach (var tree in _trees)
+            var parser = new CodeGenSemanticModelParser();
+            foreach (var type in _types)
             {
-                var semanticModel = context.Compilation.GetSemanticModel(tree);
-                foreach (var symbol in semanticModel.LookupNamespacesAndTypes(0))
-                {
-                    var firstRef = symbol.DeclaringSyntaxReferences.FirstOrDefault();
-                    if (firstRef is not null && firstRef.SyntaxTree == tree)
-                    {
-                        parsedFromCode = CodeGenSemanticModelParser.Parse(parsedFromCode, symbol);
-                    }
-                }
+                var symbol = context.Compilation.GetSemanticModel(type.SyntaxTree).GetDeclaredSymbol(type, context.CancellationToken);
+                parser.Parse(symbol);
             }
+            var parsedFromCode = parser.Process();
             if (parsedFromCode.Files.Count == 0) return;
             foreach (var codeFile in CodeGenCSharpCodeGenerator.Default.Generate(parsedFromCode))
             {

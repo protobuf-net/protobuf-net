@@ -13,7 +13,7 @@ namespace TypeRefs
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static void Write(MsgA value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.A is global::TypeRefs.MsgA obj1)
@@ -44,7 +44,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static ulong Measure(MsgA value)
         {
             ulong len = 0;
@@ -69,7 +69,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static MsgA Merge(MsgA value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong oldEnd;
@@ -146,7 +146,7 @@ namespace TypeRefs
         {
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
             internal static void Write(MsgC value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.A is global::TypeRefs.MsgA obj1)
@@ -177,7 +177,7 @@ namespace TypeRefs
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
             internal static ulong Measure(MsgC value)
             {
                 ulong len = 0;
@@ -202,7 +202,7 @@ namespace TypeRefs
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
             internal static MsgC Merge(MsgC value, ref global::ProtoBuf.Nano.Reader reader)
             {
                 ulong oldEnd;
@@ -275,7 +275,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static void Write(MsgB value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.A is global::TypeRefs.MsgA obj1)
@@ -306,7 +306,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static ulong Measure(MsgB value)
         {
             ulong len = 0;
@@ -331,7 +331,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static MsgB Merge(MsgB value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong oldEnd;
@@ -406,7 +406,7 @@ namespace TypeRefs
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static void Write(MsgD value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.A is global::TypeRefs.MsgA obj1)
@@ -437,7 +437,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static ulong Measure(MsgD value)
         {
             ulong len = 0;
@@ -462,7 +462,7 @@ namespace TypeRefs
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.102.6987")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
         internal static MsgD Merge(MsgD value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong oldEnd;

@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Models;
 using ProtoBuf.Internal.CodeGen.Parsers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen.Error;
@@ -9,7 +8,7 @@ namespace ProtoBuf.Internal.CodeGen.Providers;
 
 internal class SymbolCodeGenModelParserProvider
 {
-    private ISymbolCodeGenModelParser<INamespaceOrTypeSymbol, CodeGenFile> _namespaceParser;
+    private ISymbolCodeGenModelParser<INamedTypeSymbol, object?> _namedTypeParser;
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> _messageParser;
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> _enumParser;
     private ISymbolCodeGenModelParser<ITypeSymbol, CodeGenService> _serviceParser;
@@ -26,15 +25,15 @@ internal class SymbolCodeGenModelParserProvider
         ParseContext = new();
         ErrorContainer = new();
     }
-    
-    public ISymbolCodeGenModelParser<INamespaceOrTypeSymbol, CodeGenFile> GetNamespaceParser()
+
+    public ISymbolCodeGenModelParser<INamedTypeSymbol, object?> GetNamedTypeParser()
     {
-        return _namespaceParser ??= new NamespaceCodeGenModelParser(this);
+        return _namedTypeParser ??= new NamedTypeCodeGenModelParser(this);
     }
 
-    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> GetMessageParser(CodeGenNamespaceParseContext namespaceParseContext)
+    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenMessage> GetMessageParser()
     {
-        return _messageParser ??= new MessageCodeGenModelParser(this, namespaceParseContext);
+        return _messageParser ??= new MessageCodeGenModelParser(this);
     }
     
     public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenEnum> GetEnumParser()
@@ -57,9 +56,9 @@ internal class SymbolCodeGenModelParserProvider
         return _enumValueParser ??= new EnumValueCodeGenModelParser(this);
     }
     
-    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenService> GetServiceParser(CodeGenNamespaceParseContext namespaceParseContext)
+    public ISymbolCodeGenModelParser<ITypeSymbol, CodeGenService> GetServiceParser()
     {
-        return _serviceParser ??= new ServiceCodeGenModelParser(this, namespaceParseContext);
+        return _serviceParser ??= new ServiceCodeGenModelParser(this);
     }
 
     public ISymbolCodeGenModelParser<IMethodSymbol, CodeGenServiceMethod> GetServiceMethodParser()
