@@ -1,7 +1,4 @@
 {
-  "ErrorContainer": {
-    "Errors": []
-  },
   "Files": [
     {
       "Name": "TypeRefs.cs",
@@ -72,7 +69,7 @@
               ],
               "Name": "MsgC",
               "OriginalName": "msg_c",
-              "Package": "TypeRefs",
+              "Package": "TypeRefs.MsgB",
               "FullyQualifiedPrefix": "TypeRefs.MsgB+"
             }
           ],

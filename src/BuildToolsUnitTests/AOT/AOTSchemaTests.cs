@@ -159,7 +159,8 @@ public class AOTSchemaTests
 #endif
 
         // generate C# model out of Code-Gen model
-        codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsedFromCode));
+        generateOptions.Remove("emit");
+        codeFile = Assert.Single(CodeGenCSharpCodeGenerator.Default.Generate(parsedFromCode, generateOptions));
         Assert.Equal(Path.ChangeExtension(Path.GetFileName(protoPath), "cs"), codeFile.Name);
         Assert.NotNull(codeFile);
 

@@ -1,5 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
-using ProtoBuf.Internal.CodeGen.Providers;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
+using ProtoBuf.Internal.CodeGen.Parsers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen;
@@ -11,8 +12,7 @@ internal class CodeGenSemanticModelParser
     //    var codeGenSet = new CodeGenSet();
     //    return Parse(codeGenSet, symbol);
     //}
-
-    private readonly SymbolCodeGenModelParserProvider symbolCodeGenModelParserProvider = new SymbolCodeGenModelParserProvider();
+    private readonly CodeGenParseContext codeGenParseContext = new CodeGenParseContext();
     private readonly CodeGenSet set = new CodeGenSet();
     private CodeGenFile? defaultFile;
     private CodeGenFile DefaultFile
@@ -22,9 +22,20 @@ internal class CodeGenSemanticModelParser
             if (defaultFile is null)
             {
                 defaultFile = new CodeGenFile("protogen.generated.cs");
+                _defaultContext = new CodeGenFileParseContext(defaultFile, codeGenParseContext);
                 set.Files.Add(defaultFile);
             }
             return defaultFile;
+        }
+    }
+
+    private CodeGenFileParseContext _defaultContext;
+    public ref readonly CodeGenFileParseContext DefaultContext
+    {
+        get
+        {
+            if (defaultFile is null) _ = DefaultFile;
+            return ref _defaultContext;
         }
     }
 
@@ -32,44 +43,58 @@ internal class CodeGenSemanticModelParser
     {
         var semanticModel = compilation.GetSemanticModel(syntaxTree);
         int count = 0;
+        var file = new CodeGenFile(syntaxTree.FilePath);
+        set.Files.Add(file);
+        var ctx = new CodeGenFileParseContext(file, codeGenParseContext);
         foreach (var symbol in semanticModel.LookupNamespacesAndTypes(0))
         {
-            count += ParseAll(symbol, DefaultFile);
+            bool fromTree = false;
+            foreach (var src in symbol.DeclaringSyntaxReferences)
+            {
+                if (src.SyntaxTree == syntaxTree)
+                {
+                    fromTree = true;
+                    break;
+                }
+            }
+            if (fromTree)
+            {
+                count += ParseAll(symbol, in ctx);
+            }
         }
         return count;
     }
-    private int ParseAll(ISymbol symbol, CodeGenFile file)
+    private int ParseAll(ISymbol symbol, in CodeGenFileParseContext ctx)
     {
         int count = 0;
         if (symbol is INamedTypeSymbol type)
         {
-            if (Parse(type, file)) count++;
+            if (Parse(type, in ctx)) count++;
         }
         if (symbol is INamespaceSymbol ns)
         {
             foreach (var member in ns.GetMembers())
             {
-                count += ParseAll(member, file);
+                count += ParseAll(member, in ctx);
             }
         }
         return count;
     }
 
-    public bool Parse(INamedTypeSymbol type) => Parse(type, DefaultFile);
+    public bool Parse(INamedTypeSymbol type) => Parse(type, in DefaultContext);
 
-    private bool Parse(INamedTypeSymbol type, CodeGenFile file)
+    private bool Parse(INamedTypeSymbol type, in CodeGenFileParseContext ctx)
     {
-        var namespaceParser = symbolCodeGenModelParserProvider.GetNamedTypeParser();
-        switch (namespaceParser.Parse(type))
+        switch (ParseUtils.ParseNamedType(in ctx, type))
         {
             case CodeGenMessage msg:
-                file.Messages.Add(msg);
+                ctx.File.Messages.Add(msg);
                 return true;
             case CodeGenEnum enm:
-                file.Enums.Add(enm);
+                ctx.File.Enums.Add(enm);
                 return true;
             case CodeGenService svc:
-                file.Services.Add(svc);
+                ctx.File.Services.Add(svc);
                 return true;
         }
         return false;
@@ -79,13 +104,13 @@ internal class CodeGenSemanticModelParser
         // note: if message/enum type is consumed before it is defined, we simplify things
         // by using a place-holder initially (via the protobuf FQN); we need to go back over the
         // tree, and substitute out any such place-holders for the final types
-        symbolCodeGenModelParserProvider.ParseContext.FixupPlaceholders();
+        codeGenParseContext.FixupPlaceholders();
 
-        // throwing errors, which happened during parsing
-        // warnings will be available later for logging output
-        symbolCodeGenModelParserProvider.ErrorContainer.Throw();
+        //// throwing errors, which happened during parsing
+        //// warnings will be available later for logging output
+        //symbolCodeGenModelParserProvider.ErrorContainer.Throw();
 
-        set.ErrorContainer = symbolCodeGenModelParserProvider.ErrorContainer;
+        //set.ErrorContainer = symbolCodeGenModelParserProvider.ErrorContainer;
         return set;
     }
 }

@@ -1,8 +1,7 @@
-﻿using ProtoBuf.Internal.CodeGen;
+﻿#nullable enable
+using ProtoBuf.Internal.CodeGen;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
@@ -876,7 +875,7 @@ internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
     //}
 
     private static readonly char[] NamespaceSplitTokens = new[] { '.', '+' };
-    private string GetEscapedTypeName(CodeGenGeneratorContext? ctx, CodeGenType type, out DataFormat? dataFormat)
+    private string? GetEscapedTypeName(CodeGenGeneratorContext? ctx, CodeGenType type, out DataFormat? dataFormat)
     {
         dataFormat = null;
         //isMap = false;

@@ -1,20 +1,15 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Parsers.Common;
-using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGenEnum>
-{
-    public EnumCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+internal static partial class ParseUtils
+{    
+    public static CodeGenEnum? ParseEnum(in CodeGenFileParseContext ctx, ITypeSymbol symbol)
     {
-    }
-    
-    public override CodeGenEnum Parse(ITypeSymbol symbol)
-    {
-        var codeGenEnum = InitializeCodeGenEnum(symbol);
+        var codeGenEnum = InitializeCodeGenEnum(in ctx, symbol);
         if (codeGenEnum is null) return null;
         
         var childSymbols = symbol.GetMembers();
@@ -22,32 +17,34 @@ internal sealed class EnumCodeGenModelParser : TypeCodeGenModelParserBase<CodeGe
         {
             if (childSymbol is IFieldSymbol fieldSymbol)
             {
-                var enumValueParser = ParserProvider.GetEnumValueParser();
-                var parsedEnumValue = enumValueParser.Parse(fieldSymbol);
-                codeGenEnum.EnumValues.Add(parsedEnumValue);
+                var parsedEnumValue = ParseUtils.ParseEnumValue(in ctx, fieldSymbol);
+                if (parsedEnumValue is not null)
+                {
+                    codeGenEnum.EnumValues.Add(parsedEnumValue);
+                }
             }
         }
 
         return codeGenEnum;
     }
 
-    private CodeGenEnum InitializeCodeGenEnum(ITypeSymbol symbol)
+    private static CodeGenEnum? InitializeCodeGenEnum(in CodeGenFileParseContext ctx, ITypeSymbol symbol)
     {
         var symbolAttributes = symbol.GetAttributes();
-        if (IsProtoContract(symbolAttributes, out var protoContractAttributeData))
+        if (ParseUtils.IsProtoContract(symbolAttributes, out var protoContractAttributeData))
         {
             var codeGenEnum = ParseEnum(symbol, protoContractAttributeData);
-            ParseContext.Register(symbol.GetFullyQualifiedType(), codeGenEnum);
+            ctx.Context.Register(symbol.GetFullyQualifiedType(), codeGenEnum);
             return codeGenEnum;
         }
         
-        return ErrorContainer.SaveWarning<CodeGenEnum>(
+        ctx.SaveWarning(
             $"Failed to find a '{nameof(ProtoContractAttribute)}' attribute within enum type definition", 
-            symbol.GetFullTypeName(), 
-            symbol.GetLocation());
+            symbol);
+        return null;
     }
     
-    private CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
+    private static CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
         var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {

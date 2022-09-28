@@ -1,22 +1,17 @@
-﻿using System.Linq;
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
+using System.Linq;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class ServiceMethodCodeGenModelParser : SymbolCodeGenModelParserBase<IMethodSymbol, CodeGenServiceMethod>
+internal static partial class ParseUtils
 {
-    public ServiceMethodCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
+    public static CodeGenServiceMethod? ParseOperation(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
     {
-    }
-    
-    public override CodeGenServiceMethod Parse(IMethodSymbol symbol)
-    {
-        var responseType = ParseResponseType(symbol);
-        var (requestType, parametersDescriptor) = ParseParameters(symbol);
+        var responseType = ParseResponseType(in ctx, symbol);
+        var (requestType, parametersDescriptor) = ParseParameters(in ctx, symbol);
 
         return new CodeGenServiceMethod(symbol.Name)
         {
@@ -26,10 +21,10 @@ internal sealed class ServiceMethodCodeGenModelParser : SymbolCodeGenModelParser
         };
     }
 
-    private (CodeGenServiceMethod.Type requestType, CodeGenServiceMethodParametersDescriptor parametersDescriptor) ParseParameters(IMethodSymbol symbol)
+    private static (CodeGenServiceMethod.Type? requestType, CodeGenServiceMethodParametersDescriptor parametersDescriptor) ParseParameters(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
     {
         var parameters = symbol.Parameters;
-        CodeGenServiceMethod.Type requestType = null;
+        CodeGenServiceMethod.Type? requestType = null;
         var parametersDescriptor = CodeGenServiceMethodParametersDescriptor.None;
 
         foreach (var parameter in parameters)
@@ -50,26 +45,26 @@ internal sealed class ServiceMethodCodeGenModelParser : SymbolCodeGenModelParser
             
             // after we have passed predefined types,
             // we know it is a user message type. Let's parse it!
-            requestType = ParseServiceMethodType(parameter.Type);
+            requestType = ParseServiceMethodType(in ctx, parameter.Type);
         }
 
         return (requestType, parametersDescriptor);
     } 
     
-    private CodeGenServiceMethod.Type ParseResponseType(IMethodSymbol symbol)
+    private static CodeGenServiceMethod.Type ParseResponseType(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
     {
-        return ParseServiceMethodType(symbol.ReturnType);
+        return ParseServiceMethodType(ctx, symbol.ReturnType);
     }
 
-    private CodeGenServiceMethod.Type ParseServiceMethodType(ITypeSymbol typeSymbol)
+    private static CodeGenServiceMethod.Type ParseServiceMethodType(in CodeGenFileParseContext ctx, ITypeSymbol typeSymbol)
     {
-        var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+        var namedTypeSymbol = (INamedTypeSymbol)typeSymbol;
         if (namedTypeSymbol.Arity == 0)
         {
             // simply it is a raw type
             return new CodeGenServiceMethod.Type
             {
-                RawType = ParseContext.GetContractType(typeSymbol.ToString()),
+                RawType = ctx.Context.GetContractType(typeSymbol.ToString()),
                 Representation = CodeGenTypeRepresentation.Raw
             }; 
         }
@@ -79,16 +74,16 @@ internal sealed class ServiceMethodCodeGenModelParser : SymbolCodeGenModelParser
 
         return new CodeGenServiceMethod.Type
         {
-            RawType = ParseContext.GetContractType(typeArgumentTypeDefinition.ToString()),
+            RawType = typeArgumentTypeDefinition is null ? CodeGenType.Unknown : ctx.Context.GetContractType(typeArgumentTypeDefinition.GetFullyQualifiedType()),
             Representation = DetermineGenericTypeRepresentation(genericTypeDefinition)
         };
     }
 
-    private bool IsGrpcCallContext(IParameterSymbol parameterSymbol) => parameterSymbol.Type.ToString() == "ProtoBuf.Grpc.CallContext" && parameterSymbol.Type.InProtoBufNamespace();
+    private static bool IsGrpcCallContext(IParameterSymbol parameterSymbol) => parameterSymbol.Type.ToString() == "ProtoBuf.Grpc.CallContext" && parameterSymbol.Type.InProtoBufNamespace();
     
-    private bool IsCancellationToken(IParameterSymbol parameterSymbol) => parameterSymbol.Type.ToString() == "System.Threading.CancellationToken" && parameterSymbol.Type.InThreadingNamespace();
+    private static bool IsCancellationToken(IParameterSymbol parameterSymbol) => parameterSymbol.Type.ToString() == "System.Threading.CancellationToken" && parameterSymbol.Type.InThreadingNamespace();
 
-    private CodeGenTypeRepresentation DetermineGenericTypeRepresentation(INamedTypeSymbol symbol) => symbol.ToString() switch
+    private static CodeGenTypeRepresentation DetermineGenericTypeRepresentation(INamedTypeSymbol symbol) => symbol.ToString() switch
     {
         "System.Collections.Generic.IAsyncEnumerable<T>" when symbol.InGenericCollectionsNamespace() => CodeGenTypeRepresentation.AsyncEnumerable,
         "System.Threading.Tasks.Task<T>" or "System.Threading.Tasks.Task<TResult>" when symbol.InThreadingTasksNamespace() => CodeGenTypeRepresentation.Task,

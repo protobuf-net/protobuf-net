@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Providers;
+using System;
+using System.Collections.Immutable;
+using System.Linq;
 
-namespace ProtoBuf.Internal.CodeGen.Parsers.Common;
+namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCodeGenModelParserBase<IPropertySymbol, TCodeGenModel>
+internal static partial class ParseUtils
 {
-    protected PropertyCodeGenModelParserBase(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
-    {
-    }
-    
-    protected bool IsProtoMember(ImmutableArray<AttributeData> attributes, out AttributeData protoMemberAttributeData)
+    public static bool IsProtoMember(ImmutableArray<AttributeData> attributes, out AttributeData protoMemberAttributeData)
     {
         foreach (var attribute in attributes)
         {
@@ -30,7 +25,7 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
         return false;
     }
 
-    protected (int fieldNumber, string originalName, DataFormat? dataFormat, bool isRequired) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
+    public static (int fieldNumber, string originalName, DataFormat? dataFormat, bool isRequired) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
     {
         int fieldNumber = default;
         string originalName = null;
@@ -76,5 +71,22 @@ internal abstract class PropertyCodeGenModelParserBase<TCodeGenModel> : SymbolCo
         }
 
         return (fieldNumber, originalName, dataFormat, isRequired);
+    }
+
+    public static bool IsProtoContract(ImmutableArray<AttributeData> attributes, out AttributeData protoContractAttributeData)
+    {
+        foreach (var attribute in attributes)
+        {
+            var ac = attribute.AttributeClass;
+            if (ac?.Name == nameof(ProtoContractAttribute) && ac.InProtoBufNamespace())
+            {
+                protoContractAttributeData = attribute;
+                return true;
+            }
+
+        }
+
+        protoContractAttributeData = null!;
+        return false;
     }
 }

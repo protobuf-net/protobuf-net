@@ -1,7 +1,4 @@
 {
-  "ErrorContainer": {
-    "Errors": []
-  },
   "Files": [
     {
       "Name": "Basic.cs",

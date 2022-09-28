@@ -1,10 +1,8 @@
-﻿using ProtoBuf.Internal.CodeGen;
+﻿#nullable enable
+using ProtoBuf.Internal.CodeGen;
 using System;
-using System.CodeDom.Compiler;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -231,7 +229,7 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 ctx.WriteLine("{").Indent();
             }
-            TextWriter tw = null;
+            TextWriter? tw = null;
             bool addHeaderLength = false;
 
             var source = GetSource(field);
@@ -323,7 +321,7 @@ internal partial class CodeGenCSharpCodeGenerator
             {
                 if (isConditional || field.IsRepeated)
                 {
-                    tw.Write($" + {HeaderLength(field)}");
+                    tw!.Write($" + {HeaderLength(field)}");
                 }
                 else
                 {
@@ -684,11 +682,11 @@ internal partial class CodeGenCSharpCodeGenerator
                         if (string.Equals(field.DefaultValue, "nan", StringComparison.OrdinalIgnoreCase)) return "float.NaN";
                         return field.DefaultValue + "F";
                     case CodeGenWellKnownType.String:
-                        return @"@""" + field.DefaultValue.Replace(@"""", @"""""") + @"""";
+                        return @"@""" + field.DefaultValue!.Replace(@"""", @"""""") + @"""";
                     case CodeGenWellKnownType.Int32:
                     case CodeGenWellKnownType.SInt32:
                     case CodeGenWellKnownType.SFixed32:
-                        return field.DefaultValue;
+                        return field.DefaultValue!;
                     case CodeGenWellKnownType.Fixed32:
                     case CodeGenWellKnownType.UInt32:
                         return field.DefaultValue + "U";
@@ -700,7 +698,6 @@ internal partial class CodeGenCSharpCodeGenerator
                     case CodeGenWellKnownType.UInt64:
                         return field.DefaultValue + "UL";
                 }
-                var x = 123;
             }
             else
             {
@@ -745,7 +742,7 @@ internal partial class CodeGenCSharpCodeGenerator
         return $"/* invalid type / value: {field.TypeName}={field.DefaultValue} */";
     }
 
-    private static bool TryParseBoolean(string value, out bool result)
+    private static bool TryParseBoolean(string? value, out bool result)
     {
         result = default;
         return !string.IsNullOrWhiteSpace(value) && bool.TryParse(value, out result);
@@ -755,7 +752,8 @@ internal partial class CodeGenCSharpCodeGenerator
     {
         if (type.IsWellKnownType(out var known))
         {
-            return GetEscapedTypeName(ctx, type, out _);
+            var name = GetEscapedTypeName(ctx, type, out _);
+            if (name is not null) return name;
         }
         return "global::" + type.ToString().Replace('+', '.'); // lazy
     }

@@ -52,8 +52,9 @@ internal static class CodeGenUtils
         return parseContext.GetContractType(symbol.GetFullyQualifiedType());
     }
 
-    internal static CodeGenType? TryResolveKnownCodeGenType(this ITypeSymbol symbol, DataFormat? dataFormat)
+    internal static CodeGenType? TryResolveKnownCodeGenType(this ITypeSymbol? symbol, DataFormat? dataFormat)
     {
+        if (symbol is null) return null;
         if (symbol is IArrayTypeSymbol arr)
         {
             if (arr.Rank == 1 && arr.ElementType.InNamespace("System") && arr.ElementType.Name == nameof(Byte))

@@ -59,6 +59,8 @@ internal class CodeGenMessage : CodeGenType
 
     [DefaultValue(false)]
     public bool IsValueType { get; set; }
+    [DefaultValue(false)]
+    public bool IsReadOnly { get; set; }
 
     [DefaultValue(Access.Public)]
     public Access Access { get; set; } = Access.Public;

@@ -1,7 +1,4 @@
 {
-  "ErrorContainer": {
-    "Errors": []
-  },
   "Files": [
     {
       "Name": "everything.cs",
@@ -48,7 +45,7 @@
                         }
                       ],
                       "Name": "Result",
-                      "Package": "AllTheThings",
+                      "Package": "AllTheThings.SearchResponse",
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
@@ -76,7 +73,7 @@
                         }
                       ],
                       "Name": "Grouped",
-                      "Package": "AllTheThings",
+                      "Package": "AllTheThings.SearchResponse",
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
@@ -105,7 +102,7 @@
                       ],
                       "Name": "Upper",
                       "OriginalName": "UPPER",
-                      "Package": "AllTheThings",
+                      "Package": "AllTheThings.SearchResponse",
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     }
                   ],
@@ -174,7 +171,7 @@
                         }
                       ],
                       "Name": "Result",
-                      "Package": "AllTheThings",
+                      "Package": "AllTheThings.SearchResponse",
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
@@ -202,7 +199,7 @@
                         }
                       ],
                       "Name": "Grouped",
-                      "Package": "AllTheThings",
+                      "Package": "AllTheThings.SearchResponse",
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     },
                     {
@@ -231,7 +228,7 @@
                       ],
                       "Name": "Upper",
                       "OriginalName": "UPPER",
-                      "Package": "AllTheThings",
+                      "Package": "AllTheThings.SearchResponse",
                       "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
                     }
                   ],
@@ -398,6 +395,7 @@
             {
               "Emit": "None",
               "OriginalName": "corpus",
+              "TypeName": "(unknown)",
               "Name": "CorpusValue",
               "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
             },
@@ -497,7 +495,7 @@
                 }
               ],
               "Name": "Result",
-              "Package": "AllTheThings",
+              "Package": "AllTheThings.SearchResponse",
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             },
             {
@@ -525,7 +523,7 @@
                 }
               ],
               "Name": "Grouped",
-              "Package": "AllTheThings",
+              "Package": "AllTheThings.SearchResponse",
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             },
             {
@@ -554,7 +552,7 @@
               ],
               "Name": "Upper",
               "OriginalName": "UPPER",
-              "Package": "AllTheThings",
+              "Package": "AllTheThings.SearchResponse",
               "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
             }
           ],
@@ -608,12 +606,12 @@
                     }
                   ],
                   "Name": "Inner",
-                  "Package": "AllTheThings",
+                  "Package": "AllTheThings.Outer+MiddleAA",
                   "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleAA+"
                 }
               ],
               "Name": "MiddleAA",
-              "Package": "AllTheThings",
+              "Package": "AllTheThings.Outer",
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             },
             {
@@ -637,12 +635,12 @@
                     }
                   ],
                   "Name": "Inner",
-                  "Package": "AllTheThings",
+                  "Package": "AllTheThings.Outer+MiddleBB",
                   "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleBB+"
                 }
               ],
               "Name": "MiddleBB",
-              "Package": "AllTheThings",
+              "Package": "AllTheThings.Outer",
               "FullyQualifiedPrefix": "AllTheThings.Outer+"
             }
           ],

@@ -13,7 +13,7 @@ namespace BasicPackage
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(BasicMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.BasicField is { Length: > 0 } obj1)
@@ -25,7 +25,7 @@ namespace BasicPackage
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(BasicMessage value)
         {
             ulong len = 0;
@@ -38,7 +38,7 @@ namespace BasicPackage
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static BasicMessage Merge(BasicMessage value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();

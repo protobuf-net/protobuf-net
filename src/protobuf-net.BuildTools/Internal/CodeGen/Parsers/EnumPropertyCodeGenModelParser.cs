@@ -1,36 +1,31 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Parsers.Common;
-using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class EnumPropertyCodeGenModelParser : PropertyCodeGenModelParserBase<CodeGenEnum>
+internal static class EnumPropertyCodeGenModelParser
 {
-    public EnumPropertyCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
-    {
-    }
-
-    public override CodeGenEnum Parse(IPropertySymbol symbol)
+    public static CodeGenEnum? Parse(in CodeGenFileParseContext ctx, IPropertySymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
-        if (IsProtoMember(propertyAttributes, out var protoMemberAttribute))
+        if (ParseUtils.IsProtoMember(propertyAttributes, out var protoMemberAttribute))
         {
-            var (_, originalName, dataFormat, _) = GetProtoMemberAttributeData(protoMemberAttribute);
+            var (_, originalName, dataFormat, _) = ParseUtils.GetProtoMemberAttributeData(protoMemberAttribute);
             var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
             {
                 OriginalName = originalName,
-                Type = symbol.Type.TryResolveKnownCodeGenType(dataFormat),
+                Type = symbol.Type.TryResolveKnownCodeGenType(dataFormat) ?? CodeGenType.Unknown,
                 Emit = CodeGenGenerate.None, // nothing to emit
             };
         
             return codeGenField;
         }
 
-        return ErrorContainer.SaveWarning<CodeGenEnum>(
+        ctx.SaveWarning(
             $"Failed to find a '{nameof(protoMemberAttribute)}' attribute within enum property definition", 
-            symbol.GetFullTypeName(), 
-            symbol.GetLocation());
+            symbol);
+        return null;
     }
 }

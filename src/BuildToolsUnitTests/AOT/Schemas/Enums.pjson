@@ -1,7 +1,4 @@
 {
-  "ErrorContainer": {
-    "Errors": []
-  },
   "Files": [
     {
       "Name": "Enums.cs",
@@ -12,6 +9,7 @@
             {
               "Emit": "None",
               "OriginalName": "corpus",
+              "TypeName": "(unknown)",
               "Name": "Corpus",
               "FullyQualifiedPrefix": "BasicPackage.SearchRequest+"
             }

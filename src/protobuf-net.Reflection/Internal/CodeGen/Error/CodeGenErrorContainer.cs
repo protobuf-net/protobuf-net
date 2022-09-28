@@ -14,7 +14,7 @@ internal sealed class CodeGenErrorContainer
     /// <param name="errorDescription">manual description of what has happened to fire an error</param>
     /// <param name="symbolType">type of symbol, which has an error</param>
     /// <param name="symbolLocation">location of symbol, which has an error</param>
-    public TCodeGen SaveFatal<TCodeGen>(string errorDescription, string symbolType, string symbolLocation)
+    public TCodeGen? SaveFatal<TCodeGen>(string errorDescription, string symbolType, string symbolLocation)
         where TCodeGen : class
     {
         return Save<TCodeGen>(CodeGenErrorLevel.Fatal, errorDescription, symbolType, symbolLocation);
@@ -27,7 +27,7 @@ internal sealed class CodeGenErrorContainer
     /// <param name="errorDescription">manual description of what has happened to fire an error</param>
     /// <param name="symbolType">type of symbol, which has an error</param>
     /// <param name="symbolLocation">location of symbol, which has an error</param>
-    public TCodeGen SaveWarning<TCodeGen>(string errorDescription, string symbolType, string symbolLocation)
+    public TCodeGen? SaveWarning<TCodeGen>(string errorDescription, string symbolType, string symbolLocation)
         where TCodeGen : class
     {
         return Save<TCodeGen>(CodeGenErrorLevel.Warning, errorDescription, symbolType, symbolLocation);
@@ -41,7 +41,7 @@ internal sealed class CodeGenErrorContainer
     /// <param name="errorDescription">manual description of what has happened to fire an error</param>
     /// <param name="symbolType">type of symbol, which has an error</param>
     /// <param name="symbolLocation">location of symbol, which has an error</param>
-    public TCodeGen Save<TCodeGen>(CodeGenErrorLevel errorLevel, string errorDescription, string symbolType, string symbolLocation)
+    public TCodeGen? Save<TCodeGen>(CodeGenErrorLevel errorLevel, string errorDescription, string symbolType, string symbolLocation)
         where TCodeGen : class
     {
         Errors.Add(new CodeGenError

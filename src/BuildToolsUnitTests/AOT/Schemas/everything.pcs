@@ -13,7 +13,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(TestNetObject value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Foo is global::AllTheThings.TestNetObject obj1)
@@ -36,7 +36,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(TestNetObject value)
         {
             ulong len = 0;
@@ -57,7 +57,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static TestNetObject Merge(TestNetObject value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong oldEnd;
@@ -117,7 +117,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(MagicValues value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(13); // field 1, fixed32
@@ -140,7 +140,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(MagicValues value)
         {
             ulong len = 0;
@@ -150,7 +150,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static MagicValues Merge(MagicValues value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -246,7 +246,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(SampleMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.FooName is { Length: > 0 } obj1)
@@ -277,7 +277,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(SampleMessage value)
         {
             ulong len = 0;
@@ -302,7 +302,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static SampleMessage Merge(SampleMessage value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -372,7 +372,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(SearchRequest value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Query is { Length: > 0 } obj1)
@@ -388,7 +388,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(SearchRequest value)
         {
             ulong len = 0;
@@ -403,7 +403,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static SearchRequest Merge(SearchRequest value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -463,7 +463,7 @@ namespace AllTheThings
         {
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static void Write(Result value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.Url is { Length: > 0 } obj1)
@@ -489,7 +489,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static ulong Measure(Result value)
             {
                 ulong len = 0;
@@ -515,7 +515,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static Result Merge(Result value, ref global::ProtoBuf.Nano.Reader reader)
             {
                 if (value is null) value = new();
@@ -565,7 +565,7 @@ namespace AllTheThings
         {
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static void Write(Grouped value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.Url is { Length: > 0 } obj2)
@@ -591,7 +591,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static ulong Measure(Grouped value)
             {
                 ulong len = 0;
@@ -617,7 +617,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static Grouped Merge(Grouped value, ref global::ProtoBuf.Nano.Reader reader)
             {
                 if (value is null) value = new();
@@ -667,7 +667,7 @@ namespace AllTheThings
         {
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static void Write(Upper value, ref global::ProtoBuf.Nano.Writer writer)
             {
                 if (value.Url is { Length: > 0 } obj2)
@@ -693,7 +693,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static ulong Measure(Upper value)
             {
                 ulong len = 0;
@@ -719,7 +719,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static Upper Merge(Upper value, ref global::ProtoBuf.Nano.Reader reader)
             {
                 if (value is null) value = new();
@@ -767,7 +767,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(SearchResponse value, ref global::ProtoBuf.Nano.Writer writer)
         {
         #if NET5_0_OR_GREATER
@@ -800,7 +800,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(SearchResponse value)
         {
             ulong len = 0;
@@ -831,7 +831,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static SearchResponse Merge(SearchResponse value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong oldEnd;
@@ -916,7 +916,7 @@ namespace AllTheThings
             {
                 [global::System.Runtime.CompilerServices.CompilerGenerated]
                 [global::System.Diagnostics.DebuggerNonUserCode]
-                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
                 internal static void Write(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
@@ -927,7 +927,7 @@ namespace AllTheThings
 
                 [global::System.Runtime.CompilerServices.CompilerGenerated]
                 [global::System.Diagnostics.DebuggerNonUserCode]
-                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
                 internal static ulong Measure(Inner value)
                 {
                     ulong len = 0;
@@ -937,7 +937,7 @@ namespace AllTheThings
 
                 [global::System.Runtime.CompilerServices.CompilerGenerated]
                 [global::System.Diagnostics.DebuggerNonUserCode]
-                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
                 internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
                 {
                     if (value is null) value = new();
@@ -989,14 +989,14 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static void Write(MiddleAA value, ref global::ProtoBuf.Nano.Writer writer)
             {
             }
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static ulong Measure(MiddleAA value)
             {
                 ulong len = 0;
@@ -1005,7 +1005,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static MiddleAA Merge(MiddleAA value, ref global::ProtoBuf.Nano.Reader reader)
             {
                 if (value is null) value = new();
@@ -1036,7 +1036,7 @@ namespace AllTheThings
             {
                 [global::System.Runtime.CompilerServices.CompilerGenerated]
                 [global::System.Diagnostics.DebuggerNonUserCode]
-                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
                 internal static void Write(Inner value, ref global::ProtoBuf.Nano.Writer writer)
                 {
                     writer.WriteVarint(8); // field 1, varint
@@ -1047,7 +1047,7 @@ namespace AllTheThings
 
                 [global::System.Runtime.CompilerServices.CompilerGenerated]
                 [global::System.Diagnostics.DebuggerNonUserCode]
-                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
                 internal static ulong Measure(Inner value)
                 {
                     ulong len = 0;
@@ -1057,7 +1057,7 @@ namespace AllTheThings
 
                 [global::System.Runtime.CompilerServices.CompilerGenerated]
                 [global::System.Diagnostics.DebuggerNonUserCode]
-                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+                [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
                 internal static Inner Merge(Inner value, ref global::ProtoBuf.Nano.Reader reader)
                 {
                     if (value is null) value = new();
@@ -1109,14 +1109,14 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static void Write(MiddleBB value, ref global::ProtoBuf.Nano.Writer writer)
             {
             }
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static ulong Measure(MiddleBB value)
             {
                 ulong len = 0;
@@ -1125,7 +1125,7 @@ namespace AllTheThings
 
             [global::System.Runtime.CompilerServices.CompilerGenerated]
             [global::System.Diagnostics.DebuggerNonUserCode]
-            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+            [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
             internal static MiddleBB Merge(MiddleBB value, ref global::ProtoBuf.Nano.Reader reader)
             {
                 if (value is null) value = new();
@@ -1152,7 +1152,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(Outer value, ref global::ProtoBuf.Nano.Writer writer)
         {
             #warning maps not implemented yet
@@ -1161,7 +1161,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(Outer value)
         {
             ulong len = 0;
@@ -1172,7 +1172,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static Outer Merge(Outer value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong oldEnd;
@@ -1211,7 +1211,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(SomeOtherMessage value, ref global::ProtoBuf.Nano.Writer writer)
         {
             if (value.Result is { Length: > 0 } obj1)
@@ -1223,7 +1223,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(SomeOtherMessage value)
         {
             ulong len = 0;
@@ -1236,7 +1236,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static SomeOtherMessage Merge(SomeOtherMessage value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -1274,7 +1274,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(FieldRules value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(8); // field 1, varint
@@ -1303,7 +1303,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(FieldRules value)
         {
             ulong len = 0;
@@ -1330,7 +1330,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static FieldRules Merge(FieldRules value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong packed;
@@ -1443,7 +1443,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(TagRanges value, ref global::ProtoBuf.Nano.Writer writer)
         {
         #if NET5_0_OR_GREATER
@@ -1464,7 +1464,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(TagRanges value)
         {
             ulong len = 0;
@@ -1486,7 +1486,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static TagRanges Merge(TagRanges value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -1532,14 +1532,14 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(Foo value, ref global::ProtoBuf.Nano.Writer writer)
         {
         }
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(Foo value)
         {
             ulong len = 0;
@@ -1548,7 +1548,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static Foo Merge(Foo value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -1577,14 +1577,14 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(Baz value, ref global::ProtoBuf.Nano.Writer writer)
         {
         }
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(Baz value)
         {
             ulong len = 0;
@@ -1593,7 +1593,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static Baz Merge(Baz value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -1622,7 +1622,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
             writer.WriteVarint(9); // field 1, fixed64
@@ -1660,7 +1660,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(PrimitiveFieldTypes value)
         {
             ulong len = 0;
@@ -1679,7 +1679,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static PrimitiveFieldTypes Merge(PrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Reader reader)
         {
             if (value is null) value = new();
@@ -1817,7 +1817,7 @@ namespace AllTheThings
     {
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static void Write(RepeatedPrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Writer writer)
         {
         #if NET5_0_OR_GREATER
@@ -1959,7 +1959,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static ulong Measure(RepeatedPrimitiveFieldTypes value)
         {
             ulong len = 0;
@@ -2090,7 +2090,7 @@ namespace AllTheThings
 
         [global::System.Runtime.CompilerServices.CompilerGenerated]
         [global::System.Diagnostics.DebuggerNonUserCode]
-        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "3.1.104.63208")]
+        [global::System.CodeDom.Compiler.GeneratedCode("protogen", "test")]
         internal static RepeatedPrimitiveFieldTypes Merge(RepeatedPrimitiveFieldTypes value, ref global::ProtoBuf.Nano.Reader reader)
         {
             ulong packed;

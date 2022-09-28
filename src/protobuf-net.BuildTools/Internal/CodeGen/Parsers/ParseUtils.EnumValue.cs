@@ -1,40 +1,36 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
+using System;
+using System.Collections.Immutable;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class EnumValueCodeGenModelParser : SymbolCodeGenModelParserBase<IFieldSymbol, CodeGenEnumValue>
-{
-    public EnumValueCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) : base(parserProvider)
-    {
-    }
-    
-    public override CodeGenEnumValue Parse(IFieldSymbol symbol)
+internal static partial class ParseUtils
+{    
+    public static CodeGenEnumValue? ParseEnumValue(in CodeGenFileParseContext ctx, IFieldSymbol symbol)
     {
         var propertyAttributes = symbol.GetAttributes();
         if (IsProtoEnum(propertyAttributes, out var protoEnumAttributeData))
         {
             var originalName = GetProtoEnumAttributeNameValue(protoEnumAttributeData);
-            var codeGenEnumValue = new CodeGenEnumValue(symbol.GetConstantValue(), symbol.Name)
+            var codeGenEnumValue = new CodeGenEnumValue(symbol.GetConstantValue(), symbol.Name);
+            if (originalName is not null)
             {
-                OriginalName = originalName
-            };
+                codeGenEnumValue.OriginalName = originalName;
+            }
         
             return codeGenEnumValue;   
         }
 
-        return ErrorContainer.SaveWarning<CodeGenEnumValue>(
+        ctx.SaveWarning(
             $"Failed to find a '{nameof(ProtoEnumAttribute)}' attribute within enum value definition", 
-            symbol.GetFullTypeName(), 
-            symbol.GetLocation());
+            symbol);
+        return null;
     }
 
-    private static string GetProtoEnumAttributeNameValue(AttributeData protoEnumAttributeData)
+    private static string? GetProtoEnumAttributeNameValue(AttributeData protoEnumAttributeData)
     {
         foreach (var namedArg in protoEnumAttributeData.NamedArguments)
         {
@@ -61,7 +57,7 @@ internal sealed class EnumValueCodeGenModelParser : SymbolCodeGenModelParserBase
             }
         }
 
-        protoEnumAttributeData = null;
+        protoEnumAttributeData = null!;
         return false;
     }
 }

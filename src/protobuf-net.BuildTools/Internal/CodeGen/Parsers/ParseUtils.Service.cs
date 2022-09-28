@@ -1,51 +1,49 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Internal.CodeGen.Abstractions;
-using ProtoBuf.Internal.CodeGen.Providers;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.ServiceModel;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
-internal sealed class ServiceCodeGenModelParser : SymbolCodeGenModelParserBase<ITypeSymbol, CodeGenService>
+internal static partial class ParseUtils
 {
-    public ServiceCodeGenModelParser(SymbolCodeGenModelParserProvider parserProvider) 
-        : base(parserProvider)
-    {
-    }
 
-    public override CodeGenService Parse(ITypeSymbol symbol)
+    public static CodeGenService? ParseService(in CodeGenFileParseContext ctx, ITypeSymbol symbol)
     {
-        var codeGenService = InitializeCodeGenService(symbol);
-        
-        // go through child nodes and attach nested members
-        var childSymbols = symbol.GetMembers();
-        foreach (var childSymbol in childSymbols)
+        var codeGenService = InitializeCodeGenService(in ctx, symbol);
+        if (codeGenService is not null)
         {
-            if (childSymbol is IMethodSymbol methodSymbol)
+            // go through child nodes and attach nested members
+            var childSymbols = symbol.GetMembers();
+            foreach (var childSymbol in childSymbols)
             {
-                var serviceMethodParser = ParserProvider.GetServiceMethodParser();
-                var codeGenServiceMethod = serviceMethodParser.Parse(methodSymbol);
-                codeGenService.ServiceMethods.Add(codeGenServiceMethod);
+                if (childSymbol is IMethodSymbol methodSymbol)
+                {
+                    var codeGenServiceMethod = ParseUtils.ParseOperation(in ctx, methodSymbol);
+                    if (codeGenServiceMethod is not null)
+                    {
+                        codeGenService.ServiceMethods.Add(codeGenServiceMethod);
+                    }
+                }
             }
         }
-        
         return codeGenService;
     }
     
-    private CodeGenService InitializeCodeGenService(ITypeSymbol symbol)
+    private static CodeGenService? InitializeCodeGenService(in CodeGenFileParseContext ctx, ITypeSymbol symbol)
     {
         if (TryGetServiceContractAttributeData(symbol, out var protoContractAttributeData))
         {
             var codeGenService = ParseService(symbol, protoContractAttributeData);
-            ParseContext.Register(symbol.GetFullyQualifiedType(), codeGenService);
+            ctx.Context.Register(symbol.GetFullyQualifiedType(), codeGenService);
             return codeGenService;
         }
         
         return null;
     }
     
-    private CodeGenService ParseService(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
+    private static CodeGenService ParseService(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
         var codeGenMessage = new CodeGenService(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
         {
@@ -93,7 +91,7 @@ internal sealed class ServiceCodeGenModelParser : SymbolCodeGenModelParserBase<I
             }
         }
 
-        serviceContractAttribute = null;
+        serviceContractAttribute = null!;
         return false;
     }
     
