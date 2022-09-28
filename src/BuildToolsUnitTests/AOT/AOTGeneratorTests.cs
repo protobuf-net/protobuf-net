@@ -1,48 +1,58 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
+using System;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests.AOT;
 
 public class AOTGeneratorTests : GeneratorTestBase<DataContractGenerator>
 {
+    private readonly ITestOutputHelper _log;
+
+    public AOTGeneratorTests(ITestOutputHelper log) => _log = log;
     [Fact]
     public async Task ProtoContractOneTree()
     {
-        SyntaxTree[] docs = 
+        var result = await RunAsync(@"[ProtoBuf.ProtoContract] partial class Foo {}");
+        Assert.Single(result.GeneratedTrees);
+    }
+
+    private Task<GeneratorDriverRunResult> RunAsync(params string[] docs)
+    {
+        docs ??= Array.Empty<string>();
+        var trees = new SyntaxTree[docs.Length];
+        for (int i = 0; i < docs.Length; i++)
         {
-            Code("my.cs", @"[ProtoBuf.ProtoContract] partial class Foo {}"),
-        };
-        var result = await base.GenerateAsync(source: docs);
-        Assert.True(result.Diagnostics.IsEmpty);
-        Assert.Single(result.Result.GeneratedTrees);
+            trees[i] = Code($"doc{i}.cs", docs[i]);
+        }
+        return RunAsync(trees);
+    }
+    private async Task<GeneratorDriverRunResult> RunAsync(params SyntaxTree[] docs)
+    {
+        var (result, diagnostics) = await base.GenerateAsync(source: docs);
+        foreach (var diag in diagnostics)
+        {
+            _log?.WriteLine(diag.ToString());
+        }
+        Assert.Empty(diagnostics);
+        return result;
     }
 
     [Fact]
     public async Task NotContractNoTrees()
     {
-        SyntaxTree[] docs =
-        {
-            Code("my.cs", @"partial class Foo {}"),
-        };
-        var result = await base.GenerateAsync(source: docs);
-        Assert.True(result.Diagnostics.IsEmpty);
-        Assert.Empty(result.Result.GeneratedTrees);
+        var result = await RunAsync(Code("my.cs", @"partial class Foo {}"));
+        Assert.Empty(result.GeneratedTrees);
     }
 
     [Fact]
     public async Task PartialOverTwoTrees()
     {
-        SyntaxTree[] docs =
-        {
-            Code("my.cs", @"partial class Foo {}"),
-            Code("myother.cs", @"
+        var result = await RunAsync(@"partial class Foo {}", @"
 using ProtoBuf;
-[ProtoContract] partial class Foo {}"),
-        };
-        var result = await base.GenerateAsync(source: docs);
-        Assert.True(result.Diagnostics.IsEmpty);
-        Assert.Single(result.Result.GeneratedTrees);
+[ProtoContract] partial class Foo {}");
+        Assert.Single(result.GeneratedTrees);
     }
 }

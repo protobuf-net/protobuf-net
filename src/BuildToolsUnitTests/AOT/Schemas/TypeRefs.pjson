@@ -1,7 +1,7 @@
 {
   "Files": [
     {
-      "Name": "TypeRefs.cs",
+      "Name": "TypeRefs.generated.cs",
       "Messages": [
         {
           "Emit": "DataContract, DataSerializer",

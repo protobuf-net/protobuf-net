@@ -11,6 +11,7 @@ internal static partial class ParseUtils
 
     public static CodeGenService? ParseService(in CodeGenFileParseContext ctx, ITypeSymbol symbol)
     {
+        if (ctx.HasConsidered(symbol)) return null;
         var codeGenService = InitializeCodeGenService(in ctx, symbol);
         if (codeGenService is not null)
         {

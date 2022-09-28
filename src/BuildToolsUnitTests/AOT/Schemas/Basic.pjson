@@ -1,7 +1,7 @@
 {
   "Files": [
     {
-      "Name": "Basic.cs",
+      "Name": "Basic.generated.cs",
       "Messages": [
         {
           "Emit": "DataContract, DataSerializer",

@@ -1,7 +1,7 @@
 {
   "Files": [
     {
-      "Name": "Services.cs",
+      "Name": "Services.generated.cs",
       "Services": [
         {
           "Emit": "ServiceContract, ServiceProxy",

@@ -2,6 +2,9 @@
 using Microsoft.CodeAnalysis;
 using ProtoBuf.Internal.CodeGen.Parsers;
 using ProtoBuf.Reflection.Internal.CodeGen;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace ProtoBuf.Internal.CodeGen;
 
@@ -13,6 +16,7 @@ internal class CodeGenSemanticModelParser
     //    return Parse(codeGenSet, symbol);
     //}
     private readonly CodeGenParseContext codeGenParseContext = new CodeGenParseContext();
+    internal CodeGenParseContext Context => codeGenParseContext;
     private readonly CodeGenSet set = new CodeGenSet();
     private CodeGenFile? defaultFile;
     private CodeGenFile DefaultFile
@@ -22,7 +26,7 @@ internal class CodeGenSemanticModelParser
             if (defaultFile is null)
             {
                 defaultFile = new CodeGenFile("protogen.generated.cs");
-                _defaultContext = new CodeGenFileParseContext(defaultFile, codeGenParseContext);
+                _defaultContext = new CodeGenFileParseContext(defaultFile, this);
                 set.Files.Add(defaultFile);
             }
             return defaultFile;
@@ -43,9 +47,9 @@ internal class CodeGenSemanticModelParser
     {
         var semanticModel = compilation.GetSemanticModel(syntaxTree);
         int count = 0;
-        var file = new CodeGenFile(syntaxTree.FilePath);
-        set.Files.Add(file);
-        var ctx = new CodeGenFileParseContext(file, codeGenParseContext);
+        var ext = Path.GetExtension(syntaxTree.FilePath);
+        var file = new CodeGenFile(Path.ChangeExtension(syntaxTree.FilePath, "generated" + ext));
+        var ctx = new CodeGenFileParseContext(file, this);
         foreach (var symbol in semanticModel.LookupNamespacesAndTypes(0))
         {
             bool fromTree = false;
@@ -62,6 +66,7 @@ internal class CodeGenSemanticModelParser
                 count += ParseAll(symbol, in ctx);
             }
         }
+        if (!file.IsEmpty) set.Files.Add(file);
         return count;
     }
     private int ParseAll(ISymbol symbol, in CodeGenFileParseContext ctx)
@@ -113,4 +118,10 @@ internal class CodeGenSemanticModelParser
         //set.ErrorContainer = symbolCodeGenModelParserProvider.ErrorContainer;
         return set;
     }
+
+    // is this a new symbol?
+    internal bool HasConsidered(ISymbol symbol)
+        => !(_seen ??= new HashSet<ISymbol>(SymbolEqualityComparer.Default)).Add(symbol);
+
+    private HashSet<ISymbol>? _seen;
 }

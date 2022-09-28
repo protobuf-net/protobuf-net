@@ -69,6 +69,7 @@ internal static partial class ParseUtils
 
     private static CodeGenMessage? InitializeCodeGenMessage(in CodeGenFileParseContext ctx, ITypeSymbol symbol)
     {
+        if (ctx.HasConsidered(symbol)) return null;
         var symbolAttributes = symbol.GetAttributes();
         if (ParseUtils.IsProtoContract(symbolAttributes, out var protoContractAttributeData))
         {

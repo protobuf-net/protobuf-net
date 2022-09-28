@@ -1,7 +1,7 @@
 {
   "Files": [
     {
-      "Name": "Enums.cs",
+      "Name": "Enums.generated.cs",
       "Messages": [
         {
           "Emit": "DataContract, DataSerializer",
