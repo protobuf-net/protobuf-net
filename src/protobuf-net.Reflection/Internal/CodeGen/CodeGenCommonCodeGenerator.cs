@@ -82,7 +82,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         var enumsByNamespace = file.Enums.ToLookup(x => x.FullyQualifiedPrefix);
         var servicesByNamespace = file.Services.ToLookup(x => x.FullyQualifiedPrefix);
         var namespaces = messagesByNamespace.Select(x => x.Key).Union(enumsByNamespace.Select(x => x.Key));
-
+        bool singleNamespace = messagesByNamespace.Count() == 1;
         void WriteMessagesAndEnums(string grp)
         {
             foreach (var inner in messagesByNamespace[grp])
@@ -123,9 +123,9 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         foreach (var altNs in namespaces)
         {
             // if (altNs == @namespace) continue;
-            WriteNamespaceHeader(ctx, altNs);
+            WriteNamespaceHeader(ctx, altNs, singleNamespace);
             WriteMessagesAndEnums(altNs);
-            WriteNamespaceFooter(ctx, altNs);
+            WriteNamespaceFooter(ctx, altNs, singleNamespace);
         }
 
         WriteFileFooter(ctx, file, ref state);
@@ -134,11 +134,11 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
     /// <summary>
     /// Opens the stated namespace
     /// </summary>
-    protected abstract void WriteNamespaceHeader(CodeGenGeneratorContext ctx, string @namespace);
+    protected abstract void WriteNamespaceHeader(CodeGenGeneratorContext ctx, string @namespace, bool single);
     /// <summary>
     /// Closes the stated namespace
     /// </summary>
-    protected abstract void WriteNamespaceFooter(CodeGenGeneratorContext ctx, string @namespace);
+    protected abstract void WriteNamespaceFooter(CodeGenGeneratorContext ctx, string @namespace, bool single);
 
     /// <summary>
     /// Emit code representing an extension field

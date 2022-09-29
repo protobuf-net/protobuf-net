@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Nano;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -52,7 +53,7 @@ namespace BuildToolsUnitTests
 
             var parseOptions = new CSharpParseOptions(kind: SourceCodeKind.Regular, documentationMode: DocumentationMode.Parse);
 
-            if (globalOptions is null) globalOptions = ImmutableDictionary<string, string>.Empty;
+            globalOptions ??= ImmutableDictionary<string, string>.Empty;
             if (debugLog) globalOptions = globalOptions.SetItem("pbn_debug_log", "true");
 
             var optionsProvider = TestAnalyzeConfigOptionsProvider.Empty.WithGlobalOptions(new TestAnalyzerConfigOptions(globalOptions));
@@ -70,7 +71,7 @@ namespace BuildToolsUnitTests
             }
 
             GeneratorDriver driver = CSharpGeneratorDriver.Create(new ISourceGenerator[] { Generator }, additionalTexts, parseOptions: parseOptions, optionsProvider: optionsProvider);
-            var compilation = await ObtainCompilationAsync(source ?? Array.Empty<SyntaxTree>());
+            var compilation = CreateCompilation(source);
             var result = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
             if (_testOutputHelper is object)
             {
@@ -84,17 +85,21 @@ namespace BuildToolsUnitTests
 
         protected virtual bool ReferenceProtoBuf => true;
 
-        protected async Task<Compilation> ObtainCompilationAsync(SyntaxTree[] source, [CallerMemberName] string? callerMemberName = null)
+        protected Compilation CreateCompilation(SyntaxTree[]? source)
         {
-            List<MetadataReference> refs = new();
-            refs.Add(MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location));
+            source ??= Array.Empty<SyntaxTree>();
+            List<MetadataReference> refs = new(10)
+            {
+                MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location)
+            };
             if (ReferenceProtoBuf)
             {
                 refs.Add(MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location));
                 refs.Add(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location));
                 refs.Add(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location));
+                refs.Add(MetadataReference.CreateFromFile(typeof(Writer).Assembly.Location));
             }
-            return CSharpCompilation.Create("", source, refs, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            return CSharpCompilation.Create("compilation", source, refs, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
         }
     }
 }
