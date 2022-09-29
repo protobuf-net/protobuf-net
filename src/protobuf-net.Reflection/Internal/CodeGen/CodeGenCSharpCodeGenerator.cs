@@ -11,13 +11,6 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// </summary>
 internal partial class CodeGenCSharpCodeGenerator : CodeGenCommonCodeGenerator
 {
-
-    public CodeGenCSharpCodeGenerator(IDiagnosticSource? diagnosticSource = null) : base(diagnosticSource) { }
-
-    /// <summary>
-    /// Create a new CSharpCodeGenerator instance
-    /// </summary>
-    protected CodeGenCSharpCodeGenerator() { }
     /// <summary>
     /// Returns the language name
     /// </summary>

@@ -6,12 +6,6 @@
         {
           "Fields": [
             {
-              "Location": {
-                "Name": "basic_field",
-                "Number": 1,
-                "type": "TypeString",
-                "JsonName": "basicField"
-              },
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "BasicField",

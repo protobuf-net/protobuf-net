@@ -1,7 +1,7 @@
-﻿using System.Linq;
-using BuildToolsUnitTests.AOT.CSharpToCodeGen.Abstractions;
+﻿using BuildToolsUnitTests.AOT.CSharpToCodeGen.Abstractions;
+using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
-using ProtoBuf.Reflection.Internal.CodeGen.Error;
+using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,7 +18,7 @@ public class EnumAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void BasicEnum_Passes()
     {
-        var codeGenSet = GetCodeGenSet("BasicEnum.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("BasicEnum.cs", out _);
         Assert.NotNull(codeGenSet);
         
         var @enum = codeGenSet.Files.First().Enums.First();
@@ -32,7 +32,7 @@ public class EnumAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void EnumBasedOnByte_Passes()
     {
-        var codeGenSet = GetCodeGenSet("EnumBasedOnByte.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("EnumBasedOnByte.cs", out _);
         Assert.NotNull(codeGenSet);
         
         var @enum = codeGenSet.Files.First().Enums.First();
@@ -44,45 +44,39 @@ public class EnumAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void NoProtoContract_SavesWarning()
     {
-        var codeGenSet = GetCodeGenSet("NoProtoContract.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("NoProtoContract.cs", out var diagnostics);
         Assert.NotNull(codeGenSet);
 
-        var errors = codeGenSet.ErrorContainer.Errors;
-        Assert.NotEmpty(errors);
-
-        var noProtoContractError = errors.First();
-        Assert.Equal(CodeGenErrorLevel.Warning, noProtoContractError.Level);
-        Assert.Contains("NoProtoContract.cs", noProtoContractError.Location);
-        Assert.Contains("Corpus", noProtoContractError.SymbolType);
+        var errors = diagnostics.ToArray();
+        var (Id, Severity, Location, _) = errors.Single();
+        Assert.Equal(CodeGenDiagnostic.DiagnosticSeverity.Warning, Severity);
+        Assert.Equal("SourceFile(NoProtoContract.cs[447..453))", Location);
+        Assert.Equal("PBN3003", Id);
     }
     
     [Fact]
     public void NoProtoEnum_SavesWarning()
     {
-        var codeGenSet = GetCodeGenSet("NoProtoEnum.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("NoProtoEnum.cs", out var diagnostics);
         Assert.NotNull(codeGenSet);
 
-        var errors = codeGenSet.ErrorContainer.Errors;
-        Assert.NotEmpty(errors);
-
-        var noProtoEnumError = errors.First();
-        Assert.Equal(CodeGenErrorLevel.Warning, noProtoEnumError.Level);
-        Assert.Contains("NoProtoEnum.cs", noProtoEnumError.Location);
-        Assert.Contains("CorpusUnspecified", noProtoEnumError.SymbolType);
+        var errors = diagnostics.ToArray();
+        var (Id, Severity, Location, _) = errors.Single();
+        Assert.Equal(CodeGenDiagnostic.DiagnosticSeverity.Warning, Severity);
+        Assert.Equal("SourceFile(NoProtoEnum.cs[467..484))", Location);
+        Assert.Equal("PBN3002", Id);
     }
     
     [Fact]
     public void NoProtoMember_SavesWarning()
     {
-        var codeGenSet = GetCodeGenSet("NoProtoMember.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("NoProtoMember.cs", out var diagnostics);
         Assert.NotNull(codeGenSet);
 
-        var errors = codeGenSet.ErrorContainer.Errors;
-        Assert.NotEmpty(errors);
-
-        var noProtoMember = errors.First();
-        Assert.Equal(CodeGenErrorLevel.Warning, noProtoMember.Level);
-        Assert.Contains("NoProtoMember.cs", noProtoMember.Location);
-        Assert.Contains("CorpusProperty", noProtoMember.SymbolType);
+        var errors = diagnostics.ToArray();
+        var (Id, Severity, Location, _) = errors.Single();
+        Assert.Equal(CodeGenDiagnostic.DiagnosticSeverity.Warning, Severity);
+        Assert.Equal("SourceFile(NoProtoMember.cs[1009..1023))", Location);
+        Assert.Equal("PBN3001", Id);
     }
 }

@@ -7,7 +7,6 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "BasicField",

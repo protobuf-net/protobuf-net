@@ -6,13 +6,6 @@
         {
           "Fields": [
             {
-              "Location": {
-                "Name": "corpus",
-                "Number": 2,
-                "type": "TypeEnum",
-                "TypeName": ".basic_package.Corpus2",
-                "JsonName": "corpus"
-              },
               "FieldNumber": 2,
               "TypeName": "BasicPackage.Corpus2",
               "Name": "Corpus",

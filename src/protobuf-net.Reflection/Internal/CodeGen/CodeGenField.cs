@@ -7,15 +7,13 @@ using System.ComponentModel;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenField : ILocated
+internal class CodeGenField : CodeGenEntity
 {
-    public CodeGenField(int fieldNumber, string name, object? location)
+    public CodeGenField(int fieldNumber, string name, object? origin) : base(origin)
     {
         FieldNumber = fieldNumber;
         BackingName = OriginalName = Name = name?.Trim() ?? "";
-        Location = location;
     }
-    public object? Location { get; }
     public const string PresenceTrackingFieldName = "__pbn_field_presence_";
     public int FieldNumber { get; }
     public CodeGenType Type { get; set; } = CodeGenUnknownType.Instance;

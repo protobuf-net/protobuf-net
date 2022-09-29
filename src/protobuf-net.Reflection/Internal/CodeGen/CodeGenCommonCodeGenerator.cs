@@ -14,8 +14,6 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// </summary>
 internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerator
 {
-    public CodeGenCommonCodeGenerator(IDiagnosticSource diagnosticSource = null) : base(diagnosticSource) { }
-
     /// <summary>
     /// The file extension of the files generatred by this generator
     /// </summary>
@@ -56,7 +54,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             string generated;
             using (var buffer = new StringWriter())
             {
-                var ctx = new CodeGenGeneratorContext(this, file, buffer, Indent, options);
+                var ctx = new CodeGenGeneratorContext(this, set.DiagnosticSink, file, buffer, Indent, options);
 
                 WriteFile(ctx, file);
                 generated = buffer.ToString();
@@ -479,7 +477,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         /// The token to use for indentation
         /// </summary>
         public string IndentToken { get; }
-        public IDiagnosticSource DiagnosticSource { get; }
+        public IDiagnosticSink DiagnosticSource { get; }
 
         /// <summary>
         /// The current indent level
@@ -499,7 +497,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         /// <summary>
         /// Create a new GeneratorContext instance
         /// </summary>
-        internal CodeGenGeneratorContext(CodeGenCommonCodeGenerator generator, CodeGenFile file, TextWriter output, string indentToken, Dictionary<string, string> options)
+        internal CodeGenGeneratorContext(CodeGenCommonCodeGenerator generator, IDiagnosticSink diagnosticSink, CodeGenFile file, TextWriter output, string indentToken, Dictionary<string, string> options)
         {
             string langver = null;
             if (options != null) options.TryGetValue("langver", out langver); // explicit option first
@@ -521,7 +519,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
             File = file;
             Output = output;
             IndentToken = indentToken;
-            DiagnosticSource = generator.DiagnosticSource;
+            DiagnosticSource = diagnosticSink;
             LanguageVersion = ParseVersion(langver);
             Emit = emit;
             EmitRequiredDefaults = false; // file.Options.GetOptions()?.EmitRequiredDefaults ?? false;

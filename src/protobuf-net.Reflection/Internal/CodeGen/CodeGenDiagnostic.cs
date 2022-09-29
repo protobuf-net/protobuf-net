@@ -4,11 +4,11 @@ namespace ProtoBuf.Internal.CodeGen;
 
 interface ILocated
 {
-    object? Location { get; }
+    object? Origin { get; }
 }
-interface IDiagnosticSource
+interface IDiagnosticSink
 {
-    void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated source, params object[] messageArgs);
+    void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated? source, params object[] messageArgs);
 }
 internal class CodeGenDiagnostic
 {

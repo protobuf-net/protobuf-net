@@ -13,7 +13,7 @@ internal static partial class ParseUtils
         var responseType = ParseResponseType(in ctx, symbol);
         var (requestType, parametersDescriptor) = ParseParameters(in ctx, symbol);
 
-        return new CodeGenServiceMethod(symbol.Name)
+        return new CodeGenServiceMethod(symbol.Name, symbol)
         {
             RequestType = requestType,
             ResponseType = responseType,

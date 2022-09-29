@@ -12,11 +12,6 @@ namespace ProtoBuf.Reflection.Internal.CodeGen;
 /// </summary>
 internal abstract class CodeGenCodeGenerator
 {
-    public CodeGenCodeGenerator(IDiagnosticSource diagnosticSource = null)
-    {
-        DiagnosticSource = diagnosticSource;
-    }
-    public IDiagnosticSource? DiagnosticSource { get; }
     /// <summary>
     /// The logical name of this code generator
     /// </summary>

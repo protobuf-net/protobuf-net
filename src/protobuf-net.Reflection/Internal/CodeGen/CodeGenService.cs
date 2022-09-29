@@ -3,15 +3,16 @@ using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.ComponentModel;
 using ProtoBuf.Reflection.Internal.CodeGen.Collections;
+using ProtoBuf.Internal.CodeGen;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenService : CodeGenType
+internal class CodeGenService : CodeGenLocatedType
 {
     [DefaultValue(CodeGenGenerate.All)]
     public CodeGenGenerate Emit { get; set; } = CodeGenGenerate.All;
 
-    public CodeGenService(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
+    public CodeGenService(string name, string fullyQualifiedPrefix, object? origin) : base(name, fullyQualifiedPrefix, origin)
     {
         OriginalName = base.Name;
     }
@@ -37,7 +38,7 @@ internal class CodeGenService : CodeGenType
     internal static CodeGenService Parse(ServiceDescriptorProto service, string fullyQualifiedPrefix, CodeGenParseContext context, string package)
     {
         var name = context.NameNormalizer.GetName(service);
-        var newService = new CodeGenService(name, fullyQualifiedPrefix);
+        var newService = new CodeGenService(name, fullyQualifiedPrefix, service);
         context.Register(service.FullyQualifiedName, newService);
         newService.OriginalName = service.Name;
         newService.Package = package;

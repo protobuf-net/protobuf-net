@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace ProtoBuf.Internal.CodeGen;
 
-internal class CodeGenSemanticModelParser : IDiagnosticSource
+internal class CodeGenSemanticModelParser : IDiagnosticSink
 {
     //public static CodeGenSet Parse(ISymbol symbol)
     //{
@@ -19,15 +19,18 @@ internal class CodeGenSemanticModelParser : IDiagnosticSource
     //    return Parse(codeGenSet, symbol);
     //}
 
-    public CodeGenSemanticModelParser() { }
+    public CodeGenSemanticModelParser(IDiagnosticSink? diagnosticSink = null) => set = new CodeGenSet(diagnosticSink);
     public CodeGenSemanticModelParser(in GeneratorExecutionContext executionContext)
-        => _executionContext = executionContext;
+    {
+        _executionContext = executionContext;
+        set = new CodeGenSet(this);
+    }
 
     private readonly GeneratorExecutionContext? _executionContext;
 
     private readonly CodeGenParseContext codeGenParseContext = new CodeGenParseContext();
     internal CodeGenParseContext Context => codeGenParseContext;
-    private readonly CodeGenSet set = new CodeGenSet();
+    private readonly CodeGenSet set;
     private CodeGenFile? defaultFile;
     private CodeGenFile DefaultFile
     {
@@ -140,13 +143,27 @@ internal class CodeGenSemanticModelParser : IDiagnosticSource
             var loc = source.Locations.FirstOrDefault();
             _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(diagnostic, loc, messageArgs));
         }
+        else if (set.DiagnosticSink is { } sink)
+        {
+            // intended for debug
+            var mapped = new CodeGenDiagnostic(diagnostic.Id,
+                (string?)diagnostic.Title ?? "", (string ?)diagnostic.MessageFormat ?? "",
+                (CodeGenDiagnostic.DiagnosticSeverity)diagnostic.DefaultSeverity);
+            sink.ReportDiagnostic(mapped, LocationWrapper.Create(source), messageArgs);
+        }
+    }
+    sealed private class LocationWrapper : ILocated
+    {
+        public object? Origin { get; }
+        private LocationWrapper(object? origin) => Origin = origin;
+        internal static ILocated? Create(ISymbol? loc)  => loc is null ? null : new LocationWrapper(loc);
     }
 
-    void IDiagnosticSource.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
+    void IDiagnosticSink.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
     {
         if (_executionContext.HasValue)
         {
-            var loc = (located.Location as ISymbol)?.Locations.FirstOrDefault();
+            var loc = (located.Origin as ISymbol)?.Locations.FirstOrDefault();
             var mapped = MapDescriptor(diagnostic);
             _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(mapped, loc, messageArgs));
         }

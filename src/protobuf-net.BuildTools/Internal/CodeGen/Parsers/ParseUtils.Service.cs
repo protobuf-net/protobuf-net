@@ -46,7 +46,7 @@ internal static partial class ParseUtils
     
     private static CodeGenService ParseService(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
-        var codeGenMessage = new CodeGenService(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
+        var codeGenMessage = new CodeGenService(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix(), typeSymbol)
         {
             Package = typeSymbol.GetFullyQualifiedPrefix(trimFinal: true),
             Emit = CodeGenGenerate.ServiceContract | CodeGenGenerate.ServiceProxy, // everything else is in the existing code

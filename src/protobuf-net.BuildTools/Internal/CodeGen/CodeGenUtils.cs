@@ -8,7 +8,7 @@ namespace ProtoBuf.Internal.CodeGen;
 
 internal static class CodeGenUtils
 {
-    internal static CodeGenType ResolveCodeGenType(this ITypeSymbol symbol, DataFormat? dataFormat, CodeGenParseContext parseContext, out RepeatedKind repeated)
+    internal static CodeGenType ResolveCodeGenType(this ITypeSymbol symbol, DataFormat? dataFormat, CodeGenParseContext parseContext, out RepeatedKind repeated, ISymbol origin)
     {
         repeated = RepeatedKind.Single;
         
@@ -17,7 +17,7 @@ internal static class CodeGenUtils
 
         if (symbol is IArrayTypeSymbol arr && arr.Rank == 1)
         {
-            var inner = ResolveCodeGenType(arr.ElementType, dataFormat, parseContext, out var innerRepeated);
+            var inner = ResolveCodeGenType(arr.ElementType, dataFormat, parseContext, out var innerRepeated, origin);
             if (inner is not null && innerRepeated == RepeatedKind.Single)
             {
                 repeated = RepeatedKind.Array;
@@ -29,7 +29,7 @@ internal static class CodeGenUtils
             switch (symbol.Name)
             {
                 case "List" when named.TypeArguments.Length == 1:
-                    var inner = ResolveCodeGenType(named.TypeArguments[0], dataFormat, parseContext, out var innerRepeated);
+                    var inner = ResolveCodeGenType(named.TypeArguments[0], dataFormat, parseContext, out var innerRepeated, origin);
                     if (inner is not null && innerRepeated == RepeatedKind.Single)
                     {
                         repeated = RepeatedKind.List;
@@ -37,13 +37,13 @@ internal static class CodeGenUtils
                     }
                     break;
                 case "Dictionary" when named.TypeArguments.Length == 2:
-                    var key = ResolveCodeGenType(named.TypeArguments[0], dataFormat, parseContext, out var keyRepeated);
-                    var value = ResolveCodeGenType(named.TypeArguments[1], dataFormat, parseContext, out var valueRepeated);
+                    var key = ResolveCodeGenType(named.TypeArguments[0], dataFormat, parseContext, out var keyRepeated, origin);
+                    var value = ResolveCodeGenType(named.TypeArguments[1], dataFormat, parseContext, out var valueRepeated, origin);
                     if (key is not null && value is not null && keyRepeated == RepeatedKind.Single && valueRepeated == RepeatedKind.Single)
                     {
                         var opaqueKey = named.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                         repeated = RepeatedKind.Dictionary;
-                        return parseContext.GetMapEntryType(opaqueKey, key, value);
+                        return parseContext.GetMapEntryType(opaqueKey, key, value, origin);
                     }
                     break;
             }

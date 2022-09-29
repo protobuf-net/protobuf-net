@@ -30,11 +30,11 @@ internal class CodeGenParseContext
             _ => null,
         };
 
-    public CodeGenType GetMapEntryType(string fqn, CodeGenType key, CodeGenType value)
+    public CodeGenType GetMapEntryType(string fqn, CodeGenType key, CodeGenType value, object? origin)
     {
         if (!_contractTypes.TryGetValue(fqn, out var type) || type is CodeGenPlaceholderType)
         {
-            type = new CodeGenMapEntryType(fqn, key, value);
+            type = new CodeGenMapEntryType(fqn, key, value, origin);
             _contractTypes[fqn] = type;
         }
         return type;
@@ -88,7 +88,7 @@ internal class CodeGenParseContext
             {
                 GetMapEntryType(type.FullyQualifiedName,
                     CodeGenField.Parse(type.Fields[0], this).Type,
-                    CodeGenField.Parse(type.Fields[1], this).Type);
+                    CodeGenField.Parse(type.Fields[1], this).Type, type);
             }
             return true;
         }

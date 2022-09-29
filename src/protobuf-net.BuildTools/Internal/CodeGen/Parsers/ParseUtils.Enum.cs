@@ -38,14 +38,14 @@ internal static partial class ParseUtils
             ctx.Context.Register(symbol.GetFullyQualifiedType(), codeGenEnum);
             return codeGenEnum;
         }
-        
+
         ctx.ReportDiagnostic(EnumTypeLacksAttribute, symbol);
         return null;
     }
     
     private static CodeGenEnum ParseEnum(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
-        var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
+        var codeGenEnum = new CodeGenEnum(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix(), typeSymbol)
         {
             Emit = CodeGenGenerate.None, // nothing to emit
         };

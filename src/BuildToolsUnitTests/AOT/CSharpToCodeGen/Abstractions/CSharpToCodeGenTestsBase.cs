@@ -1,13 +1,13 @@
-﻿using System.IO;
-using System.Linq;
-using System.Reflection;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf;
 using ProtoBuf.Grpc;
 using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
-using Xunit;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests.AOT.CSharpToCodeGen.Abstractions;
@@ -25,7 +25,19 @@ public abstract class CSharpToCodeGenTestsBase
         Output = output;
     }
 
-    protected object GetCodeGenSet(string csFileName)
+    private protected sealed class SimpleDiagnosticSink : IDiagnosticSink
+    {
+        private readonly List<(string Id, CodeGenDiagnostic.DiagnosticSeverity Severity, string? Location, string Message)> _reported = new();
+        void IDiagnosticSink.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated? source, params object[] messageArgs)
+        {
+            var loc = (source?.Origin as ISymbol)?.Locations.FirstOrDefault()?.ToString();
+            var msg = string.Format(diagnostic.MessageFormat, messageArgs);
+            _reported.Add((diagnostic.Id, diagnostic.Severity, loc, msg));
+        }
+        public (string Id, CodeGenDiagnostic.DiagnosticSeverity Severity, string? Location, string Message)[] ToArray()
+            => _reported.ToArray();
+    }
+    private protected CodeGenSet GetCodeGenSet(string csFileName, out SimpleDiagnosticSink diagnostics)
     {
         var (csFilePath, csFileText) = LoadCSharpFile(csFileName);
         
@@ -50,8 +62,9 @@ public abstract class CSharpToCodeGenTestsBase
                 Output.WriteLine(diag.ToString());
             }
         }
-        
-        var parser = new CodeGenSemanticModelParser();
+
+        diagnostics = new();
+        var parser = new CodeGenSemanticModelParser(diagnostics);
         parser.Parse(compilation, syntaxTree);
         return parser.Process();
     }

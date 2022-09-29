@@ -3,19 +3,21 @@ using Google.Protobuf.Reflection;
 using System.Collections.Generic;
 using System.IO;
 using ProtoBuf.Reflection.Internal.CodeGen.Collections;
-using ProtoBuf.Reflection.Internal.CodeGen.Error;
+using ProtoBuf.Internal.CodeGen;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenSet
 {
-    public CodeGenErrorContainer ErrorContainer { get; set; }
     public ICollection<CodeGenFile> Files { get; } = new NonNullableList<CodeGenFile>();
     public bool ShouldSerializeFiles() => Files.Count > 0;
-    
-    public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenParseContext context)
+    internal IDiagnosticSink? DiagnosticSink { get; }
+
+    public CodeGenSet(IDiagnosticSink? diagnosticSink) => DiagnosticSink = diagnosticSink;
+
+    public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenParseContext context, IDiagnosticSink? diagnosticSink = null)
     {
-        var set = new CodeGenSet();
+        var set = new CodeGenSet(diagnosticSink);
         foreach (var file in descriptorSet.Files)
         {
             if (!file.IncludeInOutput) continue;

@@ -95,7 +95,7 @@ internal static partial class ParseUtils
     }
     private static CodeGenMessage ParseMessage(ITypeSymbol typeSymbol, AttributeData protoContractAttributeData)
     {
-        var codeGenMessage = new CodeGenMessage(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix())
+        var codeGenMessage = new CodeGenMessage(typeSymbol.Name, typeSymbol.GetFullyQualifiedPrefix(), typeSymbol)
         {
             Package = typeSymbol.GetFullyQualifiedPrefix(trimFinal: true),
             IsValueType = typeSymbol.IsValueType,

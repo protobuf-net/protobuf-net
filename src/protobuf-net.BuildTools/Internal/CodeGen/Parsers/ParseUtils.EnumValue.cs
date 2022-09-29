@@ -15,13 +15,13 @@ internal static partial class ParseUtils
         if (IsProtoEnum(propertyAttributes, out var protoEnumAttributeData))
         {
             var originalName = GetProtoEnumAttributeNameValue(protoEnumAttributeData);
-            var codeGenEnumValue = new CodeGenEnumValue(symbol.GetConstantValue(), symbol.Name);
+            var codeGenEnumValue = new CodeGenEnumValue(symbol.GetConstantValue(), symbol.Name, symbol);
             if (originalName is not null)
             {
                 codeGenEnumValue.OriginalName = originalName;
             }
         
-            return codeGenEnumValue;   
+            return codeGenEnumValue;
         }
 
         ctx.ReportDiagnostic(EnumValueLacksAttribute, symbol);

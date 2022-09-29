@@ -1,12 +1,13 @@
 ﻿#nullable enable
 using System;
 using Google.Protobuf.Reflection;
+using ProtoBuf.Internal.CodeGen;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenServiceMethod
+internal class CodeGenServiceMethod : CodeGenEntity
 {
-    public CodeGenServiceMethod(string name)
+    public CodeGenServiceMethod(string name, object? origin) : base(origin)
     {
         Name = name;
     }
@@ -37,7 +38,7 @@ internal class CodeGenServiceMethod
     internal static CodeGenServiceMethod Parse(MethodDescriptorProto method, CodeGenParseContext context)
     {
         var name = context.NameNormalizer.GetName(method);
-        var newMethod = new CodeGenServiceMethod(name)
+        var newMethod = new CodeGenServiceMethod(name, method)
         {
             OriginalName = method.Name,
             RequestType =

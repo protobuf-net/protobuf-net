@@ -1,6 +1,6 @@
 ﻿#nullable enable
 
-using System;
+using ProtoBuf.Internal.CodeGen;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
@@ -24,4 +24,12 @@ internal abstract partial class CodeGenType
     }
 
     internal virtual string Serialize() => ToString();
+}
+
+internal abstract class CodeGenLocatedType : CodeGenType, ILocated
+{
+    protected CodeGenLocatedType(string name, string fullyQualifiedPrefix, object? origin)
+        : base(name, fullyQualifiedPrefix) => _origin = origin;
+    private readonly object? _origin;
+    object? ILocated.Origin => _origin;
 }

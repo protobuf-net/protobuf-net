@@ -18,7 +18,7 @@ public sealed class DataContractGenerator : ISourceGenerator
         }
         var parsedFromCode = parser.Process();
         if (parsedFromCode.Files.Count == 0) return;
-        var generator = new CodeGenCSharpCodeGenerator(parser);
+        var generator = new CodeGenCSharpCodeGenerator();
         foreach (var codeFile in generator.Generate(parsedFromCode))
         {
             context.AddSource(codeFile.Name, codeFile.Text);

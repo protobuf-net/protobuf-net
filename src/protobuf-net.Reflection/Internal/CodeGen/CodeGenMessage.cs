@@ -26,11 +26,11 @@ internal enum CodeGenGenerate
 
     All = ~None,
 }
-internal class CodeGenMessage : CodeGenType
+internal class CodeGenMessage : CodeGenLocatedType
 {
     [DefaultValue(CodeGenGenerate.All)]
     public CodeGenGenerate Emit { get; set; } = CodeGenGenerate.All;
-    internal CodeGenMessage(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
+    internal CodeGenMessage(string name, string fullyQualifiedPrefix, object? origin) : base(name, fullyQualifiedPrefix, origin)
     {
         OriginalName = base.Name;
     }
@@ -72,7 +72,7 @@ internal class CodeGenMessage : CodeGenType
     internal static CodeGenMessage Parse(DescriptorProto message, string fullyQualifiedPrefix, CodeGenParseContext context, string package)
     {
         var name = context.NameNormalizer.GetName(message);
-        var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix);
+        var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix, message);
         context.Register(message.FullyQualifiedName, newMessage);
         newMessage.OriginalName = message.Name;
         newMessage.Package = package;

@@ -13,7 +13,7 @@ internal static partial class ParseUtils
             title: nameof(DataContractGenerator) + "." + nameof(EnumPropertyLacksAttribute),
             messageFormat: $"Failed to find a '{nameof(ProtoMemberAttribute)}' attribute within enum property definition",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor EnumValueLacksAttribute = new(
@@ -21,7 +21,7 @@ internal static partial class ParseUtils
             title: nameof(DataContractGenerator) + "." + nameof(EnumValueLacksAttribute),
             messageFormat: $"Failed to find a '{nameof(ProtoEnumAttribute)}' attribute within enum value definition",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor EnumTypeLacksAttribute = new(
@@ -29,6 +29,6 @@ internal static partial class ParseUtils
             title: nameof(DataContractGenerator) + "." + nameof(EnumTypeLacksAttribute),
             messageFormat: $"Failed to find a '{nameof(ProtoContractAttribute)}' attribute within enum type definition",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 }

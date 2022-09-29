@@ -24,7 +24,6 @@
                       "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
-                          "Location": {},
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
@@ -32,14 +31,12 @@
                           "IsRequired": true
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -55,7 +52,6 @@
                       "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
-                          "Location": {},
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -63,14 +59,12 @@
                           "IsRequired": true
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -86,7 +80,6 @@
                       "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
-                          "Location": {},
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -94,14 +87,12 @@
                           "IsRequired": true
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -117,7 +108,6 @@
                   ],
                   "Fields": [
                     {
-                      "Location": {},
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
@@ -125,7 +115,6 @@
                       "Repeated": "List"
                     },
                     {
-                      "Location": {},
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
@@ -133,7 +122,6 @@
                       "Repeated": "List"
                     },
                     {
-                      "Location": {},
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
@@ -162,7 +150,6 @@
                       "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
-                          "Location": {},
                           "FieldNumber": 1,
                           "TypeName": "string",
                           "Name": "Url",
@@ -170,14 +157,12 @@
                           "IsRequired": true
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -193,7 +178,6 @@
                       "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
-                          "Location": {},
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -201,14 +185,12 @@
                           "IsRequired": true
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -224,7 +206,6 @@
                       "Emit": "DataContract, DataSerializer",
                       "Fields": [
                         {
-                          "Location": {},
                           "FieldNumber": 2,
                           "TypeName": "string",
                           "Name": "Url",
@@ -232,14 +213,12 @@
                           "IsRequired": true
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 3,
                           "TypeName": "string",
                           "Name": "Title",
                           "OriginalName": "title"
                         },
                         {
-                          "Location": {},
                           "FieldNumber": 4,
                           "TypeName": "string",
                           "Name": "Snippets",
@@ -255,7 +234,6 @@
                   ],
                   "Fields": [
                     {
-                      "Location": {},
                       "FieldNumber": 1,
                       "TypeName": "AllTheThings.SearchResponse+Result",
                       "Name": "Results",
@@ -263,7 +241,6 @@
                       "Repeated": "List"
                     },
                     {
-                      "Location": {},
                       "FieldNumber": 10,
                       "TypeName": "AllTheThings.SearchResponse+Grouped",
                       "Name": "Groupeds",
@@ -271,7 +248,6 @@
                       "Repeated": "List"
                     },
                     {
-                      "Location": {},
                       "FieldNumber": 12,
                       "TypeName": "AllTheThings.SearchResponse+Upper",
                       "Name": "UpperValue",
@@ -293,20 +269,17 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "AllTheThings.TestNetObject",
               "Name": "Foo",
               "OriginalName": "foo"
             },
             {
-              "Location": {},
               "FieldNumber": 2,
               "TypeName": "AllTheThings.TestNetObject",
               "Name": "barRef"
             },
             {
-              "Location": {},
               "FieldNumber": 3,
               "TypeName": ":NetObjectProxy",
               "Name": "barDyn"
@@ -320,56 +293,48 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "float",
               "Name": "A",
               "OriginalName": "a"
             },
             {
-              "Location": {},
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "B",
               "OriginalName": "b"
             },
             {
-              "Location": {},
               "FieldNumber": 3,
               "TypeName": "float",
               "Name": "C",
               "OriginalName": "c"
             },
             {
-              "Location": {},
               "FieldNumber": 4,
               "TypeName": "float",
               "Name": "D",
               "OriginalName": "d"
             },
             {
-              "Location": {},
               "FieldNumber": 5,
               "TypeName": "float",
               "Name": "E",
               "OriginalName": "e"
             },
             {
-              "Location": {},
               "FieldNumber": 6,
               "TypeName": "float",
               "Name": "F",
               "OriginalName": "f"
             },
             {
-              "Location": {},
               "FieldNumber": 7,
               "TypeName": "bool",
               "Name": "G",
               "OriginalName": "g"
             },
             {
-              "Location": {},
               "FieldNumber": 8,
               "TypeName": "int32",
               "Name": "requiredWithDefault",
@@ -384,42 +349,36 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "FooName",
               "OriginalName": "foo_name"
             },
             {
-              "Location": {},
               "FieldNumber": 4,
               "TypeName": "string",
               "Name": "Name",
               "OriginalName": "name"
             },
             {
-              "Location": {},
               "FieldNumber": 9,
               "TypeName": "bool",
               "Name": "SubMessage",
               "OriginalName": "sub_message"
             },
             {
-              "Location": {},
               "FieldNumber": 5,
               "TypeName": "string",
               "Name": "Name2",
               "OriginalName": "name2"
             },
             {
-              "Location": {},
               "FieldNumber": 10,
               "TypeName": "bool",
               "Name": "SubMessage2",
               "OriginalName": "sub_message2"
             },
             {
-              "Location": {},
               "FieldNumber": 12,
               "TypeName": "string",
               "Name": "BarName",
@@ -485,7 +444,6 @@
           ],
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Query",
@@ -493,14 +451,12 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 2,
               "TypeName": "int32",
               "Name": "PageNumber",
               "OriginalName": "page_number"
             },
             {
-              "Location": {},
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "ResultPerPage",
@@ -518,7 +474,6 @@
               "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
-                  "Location": {},
                   "FieldNumber": 1,
                   "TypeName": "string",
                   "Name": "Url",
@@ -526,14 +481,12 @@
                   "IsRequired": true
                 },
                 {
-                  "Location": {},
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
                 },
                 {
-                  "Location": {},
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Snippets",
@@ -549,7 +502,6 @@
               "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
-                  "Location": {},
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
@@ -557,14 +509,12 @@
                   "IsRequired": true
                 },
                 {
-                  "Location": {},
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
                 },
                 {
-                  "Location": {},
                   "FieldNumber": 4,
                   "TypeName": "string",
                   "Name": "Snippets",
@@ -580,7 +530,6 @@
               "Emit": "DataContract, DataSerializer",
               "Fields": [
                 {
-                  "Location": {},
                   "FieldNumber": 2,
                   "TypeName": "string",
                   "Name": "Url",
@@ -588,14 +537,12 @@
                   "IsRequired": true
                 },
                 {
-                  "Location": {},
                   "FieldNumber": 3,
                   "TypeName": "string",
                   "Name": "Title",
                   "OriginalName": "title"
                 },
                 {
-                  "Location": {},
                   "FieldNumber": 4,
                   "TypeName": "string",
                   "Name": "Snippets",
@@ -611,7 +558,6 @@
           ],
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "AllTheThings.SearchResponse+Result",
               "Name": "Results",
@@ -619,7 +565,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 10,
               "TypeName": "AllTheThings.SearchResponse+Grouped",
               "Name": "Groupeds",
@@ -627,7 +572,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 12,
               "TypeName": "AllTheThings.SearchResponse+Upper",
               "Name": "UpperValue",
@@ -648,7 +592,6 @@
                   "Emit": "DataContract, DataSerializer",
                   "Fields": [
                     {
-                      "Location": {},
                       "FieldNumber": 1,
                       "TypeName": "int64",
                       "Name": "Ival",
@@ -656,7 +599,6 @@
                       "IsRequired": true
                     },
                     {
-                      "Location": {},
                       "FieldNumber": 2,
                       "TypeName": "bool",
                       "Name": "Booly",
@@ -679,7 +621,6 @@
                   "Emit": "DataContract, DataSerializer",
                   "Fields": [
                     {
-                      "Location": {},
                       "FieldNumber": 1,
                       "TypeName": "int32",
                       "Name": "Ival",
@@ -687,7 +628,6 @@
                       "IsRequired": true
                     },
                     {
-                      "Location": {},
                       "FieldNumber": 2,
                       "TypeName": "bool",
                       "Name": "Booly",
@@ -706,7 +646,6 @@
           ],
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 7,
               "TypeName": "int32, string",
               "Name": "MapField1s",
@@ -714,7 +653,6 @@
               "Repeated": "Dictionary"
             },
             {
-              "Location": {},
               "FieldNumber": 8,
               "TypeName": "string, AllTheThings.Outer",
               "Name": "MapField2s",
@@ -730,7 +668,6 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Result",
@@ -745,7 +682,6 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "int32",
               "Name": "Required",
@@ -753,14 +689,12 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 2,
               "TypeName": "int32",
               "Name": "Optional",
               "OriginalName": "optional"
             },
             {
-              "Location": {},
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Repeateds",
@@ -768,7 +702,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 4,
               "TypeName": "int32",
               "Name": "Packeds",
@@ -784,7 +717,6 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 536870911,
               "TypeName": "string",
               "Name": "His",
@@ -792,7 +724,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "string",
               "Name": "Lo",
@@ -819,7 +750,6 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "double",
               "Name": "Double",
@@ -827,7 +757,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "Float",
@@ -835,7 +764,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Int32",
@@ -843,7 +771,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 4,
               "TypeName": "int64",
               "Name": "Int64",
@@ -851,7 +778,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 5,
               "TypeName": "uint32",
               "Name": "Uint32",
@@ -859,7 +785,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 6,
               "TypeName": "uint64",
               "Name": "Uint64",
@@ -867,7 +792,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 7,
               "TypeName": "sint32",
               "Name": "Sint32",
@@ -875,7 +799,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 8,
               "TypeName": "sint64",
               "Name": "Sint64",
@@ -883,7 +806,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 9,
               "TypeName": "fixed32",
               "Name": "Fixed32",
@@ -891,7 +813,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 10,
               "TypeName": "fixed64",
               "Name": "Fixed64",
@@ -899,7 +820,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 11,
               "TypeName": "sfixed32",
               "Name": "Sfixed32",
@@ -907,7 +827,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 12,
               "TypeName": "sfixed64",
               "Name": "Sfixed64",
@@ -915,7 +834,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 13,
               "TypeName": "bool",
               "Name": "Bool",
@@ -923,7 +841,6 @@
               "IsRequired": true
             },
             {
-              "Location": {},
               "FieldNumber": 14,
               "TypeName": "string",
               "Name": "String",
@@ -939,7 +856,6 @@
           "Emit": "DataContract, DataSerializer",
           "Fields": [
             {
-              "Location": {},
               "FieldNumber": 1,
               "TypeName": "double",
               "Name": "Doubles",
@@ -947,7 +863,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 2,
               "TypeName": "float",
               "Name": "Floats",
@@ -955,7 +870,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 3,
               "TypeName": "int32",
               "Name": "Int32s",
@@ -963,7 +877,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 4,
               "TypeName": "int64",
               "Name": "Int64s",
@@ -971,7 +884,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 5,
               "TypeName": "uint32",
               "Name": "Uint32s",
@@ -979,7 +891,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 6,
               "TypeName": "uint64",
               "Name": "Uint64s",
@@ -987,7 +898,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 7,
               "TypeName": "sint32",
               "Name": "Sint32s",
@@ -995,7 +905,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 8,
               "TypeName": "sint64",
               "Name": "Sint64s",
@@ -1003,7 +912,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 9,
               "TypeName": "fixed32",
               "Name": "Fixed32s",
@@ -1011,7 +919,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 10,
               "TypeName": "fixed64",
               "Name": "Fixed64s",
@@ -1019,7 +926,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 11,
               "TypeName": "sfixed32",
               "Name": "Sfixed32s",
@@ -1027,7 +933,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 12,
               "TypeName": "sfixed64",
               "Name": "Sfixed64s",
@@ -1035,7 +940,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 13,
               "TypeName": "bool",
               "Name": "Bools",
@@ -1043,7 +947,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 14,
               "TypeName": "string",
               "Name": "Strings",
@@ -1051,7 +954,6 @@
               "Repeated": "List"
             },
             {
-              "Location": {},
               "FieldNumber": 15,
               "TypeName": "bytes",
               "Name": "Bytes",

@@ -17,7 +17,7 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void RawReturnType_Passes()
     {
-        var codeGenSet = GetCodeGenSet("RawReturnTypecs.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("RawReturnTypecs.cs", out _);
         Assert.NotNull(codeGenSet);
         
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
@@ -30,7 +30,7 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void StreamableResponse_Passes()
     {
-        var codeGenSet = GetCodeGenSet("IAsyncEnumerableReturnType.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("IAsyncEnumerableReturnType.cs", out _);
         Assert.NotNull(codeGenSet);
 
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
@@ -43,7 +43,7 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void TaskReturnType_Passes()
     {
-        var codeGenSet = GetCodeGenSet("TaskReturnType.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("TaskReturnType.cs", out _);
         Assert.NotNull(codeGenSet);
 
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();
@@ -56,7 +56,7 @@ public class ServicesAotTests : CSharpToCodeGenTestsBase
     [Fact]
     public void ValueTaskReturnType_Passes()
     {
-        var codeGenSet = GetCodeGenSet("ValueTaskReturnType.cs") as CodeGenSet;
+        var codeGenSet = GetCodeGenSet("ValueTaskReturnType.cs", out _);
         Assert.NotNull(codeGenSet);
 
         var serviceMethod = codeGenSet.Files.First().Services.First().ServiceMethods.First();

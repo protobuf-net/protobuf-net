@@ -6,12 +6,12 @@ using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenEnum : CodeGenType
+internal class CodeGenEnum : CodeGenLocatedType
 {
     [DefaultValue(CodeGenGenerate.All)]
     public CodeGenGenerate Emit { get; set; } = CodeGenGenerate.All;
 
-    public CodeGenEnum(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix)
+    public CodeGenEnum(string name, string fullyQualifiedPrefix, object? origin) : base(name, fullyQualifiedPrefix, origin)
     {
         OriginalName = base.Name;
     }
@@ -40,11 +40,11 @@ internal class CodeGenEnum : CodeGenType
         // note: remember context.Register(@enum.FullyQualifiedName, newEnum);
         var name = context.NameNormalizer.GetName(@enum);
         
-        var newEnum = new CodeGenEnum(name, fullyQualifiedPrefix);
+        var newEnum = new CodeGenEnum(name, fullyQualifiedPrefix, @enum);
         context.Register(@enum.FullyQualifiedName, newEnum);
         if (@enum.Options?.Deprecated is not null)
         {
-            newEnum.IsDeprecated = @enum.Options.Deprecated;    
+            newEnum.IsDeprecated = @enum.Options.Deprecated;
         }
         
         if (@enum.Values.Count > 0)

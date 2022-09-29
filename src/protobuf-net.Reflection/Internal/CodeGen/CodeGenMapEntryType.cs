@@ -3,10 +3,10 @@ using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.Internal.CodeGen;
 
-internal class CodeGenMapEntryType : CodeGenType
+internal class CodeGenMapEntryType : CodeGenLocatedType
 {
-    public CodeGenMapEntryType(string fqn, CodeGenType keyType, CodeGenType valueType)
-        : base(fqn, "")
+    public CodeGenMapEntryType(string fqn, CodeGenType keyType, CodeGenType valueType, object? origin)
+        : base(fqn, "", origin)
     {
         KeyType = keyType;
         ValueType = valueType;

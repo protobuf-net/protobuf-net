@@ -15,7 +15,7 @@ internal static partial class ParseUtils
             var codeGenField = new CodeGenField(fieldNumber, symbol.Name, symbol)
             {
                 OriginalName = originalName,
-                Type = symbol.Type.ResolveCodeGenType(dataFormat, ctx.Context, out var repeated),
+                Type = symbol.Type.ResolveCodeGenType(dataFormat, ctx.Context, out var repeated, symbol),
                 Repeated = repeated,
                 IsRequired = isRequired,
             };

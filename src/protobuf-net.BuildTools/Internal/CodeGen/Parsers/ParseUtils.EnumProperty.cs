@@ -13,7 +13,7 @@ internal static partial class ParseUtils
         if (ParseUtils.IsProtoMember(propertyAttributes, out var protoMemberAttribute))
         {
             var (_, originalName, dataFormat, _) = ParseUtils.GetProtoMemberAttributeData(protoMemberAttribute);
-            var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix())
+            var codeGenField = new CodeGenEnum(symbol.Name, symbol.GetFullyQualifiedPrefix(), symbol)
             {
                 OriginalName = originalName,
                 Type = symbol.Type.TryResolveKnownCodeGenType(dataFormat) ?? CodeGenType.Unknown,
