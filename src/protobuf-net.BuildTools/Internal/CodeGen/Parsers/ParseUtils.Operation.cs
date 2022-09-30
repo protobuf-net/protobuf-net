@@ -79,15 +79,15 @@ internal static partial class ParseUtils
         };
     }
 
-    private static bool IsGrpcCallContext(IParameterSymbol parameterSymbol) => parameterSymbol.Type.ToString() == "ProtoBuf.Grpc.CallContext" && parameterSymbol.Type.InProtoBufNamespace();
+    private static bool IsGrpcCallContext(IParameterSymbol parameterSymbol) => parameterSymbol.Type.Name == "CallContext" && parameterSymbol.Type.InProtoBufGrpcNamespace();
     
-    private static bool IsCancellationToken(IParameterSymbol parameterSymbol) => parameterSymbol.Type.ToString() == "System.Threading.CancellationToken" && parameterSymbol.Type.InThreadingNamespace();
+    private static bool IsCancellationToken(IParameterSymbol parameterSymbol) => parameterSymbol.Type.Name == "CancellationToken" && parameterSymbol.Type.InThreadingNamespace();
 
-    private static CodeGenTypeRepresentation DetermineGenericTypeRepresentation(INamedTypeSymbol symbol) => symbol.ToString() switch
+    private static CodeGenTypeRepresentation DetermineGenericTypeRepresentation(INamedTypeSymbol symbol) => symbol.Name switch
     {
-        "System.Collections.Generic.IAsyncEnumerable<T>" when symbol.InGenericCollectionsNamespace() => CodeGenTypeRepresentation.AsyncEnumerable,
-        "System.Threading.Tasks.Task<T>" or "System.Threading.Tasks.Task<TResult>" when symbol.InThreadingTasksNamespace() => CodeGenTypeRepresentation.Task,
-        "System.Threading.Tasks.ValueTask<T>" or "System.Threading.Tasks.ValueTask<TResult>" when symbol.InThreadingTasksNamespace() => CodeGenTypeRepresentation.ValueTask,
+        "IAsyncEnumerable" when symbol.InGenericCollectionsNamespace() && symbol.IsGenericType => CodeGenTypeRepresentation.AsyncEnumerable,
+        "Task" when symbol.InThreadingTasksNamespace() => CodeGenTypeRepresentation.Task,
+        "ValueTask" when symbol.InThreadingTasksNamespace() => CodeGenTypeRepresentation.ValueTask,
         _ => CodeGenTypeRepresentation.Raw
     };
 }

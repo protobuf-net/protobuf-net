@@ -12,11 +12,21 @@
               "Name": "SayHelloAsync",
               "RequestType": {
                 "RawType": {
-                  "Name": "ProtoBuf.Grpc.CallContext"
+                  "Emit": "DataContract, DataSerializer",
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Name",
+                      "OriginalName": "name"
+                    }
+                  ],
+                  "Name": "HelloRequest",
+                  "Package": "GrpcGreeter",
+                  "FullyQualifiedPrefix": "GrpcGreeter."
                 }
               },
               "ResponseType": {
-                "Representation": "AsyncEnumerable",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Fields": [
@@ -31,7 +41,8 @@
                   "Package": "GrpcGreeter",
                   "FullyQualifiedPrefix": "GrpcGreeter."
                 }
-              }
+              },
+              "ParametersDescriptor": "HasCallContext"
             }
           ],
           "FullyQualifiedPrefix": "GrpcGreeter."

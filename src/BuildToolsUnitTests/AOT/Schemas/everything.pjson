@@ -12,11 +12,85 @@
               "Name": "SearchAsync",
               "RequestType": {
                 "RawType": {
-                  "Name": "ProtoBuf.Grpc.CallContext"
+                  "Emit": "DataContract, DataSerializer",
+                  "Enums": [
+                    {
+                      "Emit": "None",
+                      "OriginalName": "corpus",
+                      "TypeName": "(unknown)",
+                      "Name": "CorpusValue",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    },
+                    {
+                      "Emit": "None",
+                      "EnumValues": [
+                        {
+                          "Name": "Universal",
+                          "OriginalName": "UNIVERSAL"
+                        },
+                        {
+                          "Name": "Web",
+                          "Value": 1,
+                          "OriginalName": "WEB"
+                        },
+                        {
+                          "Name": "Images",
+                          "Value": 2,
+                          "OriginalName": "IMAGES"
+                        },
+                        {
+                          "Name": "Local",
+                          "Value": 3,
+                          "OriginalName": "LOCAL"
+                        },
+                        {
+                          "Name": "News",
+                          "Value": 4,
+                          "OriginalName": "NEWS"
+                        },
+                        {
+                          "Name": "Products",
+                          "Value": 5,
+                          "OriginalName": "PRODUCTS"
+                        },
+                        {
+                          "Name": "Video",
+                          "Value": 6,
+                          "OriginalName": "VIDEO"
+                        }
+                      ],
+                      "TypeName": "int32",
+                      "Name": "Corpus",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Query",
+                      "OriginalName": "query",
+                      "IsRequired": true
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "int32",
+                      "Name": "PageNumber",
+                      "OriginalName": "page_number"
+                    },
+                    {
+                      "FieldNumber": 3,
+                      "TypeName": "int32",
+                      "Name": "ResultPerPage",
+                      "OriginalName": "result_per_page"
+                    }
+                  ],
+                  "Name": "SearchRequest",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
                 }
               },
               "ResponseType": {
-                "Representation": "ValueTask",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Messages": [
@@ -132,17 +206,92 @@
                   "Package": "AllTheThings",
                   "FullyQualifiedPrefix": "AllTheThings."
                 }
-              }
+              },
+              "ParametersDescriptor": "HasCallContext"
             },
             {
               "Name": "OldMethodAsync",
               "RequestType": {
                 "RawType": {
-                  "Name": "ProtoBuf.Grpc.CallContext"
+                  "Emit": "DataContract, DataSerializer",
+                  "Enums": [
+                    {
+                      "Emit": "None",
+                      "OriginalName": "corpus",
+                      "TypeName": "(unknown)",
+                      "Name": "CorpusValue",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    },
+                    {
+                      "Emit": "None",
+                      "EnumValues": [
+                        {
+                          "Name": "Universal",
+                          "OriginalName": "UNIVERSAL"
+                        },
+                        {
+                          "Name": "Web",
+                          "Value": 1,
+                          "OriginalName": "WEB"
+                        },
+                        {
+                          "Name": "Images",
+                          "Value": 2,
+                          "OriginalName": "IMAGES"
+                        },
+                        {
+                          "Name": "Local",
+                          "Value": 3,
+                          "OriginalName": "LOCAL"
+                        },
+                        {
+                          "Name": "News",
+                          "Value": 4,
+                          "OriginalName": "NEWS"
+                        },
+                        {
+                          "Name": "Products",
+                          "Value": 5,
+                          "OriginalName": "PRODUCTS"
+                        },
+                        {
+                          "Name": "Video",
+                          "Value": 6,
+                          "OriginalName": "VIDEO"
+                        }
+                      ],
+                      "TypeName": "int32",
+                      "Name": "Corpus",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Query",
+                      "OriginalName": "query",
+                      "IsRequired": true
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "int32",
+                      "Name": "PageNumber",
+                      "OriginalName": "page_number"
+                    },
+                    {
+                      "FieldNumber": 3,
+                      "TypeName": "int32",
+                      "Name": "ResultPerPage",
+                      "OriginalName": "result_per_page"
+                    }
+                  ],
+                  "Name": "SearchRequest",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
                 }
               },
               "ResponseType": {
-                "Representation": "AsyncEnumerable",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Messages": [
@@ -258,7 +407,8 @@
                   "Package": "AllTheThings",
                   "FullyQualifiedPrefix": "AllTheThings."
                 }
-              }
+              },
+              "ParametersDescriptor": "HasCallContext"
             }
           ],
           "FullyQualifiedPrefix": "AllTheThings."

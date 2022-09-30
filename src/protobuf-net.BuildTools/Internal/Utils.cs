@@ -54,6 +54,8 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static bool InProtoBufNamespace(this ISymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
+        internal static bool InProtoBufGrpcNamespace(this ISymbol symbol)
+            => InNamespace(symbol, ProtoBufNamespace, "Grpc");
 
         internal static bool InNamespace(this ISymbol symbol, string ns0)
         {

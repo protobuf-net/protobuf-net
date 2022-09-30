@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceModel;
 using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests.AOT.CSharpToCodeGen.Abstractions;
@@ -49,6 +50,7 @@ public abstract class CSharpToCodeGenTestsBase
             GetLib<CallContext>(),
             MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=4.2.2.0").Location),
+            GetLib<ServiceContractAttribute>(),
         };
         var compilation = CSharpCompilation.Create("MyCompilation.dll",
             syntaxTrees: new[] { syntaxTree }, references: libs, options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
