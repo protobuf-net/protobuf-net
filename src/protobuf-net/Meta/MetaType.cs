@@ -217,6 +217,7 @@ namespace ProtoBuf.Meta
         /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(MethodInfo beforeSerialize, MethodInfo afterSerialize, MethodInfo beforeDeserialize, MethodInfo afterDeserialize)
         {
+            CheckSetCallbacks();
             CallbackSet callbacks = Callbacks;
             callbacks.BeforeSerialize = beforeSerialize;
             callbacks.AfterSerialize = afterSerialize;
@@ -224,6 +225,14 @@ namespace ProtoBuf.Meta
             callbacks.AfterDeserialize = afterDeserialize;
             return this;
         }
+
+        private void CheckSetCallbacks()
+        {
+            // note: historically value-type was also disabled, but that works from v3
+            ThrowIfFrozen();
+            ThrowIfAutoTuple();
+        }
+
         /// <summary>
         /// Assigns the callbacks to use during serialiation/deserialization.
         /// </summary>
@@ -234,7 +243,7 @@ namespace ProtoBuf.Meta
         /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(string beforeSerialize, string afterSerialize, string beforeDeserialize, string afterDeserialize)
         {
-            if (IsValueType) throw new InvalidOperationException();
+            CheckSetCallbacks();
             CallbackSet callbacks = Callbacks;
             callbacks.BeforeSerialize = ResolveMethod(beforeSerialize, true);
             callbacks.AfterSerialize = ResolveMethod(afterSerialize, true);
@@ -368,6 +377,7 @@ namespace ProtoBuf.Meta
         {
             RuntimeTypeModel.VerifyFactory(factory, Type);
             ThrowIfFrozen();
+            ThrowIfAutoTuple();
             this.factory = factory;
             return this;
         }
@@ -1568,13 +1578,19 @@ namespace ProtoBuf.Meta
             return AddField(fieldNumber, memberName, itemType, defaultType, null);
         }
 
+        private void ThrowIfAutoTuple()
+        {
+            if (IsAutoTuple) Throw();
+            static void Throw() => throw new InvalidOperationException("This operation is not supported for tuple-like types; to disable tuple-like type discovery, use applyDefaultBehaviour: false when first adding the type to the model.");
+        }
+
         private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
             MemberInfo mi = null;
             MemberInfo[] members = Type.GetMember(memberName, Type.IsEnum ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (members is not null && members.Length == 1) mi = members[0];
             if (mi is null) throw new ArgumentException("Unable to determine member: " + memberName, nameof(memberName));
-
+            ThrowIfAutoTuple();
             Type miType;
             PropertyInfo pi = null;
             switch (mi.MemberType)
