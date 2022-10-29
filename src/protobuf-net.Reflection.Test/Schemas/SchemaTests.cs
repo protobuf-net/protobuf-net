@@ -86,6 +86,34 @@ namespace ProtoBuf.Schemas
 
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
+        [Fact]
+        public void FieldTypes()
+        {
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            const string path = "field_types.proto";
+
+            var set = new FileDescriptorSet();
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            foreach (var file in set.Files)
+            {
+                foreach (var messageType in file.MessageTypes)
+                {
+                    foreach (var field in messageType.Fields)
+                    {
+                        if (field.Name.Equals("field1"))
+                        {
+                            Assert.Equal("Foo", DescriptorExtensions.GetEnumType(field).Name);
+                        }
+                        else if (field.Name.Equals("field2"))
+                        {
+                            Assert.Equal("TestObject", DescriptorExtensions.GetMessageType(field).Name);
+                        }
+                    }
+                }
+            }
+        }
+
         [SkippableFact]
         public void EverythingProtoLangver3()
         {

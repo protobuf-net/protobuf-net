@@ -1271,6 +1271,7 @@ namespace Google.Protobuf.Reflection
                                 field.type = FieldDescriptorProto.Type.TypeMessage;
                             }
                             fqn = msg?.FullyQualifiedName;
+                            field.ResolvedType = msg;
                         }
                         else if (TryResolveEnum(field.TypeName, parent, out var @enum, true))
                         {
@@ -1281,6 +1282,7 @@ namespace Google.Protobuf.Reflection
                                 ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'", ErrorCode.EnumValueNotFound);
                             }
                             fqn = @enum?.FullyQualifiedName;
+                            field.ResolvedType = @enum;
                         }
                         else
                         {
@@ -1975,6 +1977,10 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class FieldDescriptorProto : ISchemaObject, IField
     {
+        /// <summary>
+        /// The resolved type if available.
+        /// </summary>
+        internal IType ResolvedType { get; set; }
 
         /// <summary>
         /// Indicates whether this field is considered "packed" in the given schema
@@ -2632,6 +2638,15 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf.Reflection
 {
+    public static class DescriptorExtensions
+    {
+        public static EnumDescriptorProto GetEnumType(this FieldDescriptorProto field)
+            => field?.ResolvedType as EnumDescriptorProto;
+    
+        public static DescriptorProto GetMessageType(this FieldDescriptorProto field)
+            => field?.ResolvedType as DescriptorProto;
+    }
+    
     internal static class ErrorExtensions
     {
         public static void Warn(this List<Error> errors, Token token, string message, ErrorCode code)
