@@ -103,11 +103,11 @@ namespace ProtoBuf.Schemas
                     {
                         if (field.Name.Equals("field1"))
                         {
-                            Assert.Equal("Foo", DescriptorExtensions.GetEnumType(field).Name);
+                            Assert.Equal("Foo", field.GetEnumType().Name);
                         }
                         else if (field.Name.Equals("field2"))
                         {
-                            Assert.Equal("TestObject", DescriptorExtensions.GetMessageType(field).Name);
+                            Assert.Equal("TestObject", field.GetMessageType().Name);
                         }
                     }
                 }
