@@ -2645,6 +2645,12 @@ namespace ProtoBuf.Reflection
     
         public static DescriptorProto GetMessageType(this FieldDescriptorProto field)
             => field?.ResolvedType as DescriptorProto;
+
+        public static string GetFullyQualifiedName(this EnumDescriptorProto @enum) 
+            => @enum.FullyQualifiedName;
+
+        public static string GetFullyQualifiedName(this DescriptorProto message) 
+            => message.FullyQualifiedName;
     }
     
     internal static class ErrorExtensions
