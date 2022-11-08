@@ -114,6 +114,43 @@ namespace ProtoBuf.Schemas
             }
         }
 
+        [Fact]
+        public void FullyQualifiedNames()
+        {
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            const string path = "field_types.proto";
+
+            var set = new FileDescriptorSet();
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            foreach (var file in set.Files)
+            {
+                foreach (var messageType in file.MessageTypes)
+                {
+                    if (messageType.Name.Equals("TestObject"))
+                    {
+                        Assert.Equal("example.TestObject", messageType.GetFullyQualifiedName());
+                    }
+
+                    foreach (var nestedType in messageType.NestedTypes)
+                    {
+                        if (nestedType.Name.Equals("NestedObject"))
+                        {
+                            Assert.Equal("example.TestObject.NestedObject", nestedType.GetFullyQualifiedName());
+                        }
+                    }
+
+                    foreach (var nestedEnum in messageType.EnumTypes)
+                    {
+                        if (nestedEnum.Name.Equals("NestedEnum"))
+                        {
+                            Assert.Equal("example.TestObject.NestedEnum", nestedEnum.GetFullyQualifiedName());
+                        }
+                    }
+                }
+            }
+        }
+
         [SkippableFact]
         public void EverythingProtoLangver3()
         {
