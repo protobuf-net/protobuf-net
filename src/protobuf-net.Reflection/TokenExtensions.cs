@@ -12,6 +12,9 @@ namespace ProtoBuf.Reflection
 {
     internal static class TokenExtensions
     {
+        private const char DoubleQuoteChar = '"';
+        private const char SingleQuoteChar = '\'';
+
         public static bool Is(this Peekable<Token> tokens, TokenType type, string value = null)
             => tokens.Peek(out var val) && val.Is(type, value);
 
@@ -559,9 +562,12 @@ namespace ProtoBuf.Reflection
             throw token.Throw(ErrorCode.InvalidBoolean, "Unable to parse boolean");
         }
 
-        private static TokenType Identify(char c)
+        private static TokenType Identify(char c, char[] remainingChars)
         {
-            if (c == '"' || c == '\'') return TokenType.StringLiteral;
+            if (c == DoubleQuoteChar && remainingChars.Any(x => x == DoubleQuoteChar) ||
+                c == SingleQuoteChar && remainingChars.Any(x => x == SingleQuoteChar)) 
+                return TokenType.StringLiteral;
+            
             if (char.IsWhiteSpace(c)) return TokenType.Whitespace;
             if (char.IsLetterOrDigit(c)) return TokenType.AlphaNumeric;
             return c switch
@@ -645,7 +651,7 @@ namespace ProtoBuf.Reflection
                     }
                     else
                     {
-                        var newType = Identify(c);
+                        var newType = Identify(c, line.Skip(columnNumber).ToArray());
                         if (newType == type && CanCombine(type, buffer.Length, lastChar, c))
                         {
                             buffer.Append(c);
