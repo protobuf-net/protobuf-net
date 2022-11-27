@@ -2,6 +2,7 @@
 using ProtoBuf.BuildTools.Analyzers;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -42,6 +43,35 @@ public class Foo
     public int Bar {{get;set;}}
 }}");
             Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public async Task DoesntReportOnMixBetweenProtoAndSystemRuntimeAttributes()
+        {
+            Assert.Empty(await AnalyzeAsync(@"
+using ProtoBuf;
+using System.Runtime.Serialization;
+[DataContract]
+public class Foo
+{
+    [ProtoMember(1)]
+    public int Bar {get;set;}
+}",
+                project => project.AddMetadataReference(
+                    MetadataReference.CreateFromFile(Assembly.Load("System.Runtime.Serialization.Primitives")
+                        .Location))));
+            Assert.Empty(await AnalyzeAsync(@"
+using ProtoBuf;
+using System.Runtime.Serialization;
+[ProtoContract]
+public class Foo
+{
+    [DataMember(Order = 1)]
+    public int Bar {get;set;}
+}",
+                project => project.AddMetadataReference(
+                    MetadataReference.CreateFromFile(Assembly.Load("System.Runtime.Serialization.Primitives")
+                        .Location))));
         }
 
         [Theory]
@@ -172,7 +202,40 @@ public class Foo
 }");
             var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
-            Assert.Equal($"The specified field number 2 is duplicated; field numbers must be unique between all declared members and includes on a single type.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal(
+                $"The specified field number 2 is duplicated; field numbers must be unique between all declared members and includes on a single type.",
+                diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        [Fact]
+        public async Task ReportsDuplicateFieldBetweenFieldsWithDifferentAttributes()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System.Runtime.Serialization;
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)]
+    public int A {get;set;}
+
+    [DataMember(Order = 2)]
+    public int B {get;set;}
+
+    [ProtoMember(2)]
+    public int C {get;set;}
+
+    [ProtoMember(3)]
+    public int D {get;set;}
+}",
+                project => project.AddMetadataReference(
+                    MetadataReference.CreateFromFile(Assembly.Load("System.Runtime.Serialization.Primitives")
+                        .Location)));
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
+            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            Assert.Equal(
+                $"The specified field number 2 is duplicated; field numbers must be unique between all declared members and includes on a single type.",
+                diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
         [Fact]

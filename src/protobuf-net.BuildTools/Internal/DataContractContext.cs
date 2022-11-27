@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -432,6 +433,19 @@ namespace ProtoBuf.BuildTools.Internal
                     return;
             }
             (_ignores ??= new List<Ignore>()).Add(new Ignore(attrib.GetLocation(blame), memberName));
+        }
+        
+        internal void AddMemberFromSystemRuntimeSerialization(ISymbol blame, AttributeData attrib, string memberName)
+        {
+            if (!attrib.TryGetInt32ByName(nameof(DataMemberAttribute.Order), out var tag))
+                return;
+
+            if (!attrib.TryGetStringByName(nameof(DataMemberAttribute.Name), out var name))
+                name = memberName;
+
+            attrib.TryGetBooleanByName(nameof(DataMemberAttribute.IsRequired), out bool isRequired);
+
+            (_members ??= new List<Member>()).Add(new Member(attrib.GetLocation(blame), tag, memberName, name, blame, isRequired));
         }
 
         internal void AddMember(ISymbol blame, AttributeData attrib, string? memberName)
