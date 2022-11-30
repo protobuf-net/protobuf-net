@@ -9,7 +9,7 @@ namespace ProtoBuf
     public class NestedDictionarySupport
     {
         [Fact]
-        public void DictionaryListList_Empty() => RoundTripWithoutValue(new HazDictionaryWithLists(), "");
+        public void DictionaryListList_Empty() => RoundTripCheck(new HazDictionaryWithLists(), "");
 
         [Theory]
         [InlineData(new object[] { new int[] { }, "D2-02-02-0A-00" })] // field 42, length 0, field 1 = (empty)
@@ -19,7 +19,7 @@ namespace ProtoBuf
         public void DictionaryListList_SingleList_KeyEmptyList(int[] items, string expectedHex)
         {
             List<int> list = new List<int>(items);
-            RoundTripWithoutValue(new HazDictionaryWithLists
+            RoundTripCheck(new HazDictionaryWithLists
             {
                 CrazyMap = { { list, null } }
             }, expectedHex); 
@@ -33,13 +33,13 @@ namespace ProtoBuf
         public void DictionaryListList_SingleList_KeyDataList(string[] items, string expectedHex)
         {
             List<string> list = items == null ? null : new List<string>(items);
-            RoundTripWithValue(new HazDictionaryWithLists
+            RoundTripCheck(new HazDictionaryWithLists
             {
                 CrazyMap = { { new List<int> { 1 }, list } }
             }, expectedHex);
         }
-
-        private void RoundTripWithoutValue(HazDictionaryWithLists value, string expectedHex)
+        
+        private void RoundTripCheck(HazDictionaryWithLists value, string expectedHex)
         {
             var ms = new MemoryStream();
             Serializer.Serialize(ms, value);
@@ -57,44 +57,18 @@ namespace ProtoBuf
             if (value.CrazyMap.Count == 1)
             {
                 var pair = dict.Single();
-                Assert.True(value.CrazyMap.First().Key.SequenceEqual(pair.Key));
+                Assert.NotNull(pair.Key); // Dictionary key cannot be null
+                
+                var oldPair = value.CrazyMap.Single();
+                Assert.True(oldPair.Key.SequenceEqual(pair.Key));
 
-                // can't encode null, so we assume it must create a value
-                Assert.NotNull(pair.Value);
-                Assert.Empty(pair.Value);
-            }
-        }
-
-        private void RoundTripWithValue(HazDictionaryWithLists value, string expectedHex)
-        {
-            var ms = new MemoryStream();
-            Serializer.Serialize(ms, value);
-            var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-            Assert.Equal(expectedHex, hex);
-            ms.Position = 0;
-            var clone = Serializer.Deserialize<HazDictionaryWithLists>(ms);
-            Assert.NotNull(clone);
-            Assert.NotSame(value, clone);
-            var dict = clone.CrazyMap;
-            Assert.NotNull(dict);
-            Assert.NotSame(value.CrazyMap, dict);
-            Assert.Equal(value.CrazyMap.Count, dict.Count);
-
-            if (value.CrazyMap.Count == 1)
-            {
-                var pair = dict.Single();
-                Assert.NotNull(pair.Key); // can't represent null
-                Assert.NotNull(pair.Value);
-
-                Assert.True(value.CrazyMap.First().Key.SequenceEqual(pair.Key));
-                var oldVal = value.CrazyMap.First().Value;
-                if (oldVal == null)
+                if (oldPair.Value == null || !oldPair.Value.Any())
                 {
-                    Assert.Empty(pair.Value);
-                }
-                else
+	                Assert.Null(pair.Value);
+                } 
+                else 
                 {
-                    Assert.True(oldVal.SequenceEqual(pair.Value));
+	                Assert.True(oldPair.Value.SequenceEqual(pair.Value));
                 }
             }
         }
