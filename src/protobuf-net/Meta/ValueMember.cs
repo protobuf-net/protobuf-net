@@ -464,9 +464,9 @@ namespace ProtoBuf.Meta
 #pragma warning disable CS0618
                         if (SupportNull)
                         {
-                            if (NullWrappedValue || NullWrappedCollection)
+                            if (NullWrappedValue || NullWrappedCollection || IsPacked)
                             {
-                                ThrowHelper.ThrowNotSupportedException($"{nameof(SupportNull)} cannot be combined with {NullWrappedValue} or {NullWrappedCollection}");
+                                ThrowHelper.ThrowNotSupportedException($"{nameof(SupportNull)} cannot be combined with {nameof(IsPacked)}, {nameof(NullWrappedValue)} or {nameof(NullWrappedCollection)}");
                             }
                             listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup;
                         }
@@ -807,28 +807,28 @@ namespace ProtoBuf.Meta
         }
 
         /// <see cref="NullWrappedValueAttribute"/>
-        public bool NullWrappedValue
+        internal bool NullWrappedValue
         {
             get { return HasFlag(OPTIONS_NullWrappedValue); }
             set { SetFlag(OPTIONS_NullWrappedValue, value); }
         }
 
         /// <see cref="NullWrappedValueAttribute.AsGroup"/>
-        public bool NullWrappedValueGroup
+        internal bool NullWrappedValueGroup
         {
             get { return HasFlag(OPTIONS_NullWrappedValueGroup); }
             set { SetFlag(OPTIONS_NullWrappedValueGroup, value); }
         }
 
         /// <see cref="NullWrappedValueAttribute"/>
-        public bool NullWrappedCollection
+        internal bool NullWrappedCollection
         {
             get { return HasFlag(OPTIONS_NullWrappedCollection); }
             set { SetFlag(OPTIONS_NullWrappedCollection, value); }
         }
 
         /// <see cref="NullWrappedValueAttribute.AsGroup"/>
-        public bool NullWrappedCollectionGroup
+        internal bool NullWrappedCollectionGroup
         {
             get { return HasFlag(OPTIONS_NullWrappedCollectionGroup); }
             set { SetFlag(OPTIONS_NullWrappedCollectionGroup, value); }

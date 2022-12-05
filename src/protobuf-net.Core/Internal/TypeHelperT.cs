@@ -58,6 +58,7 @@ namespace ProtoBuf.Internal
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         internal static bool CanBePacked(Type type)
         {
+            type = Nullable.GetUnderlyingType(type) ?? type;
             if (type.IsEnum) return true;
             switch (Type.GetTypeCode(type))
             {
@@ -167,7 +168,7 @@ namespace ProtoBuf.Internal
             ?? ReferenceValueChecker.Instance as IValueChecker<T>
             ?? (IValueChecker<T>)TypeHelper.GetValueTypeChecker(typeof(T));
 
-        public static readonly bool CanBePacked = !CanBeNull && TypeHelper.CanBePacked(typeof(T));
+        public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
         public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
 
