@@ -376,7 +376,7 @@ message SomePoco {
         [Theory]
         [InlineData(false, Scenario.Null, Outcome.Null, "")]
         [InlineData(false, Scenario.Empty, Outcome.AllContents, "0A-00")]
-        [InlineData(false, Scenario.SingleNotNull, Outcome.AllContents, "0A-01-2A")]
+        [InlineData(false, Scenario.SingleNotNull, Outcome.AllContents, "08-2A")]
         [InlineData(false, Scenario.MultipleNotNull, Outcome.AllContents, "0A-04-2A-11-09-04")]
         [InlineData(true, Scenario.Null, Outcome.SerializeFail)]
         [InlineData(true, Scenario.Empty, Outcome.SerializeFail)]
