@@ -7,3 +7,12 @@ using System.Runtime.CompilerServices;
     + "dba67bd4c830f93f0317504a76ba6a48243c36d2590695991164592767a7bbc4453b34694e31e2"
     + "0815a096e4483605139a32a76ec2fef196507487329c12047bf6a68bca8ee9354155f4d01daf6e"
     + "ec5ff6bc")]
+
+#if NET20 || NET35
+namespace System.Diagnostics.CodeAnalysis
+{
+    // make NerdBank happy (the generated code doesn't anticipate people using frameworks this old)
+    [System.AttributeUsage(System.AttributeTargets.Assembly | System.AttributeTargets.Class | System.AttributeTargets.Constructor | System.AttributeTargets.Event | System.AttributeTargets.Method | System.AttributeTargets.Property | System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+    internal sealed class ExcludeFromCodeCoverageAttribute : Attribute { }
+}
+#endif

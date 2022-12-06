@@ -5,7 +5,6 @@
     "semVer": 2
   },
   "publicReleaseRefSpec": [
-    "^refs/heads/master$",
-    "^refs/heads/2.4.1$"
+    "^refs/heads/v2$"
   ]
 }
