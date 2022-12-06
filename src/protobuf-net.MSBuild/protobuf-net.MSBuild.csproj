@@ -12,10 +12,10 @@
 
   <ItemGroup>
     <PackageReference Include="System.Threading" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="16.8.0">
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.4.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.8.0">
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.4.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>

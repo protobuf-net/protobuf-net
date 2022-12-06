@@ -203,18 +203,7 @@ message SomePoco {
     int32 Value = 1;
 }");
         [Fact]
-        public void BasicPackedLists_Schema_SupportNull() => CheckSchema<BasicPackedLists>(true, @"syntax = ""proto3"";
-package ProtoBuf.Test;
-
-message BasicPackedLists {
-    repeated int32 Int32List = 1;
-    repeated int32 NullableInt32List = 2;
-    repeated string StringList = 3;
-    repeated SomePoco PocoList = 4;
-}
-message SomePoco {
-    int32 Value = 1;
-}");
+        public void BasicPackedLists_Schema_SupportNull() => CheckSchema<BasicPackedLists>(true, "SupportNull cannot be combined with IsPacked, NullWrappedValue or NullWrappedCollection", expectFailure: true);
 
         [Theory]
         [InlineData(false, Scenario.Null, Outcome.Null, "")]
@@ -382,18 +371,7 @@ message SomePoco {
     int32 Value = 1;
 }");
         [Fact]
-        public void BasicPackedGroupedLists_Schema_SupportNull() => CheckSchema<BasicPackedGroupedLists>(true, @"syntax = ""proto3"";
-package ProtoBuf.Test;
-
-message BasicPackedGroupedLists {
-    repeated int32 Int32List = 1;
-    repeated int32 NullableInt32List = 2;
-    repeated string StringList = 3;
-    repeated group SomePoco PocoList = 4;
-}
-message SomePoco {
-    int32 Value = 1;
-}");
+        public void BasicPackedGroupedLists_Schema_SupportNull() => CheckSchema<BasicPackedGroupedLists>(true, "SupportNull cannot be combined with IsPacked, NullWrappedValue or NullWrappedCollection", expectFailure: true);
 
         [Theory]
         [InlineData(false, Scenario.Null, Outcome.Null, "")]
@@ -472,9 +450,20 @@ message SomePoco {
             return model;
         }
 
-        private void CheckSchema<T>(bool supportNull, string expected)
+        private void CheckSchema<T>(bool supportNull, string expected, bool expectFailure = false)
         {
-            var actual = GetModel<T>(supportNull).GetSchema(typeof(T), ProtoBuf.Meta.ProtoSyntax.Proto3);
+            string actual;
+            try
+            {
+                actual = GetModel<T>(supportNull).GetSchema(typeof(T), ProtoBuf.Meta.ProtoSyntax.Proto3);
+            }
+            catch (Exception ex) when (expectFailure)
+            {
+                _log?.WriteLine(ex.Message);
+                Assert.Equal(expected, ex.Message);
+                return;
+            }
+            Assert.False(expectFailure);
             _log?.WriteLine(actual);
             Assert.Equal(expected.Trim(), actual.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
         }
