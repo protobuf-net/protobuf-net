@@ -50,5 +50,6 @@
         MessageKindNullWrapperProto3 = 42,
         MessageKindNullWrapperSingleField = 43,
         MessageKindNullWrapperFieldOne = 44,
+        InvalidUtf8 = 45,
     }
 }

@@ -14,7 +14,7 @@ namespace ProtoBuf.Internal.Serializers
             MethodInfo method = type.GetMethod(nameof(int.Parse),
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
                 null, new Type[] { typeof(string) }, null);
-            if (method is object && method.ReturnType == type)
+            if (method is not null && method.ReturnType == type)
             {
                 if (type.IsValueType)
                 {

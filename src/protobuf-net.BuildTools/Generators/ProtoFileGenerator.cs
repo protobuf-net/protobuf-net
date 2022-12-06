@@ -8,7 +8,6 @@ using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -193,7 +192,7 @@ namespace ProtoBuf.BuildTools.Generators
                         };
                         if (services is not null)
                         {
-                            options.Add("services", "yes");
+                            options.Add("services", services);
                         }
 
                         if (userOptions is not null)
@@ -205,6 +204,7 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "LangVersion", "langver");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Package", "package");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Bytes", "bytes");
 
                             void AddOption(string readKey, string writeKey)
                             {
@@ -224,15 +224,32 @@ namespace ProtoBuf.BuildTools.Generators
                         }
 
                         var files = generator.Generate(set, options: options);
+                        var root = Directory.GetCurrentDirectory();
                         foreach (var file in files)
                         {
-                            var finalName = Path.GetFileName(file.Name); // not allowed to use path qualifiers
-                            var ext = Path.GetExtension(finalName);
-                            if (!ext.StartsWith(".generated."))
-                            {
-                                finalName = Path.ChangeExtension(finalName, "generated" + ext);
-                            }
-                            log?.Invoke($"Adding: '{finalName}' ({file.Text.Length} characters)");
+                            // not allowed to use path qualifiers
+                            // fix not unique HintName (AddSource method)
+                            // like embedded resource path: xxx.xxx.xxx.generated.cs
+
+                            // absolute path issue
+                            // oh, you can specify any path, so ...
+                            var fullName = Path.GetFullPath(file.Name);
+                            var finalName =
+                            (
+                                // try to fix absolute path (if the file is in the project folder)
+                                fullName.StartsWith(root) ? fullName.Substring(root.Length) :
+                                // skip drive letter (windows fix)
+                                fullName.IndexOf(@":\") is var lpos && lpos != -1 ? fullName.Substring(lpos + 1) :
+                                // else
+                                fullName
+                            )
+                            // normalize name
+                            .Replace(Path.DirectorySeparatorChar, '.').TrimStart('.');
+
+                            // set 'generated' file extension prefix
+                            finalName = Path.ChangeExtension(finalName, $"generated{Path.GetExtension(file.Name)}");
+
+                            log?.Invoke($"Adding: '{finalName}' ({file.Text.Length} characters) [{file.Name}]");
                             context.AddSource(finalName, SourceText.From(file.Text, Encoding.UTF8));
                         }
                     }

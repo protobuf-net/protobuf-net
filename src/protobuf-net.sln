@@ -1,7 +1,6 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.1.32120.378
+VisualStudioVersion = 17.2.32427.441
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net", "protobuf-net\protobuf-net.csproj", "{3044FAAC-6DCC-44AA-ADAF-26152FF46922}"
 EndProject
@@ -11,6 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LongDataTests", "LongDataTe
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81F2-C124-4C3D-BBD1-301247B55A77}"
 	ProjectSection(SolutionItems) = preProject
+		..\appveyor.yml = ..\appveyor.yml
 		Tools\bcl.proto = Tools\bcl.proto
 		..\Build.csproj = ..\Build.csproj
 		Directory.build.props = Directory.build.props
@@ -65,6 +65,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0074CABB-8
 		..\docs\nodatime.md = ..\docs\nodatime.md
 		..\docs\nullwrappers.md = ..\docs\nullwrappers.md
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
+		..\docs\schemas.md = ..\docs\schemas.md
 		..\docs\version.md = ..\docs\version.md
 	EndProjectSection
 EndProject

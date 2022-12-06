@@ -1,0 +1,21 @@
+﻿syntax = "proto2";
+package example;
+
+enum Foo {
+  A = 1;
+  B = 2;
+  C = 0;
+}
+message TestObject {
+  optional Foo field1 = 1;
+  required TestObject field2 = 2;
+  
+  message NestedObject {
+    optional Foo nested1 = 1;
+  }
+  
+  enum NestedEnum {
+    D = 1;
+    E = 0;
+  }
+}

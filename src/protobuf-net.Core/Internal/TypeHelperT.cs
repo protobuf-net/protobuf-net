@@ -194,7 +194,7 @@ namespace ProtoBuf.Internal
         /// <summary>
         /// Indicates whether a value is non-null and needs serialization (non-zero, not an empty string, etc)
         /// </summary>
-        bool IValueChecker<object>.HasNonTrivialValue(object value) => value is object;
+        bool IValueChecker<object>.HasNonTrivialValue(object value) => value is not null;
         /// <summary>
         /// Indicates whether a value is null
         /// </summary>

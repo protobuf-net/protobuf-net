@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Text;
 
 namespace ProtoBuf.BuildTools.Internal
 {

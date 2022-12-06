@@ -98,8 +98,8 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                return beforeSerialize is object || beforeDeserialize is object
-                    || afterSerialize is object || afterDeserialize is object;
+                return beforeSerialize is not null || beforeDeserialize is not null
+                    || afterSerialize is not null || afterDeserialize is not null;
             }
         }
     }

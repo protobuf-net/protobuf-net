@@ -237,8 +237,9 @@ namespace ProtoBuf
                 where TSerializer : ISerializer<T>
                 where TList : ICollection<T>
             {
-                var bytes = checked((int)ReadUInt32Varint(Read32VarintMode.Unsigned));
+                var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
                 if (bytes == 0) return;
+                if (bytes < 0) ThrowInvalidLength(bytes);
                 switch (wireType)
                 {
                     case WireType.Fixed32:
@@ -322,9 +323,9 @@ namespace ProtoBuf
             /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
             /// </summary>
-            [MethodImpl(MethodImplOptions.NoInlining)]
+            [MethodImpl(ProtoReader.HotPath)]
             public byte[] AppendBytes(byte[] value)
-                => AppendBytes(value, DefaultMemoryConverter<byte>.Instance);
+                => AppendBytesImpl(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <summary>
             /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence; supported wire-types: String
@@ -354,6 +355,7 @@ namespace ProtoBuf
             public TStorage AppendBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
                 => AppendBytesImpl(value, converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model));
 
+
             private TStorage AppendBytesImpl<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
             {
                 switch (_reader.WireType)
@@ -362,6 +364,7 @@ namespace ProtoBuf
                         int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
                         _reader.WireType = WireType.None;
                         if (len == 0) return converter.NonNull(value);
+                        if (len < 0) ThrowInvalidLength(len);
 
                         // expand the storage
 #if DEBUG
@@ -398,6 +401,7 @@ namespace ProtoBuf
                 {
                     case WireType.String:
                         int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        if (len < 0) ThrowInvalidLength(len);
                         if (len > destination.Length)
                             ThrowHelper.ThrowInvalidOperationException($"Insufficient space in the target span to read a string/bytes value; {destination.Length} vs {len} bytes");
                         _reader.WireType = WireType.None;
@@ -481,14 +485,14 @@ namespace ProtoBuf
                 {
                     case WireType.StartGroup:
                         reader.WireType = WireType.None; // to prevent glitches from double-calling
-                        reader._depth++;
+                        if (reader.IncrDepth()) ThrowTooDeep();
                         return new SubItemToken((long)(-reader._fieldNumber));
                     case WireType.String:
                         long len = (long)ReadUInt64Varint();
                         if (len < 0) ThrowInvalidOperationException();
                         long lastEnd = reader.blockEnd64;
                         reader.blockEnd64 = reader._longPosition + len;
-                        reader._depth++;
+                        if (reader.IncrDepth()) ThrowTooDeep();
                         return new SubItemToken(lastEnd);
                     default:
                         ThrowWireTypeException();
@@ -513,7 +517,7 @@ namespace ProtoBuf
                         if (value64 >= 0) ThrowProtoException("A length-based message was terminated via end-group; this indicates data corruption");
                         if (-(int)value64 != reader._fieldNumber) ThrowProtoException("Wrong group was ended"); // wrong group ended!
                         reader.WireType = WireType.None; // this releases ReadFieldHeader
-                        reader._depth--;
+                        reader.DecrDepth();
                         break;
                     // case WireType.None: // TODO reinstate once reads reset the wire-type
                     default:
@@ -524,7 +528,7 @@ namespace ProtoBuf
                             ThrowProtoException($"Sub-message not read correctly (end {reader.blockEnd64} vs {position})");
                         }
                         reader.blockEnd64 = value64;
-                        reader._depth--;
+                        reader.DecrDepth();
                         break;
                         /*default:
                             throw reader.BorkedIt(); */
@@ -549,7 +553,7 @@ namespace ProtoBuf
 
 
                 SubItemToken token = StartSubItem();
-                if (type is object && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: false))
+                if (type is not null && model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, true, false, null, isRoot: false))
                 {
                     // handled it the easy way
                 }
@@ -579,6 +583,7 @@ namespace ProtoBuf
                 {
                     int bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
                     if (bytes == 0) return "";
+                    if (bytes < 0) ThrowInvalidLength(bytes);
                     var s = _reader.ImplReadString(ref this, bytes);
                     if (_reader.InternStrings) { s = _reader.Intern(s); }
                     return s;
@@ -653,6 +658,7 @@ namespace ProtoBuf
                         break;
                     case WireType.String:
                         long len = (long)ReadUInt64Varint();
+                        if (len < 0) ThrowInvalidLength(len);
                         _reader.ImplSkipBytes(ref this, len);
                         break;
                     case WireType.Varint:
@@ -676,9 +682,9 @@ namespace ProtoBuf
             private void SkipGroup()
             {
                 int originalFieldNumber = _reader._fieldNumber;
-                _reader._depth++; // need to satisfy the sanity-checks in ReadFieldHeader
+                if (_reader.IncrDepth()) ThrowTooDeep(); // need to satisfy the sanity-checks in ReadFieldHeader
                 while (ReadFieldHeader() > 0) { SkipField(); }
-                _reader._depth--;
+                _reader.DecrDepth();
                 if (_reader.WireType == WireType.EndGroup && _reader._fieldNumber == originalFieldNumber)
                 { // we expect to exit in a similar state to how we entered
                     _reader.WireType = WireType.None;
@@ -778,12 +784,19 @@ namespace ProtoBuf
                 throw AddErrorData(new EndOfStreamException(), _reader, ref this);
             }
 
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowTooDeep() => ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + _reader._depth.ToString());
+
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidOperationException(string message = null)
             {
                 var ex = string.IsNullOrWhiteSpace(message) ? new InvalidOperationException() : new InvalidOperationException(message);
                 throw AddErrorData(ex, _reader, ref this);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowInvalidLength(long length) => ThrowInvalidOperationException("Invalid length: " + length.ToString());
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowArgumentException(string message)
@@ -799,7 +812,7 @@ namespace ProtoBuf
 
             internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
             {
-                if (exception is object && source is object && !exception.Data.Contains("protoSource"))
+                if (exception is not null && source is not null && !exception.Data.Contains("protoSource"))
                 {
                     exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                         source.FieldNumber, source.WireType, state.GetPosition(), source._depth));
@@ -932,7 +945,7 @@ namespace ProtoBuf
                         writeState.WriteInt64(ReadInt64());
                         return;
                     case WireType.String:
-                        writeState.WriteBytes(AppendBytes(null));
+                        writeState.WriteBytes(AppendBytes((byte[])null));
                         return;
                     case WireType.StartGroup:
                         SubItemToken readerToken = StartSubItem(),

@@ -25,16 +25,16 @@ namespace ProtoBuf.Internal.Serializers
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            Debug.Assert(value is object);
+            Debug.Assert(value is not null);
             value = field.GetValue(value);
-            if (value is object) Tail.Write(ref state, value);
+            if (value is not null) Tail.Write(ref state, value);
         }
 
         public override object Read(ref ProtoReader.State state, object value)
         {
-            Debug.Assert(value is object);
+            Debug.Assert(value is not null);
             object newValue = Tail.Read(ref state, Tail.RequiresOldValue ? field.GetValue(value) : null);
-            if (newValue is object) field.SetValue(value, newValue);
+            if (newValue is not null) field.SetValue(value, newValue);
             return null;
         }
 

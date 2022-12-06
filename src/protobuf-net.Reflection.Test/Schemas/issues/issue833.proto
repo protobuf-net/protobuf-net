@@ -1,0 +1,65 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+message Request {
+    string message = 1;
+}
+
+message Response {
+    string message = 1;
+}
+
+message OptionDefinition {
+    string title = 1;
+    string message = 2;
+    OptionDefinitionInner inner = 3;
+}
+
+message OptionDefinitionInner {
+    int32 min = 1;
+    int32 max = 2;
+}
+
+extend google.protobuf.MethodOptions {
+  OptionDefinition option1 = 9998;
+}
+
+extend google.protobuf.MethodOptions {
+  OptionDefinition option2 = 9999;
+}
+
+service TestService {
+    
+    rpc Request1(Request) returns (Response) {
+        option (option1) = {
+            title: "test request 1 title (option 1)";
+            message: "test request 1 messsage (option 1)";
+            inner: {}
+        };
+        option (option2) = {
+            title: "test request 1 title (option 2)";
+            message: "test request 1 messsage (option 2)";
+            inner: {
+                min: 1;
+                max: 10;
+            }
+        };
+    }
+
+    rpc Request2(Request) returns (Response) {
+        option (option1) = {
+            title: "test request 2 title (option 1)";
+            message: "test request 2 messsage (option 1)";
+            inner: {
+                min: 20;
+                max: 100;
+            }
+        };
+        option (option2) = {
+            title: "test request 2 title (option 2)";
+            message: "test request 2 messsage (option 2)";
+            inner: {}
+        };
+    }
+}

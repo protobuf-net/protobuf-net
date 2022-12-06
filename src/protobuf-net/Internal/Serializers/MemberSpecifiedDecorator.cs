@@ -31,7 +31,7 @@ namespace ProtoBuf.Internal.Serializers
         public override object Read(ref ProtoReader.State state, object value)
         {
             object result = Tail.Read(ref state, value);
-            if (setSpecified is object) setSpecified.Invoke(value, new object[] { true });
+            if (setSpecified is not null) setSpecified.Invoke(value, new object[] { true });
             return result;
         }
 

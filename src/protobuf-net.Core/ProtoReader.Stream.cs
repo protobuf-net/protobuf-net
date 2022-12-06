@@ -58,7 +58,7 @@ namespace ProtoBuf
             s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
         {
-            if (s_origin is object && s_buffer is object)
+            if (s_origin is not null && s_buffer is not null && ms.GetType() == typeof(MemoryStream)) // don't consider subclasses
             {
                 try
                 {
@@ -172,7 +172,7 @@ namespace ProtoBuf
             {
                 // importantly, this does **not** own the stream, and does not dispose 
                 base.Dispose();
-                if (_source is object)
+                if (_source is not null)
                 {
                     _source = null;
                     // make sure we don't pool this if it came from a MemoryStream
@@ -361,7 +361,7 @@ namespace ProtoBuf
             private void Ensure(ref State state, int count, bool strict)
             {
                 Debug.Assert(_available <= count, "Asking for data without checking first");
-                if (_source is object)
+                if (_source is not null)
                 {
                     if (count > _ioBuffer.Length)
                     {

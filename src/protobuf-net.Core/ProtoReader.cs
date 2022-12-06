@@ -47,6 +47,13 @@ namespace ProtoBuf
 
         private TypeModel _model;
         private int _fieldNumber, _depth;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IncrDepth() => ++_depth >= (_model is null ? TypeModel.DefaultMaxDepth : _model.MaxDepth);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void DecrDepth() => _depth--;
+
         private long blockEnd64;
         private readonly NetObjectCache netCache = new NetObjectCache();
 
@@ -140,7 +147,7 @@ namespace ProtoBuf
         {
             OnDispose();
             _model = null;
-            if (stringInterner is object)
+            if (stringInterner is not null)
             {
                 stringInterner.Clear();
                 stringInterner = null;
@@ -620,7 +627,7 @@ namespace ProtoBuf
                 source.Seek(count, SeekOrigin.Current);
                 count = 0;
             }
-            else if (buffer is object)
+            else if (buffer is not null)
             {
                 int bytesRead;
                 while (count > buffer.Length && (bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)

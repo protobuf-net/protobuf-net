@@ -225,7 +225,7 @@ namespace ProtoBuf.Compiler
             this.il = il ?? throw new ArgumentNullException(nameof(il));
             // NonPublic = false; <== implicit
             this.Model = model ?? throw new ArgumentNullException(nameof(model));
-            if (inputType is object) InputValue = new Local(null, inputType);
+            if (inputType is not null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
             _traceName = traceName;
             IsStatic = isStatic;
@@ -284,7 +284,7 @@ namespace ProtoBuf.Compiler
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(CultureInfo.InvariantCulture), returnType ?? typeof(void), paramTypes,
                 associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
-            if (inputType is object) InputValue = new Local(null, inputType);
+            if (inputType is not null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + method.Name);
             _traceName = method.Name;
             IsStatic = isStatic;
@@ -409,7 +409,7 @@ namespace ProtoBuf.Compiler
             for (int i = 0; i < count; i++)
             {
                 LocalBuilder item = locals[i];
-                if (item is object && item.LocalType == type)
+                if (item is not null && item.LocalType == type)
                 {
                     locals[i] = null; // remove from pool
                     return item;
@@ -503,7 +503,7 @@ namespace ProtoBuf.Compiler
 
         public Local GetLocalWithValue(Type type, Compiler.Local fromValue)
         {
-            if (fromValue is object)
+            if (fromValue is not null)
             {
                 if (fromValue.Type == type) return fromValue.AsCopy();
                 // otherwise, load onto the stack and let the default handling (below) deal with it
@@ -620,7 +620,7 @@ namespace ProtoBuf.Compiler
             else
             {
                 opcode = OpCodes.Callvirt;
-                if (targetType is object && targetType.IsValueType && !method.DeclaringType.IsValueType)
+                if (targetType is not null && targetType.IsValueType && !method.DeclaringType.IsValueType)
                 {
                     Constrain(targetType);
                 }
@@ -685,7 +685,7 @@ namespace ProtoBuf.Compiler
         internal void ReadNullCheckedTail(Type type, IRuntimeProtoSerializerNode tail, Compiler.Local valueFrom)
         {
             Type underlyingType;
-            if (type.IsValueType && type != tail.ExpectedType && (underlyingType = Nullable.GetUnderlyingType(type)) is object
+            if (type.IsValueType && type != tail.ExpectedType && (underlyingType = Nullable.GetUnderlyingType(type)) is not null
                 && underlyingType == tail.ExpectedType)
             {
                 if (tail.RequiresOldValue)
@@ -739,8 +739,8 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
-            Debug.Assert(type is object);
-            Debug.Assert(parameterTypes is object);
+            Debug.Assert(type is not null);
+            Debug.Assert(parameterTypes is not null);
             if (type.IsValueType && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
@@ -759,14 +759,14 @@ namespace ProtoBuf.Compiler
         private bool InternalsVisible(Assembly assembly)
         {
             if (string.IsNullOrEmpty(Scope.AssemblyName)) return false;
-            if (knownTrustedAssemblies is object)
+            if (knownTrustedAssemblies is not null)
             {
                 if (knownTrustedAssemblies.IndexOf(assembly) >= 0)
                 {
                     return true;
                 }
             }
-            if (knownUntrustedAssemblies is object)
+            if (knownUntrustedAssemblies is not null)
             {
                 if (knownUntrustedAssemblies.IndexOf(assembly) >= 0)
                 {
@@ -809,7 +809,7 @@ namespace ProtoBuf.Compiler
                 {
                     var propName = member.Name.Substring(1, member.Name.Length - 17);
                     var prop = member.DeclaringType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-                    if (prop is object) member = prop;
+                    if (prop is not null) member = prop;
                 }
                 bool isPublic;
                 MemberTypes memberType = member.MemberType;
@@ -825,7 +825,7 @@ namespace ProtoBuf.Compiler
                         do
                         {
                             isPublic = type.IsNestedPublic || type.IsPublic || ((type.DeclaringType is null || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
-                        } while (isPublic && (type = type.DeclaringType) is object); // ^^^ !type.IsNested, but not all runtimes have that
+                        } while (isPublic && (type = type.DeclaringType) is not null); // ^^^ !type.IsNested, but not all runtimes have that
                         break;
                     case MemberTypes.Field:
                         FieldInfo field = ((FieldInfo)member);
@@ -1291,7 +1291,7 @@ namespace ProtoBuf.Compiler
             Type type = arr.Type;
             Debug.Assert(type.IsArray && arr.Type.GetArrayRank() == 1);
             type = type.GetElementType();
-            Debug.Assert(type is object, "Not an array: " + arr.Type.FullName);
+            Debug.Assert(type is not null, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
             switch (Helpers.GetTypeCode(type))

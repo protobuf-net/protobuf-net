@@ -86,6 +86,71 @@ namespace ProtoBuf.Schemas
 
         private static readonly JsonSerializerSettings jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
+        [Fact]
+        public void FieldTypes()
+        {
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            const string path = "field_types.proto";
+
+            var set = new FileDescriptorSet();
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            foreach (var file in set.Files)
+            {
+                foreach (var messageType in file.MessageTypes)
+                {
+                    foreach (var field in messageType.Fields)
+                    {
+                        if (field.Name.Equals("field1"))
+                        {
+                            Assert.Equal("Foo", field.GetEnumType().Name);
+                        }
+                        else if (field.Name.Equals("field2"))
+                        {
+                            Assert.Equal("TestObject", field.GetMessageType().Name);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Fact]
+        public void FullyQualifiedNames()
+        {
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            const string path = "field_types.proto";
+
+            var set = new FileDescriptorSet();
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            foreach (var file in set.Files)
+            {
+                foreach (var messageType in file.MessageTypes)
+                {
+                    if (messageType.Name.Equals("TestObject"))
+                    {
+                        Assert.Equal("example.TestObject", messageType.GetFullyQualifiedName());
+                    }
+
+                    foreach (var nestedType in messageType.NestedTypes)
+                    {
+                        if (nestedType.Name.Equals("NestedObject"))
+                        {
+                            Assert.Equal("example.TestObject.NestedObject", nestedType.GetFullyQualifiedName());
+                        }
+                    }
+
+                    foreach (var nestedEnum in messageType.EnumTypes)
+                    {
+                        if (nestedEnum.Name.Equals("NestedEnum"))
+                        {
+                            Assert.Equal("example.TestObject.NestedEnum", nestedEnum.GetFullyQualifiedName());
+                        }
+                    }
+                }
+            }
+        }
+
         [SkippableFact]
         public void EverythingProtoLangver3()
         {

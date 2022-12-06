@@ -178,8 +178,8 @@ namespace ProtoBuf
         [Obsolete(ProtoEnumAttribute.EnumValueDeprecated, true)]
         public bool EnumPassthru
         {
-            get { ThrowHelper.ThrowNotSupportedException(); return default;  }
-            set { ThrowHelper.ThrowNotSupportedException(); }
+            get { return true; }
+            set { if (!value) ThrowHelper.ThrowInvalidOperationException($"{nameof(EnumPassthru)} is not longer supported, and is always considered true"); }
         }
 
         /// <summary>
