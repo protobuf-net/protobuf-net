@@ -16,6 +16,7 @@ namespace ProtoBuf.Serializers
     }
     internal sealed class NilSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private readonly Type type;
         public bool ReturnsValue { get { return true; } }
         public bool RequiresOldValue { get { return true; } }

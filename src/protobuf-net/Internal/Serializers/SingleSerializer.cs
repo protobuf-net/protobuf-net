@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     sealed class SingleSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private SingleSerializer() { }
         internal static readonly SingleSerializer Instance = new SingleSerializer();
 

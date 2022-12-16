@@ -63,8 +63,15 @@ namespace ProtoBuf.Internal.Serializers
 
         public override void Write(ref ProtoWriter.State state, object value)
         {
-            state.WriteFieldHeader(fieldNumber, wireType);
-            Tail.Write(ref state, value);
+            if (Tail is IDirectRuntimeWriteNode dw && dw.CanDirectWrite(wireType))
+            {
+                dw.DirectWrite(fieldNumber, wireType, ref state, value);
+            }
+            else
+            {
+                state.WriteFieldHeader(fieldNumber, wireType);
+                Tail.Write(ref state, value);
+            }
         }
 
         bool IProtoTypeSerializer.HasInheritance => false;

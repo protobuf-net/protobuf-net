@@ -15,6 +15,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 ## pending
 
 - fix protogen parsing of escape characters in custom options (#931)
+- reinstate `ValueMember.SupportNull` for support of `null` values in lists
 
 ## 3.1.17
 

@@ -5,6 +5,13 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class GuidSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => _variant switch
+        {
+            Variant.GuidString => true,
+            Variant.GuidBytes => true,
+            _ => false,
+        };
+
         private enum Variant
         {
             BclGuid = 0,

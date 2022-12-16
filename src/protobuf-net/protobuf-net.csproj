@@ -24,11 +24,7 @@
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL;PLAT_SKIP_LOCALS_INIT</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-    <PackageReference Include="System.Memory" Version="4.5.4" />
-  </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.4" />
     <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>

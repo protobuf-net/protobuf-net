@@ -14,7 +14,8 @@ namespace Examples.Issues
     
     public class Issue297
     {
-    // also asked: http://stackoverflow.com/q/11134370
+
+        // also asked: http://stackoverflow.com/q/11134370
         [Fact]
         public void TestInt32()
         {

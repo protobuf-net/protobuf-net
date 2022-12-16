@@ -43,13 +43,13 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer)
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer, SerializerFeatures features)
         {
             IEnumerator<T> iter = null;
             try
             {
                 iter = values.GetEnumerator();
-                Write(ref state, fieldNumber, category, wireType, ref iter, serializer);
+                Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
             }
             finally
             {
