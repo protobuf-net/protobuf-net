@@ -14,8 +14,22 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## pending
 
-- fix protogen parsing of escape characters in custom options (#931)
-- reinstate `ValueMember.SupportNull` for support of `null` values in lists
+## 3.1.26
+
+- reinstate `ValueMember.SupportNull` (from v2) for handling `null` values in lists
+
+## 3.1.25
+
+- fix issue with non-supported features in tuple-types (#964)
+- add `MessageType` and `EnumType` on `FieldDescriptorProto` (#971)
+- expose fully qualified name for `DescriptorProto` and `EnumDescriptorProto` (#974)
+
+## 3.1.22
+
+- fix schema parsing bug with semicolon-delimited options (#833)
+- fix schema parsing bug with escape characters in custom options (#931 / #933)
+- fix ProtoSyntax type-forwarding (#953)
+- update TFMs (#946)
 
 ## 3.1.17
 
@@ -252,7 +266,7 @@ Other changes:
 
 ## v2.3.6
 
-- add .NET Standard 2.0 build target 
+- add .NET Standard 2.0 build target
 
 ## v2.3.5
 
