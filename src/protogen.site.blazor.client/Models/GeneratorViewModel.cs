@@ -42,6 +42,7 @@ namespace ProtoBuf.Models
         public bool? Services { get; set; } = true;
         public bool? OneOfEnum { get; set; } = false;
         public bool? RepeatedEmitSetAccessors { get; set; } = false;
+        public bool? NullableValueType { get; set; } = false;
 
         public string LanguageVersion { get; set; }
         public NamingConventionEnum NamingConvention { get; set; } = NamingConventionEnum.Auto;
@@ -82,6 +83,11 @@ namespace ProtoBuf.Models
             if (RepeatedEmitSetAccessors.GetValueOrDefault (false)) {
                 res.Add ("listset", "yes");
             }
+            if (NullableValueType.GetValueOrDefault(false))
+            {
+                res.Add("nullablevaluetype", "yes");
+            }
+
             return res;
         }
 
