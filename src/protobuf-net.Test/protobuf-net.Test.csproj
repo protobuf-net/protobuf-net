@@ -65,6 +65,9 @@
     <None Update="Schemas\nanopb\nanopb.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+	<None Include="NullWrappedValueTests.Lists.cs">
+	  <DependentUpon>NullWrappedValueTests.cs</DependentUpon>
+	</None>
   </ItemGroup>
   <PropertyGroup Condition="'$(WithSpans)'=='true'">
     <DefineConstants>$(DefineConstants);PLAT_SPANS</DefineConstants>
