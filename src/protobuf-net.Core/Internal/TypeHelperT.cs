@@ -78,6 +78,14 @@ namespace ProtoBuf.Internal
             }
             return false;
         }
+        internal static bool IsBytesLike(Type type)
+        {
+            if (type == typeof(byte[])) return true;
+            if (type == typeof(Memory<byte>)) return true;
+            if (type == typeof(ReadOnlyMemory<byte>)) return true;
+            if (type == typeof(ArraySegment<byte>)) return true;
+            return false;
+        }
 
         [Obsolete("Prefer list provider")]
         internal static bool ResolveUniqueEnumerableT(Type type, out Type t)
@@ -95,7 +103,7 @@ namespace ProtoBuf.Internal
             }
 
             if (type is null
-                || type == typeof(string) || type == typeof(byte[]) || type == typeof(object))
+                || type == typeof(string) || IsBytesLike(type) || type == typeof(object))
             {
                 t = null; // don't need that kind of confusion
                 return false;

@@ -169,11 +169,8 @@ namespace ProtoBuf.Serializers
 
         static readonly Type[] NotSupportedFlavors = new[]
         {   // see notes in /src/protobuf-net.Test/Serializers/Collections.cs for reasons and roadmap
-            typeof(ArraySegment<>),
             typeof(Span<>),
             typeof(ReadOnlySpan<>),
-            typeof(Memory<>),
-            typeof(ReadOnlyMemory<>),
             typeof(ReadOnlySequence<>),
             typeof(IMemoryOwner<>),
         };
@@ -204,7 +201,7 @@ namespace ProtoBuf.Serializers
             if (type.IsArray)
             {
                 // the fun bit here is checking we mean a *vector*
-                if (type == typeof(byte[])) return null; // special-case, "bytes"
+                if (TypeHelper.IsBytesLike(type)) return null; // special-case, "bytes"
 
                 var vectorType = type.GetElementType().MakeArrayType();
                 return vectorType == type ? s_Array.Resolve(type, vectorType) : null;
