@@ -97,7 +97,10 @@ namespace ProtoBuf.Serializers
             // so: allocate an entire array
             int oldCount = value.Count;
             var arr = new T[oldCount + additionalCapacity];
-            Array.Copy(value.Array, value.Offset, arr, 0, oldCount);
+            if (oldCount != 0)
+            {
+                Array.Copy(value.Array, value.Offset, arr, 0, oldCount);
+            }
             value = new ArraySegment<T>(arr);
             return new Memory<T>(arr, oldCount, additionalCapacity);
         }

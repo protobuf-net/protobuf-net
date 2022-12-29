@@ -198,11 +198,11 @@ namespace ProtoBuf.Serializers
         {
             if (type is null) return null;
 
+            // the fun bit here is checking we mean a *vector*
+            if (TypeHelper.IsBytesLike(type)) return null; // special-case, "bytes"
+
             if (type.IsArray)
             {
-                // the fun bit here is checking we mean a *vector*
-                if (TypeHelper.IsBytesLike(type)) return null; // special-case, "bytes"
-
                 var vectorType = type.GetElementType().MakeArrayType();
                 return vectorType == type ? s_Array.Resolve(type, vectorType) : null;
             }
