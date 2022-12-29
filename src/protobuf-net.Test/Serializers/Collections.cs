@@ -89,9 +89,6 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IMemoryOwner<int>))]
 
         // these are things we'll probably light up later as "bytes",
-        [InlineData(typeof(ArraySegment<byte>))]
-        [InlineData(typeof(Memory<byte>))]
-        [InlineData(typeof(ReadOnlyMemory<byte>))]
         [InlineData(typeof(ReadOnlySequence<byte>))]
         [InlineData(typeof(IMemoryOwner<byte>))]
 

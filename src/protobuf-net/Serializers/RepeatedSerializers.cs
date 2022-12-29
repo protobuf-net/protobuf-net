@@ -123,7 +123,7 @@ namespace ProtoBuf.Serializers
             if (known is null)
             {
                 Type genDef;
-                if (type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
+                if (!TypeHelper.IsBytesLike(type) && type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
                 {
                     if (genDef == typeof(Span<>) || genDef == typeof(ReadOnlySpan<>))
                     {   // needs special handling because can't use Span<T> as a TSomething in a Foo<TSomething>
@@ -172,6 +172,9 @@ namespace ProtoBuf.Serializers
             typeof(Span<>),
             typeof(ReadOnlySpan<>),
             typeof(ReadOnlySequence<>),
+            typeof(ReadOnlyMemory<>),
+            typeof(Memory<>),
+            typeof(ArraySegment<>),
             typeof(IMemoryOwner<>),
         };
 
