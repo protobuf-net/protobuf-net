@@ -45,7 +45,7 @@ package ProtoBuf.Issues;
 message Test {
    bytes Payload = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
 
