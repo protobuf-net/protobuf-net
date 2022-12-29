@@ -1799,7 +1799,7 @@ namespace ProtoBuf.Meta
 
         static bool IsWellKnownType(Type type, out string name, HashSet<string> imports)
         {
-            if (type == typeof(byte[]))
+            if (TypeHelper.IsBytesLike(type))
             {
                 name = "bytes";
                 return true;

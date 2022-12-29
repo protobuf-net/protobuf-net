@@ -123,7 +123,7 @@ namespace ProtoBuf.Serializers
             if (known is null)
             {
                 Type genDef;
-                if (type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
+                if (!TypeHelper.IsBytesLike(type) && type.IsGenericType && Array.IndexOf(NotSupportedFlavors, (genDef = type.GetGenericTypeDefinition())) >= 0)
                 {
                     if (genDef == typeof(Span<>) || genDef == typeof(ReadOnlySpan<>))
                     {   // needs special handling because can't use Span<T> as a TSomething in a Foo<TSomething>
@@ -169,12 +169,12 @@ namespace ProtoBuf.Serializers
 
         static readonly Type[] NotSupportedFlavors = new[]
         {   // see notes in /src/protobuf-net.Test/Serializers/Collections.cs for reasons and roadmap
-            typeof(ArraySegment<>),
             typeof(Span<>),
             typeof(ReadOnlySpan<>),
-            typeof(Memory<>),
-            typeof(ReadOnlyMemory<>),
             typeof(ReadOnlySequence<>),
+            typeof(ReadOnlyMemory<>),
+            typeof(Memory<>),
+            typeof(ArraySegment<>),
             typeof(IMemoryOwner<>),
         };
 
@@ -201,11 +201,11 @@ namespace ProtoBuf.Serializers
         {
             if (type is null) return null;
 
+            // the fun bit here is checking we mean a *vector*
+            if (TypeHelper.IsBytesLike(type)) return null; // special-case, "bytes"
+
             if (type.IsArray)
             {
-                // the fun bit here is checking we mean a *vector*
-                if (type == typeof(byte[])) return null; // special-case, "bytes"
-
                 var vectorType = type.GetElementType().MakeArrayType();
                 return vectorType == type ? s_Array.Resolve(type, vectorType) : null;
             }

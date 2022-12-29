@@ -14,6 +14,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## pending
 
+- support `Memory<byte>`, `ReadOnlyMemory<byte>` and `ArraySegment<byte>` as `bytes` payloads
+- add reader/writer API for `Span<byte>`/`ReadOnlySpan<byte>`
+
 ## 3.1.26
 
 - reinstate `ValueMember.SupportNull` (from v2) for handling `null` values in lists

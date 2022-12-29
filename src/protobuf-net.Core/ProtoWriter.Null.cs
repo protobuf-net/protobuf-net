@@ -157,7 +157,7 @@ namespace ProtoBuf
                 CheckOversized(ref state);
             }
 
-            private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data) { }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data) { }
 
