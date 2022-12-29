@@ -559,12 +559,18 @@ namespace ProtoBuf
             /// </summary>
             [MethodImpl(HotPath)]
             public void WriteBytes(Memory<byte> data)
-                => WriteBytes((ReadOnlyMemory<byte>)data);
+                => WriteBytes(data.Span);
 
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String
             /// </summary>
             public void WriteBytes(ReadOnlyMemory<byte> data)
+                => WriteBytes(data.Span);
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(ReadOnlySpan<byte> data)
             {
                 var writer = _writer;
                 var length = data.Length;
@@ -896,7 +902,7 @@ namespace ProtoBuf
                     {
                         if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
                         {
-                            _writer.ImplWriteBytes(ref this, new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
+                            _writer.ImplWriteBytes(ref this, new ReadOnlySpan<byte>(data.Array, data.Offset, data.Count));
                             _writer.Advance(data.Count);
                         }
                         else

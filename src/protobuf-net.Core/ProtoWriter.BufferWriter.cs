@@ -139,11 +139,10 @@ namespace ProtoBuf
                 state.Init(_writer.GetMemory(model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize));
             }
 
-            private protected override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> bytes)
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> bytes)
             {
-                var span = bytes.Span;
-                if (bytes.Length <= state.RemainingInCurrent) state.LocalWriteBytes(span);
-                else FallbackWriteBytes(ref state, span);
+                if (bytes.Length <= state.RemainingInCurrent) state.LocalWriteBytes(bytes);
+                else FallbackWriteBytes(ref state, bytes);
             }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data)
