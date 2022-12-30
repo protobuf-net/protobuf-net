@@ -398,8 +398,14 @@ namespace ProtoBuf.Serializers
         where TCreate : TCollection
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
+        {
+            // looks like we can use "values" only if it's non-readonly collection
+            if (values is ICollection<T> collection && !collection.IsReadOnly)
+                return values;
+
             // note: don't call TypeModel.CreateInstance: *we are the factory*
-            => values ?? (typeof(TCreate).IsInterface ? (TCollection)(object)new List<T>() : TypeModel.ActivatorCreate<TCreate>());
+            return typeof(TCreate).IsInterface ? (TCollection)(object)new List<T>() : TypeModel.ActivatorCreate<TCreate>();
+        }
 
         protected override int TryGetCount(TCollection values) => TryGetCountDefault(values); // don't trust them much
 
