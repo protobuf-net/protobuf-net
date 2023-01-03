@@ -1019,6 +1019,11 @@ namespace ProtoBuf.Meta
             public int MetaDataVersion { get { return metaDataVersion; } set { metaDataVersion = value; } }
 
             /// <summary>
+            /// The company name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCompanyName { get; set; }
+
+            /// <summary>
             /// The assembly version to burn into the generated assembly
             /// </summary>
             public Version AssemblyVersion { get; set; }
@@ -1613,6 +1618,17 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
+
+            WriteAssemblyInfoAttributes(options, asm);
+        }
+
+        private void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
+        {
+            var attributeType = typeof(AssemblyCompanyAttribute);
+            Type[] ctorParameters = { typeof(string) };
+            var ctor = attributeType.GetConstructor(ctorParameters);
+            var attribute = new CustomAttributeBuilder(ctor, new object[] { options.AssemblyCompanyName });
+            asm.SetCustomAttribute(attribute);
         }
 
         private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
