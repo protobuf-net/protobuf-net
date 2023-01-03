@@ -1018,6 +1018,10 @@ namespace ProtoBuf.Meta
             /// </summary>
             public int MetaDataVersion { get { return metaDataVersion; } set { metaDataVersion = value; } }
 
+            /// <summary>
+            /// The assembly version to burn into the generated assembly
+            /// </summary>
+            public Version AssemblyVersion { get; set; }
 
             private Accessibility accessibility = Accessibility.Public;
             /// <summary>
@@ -1094,13 +1098,13 @@ namespace ProtoBuf.Meta
             }
 
 #if COREFX
-            AssemblyName an = new AssemblyName();
+            AssemblyName an = new AssemblyName() { Version = options.AssemblyVersion };
             an.Name = assemblyName;
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.Run);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
 #else
-            AssemblyName an = new AssemblyName();
+            AssemblyName an = new AssemblyName() { Version = options.AssemblyVersion };
             an.Name = assemblyName;
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 (save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run)
