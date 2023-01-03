@@ -1655,6 +1655,10 @@ namespace ProtoBuf.Meta
             WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
             WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
             WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
+
+#if !NETCOREAPP3_1 && !NETSTANDARD2_0
+            asm.DefineVersionInfoResource();
+#endif
         }
 
         private void WriteAssemblyInfoAttribute<TA>(CompilerOptions options, AssemblyBuilder asm, string value)
