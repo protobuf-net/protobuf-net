@@ -1,15 +1,14 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using ProtoBuf.Internal;
-using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
 
 namespace ProtoBuf
 {

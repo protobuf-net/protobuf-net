@@ -10,7 +10,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace Benchmark
 {
-    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.NetCoreApp31), SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net472), SimpleJob(RuntimeMoniker.Net70)]
     public class VarintDecodeBenchmarks
     {
         readonly byte[] _payload = new byte[16 * 1024];

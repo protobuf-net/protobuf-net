@@ -27,7 +27,7 @@
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
-    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR;PLAT_SKIP_LOCALS_INIT;PLAT_UTF8_STRING;PLAT_DYNAMIC_ACCESS_ATTR</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR;PLAT_SKIP_LOCALS_INIT;PLAT_DYNAMIC_ACCESS_ATTR</DefineConstants>
   </PropertyGroup>
 
 <!--
@@ -35,6 +35,7 @@ PREFER_SPANS              : if the Stream resolves to something that can be proc
 PLAT_ISREF                : does System.Runtime.CompilerServices.RuntimeHelpers.IsReferenceOrContainsReferences-T() exist?
 PLAT_SPAN_OVERLOADS       : do common methods like string encode have APIs that take spans
 PLAT_INTRINSICS           : make use of CPU intrinsics
+PLAT_UTF8_STRING          : support System.Utf8String
 PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
 FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
 PLAT_CONCURRENT_CLEAR     : whether the concurrent collections have the necessary Clear method

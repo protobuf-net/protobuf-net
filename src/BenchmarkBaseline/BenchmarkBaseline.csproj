@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net472</TargetFrameworks>
-    <NoWarn>$(NoWarn);CS1591;CA1822</NoWarn>
+    <TargetFrameworks>net7.0;net472</TargetFrameworks>
+    <NoWarn>$(NoWarn);CS1591;CA1822;CS8981</NoWarn>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
     <RootNamespace>Benchmark</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
