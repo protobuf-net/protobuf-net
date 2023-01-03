@@ -1029,6 +1029,26 @@ namespace ProtoBuf.Meta
             public string AssemblyCopyright { get; set; }
 
             /// <summary>
+            /// The description to burn into the generated assembly
+            /// </summary>
+            public string AssemblyDescription { get; set; }
+
+            /// <summary>
+            /// The product name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyProductName { get; set; }
+
+            /// <summary>
+            /// The application title to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTitle { get; set; }
+
+            /// <summary>
+            /// The trademark notice to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTrademark { get; set; }
+
+            /// <summary>
             /// The assembly version to burn into the generated assembly
             /// </summary>
             public Version AssemblyVersion { get; set; }
@@ -1631,6 +1651,10 @@ namespace ProtoBuf.Meta
         {
             WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
             WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
+            WriteAssemblyInfoAttribute<AssemblyDescriptionAttribute>(options, asm, options.AssemblyDescription);
+            WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
+            WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
+            WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
         }
 
         private void WriteAssemblyInfoAttribute<TA>(CompilerOptions options, AssemblyBuilder asm, string value)
