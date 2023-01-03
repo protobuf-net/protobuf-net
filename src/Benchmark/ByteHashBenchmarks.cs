@@ -124,7 +124,7 @@ namespace Benchmark
             var hash = b8.Length;
             if (hash == 0) return 0;
 
-            const int Vector256Bytes = 256 / sizeof(byte);
+            const int Vector256Bytes = 256 / 8;
             if (Vector256.IsHardwareAccelerated && b8.Length >= Vector256Bytes)
             {
                 var b32Vec = MemoryMarshal.Cast<byte, Vector256<int>>(b8);
