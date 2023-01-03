@@ -1024,6 +1024,11 @@ namespace ProtoBuf.Meta
             public string AssemblyCompanyName { get; set; }
 
             /// <summary>
+            /// The copyright to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCopyright { get; set; }
+
+            /// <summary>
             /// The assembly version to burn into the generated assembly
             /// </summary>
             public Version AssemblyVersion { get; set; }
@@ -1624,10 +1629,16 @@ namespace ProtoBuf.Meta
 
         private void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
         {
-            var attributeType = typeof(AssemblyCompanyAttribute);
+            WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
+            WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
+        }
+
+        private void WriteAssemblyInfoAttribute<TA>(CompilerOptions options, AssemblyBuilder asm, string value)
+        {
+            var attributeType = typeof(TA);
             Type[] ctorParameters = { typeof(string) };
             var ctor = attributeType.GetConstructor(ctorParameters);
-            var attribute = new CustomAttributeBuilder(ctor, new object[] { options.AssemblyCompanyName });
+            var attribute = new CustomAttributeBuilder(ctor, new object[] { value });
             asm.SetCustomAttribute(attribute);
         }
 
