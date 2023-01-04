@@ -1663,6 +1663,9 @@ namespace ProtoBuf.Meta
 
         private void WriteAssemblyInfoAttribute<TA>(CompilerOptions options, AssemblyBuilder asm, string value)
         {
+            if (string.IsNullOrEmpty(value))
+                return;
+
             var attributeType = typeof(TA);
             Type[] ctorParameters = { typeof(string) };
             var ctor = attributeType.GetConstructor(ctorParameters);
