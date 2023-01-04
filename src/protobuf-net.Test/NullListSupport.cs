@@ -435,7 +435,6 @@ message SomePoco {
         public void BasicPackedGroupedLists_PocoList(bool supportNull, Scenario scenario, Outcome outcome, string hex = null, bool fullCompile = false)
             => RunPocoList<BasicPackedGroupedLists>(supportNull, scenario, outcome, hex, fullCompile);
 
-
         private static RuntimeTypeModel GetModel<T>(bool supportNull)
         {
             var model = RuntimeTypeModel.Create();

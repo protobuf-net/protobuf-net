@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Test
 {
-    public partial class NullWrappedValueTests
+    public class NullWrappedValueTests
     {
         private readonly ITestOutputHelper _log;
         public NullWrappedValueTests(ITestOutputHelper log)

@@ -21,6 +21,10 @@
     <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="NullWrappedListsTests - Copy.Basic.cs" />
+    <Compile Remove="NullWrappedListsTests - Copy.SupportNull.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -65,8 +69,14 @@
     <None Update="Schemas\nanopb\nanopb.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="NullWrappedValueTests.Lists.cs">
-	  <DependentUpon>NullWrappedValueTests.cs</DependentUpon>
+	<None Include="CollectionsWithNullsTests.Basic.cs">
+	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
+	</None>
+    <None Include="CollectionsWithNullsTests.SupportNull.cs">
+	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
+	</None>
+    <None Include="CollectionsWithNullsTests.NullWrappedValue.cs">
+	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
 	</None>
   </ItemGroup>
   <PropertyGroup Condition="'$(WithSpans)'=='true'">
