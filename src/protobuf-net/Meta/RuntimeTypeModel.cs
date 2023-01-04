@@ -1053,6 +1053,11 @@ namespace ProtoBuf.Meta
             /// </summary>
             public Version AssemblyVersion { get; set; }
 
+            /// <summary>
+            /// The assembly product version to burn into the generated assembly
+            /// </summary>
+            public Version AssemblyProductVersion { get; set; }
+
             private Accessibility accessibility = Accessibility.Public;
             /// <summary>
             /// The acecssibility of the generated serializer
@@ -1655,6 +1660,7 @@ namespace ProtoBuf.Meta
             WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
             WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
             WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
+            WriteAssemblyInfoAttribute<AssemblyInformationalVersionAttribute>(options, asm, options.AssemblyProductVersion.ToString());
 
 #if !NETCOREAPP3_1 && !NETSTANDARD2_0
             asm.DefineVersionInfoResource();
