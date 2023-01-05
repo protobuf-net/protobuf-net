@@ -40,24 +40,19 @@ namespace ProtoBuf.unittest.Meta
             // assert
             var fileInfo = FileVersionInfo.GetVersionInfo(outputPath);
 
-            var defaultValue = " ";
-            var expectedVersion        = string.IsNullOrEmpty(version)        ? defaultValue : version;
-            var expectedProductVersion = string.IsNullOrEmpty(productVersion) ? defaultValue : productVersion;
-            var expectedCompanyName    = string.IsNullOrEmpty(companyName)    ? " "          : companyName;
-            var expectedCopyright      = string.IsNullOrEmpty(copyright)      ? defaultValue : copyright;
-            var expectedTrademark      = string.IsNullOrEmpty(trademark)      ? defaultValue : trademark;
-            var expectedTitle          = string.IsNullOrEmpty(title)          ? defaultValue : title;
-            var expectedProductName    = string.IsNullOrEmpty(productName)    ? defaultValue : productName;
-            var expectedDescription    = string.IsNullOrEmpty(description)    ? defaultValue : description;
+            Assert.Equal(Normalize(version),        fileInfo.FileVersion);
+            Assert.Equal(Normalize(companyName),    fileInfo.CompanyName);
+            Assert.Equal(Normalize(copyright),      fileInfo.LegalCopyright);
+            Assert.Equal(Normalize(trademark),      fileInfo.LegalTrademarks);
+            Assert.Equal(Normalize(title),          fileInfo.FileDescription);
+            Assert.Equal(Normalize(productName),    fileInfo.ProductName);
+            Assert.Equal(Normalize(description),    fileInfo.Comments);
+            Assert.Equal(Normalize(productVersion), fileInfo.ProductVersion);
+        }
 
-            Assert.Equal(expectedVersion,        fileInfo.FileVersion);
-            Assert.Equal(expectedCompanyName,    fileInfo.CompanyName);
-            Assert.Equal(expectedCopyright,      fileInfo.LegalCopyright);
-            Assert.Equal(expectedTrademark,      fileInfo.LegalTrademarks);
-            Assert.Equal(expectedTitle,          fileInfo.FileDescription);
-            Assert.Equal(expectedProductName,    fileInfo.ProductName);
-            Assert.Equal(expectedDescription,    fileInfo.Comments);
-            Assert.Equal(expectedProductVersion, fileInfo.ProductVersion);
+        private string Normalize(string value)
+        {
+            return string.IsNullOrEmpty(value) ? " " : value;
         }
     }
 }
