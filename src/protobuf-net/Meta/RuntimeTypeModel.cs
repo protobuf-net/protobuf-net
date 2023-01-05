@@ -1654,6 +1654,7 @@ namespace ProtoBuf.Meta
 
         private void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
         {
+            WriteAssemblyInfoAttribute<AssemblyFileVersionAttribute>(options, asm, options.AssemblyVersion.ToString());
             WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
             WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
             WriteAssemblyInfoAttribute<AssemblyDescriptionAttribute>(options, asm, options.AssemblyDescription);
