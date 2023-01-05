@@ -1,6 +1,6 @@
 # Support for `null` values and empty collections
 
-For many commaon scenarios, protobuf-net *just works* with null values; for example:
+For many common scenarios, protobuf-net *just works* with null values; for example:
 
 ``` c#
 [ProtoMember(5)]
