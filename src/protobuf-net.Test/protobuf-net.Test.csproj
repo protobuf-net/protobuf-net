@@ -75,6 +75,9 @@
     <None Include="CollectionsWithNullsTests.SupportNull.cs">
 	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
 	</None>
+    <None Include="CollectionsWithNullsTests.NullWrappedValue.Group.cs">
+	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
+	</None>
     <None Include="CollectionsWithNullsTests.NullWrappedValue.cs">
 	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
 	</None>

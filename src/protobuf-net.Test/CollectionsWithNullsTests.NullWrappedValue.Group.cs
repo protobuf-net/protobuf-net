@@ -1,30 +1,24 @@
-﻿using ProtoBuf.Meta;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
 namespace ProtoBuf.Test
 {
-    //2. if model *is* tweaked with SupportNull, then: 
-    //  2a. schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" 
-    //      // naming is hard, with "group Bar value = 1" **invalid** syntax
-    //  2b. payload has the extra layer with "group"
-    //  2c. null works correctly! 
     public partial class CollectionsWithNullsTests
     {
         [Fact]
-        public void ProtoSchema_SupportsNullModel()
+        public void ProtoSchema_NullWrappedValueGroupListModel()
         {
-            RuntimeTypeModel.Default[typeof(SupportsNullListModel)][1].SupportNull = true;
+            _log.WriteLine(Serializer.GetProto<NullWrappedValueGroupListModel>());
 
-            AssertSchemaSections<SupportsNullListModel>(
+            AssertSchemaSections<NullWrappedValueGroupListModel>(
                 "group Bar { }",
-                "message SupportsNullListModel { repeated Bar Items = 1; }"
+                "message NullWrappedValueGroupListModel { repeated Bar Items = 1; }"
             );
         }
 
         [Fact]
-        public void SupportsNullModel_ByteOutput()
+        public void NullWrappedValueGroupListModel_ByteOutput()
         {
             var model = SupportsNullListModel.Build();
             var hex = GetSerializationOutputHex(model);
@@ -32,7 +26,7 @@ namespace ProtoBuf.Test
         }
 
         [Fact]
-        public void ProtoSerializationWithNulls_SupportsNullModel_Fails()
+        public void ProtoSerializationWithNulls_NullWrappedValueGroupListModel_Fails()
         {
             var model = SupportsNullListModel.BuildWithNull();
             var ms = new MemoryStream();
@@ -40,12 +34,12 @@ namespace ProtoBuf.Test
         }
 
         [ProtoContract]
-        public class SupportsNullListModel
+        public class NullWrappedValueGroupListModel
         {
-            [ProtoMember(1)]
+            [ProtoMember(1), NullWrappedValue(AsGroup = true)]
             public List<Bar?> Items { get; set; } = new();
 
-            public static SupportsNullListModel Build() => new()
+            public static NullWrappedValueGroupListModel Build() => new()
             {
                 Items = new()
                 {
@@ -53,7 +47,7 @@ namespace ProtoBuf.Test
                 }
             };
 
-            public static SupportsNullListModel BuildWithNull() => new()
+            public static NullWrappedValueGroupListModel BuildWithNull() => new()
             {
                 Items = new()
                 {

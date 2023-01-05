@@ -16,6 +16,35 @@ namespace ProtoBuf.Test
             _log = log;
         }
 
+        /*
+
+        
+
+
+3: FooWithAttributes [NullWrappedValue(AsGroup = true)], *not touching* SupportNull at all **works exactly like 2** 
+        
+4: FooWithAttributes2 [NullWrappedValue], *not touching* SupportNull at all 
+    4a. schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" // naming is hard, with "Bar value = 1" **valid** syntax
+    4b. payload has the extra layer with "length prefix"
+    4c. null works correctly! 
+
+5: "wrappers"; consider schema: import "google/protobuf/wrappers.proto";
+syntax = "proto3"; message WrappedTest {
+  .google.protobuf.DoubleValue optionalValue = 42;
+} What we get today: [global::ProtoBuf.ProtoContract()]
+public partial class WrappedTest
+{
+    [global::ProtoBuf.ProtoMember(42)]
+    public global::Google.Protobuf.WellKnownTypes.DoubleValue optionalValue { get; set; }
+} unusable, because global::Google.Protobuf.WellKnownTypes.DoubleValue doesn't exist [global::ProtoBuf.ProtoContract()]
+public partial class WrappedTest
+{
+    [global::ProtoBuf.ProtoMember(42), NullWrappedValue]
+    public double? optionalValue { get; set; }
+} and want that to work in both directions, i.e. GetSchema with NullWrappedValue on a supported wrappers.proto type should emit ^^^
+
+    */
+
         #region LegacyBehaviour
 
         [Fact]
@@ -61,8 +90,11 @@ namespace ProtoBuf.Test
             if (protoModelDefinitions.Length == 0) Assert.Fail(nameof(protoModelDefinitions));
 
             var proto = Serializer.GetProto<T>();
+            _log.WriteLine("Protobuf definition of model:");
+            _log.WriteLine(proto);
+            _log.WriteLine("-----------------------------");
+
             var actualProtoDefinition = Regex.Replace(proto, @"\s", "");
-            
             foreach (var protoModelDefinition in protoModelDefinitions)
             {
                 var expectedProtoDefinition = Regex.Replace(protoModelDefinition, @"\s", "");
