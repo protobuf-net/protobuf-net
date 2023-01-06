@@ -13,11 +13,10 @@ namespace ProtoBuf.Test
         [Fact]
         public void ProtoSchema_NullWrappedValueListModel()
         {
-            _log.WriteLine(Serializer.GetProto<NullWrappedValueListModel>());
-
             AssertSchemaSections<NullWrappedValueListModel>(
                 "message Bar { }",
-                "message NullWrappedValueListModel { repeated Bar Items = 1; }"
+                "message WrappedBar { Bar value = 1; }",
+                "message NullWrappedValueListModel { repeated WrappedBar Items = 1;}"
             );
         }
 

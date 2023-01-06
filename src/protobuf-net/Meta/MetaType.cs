@@ -2255,17 +2255,27 @@ namespace ProtoBuf.Meta
                 {
                     var wrappedSchemaTypeName = GetWrappedSchemaTypeName(originalSchemaType);
 
-                    builder.NewLine(ref pos, indent)
+                    builder
+                        .NewLine(ref pos, indent)
                         .Insert("message ", ref pos)
                         .Insert(wrappedSchemaTypeName, ref pos)
                         .Insert(" {", ref pos);
 
-                    builder.NewLine(ref pos, indent + 1)
-                        .Insert(originalSchemaType, ref pos)
-                        .Insert(" value = 1;", ref pos);
+                    builder.NewLine(ref pos, indent + 1);
+                    WriteWrappedFieldPayload();
+                    builder.Insert(";", ref pos);
 
-                    builder.NewLine(ref pos, indent)
-                        .Insert(" }", ref pos);
+                    builder
+                        .NewLine(ref pos, indent)
+                        .Insert("}", ref pos);
+
+                    void WriteWrappedFieldPayload()
+                    {
+                        builder
+                            .Insert("group ", ref pos, condition: () => member.SupportNull || member.NullWrappedValueGroup)
+                            .Insert(originalSchemaType, ref pos)
+                            .Insert(" value = 1", ref pos);
+                    }
                 }
             }
             void AddNamespace(HashSet<string> imports)

@@ -11,11 +11,10 @@ namespace ProtoBuf.Test
         [Fact]
         public void ProtoSchema_NullWrappedValueGroupListModel()
         {
-            _log.WriteLine(Serializer.GetProto<NullWrappedValueGroupListModel>());
-
             AssertSchemaSections<NullWrappedValueGroupListModel>(
-                "group Bar { }",
-                "message NullWrappedValueGroupListModel { repeated Bar Items = 1; }"
+                "message Bar { }",
+                "message WrappedBar { group Bar value = 1; }",
+                "message NullWrappedValueGroupListModel { repeated WrappedBar Items = 1;}"
             );
         }
 

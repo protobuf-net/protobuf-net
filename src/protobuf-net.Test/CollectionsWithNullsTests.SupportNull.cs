@@ -19,7 +19,7 @@ namespace ProtoBuf.Test
 
             AssertSchemaSections<SupportsNullListModel>(
                 "message Bar { }",
-                "message WrappedBar { Bar value = 1; }",
+                "message WrappedBar { group Bar value = 1; }",
                 "message SupportsNullListModel { repeated WrappedBar Items = 1;}"
             );
         }

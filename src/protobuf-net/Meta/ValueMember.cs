@@ -845,7 +845,7 @@ namespace ProtoBuf.Meta
         }
 
         /// <see href="https://github.com/protobuf-net/protobuf-net/blob/main/docs/nullwrappers.md"/>
-        internal bool RequiresExtraLayerInSchema() => SupportNull;
+        internal bool RequiresExtraLayerInSchema() => SupportNull || NullWrappedValueGroup || NullWrappedValue;
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
         {
