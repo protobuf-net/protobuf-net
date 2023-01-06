@@ -1,9 +1,11 @@
-﻿using ProtoBuf.Internal;
+﻿using ProtoBuf.Extensions;
+using ProtoBuf.Internal;
 using ProtoBuf.Internal.Serializers;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -2089,12 +2091,16 @@ namespace ProtoBuf.Meta
             }
             else
             {
+                HashSet<(ValueMember, string)> extraLayeredMembers = new();
                 ValueMember[] fieldsArr = GetFields();
+                int beforeMessagePosition = builder.Length;
+
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
+                    string altName;
                     bool hasOption = false;
                     if (member.IsMap)
                     {
@@ -2108,84 +2114,100 @@ namespace ProtoBuf.Meta
                     }
                     else
                     {
-                        string ordinality = member.ItemType is not null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
-                        NewLine(builder, indent + 1).Append(ordinality);
-                        if (member.DataFormat == DataFormat.Group) builder.Append("group ");
-
-                        schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out var altName);
-                        builder.Append(schemaTypeName).Append(' ')
-                             .Append(member.Name).Append(" = ").Append(member.FieldNumber);
-
-                        if (syntax == ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
+                        if (member.RequiresExtraLayerInSchema())
                         {
-                            if (member.DefaultValue is string)
+                            schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
+                            var wrappedSchemaTypeName = GetWrappedSchemaTypeName(schemaTypeName);
+                            
+                            extraLayeredMembers.Add(new(member, schemaTypeName));
+                            WriteValueMember(wrappedSchemaTypeName);
+                        }
+                        else
+                        {
+                            schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
+                            WriteValueMember(schemaTypeName);
+                        }
+
+                        void WriteValueMember(string schemaModelTypeName)
+                        {
+                            string ordinality = member.ItemType is not null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
+                            NewLine(builder, indent + 1).Append(ordinality);
+                            if (member.DataFormat == DataFormat.Group) builder.Append("group ");
+
+                            builder.Append(schemaModelTypeName).Append(' ')
+                                 .Append(member.Name).Append(" = ").Append(member.FieldNumber);
+
+                            if (syntax == ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
                             {
-                                AddOption(builder, ref hasOption).Append("default = \"").Append(member.DefaultValue).Append('\"');
-                            }
-                            else if (member.DefaultValue is TimeSpan)
-                            {
-                                // ignore
-                            }
-                            else if (member.DefaultValue is bool boolValue)
-                            {   // need to be lower case (issue 304)
-                                AddOption(builder, ref hasOption).Append(boolValue ? "default = true" : "default = false");
-                            }
-                            else
-                            {
-                                object effectiveValue = member.DefaultValue;
-                                if (effectiveValue is Enum &&effectiveValue.GetType() == member.MemberType
-                                    && model.IsDefined(member.MemberType, member.CompatibilityLevel))
+                                if (member.DefaultValue is string)
                                 {
-                                    // lookup the enum name
-                                    var enumType = model[member.MemberType];
-                                    foreach (var val in enumType.Enums)
+                                    AddOption(builder, ref hasOption).Append("default = \"").Append(member.DefaultValue).Append('\"');
+                                }
+                                else if (member.DefaultValue is TimeSpan)
+                                {
+                                    // ignore
+                                }
+                                else if (member.DefaultValue is bool boolValue)
+                                {   // need to be lower case (issue 304)
+                                    AddOption(builder, ref hasOption).Append(boolValue ? "default = true" : "default = false");
+                                }
+                                else
+                                {
+                                    object effectiveValue = member.DefaultValue;
+                                    if (effectiveValue is Enum && effectiveValue.GetType() == member.MemberType
+                                        && model.IsDefined(member.MemberType, member.CompatibilityLevel))
                                     {
-                                        if (!string.IsNullOrWhiteSpace(val.Name) && effectiveValue.Equals(val.Value))
+                                        // lookup the enum name
+                                        var enumType = model[member.MemberType];
+                                        foreach (var val in enumType.Enums)
                                         {
-                                            effectiveValue = val.Name;
-                                            break;
+                                            if (!string.IsNullOrWhiteSpace(val.Name) && effectiveValue.Equals(val.Value))
+                                            {
+                                                effectiveValue = val.Name;
+                                                break;
+                                            }
                                         }
                                     }
+                                    AddOption(builder, ref hasOption).Append("default = ").Append(member.DefaultValue);
                                 }
-                                AddOption(builder, ref hasOption).Append("default = ").Append(member.DefaultValue);
                             }
-                        }
-                        if (CanPack(member.ItemType))
-                        {
-                            if (syntax == ProtoSyntax.Proto2)
+                            if (CanPack(member.ItemType))
                             {
-                                if (member.IsPacked) AddOption(builder, ref hasOption).Append("packed = true"); // disabled by default
+                                if (syntax == ProtoSyntax.Proto2)
+                                {
+                                    if (member.IsPacked) AddOption(builder, ref hasOption).Append("packed = true"); // disabled by default
+                                }
+                                else
+                                {
+                                    if (!member.IsPacked) AddOption(builder, ref hasOption).Append("packed = false"); // enabled by default
+                                }
                             }
-                            else
+                            if (member.AsReference)
                             {
-                                if (!member.IsPacked) AddOption(builder, ref hasOption).Append("packed = false"); // enabled by default
+                                imports.Add(RuntimeTypeModel.CommonImports.Protogen);
+                                AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).asRef = true");
                             }
-                        }
-                        if (member.AsReference)
-                        {
-                            imports.Add(RuntimeTypeModel.CommonImports.Protogen);
-                            AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).asRef = true");
-                        }
-                        if (member.DynamicType)
-                        {
-                            imports.Add(RuntimeTypeModel.CommonImports.Protogen);
-                            AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
-                        }
-                        CloseOption(builder, ref hasOption).Append(';');
-                        if (syntax != ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
-                        {
-                            if (IsImplicitDefault(member.DefaultValue))
+                            if (member.DynamicType)
                             {
-                                // don't emit; we're good
+                                imports.Add(RuntimeTypeModel.CommonImports.Protogen);
+                                AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
                             }
-                            else
+                            CloseOption(builder, ref hasOption).Append(';');
+                            if (syntax != ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
                             {
-                                builder.Append(" // default value could not be applied: ").Append(member.DefaultValue);
+                                if (IsImplicitDefault(member.DefaultValue))
+                                {
+                                    // don't emit; we're good
+                                }
+                                else
+                                {
+                                    builder.Append(" // default value could not be applied: ").Append(member.DefaultValue);
+                                }
                             }
-                        }
 
-                        if (!string.IsNullOrWhiteSpace(altName))
-                            builder.Append(" // declared as invalid enum: ").Append(altName);
+                            if (!string.IsNullOrWhiteSpace(altName))
+                                builder.Append(" // declared as invalid enum: ").Append(altName);
+                        }
                     }
                     if (schemaTypeName == ".bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
@@ -2222,8 +2244,30 @@ namespace ProtoBuf.Meta
                 }
                 if (HasReservations) AppendReservations();
                 NewLine(builder, indent).Append('}');
+
+                AddExtraLayerSchemaModels(extraLayeredMembers, beforeMessagePosition);
             }
 
+            void AddExtraLayerSchemaModels(IEnumerable<(ValueMember, string)> wrappedMembers, int pos)
+            {
+                if (wrappedMembers is null || !wrappedMembers.Any()) return;
+                foreach (var (member, originalSchemaType) in wrappedMembers)
+                {
+                    var wrappedSchemaTypeName = GetWrappedSchemaTypeName(originalSchemaType);
+
+                    builder.NewLine(ref pos, indent)
+                        .Insert("message ", ref pos)
+                        .Insert(wrappedSchemaTypeName, ref pos)
+                        .Insert(" {", ref pos);
+
+                    builder.NewLine(ref pos, indent + 1)
+                        .Insert(originalSchemaType, ref pos)
+                        .Insert(" value = 1;", ref pos);
+
+                    builder.NewLine(ref pos, indent)
+                        .Insert(" }", ref pos);
+                }
+            }
             void AddNamespace(HashSet<string> imports)
             {
                 if (!multipleNamespaceSupport || IsAutoTuple || string.IsNullOrWhiteSpace(Type.Namespace) || Type.Namespace == package)
@@ -2263,6 +2307,8 @@ namespace ProtoBuf.Meta
                 }
             }
         }
+
+        private static string GetWrappedSchemaTypeName(string schemaTypeName) => $"Wrapped{schemaTypeName}";
 
         private static StringBuilder AddOption(StringBuilder builder, ref bool hasOption)
         {

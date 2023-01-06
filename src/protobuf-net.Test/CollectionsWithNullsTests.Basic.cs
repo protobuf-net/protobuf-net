@@ -4,7 +4,7 @@ using Xunit;
 
 namespace ProtoBuf.Test
 {
-    //1. if model not tweaked with SupportNull, then: 
+    // 1. if model not tweaked with SupportNull, then: 
     //  1a. schema is just "message Foo { repeated Bar Items = 1; }"
     //  1b. payload output has no extra layer, i.e. (in bytes) "field 1, length prefix, for each item"
     //  1c. fails with null values

@@ -142,7 +142,7 @@ namespace ProtoBuf.Meta
             Member = member ?? throw new ArgumentNullException(nameof(member));
             ParentType = parentType;
             if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-            
+
             if (defaultValue is not null && (defaultValue.GetType() != memberType))
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
@@ -843,6 +843,9 @@ namespace ProtoBuf.Meta
             get { return HasFlag(OPTIONS_NullWrappedCollectionGroup); }
             set { SetFlag(OPTIONS_NullWrappedCollectionGroup, value); }
         }
+
+        /// <see href="https://github.com/protobuf-net/protobuf-net/blob/main/docs/nullwrappers.md"/>
+        internal bool RequiresExtraLayerInSchema() => SupportNull;
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
         {

@@ -4,6 +4,8 @@ using Xunit;
 
 namespace ProtoBuf.Test
 {
+    // 3: FooWithAttributes [NullWrappedValue(AsGroup = true)],
+    // * not touching* SupportNull at all ** works exactly like [SupportNull]**
     public partial class CollectionsWithNullsTests
     {
         [Fact]

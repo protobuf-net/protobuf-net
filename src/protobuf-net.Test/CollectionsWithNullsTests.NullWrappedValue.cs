@@ -4,6 +4,10 @@ using Xunit;
 
 namespace ProtoBuf.Test
 {
+    // 4: FooWithAttributes2 [NullWrappedValue], * not touching* SupportNull at all
+    //  4a.schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" // naming is hard, with "Bar value = 1" **valid** syntax
+    //  4b.payload has the extra layer with "length prefix"
+    //  4c. null works correctly! 
     public partial class CollectionsWithNullsTests
     {
         [Fact]

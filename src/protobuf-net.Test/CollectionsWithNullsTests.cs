@@ -17,17 +17,6 @@ namespace ProtoBuf.Test
         }
 
         /*
-
-        
-
-
-3: FooWithAttributes [NullWrappedValue(AsGroup = true)], *not touching* SupportNull at all **works exactly like 2** 
-        
-4: FooWithAttributes2 [NullWrappedValue], *not touching* SupportNull at all 
-    4a. schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" // naming is hard, with "Bar value = 1" **valid** syntax
-    4b. payload has the extra layer with "length prefix"
-    4c. null works correctly! 
-
 5: "wrappers"; consider schema: import "google/protobuf/wrappers.proto";
 syntax = "proto3"; message WrappedTest {
   .google.protobuf.DoubleValue optionalValue = 42;
