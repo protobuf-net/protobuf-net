@@ -1,13 +1,20 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using ProtoBuf.Test.Nullables.Abstractions;
+using System.Collections.Generic;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace ProtoBuf.Test
+namespace ProtoBuf.Test.Nullables
 {
-    // 3: FooWithAttributes [NullWrappedValue(AsGroup = true)],
-    // * not touching* SupportNull at all ** works exactly like [SupportNull]**
-    public partial class CollectionsWithNullsTests
+    public class CollectionsWithNullsTests_NullWrappedValueGroup : CollectionsWithNullsTestsBase
     {
+        // 3: FooWithAttributes [NullWrappedValue(AsGroup = true)],
+        // * not touching* SupportNull at all ** works exactly like [SupportNull]**
+
+        public CollectionsWithNullsTests_NullWrappedValueGroup(ITestOutputHelper log) 
+            : base(log)
+        {
+        }
+
         [Fact]
         public void ProtoSchema_NullWrappedValueGroupListModel()
         {
@@ -27,13 +34,14 @@ namespace ProtoBuf.Test
         }
 
         [Fact]
-        public void ProtoSerializationWithNulls_NullWrappedValueGroupListModel_Fails()
+        public void ProtoSerializationWithNulls_NullWrappedValueGroupListModel_Success()
         {
-            var model = NullWrappedValueGroupListModel.BuildWithNull();
-            var ms = new MemoryStream();
+            var origin = NullWrappedValueGroupListModel.BuildWithNull();
+            var result = SerializeAndDeserialize(origin);
 
-            // runs with no exceptions raised
-            Serializer.Serialize(ms, model);
+            Assert.Equal(origin.Items[0], result.Items[0]);
+            Assert.Null(result.Items[1]);
+            Assert.Equal(origin.Items[2], result.Items[2]);
         }
 
         [ProtoContract]

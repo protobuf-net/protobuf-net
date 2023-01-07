@@ -69,18 +69,6 @@
     <None Update="Schemas\nanopb\nanopb.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Include="CollectionsWithNullsTests.Basic.cs">
-	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
-	</None>
-    <None Include="CollectionsWithNullsTests.SupportNull.cs">
-	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
-	</None>
-    <None Include="CollectionsWithNullsTests.NullWrappedValue.Group.cs">
-	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
-	</None>
-    <None Include="CollectionsWithNullsTests.NullWrappedValue.cs">
-	  <DependentUpon>CollectionsWithNullsTests.cs</DependentUpon>
-	</None>
   </ItemGroup>
   <PropertyGroup Condition="'$(WithSpans)'=='true'">
     <DefineConstants>$(DefineConstants);PLAT_SPANS</DefineConstants>

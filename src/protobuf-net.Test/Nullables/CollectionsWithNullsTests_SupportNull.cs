@@ -1,18 +1,25 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.Test.Nullables.Abstractions;
 using System.Collections.Generic;
-using System.IO;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace ProtoBuf.Test
+namespace ProtoBuf.Test.Nullables
 {
-    // 2. if model *is* tweaked with SupportNull, then: 
-    //  2a. schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" 
-    //      with "group Bar value = 1" **invalid** syntax
-    //  2b. payload has the extra layer with "group"
-    //  2c. null works correctly! 
-    public partial class CollectionsWithNullsTests
+    public class CollectionsWithNullsTests_SupportNull : CollectionsWithNullsTestsBase
     {
-        private static void AdjustRuntimeTypeModel()
+        // 2. if model is tweaked with SupportNull:
+        //  2a. schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" 
+        //      with "group Bar value = 1" **invalid** syntax
+        //  2b. payload has the extra layer with "group"
+        //  2c. null works correctly!
+
+        public CollectionsWithNullsTests_SupportNull(ITestOutputHelper log) 
+            : base(log)
+        {
+        }
+
+        protected override void Setup()
         {
             RuntimeTypeModel.Default[typeof(SupportsNullListModel)][1].SupportNull = true;
         }
@@ -36,13 +43,14 @@ namespace ProtoBuf.Test
         }
 
         [Fact]
-        public void ProtoSerializationWithNulls_SupportsNullModel_Fails()
+        public void ProtoSerializationWithNulls_SupportsNullModel_Success()
         {
-            var model = SupportsNullListModel.BuildWithNull();
-            var ms = new MemoryStream();
-            
-            // runs with no exceptions raised
-            Serializer.Serialize(ms, model);
+            var origin = SupportsNullListModel.BuildWithNull();
+            var result = SerializeAndDeserialize(origin);
+
+            Assert.Equal(origin.Items[0], result.Items[0]);
+            Assert.Null(result.Items[1]);
+            Assert.Equal(origin.Items[2], result.Items[2]);
         }
 
         [ProtoContract]

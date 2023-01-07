@@ -1,15 +1,22 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using ProtoBuf.Test.Nullables.Abstractions;
+using System.Collections.Generic;
 using Xunit;
+using Xunit.Abstractions;
 
-namespace ProtoBuf.Test
+namespace ProtoBuf.Test.Nullables
 {
-    // 4: FooWithAttributes2 [NullWrappedValue], * not touching* SupportNull at all
-    //  4a.schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" // naming is hard, with "Bar value = 1" **valid** syntax
-    //  4b.payload has the extra layer with "length prefix"
-    //  4c. null works correctly! 
-    public partial class CollectionsWithNullsTests
+    public class CollectionsWithNullsTests_NullWrappedValue : CollectionsWithNullsTestsBase
     {
+        // 4: FooWithAttributes2 [NullWrappedValue], * not touching* SupportNull at all
+        //  4a.schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" // naming is hard, with "Bar value = 1" **valid** syntax
+        //  4b.payload has the extra layer with "length prefix"
+        //  4c. null works correctly! 
+
+        public CollectionsWithNullsTests_NullWrappedValue(ITestOutputHelper log) 
+            : base(log)
+        {
+        }
+
         [Fact]
         public void ProtoSchema_NullWrappedValueListModel()
         {
@@ -25,17 +32,18 @@ namespace ProtoBuf.Test
         {
             var model = NullWrappedValueListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("will-be-defined-later", hex);
+            Assert.Equal("0A-02-0A-00-0A-02-0A-00", hex);
         }
 
         [Fact]
-        public void ProtoSerializationWithNulls_NullWrappedValueListModel_Fails()
+        public void ProtoSerializationWithNulls_NullWrappedValueListModel_Success()
         {
-            var model = NullWrappedValueListModel.BuildWithNull();
-            var ms = new MemoryStream();
+            var origin = NullWrappedValueListModel.BuildWithNull();
+            var result = SerializeAndDeserialize(origin);
 
-            // runs with no exceptions raised
-            Serializer.Serialize(ms, model);
+            Assert.Equal(origin.Items[0], result.Items[0]);
+            Assert.Null(result.Items[1]);
+            Assert.Equal(origin.Items[2], result.Items[2]);
         }
 
         [ProtoContract]
