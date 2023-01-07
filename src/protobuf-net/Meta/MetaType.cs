@@ -986,23 +986,49 @@ namespace ProtoBuf.Meta
             // for most types we'll enforce that you need readonly, because that is what protobuf-net
             // always did historically; but: if you smell so much like a Tuple that it is *in your name*,
             // we'll let you past that
-            bool demandReadOnly = type.Name.IndexOf("Tuple", StringComparison.OrdinalIgnoreCase) < 0;
+            bool checkForDisallowedSetters = type.Name.IndexOf("Tuple", StringComparison.OrdinalIgnoreCase) < 0,
+                isPossibleStructRecord = type.IsValueType && IsSelfEquatable(type); // not much to go on
+
+            static bool IsSelfEquatable(Type type) // T : IEquatable<T>
+            {
+                foreach(var iType in type.GetInterfaces())
+                {
+                    if (iType.IsGenericType && iType.GetGenericTypeDefinition() == typeof(IEquatable<>)
+                        && iType.GetGenericArguments()[0] == type)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             for (int i = 0; i < fieldsPropsUnfiltered.Length; i++)
             {
                 if (fieldsPropsUnfiltered[i] is PropertyInfo prop)
                 {
                     if (!prop.CanRead) return null; // no use if can't read
-                    if (demandReadOnly && prop.CanWrite && IsPublicSetter(Helpers.GetSetMethod(prop, false, false)))
+                    if (checkForDisallowedSetters && prop.CanWrite && IsDisallowedSetter(isPossibleStructRecord, Helpers.GetSetMethod(prop, false, false)))
                     {
-                        // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
-                        // (unless it is an "init-only" set)
                         return null;
                     }
                     memberList.Add(prop);
 
-                    static bool IsPublicSetter(MethodInfo method)
+                    static bool IsDisallowedSetter(bool isValueType, MethodInfo method)
                     {
+                        // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
                         if (method is null) return false;
+
+                        if (isValueType)
+                        {
+                            // for value-types, allow [CompilerGenerated], to allow
+                            // mutable struct records
+                            foreach(var attrib in method.GetCustomAttributesData())
+                            {
+                                if (attrib.AttributeType is { FullName: "System.Runtime.CompilerServices.CompilerGeneratedAttribute" }) return false;
+                            }
+                        }
+
+                        // (unless it is an "init-only" set)
                         foreach (Type modreq in method.ReturnParameter?.GetRequiredCustomModifiers() ?? Type.EmptyTypes)
                         {
                             if (modreq?.FullName == "System.Runtime.CompilerServices.IsExternalInit") return false;
@@ -1014,7 +1040,7 @@ namespace ProtoBuf.Meta
                 {
                     if (fieldsPropsUnfiltered[i] is FieldInfo field)
                     {
-                        if (demandReadOnly && !field.IsInitOnly) return null; // all public fields must be readonly to be counted a tuple
+                        if (checkForDisallowedSetters && !field.IsInitOnly) return null; // all public fields must be readonly to be counted a tuple
                         memberList.Add(field);
                     }
                 }
