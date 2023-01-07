@@ -14,6 +14,7 @@ namespace ProtoBuf.Test
         public CollectionsWithNullsTests(ITestOutputHelper log)
         {
             _log = log;
+            AdjustRuntimeTypeModel();
         }
 
         /*

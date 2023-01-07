@@ -21,17 +21,19 @@ namespace ProtoBuf.Test
         [Fact]
         public void NullWrappedValueGroupListModel_ByteOutput()
         {
-            var model = SupportsNullListModel.Build();
+            var model = NullWrappedValueGroupListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("will-be-defined-later", hex);
+            Assert.Equal("0B-0A-00-0C-0B-0A-00-0C", hex);
         }
 
         [Fact]
         public void ProtoSerializationWithNulls_NullWrappedValueGroupListModel_Fails()
         {
-            var model = SupportsNullListModel.BuildWithNull();
+            var model = NullWrappedValueGroupListModel.BuildWithNull();
             var ms = new MemoryStream();
-            Assert.Throws<System.NullReferenceException>(() => Serializer.Serialize(ms, model));
+
+            // runs with no exceptions raised
+            Serializer.Serialize(ms, model);
         }
 
         [ProtoContract]

@@ -12,11 +12,14 @@ namespace ProtoBuf.Test
     //  2c. null works correctly! 
     public partial class CollectionsWithNullsTests
     {
+        private static void AdjustRuntimeTypeModel()
+        {
+            RuntimeTypeModel.Default[typeof(SupportsNullListModel)][1].SupportNull = true;
+        }
+
         [Fact]
         public void ProtoSchema_SupportsNullModelClass()
         {
-            RuntimeTypeModel.Default[typeof(SupportsNullListModel)][1].SupportNull = true;
-
             AssertSchemaSections<SupportsNullListModel>(
                 "message Bar { }",
                 "message WrappedBar { group Bar value = 1; }",
@@ -29,18 +32,17 @@ namespace ProtoBuf.Test
         {
             var model = SupportsNullListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("will-be-defined-later", hex);
+            Assert.Equal("0B-0A-00-0C-0B-0A-00-0C", hex);
         }
 
         [Fact]
         public void ProtoSerializationWithNulls_SupportsNullModel_Fails()
         {
-            RuntimeTypeModel.Default[typeof(SupportsNullListModel)][1].SupportNull = true;
-
             var model = SupportsNullListModel.BuildWithNull();
             var ms = new MemoryStream();
-            // assert does not throw
-            // Assert.Throws<System.NullReferenceException>(() => Serializer.Serialize(ms, model));
+            
+            // runs with no exceptions raised
+            Serializer.Serialize(ms, model);
         }
 
         [ProtoContract]

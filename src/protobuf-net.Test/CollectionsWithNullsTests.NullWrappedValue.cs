@@ -31,9 +31,11 @@ namespace ProtoBuf.Test
         [Fact]
         public void ProtoSerializationWithNulls_NullWrappedValueListModel_Fails()
         {
-            var model = SupportsNullListModel.BuildWithNull();
+            var model = NullWrappedValueListModel.BuildWithNull();
             var ms = new MemoryStream();
-            Assert.Throws<System.NullReferenceException>(() => Serializer.Serialize(ms, model));
+
+            // runs with no exceptions raised
+            Serializer.Serialize(ms, model);
         }
 
         [ProtoContract]
