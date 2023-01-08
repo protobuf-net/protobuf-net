@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Meta;
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using Xunit;
@@ -9,27 +10,24 @@ namespace ProtoBuf.Test.Nullables.Abstractions
     public abstract class CollectionsWithNullsTestsBase
     {
         private readonly ITestOutputHelper _log;
+        protected readonly RuntimeTypeModel _runtimeTypeModel;
 
         public CollectionsWithNullsTestsBase(ITestOutputHelper log)
         {
             _log = log;
-            Setup();
+
+            _runtimeTypeModel = RuntimeTypeModel.Create();
+            SetupRuntimeTypeModel(_runtimeTypeModel);
         }
 
-        protected virtual void Setup() { }
+        protected virtual void SetupRuntimeTypeModel(RuntimeTypeModel runtimeTypeModel) { }
 
-        protected T SerializeAndDeserialize<T>(T instance)
-        {
-            var ms = new MemoryStream();
-            Serializer.Serialize(ms, instance);
-            ms.Position = 0;
-            return Serializer.Deserialize<T>(ms);
-        }
+        protected T DeepClone<T>(T instance) => _runtimeTypeModel.DeepClone(instance);
 
         protected string GetSerializationOutputHex<T>(T instance)
         {
             var ms = new MemoryStream();
-            Serializer.Serialize(ms, instance);
+            _runtimeTypeModel.Serialize(ms, instance);
             if (!ms.TryGetBuffer(out var segment))
                 segment = new ArraySegment<byte>(ms.ToArray());
             return BitConverter.ToString(segment.Array, segment.Offset, segment.Count);
@@ -44,7 +42,7 @@ namespace ProtoBuf.Test.Nullables.Abstractions
         {
             if (protoModelDefinitions.Length == 0) Assert.Fail(nameof(protoModelDefinitions));
 
-            var proto = Serializer.GetProto<T>();
+            var proto = _runtimeTypeModel.GetSchema(typeof(T), ProtoSyntax.Default);
             _log.WriteLine("Protobuf definition of model:");
             _log.WriteLine(proto);
             _log.WriteLine("-----------------------------");

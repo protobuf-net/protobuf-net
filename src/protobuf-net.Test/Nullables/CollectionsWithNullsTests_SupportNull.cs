@@ -19,9 +19,9 @@ namespace ProtoBuf.Test.Nullables
         {
         }
 
-        protected override void Setup()
+        protected override void SetupRuntimeTypeModel(RuntimeTypeModel runtimeTypeModel)
         {
-            RuntimeTypeModel.Default[typeof(SupportsNullListModel)][1].SupportNull = true;
+            runtimeTypeModel[typeof(SupportsNullListModel)][1].SupportNull = true;
         }
 
         [Fact]
@@ -31,7 +31,7 @@ namespace ProtoBuf.Test.Nullables
                 "message Bar { }",
                 "message WrappedBar { group Bar value = 1; }",
                 "message SupportsNullListModel { repeated WrappedBar Items = 1;}"
-            );
+            );      
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace ProtoBuf.Test.Nullables
         public void ProtoSerializationWithNulls_SupportsNullModel_Success()
         {
             var origin = SupportsNullListModel.BuildWithNull();
-            var result = SerializeAndDeserialize(origin);
+            var result = DeepClone(origin);
 
             Assert.Equal(origin.Items[0], result.Items[0]);
             Assert.Null(result.Items[1]);

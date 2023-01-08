@@ -39,7 +39,7 @@ namespace ProtoBuf.Test.Nullables
         public void ProtoSerializationWithNulls_NullWrappedValueListModel_Success()
         {
             var origin = NullWrappedValueListModel.BuildWithNull();
-            var result = SerializeAndDeserialize(origin);
+            var result = DeepClone(origin);
 
             Assert.Equal(origin.Items[0], result.Items[0]);
             Assert.Null(result.Items[1]);
