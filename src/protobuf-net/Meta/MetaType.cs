@@ -2091,7 +2091,7 @@ namespace ProtoBuf.Meta
             }
             else
             {
-                HashSet<(ValueMember, string)> extraLayeredMembers = new();
+                HashSet<NullWrappedValueMemberData> extraLayeredMembers = new();
                 ValueMember[] fieldsArr = GetFields();
                 int beforeMessagePosition = builder.Length;
 
@@ -2117,10 +2117,10 @@ namespace ProtoBuf.Meta
                         if (member.RequiresExtraLayerInSchema())
                         {
                             schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
-                            var wrappedSchemaTypeName = GetWrappedSchemaTypeName(schemaTypeName);
-                            
-                            extraLayeredMembers.Add(new(member, schemaTypeName));
-                            WriteValueMember(wrappedSchemaTypeName);
+                            var nullWrappedValueMemberData = new NullWrappedValueMemberData(member, schemaTypeName);
+                            extraLayeredMembers.Add(nullWrappedValueMemberData);
+
+                            WriteValueMember(nullWrappedValueMemberData.WrappedSchemaTypeName);
                         }
                         else
                         {
@@ -2248,17 +2248,15 @@ namespace ProtoBuf.Meta
                 AddExtraLayerSchemaModels(extraLayeredMembers, beforeMessagePosition);
             }
 
-            void AddExtraLayerSchemaModels(IEnumerable<(ValueMember, string)> wrappedMembers, int pos)
+            void AddExtraLayerSchemaModels(IEnumerable<NullWrappedValueMemberData> wrappedMembers, int pos)
             {
                 if (wrappedMembers is null || !wrappedMembers.Any()) return;
-                foreach (var (member, originalSchemaType) in wrappedMembers)
+                foreach (var wrappedMember in wrappedMembers)
                 {
-                    var wrappedSchemaTypeName = GetWrappedSchemaTypeName(originalSchemaType);
-
                     builder
                         .NewLine(ref pos, indent)
                         .Insert("message ", ref pos)
-                        .Insert(wrappedSchemaTypeName, ref pos)
+                        .Insert(wrappedMember.WrappedSchemaTypeName, ref pos)
                         .Insert(" {", ref pos);
 
                     builder.NewLine(ref pos, indent + 1);
@@ -2272,8 +2270,10 @@ namespace ProtoBuf.Meta
                     void WriteWrappedFieldPayload()
                     {
                         builder
-                            .Insert("group ", ref pos, condition: () => member.SupportNull || member.NullWrappedValueGroup)
-                            .Insert(originalSchemaType, ref pos)
+                            .Insert("group ", ref pos, 
+                                condition: () => wrappedMember.ValueMember.SupportNull 
+                                              || wrappedMember.ValueMember.NullWrappedValueGroup)
+                            .Insert(wrappedMember.OriginalSchemaTypeName, ref pos)
                             .Insert(" value = 1", ref pos);
                     }
                 }
@@ -2317,8 +2317,6 @@ namespace ProtoBuf.Meta
                 }
             }
         }
-
-        private static string GetWrappedSchemaTypeName(string schemaTypeName) => $"Wrapped{schemaTypeName}";
 
         private static StringBuilder AddOption(StringBuilder builder, ref bool hasOption)
         {
