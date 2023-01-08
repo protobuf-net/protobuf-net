@@ -101,7 +101,9 @@ namespace ProtoBuf.Meta
         private List<SubType> _subTypes;
         private bool IsValidSubType(Type subType)
         {
-            return subType is not null && !subType.IsValueType
+            // must be assignable (i.e. subtype or implements interface), and can
+            // only be a struct for interface inheritance (i.e. unboxing)
+            return subType is not null && (Type.IsInterface || !subType.IsValueType)
                 && Type.IsAssignableFrom(subType);
         }
         /// <summary>
