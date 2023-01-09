@@ -125,7 +125,7 @@ message ListWrapper {
    repeated string MyList = 2;
    repeated string MyContractList = 3;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
             model.Compile("SanityCheckListWrapper", "SanityCheckListWrapper.dll");
             PEVerify.AssertValid("SanityCheckListWrapper.dll");
         }

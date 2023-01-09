@@ -148,7 +148,7 @@ message PartCollectionSurrogate {
 message Whole {
    optional PartCollectionSurrogate Parts = 1;
 }
-", schema);
+", schema, ignoreLineEndingDifferences: true);
         }
     }
 }
