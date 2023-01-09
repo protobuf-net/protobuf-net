@@ -1654,14 +1654,14 @@ namespace ProtoBuf.Meta
 
         private void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
         {
-            WriteAssemblyInfoAttribute<AssemblyFileVersionAttribute>(options, asm, options.AssemblyVersion.ToString());
+            WriteAssemblyInfoAttribute<AssemblyFileVersionAttribute>(options, asm, options.AssemblyVersion?.ToString());
             WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
             WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
             WriteAssemblyInfoAttribute<AssemblyDescriptionAttribute>(options, asm, options.AssemblyDescription);
             WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
             WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
             WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
-            WriteAssemblyInfoAttribute<AssemblyInformationalVersionAttribute>(options, asm, options.AssemblyProductVersion.ToString());
+            WriteAssemblyInfoAttribute<AssemblyInformationalVersionAttribute>(options, asm, options.AssemblyProductVersion?.ToString());
 
 #if !NETCOREAPP3_1 && !NETSTANDARD2_0
             asm.DefineVersionInfoResource();
