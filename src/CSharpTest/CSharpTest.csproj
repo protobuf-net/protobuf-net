@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>7.1</LangVersion>
+    <IsTestProject>False</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
