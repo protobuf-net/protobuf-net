@@ -45,7 +45,7 @@ message IdName {
    optional int32 Id = 1 [default = 0];
    optional string Name = 2;
 }
-", protoFile);
+", protoFile, ignoreLineEndingDifferences: true);
         }
     }
 }
