@@ -1236,9 +1236,44 @@ namespace ProtoBuf.Meta
             public int MetaDataVersion { get; set; }
 
             /// <summary>
-            /// The Version baked into the generated assembly.
+            /// The company name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCompanyName { get; set; }
+
+            /// <summary>
+            /// The copyright to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCopyright { get; set; }
+
+            /// <summary>
+            /// The description to burn into the generated assembly
+            /// </summary>
+            public string AssemblyDescription { get; set; }
+
+            /// <summary>
+            /// The product name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyProductName { get; set; }
+
+            /// <summary>
+            /// The application title to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTitle { get; set; }
+
+            /// <summary>
+            /// The trademark notice to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTrademark { get; set; }
+
+            /// <summary>
+            /// The assembly version to burn into the generated assembly
             /// </summary>
             public Version AssemblyVersion { get; set; }
+
+            /// <summary>
+            /// The assembly product version to burn into the generated assembly
+            /// </summary>
+            public Version AssemblyProductVersion { get; set; }
 
             /// <summary>
             /// The acecssibility of the generated serializer
@@ -1329,13 +1364,12 @@ namespace ProtoBuf.Meta
                 moduleName = assemblyName + System.IO.Path.GetExtension(path);
             }
 
-#if PLAT_NO_EMITDLL
             AssemblyName an = new AssemblyName { Name = assemblyName, Version = options.AssemblyVersion };
+#if PLAT_NO_EMITDLL
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
 #else
-            AssemblyName an = new AssemblyName { Name = assemblyName, Version = options.AssemblyVersion };
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
@@ -1696,6 +1730,36 @@ namespace ProtoBuf.Meta
                             new object[] { privelegedAssemblyName });
                         asm.SetCustomAttribute(builder);
                     }
+                }
+            }
+
+            WriteAssemblyInfoAttributes(options, asm);
+
+            static void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
+            {
+                WriteAssemblyInfoAttribute<AssemblyFileVersionAttribute>(options, asm, options.AssemblyVersion?.ToString());
+                WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
+                WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
+                WriteAssemblyInfoAttribute<AssemblyDescriptionAttribute>(options, asm, options.AssemblyDescription);
+                WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
+                WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
+                WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
+                WriteAssemblyInfoAttribute<AssemblyInformationalVersionAttribute>(options, asm, options.AssemblyProductVersion?.ToString());
+
+#if NETFRAMEWORK
+                asm.DefineVersionInfoResource();
+#endif
+                static void WriteAssemblyInfoAttribute<TAttribute>(CompilerOptions options, AssemblyBuilder asm, string value)
+                    where TAttribute : Attribute
+                {
+                    if (string.IsNullOrEmpty(value))
+                        return;
+
+                    var attributeType = typeof(TAttribute);
+                    Type[] ctorParameters = { typeof(string) };
+                    var ctor = attributeType.GetConstructor(ctorParameters);
+                    var attribute = new CustomAttributeBuilder(ctor, new object[] { value });
+                    asm.SetCustomAttribute(attribute);
                 }
             }
         }

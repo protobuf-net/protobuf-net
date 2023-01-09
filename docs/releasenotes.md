@@ -16,6 +16,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 - support `Memory<byte>`, `ReadOnlyMemory<byte>` and `ArraySegment<byte>` as `bytes` payloads
 - add reader/writer API for `Span<byte>`/`ReadOnlySpan<byte>`
+- add support for full assembly metadata (bring forward #998 by mihaicodrean)
 
 ## 3.1.26
 
@@ -140,6 +141,22 @@ Other changes:
 - empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
 - as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
 - common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
+
+## 2.4.8
+
+- add support for full assembly metadata (#998 by mihaicodrean)
+
+## 2.4.7
+
+## 2.4.6
+
+- apply #603 to 2.4 branch
+- apply #611 to 2.4 branch
+
+## 2.4.5
+
+- Move TypeModel.Create (#609)
+- add ApplyFieldOffset API (#608)
 
 ## 2.4.4
 
