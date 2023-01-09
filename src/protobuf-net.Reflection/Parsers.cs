@@ -2701,7 +2701,10 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf.Reflection
 {
-    internal static class DescriptorExtensions
+    /// <summary>
+    /// Utility methods for descriptors
+    /// </summary>
+    public static class DescriptorExtensions
     {
         /// <summary>
         /// Gets the resolved enum type associated with a field
