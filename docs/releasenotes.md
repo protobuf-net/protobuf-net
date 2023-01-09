@@ -14,9 +14,12 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## pending
 
+## 3.1.31
+
 - support `Memory<byte>`, `ReadOnlyMemory<byte>` and `ArraySegment<byte>` as `bytes` payloads
 - add reader/writer API for `Span<byte>`/`ReadOnlySpan<byte>`
-- add support for full assembly metadata (bring forward #998 by mihaicodrean)
+- add support for full assembly metadata (bring forward #998 by mihaicodrean
+- update `protoc` and Google reference proto files
 
 ## 3.1.26
 
