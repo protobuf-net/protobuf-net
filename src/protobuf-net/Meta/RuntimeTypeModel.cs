@@ -1018,6 +1018,45 @@ namespace ProtoBuf.Meta
             /// </summary>
             public int MetaDataVersion { get { return metaDataVersion; } set { metaDataVersion = value; } }
 
+            /// <summary>
+            /// The company name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCompanyName { get; set; }
+
+            /// <summary>
+            /// The copyright to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCopyright { get; set; }
+
+            /// <summary>
+            /// The description to burn into the generated assembly
+            /// </summary>
+            public string AssemblyDescription { get; set; }
+
+            /// <summary>
+            /// The product name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyProductName { get; set; }
+
+            /// <summary>
+            /// The application title to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTitle { get; set; }
+
+            /// <summary>
+            /// The trademark notice to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTrademark { get; set; }
+
+            /// <summary>
+            /// The assembly version to burn into the generated assembly
+            /// </summary>
+            public Version AssemblyVersion { get; set; }
+
+            /// <summary>
+            /// The assembly product version to burn into the generated assembly
+            /// </summary>
+            public Version AssemblyProductVersion { get; set; }
 
             private Accessibility accessibility = Accessibility.Public;
             /// <summary>
@@ -1094,13 +1133,13 @@ namespace ProtoBuf.Meta
             }
 
 #if COREFX
-            AssemblyName an = new AssemblyName();
+            AssemblyName an = new AssemblyName() { Version = options.AssemblyVersion };
             an.Name = assemblyName;
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.Run);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
 #else
-            AssemblyName an = new AssemblyName();
+            AssemblyName an = new AssemblyName() { Version = options.AssemblyVersion };
             an.Name = assemblyName;
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 (save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run)
@@ -1609,6 +1648,36 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
+
+            WriteAssemblyInfoAttributes(options, asm);
+        }
+
+        private void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
+        {
+            WriteAssemblyInfoAttribute<AssemblyFileVersionAttribute>(options, asm, options.AssemblyVersion?.ToString());
+            WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
+            WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
+            WriteAssemblyInfoAttribute<AssemblyDescriptionAttribute>(options, asm, options.AssemblyDescription);
+            WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
+            WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
+            WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
+            WriteAssemblyInfoAttribute<AssemblyInformationalVersionAttribute>(options, asm, options.AssemblyProductVersion?.ToString());
+
+#if !NETCOREAPP3_1 && !NETSTANDARD2_0
+            asm.DefineVersionInfoResource();
+#endif
+        }
+
+        private void WriteAssemblyInfoAttribute<TA>(CompilerOptions options, AssemblyBuilder asm, string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return;
+
+            var attributeType = typeof(TA);
+            Type[] ctorParameters = { typeof(string) };
+            var ctor = attributeType.GetConstructor(ctorParameters);
+            var attribute = new CustomAttributeBuilder(ctor, new object[] { value });
+            asm.SetCustomAttribute(attribute);
         }
 
         private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
