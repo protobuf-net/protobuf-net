@@ -30,7 +30,7 @@ package Examples.Issues;
 message BinarySerializationSurrogate_MyException {
    optional bytes objectData = 1;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         class MyException : Exception { }

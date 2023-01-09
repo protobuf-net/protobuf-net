@@ -47,7 +47,7 @@ message ModelWithTypeMember {
    optional int32 Id = 1 [default = 0];
    optional string SomeType = 2;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
         [ProtoContract]
         public class ModelWithTypeMember

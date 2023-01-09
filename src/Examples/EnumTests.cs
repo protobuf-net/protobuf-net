@@ -126,7 +126,7 @@ enum blah {
    LeaveAlone = 22;
    BAR = 92;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
 
@@ -152,7 +152,7 @@ enum blah {
    LeaveAlone = 22;
    BAR = 92;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]
@@ -175,7 +175,7 @@ enum blah {
    LeaveAlone = 22;
    BAR = 92;
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
 
         [Fact]

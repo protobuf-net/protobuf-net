@@ -58,7 +58,7 @@ enum ETheoFlags {
 message Foo {
    optional ETheoFlags Flags = 1 [default = TF_P];
 }
-", proto);
+", proto, ignoreLineEndingDifferences: true);
         }
     }
 }
