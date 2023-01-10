@@ -30,7 +30,9 @@ namespace ProtoBuf.Test.Nullables.Abstractions
             _runtimeTypeModel.Serialize(ms, instance);
             if (!ms.TryGetBuffer(out var segment))
                 segment = new ArraySegment<byte>(ms.ToArray());
-            return BitConverter.ToString(segment.Array, segment.Offset, segment.Count);
+            var hexOutput = BitConverter.ToString(segment.Array, segment.Offset, segment.Count);
+            _log.WriteLine($"Serialization Hex-Output: '{hexOutput}'");
+            return hexOutput;
         }
 
         /// <summary>
@@ -63,6 +65,7 @@ namespace ProtoBuf.Test.Nullables.Abstractions
         [ProtoContract]
         public class Bar
         {
+            [ProtoMember(1)]
             public int Id { get; set; }
         }
     }

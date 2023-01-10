@@ -20,8 +20,8 @@ namespace ProtoBuf.Test.Nullables
         {
             AssertSchemaSections<NullWrappedValueGroupListModel>(
                 "message Bar { }",
-                "message WrappedBar { group Bar value = 1; }",
-                "message NullWrappedValueGroupListModel { repeated WrappedBar Items = 1;}"
+                "message WrappedBar { optional Bar value = 1; }",
+                "message NullWrappedValueGroupListModel { repeated group WrappedBar Items = 1;}"
             );
         }
 
