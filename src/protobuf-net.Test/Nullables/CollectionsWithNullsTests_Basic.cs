@@ -22,7 +22,7 @@ namespace ProtoBuf.Test.Nullables
         public void ProtoSchema_BasicNullableModel()
         {
             AssertSchemaSections<BasicNullableListModel>(
-                "message Bar { }",
+                "message Bar { int32 Id = 1; }",
                 "message BasicNullableListModel { repeated Bar Items = 1; }"
             );
         }
@@ -32,7 +32,7 @@ namespace ProtoBuf.Test.Nullables
         {
             var model = BasicNullableListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("0A-00-0A-00", hex);
+            Assert.Equal("0A-02-08-01-0A-02-08-02", hex);
         }
 
         [Fact]

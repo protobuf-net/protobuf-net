@@ -16,8 +16,8 @@ namespace ProtoBuf.Test.Nullables
         public void DuplicateFieldTypeModel_DoesNotGenerateMultipleWrappedSchemaDefinitions()
         {
             AssertSchemaSections<DuplicateFieldTypesModel>(
-                "message Bar { }",
-                "message WrappedBar { Bar value = 1; }",
+                "message Bar { int32 Id = 1; }",
+                "message WrappedBar { optional Bar value = 1; }",
                 @"message DuplicateFieldTypesModel 
                 { 
                     repeated WrappedBar Items1 = 1;

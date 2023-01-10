@@ -19,7 +19,7 @@ namespace ProtoBuf.Test.Nullables
         public void ProtoSchema_NullWrappedValueGroupListModel()
         {
             AssertSchemaSections<NullWrappedValueGroupListModel>(
-                "message Bar { }",
+                "message Bar { int32 Id = 1; }",
                 "message WrappedBar { optional Bar value = 1; }",
                 "message NullWrappedValueGroupListModel { repeated group WrappedBar Items = 1;}"
             );
@@ -30,7 +30,7 @@ namespace ProtoBuf.Test.Nullables
         {
             var model = NullWrappedValueGroupListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("0B-0A-00-0C-0B-0A-00-0C", hex);
+            Assert.Equal("0B-0A-02-08-01-0C-0B-0A-02-08-02-0C", hex);
         }
 
         [Fact]

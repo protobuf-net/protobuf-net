@@ -30,15 +30,15 @@ namespace ProtoBuf.Test.Nullables
         public void ProtoSchema_SupportsNullModelClass()
         {
             AssertSchemaSections<SupportsNullListModel>(
-                "message Bar { }",
-                "message WrappedBar { group Bar value = 1; }",
-                "message Wrappedint32 { group int32 value = 1; }",
-                "message Wrappedstring { group string value = 1; }",
+                "message Bar { int32 Id = 1; }",
+                "message WrappedBar { optional Bar value = 1; }",
+                "message Wrappedint32 { optional int32 value = 1; }",
+                "message Wrappedstring { optional string value = 1; }",
                 @"message SupportsNullListModel 
                 { 
-                    repeated WrappedBar ClassItems = 1;
-                    repeated Wrappedint32 NullableIntItems = 2;
-                    repeated Wrappedstring StringItems = 3;
+                    repeated group WrappedBar ClassItems = 1;
+                    repeated group Wrappedint32 NullableIntItems = 2;
+                    repeated group Wrappedstring StringItems = 3;
                 }"
             );      
         }
@@ -48,7 +48,7 @@ namespace ProtoBuf.Test.Nullables
         {
             var model = SupportsNullListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("0B-0A-00-0C-0B-0A-00-0C-13-08-01-14-13-08-02-14-1B-0A-03-71-77-65-1C-1B-0A-03-72-74-79-1C", hex);
+            Assert.Equal("0B-0A-02-08-01-0C-0B-0A-02-08-02-0C-13-08-01-14-13-08-02-14-1B-0A-03-71-77-65-1C-1B-0A-03-72-74-79-1C", hex);
         }
 
         [Fact]
@@ -57,9 +57,9 @@ namespace ProtoBuf.Test.Nullables
             var origin = SupportsNullListModel.BuildWithNull();
             var result = DeepClone(origin);
 
-            Assert.Equal(origin.ClassItems[0].Id, result.ClassItems[0].Id);
+            Assert.Equal(origin.ClassItems[0], result.ClassItems[0]);
             Assert.Null(result.ClassItems[1]);
-            Assert.Equal(origin.ClassItems[2].Id, result.ClassItems[2].Id);
+            Assert.Equal(origin.ClassItems[2], result.ClassItems[2]);
         }
 
         [ProtoContract]

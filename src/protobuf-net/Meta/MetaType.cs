@@ -2120,7 +2120,9 @@ namespace ProtoBuf.Meta
                             var nullWrappedValueMemberData = new NullWrappedValueMemberData(member, schemaTypeName);
                             extraLayeredMembers.Add(nullWrappedValueMemberData);
 
-                            WriteValueMember(nullWrappedValueMemberData.WrappedSchemaTypeName);
+                            WriteValueMember(
+                                schemaModelTypeName: nullWrappedValueMemberData.WrappedSchemaTypeName,
+                                hasGroupModifier: nullWrappedValueMemberData.HasGroupModifier);
                         }
                         else
                         {
@@ -2128,11 +2130,13 @@ namespace ProtoBuf.Meta
                             WriteValueMember(schemaTypeName);
                         }
 
-                        void WriteValueMember(string schemaModelTypeName)
+                        void WriteValueMember(string schemaModelTypeName, bool hasGroupModifier = false)
                         {
                             string ordinality = member.ItemType is not null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
                             NewLine(builder, indent + 1).Append(ordinality);
-                            if (member.DataFormat == DataFormat.Group) builder.Append("group ");
+
+                            if (hasGroupModifier) builder.Append("group ");
+                            else if (member.DataFormat == DataFormat.Group) builder.Append("group ");
 
                             builder.Append(schemaModelTypeName).Append(' ')
                                  .Append(member.Name).Append(" = ").Append(member.FieldNumber);
@@ -2270,9 +2274,7 @@ namespace ProtoBuf.Meta
                     void WriteWrappedFieldPayload()
                     {
                         builder
-                            .Insert("group ", ref pos, 
-                                condition: () => wrappedMember.ValueMember.SupportNull 
-                                              || wrappedMember.ValueMember.NullWrappedValueGroup)
+                            .Insert("optional ", ref pos)
                             .Insert(wrappedMember.OriginalSchemaTypeName, ref pos)
                             .Insert(" value = 1", ref pos);
                     }

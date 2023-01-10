@@ -67,6 +67,17 @@ namespace ProtoBuf.Test.Nullables.Abstractions
         {
             [ProtoMember(1)]
             public int Id { get; set; }
+
+            public override bool Equals(object obj)
+            {               
+                if (obj is Bar)
+                {
+                    var that = obj as Bar;
+                    return this.Id == that.Id;
+                }
+
+                return false;
+            }
         }
     }
 }

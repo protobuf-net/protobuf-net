@@ -15,6 +15,11 @@ namespace ProtoBuf.Meta
             OriginalSchemaTypeName = originalSchemaTypeName;
         }
 
+        /// <summary>
+        /// Requires `group` to be placed on original valueMember level
+        /// </summary>
+        public bool HasGroupModifier => ValueMember.SupportNull || ValueMember.NullWrappedValueGroup;
+
         public override bool Equals(object obj)
         {
             return obj is NullWrappedValueMemberData data &&
