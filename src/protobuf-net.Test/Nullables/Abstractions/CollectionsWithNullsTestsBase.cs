@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Meta;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using Xunit;
@@ -77,6 +78,18 @@ namespace ProtoBuf.Test.Nullables.Abstractions
                 }
 
                 return false;
+            }
+        }
+
+        protected void AssertCollectionEquality<T>(List<T> one, List<T> another)
+        {
+            Assert.NotNull(one);
+            Assert.NotNull(another);
+            Assert.Equal(one.Count, another.Count);
+
+            for (var i = 0; i < 0; i++)
+            {
+                Assert.Equal(one[i], another[i]);
             }
         }
     }

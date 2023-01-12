@@ -24,6 +24,7 @@ namespace ProtoBuf.Test.Nullables
             runtimeTypeModel[typeof(SupportsNullListModel)][1].SupportNull = true;
             runtimeTypeModel[typeof(SupportsNullListModel)][2].SupportNull = true;
             runtimeTypeModel[typeof(SupportsNullListModel)][3].SupportNull = true;
+            runtimeTypeModel[typeof(SupportsNullListModel)][4].SupportNull = true;
         }
 
         [Fact]
@@ -39,6 +40,7 @@ namespace ProtoBuf.Test.Nullables
                     repeated group WrappedBar ClassItems = 1;
                     repeated group Wrappedint32 NullableIntItems = 2;
                     repeated group Wrappedstring StringItems = 3;
+                    repeated group Wrappedint32 IntItems = 4 [packed = false];
                 }"
             );      
         }
@@ -48,7 +50,7 @@ namespace ProtoBuf.Test.Nullables
         {
             var model = SupportsNullListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("0B-0A-02-08-01-0C-0B-0A-02-08-02-0C-13-08-01-14-13-08-02-14-1B-0A-03-71-77-65-1C-1B-0A-03-72-74-79-1C", hex);
+            Assert.Equal("0B-0A-02-08-01-0C-0B-0A-02-08-02-0C-13-08-01-14-13-08-02-14-1B-0A-03-71-77-65-1C-1B-0A-03-72-74-79-1C-23-08-01-24-23-08-02-24", hex);
         }
 
         [Fact]
@@ -57,9 +59,10 @@ namespace ProtoBuf.Test.Nullables
             var origin = SupportsNullListModel.BuildWithNull();
             var result = DeepClone(origin);
 
-            Assert.Equal(origin.ClassItems[0], result.ClassItems[0]);
-            Assert.Null(result.ClassItems[1]);
-            Assert.Equal(origin.ClassItems[2], result.ClassItems[2]);
+            AssertCollectionEquality(origin.ClassItems, result.ClassItems);
+            AssertCollectionEquality(origin.NullableIntItems, result.NullableIntItems);
+            AssertCollectionEquality(origin.StringItems, result.StringItems);
+            AssertCollectionEquality(origin.IntItems, result.IntItems);
         }
 
         [ProtoContract]
@@ -74,18 +77,23 @@ namespace ProtoBuf.Test.Nullables
             [ProtoMember(3)]
             public List<string> StringItems { get; set; } = new();
 
+            [ProtoMember(4)]
+            public List<int> IntItems { get; set; } = new();
+
             public static SupportsNullListModel Build() => new()
             {
                 ClassItems = new() { new Bar { Id = 1 }, new Bar { Id = 2 } },
                 NullableIntItems = new() { 1, 2 },
-                StringItems = new() { "qwe", "rty" }
+                StringItems = new() { "qwe", "rty" },
+                IntItems = new() { 1, 2 }
             };
 
             public static SupportsNullListModel BuildWithNull() => new()
             {
                 ClassItems = new() { new Bar { Id = 1 }, null, new Bar { Id = 2 } },
                 NullableIntItems = new() { 1, null, 2 },
-                StringItems = new() { "qwe", null, "rty" }
+                StringItems = new() { "qwe", null, "rty" },
+                IntItems = new() { 1, 2 }
             };
         }
     }

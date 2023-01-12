@@ -23,7 +23,15 @@ namespace ProtoBuf.Test.Nullables
             AssertSchemaSections<NullWrappedValueListModel>(
                 "message Bar { int32 Id = 1; }",
                 "message WrappedBar { optional Bar value = 1; }",
-                "message NullWrappedValueListModel { repeated WrappedBar Items = 1;}"
+                "message Wrappedint32 { optional int32 value = 1; }",
+                "message Wrappedstring { optional string value = 1; }",
+                @"message NullWrappedValueListModel 
+                { 
+                    repeated WrappedBar ClassItems = 1;
+                    repeated Wrappedint32 NullableIntItems = 2;
+                    repeated Wrappedstring StringItems = 3;
+                    repeated Wrappedint32 IntItems = 4 [packed = false];
+                }"
             );
         }
 
@@ -32,7 +40,7 @@ namespace ProtoBuf.Test.Nullables
         {
             var model = NullWrappedValueListModel.Build();
             var hex = GetSerializationOutputHex(model);
-            Assert.Equal("0A-04-0A-02-08-01-0A-04-0A-02-08-02", hex);
+            Assert.Equal("0A-04-0A-02-08-01-0A-04-0A-02-08-02-12-02-08-01-12-02-08-02-1A-05-0A-03-71-77-65-1A-05-0A-03-72-74-79-22-02-08-01-22-02-08-02", hex);
         }
 
         [Fact]
@@ -41,31 +49,41 @@ namespace ProtoBuf.Test.Nullables
             var origin = NullWrappedValueListModel.BuildWithNull();
             var result = DeepClone(origin);
 
-            Assert.Equal(origin.Items[0], result.Items[0]);
-            Assert.Null(result.Items[1]);
-            Assert.Equal(origin.Items[2], result.Items[2]);
+            AssertCollectionEquality(origin.ClassItems, result.ClassItems);
+            AssertCollectionEquality(origin.NullableIntItems, result.NullableIntItems);
+            AssertCollectionEquality(origin.StringItems, result.StringItems);
+            AssertCollectionEquality(origin.IntItems, result.IntItems);
         }
 
         [ProtoContract]
         public class NullWrappedValueListModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Bar> Items { get; set; } = new();
+            public List<Bar?> ClassItems { get; set; } = new();
+
+            [ProtoMember(2), NullWrappedValue]
+            public List<int?> NullableIntItems { get; set; } = new();
+
+            [ProtoMember(3), NullWrappedValue]
+            public List<string> StringItems { get; set; } = new();
+
+            [ProtoMember(4), NullWrappedValue]
+            public List<int> IntItems { get; set; } = new();
 
             public static NullWrappedValueListModel Build() => new()
             {
-                Items = new()
-                {
-                    new Bar { Id = 1 }, new Bar { Id = 2 }
-                }
+                ClassItems = new() { new Bar { Id = 1 }, new Bar { Id = 2 } },
+                NullableIntItems = new() { 1, 2 },
+                StringItems = new() { "qwe", "rty" },
+                IntItems = new() { 1, 2 }
             };
 
             public static NullWrappedValueListModel BuildWithNull() => new()
             {
-                Items = new()
-                {
-                    new Bar { Id = 1 }, null, new Bar { Id = 2 }
-                }
+                ClassItems = new() { new Bar { Id = 1 }, null, new Bar { Id = 2 } },
+                NullableIntItems = new() { 1, null, 2 },
+                StringItems = new() { "qwe", null, "rty" },
+                IntItems = new() { 1, 2 }
             };
         }
     }
