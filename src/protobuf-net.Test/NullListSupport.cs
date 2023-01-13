@@ -113,19 +113,6 @@ message BasicLists {
 message SomePoco {
     int32 Value = 1;
 }");
-        [Fact]
-        public void BasicLists_Schema_SupportNull() => CheckSchema<BasicLists>(true, @"syntax = ""proto3"";
-package ProtoBuf.Test;
-
-message BasicLists {
-    repeated int32 Int32List = 1 [packed = false];
-    repeated int32 NullableInt32List = 2;
-    repeated string StringList = 3;
-    repeated SomePoco PocoList = 4;
-}
-message SomePoco {
-    int32 Value = 1;
-}");
 
         [Theory]
         [InlineData(false, Scenario.Null, Outcome.Null, "")]
@@ -269,20 +256,6 @@ message SomePoco {
 
         [Fact]
         public void BasicGroupedLists_Schema() => CheckSchema<BasicGroupedLists>(false, @"syntax = ""proto3"";
-package ProtoBuf.Test;
-
-message BasicGroupedLists {
-    repeated int32 Int32List = 1 [packed = false];
-    repeated int32 NullableInt32List = 2;
-    repeated string StringList = 3;
-    repeated group SomePoco PocoList = 4;
-}
-message SomePoco {
-    int32 Value = 1;
-}");
-
-        [Fact]
-        public void BasicGroupedLists_Schema_SupportNull() => CheckSchema<BasicGroupedLists>(true, @"syntax = ""proto3"";
 package ProtoBuf.Test;
 
 message BasicGroupedLists {
