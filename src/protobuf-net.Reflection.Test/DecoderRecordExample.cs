@@ -141,7 +141,13 @@ enum Blap {
         }
         protected override bool TryGetObject(in VisitContext context, FieldDescriptorProto field, out object existing)
         {
-            return base.TryGetObject(context, field, out existing);
+            if (context.Current is Record record)
+            {
+                existing = record[field.Name];
+                return existing is not null;
+            }
+            existing = default;
+            return false;
         }
 
         private Type GetType(FieldDescriptorProto field)
