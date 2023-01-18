@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" Condition="'$(TargetFramework)'=='net462'" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
@@ -39,7 +40,7 @@
     <PackageReference Include="System.CodeDom" Version="7.0.0" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
     <PackageReference Include="Xunit.SkippableFact" Version="1.4.13" />
-    <Reference Include="Microsoft.CSharp" Condition="'$(TargetFramework)'=='net462'"/>
+    <Reference Include="Microsoft.CSharp" Condition="'$(TargetFramework)'=='net462'" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="basic.proto" />

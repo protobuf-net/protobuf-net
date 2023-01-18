@@ -143,6 +143,25 @@ namespace ProtoBuf.Reflection
             return false;
         }
 
+        /// <summary>
+        /// Gets the suggested type for a given field
+        /// </summary>
+        protected virtual Type GetSuggestedType(FieldDescriptorProto field) => field.type switch
+        {
+            FieldDescriptorProto.Type.TypeBool => typeof(bool),
+            FieldDescriptorProto.Type.TypeDouble => typeof(double),
+            FieldDescriptorProto.Type.TypeFloat => typeof(float),
+            FieldDescriptorProto.Type.TypeFixed32 or FieldDescriptorProto.Type.TypeInt32
+                or FieldDescriptorProto.Type.TypeSfixed32 or FieldDescriptorProto.Type.TypeSint32 => typeof(int),
+            FieldDescriptorProto.Type.TypeFixed64 or FieldDescriptorProto.Type.TypeInt64
+                or FieldDescriptorProto.Type.TypeSfixed64 or FieldDescriptorProto.Type.TypeSint64 => typeof(long),
+            FieldDescriptorProto.Type.TypeUint64 => typeof(ulong),
+            FieldDescriptorProto.Type.TypeUint32 => typeof(uint),
+            FieldDescriptorProto.Type.TypeString => typeof(string),
+            FieldDescriptorProto.Type.TypeBytes => typeof(byte[]),
+            FieldDescriptorProto.Type.TypeEnum => Enums == EnumMode.Name ? typeof(string) : typeof(int),
+            _ => typeof(object),
+        };
 
         private protected override object OnBeginMessage(in VisitContext callingContext, FieldDescriptorProto field)
         {
