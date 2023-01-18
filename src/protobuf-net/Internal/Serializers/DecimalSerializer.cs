@@ -5,6 +5,8 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class DecimalSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => _variant == Variant.String;
+
         private enum Variant
         {
             BclDecimal,

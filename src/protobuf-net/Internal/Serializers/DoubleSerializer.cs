@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class DoubleSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private DoubleSerializer() { }
         internal static readonly DoubleSerializer Instance = new DoubleSerializer();
 

@@ -1,0 +1,25 @@
+﻿syntax = "proto2";
+
+message StringMessage {
+	optional string quotes = 1 [default="abc\'def\"ghi"];
+	optional string simples = 2 [default="a\ab\bc\fd\ve\tf\ng\rg \\t"];
+	optional string octal = 3 [default="\0a \12b \123c \1234d"]; // \N \NN and \NNN for octal N
+	optional string hex = 4 [default="\xcga \x0cgb \x7egc \xc2\xa2"]; // \xN and \xNN for hex N
+	optional string u16 = 5 [default="\u000cd \u00ebc \u01324"]; // \uNNNN for hex N
+	optional string u32 = 6 [default="\u000123456"]; // \U000NNNNN for hex N, limited 1FFFF
+	optional string slash = 7 [default="a\\b"];
+	optional string trigraph = 8 [default="a\?b"];
+	optional string unicode = 9 [default="ab¢de"];
+}
+
+message BytesMessage {
+	optional bytes quotes = 1 [default="abc\'def\"ghi"];
+	optional bytes simples = 2 [default="a\ab\bc\fd\ve\tf\ng\rg \\t"];
+	optional bytes octal = 3 [default="\0a \12b \123c \1234d"]; // \N \NN and \NNN for octal N
+	optional bytes hex = 4 [default="\xcga \x0cgb \x7egc \xc2\xa2 \xff"]; // \xN and \xNN for hex N
+	optional bytes u16 = 5 [default="\u000cd \u00ebc \u01324"]; // \uNNNN for hex N
+	optional bytes u32 = 6 [default="\u000123456"]; // \U000NNNNN for hex N, limited 1FFFF
+	optional bytes slash = 7 [default="a\\b"];
+	optional bytes trigraph = 8 [default="a\?b"];
+	optional bytes unicode = 9 [default="ab¢de"];
+}

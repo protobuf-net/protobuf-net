@@ -58,6 +58,7 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(MeasureState<>))]
 [assembly: TypeForwardedTo(typeof(CompatibilityLevel))]
 [assembly: TypeForwardedTo(typeof(CompatibilityLevelAttribute))]
+[assembly: TypeForwardedTo(typeof(ProtoSyntax))]
 
 #if PLAT_SKIP_LOCALS_INIT
 [module: SkipLocalsInit]

@@ -104,18 +104,18 @@ namespace Examples.Issues
             Assert.True(clone.StringArray.SequenceEqual(new[] { "c", null, "", "d", null }));
         }
 
-
-#if FEAT_NULL_LIST_ITEMS
         static RuntimeTypeModel GetModelWithSupportForNulls()
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(NullableSequences), true);
             var metaType = model[typeof(NullableSequences)];
+#pragma warning disable CS0618
             metaType[1].SupportNull = true;
             metaType[2].SupportNull = true;
             metaType[3].SupportNull = true;
             metaType[4].SupportNull = true;
+#pragma warning restore CS0618
             return model;
         }
         [Fact]
@@ -136,6 +136,5 @@ namespace Examples.Issues
 
             RunTestNull(model.Compile(), "Compile");
         }
-#endif
     }
 }

@@ -44,6 +44,7 @@ namespace ProtoBuf.Internal.Serializers
 
         SerializerFeatures IProtoTypeSerializer.Features => Serializer.Features;
 
+        bool IRuntimeProtoSerializerNode.IsScalar => Serializer.Features.IsScalar();
 
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 

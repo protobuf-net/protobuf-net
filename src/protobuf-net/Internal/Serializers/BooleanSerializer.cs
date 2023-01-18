@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class BooleanSerializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private BooleanSerializer() { }
         internal static readonly BooleanSerializer Instance = new BooleanSerializer();
 

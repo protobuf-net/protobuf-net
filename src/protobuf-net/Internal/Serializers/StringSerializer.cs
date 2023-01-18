@@ -6,6 +6,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class StringSerializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private StringSerializer() { }
         internal static readonly StringSerializer Instance = new StringSerializer();
 

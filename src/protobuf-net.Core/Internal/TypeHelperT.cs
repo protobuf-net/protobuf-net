@@ -58,6 +58,7 @@ namespace ProtoBuf.Internal
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         internal static bool CanBePacked(Type type)
         {
+            type = Nullable.GetUnderlyingType(type) ?? type;
             if (type.IsEnum) return true;
             switch (Type.GetTypeCode(type))
             {
@@ -77,6 +78,14 @@ namespace ProtoBuf.Internal
             }
             return false;
         }
+        internal static bool IsBytesLike(Type type)
+        {
+            if (type == typeof(byte[])) return true;
+            if (type == typeof(Memory<byte>)) return true;
+            if (type == typeof(ReadOnlyMemory<byte>)) return true;
+            if (type == typeof(ArraySegment<byte>)) return true;
+            return false;
+        }
 
         [Obsolete("Prefer list provider")]
         internal static bool ResolveUniqueEnumerableT(Type type, out Type t)
@@ -94,7 +103,7 @@ namespace ProtoBuf.Internal
             }
 
             if (type is null
-                || type == typeof(string) || type == typeof(byte[]) || type == typeof(object))
+                || type == typeof(string) || IsBytesLike(type) || type == typeof(object))
             {
                 t = null; // don't need that kind of confusion
                 return false;
@@ -146,6 +155,14 @@ namespace ProtoBuf.Internal
                 .GetField(nameof(StructValueChecker<int>.Instance))
                 .GetValue(null);
         }
+
+        internal static object CreateNonTrivialDefault(Type type)
+        {
+            if (type.IsValueType) return Activator.CreateInstance(Nullable.GetUnderlyingType(type) ?? type);
+            if (type == typeof(string)) return "";
+            if (type == typeof(byte[])) return Array.Empty<byte>();
+            return null;
+        }
     }
 
     internal static class TypeHelper<T>
@@ -159,9 +176,11 @@ namespace ProtoBuf.Internal
             ?? ReferenceValueChecker.Instance as IValueChecker<T>
             ?? (IValueChecker<T>)TypeHelper.GetValueTypeChecker(typeof(T));
 
-        public static readonly bool CanBePacked = !CanBeNull && TypeHelper.CanBePacked(typeof(T));
+        public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
         public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
+
+        public static readonly T NonTrivialDefault = Default ?? (T)TypeHelper.CreateNonTrivialDefault(typeof(T));
 
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]

@@ -1,0 +1,36 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+message CheckInfo
+{
+	string regex = 1;
+	string desc = 2;
+	bytes regex_b = 3;
+	bytes desc_b = 4;
+}
+
+extend google.protobuf.FieldOptions {
+	CheckInfo check = 5000;
+}
+
+message MyMsg{
+	string Simple = 1[(check) = {
+		regex:'abc',
+		desc:"def",
+		regex_b:'ghi',
+		desc_b:"jkl"
+	}];
+	string NonTrivial = 2[(check) = {
+		regex:'a\u0afFbc',
+		//desc:"d\u0afFef",
+		//regex_b:'g\ffhi',
+		//desc_b:"j\ffkl"
+	}];
+	string Name = 3[(check) = {
+		regex:'\\[\\S*,\\S*\\]',
+		desc:"Msg",
+		regex_b:'\\[\\S*,\\S*\\] \u0afF \xff',
+		desc_b:"Msg \u0afF \xff"
+	}];
+}

@@ -685,8 +685,8 @@ namespace ProtoBuf.Compiler
         internal void ReadNullCheckedTail(Type type, IRuntimeProtoSerializerNode tail, Compiler.Local valueFrom)
         {
             Type underlyingType;
-
-            if (type.IsValueType && (underlyingType = Nullable.GetUnderlyingType(type)) is not null)
+            if (type.IsValueType && type != tail.ExpectedType && (underlyingType = Nullable.GetUnderlyingType(type)) is not null
+                && underlyingType == tail.ExpectedType)
             {
                 if (tail.RequiresOldValue)
                 {

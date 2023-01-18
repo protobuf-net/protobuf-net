@@ -1,21 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
     <RootNamespace>ProtoBuf</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.Core</AssemblyName>
+    <LangVersion>10</LangVersion>
     <Title>protobuf-net.Core</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
     <!--<DefineConstants>$(DefineConstants);TRACK_USAGE</DefineConstants>-->
   </PropertyGroup>
   
-  <ItemGroup Condition="'$(TargetFramework)' == 'net461' or '$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.4" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net461' or '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
   </ItemGroup>
 
@@ -25,7 +26,7 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp3.1'">
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)'=='net5.0'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
     <DefineConstants>$(DefineConstants);PLAT_ISREF;PLAT_SPAN_OVERLOADS;PLAT_INTRINSICS;PLAT_AGGRESSIVE_OPTIMIZE;PLAT_CONCURRENT_CLEAR;PLAT_SKIP_LOCALS_INIT;PLAT_UTF8_STRING;PLAT_DYNAMIC_ACCESS_ATTR</DefineConstants>
   </PropertyGroup>
 
@@ -36,7 +37,6 @@ PLAT_SPAN_OVERLOADS       : do common methods like string encode have APIs that 
 PLAT_INTRINSICS           : make use of CPU intrinsics
 PLAT_AGGRESSIVE_OPTIMIZE  : use MethodImplOptions.AggressiveOptimization appropriate
 FEAT_DYNAMIC_REF          : whether the dynamic type / reference-tracking features are enabled
-FEAT_NULL_LIST_ITEMS      : whether we support retaining nulls in lists
 PLAT_CONCURRENT_CLEAR     : whether the concurrent collections have the necessary Clear method
 PLAT_SKIP_LOCALS_INIT     : whether we can avoid ".locals init"
 PLAT_DYNAMIC_ACCESS_ATTR  : whether the runtime defines DynamicallyAccessedMembersAttribute et al

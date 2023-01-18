@@ -1,17 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
-	  <TargetFrameworks>net461;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
-	  <RootNamespace>ProtoBuf.FSharp</RootNamespace>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+    <RootNamespace>ProtoBuf.FSharp</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="5.0.2" />
+    <PackageReference Include="FSharp.Core" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
-
 </Project>

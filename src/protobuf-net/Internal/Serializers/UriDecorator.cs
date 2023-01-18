@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class UriDecorator : ProtoDecoratorBase
     {
+        public override bool IsScalar => true;
         private static readonly Type expectedType = typeof(Uri);
         public UriDecorator(IRuntimeProtoSerializerNode tail) : base(tail) { }
 

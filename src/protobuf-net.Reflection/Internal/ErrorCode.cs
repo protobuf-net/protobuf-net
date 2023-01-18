@@ -46,5 +46,10 @@
         UnexpectedEOF = 38,
         InvalidString = 39,
         SyntaxErrorUnknownEntity = 40,
+        MessageKindUnknownKind = 41,
+        MessageKindNullWrapperProto3 = 42,
+        MessageKindNullWrapperSingleField = 43,
+        MessageKindNullWrapperFieldOne = 44,
+        InvalidUtf8 = 45,
     }
 }

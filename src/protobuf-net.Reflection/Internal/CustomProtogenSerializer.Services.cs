@@ -2723,6 +2723,9 @@ namespace ProtoBuf.Reflection.Internal
                                 value.Namespace = str;
                             }
                             break;
+                        case 5:
+                            value.MessageKind = (MessageKind)state.ReadInt32();
+                            break;
                         default:
                             state.AppendExtensionData(value);
                             break;
@@ -2768,6 +2771,10 @@ namespace ProtoBuf.Reflection.Internal
                     }
                 }
                 state.WriteString(4, value.Namespace);
+                if (value.MessageKind != MessageKind.None)
+                {
+                    state.WriteInt32Varint(5, (int)value.MessageKind);
+                }
                 IExtensible instance = value;
                 state.AppendExtensionData(instance);
             }

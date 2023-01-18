@@ -4,6 +4,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class BlobSerializer<T> : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         public Type ExpectedType { get { return expectedType; } }
 
         private static readonly Type expectedType = typeof(T);

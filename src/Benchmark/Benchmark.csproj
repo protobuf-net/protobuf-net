@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net472;net5.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net472;net6.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS1591;CA1822</NoWarn>
     <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
-    <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.1' or '$(TargetFramework)'=='net5.0'">$(DefineConstants);INTRINSICS</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)'=='netcoreapp3.1' or '$(TargetFramework)'=='net6.0'">$(DefineConstants);INTRINSICS</DefineConstants>
     <RootNamespace>Benchmark</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -18,12 +18,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-    <PackageReference Include="Google.Protobuf" Version="3.20.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
+    <PackageReference Include="Google.Protobuf" Version="3.21.10" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
   </ItemGroup>
 
@@ -32,11 +31,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" />
-    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.1.1" />
-    <PackageReference Update="Nerdbank.GitVersioning" Version="3.5.104" />
-  </ItemGroup>
-
 </Project>

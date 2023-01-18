@@ -457,46 +457,65 @@ namespace ProtoBuf.Meta
                     }
                     else
                     {
-                        if (SupportNull)
-                        {
-#if FEAT_NULL_LIST_ITEMS
-                            something new here; old code not even remotely compatible
-#else
-                            ThrowHelper.ThrowNotSupportedException("null items in lists");
-#endif
-                        }
-
                         _ = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-
 
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
                         if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
                         if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
-#if FEAT_NULL_LIST_ITEMS
-                        if (SupportNull) listFeatures |= SerializerFeatures.OptionListsSupportNull;
-#endif
+#pragma warning disable CS0618
+                        if (SupportNull)
+                        {
+                            if (NullWrappedValue || NullWrappedCollection || IsPacked)
+                            {
+                                ThrowHelper.ThrowNotSupportedException($"{nameof(SupportNull)} cannot be combined with {nameof(IsPacked)}, {nameof(NullWrappedValue)} or {nameof(NullWrappedCollection)}");
+                            }
+                            listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup;
+                        }
+#pragma warning restore CS0618
+                        else
+                        {
+                            if (NullWrappedCollection)
+                            {
+                                listFeatures |= SerializerFeatures.OptionWrappedCollection;
+                                if (NullWrappedCollectionGroup) listFeatures |= SerializerFeatures.OptionWrappedCollectionGroup;
+                            }
+                            if (NullWrappedValue)
+                            {
+                                listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence;
+                                if (NullWrappedValueGroup) listFeatures |= SerializerFeatures.OptionWrappedValueGroup;
+                            }
+                        }
+
                         ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures, CompatibilityLevel, DataFormat);
                     }
                 }
                 else
                 {
-                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
-                    if (ser is null)
+
+                    ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, allowComplexTypes: true);
+                    if (ser is null) ThrowHelper.NoSerializerDefined(MemberType);
+                    if (NullWrappedValue)
                     {
-                        ThrowHelper.NoSerializerDefined(MemberType);
+                        if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
+                        var valueFeatures = SerializerFeatures.OptionWrappedValue;
+                        if (NullWrappedValueGroup) valueFeatures |= SerializerFeatures.OptionWrappedValueGroup;
+                        if (MemberType.IsValueType && Nullable.GetUnderlyingType(MemberType) is null) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with non-nullable values");
+                        if (_defaultValue is object) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with default values");
+                        if (IsRequired) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with required values");
+                        if (IsPacked) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with packed values");
+                        if (DataFormat != DataFormat.Default) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with {nameof(DataFormat)}.{nameof(DataFormat.Default)}");
+                        if (!ser.IsScalar) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with scalar types, or in a collection");
+
+                        // we now replace 'ser' with a serializer that uses read/write-any ([wrapped]), but it was
+                        // useful to know that we can at least get a suitable serializer
+                        ser = AnyTypeSerializer.Create(MemberType, valueFeatures, CompatibilityLevel, DataFormat);
                     }
+                    ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
 
-                    // apply lists if appropriate (note that we don't end up using "ser" in this case, but that's OK)
-                    
-                    else
-                    {
-                        ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
-
-                        if (_defaultValue is not null && !IsRequired && getSpecified is null)
-                        {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
-                            // as does "IsRequired"
-                            ser = new DefaultValueDecorator(_defaultValue, ser);
-                        }
+                    if (_defaultValue is not null && !IsRequired && getSpecified is null)
+                    {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
+                        // as does "IsRequired"
+                        ser = new DefaultValueDecorator(_defaultValue, ser);
                     }
                     if (MemberType == typeof(Uri))
                     {
@@ -757,23 +776,25 @@ namespace ProtoBuf.Meta
             set { SetName(value); }
         }
 
-        private const byte
-           OPTIONS_IsStrict = 1,
-           OPTIONS_IsPacked = 2,
-           OPTIONS_IsRequired = 4,
-           OPTIONS_OverwriteList = 8,
-#if FEAT_NULL_LIST_ITEMS
-           OPTIONS_SupportNull = 16,
-#endif
+        private const ushort
+           OPTIONS_IsStrict = 1 << 0,
+           OPTIONS_IsPacked = 1 << 1,
+           OPTIONS_IsRequired = 1 << 2,
+           OPTIONS_OverwriteList = 1 << 3,
+           OPTIONS_NullWrappedValue = 1 << 4,
+           OPTIONS_NullWrappedValueGroup = 1 << 5,
 #if FEAT_DYNAMIC_REF
-           OPTIONS_AsReference = 32,
-           OPTIONS_DynamicType = 128,
+           OPTIONS_AsReference = ,
+           OPTIONS_DynamicType = ,
 #endif
-           OPTIONS_IsMap = 64;
+           OPTIONS_IsMap = 1 << 6,
+           OPTIONS_NullWrappedCollection = 1 << 7,
+           OPTIONS_NullWrappedCollectionGroup = 1 << 8,
+           OPTIONS_SupportNull = 1 << 9;
 
-        private byte flags;
-        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
-        private void SetFlag(byte flag, bool value, bool throwIfFrozen)
+        private ushort flags;
+        private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
+        private void SetFlag(ushort flag, bool value, bool throwIfFrozen = true)
         {
             if (throwIfFrozen && HasFlag(flag) != value)
             {
@@ -782,27 +803,46 @@ namespace ProtoBuf.Meta
             if (value)
                 flags |= flag;
             else
-                flags = (byte)(flags & ~flag);
+                flags = (ushort)(flags & ~flag);
         }
 
         /// <summary>
         /// Should lists have extended support for null values? Note this makes the serialization less efficient.
         /// </summary>
+        //[Obsolete("Please use " + nameof(NullWrappedValue) + " with " + nameof(NullWrappedValueGroup) + "; see the documentation for " + nameof(NullWrappedValueAttribute) + " for more information.")]
         public bool SupportNull
         {
-#if FEAT_NULL_LIST_ITEMS
             get { return HasFlag(OPTIONS_SupportNull); }
-            set { SetFlag(OPTIONS_SupportNull, value, true); }
-#else
-            get => false;
-            [Obsolete(SupportNullNotImplemented, true)]
-            set { if (value != SupportNull) ThrowHelper.ThrowNotSupportedException(); }
-#endif
+            set { SetFlag(OPTIONS_SupportNull, value); }
         }
 
-#if !FEAT_NULL_LIST_ITEMS
-        internal const string SupportNullNotImplemented = "Nullable list elements are not currently implemented";
-#endif
+        /// <see cref="NullWrappedValueAttribute"/>
+        internal bool NullWrappedValue
+        {
+            get { return HasFlag(OPTIONS_NullWrappedValue); }
+            set { SetFlag(OPTIONS_NullWrappedValue, value); }
+        }
+
+        /// <see cref="NullWrappedValueAttribute.AsGroup"/>
+        internal bool NullWrappedValueGroup
+        {
+            get { return HasFlag(OPTIONS_NullWrappedValueGroup); }
+            set { SetFlag(OPTIONS_NullWrappedValueGroup, value); }
+        }
+
+        /// <see cref="NullWrappedValueAttribute"/>
+        internal bool NullWrappedCollection
+        {
+            get { return HasFlag(OPTIONS_NullWrappedCollection); }
+            set { SetFlag(OPTIONS_NullWrappedCollection, value); }
+        }
+
+        /// <see cref="NullWrappedValueAttribute.AsGroup"/>
+        internal bool NullWrappedCollectionGroup
+        {
+            get { return HasFlag(OPTIONS_NullWrappedCollectionGroup); }
+            set { SetFlag(OPTIONS_NullWrappedCollectionGroup, value); }
+        }
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
         {
