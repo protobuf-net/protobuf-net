@@ -1,44 +1,30 @@
 ﻿using Google.Protobuf.Reflection;
-using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace ProtoBuf.Internal
+namespace ProtoBuf.Reflection
 {
-    internal abstract class DecodeVisitor : IDisposable
+    /// <summary>
+    /// Visitor implementation for interpreting protobuf payloads from a runtime-provided schema
+    /// </summary>
+    public abstract class DecodeVisitor : IDisposable
     {
         private readonly Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
-        public object Visit(Stream stream, FileDescriptorProto file, string rootMessageType)
+
+        /// <summary>
+        /// Apply the payload from <paramref name="source"/> to the message-type <paramref name="rootMessageType"/> from the schema <paramref name="schema"/>
+        /// </summary>
+        public object Visit(ReadOnlyMemory<byte> source, FileDescriptorSet schema, string rootMessageType)
         {
-            if (stream is null) throw new ArgumentNullException(nameof(stream));
-            if (file is null) throw new ArgumentNullException(nameof(file));
-
-            // build an index over the known types; note that this uses .-rooted syntax, so make sure
-            // that our input matches that if needed
-            CommonCodeGenerator.BuildTypeIndex(file, _knownTypes);
-            rootMessageType = (rootMessageType ?? "").Trim();
-            if (rootMessageType.Length > 0 && rootMessageType[0] != '.') rootMessageType = "." + rootMessageType;
-
-            if (_knownTypes.TryGetValue(rootMessageType, out var found) && found is DescriptorProto descriptor)
-            { } // fine!
-            else
-            {
-                throw new InvalidOperationException($"Unable to resolve root message kind '{rootMessageType}' from {file.Name}");
-            }
-            var reader = ProtoReader.State.Create(stream, null);
+            var reader = ProtoReader.State.Create(source, null);
             try
             {
-                var ctx = new VisitContext(null, null, descriptor);
-                var obj = OnBeginMessage(in ctx, null);
-                ctx = ctx.StepIn(obj);
-
-                VisitMessageFields(ctx, ref reader);
-                OnEndMessage(in ctx, null);
-                Flush();
-                return ctx.Current;
+                return Visit(ref reader, schema, rootMessageType);
             }
             finally
             {
@@ -46,23 +32,106 @@ namespace ProtoBuf.Internal
             }
         }
 
+        /// <summary>
+        /// Apply the payload from <paramref name="source"/> to the message-type <paramref name="rootMessageType"/> from the schema <paramref name="schema"/>
+        /// </summary>
+        public object Visit(ReadOnlySequence<byte> source, FileDescriptorSet schema, string rootMessageType)
+        {
+            var reader = ProtoReader.State.Create(source, null);
+            try
+            {
+                return Visit(ref reader, schema, rootMessageType);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Apply the payload from <paramref name="source"/> to the message-type <paramref name="rootMessageType"/> from the schema <paramref name="schema"/>
+        /// </summary>
+        public object Visit(Stream source, FileDescriptorSet schema, string rootMessageType)
+        {
+            if (source is null) throw new ArgumentNullException(nameof(source));
+            var reader = ProtoReader.State.Create(source, null);
+            try
+            {
+                return Visit(ref reader, schema, rootMessageType);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Apply the payload from <paramref name="source"/> to the message-type <paramref name="rootMessageType"/> from the schema <paramref name="schema"/>
+        /// </summary>
+        public object Visit(ref ProtoReader.State source, FileDescriptorSet schema, string rootMessageType)
+        {
+            if (schema is null) throw new ArgumentNullException(nameof(schema));
+
+            // build an index over the known types; note that this uses .-rooted syntax, so make sure
+            // that our input matches that if needed
+            foreach (var file in schema.Files)
+            {
+                CommonCodeGenerator.BuildTypeIndex(file, _knownTypes);
+            }
+
+            rootMessageType = (rootMessageType ?? "").Trim();
+            if (rootMessageType.Length > 0 && rootMessageType[0] != '.') rootMessageType = "." + rootMessageType;
+
+            if (_knownTypes.TryGetValue(rootMessageType, out var found) && found is DescriptorProto descriptor)
+            { } // fine!
+            else
+            {
+                throw new InvalidOperationException($"Unable to resolve root message kind '{rootMessageType}' from schema");
+            }
+
+            var parentCtx = new VisitContext(null, null, descriptor);
+            var obj = OnBeginMessage(in parentCtx, null);
+            var ctx = parentCtx.StepIn(obj);
+
+            VisitMessageFields(ctx, ref source);
+            OnEndMessage(parentCtx, in ctx, null);
+            Flush();
+            return ctx.Current;
+        }
+
+        /// <summary>
+        /// Represents the state of the visitor
+        /// </summary>
         protected readonly struct VisitContext
         {
             private readonly DiscriminatedUnion64Object _mapKey;
             private readonly DescriptorProto _messageType;
             private readonly object _current, _parent;
             private readonly int _index;
+            /// <summary>
+            /// The current message being visited
+            /// </summary>
             public object Current => _current;
+            /// <summary>
+            /// The parent of the current message being visited - this could be a list
+            /// </summary>
             public object Parent => _parent;
+            /// <summary>
+            /// The index of the current message being visited, when part of a list
+            /// </summary>
             public int Index => _index;
+
+            /// <summary>
+            /// The schema of the current message being visited
+            /// </summary>
             public DescriptorProto MessageType => _messageType;
-            public VisitContext(object current, object parent, DescriptorProto message, int index = -1)
+            internal VisitContext(object current, object parent, DescriptorProto messageType, int index = -1)
             {
                 _current = current;
                 _parent = parent;
                 _index = index;
                 _mapKey = default;
-                _messageType = message;
+                _messageType = messageType;
             }
 
             internal VisitContext StepIn(object obj) => new VisitContext(obj, this._current, this._messageType);
@@ -76,19 +145,19 @@ namespace ProtoBuf.Internal
                 return clone;
             }
 
-            public MapKeyKind MapKeyKind => (MapKeyKind)_mapKey.Discriminator;
-            public int MapKeyInt32 => _mapKey.Int32;
-            public long MapKeyInt64 => _mapKey.Int64;
-            public uint MapKeyUInt32 => _mapKey.UInt32;
-            public ulong MapKeyUInt64 => _mapKey.UInt64;
-            public string MapKeyString => (string)_mapKey.Object;
+            internal MapKeyKind MapKeyKind => (MapKeyKind)_mapKey.Discriminator;
+            internal int MapKeyInt32 => _mapKey.Int32;
+            internal long MapKeyInt64 => _mapKey.Int64;
+            internal uint MapKeyUInt32 => _mapKey.UInt32;
+            internal ulong MapKeyUInt64 => _mapKey.UInt64;
+            internal string MapKeyString => (string)_mapKey.Object;
 
-            public object MapKeyValue => (MapKeyKind)_mapKey.Discriminator switch
+            internal object MapKeyValue => (MapKeyKind)_mapKey.Discriminator switch
             {
-                MapKeyKind.Int32 => _mapKey.Int32,
-                MapKeyKind.Int64 => _mapKey.Int64,
-                MapKeyKind.UInt32 => MapKeyUInt32,
-                MapKeyKind.UInt64 => MapKeyUInt64,
+                MapKeyKind.Int32 => BoxFunctions.Int32(MapKeyInt32),
+                MapKeyKind.Int64 => BoxFunctions.Int64(MapKeyInt64),
+                MapKeyKind.UInt32 => BoxFunctions.UInt32(MapKeyUInt32),
+                MapKeyKind.UInt64 => BoxFunctions.UInt64(MapKeyUInt64),
                 MapKeyKind.String => MapKeyString,
                 _ => null,
             };
@@ -124,7 +193,7 @@ namespace ProtoBuf.Internal
             }
         }
 
-        protected enum MapKeyKind
+        internal enum MapKeyKind
         {
             None,
             Int32,
@@ -307,7 +376,7 @@ namespace ProtoBuf.Internal
                 if (isRepeated)
                 {
                     ctx.UnsafeIncrIndex(); // for use as a final count
-                    OnEndRepeated(in ctx, field);
+                    OnEndRepeated(in ctxSnapshot, in ctx, field);
                     ctx = ctxSnapshot; // step back out
                 }
             }
@@ -414,23 +483,23 @@ namespace ProtoBuf.Internal
             }
         }
 
-        private object ReadMessage(VisitContext ctx, ref ProtoReader.State reader, FieldDescriptorProto field)
+        private object ReadMessage(VisitContext parentContext, ref ProtoReader.State reader, FieldDescriptorProto field)
         {
             var tok = reader.StartSubItem();
-            var obj = OnBeginMessage(in ctx, field);
-            ctx = ctx.StepIn(obj);
+            var obj = OnBeginMessage(in parentContext, field);
+            var ctx = parentContext.StepIn(obj);
             VisitMessageFields(ctx, ref reader);
-            OnEndMessage(in ctx, field);
+            OnEndMessage(in parentContext, in ctx, field);
             reader.EndSubItem(tok);
             return obj;
         }
 
-        private void VisitMap<TKey, TValue>(VisitContext ctx, ref ProtoReader.State reader,
+        private void VisitMap<TKey, TValue>(VisitContext parentContext, ref ProtoReader.State reader,
             Reader<TKey> keyReader,
             Reader<TValue> valueReader,
             FieldDescriptorProto mapField, FieldDescriptorProto valueField, TKey defaultKey, TValue defaultValue = default)
         {
-            ctx = ctx.StepIn(OnBeginMap<TKey, TValue>(in ctx, mapField));
+            var ctx = parentContext.StepIn(OnBeginMap<TKey, TValue>(in parentContext, mapField));
             ctx.UnsafeWithMapKey<TKey>(defaultKey); // this needs to be called before the value-read
             ctx.UnsafeIncrIndex();
             do
@@ -459,10 +528,10 @@ namespace ProtoBuf.Internal
                 OnMapEntry<TKey, TValue>(in ctx, valueField.type, key, value);
                 ctx.UnsafeIncrIndex();
             } while (reader.TryReadFieldHeader(mapField.Number));
-            OnEndMap<TKey, TValue>(in ctx, mapField);
+            OnEndMap<TKey, TValue>(in parentContext, in ctx, mapField);
         }
 
-        protected bool TryGetEnumType(FieldDescriptorProto field, out EnumDescriptorProto enumDescriptor)
+        private protected bool TryGetEnumType(FieldDescriptorProto field, out EnumDescriptorProto enumDescriptor)
         {
             if (_knownTypes.TryGetValue(field.TypeName, out var inner) && inner is EnumDescriptorProto tmp)
             {
@@ -472,53 +541,60 @@ namespace ProtoBuf.Internal
             enumDescriptor = null;
             return false;
         }
+        /// <summary>
+        /// Gets or sets the formatter associated with this instance
+        /// </summary>
         public IFormatProvider FormatProvider { get; set; } = CultureInfo.InvariantCulture;
-        protected abstract void OnFieldFallback(in VisitContext ctx, FieldDescriptorProto field, string value); // fallback to allow simple shared handling
-
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, bool value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, int value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, uint value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, long value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, ulong value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, float value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, double value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, string value) => OnFieldFallback(in ctx, field, value);
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, byte[] value) => OnFieldFallback(in ctx, field, BitConverter.ToString(value));
-        protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
+        private protected abstract void OnFieldFallback(in VisitContext ctx, FieldDescriptorProto field, string value); // fallback to allow simple shared handling
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, bool value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, int value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, uint value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, long value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, ulong value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, float value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, double value) => OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, string value) => OnFieldFallback(in ctx, field, value);
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, byte[] value) => OnFieldFallback(in ctx, field, BitConverter.ToString(value));
+        private protected virtual void OnField(in VisitContext ctx, FieldDescriptorProto field, EnumValueDescriptorProto @enum, int value)
         {
             if (@enum is null) OnFieldFallback(in ctx, field, value.ToString(FormatProvider));
             else OnFieldFallback(in ctx, field, @enum.Name);
         }
-        protected virtual object OnBeginMessage(in VisitContext ctx, FieldDescriptorProto field)
+        private protected virtual object OnBeginMessage(in VisitContext ctx, FieldDescriptorProto field)
         {
             Depth++;
             return null;
         }
-        protected virtual void OnEndMessage(in VisitContext ctx, FieldDescriptorProto field) => Depth--;
+        private protected virtual void OnEndMessage(in VisitContext parentContext, in VisitContext ctx, FieldDescriptorProto field) => Depth--;
 
-        protected virtual void OnUnkownField(in VisitContext ctx, ref ProtoReader.State reader) => reader.SkipField();
+        private protected virtual void OnUnkownField(in VisitContext ctx, ref ProtoReader.State reader) => reader.SkipField();
 
-        protected virtual object OnBeginRepeated(in VisitContext ctx, FieldDescriptorProto field)
-        {
-            Depth++;
-            return null;
-        }
-
-        protected virtual void OnEndRepeated(in VisitContext ctx, FieldDescriptorProto field) => Depth--;
-
-        protected virtual object OnBeginMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field)
+        private protected virtual object OnBeginRepeated(in VisitContext ctx, FieldDescriptorProto field)
         {
             Depth++;
             return null;
         }
 
-        protected virtual void OnMapEntry<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto.Type valueType, TKey key, TValue value) { }
+        private protected virtual void OnEndRepeated(in VisitContext parentContext, in VisitContext ctx, FieldDescriptorProto field) => Depth--;
 
-        protected virtual void OnEndMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field) => Depth--;
+        private protected virtual object OnBeginMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field)
+        {
+            Depth++;
+            return null;
+        }
 
-        protected virtual void Flush() { }
+        private protected virtual void OnMapEntry<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto.Type valueType, TKey key, TValue value) { }
 
+        private protected virtual void OnEndMap<TKey, TValue>(in VisitContext parentContext, in VisitContext ctx, FieldDescriptorProto field) => Depth--;
+
+        private protected virtual void Flush() { }
+
+        /// <summary>
+        /// Gets the current depth of the visitor
+        /// </summary>
         public int Depth { get; private set; } = -1;
+
+        /// <inheritdoc/>
         public virtual void Dispose() { }
     }
 }

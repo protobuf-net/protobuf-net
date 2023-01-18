@@ -1,6 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
-using ProtoBuf.Internal;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -120,7 +120,7 @@ enum Blap {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload();
             using var visitor = new TextDecodeVisitor(_output);
-            visitor.Visit(ms, schemaSet.Files[0], "Test");
+            visitor.Visit(ms, schemaSet, "Test");
             var result = _output.ToString();
 
             Assert.Equal(@"1: a=150 (TypeInt32)
@@ -141,7 +141,7 @@ enum Blap {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
             using var visitor = new TextDecodeVisitor(_output);
-            visitor.Visit(ms, schemaSet.Files[0], "Test");
+            visitor.Visit(ms, schemaSet, "Test");
             var result = _output.ToString();
             Assert.Equal(@"1: a=150 (TypeInt32)
 2: b=[ (TypeString)
@@ -168,8 +168,8 @@ enum Blap {
         {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload();
-            using var visitor = new ObjectDecodeVisitor();
-            IDictionary<string,object> lookup = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            using var visitor = new ExpandoObjectDecodeVisitor();
+            IDictionary<string,object> lookup = visitor.Visit(ms, schemaSet, "Test");
             dynamic obj = lookup;
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
@@ -192,8 +192,8 @@ enum Blap {
         {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
-            using var visitor = new ObjectDecodeVisitor();
-            IDictionary<string, object> lookup = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            using var visitor = new ExpandoObjectDecodeVisitor();
+            IDictionary<string, object> lookup = visitor.Visit(ms, schemaSet, "Test");
             dynamic obj = lookup;
 
             // test via JSON
@@ -217,21 +217,21 @@ enum Blap {
         {
             var schemaSet = GetDummySchema();
             using var ms = GetDummyPayload(fCount: 6);
-            using var visitor = ObjectDecodeVisitor.ForJson();
-            IDictionary<string, object> lookup = visitor.Visit(ms, schemaSet.Files[0], "Test");
+            using var visitor = ExpandoObjectDecodeVisitor.ForJson();
+            IDictionary<string, object> lookup = visitor.Visit(ms, schemaSet, "Test");
             dynamic obj = lookup;
 
             // test via JSON
             string json = JsonConvert.SerializeObject((object)obj);
             _log.WriteLine(json);
-            Assert.Equal(@"{""g"":0,""ja"":150,""jb"":[""testing""],""c"":{""g"":0,""ja"":150},""jd"":""BLAB_Y"",""e"":5,""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
+            Assert.Equal(@"{""g"":0,""ja"":150,""jb"":[""testing""],""c"":{""g"":0,""ja"":150},""jd"":""BLAB_Y"",""e"":""5"",""jf"":[0,1,2,3,4,5]}", json, ignoreLineEndingDifferences: true);
 
             // test dynamic access
             Assert.Equal(150, (int)obj.ja);
             Assert.Equal("testing", ((List<string>)obj.jb).Single());
             Assert.Equal(150, (int)obj.c.ja);
             Assert.Equal("BLAB_Y", (string)obj.jd);
-            Assert.Equal(5, (int)obj.e);
+            Assert.Equal("5", (string)obj.e);
             Assert.Equal("0,1,2,3,4,5", string.Join(",", (List<int>)obj.jf));
             Assert.Equal(0, (int)obj.g);
             Assert.False(lookup.ContainsKey("h"));
@@ -294,7 +294,7 @@ message Bar {
         {
             var schemaSet = GetMapSchema();
             var text = new TextDecodeVisitor(_output);
-            text.Visit(GetMapPayload(), schemaSet.Files[0], ".Foo");
+            text.Visit(GetMapPayload(), schemaSet, ".Foo");
             var result = _output.ToString();
             Assert.Equal(@"1: a={
  #0: 12=abc
@@ -315,9 +315,9 @@ message Bar {
         public void ProcessMaps_Json()
         {
             var schemaSet = GetMapSchema();
-            var visitor = ObjectDecodeVisitor.ForJson();
+            var visitor = ExpandoObjectDecodeVisitor.ForJson();
 
-            IDictionary<string, object> lookup = visitor.Visit(GetMapPayload(), schemaSet.Files[0], ".Foo");
+            IDictionary<string, object> lookup = visitor.Visit(GetMapPayload(), schemaSet, ".Foo");
             dynamic obj = lookup;
 
             // test via JSON

@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf.Reflection;
 using ProtoBuf;
-using ProtoBuf.Internal;
 using ProtoBuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -262,7 +262,7 @@ namespace protogen
                         if (mode == ExecMode.Decode)
                         {
                             using var visitor = new TextDecodeVisitor(Console.Out);
-                            visitor.Visit(Console.OpenStandardInput(), set.Files[0], decodeRootType);
+                            visitor.Visit(Console.OpenStandardInput(), set, decodeRootType);
                         }
                         else // othewise: code-gen
                         {

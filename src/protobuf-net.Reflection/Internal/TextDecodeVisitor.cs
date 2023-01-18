@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace ProtoBuf.Internal
+namespace ProtoBuf.Reflection.Internal
 {
     internal sealed class TextDecodeVisitor : DecodeVisitor
     {
@@ -12,7 +12,7 @@ namespace ProtoBuf.Internal
             => Output = output ?? throw new ArgumentNullException(nameof(output));
         public string Indent { get; set; } = " ";
 
-        protected override void Flush() => Output.Flush();
+        private protected override void Flush() => Output.Flush();
 
         private void WriteLine(string message)
         {
@@ -20,23 +20,23 @@ namespace ProtoBuf.Internal
                 Output.Write(Indent);
             Output.WriteLine(message);
         }
-        protected override void OnUnkownField(in VisitContext ctx, ref ProtoReader.State reader)
+        private protected override void OnUnkownField(in VisitContext ctx, ref ProtoReader.State reader)
         {
             WriteLine($"{reader.FieldNumber.ToString(FormatProvider)}: (unknown, {reader.WireType})");
             base.OnUnkownField(in ctx, ref reader); // skip the value
         }
 
-        protected override object OnBeginRepeated(in VisitContext ctx, FieldDescriptorProto field)
+        private protected override object OnBeginRepeated(in VisitContext ctx, FieldDescriptorProto field)
         {
             WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}=[ ({field.type})");
             return base.OnBeginRepeated(in ctx, field);
         }
-        protected override void OnEndRepeated(in VisitContext ctx, FieldDescriptorProto field)
+        private protected override void OnEndRepeated(in VisitContext parentContext, in VisitContext ctx, FieldDescriptorProto field)
         {
-            base.OnEndRepeated(in ctx, field);
+            base.OnEndRepeated(in parentContext, in ctx, field);
             WriteLine($"] // {field.Name}, count: {ctx.Index.ToString(FormatProvider)}");
         }
-        protected override void OnFieldFallback(in VisitContext ctx, FieldDescriptorProto field, string value)
+        private protected override void OnFieldFallback(in VisitContext ctx, FieldDescriptorProto field, string value)
         {
             if (ctx.Index < 0)
             {
@@ -48,17 +48,17 @@ namespace ProtoBuf.Internal
             }
         }
 
-        protected override object OnBeginMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field)
+        private protected override object OnBeginMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field)
         {
             WriteLine($"{field.Number.ToString(FormatProvider)}: {field.Name}={{");
             return base.OnBeginMap<TKey, TValue>(in ctx, field);
         }
-        protected override void OnEndMap<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto field)
+        private protected override void OnEndMap<TKey, TValue>(in VisitContext parentContext, in VisitContext ctx, FieldDescriptorProto field)
         {
-            base.OnEndMap<TKey, TValue>(in ctx, field);
+            base.OnEndMap<TKey, TValue>(in parentContext, in ctx, field);
             WriteLine($"}} // {field.Name}, count: {ctx.Index.ToString(FormatProvider)}");
         }
-        protected override void OnMapEntry<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto.Type valueType, TKey key, TValue value)
+        private protected override void OnMapEntry<TKey, TValue>(in VisitContext ctx, FieldDescriptorProto.Type valueType, TKey key, TValue value)
         {
             base.OnMapEntry(in ctx, valueType, key, value);
             switch (valueType)
@@ -86,7 +86,7 @@ namespace ProtoBuf.Internal
         }
 
 
-        protected override object OnBeginMessage(in VisitContext ctx, FieldDescriptorProto field)
+        private protected override object OnBeginMessage(in VisitContext ctx, FieldDescriptorProto field)
         {
             if (field is not null)
             {
@@ -120,9 +120,9 @@ namespace ProtoBuf.Internal
             _ => null,
         };
 
-        protected override void OnEndMessage(in VisitContext ctx, FieldDescriptorProto field)
+        private protected override void OnEndMessage(in VisitContext parentContext, in VisitContext ctx, FieldDescriptorProto field)
         {
-            base.OnEndMessage(in ctx, field);
+            base.OnEndMessage(in parentContext, in ctx, field);
             if (field is not null)
             {
                 WriteLine($"}} // {field.Name}");
