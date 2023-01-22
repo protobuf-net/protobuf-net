@@ -2091,7 +2091,7 @@ namespace ProtoBuf.Meta
             }
             else
             {
-                HashSet<NullWrappedValueMemberData> extraLayeredMembers = new();
+                Dictionary<string, NullWrappedValueMemberData> extraLayeredMembers = new();
                 ValueMember[] fieldsArr = GetFields();
                 int beforeMessagePosition = builder.Length;
 
@@ -2117,12 +2117,58 @@ namespace ProtoBuf.Meta
                         if (member.RequiresExtraLayerInSchema())
                         {
                             schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
-                            var nullWrappedValueMemberData = new NullWrappedValueMemberData(member, schemaTypeName);
-                            extraLayeredMembers.Add(nullWrappedValueMemberData);
-
+                            var nullWrappedValueMemberData = BuildWrappedValueMemberData();
                             WriteValueMember(
                                 schemaModelTypeName: nullWrappedValueMemberData.WrappedSchemaTypeName,
                                 hasGroupModifier: nullWrappedValueMemberData.HasGroupModifier);
+
+                            NullWrappedValueMemberData BuildWrappedValueMemberData()
+                            {
+                                NullWrappedValueMemberData res;
+                                if (extraLayeredMembers.ContainsKey(schemaTypeName))
+                                {
+                                    // a collision of schemaTypeName found.
+                                    // considering alternative [ProtoMember(Name = ...)]
+                                    if (!string.IsNullOrEmpty(member.Name))
+                                    {
+                                        // member.Name is attribute property [ProtoMember])
+                                        // member.Member.Name is a name of property (i.e. List<int> Items { get; })
+                                        if (member.Member.Name == member.Name)
+                                        {
+                                            // there is no alternative name specified, so its collision always
+                                            SetCollision();
+                                            return res;
+                                        }
+
+                                        if (extraLayeredMembers.ContainsKey(member.Name))
+                                        {
+                                            SetCollision();
+                                            return res;
+                                        }
+                                        else
+                                        {
+                                            // no collision found
+                                            var alternativeWrappedValueMemberData = new NullWrappedValueMemberData(member, member.Name);
+                                            extraLayeredMembers[member.Name] = alternativeWrappedValueMemberData;
+                                            return alternativeWrappedValueMemberData;
+                                        }
+                                    }
+
+                                    SetCollision();
+                                    return res;
+                                }
+
+                                // no collision found
+                                var nullWrappedValueMemberData = new NullWrappedValueMemberData(member, schemaTypeName);
+                                extraLayeredMembers[schemaTypeName] = nullWrappedValueMemberData;
+                                return nullWrappedValueMemberData;
+
+                                void SetCollision()
+                                {
+                                    res = extraLayeredMembers[schemaTypeName];
+                                    res.SetContainsSchemaTypeNameCollision();
+                                }
+                            }
                         }
                         else
                         {
@@ -2252,15 +2298,26 @@ namespace ProtoBuf.Meta
                 AddExtraLayerSchemaModels(extraLayeredMembers, beforeMessagePosition);
             }
 
-            void AddExtraLayerSchemaModels(IEnumerable<NullWrappedValueMemberData> wrappedMembers, int pos)
+            void AddExtraLayerSchemaModels(IReadOnlyDictionary<string, NullWrappedValueMemberData> extraLayerModels, int pos)
             {
-                if (wrappedMembers is null || !wrappedMembers.Any()) return;
-                foreach (var wrappedMember in wrappedMembers)
+                if (extraLayerModels is null || !extraLayerModels.Any()) return;
+                foreach (var extraLayerModel in extraLayerModels)
                 {
+                    var schemaTypeName = extraLayerModel.Key;
+                    var wrappedValueMember = extraLayerModel.Value;
+
+                    if (wrappedValueMember.ContainsSchemaTypeNameCollision
+                        && !wrappedValueMember.HasKnownTypeSchema())
+                    {
+                        builder
+                            .NewLine(ref pos, indent)
+                            .Insert(@"// warning: duplicate message name; you can use [ProtoContract(Name = ""..."")] to supply an alternative schema name", ref pos);
+                    }
+
                     builder
                         .NewLine(ref pos, indent)
                         .Insert("message ", ref pos)
-                        .Insert(wrappedMember.WrappedSchemaTypeName, ref pos)
+                        .Insert(wrappedValueMember.WrappedSchemaTypeName, ref pos)
                         .Insert(" {", ref pos);
 
                     builder.NewLine(ref pos, indent + 1);
@@ -2275,7 +2332,7 @@ namespace ProtoBuf.Meta
                     {
                         builder
                             .Insert("optional ", ref pos)
-                            .Insert(wrappedMember.OriginalSchemaTypeName, ref pos)
+                            .Insert(wrappedValueMember.OriginalSchemaTypeName, ref pos)
                             .Insert(" value = 1", ref pos);
                     }
                 }

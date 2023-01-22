@@ -19,13 +19,16 @@ namespace ProtoBuf.Test.Nullables
         }
 
         [Fact]
-        public void ProtoSchema_BasicNullableModel()
-        {
-            AssertSchemaSections<BasicNullableListModel>(
-                "message Bar { int32 Id = 1; }",
-                "message BasicNullableListModel { repeated Bar Items = 1; }"
-            );
-        }
+        public void ProtoSchema_BasicNullableModel() 
+            => AssertSchemaSections<BasicNullableListModel>(
+@"syntax = ""proto3"";
+
+message Bar {
+   int32 Id = 1;
+}
+message BasicNullableListModel {
+   repeated Bar Items = 1;
+}");
 
         [Fact]
         public void BasicNullableModel_ByteOutput()

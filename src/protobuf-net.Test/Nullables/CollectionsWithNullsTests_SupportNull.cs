@@ -28,22 +28,28 @@ namespace ProtoBuf.Test.Nullables
         }
 
         [Fact]
-        public void ProtoSchema_SupportsNullModelClass()
-        {
-            AssertSchemaSections<SupportsNullListModel>(
-                "message Bar { int32 Id = 1; }",
-                "message WrappedBar { optional Bar value = 1; }",
-                "message Wrappedint32 { optional int32 value = 1; }",
-                "message Wrappedstring { optional string value = 1; }",
-                @"message SupportsNullListModel 
-                { 
-                    repeated group WrappedBar ClassItems = 1;
-                    repeated group Wrappedint32 NullableIntItems = 2;
-                    repeated group Wrappedstring StringItems = 3;
-                    repeated group Wrappedint32 IntItems = 4 [packed = false];
-                }"
-            );      
-        }
+        public void ProtoSchema_SupportsNullModelClass() 
+            => AssertSchemaSections<SupportsNullListModel>(
+@"syntax = ""proto3"";
+
+message Bar {
+   int32 Id = 1;
+}
+message WrappedBar {
+   optional Bar value = 1;
+}
+message Wrappedint32 {
+   optional int32 value = 1;
+}
+message Wrappedstring {
+   optional string value = 1;
+}
+message SupportsNullListModel {
+   repeated group WrappedBar ClassItems = 1;
+   repeated group Wrappedint32 NullableIntItems = 2;
+   repeated group Wrappedstring StringItems = 3;
+   repeated group Wrappedint32 IntItems = 4 [packed = false];
+}");
 
         [Fact]
         public void SupportsNullModel_ByteOutput()

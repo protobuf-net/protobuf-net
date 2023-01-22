@@ -1,18 +1,16 @@
-﻿using System.Collections.Generic;
-
-namespace ProtoBuf.Meta
+﻿namespace ProtoBuf.Meta
 {
-    /// <remarks>Uniquessness of <see cref="NullWrappedValueMemberData"/> is based upon schemaTypeName data only</remarks>
-    internal struct NullWrappedValueMemberData
+    internal class NullWrappedValueMemberData
     {
         public ValueMember ValueMember { get; }
         public string OriginalSchemaTypeName { get; }
-        public string WrappedSchemaTypeName => "Wrapped" + OriginalSchemaTypeName;        
+        public string WrappedSchemaTypeName => "Wrapped" + OriginalSchemaTypeName;
+        public bool ContainsSchemaTypeNameCollision { get; private set; } = false;
 
-        public NullWrappedValueMemberData(ValueMember valueMember, string originalSchemaTypeName)
+        public NullWrappedValueMemberData(ValueMember valueMember, string typeName)
         {
             ValueMember = valueMember;
-            OriginalSchemaTypeName = originalSchemaTypeName;
+            OriginalSchemaTypeName = typeName;
         }
 
         /// <summary>
@@ -20,15 +18,30 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool HasGroupModifier => ValueMember.SupportNull || ValueMember.NullWrappedValueGroup;
 
-        public override bool Equals(object obj)
-        {
-            return obj is NullWrappedValueMemberData data &&
-                   OriginalSchemaTypeName == data.OriginalSchemaTypeName;
-        }
+        public void SetContainsSchemaTypeNameCollision() => ContainsSchemaTypeNameCollision = true;
 
-        public override int GetHashCode()
+        /// <summary>
+        /// Identifies, if <see cref="OriginalSchemaTypeName"/> is a known .net type
+        /// </summary>
+        /// <returns>
+        /// true, if <see cref="OriginalSchemaTypeName"/> is a string representation of known System.XXX type 
+        /// </returns>
+        public bool HasKnownTypeSchema()
         {
-            return 693692870 + EqualityComparer<string>.Default.GetHashCode(OriginalSchemaTypeName);
+            switch (OriginalSchemaTypeName)
+            {
+                case "int32":
+                case "uint32":
+                case "int64":
+                case "uint64":
+                case "double":
+                case "bool":
+                case "string":
+                    return true;
+
+                default: 
+                    return false;
+            }
         }
     }
 }

@@ -42,25 +42,14 @@ namespace ProtoBuf.Test.Nullables.Abstractions
         /// <typeparam name="T">C# type to serialize into protobuf</typeparam>
         /// <param name="protoModelDefinitions">sections of protobuf, that exist in serialized protobuf. I.e. could be 'message Msg { }'</param>
         /// <remarks>each definition has to be contained only a single time</remarks>
-        protected void AssertSchemaSections<T>(params string[] protoModelDefinitions)
+        protected void AssertSchemaSections<T>(string expected)
         {
-            if (protoModelDefinitions.Length == 0) Assert.Fail(nameof(protoModelDefinitions));
-
             var proto = _runtimeTypeModel.GetSchema(typeof(T), ProtoSyntax.Default);
             _log.WriteLine("Protobuf definition of model:");
             _log.WriteLine(proto);
             _log.WriteLine("-----------------------------");
 
-            var actualProtoDefinition = Regex.Replace(proto, @"\s", "");
-            foreach (var protoModelDefinition in protoModelDefinitions)
-            {
-                var expectedProtoDefinition = Regex.Replace(protoModelDefinition, @"\s", "");
-                Assert.Contains(expectedProtoDefinition, actualProtoDefinition);
-
-                // remove occurence and check again to ensure uniquessness of definitions
-                actualProtoDefinition = actualProtoDefinition.Replace(expectedProtoDefinition, "");
-                Assert.DoesNotContain(expectedProtoDefinition, actualProtoDefinition);
-            }
+            Assert.Equal(expected.Trim(), proto.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
         }
 
         [ProtoContract]
