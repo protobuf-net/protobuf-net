@@ -2148,7 +2148,10 @@ namespace ProtoBuf.Meta
                                         else
                                         {
                                             // no collision found
-                                            var alternativeWrappedValueMemberData = new NullWrappedValueMemberData(member, member.Name);
+                                            var alternativeWrappedValueMemberData = new NullWrappedValueMemberData(
+                                                member, 
+                                                schemaTypeName, 
+                                                alternativeTypeName: member.Name);
                                             extraLayeredMembers[member.Name] = alternativeWrappedValueMemberData;
                                             return alternativeWrappedValueMemberData;
                                         }
@@ -2332,7 +2335,7 @@ namespace ProtoBuf.Meta
                     {
                         builder
                             .Insert("optional ", ref pos)
-                            .Insert(wrappedValueMember.OriginalSchemaTypeName, ref pos)
+                            .Insert(wrappedValueMember.SchemaTypeName, ref pos)
                             .Insert(" value = 1", ref pos);
                     }
                 }

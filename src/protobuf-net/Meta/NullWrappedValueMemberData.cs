@@ -2,15 +2,27 @@
 {
     internal class NullWrappedValueMemberData
     {
+        private readonly string _originalSchemaTypeName;
+        private readonly string _alternativeTypeName;
+
         public ValueMember ValueMember { get; }
-        public string OriginalSchemaTypeName { get; }
-        public string WrappedSchemaTypeName => "Wrapped" + OriginalSchemaTypeName;
         public bool ContainsSchemaTypeNameCollision { get; private set; } = false;
 
-        public NullWrappedValueMemberData(ValueMember valueMember, string typeName)
+        public string SchemaTypeName => _originalSchemaTypeName;
+
+        public string WrappedSchemaTypeName
+            => !string.IsNullOrEmpty(_alternativeTypeName)
+                ? "Wrapped" + _alternativeTypeName
+                : "Wrapped" + _originalSchemaTypeName;        
+
+        public NullWrappedValueMemberData(
+            ValueMember valueMember,
+            string typeName,
+            string alternativeTypeName = null)
         {
             ValueMember = valueMember;
-            OriginalSchemaTypeName = typeName;
+            _originalSchemaTypeName = typeName;
+            _alternativeTypeName = alternativeTypeName;
         }
 
         /// <summary>
@@ -28,7 +40,7 @@
         /// </returns>
         public bool HasKnownTypeSchema()
         {
-            switch (OriginalSchemaTypeName)
+            switch (_originalSchemaTypeName)
             {
                 case "int32":
                 case "uint32":
