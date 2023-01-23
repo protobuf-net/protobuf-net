@@ -2127,6 +2127,13 @@ namespace ProtoBuf.Meta
                                 NullWrappedValueMemberData res;
                                 if (extraLayeredMembers.ContainsKey(schemaTypeName))
                                 {
+                                    var existingValueMemberData = extraLayeredMembers[schemaTypeName];
+                                    if (existingValueMemberData.ValueMember.ItemType == member.ItemType)
+                                    {
+                                        // if types are the same - its fine, we are just reusing same 'wrapped'
+                                        return existingValueMemberData;
+                                    }
+
                                     // a collision of schemaTypeName found.
                                     // considering alternative [ProtoMember(Name = ...)]
                                     if (!string.IsNullOrEmpty(member.Name))
