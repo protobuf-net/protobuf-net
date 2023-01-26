@@ -31,4 +31,10 @@
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+	  <None Include="Meta\MetaType.Nullability.cs">
+		  <DependentUpon>Meta\MetaType.cs</DependentUpon>
+	  </None>
+  </ItemGroup>
 </Project>

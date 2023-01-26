@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Test.Nullables.Abstractions;
+﻿using ProtoBuf.Meta;
+using ProtoBuf.Test.Nullables.Abstractions;
 using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
@@ -10,6 +11,11 @@ namespace ProtoBuf.Test.Nullables
         public CollectionsWithNullsTests_DuplicateMessageNames(ITestOutputHelper log) 
             : base(log)
         {
+        }
+
+        protected override void SetupRuntimeTypeModel(RuntimeTypeModel runtimeTypeModel)
+        {
+            runtimeTypeModel[typeof(DuplicateFieldTypesWithDifferentNullWrappingModel)][3].SupportNull = true;
         }
 
         [Fact]
@@ -67,7 +73,7 @@ message DuplicateFieldTypesWithUniqueNamespaceModel {
         [Fact]
         public void DuplicateFieldTypeWithAltNameModel_AndDifferentNamespace_AndAlternativeNameSpecified_GeneratesUniqueSchemaDefinitionsWithoutWarning()
             => AssertSchemaSections<DuplicateFieldTypesWithUniqueNamespaceWithAlternativeNameModel>( // it is expected to generate double 'BarNamespace'
-@"    syntax = ""proto3"";
+@"syntax = ""proto3"";
 
 message BarNamespace {
    int32 Id = 1;
@@ -84,6 +90,29 @@ message WrappedAlternativeBarNamespace {
 message DuplicateFieldTypesWithUniqueNamespaceWithAlternativeNameModel {
    repeated WrappedBarNamespace Items1 = 1;
    repeated WrappedAlternativeBarNamespace AlternativeBarNamespace = 2;
+}");
+
+        [Fact]
+        public void DuplicateFieldTypesWithNullWrappingModel_GeneratesUniqueSchemaDefinitionsWithoutWarning() 
+            => AssertSchemaSections<DuplicateFieldTypesWithDifferentNullWrappingModel>(
+@"syntax = ""proto3"";
+
+message Bar {
+   int32 Id = 1;
+}
+message WrappedBar {
+   optional Bar value = 1;
+}
+message WrappedAsGroupBar {
+   optional Bar value = 1;
+}
+message WrappedAsSupportNullBar {
+   optional Bar value = 1;
+}
+message DuplicateFieldTypesWithDifferentNullWrappingModel {
+   repeated WrappedBar Items1 = 1;
+   repeated group WrappedAsGroupBar Items2 = 2;
+   repeated group WrappedAsSupportNullBar Items3 = 3;
 }");
 
         [ProtoContract]
@@ -124,6 +153,19 @@ message DuplicateFieldTypesWithUniqueNamespaceWithAlternativeNameModel {
 
             [ProtoMember(2, Name = "AlternativeBarNamespace"), NullWrappedValue]
             public List<Test2.BarNamespace?> Items2 { get; set; } = new();
+        }
+
+        [ProtoContract]
+        class DuplicateFieldTypesWithDifferentNullWrappingModel
+        {
+            [ProtoMember(1), NullWrappedValue]
+            public List<Bar?> Items1 { get; set; } = new();
+
+            [ProtoMember(2), NullWrappedValue(AsGroup = true)]
+            public List<Bar?> Items2 { get; set; } = new();
+
+            [ProtoMember(3)] // [SupportNull] defined in test
+            public List<Bar?> Items3 { get; set; } = new();
         }
     }
 }

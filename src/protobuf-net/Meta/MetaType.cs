@@ -14,7 +14,7 @@ namespace ProtoBuf.Meta
     /// <summary>
     /// Represents a type at runtime for use with protobuf, allowing the field mappings (etc) to be defined
     /// </summary>
-    public sealed class MetaType : ISerializerProxy
+    public sealed partial class MetaType : ISerializerProxy
     {
         internal sealed class Comparer : IComparer, IComparer<MetaType>
         {
@@ -2091,7 +2091,7 @@ namespace ProtoBuf.Meta
             }
             else
             {
-                Dictionary<string, NullWrappedValueMemberData> extraLayeredMembers = new();
+                var extraLayeredMembers = new ExtraLayerValueMembers();
                 ValueMember[] fieldsArr = GetFields();
                 int beforeMessagePosition = builder.Length;
 
@@ -2117,68 +2117,11 @@ namespace ProtoBuf.Meta
                         if (member.RequiresExtraLayerInSchema())
                         {
                             schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
-                            var nullWrappedValueMemberData = BuildWrappedValueMemberData();
+                            var nullWrappedValueMemberData = extraLayeredMembers.Add(schemaTypeName, member);
+
                             WriteValueMember(
                                 schemaModelTypeName: nullWrappedValueMemberData.WrappedSchemaTypeName,
                                 hasGroupModifier: nullWrappedValueMemberData.HasGroupModifier);
-
-                            NullWrappedValueMemberData BuildWrappedValueMemberData()
-                            {
-                                NullWrappedValueMemberData res;
-                                if (extraLayeredMembers.ContainsKey(schemaTypeName))
-                                {
-                                    var existingValueMemberData = extraLayeredMembers[schemaTypeName];
-                                    if (existingValueMemberData.ValueMember.ItemType == member.ItemType)
-                                    {
-                                        // if types are the same - its fine, we are just reusing same 'wrapped'
-                                        return existingValueMemberData;
-                                    }
-
-                                    // a collision of schemaTypeName found.
-                                    // considering alternative [ProtoMember(Name = ...)]
-                                    if (!string.IsNullOrEmpty(member.Name))
-                                    {
-                                        // member.Name is attribute property [ProtoMember])
-                                        // member.Member.Name is a name of property (i.e. List<int> Items { get; })
-                                        if (member.Member.Name == member.Name)
-                                        {
-                                            // there is no alternative name specified, so its collision always
-                                            SetCollision();
-                                            return res;
-                                        }
-
-                                        if (extraLayeredMembers.ContainsKey(member.Name))
-                                        {
-                                            SetCollision();
-                                            return res;
-                                        }
-                                        else
-                                        {
-                                            // no collision found
-                                            var alternativeWrappedValueMemberData = new NullWrappedValueMemberData(
-                                                member, 
-                                                schemaTypeName, 
-                                                alternativeTypeName: member.Name);
-                                            extraLayeredMembers[member.Name] = alternativeWrappedValueMemberData;
-                                            return alternativeWrappedValueMemberData;
-                                        }
-                                    }
-
-                                    SetCollision();
-                                    return res;
-                                }
-
-                                // no collision found
-                                var nullWrappedValueMemberData = new NullWrappedValueMemberData(member, schemaTypeName);
-                                extraLayeredMembers[schemaTypeName] = nullWrappedValueMemberData;
-                                return nullWrappedValueMemberData;
-
-                                void SetCollision()
-                                {
-                                    res = extraLayeredMembers[schemaTypeName];
-                                    res.SetContainsSchemaTypeNameCollision();
-                                }
-                            }
                         }
                         else
                         {
@@ -2308,16 +2251,12 @@ namespace ProtoBuf.Meta
                 AddExtraLayerSchemaModels(extraLayeredMembers, beforeMessagePosition);
             }
 
-            void AddExtraLayerSchemaModels(IReadOnlyDictionary<string, NullWrappedValueMemberData> extraLayerModels, int pos)
+            void AddExtraLayerSchemaModels(ExtraLayerValueMembers extraLayerValueMembers, int pos)
             {
-                if (extraLayerModels is null || !extraLayerModels.Any()) return;
-                foreach (var extraLayerModel in extraLayerModels)
+                if (extraLayerValueMembers.IsEmpty()) return;
+                foreach (var wrappedValueMember in extraLayerValueMembers)
                 {
-                    var schemaTypeName = extraLayerModel.Key;
-                    var wrappedValueMember = extraLayerModel.Value;
-
-                    if (wrappedValueMember.ContainsSchemaTypeNameCollision
-                        && !wrappedValueMember.HasKnownTypeSchema())
+                    if (wrappedValueMember.HasSchemaTypeNameCollision)
                     {
                         builder
                             .NewLine(ref pos, indent)

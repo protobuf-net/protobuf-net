@@ -18,25 +18,25 @@ namespace ProtoBuf.Test.Nullables
         [Fact]
         public void ProtoSchema_NullWrappedValueGroupListModel() 
             => AssertSchemaSections<NullWrappedValueGroupListModel>(
-@" syntax = ""proto3"";
+@"syntax = ""proto3"";
 
 message Bar {
    int32 Id = 1;
 }
-message WrappedBar {
+message WrappedAsGroupBar {
    optional Bar value = 1;
 }
-message Wrappedint32 {
+message WrappedAsGroupint32 {
    optional int32 value = 1;
 }
-message Wrappedstring {
+message WrappedAsGroupstring {
    optional string value = 1;
 }
 message NullWrappedValueGroupListModel {
-   repeated group WrappedBar ClassItems = 1;
-   repeated group Wrappedint32 NullableIntItems = 2;
-   repeated group Wrappedstring StringItems = 3;
-   repeated group Wrappedint32 IntItems = 4 [packed = false];
+   repeated group WrappedAsGroupBar ClassItems = 1;
+   repeated group WrappedAsGroupint32 NullableIntItems = 2;
+   repeated group WrappedAsGroupstring StringItems = 3;
+   repeated group WrappedAsGroupint32 IntItems = 4 [packed = false];
 }");
 
         [Fact]

@@ -1,36 +1,55 @@
-﻿namespace ProtoBuf.Meta
+﻿using System;
+
+namespace ProtoBuf.Meta
 {
     internal class NullWrappedValueMemberData
     {
         private readonly string _originalSchemaTypeName;
         private readonly string _alternativeTypeName;
-
-        public ValueMember ValueMember { get; }
-        public bool ContainsSchemaTypeNameCollision { get; private set; } = false;
-
-        public string SchemaTypeName => _originalSchemaTypeName;
-
-        public string WrappedSchemaTypeName
-            => !string.IsNullOrEmpty(_alternativeTypeName)
-                ? "Wrapped" + _alternativeTypeName
-                : "Wrapped" + _originalSchemaTypeName;        
+        private readonly bool _hasSchemaTypeNameCollision;
+        private readonly ValueMember _valueMember;
 
         public NullWrappedValueMemberData(
             ValueMember valueMember,
-            string typeName,
-            string alternativeTypeName = null)
+            string originalSchemaTypeName,
+            string alternativeTypeName = null,
+            bool hasSchemaTypeNameCollision = false)
         {
-            ValueMember = valueMember;
-            _originalSchemaTypeName = typeName;
+            _originalSchemaTypeName = originalSchemaTypeName;
             _alternativeTypeName = alternativeTypeName;
+            _hasSchemaTypeNameCollision = hasSchemaTypeNameCollision;
+            _valueMember = valueMember;
         }
+
+        public string SchemaTypeName => _originalSchemaTypeName;
+        public string WrappedSchemaTypeName
+        {
+            get
+            {
+                var typeName = !string.IsNullOrEmpty(_alternativeTypeName)
+                    ? _alternativeTypeName
+                    : _originalSchemaTypeName;
+
+                if (_valueMember.SupportNull) return "WrappedAsSupportNull" + typeName;
+                if (_valueMember.NullWrappedValueGroup) return "WrappedAsGroup" + typeName;
+                return "Wrapped" + typeName;
+            }
+        }
+
+        /// <summary>
+        /// Calculates, if valueMember has a schemaTypeName collision
+        /// </summary>
+        public bool HasSchemaTypeNameCollision => _hasSchemaTypeNameCollision && !HasKnownTypeSchema();
+
+        /// <summary>
+        /// Gets inner valueMember's item type
+        /// </summary>
+        public Type ItemType => _valueMember.ItemType;
 
         /// <summary>
         /// Requires `group` to be placed on original valueMember level
         /// </summary>
-        public bool HasGroupModifier => ValueMember.SupportNull || ValueMember.NullWrappedValueGroup;
-
-        public void SetContainsSchemaTypeNameCollision() => ContainsSchemaTypeNameCollision = true;
+        public bool HasGroupModifier => _valueMember.SupportNull || _valueMember.NullWrappedValueGroup;
 
         /// <summary>
         /// Identifies, if <see cref="OriginalSchemaTypeName"/> is a known .net type
@@ -38,22 +57,10 @@
         /// <returns>
         /// true, if <see cref="OriginalSchemaTypeName"/> is a string representation of known System.XXX type 
         /// </returns>
-        public bool HasKnownTypeSchema()
+        private bool HasKnownTypeSchema() => _originalSchemaTypeName switch
         {
-            switch (_originalSchemaTypeName)
-            {
-                case "int32":
-                case "uint32":
-                case "int64":
-                case "uint64":
-                case "double":
-                case "bool":
-                case "string":
-                    return true;
-
-                default: 
-                    return false;
-            }
-        }
+            "int32" or "uint32" or "int64" or "uint64" or "double" or "bool" or "string" => true,
+            _ => false
+        };
     }
 }

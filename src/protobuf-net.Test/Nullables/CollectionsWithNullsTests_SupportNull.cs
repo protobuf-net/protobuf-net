@@ -35,20 +35,20 @@ namespace ProtoBuf.Test.Nullables
 message Bar {
    int32 Id = 1;
 }
-message WrappedBar {
+message WrappedAsSupportNullBar {
    optional Bar value = 1;
 }
-message Wrappedint32 {
+message WrappedAsSupportNullint32 {
    optional int32 value = 1;
 }
-message Wrappedstring {
+message WrappedAsSupportNullstring {
    optional string value = 1;
 }
 message SupportsNullListModel {
-   repeated group WrappedBar ClassItems = 1;
-   repeated group Wrappedint32 NullableIntItems = 2;
-   repeated group Wrappedstring StringItems = 3;
-   repeated group Wrappedint32 IntItems = 4 [packed = false];
+   repeated group WrappedAsSupportNullBar ClassItems = 1;
+   repeated group WrappedAsSupportNullint32 NullableIntItems = 2;
+   repeated group WrappedAsSupportNullstring StringItems = 3;
+   repeated group WrappedAsSupportNullint32 IntItems = 4 [packed = false];
 }");
 
         [Fact]
