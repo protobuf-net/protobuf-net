@@ -575,31 +575,10 @@ namespace ProtoBuf.Reflection
 
         public static IEnumerable<Token> RemoveCommentsAndWhitespace(this IEnumerable<Token> tokens)
         {
-            int commentLineNumber = -1;
-            bool isBlockComment = false;
             foreach (var token in tokens)
             {
-                if (isBlockComment)
+                if (token.Is(TokenType.Comment) || token.Is(TokenType.Whitespace))
                 {
-                    // swallow everything until the end of the block comment
-                    if (token.Is(TokenType.Symbol, "*/"))
-                        isBlockComment = false;
-                }
-                else if (commentLineNumber == token.LineNumber)
-                {
-                    // swallow everything else on that line
-                }
-                else if (token.Is(TokenType.Whitespace))
-                {
-                    continue;
-                }
-                else if (token.Is(TokenType.Symbol, "//"))
-                {
-                    commentLineNumber = token.LineNumber;
-                }
-                else if (token.Is(TokenType.Symbol, "/*"))
-                {
-                    isBlockComment = true;
                 }
                 else
                 {
@@ -608,34 +587,59 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        private static bool CanCombine(TokenType type, int len, char prev, char next)
-            => type != TokenType.Symbol
-            || (len == 1 && prev == '/' && (next == '/' || next == '*'))
-            || (len == 1 && prev == '*' && next == '/');
-
         public static IEnumerable<Token> Tokenize(this TextReader reader, string file)
         {
             var buffer = new StringBuilder();
 
-            int lineNumber = 0, offset = 0;
+            int lineNumber = 0, tokenIndex = 0;
+
+            char commentType = '\0';
             string line;
-            string lastLine;
+
             while ((line = reader.ReadLine()) != null)
             {
-                lastLine = line;
                 lineNumber++;
                 int columnNumber = 0, tokenStart = 1;
                 char lastChar = '\0', stringType = '\0';
                 TokenType type = TokenType.None;
                 bool isEscaped = false;
+
+                if (commentType == '/') commentType = '\0'; // line-comments don't survive into subsequent lines
+
                 foreach (char c in line)
                 {
                     columnNumber++;
-                    if (type == TokenType.StringLiteral)
+
+                    if (commentType != '\0')
+                    {
+                        if (commentType == '*' && c == '/' && buffer.Length != 0 && buffer[buffer.Length - 1] == '*')
+                        {
+                            // end block comment
+                            buffer.Length -= 1; // remove the '*' in '*/'
+                            if (buffer.Length != 0)
+                            {
+                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, TokenType.Comment, line, tokenIndex++, file);
+                            }
+                            // also yield the terminator
+                            tokenStart += buffer.Length;
+                            yield return new Token("*/", lineNumber, tokenStart, TokenType.Comment, line, tokenIndex++, file);
+
+                            buffer.Clear();
+                            commentType = '\0';
+                            type = TokenType.None;
+                            tokenStart = columnNumber;
+                        }
+                        else
+                        {
+                            // otherwise, just accumulate
+                            buffer.Append(c);
+                        }
+                    }
+                    else if (type == TokenType.StringLiteral)
                     {
                         if (c == stringType && !isEscaped)
                         {
-                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++, file);
+                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, tokenIndex++, file);
                             buffer.Clear();
                             type = TokenType.None;
                         }
@@ -648,15 +652,24 @@ namespace ProtoBuf.Reflection
                     else
                     {
                         var newType = Identify(c);
-                        if (newType == type && CanCombine(type, buffer.Length, lastChar, c))
-                        {
+                        if (newType == type && type != TokenType.Symbol)
+                        {   // can always append non-symbol types
                             buffer.Append(c);
+                        }
+                        else if (newType == type && buffer.Length == 1 && lastChar == '/' && c is '/' or '*')
+                        {   // for symbols, only comments are expected together, and they have special handling
+
+                            // we yield the start glyph
+                            yield return new Token(c == '/' ? "//" : "/*", lineNumber, tokenStart, TokenType.Comment, line, tokenIndex++, file);
+                            buffer.Clear();
+                            tokenStart = columnNumber + 1;
+                            commentType = c;
                         }
                         else
                         {
                             if (buffer.Length != 0)
                             {
-                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++, file);
+                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, tokenIndex++, file);
                                 buffer.Clear();
                             }
                             type = newType;
@@ -674,9 +687,11 @@ namespace ProtoBuf.Reflection
                     lastChar = c;
                 }
 
+                // process anything left on the line
                 if (buffer.Length != 0)
                 {
-                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine, offset++, file);
+                    if (commentType != '\0') type = TokenType.Comment;
+                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, tokenIndex++, file);
                     buffer.Clear();
                 }
             }
