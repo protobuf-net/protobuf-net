@@ -619,12 +619,9 @@ namespace ProtoBuf.Reflection
                             if (buffer.Length != 0)
                             {
                                 yield return new Token(buffer.ToString(), lineNumber, tokenStart, TokenType.Comment, line, tokenIndex++, file);
+                                buffer.Clear();
                             }
-                            // also yield the terminator
-                            tokenStart += buffer.Length;
-                            yield return new Token("*/", lineNumber, tokenStart, TokenType.Comment, line, tokenIndex++, file);
 
-                            buffer.Clear();
                             commentType = '\0';
                             type = TokenType.None;
                             tokenStart = columnNumber;
@@ -657,10 +654,9 @@ namespace ProtoBuf.Reflection
                             buffer.Append(c);
                         }
                         else if (newType == type && buffer.Length == 1 && lastChar == '/' && c is '/' or '*')
-                        {   // for symbols, only comments are expected together, and they have special handling
-
-                            // we yield the start glyph
-                            yield return new Token(c == '/' ? "//" : "/*", lineNumber, tokenStart, TokenType.Comment, line, tokenIndex++, file);
+                        {
+                            // for symbols, only comments are expected together, and they have special handling
+                            // so: we start a comment region using the '/' or '*' to mark the kind
                             buffer.Clear();
                             tokenStart = columnNumber + 1;
                             commentType = c;

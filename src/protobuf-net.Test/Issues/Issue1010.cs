@@ -40,37 +40,25 @@ message StackFrame {
         [Theory]
         [InlineData("", "")]
         [InlineData("a", "1,1 AlphaNumeric a")]
-        [InlineData("a//", @"1,1 AlphaNumeric a
-1,2 Comment //")]
-        [InlineData("//", "1,1 Comment //")]
-        [InlineData("//a", @"1,1 Comment //
-1,3 Comment a")]
-        [InlineData("//a//b", @"1,1 Comment //
-1,3 Comment a//b")]
+        [InlineData("a//", @"1,1 AlphaNumeric a")]
+        [InlineData("//", "")]
+        [InlineData("//a", @"1,3 Comment a")]
+        [InlineData("//a//b", @"1,3 Comment a//b")]
         [InlineData(@"//
-a", @"1,1 Comment //
-2,1 AlphaNumeric a")]
-        [InlineData(@"/**/", @"1,1 Comment /*
-1,3 Comment */")]
-        [InlineData(@"/*/a", @"1,1 Comment /*
-1,3 Comment /a")]
-        [InlineData(@"/*a*/b", @"1,1 Comment /*
-1,3 Comment a
-1,4 Comment */
+a", @"2,1 AlphaNumeric a")]
+        [InlineData(@"/**/", @"")]
+        [InlineData(@"/*/a", @"1,3 Comment /a")]
+        [InlineData(@"/*a*/b", @"1,3 Comment a
 1,6 AlphaNumeric b")]
-        [InlineData(@"/*/*a*/b", @"1,1 Comment /*
-1,3 Comment /*a
-1,6 Comment */
+        [InlineData(@"/*/*a*/b", @"1,3 Comment /*a
 1,8 AlphaNumeric b")]
         [InlineData(@"/*a
 bcd
 //e
-f*/g", @"1,1 Comment /*
-1,3 Comment a
+f*/g", @"1,3 Comment a
 2,1 Comment bcd
 3,1 Comment //e
 4,1 Comment f
-4,2 Comment */
 4,4 AlphaNumeric g")]
         public void VerifyTokens(string schema, string expected)
         {
