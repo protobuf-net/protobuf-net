@@ -14,6 +14,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## pending
 
+## 3.1.33
+
+- fix issue with comment-parsing in .proto schemas (#1010 / #1011)
+
 ## 3.1.31
 
 - support `Memory<byte>`, `ReadOnlyMemory<byte>` and `ArraySegment<byte>` as `bytes` payloads
