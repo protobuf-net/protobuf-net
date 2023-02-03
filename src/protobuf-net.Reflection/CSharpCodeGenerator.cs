@@ -848,6 +848,35 @@ namespace ProtoBuf.Reflection
         {
             switch (typeName)
             {
+                #region WellKnownTypes
+                
+                case WellKnownTypeDouble:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::double" : "global::double?";
+                case WellKnownTypeFloat:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::float" : "global::float?";
+                case WellKnownTypeInt64:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::long" : "global::long?";
+                case WellKnownTypeUInt64:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::ulong" : "global::ulong?";
+                case WellKnownTypeInt32:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::int" : "global::int?";
+                case WellKnownTypeUInt32:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::uint" : "global::uint?";
+                case WellKnownTypeBool:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::bool" : "global::bool?";
+                case WellKnownTypeString:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::string" : "global::string?";
+                case WellKnownTypeBytes:
+                    dataFormat = "WellKnown";
+                    return nonNullable ? "global::byte" : "global::byte?";
                 case WellKnownTypeTimestamp:
                     dataFormat = "WellKnown";
                     return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
@@ -856,6 +885,11 @@ namespace ProtoBuf.Reflection
                     return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
                 case WellKnownTypeEmpty:
                     return "global::ProtoBuf.Empty";
+                
+                #endregion
+
+                #region BCL
+
                 case ".bcl.NetObjectProxy":
                     return "object";
                 case ".bcl.DateTime":
@@ -865,7 +899,9 @@ namespace ProtoBuf.Reflection
                 case ".bcl.Decimal":
                     return nonNullable ? "decimal" : "decimal?";
                 case ".bcl.Guid":
-                    return nonNullable ? "global::System.Guid" : "global::System.Guid?";
+                    return nonNullable ? "global::System.Guid" : "global::System.Guid?";    
+
+                #endregion
             }
             var msgType = ctx.TryFind<DescriptorProto>(typeName);
             if ( field!= null && field.type == FieldDescriptorProto.Type.TypeGroup)
@@ -1055,6 +1091,15 @@ namespace ProtoBuf.Reflection
         }
 
         private const string
+            WellKnownTypeDouble = ".google.protobuf.DoubleValue",
+            WellKnownTypeFloat = ".google.protobuf.FloatValue",
+            WellKnownTypeInt64 = ".google.protobuf.Int64Value",
+            WellKnownTypeUInt64 = ".google.protobuf.UInt64Value",
+            WellKnownTypeInt32 = ".google.protobuf.Int32Value",
+            WellKnownTypeUInt32 = ".google.protobuf.UInt32Value",
+            WellKnownTypeBool = ".google.protobuf.BoolValue",
+            WellKnownTypeString = ".google.protobuf.StringValue",
+            WellKnownTypeBytes = ".google.protobuf.BytesValue",
             WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
             WellKnownTypeDuration = ".google.protobuf.Duration",
             WellKnownTypeEmpty = ".google.protobuf.Empty";
