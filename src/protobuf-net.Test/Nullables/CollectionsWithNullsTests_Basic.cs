@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Test.Nullables
 {
-    public class CollectionsWithNullsTests_Basic : CollectionsWithNullsTestsBase
+    public class CollectionsWithNullsTests_Basic : NullablesTestsBase
     {
         // 1. if model not tweaked with SupportNull, then: 
         //  1a. schema is just "message Foo { repeated Bar Items = 1; }"

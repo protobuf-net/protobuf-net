@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Test.Nullables
 {
-    public class CollectionsWithNullsTests_DuplicateMessageNames : CollectionsWithNullsTestsBase
+    public class CollectionsWithNullsTests_DuplicateMessageNames : NullablesTestsBase
     {
         public CollectionsWithNullsTests_DuplicateMessageNames(ITestOutputHelper log) 
             : base(log)

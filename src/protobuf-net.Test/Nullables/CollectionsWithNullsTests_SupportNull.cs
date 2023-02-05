@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Test.Nullables
 {
-    public class CollectionsWithNullsTests_SupportNull : CollectionsWithNullsTestsBase
+    public class CollectionsWithNullsTests_SupportNull : NullablesTestsBase
     {
         // 2. if model is tweaked with SupportNull:
         //  2a. schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" 
@@ -21,10 +21,7 @@ namespace ProtoBuf.Test.Nullables
 
         protected override void SetupRuntimeTypeModel(RuntimeTypeModel runtimeTypeModel)
         {
-            runtimeTypeModel[typeof(SupportsNullListModel)][1].SupportNull = true;
-            runtimeTypeModel[typeof(SupportsNullListModel)][2].SupportNull = true;
-            runtimeTypeModel[typeof(SupportsNullListModel)][3].SupportNull = true;
-            runtimeTypeModel[typeof(SupportsNullListModel)][4].SupportNull = true;
+            MarkTypeFieldsAsSupportNull<SupportsNullListModel>();
         }
 
         [Fact]

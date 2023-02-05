@@ -2125,7 +2125,8 @@ namespace ProtoBuf.Meta
                         }
                         else
                         {
-                            schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
+                            var considerWrappersProtoTypes = member.HasExtendedNullSupport();
+                            schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName, considerWrappersProtoTypes);
                             WriteValueMember(schemaTypeName);
                         }
 

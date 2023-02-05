@@ -1,12 +1,12 @@
-﻿using ProtoBuf.Test.WrappersProto.Abstractions;
+﻿using ProtoBuf.Test.Nullables.Abstractions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ProtoBuf.Test.WrappersProto
+namespace ProtoBuf.Test.Nullables.WrappersProto
 {
-    public class WrappersProto : WrappersProtoTestsBase
+    public class WrappersProtoToCode : NullablesTestsBase
     {
-        public WrappersProto(ITestOutputHelper log) : base(log)
+        public WrappersProtoToCode(ITestOutputHelper log) : base(log)
         {
         }
 
@@ -18,8 +18,8 @@ namespace ProtoBuf.Test.WrappersProto
         [InlineData(".google.protobuf.Int32Value", "global::int?")]
         [InlineData(".google.protobuf.UInt32Value", "global::uint?")]
         [InlineData(".google.protobuf.BoolValue", "global::bool?")]
-        [InlineData(".google.protobuf.StringValue", "global::string?")]
-        [InlineData(".google.protobuf.BytesValue", "global::byte?")]
+        [InlineData(".google.protobuf.StringValue", "global::string")]
+        [InlineData(".google.protobuf.BytesValue", "global::byte[]")]
         [InlineData(".google.protobuf.Timestamp", "global::System.DateTime?")]
         [InlineData(".google.protobuf.Duration", "global::System.TimeSpan?")]
         public void GoogleProtobufWellKnownType_ConvertsToCSharpNullable(string protoFieldType, string csharpGeneratedType) 

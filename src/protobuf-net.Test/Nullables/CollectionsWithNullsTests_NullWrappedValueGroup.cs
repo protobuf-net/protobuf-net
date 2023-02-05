@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Test.Nullables
 {
-    public class CollectionsWithNullsTests_NullWrappedValueGroup : CollectionsWithNullsTestsBase
+    public class CollectionsWithNullsTests_NullWrappedValueGroup : NullablesTestsBase
     {
         // 3: FooWithAttributes [NullWrappedValue(AsGroup = true)],
         // * not touching* SupportNull at all ** works exactly like [SupportNull]**

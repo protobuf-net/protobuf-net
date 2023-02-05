@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Test.Nullables
 {
-    public class CollectionsWithNullsTests_NullWrappedValue : CollectionsWithNullsTestsBase
+    public class CollectionsWithNullsTests_NullWrappedValue : NullablesTestsBase
     {
         // 4: FooWithAttributes2 [NullWrappedValue], * not touching* SupportNull at all
         //  4a.schema has new wrapper layer, "message Foo { repeated NullWrappedBar Items = 1; }" // naming is hard, with "Bar value = 1" **valid** syntax

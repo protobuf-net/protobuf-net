@@ -419,6 +419,7 @@ namespace ProtoBuf.Meta
         {
             public const string
                 Bcl = "protobuf-net/bcl.proto",
+                WrappersProto = "google/protobuf/wrappers.proto",
                 Timestamp = "google/protobuf/timestamp.proto",
                 Duration = "google/protobuf/duration.proto",
                 Protogen = "protobuf-net/protogen.proto",
@@ -1797,6 +1798,25 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, HashSet<string> imports)
             => GetSchemaTypeName(callstack, effectiveType, dataFormat, compatibilityLevel, asReference, dynamicType, imports, out _);
 
+        static bool IsWrappersProtoType(Type type, out string name, HashSet<string> imports)
+        {
+            name = null;
+            if (type == typeof(double?)) name = ".google.protobuf.DoubleValue";
+            if (type == typeof(float?)) name = ".google.protobuf.FloatValue";
+            if (type == typeof(long?)) name = ".google.protobuf.Int64Value";
+            if (type == typeof(ulong?)) name = ".google.protobuf.UInt64Value";
+            if (type == typeof(int?)) name = ".google.protobuf.Int32Value";
+            if (type == typeof(uint?)) name = ".google.protobuf.UInt32Value";
+            if (type == typeof(bool?)) name = ".google.protobuf.BoolValue";
+            if (type == typeof(string)) name = ".google.protobuf.StringValue";
+            if (type == typeof(byte[])) name = ".google.protobuf.BytesValue";
+
+            if (name is null) return false;
+            
+            imports.Add(CommonImports.WrappersProto);
+            return true;
+        }
+        
         static bool IsWellKnownType(Type type, out string name, HashSet<string> imports)
         {
             if (type == typeof(byte[]))
@@ -1825,9 +1845,14 @@ namespace ProtoBuf.Meta
             name = default;
             return false;
         }
-        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, HashSet<string> imports, out string altName)
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, HashSet<string> imports, out string altName, bool considerWrappersProtoTypes = false)
         {
             altName = null;
+            if (considerWrappersProtoTypes && IsWrappersProtoType(effectiveType, out var wrappersProtoTypeParsed, imports))
+            {
+                return wrappersProtoTypeParsed;
+            }
+            
             compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 

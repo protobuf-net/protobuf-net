@@ -873,10 +873,10 @@ namespace ProtoBuf.Reflection
                     return nonNullable ? "global::bool" : "global::bool?";
                 case WellKnownTypeString:
                     dataFormat = "WellKnown";
-                    return nonNullable ? "global::string" : "global::string?";
+                    return "global::string";
                 case WellKnownTypeBytes:
                     dataFormat = "WellKnown";
-                    return nonNullable ? "global::byte" : "global::byte?";
+                    return "global::byte[]";
                 case WellKnownTypeTimestamp:
                     dataFormat = "WellKnown";
                     return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
