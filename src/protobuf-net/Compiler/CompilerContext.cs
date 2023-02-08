@@ -437,6 +437,12 @@ namespace ProtoBuf.Compiler
 
         public void LoadState() => Emit(_state);
 
+        public void LoadFromReference(Type type)
+        {
+            il.Emit(OpCodes.Ldobj, type);
+            TraceCompile(OpCodes.Ldobj + ": " + type);
+        }
+
         public void StoreValue(Local local)
         {
             if (local == this.InputValue)

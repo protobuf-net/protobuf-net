@@ -11,6 +11,7 @@ namespace ProtoBuf.Internal.Serializers
         public SerializerFeatures Features { get; private set; } = SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 
         bool IProtoTypeSerializer.IsSubType => false;
+        bool IProtoTypeSerializer.ReadUsesState => false;
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
         private readonly IRuntimeProtoSerializerNode[] tails;

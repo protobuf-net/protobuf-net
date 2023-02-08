@@ -367,7 +367,7 @@ namespace ProtoBuf.Serializers
         /// Ensures that the instance has a value
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CreateIfNeeded() => _ = Value;
+        public void CreateIfNeeded() => _value ??= Value;
 
         internal object RawValue => _value;
 

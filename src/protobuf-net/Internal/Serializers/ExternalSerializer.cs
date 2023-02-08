@@ -61,6 +61,7 @@ namespace ProtoBuf.Internal.Serializers
 
         bool IProtoTypeSerializer.HasInheritance => false;
         bool IProtoTypeSerializer.IsSubType => false;
+        bool IProtoTypeSerializer.ReadUsesState => false;
 
         void IProtoTypeSerializer.EmitCreateInstance(CompilerContext ctx, bool callNoteObject)
             => ThrowHelper.ThrowNotSupportedException();

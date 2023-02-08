@@ -9,6 +9,7 @@ namespace ProtoBuf.Internal.Serializers
     {
         SerializerFeatures IProtoTypeSerializer.Features => wireType.AsFeatures();
         bool IProtoTypeSerializer.IsSubType => Tail is IProtoTypeSerializer pts && pts.IsSubType;
+        bool IProtoTypeSerializer.ReadUsesState => Tail is IProtoTypeSerializer pts && pts.ReadUsesState;
         public bool HasCallbacks(TypeModel.CallbackType callbackType) => Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
 
         public bool CanCreateInstance() => Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
@@ -90,6 +91,7 @@ namespace ProtoBuf.Internal.Serializers
             }
             else
             {
+                Debug.Assert(valueFrom is not null, "value is head of stack; needs local!");
                 ctx.LoadState();
                 ctx.LoadValue((int)fieldNumber);
                 ctx.LoadValue((int)wireType);

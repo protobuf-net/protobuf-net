@@ -18,6 +18,8 @@ namespace ProtoBuf.Internal.Serializers
         public override Type ExpectedType => typeof(TChild);
         public override Type BaseType => typeof(TParent);
 
+        public override bool ReadUsesState => true;
+
         public override void Write(ref ProtoWriter.State state, object value)
             => state.WriteSubType<TChild>((TChild)value);
 
@@ -67,6 +69,49 @@ namespace ProtoBuf.Internal.Serializers
             ctx.EmitCall(type.GetMethod(nameof(SubTypeState<TParent>.ReadSubType)).MakeGenericMethod(typeof(TChild)));
         }
     }
+
+    internal sealed class ValueTypeAsInterfaceSerializer<TInterface, TValue> : SubItemSerializer, IDirectWriteNode
+        where TInterface : class
+        where TValue : struct, TInterface
+    {
+        public override bool IsSubType => true;
+
+        public override Type ExpectedType => typeof(TValue);
+        public override Type BaseType => typeof(TInterface);
+
+        public override void Write(ref ProtoWriter.State state, object value)
+            => state.WriteMessage<TValue>(default, (TValue)value);
+
+        public override object Read(ref ProtoReader.State state, object value)
+            => state.ReadMessage<TValue>(default, (TValue)value);
+
+        public override void EmitWrite(CompilerContext ctx, Local valueFrom)
+            => EmitWriteMessage<TValue>(null, WireType.String, ctx, valueFrom, applyRecursionCheck: false);
+
+        bool IDirectWriteNode.CanEmitDirectWrite(WireType wireType) => wireType == WireType.String;
+
+        void IDirectWriteNode.EmitDirectWrite(int fieldNumber, WireType wireType, CompilerContext ctx, Local valueFrom)
+            => EmitWriteMessage<TValue>(fieldNumber, wireType, ctx, valueFrom, applyRecursionCheck: false);
+
+        static readonly Dictionary<int, MethodInfo> s_WriteSubType =
+            (from method in typeof(ProtoWriter.State).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+             where method.Name == nameof(ProtoWriter.State.WriteSubType) && method.IsGenericMethod
+             select new { ArgCount = method.GetParameters().Length, Method = method }).ToDictionary(x => x.ArgCount, x => x.Method);
+
+
+        public override void EmitRead(CompilerContext ctx, Local valueFrom)
+        {
+            EmitReadMessage<TValue>(ctx, valueFrom);
+            //// we expect the input here to be the SubTypeState<>
+            //// => state.ReadSubType<TActual>(ref state, serializer);
+            //var type = typeof(SubTypeState<TInterface>);
+            //ctx.LoadAddress(valueFrom, type);
+            //ctx.LoadState();
+            //ctx.LoadSelfAsService<ISubTypeSerializer<TValue>, TValue>(default, default);
+            //ctx.EmitCall(type.GetMethod(nameof(SubTypeState<TInterface>.ReadSubType)).MakeGenericMethod(typeof(TValue)));
+        }
+    }
+
     internal class SubValueSerializer<T> : SubItemSerializer, IDirectWriteNode
     {
         public override bool IsSubType => false;
@@ -216,6 +261,7 @@ namespace ProtoBuf.Internal.Serializers
             }
         }
         public abstract bool IsSubType { get; }
+        public virtual bool ReadUsesState => false;
         public abstract Type ExpectedType { get; }
         public virtual Type BaseType => ExpectedType;
         bool IProtoTypeSerializer.HasInheritance => false;
@@ -367,7 +413,9 @@ namespace ProtoBuf.Internal.Serializers
 
         internal static IRuntimeProtoSerializerNode Create(Type actualType, MetaType metaType, Type parentType)
         {
-            var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubTypeSerializer<,>).MakeGenericType(parentType, actualType), nonPublic: true);
+            var openType = (actualType.IsValueType && parentType.IsInterface) ?
+                typeof(ValueTypeAsInterfaceSerializer<,>) : typeof(SubTypeSerializer<,>);
+            var obj = (SubItemSerializer)Activator.CreateInstance(openType.MakeGenericType(parentType, actualType), nonPublic: true);
             obj.MetaType = metaType ?? throw new ArgumentNullException(nameof(metaType));
             return (IRuntimeProtoSerializerNode)obj;
         }

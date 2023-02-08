@@ -137,6 +137,7 @@ namespace ProtoBuf.Internal.Serializers
         }
 
         bool IProtoTypeSerializer.IsSubType => head.IsSubType;
+        bool IProtoTypeSerializer.ReadUsesState => head.ReadUsesState;
 
         bool IProtoTypeSerializer.CanCreateInstance() => head.CanCreateInstance();
 

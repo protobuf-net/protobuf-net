@@ -108,6 +108,7 @@ namespace ProtoBuf.Internal.Serializers
     {
         bool IRuntimeProtoSerializerNode.IsScalar => false;
         public virtual bool HasInheritance => false;
+        bool IProtoTypeSerializer.ReadUsesState => false;
         public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitRead(context, valueFrom);
         public virtual void EmitWriteRoot(CompilerContext context, Local valueFrom)
@@ -385,7 +386,7 @@ namespace ProtoBuf.Internal.Serializers
                     {
                         IRuntimeProtoSerializerNode ser = serializers[i];
                         //Debug.WriteLine(": " + ser.ToString());
-                        if (ser is IProtoTypeSerializer ts && ts.IsSubType)
+                        if (ser is IProtoTypeSerializer ts && ts.ReadUsesState)
                         {
                             // sub-types are implemented differently; pass the entire
                             // state through and unbox again to observe any changes
@@ -533,14 +534,17 @@ namespace ProtoBuf.Internal.Serializers
                     ctx.StoreValue(tmp);
                     ctx.LoadAddress(state, stateType);
                     ctx.LoadValue(tmp);
-                    ctx.EmitCall(stateProp.GetSetMethod());
                 }
                 else
                 {
                     ctx.LoadAddress(state, stateType);
                     ctx.LoadValue(value);
-                    ctx.EmitCall(stateProp.GetSetMethod());
                 }
+                if (type.IsValueType)
+                {
+                    ctx.CastToObject(type);
+                }
+                ctx.EmitCall(stateProp.GetSetMethod());
             }
             else
             {
@@ -580,22 +584,20 @@ namespace ProtoBuf.Internal.Serializers
                             ctx.TryCast(serType);
 
                             using var typed = new Local(ctx, serType);
-                            ctx.StoreValue(typed);
-
-                            ctx.LoadValue(typed);
-                            ctx.BranchIfFalse(nextTest, false);
-
                             if (serType.IsValueType)
                             {
+                                ctx.BranchIfFalse(nextTest, false);
                                 ctx.LoadValue(loc);
                                 ctx.CastFromObject(serType);
-                                ser.EmitWrite(ctx, null);
+                                ctx.StoreValue(typed);
                             }
                             else
                             {
-                                ser.EmitWrite(ctx, typed);
+                                ctx.StoreValue(typed);
+                                ctx.LoadValue(typed);
+                                ctx.BranchIfFalse(nextTest, false);
                             }
-
+                            ser.EmitWrite(ctx, typed);
                             ctx.Branch(startFields, false);
                             ctx.MarkLabel(nextTest);
                         }
@@ -977,19 +979,20 @@ namespace ProtoBuf.Internal.Serializers
             //    serializer.EmitRead(ctx, null);
             //}
 
-            bool isSubtype = false;
+            bool usedState = false;
             if (HasInheritance)
             {
-                if (serializer is IProtoTypeSerializer pts && pts.IsSubType)
+                var pts = serializer as IProtoTypeSerializer;
+                if (pts is not null && pts.ReadUsesState)
                 {
                     // special-cased; we don't access .Value here, but instead
                     // pass the state down
-                    isSubtype = true;
+                    usedState = true;
                     serializer.EmitRead(ctx, loc);
                 }
                 else
                 {
-                    LoadFromState(ctx, loc);
+                    LoadFromState(ctx, loc, pts is not null && pts.IsSubType, serializer.ExpectedType);
                     serializer.EmitRead(ctx, null);
                 }
             }
@@ -998,7 +1001,7 @@ namespace ProtoBuf.Internal.Serializers
                 serializer.EmitRead(ctx, loc);
             }
 
-            if (!isSubtype && serializer.ReturnsValue) 
+            if (!usedState && serializer.ReturnsValue) 
             {
                 WriteToState(ctx, loc, null, serializer.ExpectedType);
             }

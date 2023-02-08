@@ -22,6 +22,7 @@ namespace ProtoBuf.Internal.Serializers
         bool HasInheritance { get; }
 
         bool IsSubType { get; }
+        bool ReadUsesState { get; }
 
         SerializerFeatures Features { get; }
     }

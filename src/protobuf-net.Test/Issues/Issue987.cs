@@ -25,7 +25,7 @@ public class Issue987
     [InlineData("Runtime")]
     [InlineData("CompileInPlace")]
     [InlineData("Compile")]
-    public void CanRoundTripStruct_Root(string mode) => CanRoundTripFromRoot(new TestPacketStruct { Message = "abc" }, "B0-06-05-0A-03-61-62-63", mode);
+    public void CanRoundTripStruct_Root(string mode) => CanRoundTripFromRoot(new TestPacketStruct { Message = "abc" }, "AA-06-05-0A-03-61-62-63", mode);
 
     [Theory]
     [InlineData("Runtime")]

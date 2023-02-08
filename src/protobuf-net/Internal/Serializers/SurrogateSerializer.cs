@@ -9,6 +9,7 @@ namespace ProtoBuf.Internal.Serializers
     {
         public SerializerFeatures Features => features;
         bool IProtoTypeSerializer.IsSubType => false;
+        bool IProtoTypeSerializer.ReadUsesState => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject) { throw new NotSupportedException(); }
