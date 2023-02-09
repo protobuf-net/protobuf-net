@@ -58,33 +58,48 @@ namespace ProtoBuf.Test.Nullables.Abstractions
             
             Assert.Equal(expectedTrimmed.Trim(), resultTrimmed.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
         }
-        
-        protected void AssertCSharpCodeGenerator(
-            string protobufSchemaContent, 
-            string generatedCode, 
-            string fileName = "default.proto")
+
+        protected void AssertCSharpCodeGeneratorTextEquality(
+            string protobufSchemaContent,
+            string generatedCode,
+            string fileName = "default.proto",
+            Dictionary<string, string> options = null)
+        {
+            var resultText = GetGenerateCodeResult(protobufSchemaContent, fileName, options);
+            generatedCode = generatedCode.RemoveEmptyLines().RemoveWhitespacesInLineStart();
+            Assert.Equal(generatedCode.Trim(), resultText.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
+        }
+
+        protected void AssertCSharpCodeGeneratorTextDoesNotContain(
+            string protobufSchemaContent,
+            string expectedContent,
+            string fileName = "default.proto",
+            Dictionary<string, string> options = null)
+        {
+            var resultText = GetGenerateCodeResult(protobufSchemaContent, fileName, options);
+            Assert.DoesNotContain(expectedContent.Trim(), resultText.Trim());
+        }
+
+        string GetGenerateCodeResult(string protobufSchemaContent, string fileName = "default.proto", Dictionary<string, string> options = null)
         {
             using var reader = new StringReader(protobufSchemaContent);
             var set = new FileDescriptorSet();
             set.Add(fileName, true, reader);
             set.Process();
-            
+
             // act
-            var result = CSharpCodeGenerator.Default.Generate(set, NameNormalizer.Default)?.ToArray();
-            
+            var result = CSharpCodeGenerator.Default.Generate(set, NameNormalizer.Default, options)?.ToArray();
+
             if (result is null || !result.Any()) Assert.Fail("No generation output found");
             if (result.Length > 1) Assert.Fail("Generated more than 1 file, however single file output was expected");
 
             var resultText = result.First().Text;
             _log.WriteLine("Generated such csharp code:");
             _log.WriteLine(resultText);
-            _log.WriteLine("-----------------------------");;
-            
+            _log.WriteLine("-----------------------------");
+
             // remove any whitespaces between '\r\n' and any valuable symbol to not struggle with tabs in tests
-            generatedCode = generatedCode.RemoveEmptyLines().RemoveWhitespacesInLineStart();
-            resultText = resultText.RemoveEmptyLines().RemoveWhitespacesInLineStart();
-            
-            Assert.Equal(generatedCode.Trim(), resultText.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
+            return resultText.RemoveEmptyLines().RemoveWhitespacesInLineStart();
         }
 
         [ProtoContract]

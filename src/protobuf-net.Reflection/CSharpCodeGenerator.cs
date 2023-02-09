@@ -884,44 +884,51 @@ namespace ProtoBuf.Reflection
             ref bool isMap,
             bool nonNullable = false)
         {
+            if (ctx.EmitNullWrappers)
+            {
+                switch (typeName)
+                {
+                    case WellKnownTypeDouble:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "double" : "double?";
+                    case WellKnownTypeFloat:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "float" : "float?";
+                    case WellKnownTypeInt64:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "long" : "long?";
+                    case WellKnownTypeUInt64:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "ulong" : "ulong?";
+                    case WellKnownTypeInt32:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "int" : "int?";
+                    case WellKnownTypeUInt32:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "uint" : "uint?";
+                    case WellKnownTypeBool:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return nonNullable ? "bool" : "bool?";
+                    case WellKnownTypeString:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return "string";
+                    case WellKnownTypeBytes:
+                        nullabilityType = NullabilityType.NullWrappedValue;
+                        return "byte[]";
+                }
+            }
+            
             switch (typeName)
             {
                 #region WellKnownTypes
-                
-                //  wrappers.proto types need [NullWrappedValue] attribute on top
-                case WellKnownTypeDouble:
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "double" : "double?";
-                case WellKnownTypeFloat: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "float" : "float?";
-                case WellKnownTypeInt64: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "long" : "long?";
-                case WellKnownTypeUInt64: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "ulong" : "ulong?";
-                case WellKnownTypeInt32: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "int" : "int?";
-                case WellKnownTypeUInt32:
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "uint" : "uint?";
-                case WellKnownTypeBool: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return nonNullable ? "bool" : "bool?";
-                case WellKnownTypeString: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return "string";
-                case WellKnownTypeBytes: 
-                    nullabilityType = NullabilityType.NullWrappedValue;
-                    return "byte[]";
-                
+
                 case WellKnownTypeTimestamp:
-                    compatibilityLevel = CompatibilityLevel.Level300;
+                    if (ctx.EmitCompatibilityLevelAttribute) compatibilityLevel = CompatibilityLevel.Level300;
+                    else dataFormat = "WellKnown";
                     return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
                 case WellKnownTypeDuration:
-                    compatibilityLevel = CompatibilityLevel.Level300;
+                    if (ctx.EmitCompatibilityLevelAttribute) compatibilityLevel = CompatibilityLevel.Level300;
+                    else dataFormat = "WellKnown";
                     return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
                 
                 case WellKnownTypeEmpty:
