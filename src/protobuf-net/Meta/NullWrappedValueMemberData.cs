@@ -49,7 +49,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Requires `group` to be placed on original valueMember level
         /// </summary>
-        public bool HasGroupModifier => _valueMember.SupportNull || _valueMember.NullWrappedValueGroup;
+        public bool HasGroupModifier => _valueMember.RequiresGroupModifier;
 
         /// <summary>
         /// Identifies, if <see cref="OriginalSchemaTypeName"/> is a known .net type

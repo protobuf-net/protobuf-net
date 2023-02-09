@@ -2118,7 +2118,6 @@ namespace ProtoBuf.Meta
                         {
                             schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
                             var nullWrappedValueMemberData = extraLayeredMembers.Add(schemaTypeName, member);
-
                             WriteValueMember(
                                 schemaModelTypeName: nullWrappedValueMemberData.WrappedSchemaTypeName,
                                 hasGroupModifier: nullWrappedValueMemberData.HasGroupModifier);
@@ -2127,7 +2126,7 @@ namespace ProtoBuf.Meta
                         {
                             var considerWrappersProtoTypes = member.HasExtendedNullSupport();
                             schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName, considerWrappersProtoTypes);
-                            WriteValueMember(schemaTypeName);
+                            WriteValueMember(schemaTypeName, hasGroupModifier: member.RequiresGroupModifier);
                         }
 
                         void WriteValueMember(string schemaModelTypeName, bool hasGroupModifier = false)

@@ -850,6 +850,11 @@ namespace ProtoBuf.Meta
         /// <see href="https://github.com/protobuf-net/protobuf-net/blob/main/docs/nullwrappers.md"/>
         /// <remarks>NullWrappers are needed **only** for items of collections</remarks>
         internal bool RequiresExtraLayerInSchema() => ItemType is not null && HasExtendedNullSupport();
+        
+        /// <summary>
+        /// Requires `group` to be placed on original valueMember level
+        /// </summary>
+        internal bool RequiresGroupModifier => SupportNull || NullWrappedValueGroup;
 
         internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName, bool considerWrappersProtoTypes = false)
         {

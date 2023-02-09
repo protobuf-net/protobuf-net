@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Google.Protobuf.Reflection;
 using ProtoBuf.Reflection;
+using ProtoBuf.Test.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -52,8 +53,8 @@ namespace ProtoBuf.Test.Nullables.Abstractions
             _log.WriteLine(proto);
             _log.WriteLine("-----------------------------");
 
-            var expectedTrimmed = RemoveWhitespacesInLineStart(expected);
-            var resultTrimmed = RemoveWhitespacesInLineStart(proto);
+            var expectedTrimmed = expected.RemoveWhitespacesInLineStart();
+            var resultTrimmed = proto.RemoveWhitespacesInLineStart();
             
             Assert.Equal(expectedTrimmed.Trim(), resultTrimmed.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
         }
@@ -80,8 +81,8 @@ namespace ProtoBuf.Test.Nullables.Abstractions
             _log.WriteLine("-----------------------------");;
             
             // remove any whitespaces between '\r\n' and any valuable symbol to not struggle with tabs in tests
-            generatedCode = RemoveWhitespacesInLineStart(generatedCode);
-            resultText = RemoveWhitespacesInLineStart(resultText);
+            generatedCode = generatedCode.RemoveEmptyLines().RemoveWhitespacesInLineStart();
+            resultText = resultText.RemoveEmptyLines().RemoveWhitespacesInLineStart();
             
             Assert.Equal(generatedCode.Trim(), resultText.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
         }
@@ -125,7 +126,5 @@ namespace ProtoBuf.Test.Nullables.Abstractions
                 metaType[i].SupportNull = true;
             }
         }
-        
-        string RemoveWhitespacesInLineStart(string str) => Regex.Replace(str, @"(?<=\n)\s+", "");
     }
 }

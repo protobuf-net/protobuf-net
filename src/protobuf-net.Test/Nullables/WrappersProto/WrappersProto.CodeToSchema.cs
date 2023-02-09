@@ -24,15 +24,15 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
                 import ""google/protobuf/wrappers.proto"";
 
                 message FieldsMarkedWithNullWrappedAsGroupPoco {
-                    .google.protobuf.DoubleValue Item1 = 1;
-                    .google.protobuf.FloatValue Item2 = 2;
-                    .google.protobuf.Int64Value Item3 = 3;
-                    .google.protobuf.UInt64Value Item4 = 4;
-                    .google.protobuf.Int32Value Item5 = 5;
-                    .google.protobuf.UInt32Value Item6 = 6;
-                    .google.protobuf.BoolValue Item7 = 7;
-                    .google.protobuf.StringValue Item8 = 8;
-                    .google.protobuf.BytesValue Item9 = 9;
+                    group .google.protobuf.DoubleValue Item1 = 1;
+                    group .google.protobuf.FloatValue Item2 = 2;
+                    group .google.protobuf.Int64Value Item3 = 3;
+                    group .google.protobuf.UInt64Value Item4 = 4;
+                    group .google.protobuf.Int32Value Item5 = 5;
+                    group .google.protobuf.UInt32Value Item6 = 6;
+                    group .google.protobuf.BoolValue Item7 = 7;
+                    group .google.protobuf.StringValue Item8 = 8;
+                    group .google.protobuf.BytesValue Item9 = 9;
                 }");
         
         [Fact]
@@ -62,15 +62,15 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
                 import ""google/protobuf/wrappers.proto"";
 
                 message FieldsMarkedWithSupportsNullPoco {
-                    .google.protobuf.DoubleValue Item1 = 1;
-                    .google.protobuf.FloatValue Item2 = 2;
-                    .google.protobuf.Int64Value Item3 = 3;
-                    .google.protobuf.UInt64Value Item4 = 4;
-                    .google.protobuf.Int32Value Item5 = 5;
-                    .google.protobuf.UInt32Value Item6 = 6;
-                    .google.protobuf.BoolValue Item7 = 7;
-                    .google.protobuf.StringValue Item8 = 8;
-                    .google.protobuf.BytesValue Item9 = 9;
+                    group .google.protobuf.DoubleValue Item1 = 1;
+                    group .google.protobuf.FloatValue Item2 = 2;
+                    group .google.protobuf.Int64Value Item3 = 3;
+                    group .google.protobuf.UInt64Value Item4 = 4;
+                    group .google.protobuf.Int32Value Item5 = 5;
+                    group .google.protobuf.UInt32Value Item6 = 6;
+                    group .google.protobuf.BoolValue Item7 = 7;
+                    group .google.protobuf.StringValue Item8 = 8;
+                    group .google.protobuf.BytesValue Item9 = 9;
                 }");
         
         [Fact]
