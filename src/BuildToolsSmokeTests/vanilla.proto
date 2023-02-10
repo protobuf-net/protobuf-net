@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+import "google/protobuf/wrappers.proto";
+
+package Vanilla;
+
+message Foo {
+    .google.protobuf.DoubleValue i = 1;
+    repeated string s = 2;
+}

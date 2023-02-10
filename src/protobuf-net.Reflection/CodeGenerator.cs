@@ -598,7 +598,7 @@ namespace ProtoBuf.Reflection
                 EmitListSetters = IsEnabled("listset");
 
                 EmitNullWrappers = IsEnabled("nullwrappers", true);
-                EmitCompatibilityLevelAttribute = IsEnabled("compatibilityLevel", true);
+                EmitCompatibilityLevelAttribute = IsEnabled("compatlevel", true);
 
                 var s = GetCustomOption("services");
                 void AddServices(string value)
