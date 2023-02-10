@@ -54,7 +54,7 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
             => AssertCSharpCodeGeneratorTextEquality(
                 protobufSchemaContent: GetSimpleProtobufSchemaContent(protoFieldType),
                 generatedCode: GetSimpleCSharpGeneratedCodeContent(csharpGeneratedType, protoMemberAttributeValue: "[global::ProtoBuf.ProtoMember(42, DataFormat = global::ProtoBuf.DataFormat.WellKnown)]"),
-                options: new Dictionary<string, string> { { "compatibilityLevel", "false" } });
+                options: new Dictionary<string, string> { { "compatlevel", "false" } });
 
         string GetSimpleProtobufSchemaContent(string fieldType) => @$"
             import ""google/protobuf/wrappers.proto"";
