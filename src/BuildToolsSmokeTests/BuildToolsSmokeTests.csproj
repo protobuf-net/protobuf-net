@@ -44,8 +44,6 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-        <AdditionalFiles Include="disabled.proto" NullWrappers="false" ListSet="false" />
-        <AdditionalFiles Include="enabled.proto" NullWrappers="true" ListSet="true" />
     </ItemGroup>
 
 </Project>

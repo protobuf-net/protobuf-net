@@ -2,7 +2,7 @@
 
 Usage:
 
-1. build protobuf-net.Build tools **in release mode**; this will generate a new .nupkg in /bin/release
+1. build protobuf-net.BuildTools **in release mode**; this will generate a new .nupkg in /bin/release
 2. edit BuildToolsSmokeTests.cspoj with the version (full name) from this new nupkg
 3. at the console, `dotnet restore` and `dotnet test`
 
