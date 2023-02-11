@@ -60,6 +60,18 @@
                                 <code>repeated</code> should emit <code>set</code> accessors
                             </label>
                         </div>
+                        <div class="form-group form-check ml-2">
+                            <input class="form-check-input" type="checkbox" @bind="model.DisableNullWrappers" id="repeated_accessors" />
+                            <label class="form-check-label" for="repeated_accessors">
+                                code types imported from <code>wrappers.proto</code> should <b>NOT</b> be generated as nullable types (<code>int?</code>)
+                            </label>
+                        </div>
+                        <div class="form-group form-check ml-2">
+                            <input class="form-check-input" type="checkbox" @bind="model.DisableCompatLevel" id="repeated_accessors" />
+                            <label class="form-check-label" for="repeated_accessors">
+                                well-known types should <b>NOT</b> be marked with <code>CompatibilityLevel</code> instead of <code>DataFormat</code>
+                            </label>
+                        </div>
                         <div class="form-group">
                             <label for="namingConvention">Naming convention</label>
                             <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control">
