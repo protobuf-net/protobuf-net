@@ -4,6 +4,14 @@ import "google/protobuf/wrappers.proto";
 package Enabled;
 
 message Foo {
-    .google.protobuf.DoubleValue i = 1;
-    repeated string s = 2;
+    .google.protobuf.DoubleValue doubleProp = 1;
+    .google.protobuf.FloatValue floatProp = 2;
+    .google.protobuf.Int64Value int64Prop = 3;
+    .google.protobuf.UInt64Value uInt64Prop = 4;
+    .google.protobuf.Int32Value int32Prop = 5;
+    .google.protobuf.UInt32Value uInt32Prop = 6;
+    .google.protobuf.BoolValue boolProp = 7;
+    .google.protobuf.StringValue stringProp = 8;
+    .google.protobuf.BytesValue bytesProp = 9;
+    repeated string stringItems = 10;
 }

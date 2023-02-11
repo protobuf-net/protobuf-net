@@ -29,7 +29,7 @@
             <OutputItemType>Analyzer</OutputItemType>
         </ProjectReference>-->
 
-        <PackageReference Include="protobuf-net.BuildTools" Version="3.1.51-gca6749abbe">
+        <PackageReference Include="protobuf-net.BuildTools" Version="3.1.60-g8ca016a7b4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
