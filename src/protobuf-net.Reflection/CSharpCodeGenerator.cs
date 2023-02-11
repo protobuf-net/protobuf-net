@@ -614,6 +614,7 @@ namespace ProtoBuf.Reflection
             }
             else if (trackPresence)
             {
+                bool isNullable = IsNullableType(ctx, field);
                 string fieldName = FieldPrefix + name, fieldType;
                 bool isRef = false;
                 switch (field.type)
@@ -625,9 +626,10 @@ namespace ProtoBuf.Reflection
                         break;
                     default:
                         fieldType = typeName + "?";
+                        isRef = isNullable;
                         break;
                 }
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)}").WriteLine("{").Indent();
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}{(isNullable ? "?": "")} {Escape(name)}").WriteLine("{").Indent();
                 tw = ctx.Write(PropGetPrefix());
                 tw.Write(fieldName);
                 if (!string.IsNullOrWhiteSpace(defaultValue))
@@ -660,7 +662,7 @@ namespace ProtoBuf.Reflection
             }
             else
             {
-                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)} {{ get; set; }}");
+                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field) ? "?" : "")} {Escape(name)} {{ get; set; }}");
                 if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
                 tw.WriteLine();
             }
@@ -1016,6 +1018,30 @@ namespace ProtoBuf.Reflection
                     return GetTypeName(ctx, field, field.TypeName, ref dataFormat, ref nullabilityType, ref compatibilityLevel, ref isMap, nonNullable);
                 default:
                     return field.TypeName;
+            }
+        }
+        private bool IsNullableType(GeneratorContext ctx, FieldDescriptorProto field)
+        {
+            if (!ctx.IsEnabled("nullablevaluetype"))
+                return false;
+            switch (field.type)
+            {
+                case FieldDescriptorProto.Type.TypeDouble:
+                case FieldDescriptorProto.Type.TypeFloat:
+                case FieldDescriptorProto.Type.TypeBool:
+                case FieldDescriptorProto.Type.TypeSint32:
+                case FieldDescriptorProto.Type.TypeInt32:
+                case FieldDescriptorProto.Type.TypeSfixed32:
+                case FieldDescriptorProto.Type.TypeSint64:
+                case FieldDescriptorProto.Type.TypeInt64:
+                case FieldDescriptorProto.Type.TypeSfixed64:
+                case FieldDescriptorProto.Type.TypeFixed32:
+                case FieldDescriptorProto.Type.TypeUint32:
+                case FieldDescriptorProto.Type.TypeFixed64:
+                case FieldDescriptorProto.Type.TypeUint64:
+                    return true;
+                default:
+                    return false;
             }
         }
 

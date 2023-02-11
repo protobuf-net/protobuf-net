@@ -2,12 +2,11 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
-using System.Buffers;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -395,22 +394,36 @@ namespace ProtoBuf
             /// is thrown; this should only be used when there is confidence that the length
             /// is bounded.
             /// </summary>
+            [Browsable(false)] // hide; not the intended API now due to span scopes
             public Span<byte> ReadBytes(Span<byte> destination)
+            {
+                ReadBytes(destination, out var length);
+                return destination.Slice(0, length);
+            }
+
+            /// <summary>
+            /// Tries to read a string-like type directly into a span; if successful, the span
+            /// returned indicates the available amount of data; if unsuccessful, an exception
+            /// is thrown; this should only be used when there is confidence that the length
+            /// is bounded.
+            /// </summary>
+            public void ReadBytes(Span<byte> destination, out int length)
             {
                 switch (_reader.WireType)
                 {
                     case WireType.String:
-                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
-                        if (len < 0) ThrowInvalidLength(len);
-                        if (len > destination.Length)
-                            ThrowHelper.ThrowInvalidOperationException($"Insufficient space in the target span to read a string/bytes value; {destination.Length} vs {len} bytes");
+                        length = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        if (length < 0) ThrowInvalidLength(length);
+                        if (length > destination.Length)
+                            ThrowHelper.ThrowInvalidOperationException($"Insufficient space in the target span to read a string/bytes value; {destination.Length} vs {length} bytes");
                         _reader.WireType = WireType.None;
-                        destination = destination.Slice(0, len);
+                        destination = destination.Slice(0, length);
                         _reader.ImplReadBytes(ref this, destination);
-                        return destination;
+                        break;
                     default:
+                        length = 0;
                         ThrowWireTypeException();
-                        return default;
+                        break;
                 }
             }
 

@@ -44,6 +44,7 @@ namespace ProtoBuf.Models
         public bool? RepeatedEmitSetAccessors { get; set; } = false;
         public bool? DisableNullWrappers { get; set; } = false;
         public bool? DisableCompatLevel { get; set; } = false;
+        public bool? NullableValueType { get; set; } = false;
 
         public string LanguageVersion { get; set; }
         public NamingConventionEnum NamingConvention { get; set; } = NamingConventionEnum.Auto;
@@ -92,6 +93,11 @@ namespace ProtoBuf.Models
             {
                 res.Add("compatlevel", "false");
             }
+            if (NullableValueType.GetValueOrDefault(false))
+            {
+                res.Add("nullablevaluetype", "yes");
+            }
+
             return res;
         }
 

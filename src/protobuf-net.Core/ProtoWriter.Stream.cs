@@ -121,13 +121,13 @@ namespace ProtoBuf
             private byte[] ioBuffer;
             private int ioIndex;
 
-            protected private override void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> bytes)
+            protected private override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> bytes)
             {
                 var length = bytes.Length;
                 if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
                 {
                     DemandSpace(length, this, ref state);
-                    bytes.CopyTo(new Memory<byte>(ioBuffer, ioIndex, length));
+                    bytes.CopyTo(new Span<byte>(ioBuffer, ioIndex, length));
                     ioIndex += length;
                 }
                 else
@@ -137,20 +137,11 @@ namespace ProtoBuf
                     state.Flush(); // commit any existing data from the buffer
                                    // now just write directly to the underlying stream
 
-                    // prefer using the array API, even on .NET Core (for now),
-                    // because many implementations won't have overridden the method yet
-                    if (MemoryMarshal.TryGetArray(bytes, out var segment))
-                    {
-                        dest.Write(segment.Array, segment.Offset, segment.Count);
-                    }
-                    else
-                    {
 #if PLAT_SPAN_OVERLOADS
-                        dest.Write(bytes.Span);
+                    dest.Write(bytes);
 #else
-                        WriteFallback(bytes.Span, dest);
+                    WriteFallback(bytes, dest);
 #endif
-                    }
                     // since we've flushed offset etc is 0, and remains
                     // zero since we're writing directly to the stream
                 }

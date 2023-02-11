@@ -4,27 +4,29 @@ using System;
 
 namespace ProtoBuf.Reflection
 {
-    internal struct Token
+    internal readonly struct Token : IEquatable<Token>
     {
-        public static bool operator ==(Token x, Token y)
+        public static bool operator ==(in Token x, in Token y)
         {
-            return x.Offset == y.Offset && x.File == y.File;
+            return x.TokenIndex == y.TokenIndex && x.File == y.File;
         }
-        public static bool operator !=(Token x, Token y)
+        public static bool operator !=(in Token x, in Token y)
         {
-            return x.Offset != y.Offset || x.File != y.File;
+            return x.TokenIndex != y.TokenIndex || x.File != y.File;
         }
-        public override int GetHashCode() => Offset;
-        public override bool Equals(object obj) => obj is Token token && token.Offset == this.Offset;
-        public bool Equals(Token token) => token.Offset == this.Offset;
-        public int Offset { get; }
+        public override int GetHashCode() => TokenIndex;
+        public override bool Equals(object obj) => obj is Token other && other.TokenIndex == this.TokenIndex && other.File == this.File;
+        public bool Equals(in Token other) => other.TokenIndex == this.TokenIndex && other.File == this.File;
+        bool IEquatable<Token>.Equals(Token other) => Equals(in other);
+
+        public int TokenIndex { get; }
         public int LineNumber { get; }
         public string File { get; }
         public int ColumnNumber { get; }
         public TokenType Type { get; }
         public string Value { get; }
         public string LineContents { get; }
-        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents, int offset, string file)
+        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents, int tokenIndex, string file)
         {
             Value = value;
             LineNumber = lineNumber;
@@ -32,7 +34,7 @@ namespace ProtoBuf.Reflection
             File = file;
             Type = type;
             LineContents = lineContents;
-            Offset = offset;
+            TokenIndex = tokenIndex;
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 

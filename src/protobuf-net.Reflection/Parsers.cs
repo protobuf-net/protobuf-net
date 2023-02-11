@@ -2701,17 +2701,32 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf.Reflection
 {
+    /// <summary>
+    /// Utility methods for descriptors
+    /// </summary>
     public static class DescriptorExtensions
     {
+        /// <summary>
+        /// Gets the resolved enum type associated with a field
+        /// </summary>
         public static EnumDescriptorProto GetEnumType(this FieldDescriptorProto field)
             => field?.ResolvedType as EnumDescriptorProto;
-    
+
+        /// <summary>
+        /// Gets the resolved message type associated with a field
+        /// </summary>
         public static DescriptorProto GetMessageType(this FieldDescriptorProto field)
             => field?.ResolvedType as DescriptorProto;
 
+        /// <summary>
+        /// Gets the fully qualified name of an enum
+        /// </summary>
         public static string GetFullyQualifiedName(this EnumDescriptorProto @enum) 
             => @enum.FullyQualifiedName;
 
+        /// <summary>
+        /// Gets the fully qualified name of a message
+        /// </summary>
         public static string GetFullyQualifiedName(this DescriptorProto message) 
             => message.FullyQualifiedName;
     }

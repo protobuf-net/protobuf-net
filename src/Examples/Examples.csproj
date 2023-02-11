@@ -14,6 +14,10 @@
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT;PLAT_SPANS;EMIT_DLL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Issues\Issue855Proto2CSharp.Generated.cs" />
+    <Compile Remove="Issues\Issue855Proto3CSharp.Generated.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\protobuf-net.MessagePipes\protobuf-net.MessagePipes.csproj" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
@@ -22,8 +26,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
@@ -52,16 +54,30 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='netcoreapp3.1' or $(TargetFramework)=='net6.0'">
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Tools\nwind.proto.bin" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Issues\Issue855Proto2CSharp.Generated.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Issues\Issue855Proto3CSharp.Generated.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Issues\Issue647.Generated.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Issues\Issue855Proto2VB.Generated.vb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Issues\Issue855Proto3VB.Generated.vb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
