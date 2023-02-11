@@ -17,5 +17,9 @@
     <ProjectReference Include="src\*\*.csproj" Exclude="src\protogen.Site\*.csproj" />
     <!-- <ProjectReference Include="samples\**\*.csproj" Exclude="samples\**\*Mvc5*.csproj" />
     <ProjectReference Include="tests\**\*.csproj" /> -->
+	
+	<!-- Excludes -->
+	  <ProjectReference Exclude="tests\BuildToolsSmokeTests\*.csproj" />
+	<!-- Excludes -->
   </ItemGroup>
-</Project>
+</Project>  
