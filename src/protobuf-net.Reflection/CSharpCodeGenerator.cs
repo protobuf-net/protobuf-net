@@ -920,8 +920,6 @@ namespace ProtoBuf.Reflection
             
             switch (typeName)
             {
-                #region WellKnownTypes
-
                 case WellKnownTypeTimestamp:
                     if (ctx.EmitCompatibilityLevelAttribute) compatibilityLevel = CompatibilityLevel.Level300;
                     else dataFormat = "WellKnown";
@@ -933,10 +931,6 @@ namespace ProtoBuf.Reflection
                 
                 case WellKnownTypeEmpty:
                     return "global::ProtoBuf.Empty";
-                
-                #endregion
-
-                #region BCL
 
                 case ".bcl.NetObjectProxy":
                     return "object";
@@ -947,9 +941,7 @@ namespace ProtoBuf.Reflection
                 case ".bcl.Decimal":
                     return nonNullable ? "decimal" : "decimal?";
                 case ".bcl.Guid":
-                    return nonNullable ? "global::System.Guid" : "global::System.Guid?";    
-
-                #endregion
+                    return nonNullable ? "global::System.Guid" : "global::System.Guid?";
             }
             
             var msgType = ctx.TryFind<DescriptorProto>(typeName);
