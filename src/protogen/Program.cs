@@ -340,9 +340,9 @@ Parse PROTO_FILES and generate output based on the options given:
   +oneof={default|enum}       Specify whether 'oneof' should generate enums.
   +listset={yes|no}           Specify whether lists should emit setters
   +services={grpc;wcf}        Semi-colon list of service metadata to support.
-  +nullwrappers={yes;no}      Specify whether wrappers.proto should be generated
+  +nullwrappers={yes|no}      Specify whether wrappers.proto should be generated
                               as C# nullable types (int?).
-  +compatlevel={yes;no}       Specify whether well-known types should be marked 
+  +compatlevel={yes|no}       Specify whether well-known types should be marked 
                               with CompatibilityLevel instead of DataFormat.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.

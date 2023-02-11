@@ -890,25 +890,25 @@ namespace ProtoBuf.Reflection
                 {
                     case WellKnownTypeDouble:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "double" : "double?";
+                        return "double?";
                     case WellKnownTypeFloat:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "float" : "float?";
+                        return "float?";
                     case WellKnownTypeInt64:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "long" : "long?";
+                        return "long?";
                     case WellKnownTypeUInt64:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "ulong" : "ulong?";
+                        return "ulong?";
                     case WellKnownTypeInt32:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "int" : "int?";
+                        return "int?";
                     case WellKnownTypeUInt32:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "uint" : "uint?";
+                        return "uint?";
                     case WellKnownTypeBool:
                         nullabilityType = NullabilityType.NullWrappedValue;
-                        return nonNullable ? "bool" : "bool?";
+                        return "bool?";
                     case WellKnownTypeString:
                         nullabilityType = NullabilityType.NullWrappedValue;
                         return "string";
