@@ -12,7 +12,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <PackageReference Include="System.IO.Pipelines" Version="6.0.3" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
-    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
+    <PackageReference Include="System.IO.Pipelines" Version="6.0.3" Condition="'$(TargetFramework)'=='netcoreapp3.1'" />
+    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" Condition="'$(TargetFramework)'!='netcoreapp3.1'" />
   </ItemGroup>
 </Project>
