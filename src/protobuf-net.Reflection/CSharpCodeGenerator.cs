@@ -585,7 +585,7 @@ namespace ProtoBuf.Reflection
             }
             else if (trackPresence)
             {
-                bool isNullable = IsNullableType(ctx, field);
+                bool isNullable = IsNullableType(ctx, field, defaultValue, isOptional);
                 string fieldName = FieldPrefix + name, fieldType;
                 bool isRef = false;
                 switch (field.type)
@@ -633,7 +633,7 @@ namespace ProtoBuf.Reflection
             }
             else
             {
-                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field) ? "?" : "")} {Escape(name)} {{ get; set; }}");
+                tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field, defaultValue, isOptional) ? "?" : "")} {Escape(name)} {{ get; set; }}");
                 if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
                 tw.WriteLine();
             }
@@ -935,10 +935,11 @@ namespace ProtoBuf.Reflection
                     return field.TypeName;
             }
         }
-        private bool IsNullableType(GeneratorContext ctx, FieldDescriptorProto field)
+        private bool IsNullableType(GeneratorContext ctx, FieldDescriptorProto field, string defaultValue, bool isOptional)
         {
-            if (!ctx.IsEnabled("nullablevaluetype"))
+            if (!(ctx.IsEnabled("nullablevaluetype") && string.IsNullOrWhiteSpace(defaultValue) && isOptional))
                 return false;
+
             switch (field.type)
             {
                 case FieldDescriptorProto.Type.TypeDouble:
