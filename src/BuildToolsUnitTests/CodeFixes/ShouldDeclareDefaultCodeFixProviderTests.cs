@@ -1,48 +1,41 @@
-﻿using ProtoBuf.BuildTools.Analyzers;
+﻿using BuildToolsUnitTests.CodeFixes.Abstractions;
+using ProtoBuf.BuildTools.Analyzers;
+using ProtoBuf.CodeFixes;
 using System.Threading.Tasks;
 using Xunit;
 
-using VerifyCS = BuildToolsUnitTests.CodeFixes.Infra.CSharpCodeFixVerifier<
-    ProtoBuf.BuildTools.Analyzers.DataContractAnalyzer,
-    ProtoBuf.CodeFixes.ShouldDeclareDefaultCodeFixProvider>;
-
 namespace BuildToolsUnitTests.CodeFixes
 {
-    public class ShouldDeclareDefaultCodeFixProviderTests
+    public class ShouldDeclareDefaultCodeFixProviderTests : CodeFixProviderTestsBase
     {
         [Fact]
         public async Task Assert()
         {
-            var testCode = @"
-                namespace TestNamespace
+            var sourceCode = @"
+                using ProtoBuf;
+                
+                [ProtoContract]
+                public class Model
                 {
-                    [ProtoContract]
-                    public class Model
-                    {
-                        [ProtoMember(1)]
-                        public int Items { get; set; } = 1;
-                    }
+                    [ProtoMember(1)]
+                    public int Items { get; set; } = 1;
                 }
             ";
 
-            var appliedCodeFix = @"
-                namespace TestNamespace
+            var expectedCode = @"
+                using ProtoBuf;
+
+                [ProtoContract]
+                public class Model
                 {
-                    [ProtoContract]
-                    public class Model
-                    {
-                        [ProtoMember(1)]
-                        [DefaultValue(1)]
-                        public int Items { get; set; } = 1;
-                    }
+                    [ProtoMember(1)]
+                    [DefaultValue(1)]
+                    public int Items { get; set; } = 1;
                 }
             ";
 
-            var expected = VerifyCS.Diagnostic(DataContractAnalyzer.ShouldDeclareDefault.Id)
-                .WithSpan(0, 1, 1, 1)
-                .WithMessage(string.Format(DataContractAnalyzer.ShouldDeclareDefault.MessageFormat, "qwe", "qwe"));
-
-            await VerifyCS.VerifyCodeFixAsync(testCode, expected, appliedCodeFix);
+            await RunCodeFixTestAsync<DataContractAnalyzer, ShouldDeclareDefaultCodeFixProvider>(
+                sourceCode, expectedCode, DataContractAnalyzer.ShouldDeclareDefault);
         }
     }
 }

@@ -78,10 +78,7 @@ namespace BuildToolsUnitTests
 
             if (ReferenceProtoBuf)
             {
-                project = project
-                    .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location));
+                project = project.ReferenceProtoBuf();
             }
 
             project = projectModifier?.Invoke(project) ?? project;
