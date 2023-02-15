@@ -61,6 +61,21 @@ namespace ProtoBuf.Test.Issues
             Assert.Equal(5, innerPair.Value);
         }
 
+        [Theory]
+        [InlineData(Scenario.Runtime)]
+        [InlineData(Scenario.CompileInPlace)]
+        [InlineData(Scenario.Compile)]
+        public void TestNestedInner(Scenario scenario)
+        {
+            var innerDict = new Dictionary<int, Inner> { { 3, new Inner { Id = 42 } } };
+            var obj = GetModel(scenario, c => c.Add<NestedInner>()).DeepClone(new NestedInner { Data = { { 12, innerDict } } });
+            var pair = Assert.Single(obj.Data);
+            Assert.Equal(12, pair.Key);
+            var innerPair = Assert.Single(pair.Value);
+            Assert.Equal(3, innerPair.Key);
+            Assert.Equal(42, innerPair.Value.Id);
+        }
+
         static TypeModel GetModel(Scenario scenario, Action<RuntimeTypeModel> configure)
         {
             var model = RuntimeTypeModel.Create();
@@ -106,6 +121,13 @@ namespace ProtoBuf.Test.Issues
         {
             [ProtoMember(1)]
             public Dictionary<int, Dictionary<int, int>> Data { get; } = new();
+        }
+
+        [ProtoContract]
+        public class NestedInner 
+        {
+            [ProtoMember(1)]
+            public Dictionary<int, Dictionary<int, Inner>> Data { get; } = new();
         }
     }
 }
