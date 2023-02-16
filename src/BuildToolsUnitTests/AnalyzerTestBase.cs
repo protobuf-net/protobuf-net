@@ -77,8 +77,8 @@ namespace BuildToolsUnitTests
             project = SetupProject(project);
 
             if (ReferenceProtoBuf)
-            {
-                project = project.ReferenceProtoBuf();
+            {                  
+                project = project.ReferenceMetadataReferences(MetadataReferenceHelpers.ProtoBufReferences);
             }
 
             project = projectModifier?.Invoke(project) ?? project;
