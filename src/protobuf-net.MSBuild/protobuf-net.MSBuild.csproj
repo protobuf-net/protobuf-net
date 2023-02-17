@@ -11,11 +11,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Threading" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="17.4.0">
+    <PackageReference Include="System.Threading" />
+    <PackageReference Include="Microsoft.Build.Framework">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.4.0">
+    <PackageReference Include="Microsoft.Build.Utilities.Core">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>

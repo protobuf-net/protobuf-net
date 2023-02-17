@@ -1,0 +1,75 @@
+<Project>
+    <ItemGroup>
+        <PackageVersion Include="System.Memory" Version="4.5.5" />
+        <PackageVersion Include="System.Collections.Immutable" Version="7.0.0" />
+
+        <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+        <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+        <PackageVersion Include="Nerdbank.GitVersioning" Version="3.5.119" PrivateAssets="All" />
+
+        <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />
+        <PackageVersion Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+
+        <PackageVersion Include="NodaTime" Version="3.1.6" />
+        <PackageVersion Include="System.IO.Pipelines" Version="7.0.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" />
+        <PackageVersion Include="FSharp.Core" Version="7.0.0" />
+
+        <PackageVersion Include="System.Threading" Version="4.3.0" />
+        <PackageVersion Include="Microsoft.Build.Framework" Version="17.4.0" />
+        <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="17.4.0" />
+
+        <PackageVersion Include="protobuf-net.Grpc.Reflection" Version="1.0.179" />
+        <PackageVersion Include="Grpc.Net.Client" Version="2.50.0" />
+        <PackageVersion Include="System.ServiceModel.Primitives" Version="4.10.0" />
+
+        <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+
+        <PackageVersion Include="NHibernate" Version="[4.1.1.4000]" />
+        <PackageVersion Include="Iesi.Collections" Version="4.0.5" />
+
+        <PackageVersion Include="Google.Protobuf" Version="3.21.10" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.2" />
+        <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
+        <PackageVersion Include="xunit" Version="2.4.2" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.5" />
+        <PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+        <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
+
+        <PackageVersion Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+        <PackageVersion Include="System.Data.SqlClient" Version="4.8.5" />
+        <PackageVersion Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
+        <PackageVersion Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+
+        <PackageVersion Include="System.CodeDom" Version="7.0.0" />
+
+        <PackageVersion Include="System.Collections.NonGeneric" Version="4.3.0" />
+        <PackageVersion Include="System.Threading.Thread" Version="4.3.0" />
+        <PackageVersion Include="System.Threading.ThreadPool" Version="4.3.0" />
+        <PackageVersion Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
+        <PackageVersion Include="System.Reflection.TypeExtensions" Version="4.7.0" />
+
+        <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
+
+        <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
+
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.2" />
+        <PackageVersion Include="coverlet.collector" Version="3.2.0" />
+
+        <PackageVersion Include="Microsoft.Build" Version="17.4.0" />
+        <PackageVersion Include="Microsoft.Build.Locator" Version="1.5.5" />
+        <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
+
+        <PackageVersion Include="protobuf-net.Grpc" Version="1.0.21" />
+        <PackageVersion Include="System.Threading.Channels" Version="7.0.0" />
+
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
+        <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
+
+        <PackageVersion Include="System.Text.Json" Version="7.0.2"/>
+        <PackageVersion Include="BlazorInputFile" Version="0.2.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.1" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.1" PrivateAssets="all" />
+    </ItemGroup>
+</Project>

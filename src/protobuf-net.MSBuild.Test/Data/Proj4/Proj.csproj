@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="protobuf-net.Grpc" Version="1.0.21" />
+    <PackageReference Include="protobuf-net.Grpc" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)/../Common.props"/>
