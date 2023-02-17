@@ -22,15 +22,18 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
         protected async Task RunCodeFixTestAsync<TDiagnosticAnalyzer, TCodeFixProvider>(
             string sourceCode,
             string expectedCode,
-            DiagnosticResult diagnosticResult,
+            DiagnosticResult? diagnosticResult = null,
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
                 where TCodeFixProvider : CodeFixProvider, new()
         {
             var codeFixTest = BuildCSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider>(sourceCode, expectedCode);
 
-            // expect a diagnostic in sourceCode
-            codeFixTest.TestState.ExpectedDiagnostics.Add(diagnosticResult);
+            if (diagnosticResult is not null)
+            {
+                // expect a diagnostic in sourceCode
+                codeFixTest.TestState.ExpectedDiagnostics.Add(diagnosticResult.Value);
+            }
 
             // we expect some standard diagnostics in both of code compilations
             AddStandardDiagnostics(codeFixTest.TestState, standardExpectedDiagnostics);
