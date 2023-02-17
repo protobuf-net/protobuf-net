@@ -100,7 +100,7 @@ message NullWrappedValueListModel {
         public class NullWrappedValueListModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Bar?> ClassItems { get; set; } = new();
+            public List<Bar> ClassItems { get; set; } = new();
 
             [ProtoMember(2), NullWrappedValue]
             public List<int?> NullableIntItems { get; set; } = new();

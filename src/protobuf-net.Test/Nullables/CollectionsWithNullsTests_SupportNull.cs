@@ -72,7 +72,7 @@ message SupportsNullListModel {
         class SupportsNullListModel
         {
             [ProtoMember(1)]
-            public List<Bar?> ClassItems { get; set; } = new();
+            public List<Bar> ClassItems { get; set; } = new();
 
             [ProtoMember(2)]
             public List<int?> NullableIntItems { get; set; } = new();

@@ -50,7 +50,7 @@ message BasicNullableListModel {
         public class BasicNullableListModel
         {
             [ProtoMember(1)]
-            public List<Bar?> Items { get; set; } = new();
+            public List<Bar> Items { get; set; } = new();
 
             public static BasicNullableListModel BuildWithNull() => new()
             {

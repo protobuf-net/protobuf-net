@@ -63,7 +63,7 @@ message NullWrappedValueGroupListModel {
         public class NullWrappedValueGroupListModel
         {
             [ProtoMember(1), NullWrappedValue(AsGroup = true)]
-            public List<Bar?> ClassItems { get; set; } = new();
+            public List<Bar> ClassItems { get; set; } = new();
 
             [ProtoMember(2), NullWrappedValue(AsGroup = true)]
             public List<int?> NullableIntItems { get; set; } = new();

@@ -118,6 +118,8 @@ namespace ProtoBuf.Test.Nullables.Abstractions
 
                 return false;
             }
+
+            public override int GetHashCode() => Id;
         }
 
         protected void AssertCollectionEquality<T>(List<T> one, List<T> another)

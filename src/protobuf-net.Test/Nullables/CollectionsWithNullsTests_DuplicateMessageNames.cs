@@ -119,53 +119,53 @@ message DuplicateFieldTypesWithDifferentNullWrappingModel {
         class DuplicateFieldTypesModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Bar?> Items1 { get; set; } = new();
+            public List<Bar> Items1 { get; set; } = new();
 
             [ProtoMember(2), NullWrappedValue]
-            public List<Bar?> Items2 { get; set; } = new();
+            public List<Bar> Items2 { get; set; } = new();
         }
 
         [ProtoContract]
         class DuplicateFieldTypesWithAltNameModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Bar?> Items1 { get; set; } = new();
+            public List<Bar> Items1 { get; set; } = new();
 
             [ProtoMember(2, Name = "AlternativeItems"), NullWrappedValue]
-            public List<Bar?> Items2 { get; set; } = new();
+            public List<Bar> Items2 { get; set; } = new();
         }
 
         [ProtoContract]
         class DuplicateFieldTypesWithUniqueNamespaceModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Test1.BarNamespace?> Items1 { get; set; } = new();
+            public List<Test1.BarNamespace> Items1 { get; set; } = new();
 
             [ProtoMember(2), NullWrappedValue]
-            public List<Test2.BarNamespace?> Items2 { get; set; } = new();
+            public List<Test2.BarNamespace> Items2 { get; set; } = new();
         }
 
         [ProtoContract]
         class DuplicateFieldTypesWithUniqueNamespaceWithAlternativeNameModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Test1.BarNamespace?> Items1 { get; set; } = new();
+            public List<Test1.BarNamespace> Items1 { get; set; } = new();
 
             [ProtoMember(2, Name = "AlternativeBarNamespace"), NullWrappedValue]
-            public List<Test2.BarNamespace?> Items2 { get; set; } = new();
+            public List<Test2.BarNamespace> Items2 { get; set; } = new();
         }
 
         [ProtoContract]
         class DuplicateFieldTypesWithDifferentNullWrappingModel
         {
             [ProtoMember(1), NullWrappedValue]
-            public List<Bar?> Items1 { get; set; } = new();
+            public List<Bar> Items1 { get; set; } = new();
 
             [ProtoMember(2), NullWrappedValue(AsGroup = true)]
-            public List<Bar?> Items2 { get; set; } = new();
+            public List<Bar> Items2 { get; set; } = new();
 
             [ProtoMember(3)] // [SupportNull] defined in test
-            public List<Bar?> Items3 { get; set; } = new();
+            public List<Bar> Items3 { get; set; } = new();
         }
     }
 }

@@ -52,10 +52,10 @@ namespace ProtoBuf.Meta
         public bool HasGroupModifier => _valueMember.RequiresGroupModifier;
 
         /// <summary>
-        /// Identifies, if <see cref="OriginalSchemaTypeName"/> is a known .net type
+        /// Identifies, if original schemaTypeName is a known .net type
         /// </summary>
         /// <returns>
-        /// true, if <see cref="OriginalSchemaTypeName"/> is a string representation of known System.XXX type 
+        /// true, if original schemaTypeName is a string representation of known System.XXX type 
         /// </returns>
         private bool HasKnownTypeSchema() => _originalSchemaTypeName switch
         {
