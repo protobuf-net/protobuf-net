@@ -1,4 +1,4 @@
-﻿using Google.Protobuf.Reflection;
+using Google.Protobuf.Reflection;
 using ProtoBuf;
 using ProtoBuf.Reflection;
 using System;
@@ -344,6 +344,7 @@ Parse PROTO_FILES and generate output based on the options given:
                               as C# nullable types (int?).
   +compatlevel={yes|no}       Specify whether well-known types should be marked 
                               with CompatibilityLevel instead of DataFormat.
+  +nullablevaluetype={yes|no} Use nullable primitives when possible.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.
   --package=PACKAGE           Add a default package (when no package is
