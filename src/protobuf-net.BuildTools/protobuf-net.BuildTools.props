@@ -9,6 +9,8 @@
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Package" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Services" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="Bytes" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NullWrappers" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CompatLevel" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NullableValueType" />
     </ItemGroup>
 </Project>

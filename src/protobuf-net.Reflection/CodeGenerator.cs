@@ -597,6 +597,9 @@ namespace ProtoBuf.Reflection
 
                 EmitListSetters = IsEnabled("listset");
 
+                EmitNullWrappers = IsEnabled("nullwrappers", true);
+                EmitCompatibilityLevelAttribute = IsEnabled("compatlevel", true);
+
                 var s = GetCustomOption("services");
                 void AddServices(string value)
                 {
@@ -628,6 +631,16 @@ namespace ProtoBuf.Reflection
             /// Whether lists should be written with getters
             /// </summary>
             public bool EmitListSetters { get; }
+            
+            /// <summary>
+            /// Whether wrappers.proto should be generated as C# nullable types (int?)
+            /// </summary>
+            public bool EmitNullWrappers { get; }
+            
+            /// <summary>
+            /// Whether well-known types should be marked with <see cref="CompatibilityLevel"/> instead of <see cref="DataFormat"/>
+            /// </summary>
+            public bool EmitCompatibilityLevelAttribute { get; }
 
             /// <summary>
             /// Whether services should be emitted
@@ -644,12 +657,12 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Whether a custom option is enabled
             /// </summary>
-            internal bool IsEnabled(string key)
-                => IsEnabledValue(GetCustomOption(key));
+            internal bool IsEnabled(string key, bool defaultIfMissing = false)
+                => IsEnabledValue(GetCustomOption(key), defaultIfMissing);
 
-            internal bool IsEnabledValue(string option)
+            internal bool IsEnabledValue(string option, bool defaultIfMissing = false)
             {
-                if (string.IsNullOrWhiteSpace(option)) return false;
+                if (string.IsNullOrWhiteSpace(option)) return defaultIfMissing;
                 option = option.Trim();
                 if (option == "1") return true;
                 if (string.Equals("yes", option, StringComparison.OrdinalIgnoreCase)) return true;

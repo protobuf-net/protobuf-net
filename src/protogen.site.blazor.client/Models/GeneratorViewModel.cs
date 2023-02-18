@@ -42,6 +42,8 @@ namespace ProtoBuf.Models
         public bool? Services { get; set; } = true;
         public bool? OneOfEnum { get; set; } = false;
         public bool? RepeatedEmitSetAccessors { get; set; } = false;
+        public bool? DisableNullWrappers { get; set; } = false;
+        public bool? DisableCompatLevel { get; set; } = false;
         public bool? NullableValueType { get; set; } = false;
 
         public string LanguageVersion { get; set; }
@@ -82,6 +84,14 @@ namespace ProtoBuf.Models
             }
             if (RepeatedEmitSetAccessors.GetValueOrDefault (false)) {
                 res.Add ("listset", "yes");
+            }
+            if (DisableNullWrappers.GetValueOrDefault(false))
+            {
+                res.Add("nullwrappers", "false");
+            }
+            if (DisableCompatLevel.GetValueOrDefault(false))
+            {
+                res.Add("compatlevel", "false");
             }
             if (NullableValueType.GetValueOrDefault(false))
             {

@@ -15,8 +15,8 @@
     <ProjectReference Include="src\protogen\*.csproj" />
   </ItemGroup>
   <ItemGroup Condition="$(Packing) != 'true'">
-    <ProjectReference Include="src\*\*.csproj" Exclude="src\protogen.Site\*.csproj" />
-    <!-- <ProjectReference Include="samples\**\*.csproj" Exclude="samples\**\*Mvc5*.csproj" />
-    <ProjectReference Include="tests\**\*.csproj" /> -->
+    <ProjectReference Include="src\*\*.csproj" Exclude="src\protogen.Site\*.csproj;src\BuildToolsSmokeTests\*.csproj" />
+    <!-- <ProjectReference Include="samples\**\*.csproj" Exclude="samples\**\*Mvc5*.csproj" /> -->
+    <!-- <ProjectReference Include="tests\**\*.csproj" /> -->
   </ItemGroup>
-</Project>
+</Project>  

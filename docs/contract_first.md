@@ -41,6 +41,8 @@ Additional configuration options can be specified at attributes against each `<A
 - `OneOf` - controls how `oneof` elements are handled (`enum` adds an enum discriminant)
 - `Package` - overrides the namespace to use for the code (which is *broadly speaking* a "package" in .proto terms)
 - `Services` - controls whether to generate services (this is defaulted based on your project references)
+- `NullWrappers` - controls whether wrappers.proto should be generated as C# nullable types (int?)
+- `CompatLevel` - controls whether well-known types should be marked with CompatibilityLevel instead of DataFormat
 - `NullableValueType` - use `int?` etc for optional value types
 
 ## That doesn't work for you?
