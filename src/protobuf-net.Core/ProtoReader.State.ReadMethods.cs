@@ -606,7 +606,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(HotPath)]
-            private uint ReadUInt32Varint(Read32VarintMode mode)
+            internal uint ReadUInt32Varint(Read32VarintMode mode)
             {
                 int read = _reader.ImplTryReadUInt32VarintWithoutMoving(ref this, mode, out uint value);
                 if (read <= 0)
@@ -918,6 +918,8 @@ namespace ProtoBuf
             {
                 [MethodImpl(HotPath)]
                 get => _reader.WireType;
+
+                internal set => _reader.WireType = value;
             }
 
             /// <summary>
