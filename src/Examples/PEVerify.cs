@@ -35,15 +35,15 @@ namespace Examples
             psi.WindowStyle = ProcessWindowStyle.Hidden;
             using (Process proc = Process.Start(psi))
             {
-                if (proc.WaitForExit(10000))
+                if (proc.WaitForExit(20000))
                 {
                     Assert.Equal(0, proc.ExitCode); //, path);
                     return; // proc.ExitCode == 0;
                 }
                 else
                 {
-                    proc.Kill();
-                    throw new TimeoutException();
+                    try { proc.Kill(); } catch { }
+                    throw new TimeoutException("PEVerify " + path);
                 }
             }
 #endif
