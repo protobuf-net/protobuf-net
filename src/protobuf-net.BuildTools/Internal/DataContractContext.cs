@@ -4,8 +4,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
+using ProtoBuf.CodeFixes;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -251,7 +253,9 @@ namespace ProtoBuf.BuildTools.Internal
                                 location: Utils.PickLocation(ref context, member.Blame),
                                 messageArgs: new object[] { member.MemberName, defaultValue },
                                 additionalLocations: null,
-                                properties: null
+                                properties: Utils.DiagnosticPropertiesBuilder.Create()
+                                                .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue)
+                                                .Build()
                             ));
                         }
                     }

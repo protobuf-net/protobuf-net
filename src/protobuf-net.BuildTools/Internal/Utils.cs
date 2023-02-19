@@ -1,9 +1,12 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -11,6 +14,52 @@ namespace ProtoBuf.BuildTools.Internal
 {
     internal static class Utils
     {
+        public class DiagnosticPropertiesBuilder
+        {
+            ImmutableDictionary<string, string?>.Builder _builder 
+                = ImmutableDictionary.CreateBuilder<string, string?>();
+
+            private DiagnosticPropertiesBuilder()
+            {
+            }
+
+            public static DiagnosticPropertiesBuilder Create() => new();
+
+            public DiagnosticPropertiesBuilder Add(string key, string value)
+            {
+                _builder.Add(new KeyValuePair<string, string?>(key, value));
+                return this;
+            }
+
+            public ImmutableDictionary<string, string?> Build() => _builder.ToImmutableDictionary();
+        }
+
+        internal static CompilationUnitSyntax AddUsingsIfNotExist(
+            this CompilationUnitSyntax compilationUnitSyntax,
+            params QualifiedNameSyntax[] usingDirectiveNames)
+        {
+            if (usingDirectiveNames is null || usingDirectiveNames.Length == 0) return compilationUnitSyntax;
+
+            // build a hashset for efficient lookup
+            // comparison is done based on string value, because different usings can have different types of identifiers:
+            // - IdentifierName
+            // - QualifiedNameSyntax
+            var existingUsingDirectiveNames = compilationUnitSyntax.Usings
+                .Select(x => x.Name.ToString())
+                .ToImmutableHashSet();
+
+            foreach (var directive in usingDirectiveNames)
+            {
+                if (!existingUsingDirectiveNames.Contains(directive.ToString()))
+                {
+                    compilationUnitSyntax = compilationUnitSyntax.AddUsings(
+                        SyntaxFactory.UsingDirective(directive));
+                }
+            }
+
+            return compilationUnitSyntax;
+        }
+
         internal static ImmutableArray<DiagnosticDescriptor> GetDeclared(Type type)
         {
             var fields = type?.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
@@ -25,6 +74,14 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
             return builder.ToImmutable();
+        }
+
+        internal static ImmutableDictionary<string, string?> BuildProperties(
+            params KeyValuePair<string, string?>[] keyValuePairs)
+        {
+            var builder = ImmutableDictionary.CreateBuilder<string, string?>();
+            builder.AddRange(keyValuePairs);
+            return builder.ToImmutableDictionary();
         }
 
         internal static Location PickLocation(ref SyntaxNodeAnalysisContext context, Location? preferred)
