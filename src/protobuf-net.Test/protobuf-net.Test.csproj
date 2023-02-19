@@ -23,7 +23,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="System.ValueTuple" />
+    <PackageReference Include="System.ValueTuple" VersionOverride="$(LibSysValueTuple)"/>
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
     <PackageReference Include="Xunit.SkippableFact" />

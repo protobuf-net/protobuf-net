@@ -14,6 +14,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## pending
 
+- (build) switch to central package management
+- update libs, drop netcoreapp3.1
+
 ## 3.1.33
 
 - fix issue with comment-parsing in .proto schemas (#1010 / #1011)

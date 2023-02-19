@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <!--<PackageReference Include="Microsoft.Build" />-->
+    <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
