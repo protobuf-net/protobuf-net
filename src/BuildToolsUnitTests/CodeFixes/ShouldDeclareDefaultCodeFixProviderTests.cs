@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Testing;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.CodeFixes;
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -11,6 +12,10 @@ namespace BuildToolsUnitTests.CodeFixes
 {
     public class ShouldDeclareDefaultCodeFixProviderTests : CodeFixProviderTestsBase
     {
+        private readonly DiagnosticResult[] _standardExpectedDiagnostics = new[] {
+            new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel)
+        };
+
         [Theory]
         [InlineData("int", "-2")]
         public async Task CodeFixValidate_ShouldDeclareDefault_NonProtoMemberAttributeExists(
@@ -42,7 +47,7 @@ public class Foo
                 sourceCode,
                 expectedCode,
                 diagnosticResult: null, // no diagnostic expected!
-                standardExpectedDiagnostics: new[] { new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel) });
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
         }
 
         [Theory]
@@ -89,7 +94,7 @@ public class CustomAttribute : Attribute {{ }}";
                 sourceCode,
                 expectedCode,
                 diagnosticResult,
-                standardExpectedDiagnostics: new[] { new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel) });
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
         }
 
         [Theory]
@@ -131,7 +136,7 @@ public class Foo
                 sourceCode,
                 expectedCode,
                 diagnosticResult,
-                standardExpectedDiagnostics: new[] { new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel) });
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
         }
 
         [Theory]
@@ -146,7 +151,6 @@ public class Foo
         [InlineData("uint", "6u")]
         [InlineData("long", "1234567890123456789L")]
         [InlineData("ulong", "6758493021UL")]
-        [InlineData("decimal", "1.618033m")]
         [InlineData("float", "2.71828f")]
         [InlineData("double", "3.14159265")]
         [InlineData("nint", "1")]
@@ -187,7 +191,7 @@ public class Foo
                 sourceCode, 
                 expectedCode, 
                 diagnosticResult,
-                standardExpectedDiagnostics: new[] { new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel) });
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
         }
 
         static DiagnosticResult PrepareDiagnosticResult(

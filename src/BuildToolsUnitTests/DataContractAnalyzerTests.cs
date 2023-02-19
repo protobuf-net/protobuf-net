@@ -720,7 +720,7 @@ public class Foo {
     [ProtoMember(11)] public uint TestUInt32 {get;set;} = 6u;
     [ProtoMember(12)] public long TestInt64 {get;set;} = 1234567890123456789L;
     [ProtoMember(13)] public ulong TestUInt64 {get;set;} = 6758493021UL;
-    [ProtoMember(14)] public decimal TestDecimal {get;set;} = 1.618033m;
+    [ProtoMember(14)] public decimal TestDecimal {get;set;} = 1.618033m; // is not a const expression, so no diagnostic
     [ProtoMember(15)] public float TestSingle {get;set;} = 2.71828f;
     [ProtoMember(16)] public double TestDouble {get;set;} = 3.14159265;
     [ProtoMember(17)] public nint TestIntPtr {get;set;} = 1;
@@ -743,7 +743,6 @@ public class Foo {
                 msg => Assert.Equal("Field 'TestUInt32' should use [DefaultValue(6u)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'TestInt64' should use [DefaultValue(1234567890123456789L)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'TestUInt64' should use [DefaultValue(6758493021UL)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                msg => Assert.Equal("Field 'TestDecimal' should use [DefaultValue(1.618033m)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'TestSingle' should use [DefaultValue(2.71828f)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'TestDouble' should use [DefaultValue(3.14159265)] to ensure its value is sent since it's initialized to a non-default value.", msg),
                 msg => Assert.Equal("Field 'TestIntPtr' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
@@ -777,7 +776,7 @@ public class Foo {
     [ProtoMember(15), DefaultValue(6u)] public uint TestUInt32 {get;set;} = 6u;
     [ProtoMember(16), DefaultValue(1234567890123456789L)] public long TestInt64 {get;set;} = 1234567890123456789L;
     [ProtoMember(17), DefaultValue(6758493021UL)] public ulong TestUInt64 {get;set;} = 6758493021UL;
-    [ProtoMember(18), DefaultValue(1.618033m)] public decimal TestDecimal {get;set;} = 1.618033m;
+    [ProtoMember(18)] public decimal TestDecimal {get;set;} = 1.618033m; // is not a const expression, so no diagnostic
     [ProtoMember(19), DefaultValue(2.71828f)] public float TestSingle {get;set;} = 2.71828f;
     [ProtoMember(20), DefaultValue(3.14159265)] public double TestDouble {get;set;} = 3.14159265;
     [ProtoMember(21), DefaultValue(1)] public nint TestIntPtr {get;set;} = 1;
