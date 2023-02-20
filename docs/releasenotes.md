@@ -12,15 +12,18 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## pending
+## 3.2.0
 
+- implement `[NullWrappedValue]` (compile-time annotation for `ValueMember.SupportNull`, see 3.1.26)
+- add `[NullWrappedValue]` support in schema tools in both directions (#1001 by DeagleGross)
+- allow nullable primitives for optional values (#856 by dxdjgl, #855, #1016)
+- update dependencies
+- drop netcoreapp3.1 (still supported indirectly via netstandard2.1)
 - (build) switch to central package management
-- update libs, drop netcoreapp3.1
 
 ## 3.1.33
 
 - fix issue with comment-parsing in .proto schemas (#1010 / #1011)
-- allow nullable primitives for optional values (#856 by dxdjgl, #855)
 
 ## 3.1.31
 
