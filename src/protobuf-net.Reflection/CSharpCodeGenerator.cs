@@ -556,7 +556,7 @@ namespace ProtoBuf.Reflection
                         ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                     }
                 }
-                else if (ctx.RepeatedAsList == false && UseArray(field))
+                else if (!ctx.RepeatedAsList && UseArray(field))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
