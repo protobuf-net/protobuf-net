@@ -6,6 +6,7 @@
         <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>
         <GenerateProgramFile>false</GenerateProgramFile>
+        <NoWarn>$(NoWarn);FS0988</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
