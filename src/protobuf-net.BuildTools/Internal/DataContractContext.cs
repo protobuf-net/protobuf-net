@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.CodeFixes;
+using ProtoBuf.Internal.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -246,17 +247,56 @@ namespace ProtoBuf.BuildTools.Internal
                                 properties: null
                             ));
                         }
-                        else if (ShouldDeclareDefault(member, out string? defaultValue) && defaultValue != null)
+                        else
                         {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                descriptor: DataContractAnalyzer.ShouldDeclareDefault,
-                                location: Utils.PickLocation(ref context, member.Blame),
-                                messageArgs: new object[] { member.MemberName, defaultValue },
-                                additionalLocations: null,
-                                properties: Utils.DiagnosticPropertiesBuilder.Create()
-                                                .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue)
-                                                .Build()
-                            ));
+                            var memberDefaultValueState = CalculateMemberDefaultValueState(member, out var defaultValue);
+                            switch (memberDefaultValueState)
+                            {
+                                case MemberDefaultValueState.NotSet:
+                                    // no diagnostic
+                                    break;
+
+                                case MemberDefaultValueState.ConstantExpression:
+                                    if (string.IsNullOrEmpty(defaultValue)) break;
+                                    if (ShouldDeclareDefault(member))
+                                    {
+                                        context.ReportDiagnostic(Diagnostic.Create(
+                                            descriptor: DataContractAnalyzer.ShouldDeclareDefault,
+                                            location: Utils.PickLocation(ref context, member.Blame),
+                                            messageArgs: new object[] { member.MemberName, defaultValue! },
+                                            additionalLocations: null,
+                                            properties: Utils.DiagnosticPropertiesBuilder.Create()
+                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue!)
+                                                            .Build()
+                                        ));
+                                    }
+                                    else if (ShouldUpdateDefaultValueAttribute(member, defaultValue!))
+                                    {
+                                        context.ReportDiagnostic(Diagnostic.Create(
+                                            descriptor: DataContractAnalyzer.ShouldUpdateDefault,
+                                            location: Utils.PickLocation(ref context, member.Blame),
+                                            messageArgs: new object[] { member.MemberName, defaultValue! },
+                                            additionalLocations: null,
+                                            properties: Utils.DiagnosticPropertiesBuilder.Create()
+                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue!)
+                                                            .Build()
+                                        ));
+                                    }
+                                    break;
+
+                                case MemberDefaultValueState.NonConstantExpression:
+                                    if (ShouldDeclareIsRequired(member))
+                                    {
+                                        context.ReportDiagnostic(Diagnostic.Create(
+                                            descriptor: DataContractAnalyzer.ShouldDeclareIsRequired,
+                                            location: Utils.PickLocation(ref context, member.Blame),
+                                            messageArgs: new object[] { member.MemberName, defaultValue! },
+                                            additionalLocations: null,
+                                            properties: null
+                                        ));
+                                    }
+                                    break;
+                            }                            
                         }
                     }
                     else
@@ -288,109 +328,162 @@ namespace ProtoBuf.BuildTools.Internal
             }
         }
 
-        private bool ShouldDeclareDefault(Member member, /*[MaybeNullWhen(false)]*/ out string? defaultValue)
+        private MemberDefaultValueState CalculateMemberDefaultValueState(Member member, out string? memberDefaultValue)
+        {
+            var declaration = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault();
+            if (declaration is null)
+            {
+                memberDefaultValue = null;
+                return MemberDefaultValueState.NotSet;
+            }
+
+            // TODO implement calculation of defualt value expression "constancy". The hardest part here.
+            
+            memberDefaultValue = "-2";
+            return MemberDefaultValueState.ConstantExpression;
+        }
+
+        /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
+        private bool ShouldUpdateDefaultValueAttribute(Member member, string memberDefaultValue)
+        {
+            var defaultValueAttrData = GetDefaultValueAttributeData(member);
+            if (defaultValueAttrData is null) return false;
+
+            var constructorArg = defaultValueAttrData.ConstructorArguments.FirstOrDefault();
+            // TODO implement check of constructor arg here
+
+            return false;
+        }
+
+        /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
+        private bool ShouldDeclareIsRequired(Member member) => !member.IsRequired;
+
+        /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
+        private bool ShouldDeclareDefault(Member member)
         {
             ITypeSymbol? checkType = member.Symbol switch
             {
-                IPropertySymbol propSym when ShouldCheck(propSym.Type) => propSym.Type,
-                IFieldSymbol fieldSym when ShouldCheck(fieldSym.Type) => fieldSym.Type,
-                _ => null,
+                IPropertySymbol propSym => propSym.Type,
+                IFieldSymbol fieldSym => fieldSym.Type,
+                _ => null
             };
-
-            bool ShouldCheck(ITypeSymbol type)
+            
+            if (checkType is null)
             {
-                // Marc mentions [DefaultValue], [ProtoMember(IsRequired)], and ShouldSerializeXxx() as some ways to tell PB to send the value.
-                // https://stackoverflow.com/a/3162253/1882616
-                if (!member.IsRequired && (IsScalarValueType(type.SpecialType) || type.TypeKind == TypeKind.Enum))
-                {
-                    bool hasDefaultValueAttrib = member.Symbol.GetAttributes().FirstOrDefault(attrib => attrib.AttributeClass != null
-                        && attrib.AttributeClass.Name == nameof(DefaultValueAttribute)
-                        && attrib.AttributeClass.InNamespace(nameof(System), nameof(System.ComponentModel))) != null;
-                    if (!hasDefaultValueAttrib)
-                    {
-                        string methodName = "ShouldSerialize" + member.Name;
-                        bool hasShouldSerializeMethod = member.Symbol.ContainingType.GetMembers().OfType<IMethodSymbol>()
-                            .FirstOrDefault(method => method.Name == methodName
-                                && method.ReturnType.SpecialType == SpecialType.System_Boolean) != null;
-                        return !hasShouldSerializeMethod;
-                    }
-                }
-
+                return false;
+            }
+            if (checkType.TypeKind == TypeKind.Enum)
+            {
+                return GetDefaultValueAttributeData(member) is null;
+            }
+            if (member.IsRequired)
+            {
                 return false;
             }
 
-            bool IsScalarValueType(SpecialType type)
-                => type switch
-                {
-                    SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte or SpecialType.System_Byte
-                    or SpecialType.System_Int16 or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32
-                    or SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_Single
-                    or SpecialType.System_Double or SpecialType.System_IntPtr or SpecialType.System_UIntPtr => true,
-                    _ => false,
-                };
+            return GetDefaultValueAttributeData(member) is null;
 
-            if (checkType != null)
-            {
-                EqualsValueClauseSyntax? equalsValue = null;
-                SyntaxNode? memberNode = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
-                if (memberNode != null && (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator)))
-                {
-                    equalsValue = (EqualsValueClauseSyntax?)memberNode.ChildNodes().FirstOrDefault(node => node.IsKind(SyntaxKind.EqualsValueClause));
-                }
+            //ITypeSymbol? checkType = member.Symbol switch
+            //{
+            //    IPropertySymbol propSym when ShouldCheck(propSym.Type) => propSym.Type,
+            //    IFieldSymbol fieldSym when ShouldCheck(fieldSym.Type) => fieldSym.Type,
+            //    _ => null,
+            //};
 
-                SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
-                if (valueNode != null)
-                {
-                    SpecialType specialType = checkType.SpecialType;
-                    if (specialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
-                    {
-                        defaultValue = "true";
-                        return true;
-                    }
-                    else if (specialType == SpecialType.System_Char && valueNode.IsKind(SyntaxKind.CharacterLiteralExpression))
-                    {
-                        defaultValue = valueNode.ToString();
-                        return !_nullCharLiterals.Contains(defaultValue);
-                    }
-                    else if (specialType != SpecialType.None
-                        && (valueNode.IsKind(SyntaxKind.NumericLiteralExpression) || valueNode.IsKind(SyntaxKind.UnaryMinusExpression)))
-                    {
-                        defaultValue = valueNode.ToString();
+            //bool ShouldCheck(ITypeSymbol type)
+            //{
+            //    // Marc mentions [DefaultValue], [ProtoMember(IsRequired)], and ShouldSerializeXxx() as some ways to tell PB to send the value.
+            //    // https://stackoverflow.com/a/3162253/1882616
+            //    if (!member.IsRequired && (IsScalarValueType(type.SpecialType) || type.TypeKind == TypeKind.Enum))
+            //    {
+                    
+            //        if (!hasDefaultValueAttrib)
+            //        {
+            //            string methodName = "ShouldSerialize" + member.Name;
+            //            bool hasShouldSerializeMethod = member.Symbol.ContainingType.GetMembers().OfType<IMethodSymbol>()
+            //                .FirstOrDefault(method => method.Name == methodName
+            //                    && method.ReturnType.SpecialType == SpecialType.System_Boolean) != null;
+            //            return !hasShouldSerializeMethod;
+            //        }
+            //    }
 
-                        string literalValue = defaultValue.TrimEnd(_trimmableNumericSuffixes).Replace("_", string.Empty);
-                        if (specialType == SpecialType.System_Single || specialType == SpecialType.System_Double)
-                        {
-                            literalValue = literalValue.TrimEnd(_floatNumericSuffixes);
-                            return double.TryParse(literalValue, out double value) && value != 0;
-                        }
-                        else if (literalValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || literalValue.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
-                        {
-                            return literalValue.Skip(2).Any(ch => ch != '0');
-                        }
-                        else if (decimal.TryParse(literalValue, out decimal decimalValue))
-                        {
-                            return decimalValue != 0;
-                        }
-                    }
-                    else if (checkType.TypeKind == TypeKind.Enum
-                        && valueNode is MemberAccessExpressionSyntax access
-                        && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
-                        && access.Expression.ToString() == checkType.Name)
-                    {
-                        string fieldName = access.Name.Identifier.ValueText;
-                        IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
-                        if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
-                        {
-                            defaultValue = $"{checkType.Name}.{fieldName}";
-                            return true;
-                        }
-                    }
-                }
-            }
+            //    return false;
+            //}
 
-            defaultValue = null;
-            return false;
+            //bool IsScalarValueType(SpecialType type)
+            //    => type switch
+            //    {
+            //        SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte or SpecialType.System_Byte
+            //        or SpecialType.System_Int16 or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32
+            //        or SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_Single
+            //        or SpecialType.System_Double or SpecialType.System_IntPtr or SpecialType.System_UIntPtr => true,
+            //        _ => false,
+            //    };
+
+            //if (checkType != null)
+            //{
+            //    EqualsValueClauseSyntax? equalsValue = null;
+            //    SyntaxNode? memberNode = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
+            //    if (memberNode != null && (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator)))
+            //    {
+            //        equalsValue = (EqualsValueClauseSyntax?)memberNode.ChildNodes().FirstOrDefault(node => node.IsKind(SyntaxKind.EqualsValueClause));
+            //    }
+
+            //    SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
+            //    if (valueNode != null)
+            //    {
+            //        SpecialType specialType = checkType.SpecialType;
+            //        if (specialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
+            //        {
+            //            defaultValue = "true";
+            //            return true;
+            //        }
+            //        else if (specialType == SpecialType.System_Char && valueNode.IsKind(SyntaxKind.CharacterLiteralExpression))
+            //        {
+            //            defaultValue = valueNode.ToString();
+            //            return !_nullCharLiterals.Contains(defaultValue);
+            //        }
+            //        else if (specialType != SpecialType.None
+            //            && (valueNode.IsKind(SyntaxKind.NumericLiteralExpression) || valueNode.IsKind(SyntaxKind.UnaryMinusExpression)))
+            //        {
+            //            defaultValue = valueNode.ToString();
+
+            //            string literalValue = defaultValue.TrimEnd(_trimmableNumericSuffixes).Replace("_", string.Empty);
+            //            if (specialType == SpecialType.System_Single || specialType == SpecialType.System_Double)
+            //            {
+            //                literalValue = literalValue.TrimEnd(_floatNumericSuffixes);
+            //                return double.TryParse(literalValue, out double value) && value != 0;
+            //            }
+            //            else if (literalValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || literalValue.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
+            //            {
+            //                return literalValue.Skip(2).Any(ch => ch != '0');
+            //            }
+            //            else if (decimal.TryParse(literalValue, out decimal decimalValue))
+            //            {
+            //                return decimalValue != 0;
+            //            }
+            //        }
+            //        else if (checkType.TypeKind == TypeKind.Enum
+            //            && valueNode is MemberAccessExpressionSyntax access
+            //            && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
+            //            && access.Expression.ToString() == checkType.Name)
+            //        {
+            //            string fieldName = access.Name.Identifier.ValueText;
+            //            IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
+            //            if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
+            //            {
+            //                defaultValue = $"{checkType.Name}.{fieldName}";
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //}
         }
+
+        AttributeData? GetDefaultValueAttributeData(Member member) => member.Symbol.GetAttributes()
+            .FirstOrDefault(attrib => attrib.AttributeClass != null
+                && attrib.AttributeClass.Name == nameof(DefaultValueAttribute)
+                && attrib.AttributeClass.InNamespace(nameof(System), nameof(System.ComponentModel))) as AttributeData;
 
         internal void SetContract(ISymbol blame, AttributeData attrib)
         {
