@@ -11,11 +11,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <DefineConstants>$(DefineConstants);BUILD_TOOLS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- build time deps -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Pack="false" PrivateAssets="all" />
 
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="protobuf-net.BuildTools.props" Pack="true" PackagePath="build" />
