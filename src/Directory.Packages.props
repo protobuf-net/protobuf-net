@@ -14,8 +14,8 @@
         <PackageVersion Include="Iesi.Collections" Version="4.0.5" />
 
         <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.14" />
-        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.14" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.3" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.3" />
         <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" />
         <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
