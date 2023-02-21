@@ -2,11 +2,9 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <!--<ImplicitUsings>enable</ImplicitUsings>-->
-        <!--<Nullable>enable</Nullable>-->
 
         <IsPackable>false</IsPackable>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,20 +14,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <AdditionalFiles Include="disabled.proto" NullWrappers="false" ListSet="false" />
-        <AdditionalFiles Include="enabled.proto" NullWrappers="true" ListSet="true" />
+        <AdditionalFiles Include="disabled.proto" NullWrappers="false" ListSet="false" RepeatedAsList="false" />
+        <AdditionalFiles Include="enabled.proto" NullWrappers="true" ListSet="true" RepeatedAsList="true" />
         <AdditionalFiles Include="vanilla.proto" />
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        
-        <!--<ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj">
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-            <OutputItemType>Analyzer</OutputItemType>
-        </ProjectReference>-->
 
         <PackageReference Include="protobuf-net.BuildTools">
+            <!-- !!update and uncomment this version!! -->
+            <!--<VersionOverride>3.2.4-g4c40875979</VersionOverride>-->
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>

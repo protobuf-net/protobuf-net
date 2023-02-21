@@ -14,4 +14,5 @@ message Foo {
     .google.protobuf.StringValue stringProp = 8;
     .google.protobuf.BytesValue bytesProp = 9;
     repeated string stringItems = 10;
+    repeated int32 intItems = 11;
 }
