@@ -28,7 +28,10 @@ namespace protogen.site
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                     new[] { "application/octet-stream" });
             });
-            services.AddApplicationInsightsTelemetry(Configuration["APPINSIGHTS_INSTRUMENTATIONKEY"]);
+            services.AddApplicationInsightsTelemetry(options =>
+            {
+                options.ConnectionString = Configuration["APPINSIGHTS_CONNECTIONSTRING"];
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
