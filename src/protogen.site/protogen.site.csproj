@@ -9,7 +9,6 @@
     <TypeScriptToolsVersion>2.8</TypeScriptToolsVersion>
     <SignAssembly>false</SignAssembly>
     <UserSecretsId>f7c4472d-ea58-47e2-9129-489edcd48abe</UserSecretsId>
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup>

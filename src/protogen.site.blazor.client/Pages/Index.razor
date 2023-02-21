@@ -234,11 +234,13 @@
                 errors = set.GetErrors();
                 if (errors.Any())
                 {
+                    var fatal = false;
                     foreach (var error in errors)
                     {
                         await protoEditor.AddError(error.IsError, error.LineNumber, error.LineNumber, error.ColumnNumber, error.ColumnNumber + error.LineContents.Length, error.Message);
+                        if (error.IsError) fatal = true;
                     }
-                    return;
+                    if (fatal) return;
                 }
 
                 if (model.IsProtogen() && !model.ProtoContent.Contains("import"))

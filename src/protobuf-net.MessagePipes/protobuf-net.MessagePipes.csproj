@@ -7,7 +7,6 @@
     <AssemblyName>protobuf-net.MessagePipes</AssemblyName>
     <Title>protobuf-net.MessagePipes</Title>
     <Description>Provides a simple message-pipe using protobuf payloads</Description>
-    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
   </PropertyGroup>
 
   <ItemGroup>
