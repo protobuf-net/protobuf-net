@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf.WellKnownTypes;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
-using System.Xml.Linq;
 using Xunit;
 
 namespace ProtoBuf
@@ -19,6 +19,7 @@ namespace ProtoBuf
         [InlineData(typeof(Enabled.Foo), nameof(Enabled.Foo.boolProp), typeof(bool?))]
         [InlineData(typeof(Enabled.Foo), nameof(Enabled.Foo.stringProp), typeof(string))]
         [InlineData(typeof(Enabled.Foo), nameof(Enabled.Foo.bytesProp), typeof(byte[]))]
+        [InlineData(typeof(Enabled.Foo), nameof(Enabled.Foo.intItems), typeof(List<int>))]
         // vanilla
         [InlineData(typeof(Vanilla.Foo), nameof(Vanilla.Foo.doubleProp), typeof(double?))]
         [InlineData(typeof(Vanilla.Foo), nameof(Vanilla.Foo.floatProp), typeof(float?))]
@@ -29,6 +30,7 @@ namespace ProtoBuf
         [InlineData(typeof(Vanilla.Foo), nameof(Vanilla.Foo.boolProp), typeof(bool?))]
         [InlineData(typeof(Vanilla.Foo), nameof(Vanilla.Foo.stringProp), typeof(string))]
         [InlineData(typeof(Vanilla.Foo), nameof(Vanilla.Foo.bytesProp), typeof(byte[]))]
+        [InlineData(typeof(Vanilla.Foo), nameof(Vanilla.Foo.intItems), typeof(int[]))]
         // disabled
         [InlineData(typeof(Disabled.Foo), nameof(Disabled.Foo.doubleProp), typeof(DoubleValue))]
         [InlineData(typeof(Disabled.Foo), nameof(Disabled.Foo.floatProp), typeof(FloatValue))]
@@ -39,6 +41,7 @@ namespace ProtoBuf
         [InlineData(typeof(Disabled.Foo), nameof(Disabled.Foo.boolProp), typeof(BoolValue))]
         [InlineData(typeof(Disabled.Foo), nameof(Disabled.Foo.stringProp), typeof(StringValue))]
         [InlineData(typeof(Disabled.Foo), nameof(Disabled.Foo.bytesProp), typeof(BytesValue))]
+        [InlineData(typeof(Disabled.Foo), nameof(Disabled.Foo.intItems), typeof(int[]))]
         public void CheckPropertyType(Type source, string name, Type valueType)
             => Assert.Same(valueType, source.GetProperty(name)?.PropertyType);
 

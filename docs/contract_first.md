@@ -44,6 +44,7 @@ Additional configuration options can be specified at attributes against each `<A
 - `NullWrappers` - controls whether wrappers.proto should be generated as C# nullable types (int?)
 - `CompatLevel` - controls whether well-known types should be marked with CompatibilityLevel instead of DataFormat
 - `NullableValueType` - use `int?` etc for optional value types
+- `RepeatedAsList` - use `List<T>` etc instead of `T[]` for *all* collections (i.e. including primitives)
 
 ## That doesn't work for you?
 
