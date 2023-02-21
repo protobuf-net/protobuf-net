@@ -599,6 +599,7 @@ namespace ProtoBuf.Reflection
 
                 EmitNullWrappers = IsEnabled("nullwrappers", true);
                 EmitCompatibilityLevelAttribute = IsEnabled("compatlevel", true);
+                RepeatedAsList = IsEnabled("repeatedaslist");
 
                 var s = GetCustomOption("services");
                 void AddServices(string value)
@@ -626,6 +627,11 @@ namespace ProtoBuf.Reflection
             }
 
             private ServiceKinds _serviceKinds;
+
+            /// <summary>
+            /// Whether repeated fields should be lists
+            /// </summary>
+            public bool RepeatedAsList { get; }
 
             /// <summary>
             /// Whether lists should be written with getters

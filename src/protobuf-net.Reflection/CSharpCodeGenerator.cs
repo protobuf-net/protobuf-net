@@ -356,7 +356,7 @@ namespace ProtoBuf.Reflection
                         out var valueDataFormat, out _, out _, out _);
                     ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
                 }
-                else if (!UseArray(field))
+                else if (ctx.RepeatedAsList || !UseArray(field))
                 {
                     ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
@@ -556,7 +556,7 @@ namespace ProtoBuf.Reflection
                         ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                     }
                 }
-                else if (UseArray(field))
+                else if (!ctx.RepeatedAsList && UseArray(field))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }

@@ -45,6 +45,7 @@ namespace ProtoBuf.Models
         public bool? DisableNullWrappers { get; set; } = false;
         public bool? DisableCompatLevel { get; set; } = false;
         public bool? NullableValueType { get; set; } = false;
+        public bool? RepeatedAsList { get; set; } = false;
 
         public string LanguageVersion { get; set; }
         public NamingConventionEnum NamingConvention { get; set; } = NamingConventionEnum.Auto;
@@ -96,6 +97,10 @@ namespace ProtoBuf.Models
             if (NullableValueType.GetValueOrDefault(false))
             {
                 res.Add("nullablevaluetype", "yes");
+            }
+            if (RepeatedAsList.GetValueOrDefault(false))
+            {
+                res.Add("repeatedaslist", "yes");
             }
 
             return res;

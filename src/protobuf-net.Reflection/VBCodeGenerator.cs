@@ -549,7 +549,7 @@ namespace ProtoBuf.Reflection
                             .WriteLine($"Private ReadOnly {fieldName} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})").WriteLine();
                     }
                 }
-                else if (UseArray(field))
+                else if (!ctx.RepeatedAsList && UseArray(field))
                 {
                     if (ctx.Supports(VB11))
                     {
