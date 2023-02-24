@@ -22,6 +22,12 @@ namespace ProtoBuf.Serializers
         public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             where TCollection : IDictionary<TKey, TValue>
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
+
+        /// <summary>Create a map serializer that operates on dictionaries</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+            where TCollection : IReadOnlyDictionary<TKey, TValue>
+            => SerializerCache<IReadOnlyDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 
     /// <summary>
@@ -199,6 +205,56 @@ namespace ProtoBuf.Serializers
             {
                 iter?.Dispose();
             }
+        }
+    }
+
+    class IReadOnlyDictionarySerializer<TKey, TValue> : MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>
+    {
+        protected override IReadOnlyDictionary<TKey, TValue> Initialize(IReadOnlyDictionary<TKey, TValue> values, ISerializationContext context)
+            => values ?? new Dictionary<TKey, TValue>();
+
+        protected override IReadOnlyDictionary<TKey, TValue> Clear(IReadOnlyDictionary<TKey, TValue> values, ISerializationContext context)
+        {
+            if (values is Dictionary<TKey, TValue> target)
+            {
+                target.Clear();
+                return target;
+            }
+            return new Dictionary<TKey, TValue>();
+        }
+
+        protected override IReadOnlyDictionary<TKey, TValue> AddRange(IReadOnlyDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        {
+            if (values is not Dictionary<TKey, TValue> target)
+            {
+                target = new Dictionary<TKey, TValue>(values.Count + newValues.Count);
+                foreach (var item in values)
+                    target.Add(item.Key, item.Value);
+            }
+
+            foreach (var pair in newValues.AsSpan())
+                target.Add(pair.Key, pair.Value);
+            return target;
+        }
+
+        protected override IReadOnlyDictionary<TKey, TValue> SetValues(IReadOnlyDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
+        {
+            if (values is not Dictionary<TKey, TValue> target)
+            {
+                target = new Dictionary<TKey, TValue>(values.Count);
+                foreach (var item in values)
+                    target.Add(item.Key, item.Value);
+            }
+
+            foreach (var pair in newValues.AsSpan())
+                target[pair.Key] = pair.Value;
+            return values;
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, IReadOnlyDictionary<TKey, TValue> values, in KeyValuePairSerializer<TKey, TValue> pairSerializer)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
         }
     }
 }

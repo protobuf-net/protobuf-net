@@ -93,6 +93,7 @@ namespace ProtoBuf.Serializers
             // pretty normal stuff
             Add(typeof(Dictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateDictionary), root == current ? targs : new[] { root, targs[0], targs[1] }), false);
             Add(typeof(IDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateDictionary), new[] { root, targs[0], targs[1] }), false);
+            Add(typeof(IReadOnlyDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateIReadOnlyDictionary), new[] { root, targs[0], targs[1] }), false);
             Add(typeof(Queue<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateQueue), new[] { root, targs[0] }), false);
             Add(typeof(Stack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateStack), new[] { root, targs[0] }), false);
 
