@@ -750,6 +750,59 @@ public class Foo {
         }
 
         [Fact]
+        public async Task ReportsShouldUpdateDefaultValue()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System;
+using System.ComponentModel;
+
+[ProtoContract]
+public class Foo {
+    //[ProtoMember(1)] public bool FieldDefaultTrue = true;
+    //[ProtoMember(2)] public bool PropertyDefaultTrue {get;set;} = true;
+    //[ProtoMember(3)] public DayOfWeek FieldDefaultMonday = DayOfWeek.Monday;
+    //[ProtoMember(4)] public DayOfWeek PropertyDefaultMonday {get;set;} = DayOfWeek.Monday;
+    //[ProtoMember(5)] public char TestChar {get;set;} = 'X';
+    //[ProtoMember(6)] public sbyte TestSByte {get;set;} = 1;
+    //[ProtoMember(7)] public byte TestByte {get;set;} = 0x2;
+    //[ProtoMember(8)] public short TestInt16 {get;set;} = 0b0000_0011;
+    //[ProtoMember(9)] public ushort TestUInt16 {get;set;} = 4;
+    [ProtoMember(10), DefaultValue(1)] public int TestInt32 {get;set;} = -5;
+    //[ProtoMember(11)] public uint TestUInt32 {get;set;} = 6u;
+    //[ProtoMember(12)] public long TestInt64 {get;set;} = 1234567890123456789L;
+    //[ProtoMember(13)] public ulong TestUInt64 {get;set;} = 6758493021UL;
+    //[ProtoMember(14)] public decimal TestDecimal {get;set;} = 1.618033m; // is not a const expression, so no diagnostic
+    //[ProtoMember(15)] public float TestSingle {get;set;} = 2.71828f;
+    //[ProtoMember(16)] public double TestDouble {get;set;} = 3.14159265;
+    //[ProtoMember(17)] public nint TestIntPtr {get;set;} = 1;
+    //[ProtoMember(18)] public nuint TestUIntPtr {get;set;} = 2;
+}
+");
+            var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault).ToList();
+            Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
+            Assert.Collection(diags.Select(diag => diag.GetMessage(CultureInfo.InvariantCulture)),
+                //msg => Assert.Equal("Field 'FieldDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'PropertyDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'FieldDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'PropertyDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestChar' should use [DefaultValue('X')] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestSByte' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestByte' should use [DefaultValue(0x2)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                msg => Assert.Equal("Field 'TestInt16' should use [DefaultValue(0b0000_0011)] to ensure its value is sent since it's initialized to a non-default value.", msg)
+                //msg => Assert.Equal("Field 'TestUInt16' should use [DefaultValue(4)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestInt32' should use [DefaultValue(-5)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestUInt32' should use [DefaultValue(6u)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestInt64' should use [DefaultValue(1234567890123456789L)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestUInt64' should use [DefaultValue(6758493021UL)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestSingle' should use [DefaultValue(2.71828f)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestDouble' should use [DefaultValue(3.14159265)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestIntPtr' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
+                //msg => Assert.Equal("Field 'TestUIntPtr' should use [DefaultValue(2)] to ensure its value is sent since it's initialized to a non-default value.", msg));
+                );
+        }
+
+        [Fact]
         public async Task DoesNotReportShouldDeclareDefault()
         {
             var diagnostics = await AnalyzeAsync(@"

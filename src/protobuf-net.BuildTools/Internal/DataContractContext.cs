@@ -328,19 +328,122 @@ namespace ProtoBuf.BuildTools.Internal
             }
         }
 
-        private MemberDefaultValueState CalculateMemberDefaultValueState(Member member, out string? memberDefaultValue)
+        private MemberDefaultValueState CalculateMemberDefaultValueState(Member member, out string? defaultValue)
         {
             var declaration = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if (declaration is null)
             {
-                memberDefaultValue = null;
+                defaultValue = null;
                 return MemberDefaultValueState.NotSet;
             }
 
-            // TODO implement calculation of defualt value expression "constancy". The hardest part here.
-            
-            memberDefaultValue = "-2";
-            return MemberDefaultValueState.ConstantExpression;
+            ITypeSymbol? checkType = member.Symbol switch
+            {
+                IPropertySymbol propSym => propSym.Type,
+                IFieldSymbol fieldSym => fieldSym.Type,
+                _ => null
+            };
+
+            if (checkType is null)
+            {
+                defaultValue = null;
+                return MemberDefaultValueState.NotSet;
+            }
+
+            EqualsValueClauseSyntax? equalsValue = null;
+            SyntaxNode? memberNode = declaration.GetSyntax();
+            if (memberNode != null && (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator)))
+            {
+                equalsValue = memberNode.ChildNodes().FirstOrDefault(node => node.IsKind(SyntaxKind.EqualsValueClause)) as EqualsValueClauseSyntax;
+            }
+
+            if (equalsValue is null)
+            {
+                defaultValue = null;
+                return MemberDefaultValueState.NotSet;
+            }
+
+            SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
+
+            // Enum calculation
+            if (checkType.TypeKind == TypeKind.Enum
+                && valueNode is MemberAccessExpressionSyntax access
+                && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
+                && access.Expression.ToString() == checkType.Name)
+            {
+                string fieldName = access.Name.Identifier.ValueText;
+                IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
+                if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
+                {
+                    defaultValue = $"{checkType.Name}.{fieldName}";
+                    return MemberDefaultValueState.ConstantExpression;
+                }
+            }
+
+            // scalarValue calculation
+            if (IsScalarValueType(checkType.SpecialType))
+            {
+                return CalculateDefaultValueScalarValues(out defaultValue);
+            }
+
+            defaultValue = null;
+            return MemberDefaultValueState.NotSet;
+
+            bool IsScalarValueType(SpecialType type) => type switch
+            {
+                SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte or SpecialType.System_Byte
+                or SpecialType.System_Int16 or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32
+                or SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_Single
+                or SpecialType.System_Double or SpecialType.System_IntPtr or SpecialType.System_UIntPtr => true,
+                
+                SpecialType.System_Decimal or _ => false,
+            };
+
+            MemberDefaultValueState CalculateDefaultValueScalarValues(out string? scalarDefaultValue)
+            {
+                SpecialType specialType = checkType!.SpecialType;
+                if (specialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
+                {
+                    scalarDefaultValue = "true";
+                    return MemberDefaultValueState.ConstantExpression;
+                }
+                else if (specialType == SpecialType.System_Char && valueNode.IsKind(SyntaxKind.CharacterLiteralExpression))
+                {
+                    scalarDefaultValue = valueNode.ToString();
+                    return !_nullCharLiterals.Contains(scalarDefaultValue)
+                        ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
+                }
+                else if (specialType != SpecialType.None
+                    && (valueNode.IsKind(SyntaxKind.NumericLiteralExpression) || valueNode.IsKind(SyntaxKind.UnaryMinusExpression)))
+                {
+                    scalarDefaultValue = valueNode.ToString();
+                    string literalValue = scalarDefaultValue.TrimEnd(_trimmableNumericSuffixes).Replace("_", string.Empty);
+
+                    if (specialType == SpecialType.System_Single || specialType == SpecialType.System_Double)
+                    {
+                        literalValue = literalValue.TrimEnd(_floatNumericSuffixes);
+                        return double.TryParse(literalValue, out double value) && value != 0
+                            ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
+                    }
+                    else if (literalValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || literalValue.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return literalValue.Skip(2).Any(ch => ch != '0')
+                            ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
+                    }
+                    // care: we use decimal here, because it can parse any numeric values,
+                    // however 'decimal' itself is not a type which has the ConstantExpression time
+                    // so this validation can be confusing, since it is not launched for any `decimal` fields
+                    // because of `IsScalarValueType()`
+                    else if (decimal.TryParse(literalValue, out decimal decimalValue))
+                    {
+                        return decimalValue != 0
+                            ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
+                    }
+                }
+
+                scalarDefaultValue = null;
+                return MemberDefaultValueState.NotSet;
+            }
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
@@ -350,9 +453,10 @@ namespace ProtoBuf.BuildTools.Internal
             if (defaultValueAttrData is null) return false;
 
             var constructorArg = defaultValueAttrData.ConstructorArguments.FirstOrDefault();
-            // TODO implement check of constructor arg here
+            if (constructorArg.IsNull) return true;
 
-            return false;
+            // we are interested in the only single argument of [DefaultValue] attribute's constructor
+            return !string.Equals(constructorArg.Value?.ToString(), memberDefaultValue);
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
@@ -383,101 +487,6 @@ namespace ProtoBuf.BuildTools.Internal
 
             return GetDefaultValueAttributeData(member) is null;
 
-            //ITypeSymbol? checkType = member.Symbol switch
-            //{
-            //    IPropertySymbol propSym when ShouldCheck(propSym.Type) => propSym.Type,
-            //    IFieldSymbol fieldSym when ShouldCheck(fieldSym.Type) => fieldSym.Type,
-            //    _ => null,
-            //};
-
-            //bool ShouldCheck(ITypeSymbol type)
-            //{
-            //    // Marc mentions [DefaultValue], [ProtoMember(IsRequired)], and ShouldSerializeXxx() as some ways to tell PB to send the value.
-            //    // https://stackoverflow.com/a/3162253/1882616
-            //    if (!member.IsRequired && (IsScalarValueType(type.SpecialType) || type.TypeKind == TypeKind.Enum))
-            //    {
-                    
-            //        if (!hasDefaultValueAttrib)
-            //        {
-            //            string methodName = "ShouldSerialize" + member.Name;
-            //            bool hasShouldSerializeMethod = member.Symbol.ContainingType.GetMembers().OfType<IMethodSymbol>()
-            //                .FirstOrDefault(method => method.Name == methodName
-            //                    && method.ReturnType.SpecialType == SpecialType.System_Boolean) != null;
-            //            return !hasShouldSerializeMethod;
-            //        }
-            //    }
-
-            //    return false;
-            //}
-
-            //bool IsScalarValueType(SpecialType type)
-            //    => type switch
-            //    {
-            //        SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte or SpecialType.System_Byte
-            //        or SpecialType.System_Int16 or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32
-            //        or SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_Single
-            //        or SpecialType.System_Double or SpecialType.System_IntPtr or SpecialType.System_UIntPtr => true,
-            //        _ => false,
-            //    };
-
-            //if (checkType != null)
-            //{
-            //    EqualsValueClauseSyntax? equalsValue = null;
-            //    SyntaxNode? memberNode = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
-            //    if (memberNode != null && (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator)))
-            //    {
-            //        equalsValue = (EqualsValueClauseSyntax?)memberNode.ChildNodes().FirstOrDefault(node => node.IsKind(SyntaxKind.EqualsValueClause));
-            //    }
-
-            //    SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
-            //    if (valueNode != null)
-            //    {
-            //        SpecialType specialType = checkType.SpecialType;
-            //        if (specialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
-            //        {
-            //            defaultValue = "true";
-            //            return true;
-            //        }
-            //        else if (specialType == SpecialType.System_Char && valueNode.IsKind(SyntaxKind.CharacterLiteralExpression))
-            //        {
-            //            defaultValue = valueNode.ToString();
-            //            return !_nullCharLiterals.Contains(defaultValue);
-            //        }
-            //        else if (specialType != SpecialType.None
-            //            && (valueNode.IsKind(SyntaxKind.NumericLiteralExpression) || valueNode.IsKind(SyntaxKind.UnaryMinusExpression)))
-            //        {
-            //            defaultValue = valueNode.ToString();
-
-            //            string literalValue = defaultValue.TrimEnd(_trimmableNumericSuffixes).Replace("_", string.Empty);
-            //            if (specialType == SpecialType.System_Single || specialType == SpecialType.System_Double)
-            //            {
-            //                literalValue = literalValue.TrimEnd(_floatNumericSuffixes);
-            //                return double.TryParse(literalValue, out double value) && value != 0;
-            //            }
-            //            else if (literalValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || literalValue.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
-            //            {
-            //                return literalValue.Skip(2).Any(ch => ch != '0');
-            //            }
-            //            else if (decimal.TryParse(literalValue, out decimal decimalValue))
-            //            {
-            //                return decimalValue != 0;
-            //            }
-            //        }
-            //        else if (checkType.TypeKind == TypeKind.Enum
-            //            && valueNode is MemberAccessExpressionSyntax access
-            //            && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
-            //            && access.Expression.ToString() == checkType.Name)
-            //        {
-            //            string fieldName = access.Name.Identifier.ValueText;
-            //            IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
-            //            if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
-            //            {
-            //                defaultValue = $"{checkType.Name}.{fieldName}";
-            //                return true;
-            //            }
-            //        }
-            //    }
-            //}
         }
 
         AttributeData? GetDefaultValueAttributeData(Member member) => member.Symbol.GetAttributes()
