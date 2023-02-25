@@ -4,7 +4,7 @@
     <RootNamespace>ProtoBuf</RootNamespace>
     <Title>protobuf-net</Title>
     <Description>ServiceModel (WCF) extensions for protobuf-net</Description>
-    <TargetFrameworks>net462;netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net462'">
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.10.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" />
   </ItemGroup>
 
   <ItemGroup>

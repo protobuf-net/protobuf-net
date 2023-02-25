@@ -117,7 +117,7 @@ namespace ProtoBuf.Serializers
             values = Initialize(values, ctx);
 
             using var buffer = state.FillBuffer(features, pairSerializer,
-                new KeyValuePair<TKey, TValue>(TypeHelper<TKey>.Default, TypeHelper<TValue>.Default));
+                new KeyValuePair<TKey, TValue>(TypeHelper<TKey>.Default, features.DefaultFor<TValue>()));
             if ((features & SerializerFeatures.OptionClearCollection) != 0) values = Clear(values, ctx);
             if (!buffer.IsEmpty)
             {

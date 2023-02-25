@@ -2,7 +2,7 @@
   "dependencies": {
     "appInsights1": {
       "type": "appInsights.sdk",
-      "connectionId": "APPINSIGHTS_INSTRUMENTATIONKEY"
+      "connectionId": "APPINSIGHTS_CONNECTIONSTRING"
     }
   }
 }

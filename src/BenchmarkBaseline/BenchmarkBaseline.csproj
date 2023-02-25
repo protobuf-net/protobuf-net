@@ -20,12 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
-    <PackageReference Include="Google.Protobuf" Version="3.21.6" />
-    <PackageReference Include="protobuf-net" Version="[2.4.7]" />
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="protobuf-net" VersionOverride="[2.4.7]" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
   </ItemGroup>
 
   <ItemGroup>

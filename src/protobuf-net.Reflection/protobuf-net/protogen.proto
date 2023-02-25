@@ -41,6 +41,12 @@ message ProtogenMessageOptions {
   Access access = 2;
   string extensions = 3 [(.protobuf_net.fieldopt).name	= "ExtensionTypeName"];
   string namespace = 4; // optional namespace, otherwise the order is: ProtogenFileOptions.namespace, global csharp_namespace, package
+  MessageKind messageKind = 5; // optionally indicates that a message should be considered with some known behaviour
+}
+enum MessageKind {
+  MESSAGEKIND_NONE = 0 [(.protobuf_net.enumvalopt).name	= "None"];
+  MESSAGEKIND_NULL_WRAPPER = 1 [(.protobuf_net.enumvalopt).name	= "NullWrapper"];
+  // TODO: MessageKindKeyValuePair = 2;
 }
 message ProtogenFieldOptions {
   string name = 1;
@@ -51,6 +57,7 @@ message ProtogenFieldOptions {
 message ProtogenEnumOptions {
   string name = 1;
   Access access = 2;
+  string namespace = 3; // optional namespace, otherwise the order is: ProtogenFileOptions.namespace, global csharp_namespace, package
 }
 message ProtogenEnumValueOptions {
   string name = 1;

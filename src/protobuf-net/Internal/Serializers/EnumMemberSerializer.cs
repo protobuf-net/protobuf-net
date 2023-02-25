@@ -6,6 +6,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal class EnumMemberSerializer : IRuntimeProtoSerializerNode, IDirectWriteNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
 
         private readonly IRuntimeProtoSerializerNode _tail;
         public EnumMemberSerializer(Type enumType)

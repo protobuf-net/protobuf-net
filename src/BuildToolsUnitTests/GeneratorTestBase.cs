@@ -43,7 +43,7 @@ namespace BuildToolsUnitTests
             }
         }
 
-        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[]? additionalTexts = null, SyntaxTree[]? source = null, ImmutableDictionary<string, string>? globalOptions = null,
+        protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[]? additionalTexts = null, SyntaxTree[]? source = null, ImmutableDictionary<string, string>? globalOptions = null,
             [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
@@ -80,7 +80,7 @@ namespace BuildToolsUnitTests
                     _testOutputHelper.WriteLine(d.ToString());
                 }
             }
-            return (result.GetRunResult(), diagnostics);
+            return Task.FromResult((result.GetRunResult(), diagnostics));
         }
 
         protected virtual bool ReferenceProtoBuf => true;

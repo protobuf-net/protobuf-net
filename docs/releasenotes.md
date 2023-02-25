@@ -12,9 +12,42 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## pending
+## 3.2.0
 
-- fix protogen parsing of escape characters in custom options (#931)
+- implement `[NullWrappedValue]` (compile-time annotation for `ValueMember.SupportNull`, see 3.1.26)
+- add `[NullWrappedValue]` support in schema tools in both directions (#1001 by DeagleGross)
+- allow nullable primitives for optional values (#856 by dxdjgl, #855, #1016)
+- update dependencies
+- drop netcoreapp3.1 (still supported indirectly via netstandard2.1)
+- (build) switch to central package management
+
+## 3.1.33
+
+- fix issue with comment-parsing in .proto schemas (#1010 / #1011)
+
+## 3.1.31
+
+- support `Memory<byte>`, `ReadOnlyMemory<byte>` and `ArraySegment<byte>` as `bytes` payloads
+- add reader/writer API for `Span<byte>`/`ReadOnlySpan<byte>`
+- add support for full assembly metadata (bring forward #998 by mihaicodrean)
+- update `protoc` and Google reference proto files
+
+## 3.1.26
+
+- reinstate `ValueMember.SupportNull` (from v2) for handling `null` values in lists
+
+## 3.1.25
+
+- fix issue with non-supported features in tuple-types (#964)
+- add `MessageType` and `EnumType` on `FieldDescriptorProto` (#971)
+- expose fully qualified name for `DescriptorProto` and `EnumDescriptorProto` (#974)
+
+## 3.1.22
+
+- fix schema parsing bug with semicolon-delimited options (#833)
+- fix schema parsing bug with escape characters in custom options (#931 / #933)
+- fix ProtoSyntax type-forwarding (#953)
+- update TFMs (#946)
 
 ## 3.1.17
 
@@ -122,6 +155,22 @@ Other changes:
 - empty lists/arrays are no longer serialized (as empty payloads) when "packed" (they aren't serialized when not "packed", so this improves consistency)
 - as a consequence of the above, the "setter" may not be invoked (to an empty array) when previously it might have been; this again is consistent with how non-"packed" works
 - common stacks (`Stack<T>`, `ConcurrentStack<T>`) now preserve order correctly
+
+## 2.4.8
+
+- add support for full assembly metadata (#998 by mihaicodrean)
+
+## 2.4.7
+
+## 2.4.6
+
+- apply #603 to 2.4 branch
+- apply #611 to 2.4 branch
+
+## 2.4.5
+
+- Move TypeModel.Create (#609)
+- add ApplyFieldOffset API (#608)
 
 ## 2.4.4
 
@@ -251,7 +300,7 @@ Other changes:
 
 ## v2.3.6
 
-- add .NET Standard 2.0 build target 
+- add .NET Standard 2.0 build target
 
 ## v2.3.5
 

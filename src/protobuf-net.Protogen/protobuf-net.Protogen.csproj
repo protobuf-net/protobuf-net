@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <PackAsTool>true</PackAsTool>
     <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
@@ -19,7 +19,7 @@
     <Compile Include="..\protogen\**\*.cs" Exclude="..\protogen\obj\**\*" />
     <ProjectReference Include="../protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
-    <PackageReference Include="protobuf-net.Grpc.Reflection" Version="1.0.177" Condition="'$(GrpcTools)'=='true'" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.48.0" Condition="'$(GrpcTools)'=='true'" />
+    <PackageReference Include="protobuf-net.Grpc.Reflection" Condition="'$(GrpcTools)'=='true'" />
+    <PackageReference Include="Grpc.Net.Client" Condition="'$(GrpcTools)'=='true'" />
   </ItemGroup>
 </Project>

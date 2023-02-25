@@ -16,7 +16,7 @@ internal class CodeGenEnum : CodeGenLocatedType
         OriginalName = base.Name;
     }
 
-    public string OriginalName { get; set; }
+    public string? OriginalName { get; set; }
 
     private NonNullableList<CodeGenEnumValue>? _enumValues;
     public IList<CodeGenEnumValue> EnumValues => _enumValues ??= new();

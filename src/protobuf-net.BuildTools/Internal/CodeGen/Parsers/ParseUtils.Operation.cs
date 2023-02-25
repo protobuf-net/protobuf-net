@@ -11,7 +11,10 @@ internal static partial class ParseUtils
     public static CodeGenServiceMethod? ParseOperation(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
     {
         var responseType = ParseResponseType(in ctx, symbol);
+        if (responseType is null) return null;
+
         var (requestType, parametersDescriptor) = ParseParameters(in ctx, symbol);
+        if (requestType is null) return null;
 
         return new CodeGenServiceMethod(symbol.Name, symbol)
         {

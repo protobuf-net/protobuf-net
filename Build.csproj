@@ -4,18 +4,18 @@
     <ProjectReference Include="src\protobuf-net\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Core\*.csproj" />
     <ProjectReference Include="src\protobuf-net.ServiceModel\*.csproj" />
-    <ProjectReference Include="src\protobuf-net.MSBuild\*.csproj" />
     <ProjectReference Include="src\protobuf-net.NodaTime\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Protogen\*.csproj" />
     <ProjectReference Include="src\protobuf-net.Reflection\*.csproj" />
     <ProjectReference Include="src\protobuf-net.AspNetCore\*.csproj" />
     <ProjectReference Include="src\protobuf-net.BuildTools\*.csproj" />
     <ProjectReference Include="src\protobuf-net.BuildTools.Legacy\*.csproj" />
+    <ProjectReference Include="src\protobuf-net.FSharp\*.csproj" />
     <ProjectReference Include="src\protogen\*.csproj" />
   </ItemGroup>
   <ItemGroup Condition="$(Packing) != 'true'">
-    <ProjectReference Include="src\*\*.csproj" Exclude="src\protogen.Site\*.csproj" />
-    <!-- <ProjectReference Include="samples\**\*.csproj" Exclude="samples\**\*Mvc5*.csproj" />
-    <ProjectReference Include="tests\**\*.csproj" /> -->
+    <ProjectReference Include="src\*\*.csproj" Exclude="src\protogen.Site\*.csproj;src\BuildToolsSmokeTests\*.csproj" />
+    <!-- <ProjectReference Include="samples\**\*.csproj" Exclude="samples\**\*Mvc5*.csproj" /> -->
+    <!-- <ProjectReference Include="tests\**\*.csproj" /> -->
   </ItemGroup>
-</Project>
+</Project>  

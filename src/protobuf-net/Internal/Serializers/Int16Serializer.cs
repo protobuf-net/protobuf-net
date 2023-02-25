@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class Int16Serializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private Int16Serializer() { }
         internal static readonly Int16Serializer Instance = new Int16Serializer();
 

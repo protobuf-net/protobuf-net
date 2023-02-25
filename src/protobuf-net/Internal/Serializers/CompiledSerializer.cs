@@ -129,6 +129,7 @@ namespace ProtoBuf.Internal.Serializers
     interface ICompiledSerializer { Type ExpectedType { get; } } // just means "nothing more to do here" in terms of auto-compile
     internal abstract class CompiledSerializer : IProtoTypeSerializer, ICompiledSerializer
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => head.IsScalar;
         public SerializerFeatures Features => head.Features;
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {

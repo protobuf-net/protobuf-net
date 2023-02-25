@@ -419,6 +419,7 @@ namespace ProtoBuf.Meta
         {
             public const string
                 Bcl = "protobuf-net/bcl.proto",
+                WrappersProto = "google/protobuf/wrappers.proto",
                 Timestamp = "google/protobuf/timestamp.proto",
                 Duration = "google/protobuf/duration.proto",
                 Protogen = "protobuf-net/protogen.proto",
@@ -1236,9 +1237,44 @@ namespace ProtoBuf.Meta
             public int MetaDataVersion { get; set; }
 
             /// <summary>
-            /// The Version baked into the generated assembly.
+            /// The company name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCompanyName { get; set; }
+
+            /// <summary>
+            /// The copyright to burn into the generated assembly
+            /// </summary>
+            public string AssemblyCopyright { get; set; }
+
+            /// <summary>
+            /// The description to burn into the generated assembly
+            /// </summary>
+            public string AssemblyDescription { get; set; }
+
+            /// <summary>
+            /// The product name to burn into the generated assembly
+            /// </summary>
+            public string AssemblyProductName { get; set; }
+
+            /// <summary>
+            /// The application title to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTitle { get; set; }
+
+            /// <summary>
+            /// The trademark notice to burn into the generated assembly
+            /// </summary>
+            public string AssemblyTrademark { get; set; }
+
+            /// <summary>
+            /// The assembly version to burn into the generated assembly
             /// </summary>
             public Version AssemblyVersion { get; set; }
+
+            /// <summary>
+            /// The assembly product version to burn into the generated assembly
+            /// </summary>
+            public Version AssemblyProductVersion { get; set; }
 
             /// <summary>
             /// The acecssibility of the generated serializer
@@ -1329,13 +1365,12 @@ namespace ProtoBuf.Meta
                 moduleName = assemblyName + System.IO.Path.GetExtension(path);
             }
 
-#if PLAT_NO_EMITDLL
             AssemblyName an = new AssemblyName { Name = assemblyName, Version = options.AssemblyVersion };
+#if PLAT_NO_EMITDLL
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
 #else
-            AssemblyName an = new AssemblyName { Name = assemblyName, Version = options.AssemblyVersion };
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
@@ -1698,6 +1733,36 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
+
+            WriteAssemblyInfoAttributes(options, asm);
+
+            static void WriteAssemblyInfoAttributes(CompilerOptions options, AssemblyBuilder asm)
+            {
+                WriteAssemblyInfoAttribute<AssemblyFileVersionAttribute>(options, asm, options.AssemblyVersion?.ToString());
+                WriteAssemblyInfoAttribute<AssemblyCompanyAttribute>(options, asm, options.AssemblyCompanyName);
+                WriteAssemblyInfoAttribute<AssemblyCopyrightAttribute>(options, asm, options.AssemblyCopyright);
+                WriteAssemblyInfoAttribute<AssemblyDescriptionAttribute>(options, asm, options.AssemblyDescription);
+                WriteAssemblyInfoAttribute<AssemblyProductAttribute>(options, asm, options.AssemblyProductName);
+                WriteAssemblyInfoAttribute<AssemblyTitleAttribute>(options, asm, options.AssemblyTitle);
+                WriteAssemblyInfoAttribute<AssemblyTrademarkAttribute>(options, asm, options.AssemblyTrademark);
+                WriteAssemblyInfoAttribute<AssemblyInformationalVersionAttribute>(options, asm, options.AssemblyProductVersion?.ToString());
+
+#if NETFRAMEWORK
+                asm.DefineVersionInfoResource();
+#endif
+                static void WriteAssemblyInfoAttribute<TAttribute>(CompilerOptions options, AssemblyBuilder asm, string value)
+                    where TAttribute : Attribute
+                {
+                    if (string.IsNullOrEmpty(value))
+                        return;
+
+                    var attributeType = typeof(TAttribute);
+                    Type[] ctorParameters = { typeof(string) };
+                    var ctor = attributeType.GetConstructor(ctorParameters);
+                    var attribute = new CustomAttributeBuilder(ctor, new object[] { value });
+                    asm.SetCustomAttribute(attribute);
+                }
+            }
         }
 
         // note that this is used by some of the unit tests
@@ -1797,9 +1862,28 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, HashSet<string> imports)
             => GetSchemaTypeName(callstack, effectiveType, dataFormat, compatibilityLevel, asReference, dynamicType, imports, out _);
 
+        static bool IsWrappersProtoType(Type type, out string name, HashSet<string> imports)
+        {
+            name = null;
+            if (type == typeof(double?)) name = ".google.protobuf.DoubleValue";
+            if (type == typeof(float?)) name = ".google.protobuf.FloatValue";
+            if (type == typeof(long?)) name = ".google.protobuf.Int64Value";
+            if (type == typeof(ulong?)) name = ".google.protobuf.UInt64Value";
+            if (type == typeof(int?)) name = ".google.protobuf.Int32Value";
+            if (type == typeof(uint?)) name = ".google.protobuf.UInt32Value";
+            if (type == typeof(bool?)) name = ".google.protobuf.BoolValue";
+            if (type == typeof(string)) name = ".google.protobuf.StringValue";
+            if (type == typeof(byte[])) name = ".google.protobuf.BytesValue";
+
+            if (name is null) return false;
+            
+            imports.Add(CommonImports.WrappersProto);
+            return true;
+        }
+        
         static bool IsWellKnownType(Type type, out string name, HashSet<string> imports)
         {
-            if (type == typeof(byte[]))
+            if (TypeHelper.IsBytesLike(type))
             {
                 name = "bytes";
                 return true;
@@ -1825,9 +1909,14 @@ namespace ProtoBuf.Meta
             name = default;
             return false;
         }
-        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, HashSet<string> imports, out string altName)
+        internal string GetSchemaTypeName(HashSet<Type> callstack, Type effectiveType, DataFormat dataFormat, CompatibilityLevel compatibilityLevel, bool asReference, bool dynamicType, HashSet<string> imports, out string altName, bool considerWrappersProtoTypes = false)
         {
             altName = null;
+            if (considerWrappersProtoTypes && IsWrappersProtoType(effectiveType, out var wrappersProtoTypeParsed, imports))
+            {
+                return wrappersProtoTypeParsed;
+            }
+            
             compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 

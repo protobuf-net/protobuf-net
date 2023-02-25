@@ -106,6 +106,7 @@ namespace ProtoBuf.Internal.Serializers
     }
     internal class TypeSerializer<T> : TypeSerializer, ISerializer<T>, IFactory<T>, IProtoTypeSerializer
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => false;
         public virtual bool HasInheritance => false;
         public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitRead(context, valueFrom);

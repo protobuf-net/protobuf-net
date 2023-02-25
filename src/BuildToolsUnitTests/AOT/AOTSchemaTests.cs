@@ -8,19 +8,18 @@ using Microsoft.CodeAnalysis.CSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using ProtoBuf;
+using ProtoBuf.Grpc;
 using ProtoBuf.Internal.CodeGen;
+using ProtoBuf.Nano;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.ServiceModel;
 using System.Text.RegularExpressions;
-using ProtoBuf.Grpc;
 using Xunit;
 using Xunit.Abstractions;
-using ProtoBuf.Nano;
-using System.ServiceModel;
 
 namespace BuildToolsUnitTests.AOT;
 

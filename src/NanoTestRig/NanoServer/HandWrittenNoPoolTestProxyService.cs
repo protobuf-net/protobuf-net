@@ -9,9 +9,11 @@ namespace GrpcTestService
 {
     internal class HandWrittenNoPoolTestProxyService : TestProxy.TestProxyBase
     {
+        /*
         private static int gen0 = 0;
         private static int gen1 = 0;
         private static int gen2 = 0;
+        */
 
         private const int ExtraResultSize = 32;
         private static byte[] extraResult = Encoding.ASCII.GetBytes(new string('b', ExtraResultSize));
@@ -34,7 +36,7 @@ namespace GrpcTestService
             }
             */
 
-            var startTicks = DateTime.UtcNow.Ticks;
+        var startTicks = DateTime.UtcNow.Ticks;
             var e2eWatch = Stopwatch.StartNew();
 
             var itemResponses = new List<ForwardPerItemResponse>(request.ItemRequests.Count);

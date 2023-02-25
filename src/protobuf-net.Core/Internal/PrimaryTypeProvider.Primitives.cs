@@ -42,6 +42,19 @@ namespace ProtoBuf.Internal
         ISerializer<short?>,
         ISerializer<char?>,
 
+        IMeasuringSerializer<int?>,
+        IMeasuringSerializer<long?>,
+        IMeasuringSerializer<bool?>,
+        IMeasuringSerializer<float?>,
+        IMeasuringSerializer<double?>,
+        IMeasuringSerializer<byte?>,
+        IMeasuringSerializer<ushort?>,
+        IMeasuringSerializer<uint?>,
+        IMeasuringSerializer<ulong?>,
+        IMeasuringSerializer<sbyte?>,
+        IMeasuringSerializer<short?>,
+        IMeasuringSerializer<char?>,
+
         IValueChecker<string>,
         IValueChecker<int>,
         IValueChecker<long>,
@@ -57,7 +70,20 @@ namespace ProtoBuf.Internal
         IValueChecker<short>,
         IValueChecker<char>,
         IValueChecker<Uri>,
-        IValueChecker<Type>
+        IValueChecker<Type>,
+
+        IValueChecker<int?>,
+        IValueChecker<long?>,
+        IValueChecker<bool?>,
+        IValueChecker<float?>,
+        IValueChecker<double?>,
+        IValueChecker<byte?>,
+        IValueChecker<ushort?>,
+        IValueChecker<uint?>,
+        IValueChecker<ulong?>,
+        IValueChecker<sbyte?>,
+        IValueChecker<short?>,
+        IValueChecker<char?>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -368,5 +394,55 @@ namespace ProtoBuf.Internal
         bool IValueChecker<byte[]>.IsNull(byte[] value) => value is null;
         bool IValueChecker<Uri>.IsNull(Uri value) => value is null;
         bool IValueChecker<Type>.IsNull(Type value) => value is null;
+
+        bool IValueChecker<int?>.HasNonTrivialValue(int? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<int?>.IsNull(int? value) => !value.HasValue;
+        bool IValueChecker<uint?>.HasNonTrivialValue(uint? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<uint?>.IsNull(uint? value) => !value.HasValue;
+        bool IValueChecker<short?>.HasNonTrivialValue(short? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<short?>.IsNull(short? value) => !value.HasValue;
+        bool IValueChecker<ushort?>.HasNonTrivialValue(ushort? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<ushort?>.IsNull(ushort? value) => !value.HasValue;
+        bool IValueChecker<long?>.HasNonTrivialValue(long? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<long?>.IsNull(long? value) => !value.HasValue;
+        bool IValueChecker<ulong?>.HasNonTrivialValue(ulong? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<ulong?>.IsNull(ulong? value) => !value.HasValue;
+        bool IValueChecker<float?>.HasNonTrivialValue(float? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<float?>.IsNull(float? value) => !value.HasValue;
+        bool IValueChecker<double?>.HasNonTrivialValue(double? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<double?>.IsNull(double? value) => !value.HasValue;
+        bool IValueChecker<byte?>.HasNonTrivialValue(byte? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<byte?>.IsNull(byte? value) => !value.HasValue;
+        bool IValueChecker<sbyte?>.HasNonTrivialValue(sbyte? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<sbyte?>.IsNull(sbyte? value) => !value.HasValue;
+        bool IValueChecker<bool?>.HasNonTrivialValue(bool? value) => value.GetValueOrDefault();
+        bool IValueChecker<bool?>.IsNull(bool? value) => !value.HasValue;
+        bool IValueChecker<char?>.HasNonTrivialValue(char? value) => value.GetValueOrDefault() != 0;
+        bool IValueChecker<char?>.IsNull(char? value) => !value.HasValue;
+
+        int IMeasuringSerializer<int?>.Measure(ISerializationContext context, WireType wireType, int? value)
+            => ((IMeasuringSerializer<int>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<long?>.Measure(ISerializationContext context, WireType wireType, long? value)
+            => ((IMeasuringSerializer<long>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<float?>.Measure(ISerializationContext context, WireType wireType, float? value)
+            => ((IMeasuringSerializer<float>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<double?>.Measure(ISerializationContext context, WireType wireType, double? value)
+            => ((IMeasuringSerializer<double>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<byte?>.Measure(ISerializationContext context, WireType wireType, byte? value)
+            => ((IMeasuringSerializer<byte>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<ushort?>.Measure(ISerializationContext context, WireType wireType, ushort? value)
+            => ((IMeasuringSerializer<ushort>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<uint?>.Measure(ISerializationContext context, WireType wireType, uint? value)
+            => ((IMeasuringSerializer<uint>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<ulong?>.Measure(ISerializationContext context, WireType wireType, ulong? value)
+            => ((IMeasuringSerializer<ulong>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<sbyte?>.Measure(ISerializationContext context, WireType wireType, sbyte? value)
+            => ((IMeasuringSerializer<sbyte>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<short?>.Measure(ISerializationContext context, WireType wireType, short? value)
+            => ((IMeasuringSerializer<short>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<char?>.Measure(ISerializationContext context, WireType wireType, char? value)
+            => ((IMeasuringSerializer<char>)this).Measure(context, wireType, value.Value);
+        int IMeasuringSerializer<bool?>.Measure(ISerializationContext context, WireType wireType, bool? value)
+            => ((IMeasuringSerializer<bool>)this).Measure(context, wireType, value.Value);
     }
 }

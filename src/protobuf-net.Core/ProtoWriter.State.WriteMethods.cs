@@ -330,7 +330,7 @@ namespace ProtoBuf
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
-                    WriteFieldHeader(fieldNumber, WireType.String);
+                    WriteFieldHeader(fieldNumber, features.IsGroup() ? WireType.StartGroup : WireType.String);
                     _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
                 }
             }
@@ -356,16 +356,75 @@ namespace ProtoBuf
                 WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
             }
 
+            internal static WireType AssertWrappedAndGetWireType(ref SerializerFeatures features, out bool fieldPresence)
+            {
+                if (features.IsRepeated())
+                {
+                    fieldPresence = false;
+                    return AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedCollection, SerializerFeatures.OptionWrappedCollectionGroup);
+                }
+                else
+                {
+                    fieldPresence = features.HasAny(SerializerFeatures.OptionWrappedValueFieldPresence);
+                    return AssertWrappedAndGetWireType(ref features, SerializerFeatures.OptionWrappedValue, SerializerFeatures.OptionWrappedValueGroup);
+                }
+                static WireType AssertWrappedAndGetWireType(ref SerializerFeatures features,
+                    SerializerFeatures demanded, SerializerFeatures group)
+                {
+                    if (!features.HasAny(demanded))
+                    {
+                        ThrowHelper.ThrowInvalidOperationException($"{nameof(WriteWrapped)} called for {features.GetCategory()}, but {demanded} was not specified");
+                    }
+                    features &= ~demanded; // we then *remove* that option, to prevent recursion from WriteAny
+                    return features.HasAny(group) ? WireType.StartGroup : WireType.String;
+                }
+            }
+
+            /// <summary>
+            /// Write a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
+            /// </summary>
+            public void WriteWrapped<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                features.InheritFrom(serializer.Features);
+
+                var wrapperFormat = AssertWrappedAndGetWireType(ref features, out var fieldPresence);
+                bool isNull = TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value);
+                if (!fieldPresence && isNull)
+                {
+                    // nothing to do
+                    return;
+                }
+                WriteFieldHeader(fieldNumber, wrapperFormat);
+#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
+                var tok = StartSubItem(TypeHelper<T>.IsReferenceType & features.ApplyRecursionCheck() ? (object)value : null, PrefixStyle.Base128);
+#pragma warning restore CS0618
+                if (!isNull && (fieldPresence || TypeHelper<T>.ValueChecker.HasNonTrivialValue(value)))
+                {   // only write the field if it has a meaningful value (note: we already remove the relevant wrap options,
+                    // so: not recursive); if we're using field-presence, we write any non-null value; otherwise,
+                    // (think 'wrappers.proto') we only write non-zero values
+                    WriteAny<T>(1, features, value, serializer);
+                }
+#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
+                EndSubItem(tok);
+#pragma warning restore CS0618
+            }
+
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
             public void WriteAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
+                serializer ??= TypeModel.GetSerializer<T>(Model);
+                features.InheritFrom(serializer.Features);
+
+                if (features.HasAny(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedCollection))
+                {
+                    WriteWrapped<T>(fieldNumber, features, value, serializer);
+                    return;
+                }
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
-                    serializer ??= TypeModel.GetSerializer<T>(Model);
-                    features.InheritFrom(serializer.Features);
-
                     switch (features.GetCategory())
                     {
                         case SerializerFeatures.CategoryRepeated:
@@ -500,12 +559,18 @@ namespace ProtoBuf
             /// </summary>
             [MethodImpl(HotPath)]
             public void WriteBytes(Memory<byte> data)
-                => WriteBytes((ReadOnlyMemory<byte>)data);
+                => WriteBytes(data.Span);
 
             /// <summary>
             /// Writes a binary chunk to the stream; supported wire-types: String
             /// </summary>
             public void WriteBytes(ReadOnlyMemory<byte> data)
+                => WriteBytes(data.Span);
+
+            /// <summary>
+            /// Writes a binary chunk to the stream; supported wire-types: String
+            /// </summary>
+            public void WriteBytes(ReadOnlySpan<byte> data)
             {
                 var writer = _writer;
                 var length = data.Length;
@@ -837,7 +902,7 @@ namespace ProtoBuf
                     {
                         if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
                         {
-                            _writer.ImplWriteBytes(ref this, new ReadOnlyMemory<byte>(data.Array, data.Offset, data.Count));
+                            _writer.ImplWriteBytes(ref this, new ReadOnlySpan<byte>(data.Array, data.Offset, data.Count));
                             _writer.Advance(data.Count);
                         }
                         else

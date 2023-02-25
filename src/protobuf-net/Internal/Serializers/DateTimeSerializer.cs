@@ -6,6 +6,8 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class DateTimeSerializer : IRuntimeProtoSerializerNode
     {
+
+        bool IRuntimeProtoSerializerNode.IsScalar => false;
         private static readonly Type expectedType = typeof(DateTime);
         private static DateTimeSerializer s_Timestamp;
 

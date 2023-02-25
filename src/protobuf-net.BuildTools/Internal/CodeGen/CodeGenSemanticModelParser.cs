@@ -159,11 +159,11 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
         internal static ILocated? Create(ISymbol? loc)  => loc is null ? null : new LocationWrapper(loc);
     }
 
-    void IDiagnosticSink.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
+    void IDiagnosticSink.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated? located, params object[] messageArgs)
     {
         if (_executionContext.HasValue)
         {
-            var loc = (located.Origin as ISymbol)?.Locations.FirstOrDefault();
+            var loc = (located?.Origin as ISymbol)?.Locations.FirstOrDefault();
             var mapped = MapDescriptor(diagnostic);
             _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(mapped, loc, messageArgs));
         }

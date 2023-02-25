@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.FSharp</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="6.0.6" />
+    <PackageReference Include="FSharp.Core" VersionOverride="7.0" />
   </ItemGroup>
 
   <ItemGroup>

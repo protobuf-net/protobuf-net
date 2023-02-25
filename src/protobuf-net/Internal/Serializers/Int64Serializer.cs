@@ -5,6 +5,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class Int64Serializer : IRuntimeProtoSerializerNode
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private Int64Serializer() { }
         internal static readonly Int64Serializer Instance = new Int64Serializer();
 

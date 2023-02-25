@@ -24,7 +24,7 @@ internal class CodeGenField : CodeGenEntity
 
     public string Name { get; set; }
     public string BackingName { get; set; } // the name to use when generating an explicit field
-    public string OriginalName { get; set; } // the name in the schema (not used in code, except in the [ProtoMember(..., Name = ...)]
+    public string? OriginalName { get; set; } // the name in the schema (not used in code, except in the [ProtoMember(..., Name = ...)]
 
     [DefaultValue(RepeatedKind.Single)]
     public RepeatedKind Repeated { get; set; }

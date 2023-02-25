@@ -549,7 +549,7 @@ namespace ProtoBuf.Reflection
                             .WriteLine($"Private ReadOnly {fieldName} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})").WriteLine();
                     }
                 }
-                else if (UseArray(field))
+                else if (!ctx.RepeatedAsList && UseArray(field))
                 {
                     if (ctx.Supports(VB11))
                     {
@@ -638,7 +638,7 @@ namespace ProtoBuf.Reflection
                         break;
                 }
 
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}").Indent()
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}{GetNullableSuffix(ctx, field, defaultValue, isOptional)}").Indent()
                     .WriteLine("Get").Indent();
 
                 if (!string.IsNullOrWhiteSpace(defaultValue))
@@ -670,7 +670,7 @@ namespace ProtoBuf.Reflection
             {
                 if (ctx.Supports(VB11))
                 {
-                    tw = ctx.Write($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}");
+                    tw = ctx.Write($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}{GetNullableSuffix(ctx, field, defaultValue, isOptional)}");
                     if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue}");
                     tw.WriteLine();
                 }
@@ -868,6 +868,31 @@ namespace ProtoBuf.Reflection
                     return MakeRelativeName(field, msgType, ctx.NameNormalizer);
                 default:
                     return field.TypeName;
+            }
+        }
+
+        private string GetNullableSuffix(GeneratorContext ctx, FieldDescriptorProto field, string defaultValue, bool isOptional)
+        {
+            if (!(ctx.IsEnabled("nullablevaluetype") && ctx.Supports(VB11) && string.IsNullOrWhiteSpace(defaultValue) && isOptional))
+                return "";
+            switch (field.type)
+            {
+                case FieldDescriptorProto.Type.TypeDouble:
+                case FieldDescriptorProto.Type.TypeFloat:
+                case FieldDescriptorProto.Type.TypeBool:
+                case FieldDescriptorProto.Type.TypeSint32:
+                case FieldDescriptorProto.Type.TypeInt32:
+                case FieldDescriptorProto.Type.TypeSfixed32:
+                case FieldDescriptorProto.Type.TypeSint64:
+                case FieldDescriptorProto.Type.TypeInt64:
+                case FieldDescriptorProto.Type.TypeSfixed64:
+                case FieldDescriptorProto.Type.TypeFixed32:
+                case FieldDescriptorProto.Type.TypeUint32:
+                case FieldDescriptorProto.Type.TypeFixed64:
+                case FieldDescriptorProto.Type.TypeUint64:
+                    return "?";
+                default:
+                    return "";
             }
         }
 

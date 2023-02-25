@@ -7,19 +7,21 @@ namespace GrpcTestService
 {
     internal class GoogleTestProxyService : TestProxy.TestProxyBase
     {
+        /*
         private static int gen0 = 0;
         private static int gen1 = 0;
         private static int gen2 = 0;
+        */
 
         private const int ExtraResultSize = 32;
-        private static ByteString extraResult = ByteString.CopyFrom(new string('b', ExtraResultSize), System.Text.Encoding.ASCII);
+        private static readonly ByteString extraResult = ByteString.CopyFrom(new string('b', ExtraResultSize), System.Text.Encoding.ASCII);
         public override Task<ForwardResponse> Forward(ForwardRequest request, ServerCallContext context)
         {
+            /*
             var gen0After = GC.CollectionCount(0);
             var gen1After = GC.CollectionCount(1);
             var gen2After = GC.CollectionCount(2);
 
-            /*
             if (gen0After != gen0 || gen1After != gen1 || gen2After != gen2)
             {
                 Console.WriteLine(
@@ -35,11 +37,13 @@ namespace GrpcTestService
             var startTicks = DateTime.UtcNow.Ticks;
             var e2eWatch = Stopwatch.StartNew();
             var response = new ForwardResponse();
-            foreach (var itemRequest in request.ItemRequests)
+            foreach (var _ in request.ItemRequests)
             {
-                var itemResponse = new ForwardPerItemResponse();
-                itemResponse.Result = 100;
-                itemResponse.ExtraResult = extraResult;
+                var itemResponse = new ForwardPerItemResponse
+                {
+                    Result = 100,
+                    ExtraResult = extraResult
+                };
                 response.ItemResponses.Add(itemResponse);
             }
             e2eWatch.Stop();

@@ -3,13 +3,16 @@ using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal static partial class ParseUtils
 {
-    public static bool IsProtoMember(ImmutableArray<AttributeData> attributes, out AttributeData protoMemberAttributeData)
+    public static bool IsProtoMember(ImmutableArray<AttributeData> attributes,
+        /*[NotNullWhen(true)] can't use cleanly because of targets*/ 
+        out AttributeData protoMemberAttributeData)
     {
         foreach (var attribute in attributes)
         {
@@ -21,14 +24,14 @@ internal static partial class ParseUtils
             }
         }
 
-        protoMemberAttributeData = null;
+        protoMemberAttributeData = null!;
         return false;
     }
 
-    public static (int fieldNumber, string originalName, DataFormat? dataFormat, bool isRequired) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
+    public static (int fieldNumber, string? originalName, DataFormat? dataFormat, bool isRequired) GetProtoMemberAttributeData(AttributeData protoMemberAttribute)
     {
         int fieldNumber = default;
-        string originalName = null;
+        string? originalName = null;
         DataFormat? dataFormat = null;
         bool isRequired = false;
 

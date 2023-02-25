@@ -11,6 +11,7 @@
             {
               "Name": "SearchAsync",
               "RequestType": {
+                "Representation": "AsyncEnumerable",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Enums": [
@@ -91,6 +92,7 @@
                 }
               },
               "ResponseType": {
+                "Representation": "ValueTask",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Messages": [
@@ -212,6 +214,7 @@
             {
               "Name": "OldMethodAsync",
               "RequestType": {
+                "Representation": "ValueTask",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Enums": [
@@ -292,6 +295,7 @@
                 }
               },
               "ResponseType": {
+                "Representation": "AsyncEnumerable",
                 "RawType": {
                   "Emit": "DataContract, DataSerializer",
                   "Messages": [

@@ -6,6 +6,7 @@
         Whitespace,
         StringLiteral,
         AlphaNumeric,
-        Symbol
+        Symbol,
+        Comment,
     }
 }

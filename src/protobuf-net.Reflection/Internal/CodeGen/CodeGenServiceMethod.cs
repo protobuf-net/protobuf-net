@@ -16,7 +16,7 @@ internal class CodeGenServiceMethod : CodeGenEntity
     private Type? _responseType;
     
     public string Name { get; set; }
-    public string OriginalName { get; set; }
+    public string? OriginalName { get; set; }
     public Type RequestType
     {
         get { return _requestType ??= new(); }
@@ -60,9 +60,9 @@ internal class CodeGenServiceMethod : CodeGenEntity
     public class Type
     {
         public CodeGenTypeRepresentation Representation { get; set; }
-        
-        public CodeGenType RawType { get; set; }
-        
+
+        public CodeGenType RawType { get; set; } = CodeGenType.Unknown;
+
         public override string ToString()
         {
             return Representation switch

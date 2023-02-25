@@ -26,7 +26,7 @@ internal class CodeGenService : CodeGenLocatedType
     public string OriginalName { get; set; }
     public string Package { get; set; } = string.Empty;
 
-    private NonNullableList<CodeGenServiceMethod> _serviceMethods;
+    private NonNullableList<CodeGenServiceMethod>? _serviceMethods;
     public ICollection<CodeGenServiceMethod> ServiceMethods => _serviceMethods ??= new();
     
     [DefaultValue(Access.Public)]

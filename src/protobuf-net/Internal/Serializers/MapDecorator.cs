@@ -24,6 +24,7 @@ namespace ProtoBuf.Internal.Serializers
     }
     internal class MapDecorator<TCollection, TKey, TValue> : IRuntimeProtoSerializerNode, ICompiledSerializer
     {
+        bool IRuntimeProtoSerializerNode.IsScalar => false;
         public MapDecorator(
             int fieldNumber, SerializerFeatures features,
             SerializerFeatures keyFeatures, CompatibilityLevel keyCompatibilityLevel, DataFormat keyDataFormat,

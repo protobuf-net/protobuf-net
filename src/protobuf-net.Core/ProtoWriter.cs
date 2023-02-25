@@ -353,7 +353,7 @@ namespace ProtoBuf
         internal abstract int ImplWriteVarint64(ref State state, ulong value);
         protected private abstract void ImplWriteFixed32(ref State state, uint value);
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
-        protected private abstract void ImplWriteBytes(ref State state, ReadOnlyMemory<byte> data);
+        protected private abstract void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data);
         protected private abstract void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data);
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
         private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);

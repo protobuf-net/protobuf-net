@@ -276,6 +276,58 @@ namespace Google.Protobuf.Reflection
                 using var ctx = new ParserContext(file, null, Errors);
                 file.ResolveTypes(ctx, true);
             }
+            foreach (var file in Files)
+            {
+                using var ctx = new ParserContext(file, null, Errors);
+                foreach (var message in file.MessageTypes)
+                {
+                    PreProcessMessage(message, ctx);
+                }
+                static void PreProcessMessage(DescriptorProto message, ParserContext ctx)
+                {
+                    if (message == null) return;
+                    var options = Extensions.GetOptions(message?.Options);
+                    if (options is not null)
+                    {
+                        switch (options.MessageKind)
+                        {
+                            case MessageKind.None:
+                                break; // nothing to do
+                            case MessageKind.NullWrapper:
+                                if (ctx.Syntax != FileDescriptorProto.SyntaxProto3)
+                                {
+                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires {FileDescriptorProto.SyntaxProto3} syntax", ErrorCode.MessageKindNullWrapperProto3);
+                                }
+                                else if (message.Fields.Count != 1)
+                                {
+                                    ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires exactly one field (found: {message.Fields.Count})", ErrorCode.MessageKindNullWrapperSingleField);
+                                }
+                                else
+                                {
+                                    var field = message.Fields.Single();
+                                    if (field.Number == 1)
+                                    {
+                                        message.ParsedSpecialKind = field.Proto3Optional || field.ShouldSerializeOneofIndex()
+                                            ? DescriptorProto.SpecialKind.NullableWrapperFieldPresence
+                                            : DescriptorProto.SpecialKind.NullableWrapperImplicitZero;
+                                    }
+                                    else
+                                    {
+                                        ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' must use field 1 (found: {field.Number})", ErrorCode.MessageKindNullWrapperFieldOne);
+                                    }
+                                }
+                                break;
+                            default:
+                                ctx.Errors.Warn(message.SourceLocation, $"Unexpected message kind on '{message.Name}': {options.MessageKind}", ErrorCode.MessageKindUnknownKind);
+                                break;
+                        }
+                    }
+                    foreach (var subMessage in message.NestedTypes)
+                    {
+                        PreProcessMessage(subMessage, ctx);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -357,6 +409,16 @@ namespace Google.Protobuf.Reflection
         /// </summary>
         public partial class ReservedRange : IReservedRange { }
 
+        internal Token SourceLocation { get; set; }
+        internal enum SpecialKind
+        {
+            None,
+            NullableWrapperImplicitZero,
+            NullableWrapperFieldPresence,
+        }
+
+        internal SpecialKind ParsedSpecialKind { get; set; }
+
         /// <summary>
         /// Gets the extension data associated with an object, as a byte-array
         /// </summary>
@@ -437,11 +499,12 @@ namespace Google.Protobuf.Reflection
         int IMessage.MaxField => MaxField;
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
-            var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
+            var name = ctx.Tokens.Consume(TokenType.AlphaNumeric, out var token);
             ctx.CheckNames(parent, name, ctx.Tokens.Previous);
             if (ctx.TryReadObject(out obj))
             {
                 obj.Name = name;
+                obj.SourceLocation = token;
                 GenerateSyntheticOneOfs(obj);
                 return true;
             }
@@ -1271,6 +1334,7 @@ namespace Google.Protobuf.Reflection
                                 field.type = FieldDescriptorProto.Type.TypeMessage;
                             }
                             fqn = msg?.FullyQualifiedName;
+                            field.ResolvedType = msg;
                         }
                         else if (TryResolveEnum(field.TypeName, parent, out var @enum, true))
                         {
@@ -1281,6 +1345,7 @@ namespace Google.Protobuf.Reflection
                                 ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'", ErrorCode.EnumValueNotFound);
                             }
                             fqn = @enum?.FullyQualifiedName;
+                            field.ResolvedType = @enum;
                         }
                         else
                         {
@@ -1975,6 +2040,10 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class FieldDescriptorProto : ISchemaObject, IField
     {
+        /// <summary>
+        /// The resolved type if available.
+        /// </summary>
+        internal IType ResolvedType { get; set; }
 
         /// <summary>
         /// Indicates whether this field is considered "packed" in the given schema
@@ -2632,6 +2701,36 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf.Reflection
 {
+    /// <summary>
+    /// Utility methods for descriptors
+    /// </summary>
+    public static class DescriptorExtensions
+    {
+        /// <summary>
+        /// Gets the resolved enum type associated with a field
+        /// </summary>
+        public static EnumDescriptorProto GetEnumType(this FieldDescriptorProto field)
+            => field?.ResolvedType as EnumDescriptorProto;
+
+        /// <summary>
+        /// Gets the resolved message type associated with a field
+        /// </summary>
+        public static DescriptorProto GetMessageType(this FieldDescriptorProto field)
+            => field?.ResolvedType as DescriptorProto;
+
+        /// <summary>
+        /// Gets the fully qualified name of an enum
+        /// </summary>
+        public static string GetFullyQualifiedName(this EnumDescriptorProto @enum) 
+            => @enum.FullyQualifiedName;
+
+        /// <summary>
+        /// Gets the fully qualified name of a message
+        /// </summary>
+        public static string GetFullyQualifiedName(this DescriptorProto message) 
+            => message.FullyQualifiedName;
+    }
+    
     internal static class ErrorExtensions
     {
         public static void Warn(this List<Error> errors, Token token, string message, ErrorCode code)
