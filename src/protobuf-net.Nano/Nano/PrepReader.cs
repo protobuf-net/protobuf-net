@@ -664,23 +664,31 @@ public ref struct PrepReader
     /// </summary>
     public long ReadVarintInt64() => (long)ReadVarintUInt64();
 
+    /// <summary>Acknowledge an unhandled wire-type</summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ThrowUnhandledWireType(uint tag)
         => throw new NotSupportedException($"Field {tag >> 3} was not expected with wire-type {tag & 7}; this may indicate a tooling error - please report as an issue");
 
+    /// <summary>Acknowledge a non-supported scenario</summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ThrowNetObjectProxy()
         => throw new NotSupportedException("dynamic types/reference-tracking is not supported");
 
+    /// <summary>Acknowledge an unhandled tag</summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ThrowUnhandledTag(uint tag)
         => throw new InvalidOperationException($"Field {tag >> 3} was not expected with wire-type {tag & 7}; this may indicate a tooling error - please report as an issue");
 
+    /// <summary>Acknowledge an invalid packed length</summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void ThrowInvalidPackedLength(uint tag, ulong len)
     => throw new InvalidOperationException($"Field {tag >> 3} has invalid packed-length {len}, which is an incomplete number of elements");
 
     int _lastGroup;
+
+    /// <summary>
+    /// Begin a protobuf group
+    /// </summary>
     public void PushGroup(int tag)
     {
         var group = tag >> 3;
@@ -688,6 +696,10 @@ public ref struct PrepReader
         if (_lastGroup != 0) throw new InvalidOperationException($"Group {_lastGroup} was already being terminated, while terminating {group}");
         _lastGroup = group;
     }
+
+    /// <summary>
+    /// End a protobuf group
+    /// </summary>
     public void PopGroup(int group)
     {
         if (group < 0) throw new ArgumentOutOfRangeException(nameof(group));

@@ -6,25 +6,27 @@ internal enum CodeGenTypeRepresentation
 {
     /// <summary>
     /// Raw type without any generic wrapper being used
-    /// i.e. 'T SendAsync()'
+    /// i.e. <code>T SendAsync()</code>
     /// </summary>
     Raw,
-    
+
+#pragma warning disable CS1574 // stop invalid cref (TFM-specific) complaining
     /// <summary>
-    /// ValueTask wrapper over Raw type
-    /// i.e. 'System.Threading.Tasks.ValueTask<T> SendAsync()'
+    /// <see cref="System.Threading.Tasks.ValueTask"/> / <see cref="System.Threading.Tasks.ValueTask{T}"/> wrapper over Raw type
+    /// i.e. <code>System.Threading.Tasks.ValueTask&lt;T&gt; SendAsync()</code>
     /// </summary>
     ValueTask,
-    
+
     /// <summary>
-    /// Task wrapper over Raw type
-    /// i.e. 'System.Threading.Tasks.Task<T> SendAsync()'
+    /// <see cref="System.Threading.Tasks.Task"/> / <see cref="System.Threading.Tasks.Task{T}"/> wrapper over Raw type
+    /// i.e. <code>System.Threading.Tasks.Task&lt;T&gt; SendAsync()</code>
     /// </summary>
     Task,
-    
+
     /// <summary>
-    /// IAsyncEnumerable wrapper over Raw type
-    /// i.e. 'System.Collections.Generic.IAsyncEnumerable<T> SendAsync()'
+    /// <see cref="System.Collections.Generic.IAsyncEnumerable{T}"/> wrapper over Raw type
+    /// i.e. <code>System.Collections.Generic.IAsyncEnumerable&lt;T&gt; SendAsync()</code>
     /// </summary>
     AsyncEnumerable
+#pragma warning restore CS1574 // stop invalid cref (TFM-specific) complaining
 }

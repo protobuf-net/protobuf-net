@@ -4,6 +4,9 @@ using ProtoBuf.Reflection.Internal.CodeGen;
 
 namespace ProtoBuf.BuildTools.Analyzers;
 
+/// <summary>
+/// Generator for AOT code for protobuf-net
+/// </summary>
 [Generator(LanguageNames.CSharp)]
 public sealed class DataContractGenerator : ISourceGenerator
 {

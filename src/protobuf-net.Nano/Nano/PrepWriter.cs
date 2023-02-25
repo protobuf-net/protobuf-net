@@ -169,9 +169,11 @@ public ref struct PrepWriter
         => MeasureWithLengthPrefix((uint)value.Length);
 
 
+    /// <summary>Convert a signed integer to a zig-zag unsigned integer</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint Zig(int value) => (uint)((value << 1) ^ (value >> 31));
 
+    /// <summary>Convert a signed integer to a zig-zag unsigned integer</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static ulong Zig(long value) => (ulong)((value << 1) ^ (value >> 63));
 
