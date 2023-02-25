@@ -12,6 +12,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
+## pending
+
+- Deserializing into uninitialized `IReadOnlyDictionary<TKey, TValue>` (#1022)
+
 ## 3.2.0
 
 - implement `[NullWrappedValue]` (compile-time annotation for `ValueMember.SupportNull`, see 3.1.26)
