@@ -1024,7 +1024,8 @@ namespace ProtoBuf.Meta
             if (memberList.Count == 0)
             {
                 // special-case detection for empty DTOs
-                if (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)
+                if (ctors.Length == 1 && ctors[0].GetParameters().Length == 0
+                    && type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Length == 0)
                 {
                     mappedMembers = Array.Empty<MemberInfo>();
                     return ctors[0];
