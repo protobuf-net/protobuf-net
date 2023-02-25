@@ -100,7 +100,7 @@ namespace Examples.Dictionary
         }
     }
 
-    public class IReadOnlyDictionaryTests
+    public class DictionaryOfIReadOnlyDictionarySerializerTests
     {
         [ProtoContract]
         class ReadOnlyDictionaryData<T>
@@ -140,7 +140,7 @@ namespace Examples.Dictionary
         {
             var obj = new Dictionary<int, string>();
             obj[0] = "abc";
-            obj[4] = "def";
+            obj[1] = "def";
             obj[7] = "abc";
             var input = new ReadOnlyDictionaryData<string>(obj);
 

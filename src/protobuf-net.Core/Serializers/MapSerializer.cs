@@ -25,9 +25,8 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
-            where TCollection : IReadOnlyDictionary<TKey, TValue>
-            => SerializerCache<IReadOnlyDictionarySerializer<TKey, TValue>>.InstanceField;
+        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+            => SerializerCache<DictionaryOfIReadOnlyDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 
     /// <summary>
@@ -208,46 +207,54 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    class IReadOnlyDictionarySerializer<TKey, TValue> : MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>
+    sealed class DictionaryOfIReadOnlyDictionarySerializer<TKey, TValue> : MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>
     {
         protected override IReadOnlyDictionary<TKey, TValue> Initialize(IReadOnlyDictionary<TKey, TValue> values, ISerializationContext context)
             => values ?? new Dictionary<TKey, TValue>();
 
         protected override IReadOnlyDictionary<TKey, TValue> Clear(IReadOnlyDictionary<TKey, TValue> values, ISerializationContext context)
         {
-            if (values is Dictionary<TKey, TValue> target)
+            if (values is IDictionary<TKey, TValue> target && !target.IsReadOnly)
             {
                 target.Clear();
-                return target;
+                return values;
             }
             return new Dictionary<TKey, TValue>();
         }
 
         protected override IReadOnlyDictionary<TKey, TValue> AddRange(IReadOnlyDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
-            if (values is not Dictionary<TKey, TValue> target)
+            if (values is IDictionary<TKey, TValue> target && !target.IsReadOnly)
             {
-                target = new Dictionary<TKey, TValue>(values.Count + newValues.Count);
-                foreach (var item in values)
-                    target.Add(item.Key, item.Value);
+                foreach (var pair in newValues.AsSpan())
+                    target.Add(pair.Key, pair.Value);
+                return values;
             }
 
+            var writableDictionary = new Dictionary<TKey, TValue>(values.Count + newValues.Count);
+            foreach (var item in values)
+                writableDictionary.Add(item.Key, item.Value);
+
             foreach (var pair in newValues.AsSpan())
-                target.Add(pair.Key, pair.Value);
-            return target;
+                writableDictionary.Add(pair.Key, pair.Value);
+            return writableDictionary;
         }
 
         protected override IReadOnlyDictionary<TKey, TValue> SetValues(IReadOnlyDictionary<TKey, TValue> values, ref ArraySegment<KeyValuePair<TKey, TValue>> newValues, ISerializationContext context)
         {
-            if (values is not Dictionary<TKey, TValue> target)
+            if (values is IDictionary<TKey, TValue> target && !target.IsReadOnly)
             {
-                target = new Dictionary<TKey, TValue>(values.Count);
-                foreach (var item in values)
-                    target.Add(item.Key, item.Value);
+                foreach (var pair in newValues.AsSpan())
+                    target[pair.Key] = pair.Value;
+                return values;
             }
 
+            var writableDictionary = new Dictionary<TKey, TValue>(values.Count);
+            foreach (var item in values)
+                writableDictionary.Add(item.Key, item.Value);
+
             foreach (var pair in newValues.AsSpan())
-                target[pair.Key] = pair.Value;
+                writableDictionary[pair.Key] = pair.Value;
             return values;
         }
 

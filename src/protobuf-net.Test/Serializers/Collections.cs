@@ -25,7 +25,7 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IList<int>), typeof(EnumerableSerializer<IList<int>, IList<int>, int>))]
         [InlineData(typeof(Dictionary<int, string>), typeof(DictionarySerializer<int, string>))]
         [InlineData(typeof(IDictionary<int, string>), typeof(DictionarySerializer<IDictionary<int,string>,int, string>))]
-        [InlineData(typeof(IReadOnlyDictionary<int, string>), typeof(IReadOnlyDictionarySerializer<int, string>))]
+        [InlineData(typeof(IReadOnlyDictionary<int, string>), typeof(DictionaryOfIReadOnlyDictionarySerializer<int, string>))]
         [InlineData(typeof(ImmutableArray<int>), typeof(ImmutableArraySerializer<int>))]
         [InlineData(typeof(ImmutableDictionary<int, string>), typeof(ImmutableDictionarySerializer<int, string>))]
         [InlineData(typeof(ImmutableSortedDictionary<int, string>), typeof(ImmutableSortedDictionarySerializer<int, string>))]
