@@ -938,7 +938,7 @@ namespace ProtoBuf.Meta
         {
             AttributeFamily family = AttributeFamily.None;
 
-            if (attributes is null) attributes = AttributeMap.Create(type, false);
+            attributes ??= AttributeMap.Create(type, false);
 
             for (int i = 0; i < attributes.Length; i++)
             {
@@ -980,8 +980,8 @@ namespace ProtoBuf.Meta
             if (type.IsAbstract) return null; // as if!
             ConstructorInfo[] ctors = Helpers.GetConstructors(type, false);
 
-            // need to have an interesting constructor to bother even checking this stuff
-            if (ctors.Length == 0 || (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)) return null;
+            // need to have a constructor to bother even checking this stuff
+            if (ctors.Length == 0) return null;
 
             MemberInfo[] fieldsPropsUnfiltered = Helpers.GetInstanceFieldsAndProperties(type, true);
             var memberList = new List<MemberInfo>();
@@ -1023,6 +1023,12 @@ namespace ProtoBuf.Meta
             }
             if (memberList.Count == 0)
             {
+                // special-case detection for empty DTOs
+                if (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)
+                {
+                    mappedMembers = Array.Empty<MemberInfo>();
+                    return ctors[0];
+                }
                 return null;
             }
 
@@ -1315,13 +1321,13 @@ namespace ProtoBuf.Meta
                     }
                 }
 
-                if ((attrib = GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName)) is object)
+                if ((attrib = GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName)) is not null)
                 {
                     vm.NullWrappedValue = true;
                     if (attrib.TryGet(nameof(NullWrappedValueAttribute.AsGroup), out object tmp) && tmp is bool b)
                         vm.NullWrappedValueGroup = b;
                 }
-                if ((attrib = GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName)) is object)
+                if ((attrib = GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName)) is not null)
                 {
                     vm.NullWrappedCollection = true;
                     if (attrib.TryGet(nameof(NullWrappedCollectionAttribute.AsGroup), out object tmp) && tmp is bool b)

@@ -331,8 +331,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 for (int i = 0; i < locals.Length; i++)
                 {
-                    if (locals[i] is not null)
-                        locals[i].Dispose(); // release for re-use
+                    locals[i]?.Dispose(); // release for re-use
                 }
             }
         }
