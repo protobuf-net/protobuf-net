@@ -386,8 +386,8 @@ namespace ProtoBuf.BuildTools.Internal
                 return CalculateDefaultValueScalarValues(out defaultValue);
             }
 
-            defaultValue = null;
-            return MemberDefaultValueState.NotSet;
+            defaultValue = equalsValue!.ToString();
+            return MemberDefaultValueState.NonConstantExpression;
 
             bool IsScalarValueType(SpecialType type) => type switch
             {

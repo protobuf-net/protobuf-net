@@ -181,7 +181,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ShouldUpdateDefault = new(
             id: "PBN0021",
             title: nameof(DataContractAnalyzer) + "." + nameof(ShouldUpdateDefault),
-            messageFormat: "Field '{0}' should update [DefaultValue({1})] attribute usage to ensure the same value is being assigned to both 'class member' and '[DefaultValue]' attribute.",
+            messageFormat: "Field '{0}' should update [DefaultValue({1})] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
@@ -190,7 +190,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ShouldDeclareIsRequired = new(
             id: "PBN0022",
             title: nameof(DataContractAnalyzer) + "." + nameof(ShouldDeclareIsRequired),
-            messageFormat: "Field '{0}' should use [ProtoMember({1}, IsRequired=true)] to ensure its value is passed since it's initialized to a non-default value.",
+            messageFormat: "Field '{0}' should use [ProtoMember(..., IsRequired=true)] to ensure its value is passed since it's initialized to a non-default value.",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
