@@ -14,7 +14,8 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## pending
 
-- Deserializing into uninitialized `IReadOnlyDictionary<TKey, TValue>` (#1022)
+- add support for deserializing into uninitialized `IReadOnlyDictionary<TKey, TValue>` (#1022 by ladeak)
+- fix missing namespace in `[CompatibilityLevel]` in code-gen (#1026)
 
 ## 3.2.0
 
