@@ -30,3 +30,5 @@ src/Benchmark/DalSerializer.dll
 .idea/
 profile.arm.json
 .DS_Store
+
+src/protobuf-net.Core.Unity/

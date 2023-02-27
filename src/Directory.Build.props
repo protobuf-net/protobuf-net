@@ -5,7 +5,7 @@
         <OutputType>Library</OutputType>
         <SignAssembly>true</SignAssembly>
         <DelaySign>False</DelaySign>
-        <NoWarn>NU5105;CS1701;BC42016;IDE0057;IDE0090;IDE0079;NU5048</NoWarn>
+        <NoWarn>NU5105;CS1701;BC42016;IDE0057;IDE0090;IDE0079;NU5048;CS8032</NoWarn>
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
         <Copyright>See https://github.com/protobuf-net/protobuf-net</Copyright>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -24,7 +24,7 @@
         <DefaultLanguage>en-US</DefaultLanguage>
         <IncludeSymbols>false</IncludeSymbols>
         <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
-        <LangVersion>9.0</LangVersion>
+        <LangVersion>11.0</LangVersion>
         <CodeAnalysisRuleset>$(MSBuildThisFileDirectory)Shared.ruleset</CodeAnalysisRuleset>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 

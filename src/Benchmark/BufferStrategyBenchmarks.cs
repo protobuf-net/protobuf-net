@@ -4,6 +4,7 @@ using Google.Protobuf;
 using Hyper;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using ProtoBuf.Nano;
 using ProtoBuf.Serializers;
 using System;
 
@@ -99,7 +100,7 @@ namespace Benchmark
             {
                 var tmp = Value;
                 Value = default;
-                // tmp.Dispose();
+                RefCountedMemory.Release(tmp);
 
                 s_Spare = this;
             }
@@ -125,8 +126,7 @@ namespace Benchmark
             {
                 var tmp = Value;
                 Value = default;
-                // tmp.Dispose();
-
+                RefCountedMemory.Release(tmp);
                 s_Spare = this;
             }
 

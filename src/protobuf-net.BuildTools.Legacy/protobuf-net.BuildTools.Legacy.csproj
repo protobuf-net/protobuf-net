@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
     <AssemblyName>protobuf-net.BuildTools.Legacy</AssemblyName>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
     <Description>Analyzer and Generator support for protobuf-net, using SDK 3.3.1 (pre .NET 5)</Description>
@@ -22,9 +22,10 @@
     <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
     <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core" />
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
-    
+
     <!-- cross-reference the analyzer code -->
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal" />
+    <Compile Remove="../protobuf-net.BuildTools/Internal/CodeGen/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
   </ItemGroup>

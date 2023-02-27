@@ -1,0 +1,47 @@
+{
+  "Files": [
+    {
+      "Name": "Enums.proto",
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 2,
+              "TypeName": "BasicPackage.Corpus2",
+              "Name": "Corpus",
+              "OriginalName": "corpus",
+              "Conditional": "NonDefault",
+              "DefaultValue": ""
+            }
+          ],
+          "Name": "SearchRequest",
+          "Package": "basic_package",
+          "FullyQualifiedPrefix": "BasicPackage."
+        }
+      ],
+      "Enums": [
+        {
+          "EnumValues": [
+            {
+              "Name": "CorpusUnspecified",
+              "OriginalName": "CORPUS_UNSPECIFIED"
+            },
+            {
+              "Name": "CorpusUniversal",
+              "Value": 1,
+              "OriginalName": "CORPUS_UNIVERSAL"
+            },
+            {
+              "Name": "CorpusWeb",
+              "Value": 2,
+              "OriginalName": "CORPUS_WEB"
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "Corpus2",
+          "FullyQualifiedPrefix": "BasicPackage."
+        }
+      ]
+    }
+  ]
+}

@@ -8,9 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<PackageReference Include="Microsoft.Build" />-->
-    <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
     <PackageReference Include="System.Collections.Immutable" />
+    <PackageReference Include="protobuf-net" Aliases="donotuse" />
+    <PackageReference Include="protobuf-net.Core" Aliases="donotuse" />
+    <PackageReference Include="protobuf-net.Grpc" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -22,5 +23,23 @@
 
   <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
+    <ProjectReference Include="../protobuf-net.Nano/protobuf-net.Nano.csproj" ReferenceOutputAssembly="true" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AOT\Schemas\Enums.cs" />
+    <Compile Include="AOT\Schemas\Services.cs" />
+
+    <!-- C# -> CodeGenSet -->
+    <Compile Remove="AOT/CSharpToCodeGen/Schemas/**/*.cs" />
+    <None Include="AOT/CSharpToCodeGen/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" />
+    
+    <!-- .proto -> FDS -> CodeGenSet -> C# -> CodeGenSet -->
+    <None Update="AOT/Schemas/**/*.proto" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="AOT/Schemas/**/*.json" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+    <None Update="AOT/Schemas/**/*.pjson" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+
+    <Compile Remove="AOT/Schemas/**/*.cs" />
+    <None Include="AOT/Schemas/**/*.cs" CopyToOutputDirectory="PreserveNewest" DependentUpon="%(Filename).proto" />
+    <!--<Compile Include="AOT\Schemas\Everything.cs" />-->
   </ItemGroup>
 </Project>

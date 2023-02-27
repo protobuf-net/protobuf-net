@@ -9,6 +9,8 @@
         <!--<PackageVersion Include="FSharp.Core" Version="7.0.0" />-->
 
         <PackageVersion Include="Google.Protobuf" Version="3.22.0" />
+        <PackageVersion Include="Grpc.AspNetCore" Version="2.51.0" />
+        <PackageVersion Include="Grpc.Core.Api" Version="2.51.0" />
         <PackageVersion Include="Grpc.Net.Client" Version="2.51.0" />
 
         <PackageVersion Include="Iesi.Collections" Version="4.0.5" />
@@ -30,8 +32,10 @@
         <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
 
         <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
+        <PackageVersion Include="protobuf-net" Version="3.2.0" />
         <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.0" />
-        <PackageVersion Include="protobuf-net.Grpc" Version="1.0.21" />
+        <PackageVersion Include="protobuf-net.Core" Version="3.2.0" />
+        <PackageVersion Include="protobuf-net.Grpc" Version="1.1.1" />
         <PackageVersion Include="protobuf-net.Grpc.Reflection" Version="1.1.1" />
 
         <PackageVersion Include="System.CodeDom" Version="7.0.0" />

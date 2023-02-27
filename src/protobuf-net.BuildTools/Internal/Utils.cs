@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -42,31 +43,42 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal const string ProtoBufNamespace = "ProtoBuf";
 
-        internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
+        internal static bool InGenericCollectionsNamespace(this ISymbol symbol)
+            => InNamespace(symbol, "System", "Collections", "Generic");
+
+        internal static bool InThreadingNamespace(this ISymbol symbol)
+            => InNamespace(symbol, "System", "Threading");
+
+        internal static bool InThreadingTasksNamespace(this ISymbol symbol)
+            => InNamespace(symbol, "System", "Threading", "Tasks");
+
+        internal static bool InProtoBufNamespace(this ISymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
+        internal static bool InProtoBufGrpcNamespace(this ISymbol symbol)
+            => InNamespace(symbol, ProtoBufNamespace, "Grpc");
 
-        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
-        {
-            var cs = symbol.ContainingNamespace;
-            return cs.Name == ns0 && cs.ContainingNamespace.IsGlobalNamespace;
-        }
-
-        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1)
+        internal static bool InNamespace(this ISymbol symbol, string ns0)
         {
             var ns = symbol.ContainingNamespace;
-            if (ns.Name != ns1) return false;
-            ns = ns.ContainingNamespace;
-            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+            return ns?.Name == ns0 && ns.ContainingNamespace?.IsGlobalNamespace == true;
         }
 
-        internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0, string ns1, string ns2)
+        internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1)
         {
             var ns = symbol.ContainingNamespace;
-            if (ns.Name != ns2) return false;
+            if (ns is null || ns.Name != ns1) return false;
             ns = ns.ContainingNamespace;
-            if (ns.Name != ns1) return false;
+            return ns?.Name == ns0 && ns.ContainingNamespace?.IsGlobalNamespace == true;
+        }
+
+        internal static bool InNamespace(this ISymbol symbol, string ns0, string ns1, string ns2)
+        {
+            var ns = symbol.ContainingNamespace;
+            if (ns is null || ns.Name != ns2) return false;
             ns = ns.ContainingNamespace;
-            return ns.Name == ns0 && ns.ContainingNamespace.IsGlobalNamespace;
+            if (ns is null ||  ns.Name != ns1) return false;
+            ns = ns.ContainingNamespace;
+            return ns?.Name == ns0 && ns.ContainingNamespace?.IsGlobalNamespace == true;
         }
 
         internal static Location? FirstBlame<T>(this IEnumerable<T>? source) where T : IBlame
@@ -115,6 +127,42 @@ namespace ProtoBuf.BuildTools.Internal
             value = default;
             return false;
         }
+
+        internal static bool TryGetString(this TypedConstant constant, out string value)
+        {
+            if (constant.Kind == TypedConstantKind.Primitive && constant.Value is string s)
+            {
+                value = s;
+                return true;
+            }
+            value = default!;
+            return false;
+        }
+
+        internal static bool TryGetInt32(this TypedConstant constant, out int value)
+        {
+            if (constant.Kind is TypedConstantKind.Primitive or TypedConstantKind.Enum && constant.Value is int val)
+            {
+                value = val;
+                return true;
+            }
+            
+            value = default;
+            return false;
+        }
+
+        internal static bool TryGetBoolean(this TypedConstant constant, out bool value)
+        {
+            if (constant.Kind is TypedConstantKind.Primitive or TypedConstantKind.Enum && constant.Value is bool val)
+            {
+                value = val;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
         internal static bool TryGetStringByName(this AttributeData attributeData, string name, out string value)
         {
             if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is string s)
@@ -128,7 +176,7 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static bool TryGetInt32ByName(this AttributeData attributeData, string name, out int value)
         {
-            if (TryGetByName(attributeData, name, out var raw) && raw.Kind == TypedConstantKind.Primitive && raw.Value is int i)
+            if (TryGetByName(attributeData, name, out var raw) && raw.Kind is TypedConstantKind.Primitive or TypedConstantKind.Enum && raw.Value is int i)
             {
                 value = i;
                 return true;
@@ -191,5 +239,81 @@ namespace ProtoBuf.BuildTools.Internal
             }
             return null;
         }
+        
+        internal static string GetFullyQualifiedPrefix(this ISymbol type, bool trimFinal = false)
+        {
+            static bool IsAnticipated(SymbolKind kind)
+                => kind == SymbolKind.Namespace || kind == SymbolKind.NamedType;
+
+            static string GetToken(SymbolKind kind) => kind == SymbolKind.Namespace ? "." : "+";
+
+            var symbol = type?.ContainingSymbol;
+
+            var stack = new Stack<(string Name, string Token)>();
+            int len = 0;
+            while (symbol is not null && IsAnticipated(symbol.Kind))
+            {
+                if (!string.IsNullOrWhiteSpace(symbol.Name))
+                {
+                    stack.Push((symbol.Name, GetToken(symbol.Kind)));
+                }
+
+                len += symbol.Name.Length + 1;
+                symbol = symbol.ContainingSymbol;
+            }
+
+            string result;
+            switch (stack.Count)
+            {
+                case 0:
+                    result = "";
+                    break;
+                case 1:
+                    var tmp = stack.Pop();
+                    result = trimFinal ? tmp.Name : (tmp.Name + tmp.Token);
+                    break;
+                default:
+                    var sb = new StringBuilder(len);
+                    while (stack.Count > 0)
+                    {
+                        tmp = stack.Pop();
+                        sb.Append(tmp.Name);
+                        if (!(trimFinal && stack.Count == 0))
+                        {
+                            sb.Append(tmp.Token);
+                        }
+                    }
+
+                    result = sb.ToString();
+                    break;
+            }
+        
+            return result;
+        }
+
+        internal static string GetFullyQualifiedType(this ITypeSymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullyQualifiedType(this IPropertySymbol symbol) => symbol.Type.ToString();
+
+        internal static int GetConstantValue(this IFieldSymbol symbol) => symbol.ConstantValue is int constantInteger ? constantInteger : default;
+
+        internal static string GetLocation(this ISymbol? symbol)
+        {
+            if (symbol is null) return string.Empty;
+            if (symbol.Locations.IsDefaultOrEmpty) return string.Empty;
+            
+            // most of times it will be a single location
+            // so let's assume we dont need to search for another location of symbol
+            // ---
+            // also it can show location not very precisely.
+            // but at least some kind of help in search is useful
+            return symbol.Locations.First().GetLineSpan().ToString();
+        }
+
+        internal static string GetFullTypeName(this IPropertySymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullTypeName(this IFieldSymbol symbol) => symbol.ToString();
+        
+        internal static string GetFullTypeName(this ITypeSymbol symbol) => symbol.ToString();
     }
 }

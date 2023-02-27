@@ -1,0 +1,85 @@
+{
+  "Files": [
+    {
+      "Name": "Services.proto",
+      "Services": [
+        {
+          "Name": "IGreeter",
+          "OriginalName": "Greeter",
+          "Package": "greet",
+          "ServiceMethods": [
+            {
+              "Name": "SayHello",
+              "OriginalName": "SayHello",
+              "RequestType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Name",
+                      "OriginalName": "name",
+                      "DefaultValue": ""
+                    }
+                  ],
+                  "Name": "HelloRequest",
+                  "Package": "greet",
+                  "FullyQualifiedPrefix": "GrpcGreeter."
+                }
+              },
+              "ResponseType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Message",
+                      "OriginalName": "message",
+                      "DefaultValue": ""
+                    }
+                  ],
+                  "Name": "HelloReply",
+                  "Package": "greet",
+                  "FullyQualifiedPrefix": "GrpcGreeter."
+                }
+              }
+            }
+          ],
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        }
+      ],
+      "Messages": [
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Name",
+              "OriginalName": "name",
+              "DefaultValue": ""
+            }
+          ],
+          "Name": "HelloRequest",
+          "Package": "greet",
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        },
+        {
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Message",
+              "OriginalName": "message",
+              "DefaultValue": ""
+            }
+          ],
+          "Name": "HelloReply",
+          "Package": "greet",
+          "FullyQualifiedPrefix": "GrpcGreeter."
+        }
+      ]
+    }
+  ]
+}

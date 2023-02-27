@@ -4,7 +4,7 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <PackAsTool>true</PackAsTool>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">True</GeneratePackageOnBuild>
     <AssemblyName>protogen</AssemblyName>
     <ToolCommandName>protogen</ToolCommandName>
     <PackageId>protobuf-net.Protogen</PackageId>

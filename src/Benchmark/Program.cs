@@ -1,29 +1,30 @@
-﻿using BenchmarkDotNet.Running;
-using System;
-
+﻿// #define RUN
 namespace Benchmark
 {
     public static class Program
     {
         private static void Main(string[] args)
         {
-            //var obj = new SerializeBenchmarks();
-            //obj.Setup();
+#if (DEBUG || RUN) && NEW_API
+            var obj = new Nano.EncodeIntrinsicBenchmarks();
+            for (int offset = 0; offset < 8; offset++)
+            {
+                obj.ByteOffset = offset;
+                for (int length = 1; length <= 5; length++)
+                {
+                    System.Console.WriteLine($"offset: {offset}; length: {length}");
+                    obj.VarintLen = length;
 
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+                    System.Console.WriteLine(obj.Unoptimized());
+                    System.Console.WriteLine(obj.Intrinsic());
+                    System.Console.WriteLine(obj.WithZeroHighBits());
+                    System.Console.WriteLine(obj.WithZeroHighBits2());
+                    System.Console.WriteLine(obj.ShiftedMasks());
+                }
+            }
+#else
+            BenchmarkDotNet.Running.BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+#endif
         }
-
-//        static void Main()
-//        {
-//#if NEW_API
-//            var obj = new SerializeBenchmarks();
-//            obj.Setup();
-//            for(int i = 0; i < 50; i++)
-//            {
-//                Console.WriteLine(i);
-//                obj.FakeBufferWriter_C();
-//            }
-//#endif
-//        }
     }
 }

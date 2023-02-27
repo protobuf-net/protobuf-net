@@ -1,0 +1,24 @@
+{
+  "Files": [
+    {
+      "Name": "Basic.generated.cs",
+      "Messages": [
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "BasicField",
+              "OriginalName": "basic_field"
+            }
+          ],
+          "Name": "BasicMessage",
+          "OriginalName": "basic_message",
+          "Package": "BasicPackage",
+          "FullyQualifiedPrefix": "BasicPackage."
+        }
+      ]
+    }
+  ]
+}

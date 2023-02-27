@@ -1,0 +1,1181 @@
+{
+  "Files": [
+    {
+      "Name": "everything.generated.cs",
+      "Services": [
+        {
+          "Emit": "ServiceContract, ServiceProxy",
+          "Name": "IISearchService",
+          "Package": "AllTheThings",
+          "ServiceMethods": [
+            {
+              "Name": "SearchAsync",
+              "RequestType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
+                  "Emit": "DataContract, DataSerializer",
+                  "Enums": [
+                    {
+                      "Emit": "None",
+                      "OriginalName": "corpus",
+                      "TypeName": "(unknown)",
+                      "Name": "CorpusValue",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    },
+                    {
+                      "Emit": "None",
+                      "EnumValues": [
+                        {
+                          "Name": "Universal",
+                          "OriginalName": "UNIVERSAL"
+                        },
+                        {
+                          "Name": "Web",
+                          "Value": 1,
+                          "OriginalName": "WEB"
+                        },
+                        {
+                          "Name": "Images",
+                          "Value": 2,
+                          "OriginalName": "IMAGES"
+                        },
+                        {
+                          "Name": "Local",
+                          "Value": 3,
+                          "OriginalName": "LOCAL"
+                        },
+                        {
+                          "Name": "News",
+                          "Value": 4,
+                          "OriginalName": "NEWS"
+                        },
+                        {
+                          "Name": "Products",
+                          "Value": 5,
+                          "OriginalName": "PRODUCTS"
+                        },
+                        {
+                          "Name": "Video",
+                          "Value": 6,
+                          "OriginalName": "VIDEO"
+                        }
+                      ],
+                      "TypeName": "int32",
+                      "Name": "Corpus",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Query",
+                      "OriginalName": "query",
+                      "IsRequired": true
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "int32",
+                      "Name": "PageNumber",
+                      "OriginalName": "page_number"
+                    },
+                    {
+                      "FieldNumber": 3,
+                      "TypeName": "int32",
+                      "Name": "ResultPerPage",
+                      "OriginalName": "result_per_page"
+                    }
+                  ],
+                  "Name": "SearchRequest",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ResponseType": {
+                "Representation": "ValueTask",
+                "RawType": {
+                  "Emit": "DataContract, DataSerializer",
+                  "Messages": [
+                    {
+                      "Emit": "DataContract, DataSerializer",
+                      "Fields": [
+                        {
+                          "FieldNumber": 1,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url",
+                          "IsRequired": true
+                        },
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
+                        }
+                      ],
+                      "Name": "Result",
+                      "Package": "AllTheThings.SearchResponse",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Emit": "DataContract, DataSerializer",
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url",
+                          "IsRequired": true
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
+                        }
+                      ],
+                      "Name": "Grouped",
+                      "Package": "AllTheThings.SearchResponse",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Emit": "DataContract, DataSerializer",
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url",
+                          "IsRequired": true
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
+                        }
+                      ],
+                      "Name": "Upper",
+                      "OriginalName": "UPPER",
+                      "Package": "AllTheThings.SearchResponse",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "AllTheThings.SearchResponse+Result",
+                      "Name": "Results",
+                      "OriginalName": "result",
+                      "Repeated": "List"
+                    },
+                    {
+                      "FieldNumber": 10,
+                      "TypeName": "AllTheThings.SearchResponse+Grouped",
+                      "Name": "Groupeds",
+                      "OriginalName": "grouped",
+                      "Repeated": "List"
+                    },
+                    {
+                      "FieldNumber": 12,
+                      "TypeName": "AllTheThings.SearchResponse+Upper",
+                      "Name": "UpperValue",
+                      "OriginalName": "upper"
+                    }
+                  ],
+                  "Name": "SearchResponse",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ParametersDescriptor": "HasCallContext"
+            },
+            {
+              "Name": "OldMethodAsync",
+              "RequestType": {
+                "Representation": "ValueTask",
+                "RawType": {
+                  "Emit": "DataContract, DataSerializer",
+                  "Enums": [
+                    {
+                      "Emit": "None",
+                      "OriginalName": "corpus",
+                      "TypeName": "(unknown)",
+                      "Name": "CorpusValue",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    },
+                    {
+                      "Emit": "None",
+                      "EnumValues": [
+                        {
+                          "Name": "Universal",
+                          "OriginalName": "UNIVERSAL"
+                        },
+                        {
+                          "Name": "Web",
+                          "Value": 1,
+                          "OriginalName": "WEB"
+                        },
+                        {
+                          "Name": "Images",
+                          "Value": 2,
+                          "OriginalName": "IMAGES"
+                        },
+                        {
+                          "Name": "Local",
+                          "Value": 3,
+                          "OriginalName": "LOCAL"
+                        },
+                        {
+                          "Name": "News",
+                          "Value": 4,
+                          "OriginalName": "NEWS"
+                        },
+                        {
+                          "Name": "Products",
+                          "Value": 5,
+                          "OriginalName": "PRODUCTS"
+                        },
+                        {
+                          "Name": "Video",
+                          "Value": 6,
+                          "OriginalName": "VIDEO"
+                        }
+                      ],
+                      "TypeName": "int32",
+                      "Name": "Corpus",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "string",
+                      "Name": "Query",
+                      "OriginalName": "query",
+                      "IsRequired": true
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "int32",
+                      "Name": "PageNumber",
+                      "OriginalName": "page_number"
+                    },
+                    {
+                      "FieldNumber": 3,
+                      "TypeName": "int32",
+                      "Name": "ResultPerPage",
+                      "OriginalName": "result_per_page"
+                    }
+                  ],
+                  "Name": "SearchRequest",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ResponseType": {
+                "Representation": "AsyncEnumerable",
+                "RawType": {
+                  "Emit": "DataContract, DataSerializer",
+                  "Messages": [
+                    {
+                      "Emit": "DataContract, DataSerializer",
+                      "Fields": [
+                        {
+                          "FieldNumber": 1,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url",
+                          "IsRequired": true
+                        },
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
+                        }
+                      ],
+                      "Name": "Result",
+                      "Package": "AllTheThings.SearchResponse",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Emit": "DataContract, DataSerializer",
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url",
+                          "IsRequired": true
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
+                        }
+                      ],
+                      "Name": "Grouped",
+                      "Package": "AllTheThings.SearchResponse",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    },
+                    {
+                      "Emit": "DataContract, DataSerializer",
+                      "Fields": [
+                        {
+                          "FieldNumber": 2,
+                          "TypeName": "string",
+                          "Name": "Url",
+                          "OriginalName": "url",
+                          "IsRequired": true
+                        },
+                        {
+                          "FieldNumber": 3,
+                          "TypeName": "string",
+                          "Name": "Title",
+                          "OriginalName": "title"
+                        },
+                        {
+                          "FieldNumber": 4,
+                          "TypeName": "string",
+                          "Name": "Snippets",
+                          "OriginalName": "snippets",
+                          "Repeated": "List"
+                        }
+                      ],
+                      "Name": "Upper",
+                      "OriginalName": "UPPER",
+                      "Package": "AllTheThings.SearchResponse",
+                      "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+                    }
+                  ],
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "AllTheThings.SearchResponse+Result",
+                      "Name": "Results",
+                      "OriginalName": "result",
+                      "Repeated": "List"
+                    },
+                    {
+                      "FieldNumber": 10,
+                      "TypeName": "AllTheThings.SearchResponse+Grouped",
+                      "Name": "Groupeds",
+                      "OriginalName": "grouped",
+                      "Repeated": "List"
+                    },
+                    {
+                      "FieldNumber": 12,
+                      "TypeName": "AllTheThings.SearchResponse+Upper",
+                      "Name": "UpperValue",
+                      "OriginalName": "upper"
+                    }
+                  ],
+                  "Name": "SearchResponse",
+                  "Package": "AllTheThings",
+                  "FullyQualifiedPrefix": "AllTheThings."
+                }
+              },
+              "ParametersDescriptor": "HasCallContext"
+            }
+          ],
+          "FullyQualifiedPrefix": "AllTheThings."
+        }
+      ],
+      "Messages": [
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "AllTheThings.TestNetObject",
+              "Name": "Foo",
+              "OriginalName": "foo"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "AllTheThings.TestNetObject",
+              "Name": "barRef"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": ":NetObjectProxy",
+              "Name": "barDyn"
+            }
+          ],
+          "Name": "TestNetObject",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "float",
+              "Name": "A",
+              "OriginalName": "a"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "B",
+              "OriginalName": "b"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "float",
+              "Name": "C",
+              "OriginalName": "c"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "float",
+              "Name": "D",
+              "OriginalName": "d"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "float",
+              "Name": "E",
+              "OriginalName": "e"
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "float",
+              "Name": "F",
+              "OriginalName": "f"
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "bool",
+              "Name": "G",
+              "OriginalName": "g"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "int32",
+              "Name": "requiredWithDefault",
+              "IsRequired": true
+            }
+          ],
+          "Name": "MagicValues",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "FooName",
+              "OriginalName": "foo_name"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "string",
+              "Name": "Name",
+              "OriginalName": "name"
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "bool",
+              "Name": "SubMessage",
+              "OriginalName": "sub_message"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "string",
+              "Name": "Name2",
+              "OriginalName": "name2"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "bool",
+              "Name": "SubMessage2",
+              "OriginalName": "sub_message2"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "string",
+              "Name": "BarName",
+              "OriginalName": "bar_name"
+            }
+          ],
+          "Name": "SampleMessage",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Enums": [
+            {
+              "Emit": "None",
+              "OriginalName": "corpus",
+              "TypeName": "(unknown)",
+              "Name": "CorpusValue",
+              "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+            },
+            {
+              "Emit": "None",
+              "EnumValues": [
+                {
+                  "Name": "Universal",
+                  "OriginalName": "UNIVERSAL"
+                },
+                {
+                  "Name": "Web",
+                  "Value": 1,
+                  "OriginalName": "WEB"
+                },
+                {
+                  "Name": "Images",
+                  "Value": 2,
+                  "OriginalName": "IMAGES"
+                },
+                {
+                  "Name": "Local",
+                  "Value": 3,
+                  "OriginalName": "LOCAL"
+                },
+                {
+                  "Name": "News",
+                  "Value": 4,
+                  "OriginalName": "NEWS"
+                },
+                {
+                  "Name": "Products",
+                  "Value": 5,
+                  "OriginalName": "PRODUCTS"
+                },
+                {
+                  "Name": "Video",
+                  "Value": 6,
+                  "OriginalName": "VIDEO"
+                }
+              ],
+              "TypeName": "int32",
+              "Name": "Corpus",
+              "FullyQualifiedPrefix": "AllTheThings.SearchRequest+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Query",
+              "OriginalName": "query",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "int32",
+              "Name": "PageNumber",
+              "OriginalName": "page_number"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "ResultPerPage",
+              "OriginalName": "result_per_page"
+            }
+          ],
+          "Name": "SearchRequest",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Messages": [
+            {
+              "Emit": "DataContract, DataSerializer",
+              "Fields": [
+                {
+                  "FieldNumber": 1,
+                  "TypeName": "string",
+                  "Name": "Url",
+                  "OriginalName": "url",
+                  "IsRequired": true
+                },
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Title",
+                  "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets",
+                  "Repeated": "List"
+                }
+              ],
+              "Name": "Result",
+              "Package": "AllTheThings.SearchResponse",
+              "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+            },
+            {
+              "Emit": "DataContract, DataSerializer",
+              "Fields": [
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Url",
+                  "OriginalName": "url",
+                  "IsRequired": true
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Title",
+                  "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets",
+                  "Repeated": "List"
+                }
+              ],
+              "Name": "Grouped",
+              "Package": "AllTheThings.SearchResponse",
+              "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+            },
+            {
+              "Emit": "DataContract, DataSerializer",
+              "Fields": [
+                {
+                  "FieldNumber": 2,
+                  "TypeName": "string",
+                  "Name": "Url",
+                  "OriginalName": "url",
+                  "IsRequired": true
+                },
+                {
+                  "FieldNumber": 3,
+                  "TypeName": "string",
+                  "Name": "Title",
+                  "OriginalName": "title"
+                },
+                {
+                  "FieldNumber": 4,
+                  "TypeName": "string",
+                  "Name": "Snippets",
+                  "OriginalName": "snippets",
+                  "Repeated": "List"
+                }
+              ],
+              "Name": "Upper",
+              "OriginalName": "UPPER",
+              "Package": "AllTheThings.SearchResponse",
+              "FullyQualifiedPrefix": "AllTheThings.SearchResponse+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "AllTheThings.SearchResponse+Result",
+              "Name": "Results",
+              "OriginalName": "result",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "AllTheThings.SearchResponse+Grouped",
+              "Name": "Groupeds",
+              "OriginalName": "grouped",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "AllTheThings.SearchResponse+Upper",
+              "Name": "UpperValue",
+              "OriginalName": "upper"
+            }
+          ],
+          "Name": "SearchResponse",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Messages": [
+            {
+              "Emit": "DataContract, DataSerializer",
+              "Messages": [
+                {
+                  "Emit": "DataContract, DataSerializer",
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "int64",
+                      "Name": "Ival",
+                      "OriginalName": "ival",
+                      "IsRequired": true
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "bool",
+                      "Name": "Booly",
+                      "OriginalName": "booly"
+                    }
+                  ],
+                  "Name": "Inner",
+                  "Package": "AllTheThings.Outer+MiddleAA",
+                  "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleAA+"
+                }
+              ],
+              "Name": "MiddleAA",
+              "Package": "AllTheThings.Outer",
+              "FullyQualifiedPrefix": "AllTheThings.Outer+"
+            },
+            {
+              "Emit": "DataContract, DataSerializer",
+              "Messages": [
+                {
+                  "Emit": "DataContract, DataSerializer",
+                  "Fields": [
+                    {
+                      "FieldNumber": 1,
+                      "TypeName": "int32",
+                      "Name": "Ival",
+                      "OriginalName": "ival",
+                      "IsRequired": true
+                    },
+                    {
+                      "FieldNumber": 2,
+                      "TypeName": "bool",
+                      "Name": "Booly",
+                      "OriginalName": "booly"
+                    }
+                  ],
+                  "Name": "Inner",
+                  "Package": "AllTheThings.Outer+MiddleBB",
+                  "FullyQualifiedPrefix": "AllTheThings.Outer+MiddleBB+"
+                }
+              ],
+              "Name": "MiddleBB",
+              "Package": "AllTheThings.Outer",
+              "FullyQualifiedPrefix": "AllTheThings.Outer+"
+            }
+          ],
+          "Fields": [
+            {
+              "FieldNumber": 7,
+              "TypeName": "int32, string",
+              "Name": "MapField1s",
+              "OriginalName": "map_field1",
+              "Repeated": "Dictionary"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "string, AllTheThings.Outer",
+              "Name": "MapField2s",
+              "OriginalName": "map_field2",
+              "Repeated": "Dictionary"
+            }
+          ],
+          "Name": "Outer",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Result",
+              "OriginalName": "result"
+            }
+          ],
+          "Name": "SomeOtherMessage",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "int32",
+              "Name": "Required",
+              "OriginalName": "required",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "int32",
+              "Name": "Optional",
+              "OriginalName": "optional"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Repeateds",
+              "OriginalName": "repeated",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int32",
+              "Name": "Packeds",
+              "OriginalName": "packed",
+              "Repeated": "List"
+            }
+          ],
+          "Name": "FieldRules",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 536870911,
+              "TypeName": "string",
+              "Name": "His",
+              "OriginalName": "hi",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 1,
+              "TypeName": "string",
+              "Name": "Lo",
+              "OriginalName": "lo"
+            }
+          ],
+          "Name": "TagRanges",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Name": "Foo",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Name": "Baz",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "double",
+              "Name": "Double",
+              "OriginalName": "double",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "Float",
+              "OriginalName": "float",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Int32",
+              "OriginalName": "int32",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int64",
+              "Name": "Int64",
+              "OriginalName": "int64",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "uint32",
+              "Name": "Uint32",
+              "OriginalName": "uint32",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "uint64",
+              "Name": "Uint64",
+              "OriginalName": "uint64",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "sint32",
+              "Name": "Sint32",
+              "OriginalName": "sint32",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "sint64",
+              "Name": "Sint64",
+              "OriginalName": "sint64",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "fixed32",
+              "Name": "Fixed32",
+              "OriginalName": "fixed32",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "fixed64",
+              "Name": "Fixed64",
+              "OriginalName": "fixed64",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 11,
+              "TypeName": "sfixed32",
+              "Name": "Sfixed32",
+              "OriginalName": "sfixed32",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "sfixed64",
+              "Name": "Sfixed64",
+              "OriginalName": "sfixed64",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 13,
+              "TypeName": "bool",
+              "Name": "Bool",
+              "OriginalName": "bool",
+              "IsRequired": true
+            },
+            {
+              "FieldNumber": 14,
+              "TypeName": "string",
+              "Name": "String",
+              "OriginalName": "string",
+              "IsRequired": true
+            }
+          ],
+          "Name": "PrimitiveFieldTypes",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "DataContract, DataSerializer",
+          "Fields": [
+            {
+              "FieldNumber": 1,
+              "TypeName": "double",
+              "Name": "Doubles",
+              "OriginalName": "double",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 2,
+              "TypeName": "float",
+              "Name": "Floats",
+              "OriginalName": "float",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 3,
+              "TypeName": "int32",
+              "Name": "Int32s",
+              "OriginalName": "int32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 4,
+              "TypeName": "int64",
+              "Name": "Int64s",
+              "OriginalName": "int64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 5,
+              "TypeName": "uint32",
+              "Name": "Uint32s",
+              "OriginalName": "uint32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 6,
+              "TypeName": "uint64",
+              "Name": "Uint64s",
+              "OriginalName": "uint64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 7,
+              "TypeName": "sint32",
+              "Name": "Sint32s",
+              "OriginalName": "sint32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 8,
+              "TypeName": "sint64",
+              "Name": "Sint64s",
+              "OriginalName": "sint64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 9,
+              "TypeName": "fixed32",
+              "Name": "Fixed32s",
+              "OriginalName": "fixed32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 10,
+              "TypeName": "fixed64",
+              "Name": "Fixed64s",
+              "OriginalName": "fixed64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 11,
+              "TypeName": "sfixed32",
+              "Name": "Sfixed32s",
+              "OriginalName": "sfixed32",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 12,
+              "TypeName": "sfixed64",
+              "Name": "Sfixed64s",
+              "OriginalName": "sfixed64",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 13,
+              "TypeName": "bool",
+              "Name": "Bools",
+              "OriginalName": "bool",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 14,
+              "TypeName": "string",
+              "Name": "Strings",
+              "OriginalName": "string",
+              "Repeated": "List"
+            },
+            {
+              "FieldNumber": 15,
+              "TypeName": "bytes",
+              "Name": "Bytes",
+              "OriginalName": "bytes",
+              "Repeated": "List"
+            }
+          ],
+          "Name": "RepeatedPrimitiveFieldTypes",
+          "Package": "AllTheThings",
+          "FullyQualifiedPrefix": "AllTheThings."
+        }
+      ],
+      "Enums": [
+        {
+          "Emit": "None",
+          "EnumValues": [
+            {
+              "Name": "A"
+            },
+            {
+              "Name": "B",
+              "Value": 1
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "RootEnum",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "None",
+          "EnumValues": [
+            {
+              "Name": "EaaUnknown",
+              "OriginalName": "EAA_UNKNOWN"
+            },
+            {
+              "Name": "EaaStarted",
+              "Value": 1,
+              "OriginalName": "EAA_STARTED"
+            },
+            {
+              "Name": "EaaRunning",
+              "Value": 1,
+              "OriginalName": "EAA_RUNNING"
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "EnumAllowingAlias",
+          "FullyQualifiedPrefix": "AllTheThings."
+        },
+        {
+          "Emit": "None",
+          "EnumValues": [
+            {
+              "Name": "EnaaUnknown",
+              "OriginalName": "ENAA_UNKNOWN"
+            },
+            {
+              "Name": "EnaaStarted",
+              "Value": 1,
+              "OriginalName": "ENAA_STARTED"
+            }
+          ],
+          "TypeName": "int32",
+          "Name": "EnumNotAllowingAlias",
+          "FullyQualifiedPrefix": "AllTheThings."
+        }
+      ]
+    }
+  ]
+}

@@ -227,6 +227,8 @@ namespace ProtoBuf
     {
         /// <summary>
         /// Creates a new ProtoMemberAttribute instance.
+        ///
+        /// instance.
         /// </summary>
         /// <param name="tag">Specifies the unique tag used to identify this member within the type.</param>
         /// <param name="memberName">Specifies the member to be serialized.</param>
