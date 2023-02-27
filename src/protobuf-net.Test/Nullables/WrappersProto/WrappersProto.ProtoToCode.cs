@@ -8,7 +8,7 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
     public class WrappersProtoToCode : NullablesTestsBase
     {
         private const string NullWrappedValueAttributeValue = "[global::ProtoBuf.NullWrappedValue]";
-        private const string CompatibilityLevel300AttributeValue = "[global::ProtoBuf.CompatibilityLevel(CompatibilityLevel.Level300)]";
+        private const string CompatibilityLevel300AttributeValue = "[global::ProtoBuf.CompatibilityLevel(global::ProtoBuf.CompatibilityLevel.Level300)]";
         
         public WrappersProtoToCode(ITestOutputHelper log) : base(log)
         {
