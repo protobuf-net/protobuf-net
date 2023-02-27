@@ -491,21 +491,17 @@ namespace ProtoBuf.Reflection
             void WriteNullabilityTypeAttribute()
             {
                 if (!nullabilityType.HasValue) return;
-                
-                tw = ctx.Write("[");
                 switch (nullabilityType)
                 {
-                    case NullabilityType.NullWrappedValue: tw.Write("global::ProtoBuf.NullWrappedValue"); break;
-                    case NullabilityType.NullWrappedValueAsGroup: tw.Write("global::ProtoBuf.NullWrappedValue(AsGroup = true)"); break;
+                    case NullabilityType.NullWrappedValue: ctx.WriteLine("[global::ProtoBuf.NullWrappedValue]"); break;
+                    case NullabilityType.NullWrappedValueAsGroup: ctx.WriteLine("[global::ProtoBuf.NullWrappedValue(AsGroup = true)]"); break;
                 }
-                tw.WriteLine("]");
             }
-            
+
             void WriteCompatibilityLevelAttribute()
             {
                 if (!compatibilityLevel.HasValue) return;
-                tw = ctx.Write("[" + $"global::ProtoBuf.CompatibilityLevel(CompatibilityLevel.{compatibilityLevel.Value})" + "]");
-                tw.WriteLine();
+                ctx.WriteLine($"[global::ProtoBuf.CompatibilityLevel(global::ProtoBuf.CompatibilityLevel.{compatibilityLevel.Value})]");
             }
             
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
