@@ -26,4 +26,10 @@
   <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
+      <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

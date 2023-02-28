@@ -456,7 +456,9 @@ namespace ProtoBuf.BuildTools.Internal
             if (constructorArg.IsNull) return true;
 
             // we are interested in the only single argument of [DefaultValue] attribute's constructor
-            return !string.Equals(constructorArg.Value?.ToString(), memberDefaultValue);
+            
+            // TODO do the comparison properly here - it fails for nearly everything!
+            return !string.Equals(constructorArg.Value?.ToString(), memberDefaultValue, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
@@ -478,15 +480,19 @@ namespace ProtoBuf.BuildTools.Internal
             }
             if (checkType.TypeKind == TypeKind.Enum)
             {
-                return GetDefaultValueAttributeData(member) is null;
+                return !(HasDefaultAttributeOrShouldSerializeMethod() || HasShouldSerializeMethod());
             }
+            
             if (member.IsRequired)
             {
                 return false;
             }
 
-            return GetDefaultValueAttributeData(member) is null;
-
+            return !(HasDefaultAttributeOrShouldSerializeMethod() || HasShouldSerializeMethod());
+            
+            bool HasDefaultAttributeOrShouldSerializeMethod() => GetDefaultValueAttributeData(member) is not null;
+            bool HasShouldSerializeMethod() => member.Symbol.ContainingType.GetMembers().OfType<IMethodSymbol>()
+                .FirstOrDefault(method => method.Name == "ShouldSerialize" + member.Name && method.ReturnType.SpecialType == SpecialType.System_Boolean) != null;
         }
 
         AttributeData? GetDefaultValueAttributeData(Member member) => member.Symbol.GetAttributes()

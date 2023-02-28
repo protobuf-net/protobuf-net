@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CodeFixes;
+﻿using System;
+using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
@@ -12,22 +13,22 @@ using ProtoBuf.BuildTools.Analyzers;
 
 namespace BuildToolsUnitTests.CodeFixes.Abstractions
 {
-    public abstract class CodeFixProviderTestsBase
+    public abstract class CodeFixProviderTestsBase<TCodeFixProvider>
+        where TCodeFixProvider : CodeFixProvider, new()
     {
         static TargetFrameworkAttribute CurrentRunningAssemblyTargetFramework 
             => (TargetFrameworkAttribute)Assembly.GetExecutingAssembly()
                 .GetCustomAttributes(typeof(TargetFrameworkAttribute), false)
                 .Single();
 
-        protected async Task RunCodeFixTestAsync<TDiagnosticAnalyzer, TCodeFixProvider>(
+        protected async Task RunCodeFixTestAsync<TDiagnosticAnalyzer>(
             string sourceCode,
             string expectedCode,
             DiagnosticResult? diagnosticResult = null,
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
-                where TCodeFixProvider : CodeFixProvider, new()
         {
-            var codeFixTest = BuildCSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider>(sourceCode, expectedCode);
+            var codeFixTest = BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode);
 
             if (diagnosticResult is not null)
             {
@@ -42,9 +43,8 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             await codeFixTest.RunAsync();
         }
 
-        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider>(string sourceCode, string expectedCode)
+        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(string sourceCode, string expectedCode)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
-            where TCodeFixProvider : CodeFixProvider, new()
         {
             var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier>
             {

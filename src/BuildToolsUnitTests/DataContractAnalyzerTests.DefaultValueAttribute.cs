@@ -88,8 +88,8 @@ using System.ComponentModel;
 
 [ProtoContract]
 public class Foo {
-    [ProtoMember(1), DefaultValue(true)] public bool FieldDefaultTrue = false;
-    [ProtoMember(2), DefaultValue(true)] public bool PropertyDefaultTrue {get;set;} = true;
+    [ProtoMember(1), DefaultValue(false)] public bool FieldDefaultTrue = true;
+    [ProtoMember(2), DefaultValue(false)] public bool PropertyDefaultTrue {get;set;} = true;
     [ProtoMember(3), DefaultValue(DayOfWeek.Tuesday)] public DayOfWeek FieldDefaultMonday = DayOfWeek.Monday;
     [ProtoMember(4), DefaultValue(DayOfWeek.Tuesday)] public DayOfWeek PropertyDefaultMonday {get;set;} = DayOfWeek.Monday;
     [ProtoMember(5), DefaultValue('Y')] public char TestChar {get;set;} = 'X';
@@ -103,7 +103,7 @@ public class Foo {
     [ProtoMember(13), DefaultValue(675849302UL)] public ulong TestUInt64 {get;set;} = 6758493021UL;
     // decimal's default is not a const expression     [ProtoMember(14), DefaultValue(!build time error!)] public decimal TestDecimal {get;set;} = 1.618033m;
     [ProtoMember(15), DefaultValue(2.6f)] public float TestSingle {get;set;} = 2.71828f;
-    [ProtoMember(16), DefaultVlaue(3.1400)] public double TestDouble {get;set;} = 3.14159265;
+    [ProtoMember(16), DefaultValue(3.1400)] public double TestDouble {get;set;} = 3.14159265;
     [ProtoMember(17), DefaultValue(2)] public nint TestIntPtr {get;set;} = 1;
     [ProtoMember(18), DefaultValue(1)] public nuint TestUIntPtr {get;set;} = 2;
 }
@@ -111,24 +111,24 @@ public class Foo {
             var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldUpdateDefault).ToList();
             Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
             Assert.Collection(diags.Select(diag => diag.GetMessage(CultureInfo.InvariantCulture)),
-                //msg => Assert.Equal("Field 'FieldDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'PropertyDefaultTrue' should use [DefaultValue(true)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'FieldDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'PropertyDefaultMonday' should use [DefaultValue(DayOfWeek.Monday)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestChar' should use [DefaultValue('X')] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestSByte' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestByte' should use [DefaultValue(0x2)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                msg => Assert.Equal("Field 'TestInt32' should update [DefaultValue(-5)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg)
-                //msg => Assert.Equal("Field 'TestUInt16' should use [DefaultValue(4)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestInt32' should use [DefaultValue(-5)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestUInt32' should use [DefaultValue(6u)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestInt64' should use [DefaultValue(1234567890123456789L)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestUInt64' should use [DefaultValue(6758493021UL)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestSingle' should use [DefaultValue(2.71828f)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestDouble' should use [DefaultValue(3.14159265)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestIntPtr' should use [DefaultValue(1)] to ensure its value is sent since it's initialized to a non-default value.", msg),
-                //msg => Assert.Equal("Field 'TestUIntPtr' should use [DefaultValue(2)] to ensure its value is sent since it's initialized to a non-default value.", msg));
-                );
+                msg => Assert.Equal("Field 'FieldDefaultTrue' should update [DefaultValue(true)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'PropertyDefaultTrue' should update [DefaultValue(true)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'FieldDefaultMonday' should update [DefaultValue(DayOfWeek.Monday)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'PropertyDefaultMonday' should update [DefaultValue(DayOfWeek.Monday)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestChar' should update [DefaultValue('X')] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestSByte' should update [DefaultValue(1)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestByte' should update [DefaultValue(0x2)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestInt16' should update [DefaultValue(0b0000_0011)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestUInt16' should update [DefaultValue(4)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestInt32' should update [DefaultValue(-5)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestUInt32' should update [DefaultValue(6u)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestInt64' should update [DefaultValue(1234567890123456789L)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestUInt64' should update [DefaultValue(6758493021UL)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestSingle' should update [DefaultValue(2.71828f)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestDouble' should update [DefaultValue(3.14159265)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestIntPtr' should update [DefaultValue(1)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg),
+                msg => Assert.Equal("Field 'TestUIntPtr' should update [DefaultValue(2)] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.", msg)
+            );
         }
 
         [Fact]

@@ -3,14 +3,12 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.CodeFixes;
-using System;
-using System.ComponentModel;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace BuildToolsUnitTests.CodeFixes
 {
-    public class ShouldDeclareDefaultCodeFixProviderTests : CodeFixProviderTestsBase
+    public class ShouldDeclareDefaultCodeFixProviderTests : CodeFixProviderTestsBase<ShouldDeclareDefaultCodeFixProvider>
     {
         private readonly DiagnosticResult[] _standardExpectedDiagnostics = new[] {
             new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel)
@@ -43,7 +41,7 @@ public class Foo
 }}
 ";
 
-            await RunCodeFixTestAsync<DataContractAnalyzer, ShouldDeclareDefaultCodeFixProvider>(
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
                 sourceCode,
                 expectedCode,
                 diagnosticResult: null, // no diagnostic expected!
@@ -90,7 +88,7 @@ public class CustomAttribute : Attribute {{ }}";
                 8, 6, 8, 20,
                 propertyDefaultValue);
 
-            await RunCodeFixTestAsync<DataContractAnalyzer, ShouldDeclareDefaultCodeFixProvider>(
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
                 sourceCode,
                 expectedCode,
                 diagnosticResult,
@@ -132,7 +130,7 @@ public class Foo
                 9, 6, 9, 20,
                 propertyDefaultValue);
 
-            await RunCodeFixTestAsync<DataContractAnalyzer, ShouldDeclareDefaultCodeFixProvider>(
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
                 sourceCode,
                 expectedCode,
                 diagnosticResult,
@@ -187,7 +185,7 @@ public class Foo
                 8, 6, 8, 20,
                 propertyDefaultValue);
 
-            await RunCodeFixTestAsync<DataContractAnalyzer, ShouldDeclareDefaultCodeFixProvider>(
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
                 sourceCode, 
                 expectedCode, 
                 diagnosticResult,

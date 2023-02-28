@@ -21,7 +21,7 @@ namespace ProtoBuf.CodeFixes
 
         public override Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            throw new System.NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }
