@@ -14,7 +14,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
-- fix BuildTools.Legacy - should have been targeting build SDK 3.3.1
+- fix SDKs used by BuildTools[.Legacy]
 
 ## 3.2.8
 
