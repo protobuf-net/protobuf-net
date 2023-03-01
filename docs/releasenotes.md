@@ -12,7 +12,11 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## pending
+## unreleased
+
+- fix SDKs used by BuildTools[.Legacy]
+
+## 3.2.8
 
 - add support for deserializing into uninitialized `IReadOnlyDictionary<TKey, TValue>` (#1022 by ladeak)
 - fix missing namespace in `[CompatibilityLevel]` in code-gen (#1026)

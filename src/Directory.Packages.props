@@ -18,9 +18,9 @@
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.1" PrivateAssets="all" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
         <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" />
         <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
 
         <PackageVersion Include="Nerdbank.GitVersioning" Version="3.5.119" PrivateAssets="All" />
@@ -30,7 +30,7 @@
         <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
 
         <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
-        <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.0" />
+        <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.8" />
         <PackageVersion Include="protobuf-net.Grpc" Version="1.0.21" />
         <PackageVersion Include="protobuf-net.Grpc.Reflection" Version="1.1.1" />
 
