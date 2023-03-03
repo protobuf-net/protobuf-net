@@ -39,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ensure any changes are also reflected in protobuf-net.BuildTools.Legacy -->
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/any.proto" Link="google/protobuf/any.proto" />
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/api.proto" Link="google/protobuf/api.proto" />
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/descriptor.proto" Link="google/protobuf/descriptor.proto" />
