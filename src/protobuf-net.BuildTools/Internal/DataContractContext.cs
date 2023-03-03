@@ -12,6 +12,8 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using ProtoBuf.Internal;
+using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -265,7 +267,7 @@ namespace ProtoBuf.BuildTools.Internal
                                             location: Utils.PickLocation(ref context, member.Blame),
                                             messageArgs: new object[] { member.MemberName, defaultValue! },
                                             additionalLocations: null,
-                                            properties: Utils.DiagnosticPropertiesBuilder.Create()
+                                            properties: DiagnosticPropertiesBuilder.Create()
                                                             .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue!)
                                                             .Build()
                                         ));
@@ -277,7 +279,7 @@ namespace ProtoBuf.BuildTools.Internal
                                             location: Utils.PickLocation(ref context, member.Blame),
                                             messageArgs: new object[] { member.MemberName, defaultValue! },
                                             additionalLocations: null,
-                                            properties: Utils.DiagnosticPropertiesBuilder.Create()
+                                            properties: DiagnosticPropertiesBuilder.Create()
                                                             .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue!)
                                                             .Build()
                                         ));
@@ -447,18 +449,18 @@ namespace ProtoBuf.BuildTools.Internal
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
-        private bool ShouldUpdateDefaultValueAttribute(Member member, string memberDefaultValue)
+        private bool ShouldUpdateDefaultValueAttribute(Member member, string memberDefaultValueRawExpression)
         {
             var defaultValueAttrData = GetDefaultValueAttributeData(member);
             if (defaultValueAttrData is null) return false;
 
+            // we are interested in the only single argument of [DefaultValue] attribute's constructor
             var constructorArg = defaultValueAttrData.ConstructorArguments.FirstOrDefault();
             if (constructorArg.IsNull) return true;
-
-            // we are interested in the only single argument of [DefaultValue] attribute's constructor
             
-            // TODO do the comparison properly here - it fails for nearly everything!
-            return !string.Equals(constructorArg.Value?.ToString(), memberDefaultValue, StringComparison.InvariantCultureIgnoreCase);
+            return !constructorArg.HasSameValueBySpecialType(
+                memberDefaultValueRawExpression,
+                overrideSpecialType: member.SymbolSpecialType);
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>

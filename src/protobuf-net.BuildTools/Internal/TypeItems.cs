@@ -24,6 +24,21 @@ namespace ProtoBuf.BuildTools.Internal
         public string Name { get; }
         public ISymbol Symbol { get; }
         public bool IsRequired { get; }
+
+        public SpecialType? SymbolSpecialType
+        {
+            get
+            {
+                var memberSymbol = Symbol switch
+                {
+                    IPropertySymbol propSym => propSym.Type,
+                    IFieldSymbol fieldSym => fieldSym.Type,
+                    _ => null
+                };
+
+                return memberSymbol?.SpecialType;
+            }
+        }
     }
 
     internal readonly struct Ignore : IBlame
