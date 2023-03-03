@@ -293,7 +293,7 @@ namespace ProtoBuf.BuildTools.Generators
         private class AdditionalFilesFileSystem : IFileSystem
         {
             public static string NormalizePath(string path)
-                => path?.Replace('/', '\\') ?? "";
+                => path != null ? Path.GetFullPath(path.Replace('/', '\\')) : "";
 
             private readonly Action<string>? _log;
             private readonly ImmutableArray<NormalizedAdditionalText> _schemas;
