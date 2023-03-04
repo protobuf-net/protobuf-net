@@ -343,7 +343,7 @@ namespace ProtoBuf.Reflection
             var typeName = GetTypeName(ctx, field, out var dataFormat, out _, out _, out var isMap);
             bool trackPresence = TrackFieldPresence(ctx, field, oneOfs, out _);
 
-            string defaultValue = GetDefaultValue(ctx, field, typeName);
+            string defaultValue = GetDefaultValue(ctx, field, typeName, out var suffix);
 
             if (isRepeated)
             {
@@ -365,16 +365,16 @@ namespace ProtoBuf.Reflection
             {
                 if (!string.IsNullOrWhiteSpace(defaultValue))
                 {
-                    ctx.WriteLine($"{Escape(name)} = {defaultValue};");
+                    ctx.WriteLine($"{Escape(name)} = {defaultValue}{suffix};");
                 }
             }
         }
 
-        private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName)
+        private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName, out string suffix)
         {
             string defaultValue = null;
             bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
-
+            suffix = "";
             if (isOptional || ctx.EmitRequiredDefaults || obj.type == FieldDescriptorProto.Type.TypeEnum)
             {
                 defaultValue = obj.DefaultValue;
@@ -391,12 +391,7 @@ namespace ProtoBuf.Reflection
                             case "inf": defaultValue = "double.PositiveInfinity"; break;
                             case "-inf": defaultValue = "double.NegativeInfinity"; break;
                             case "nan": defaultValue = "double.NaN"; break;
-                            default:
-                                if (!string.IsNullOrWhiteSpace(defaultValue))
-                                {
-                                    defaultValue += "d";
-                                }
-                                break;
+                            default: suffix = "d"; break;
                         }
                         break;
                     case FieldDescriptorProto.Type.TypeFloat:
@@ -405,35 +400,21 @@ namespace ProtoBuf.Reflection
                             case "inf": defaultValue = "float.PositiveInfinity"; break;
                             case "-inf": defaultValue = "float.NegativeInfinity"; break;
                             case "nan": defaultValue = "float.NaN"; break;
-                            default:
-                                if (!string.IsNullOrWhiteSpace(defaultValue))
-                                {
-                                    defaultValue += "f";
-                                }
-                                break;
+                            default: suffix = "f"; break;
                         }
                         break;
                     case FieldDescriptorProto.Type.TypeSfixed64:
                     case FieldDescriptorProto.Type.TypeSint64:
                     case FieldDescriptorProto.Type.TypeInt64:
-                        if (!string.IsNullOrWhiteSpace(defaultValue))
-                        {
-                            defaultValue += "l";
-                        }
+                        suffix = "l";
                         break;
                     case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeUint64:
-                        if (!string.IsNullOrWhiteSpace(defaultValue))
-                        {
-                            defaultValue += "ul";
-                        }
+                        suffix = "ul";
                         break;
                     case FieldDescriptorProto.Type.TypeFixed32:
                     case FieldDescriptorProto.Type.TypeUint32:
-                        if (!string.IsNullOrWhiteSpace(defaultValue))
-                        {
-                            defaultValue += "u";
-                        }
+                        suffix = "u";
                         break;
                     case FieldDescriptorProto.Type.TypeEnum:
                         var enumType = ctx.TryFind<EnumDescriptorProto>(obj.TypeName);
@@ -498,7 +479,7 @@ namespace ProtoBuf.Reflection
 
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, field, out var dataFormat, out var nullabilityType, out var compatibilityLevel, out var isMap);
-            string defaultValue = GetDefaultValue(ctx, field, typeName);
+            string defaultValue = GetDefaultValue(ctx, field, typeName, out var suffix);
 
             WriteDataFormatAttribute();
             WriteNullabilityTypeAttribute();
@@ -545,9 +526,8 @@ namespace ProtoBuf.Reflection
                     case FieldDescriptorProto.Type.TypeUint64:
                         ctx.WriteLine($"[global::System.ComponentModel.DefaultValue(typeof(ulong), \"{defaultValue}\")]");
                         break;
-
                     default:
-                        ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                        ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue}{suffix})]");
                         break;
                 }
             }
@@ -600,7 +580,7 @@ namespace ProtoBuf.Reflection
             }
             else if (oneOf is object)
             {
-                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : defaultValue;
+                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : (defaultValue + suffix);
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(field.type, field.TypeName);
                 ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)}").WriteLine("{").Indent();
@@ -665,6 +645,7 @@ namespace ProtoBuf.Reflection
                 {
                     tw.Write(" ?? ");
                     tw.Write(defaultValue);
+                    tw.Write(suffix);
                 }
                 else if (!isRef)
                 {
@@ -692,7 +673,7 @@ namespace ProtoBuf.Reflection
             else
             {
                 tw = ctx.Write($"{GetAccess(GetAccess(field))} {typeName}{(IsNullableType(ctx, field, defaultValue, isOptional) ? "?" : "")} {Escape(name)} {{ get; set; }}");
-                if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
+                if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue}{suffix};");
                 tw.WriteLine();
             }
             ctx.WriteLine();
@@ -721,7 +702,7 @@ namespace ProtoBuf.Reflection
             ctx.WriteLine($"{GetAccess(GetAccess(file))} static partial class {Escape(name)}").WriteLine("{").Indent();
         }
         /// <summary>
-        /// Ends an extgensions block
+        /// Ends an extensions block
         /// </summary>
         protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
