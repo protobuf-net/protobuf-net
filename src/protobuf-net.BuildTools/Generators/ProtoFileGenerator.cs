@@ -150,8 +150,15 @@ namespace ProtoBuf.BuildTools.Generators
                             }
                         }
                     }
+
+                    bool includeInOutput = true;
+                    if (userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + "IncludeInOutput", out var optionValue) && bool.TryParse(optionValue, out includeInOutput))
+                    {
+                        // Do nothing here as includeInOutput will be overwritten by .TryParse,
+                        // if a value was successfully read and parsed.
+                    }
                     
-                    if (!set.Add(name))
+                    if (!set.Add(name, includeInOutput))
                     {
                         log?.Invoke($"Failed to add '{name}'; skipping");
                         continue;

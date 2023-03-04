@@ -13,5 +13,6 @@
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CompatLevel" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NullableValueType" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="RepeatedAsList" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="IncludeInOutput" />
     </ItemGroup>
 </Project>
