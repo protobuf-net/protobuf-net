@@ -31,41 +31,55 @@ namespace ProtoBuf
         internal static bool IsSubclassOf(Type type, Type baseClass)
             => type.IsSubclassOf(baseClass);
 
-        public static ProtoTypeCode GetTypeCode(Type type)
+        public static ProtoTypeCode GetTypeCode(Type type, bool resolveNullableValueType = true)
         {
-            TypeCode code = Type.GetTypeCode(type);
-            switch (code)
+            ProtoTypeCode ExtractProtoTypeCode(Type type)
             {
-                case TypeCode.Empty:
-                case TypeCode.Boolean:
-                case TypeCode.Char:
-                case TypeCode.SByte:
-                case TypeCode.Byte:
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-                case TypeCode.Int32:
-                case TypeCode.UInt32:
-                case TypeCode.Int64:
-                case TypeCode.UInt64:
-                case TypeCode.Single:
-                case TypeCode.Double:
-                case TypeCode.Decimal:
-                case TypeCode.DateTime:
-                case TypeCode.String:
-                    return (ProtoTypeCode)code;
-            }
-            if (type == typeof(TimeSpan)) return ProtoTypeCode.TimeSpan;
-            if (type == typeof(Guid)) return ProtoTypeCode.Guid;
-            if (type == typeof(Uri)) return ProtoTypeCode.Uri;
-            if (type == typeof(byte[])) return ProtoTypeCode.ByteArray;
-            if (type == typeof(ArraySegment<byte>)) return ProtoTypeCode.ByteArraySegment;
-            if (type == typeof(Memory<byte>)) return ProtoTypeCode.ByteMemory;
-            if (type == typeof(ReadOnlyMemory<byte>)) return ProtoTypeCode.ByteReadOnlyMemory;
-            if (type == typeof(Type)) return ProtoTypeCode.Type;
+                var code = Type.GetTypeCode(type);
+                switch (code)
+                {
+                    case TypeCode.Empty:
+                    case TypeCode.Boolean:
+                    case TypeCode.Char:
+                    case TypeCode.SByte:
+                    case TypeCode.Byte:
+                    case TypeCode.Int16:
+                    case TypeCode.UInt16:
+                    case TypeCode.Int32:
+                    case TypeCode.UInt32:
+                    case TypeCode.Int64:
+                    case TypeCode.UInt64:
+                    case TypeCode.Single:
+                    case TypeCode.Double:
+                    case TypeCode.Decimal:
+                    case TypeCode.DateTime:
+                    case TypeCode.String:
+                        return (ProtoTypeCode)code;
+                }
+                if (type == typeof(TimeSpan)) return ProtoTypeCode.TimeSpan;
+                if (type == typeof(Guid)) return ProtoTypeCode.Guid;
+                if (type == typeof(Uri)) return ProtoTypeCode.Uri;
+                if (type == typeof(byte[])) return ProtoTypeCode.ByteArray;
+                if (type == typeof(ArraySegment<byte>)) return ProtoTypeCode.ByteArraySegment;
+                if (type == typeof(Memory<byte>)) return ProtoTypeCode.ByteMemory;
+                if (type == typeof(ReadOnlyMemory<byte>)) return ProtoTypeCode.ByteReadOnlyMemory;
+                if (type == typeof(Type)) return ProtoTypeCode.Type;
             if (type == typeof(IntPtr)) return ProtoTypeCode.IntPtr;
             if (type == typeof(UIntPtr)) return ProtoTypeCode.UIntPtr;
 
-            return ProtoTypeCode.Unknown;
+                return ProtoTypeCode.Unknown;
+            }
+
+            var protoTypeCode = ExtractProtoTypeCode(type);
+            if (protoTypeCode == ProtoTypeCode.Unknown && resolveNullableValueType)
+            {
+                var underlyingType = Nullable.GetUnderlyingType(type);
+                if (underlyingType != null)
+                {
+                    return ExtractProtoTypeCode(underlyingType);
+                }
+            }
+            return protoTypeCode;
         }
 
         internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)

@@ -1233,7 +1233,7 @@ namespace ProtoBuf.Meta
             // implicit zero default
             if (model.UseImplicitZeroDefaults)
             {
-                switch (Helpers.GetTypeCode(effectiveType))
+                switch (Helpers.GetTypeCode(effectiveType, false))
                 {
                     case ProtoTypeCode.Boolean: defaultValue = false; break;
                     case ProtoTypeCode.Decimal: defaultValue = (decimal)0; break;
@@ -2390,7 +2390,7 @@ namespace ProtoBuf.Meta
         private static bool CanPack(Type type)
         {
             if (type is null) return false;
-            switch (Helpers.GetTypeCode(type))
+            switch (Helpers.GetTypeCode(type, false))
             {
                 case ProtoTypeCode.Boolean:
                 case ProtoTypeCode.Byte:
