@@ -391,7 +391,12 @@ namespace ProtoBuf.Reflection
                             case "inf": defaultValue = "double.PositiveInfinity"; break;
                             case "-inf": defaultValue = "double.NegativeInfinity"; break;
                             case "nan": defaultValue = "double.NaN"; break;
-                            default: defaultValue += "d"; break;
+                            default:
+                                if (!string.IsNullOrWhiteSpace(defaultValue))
+                                {
+                                    defaultValue += "d";
+                                }
+                                break;
                         }
                         break;
                     case FieldDescriptorProto.Type.TypeFloat:
@@ -400,21 +405,35 @@ namespace ProtoBuf.Reflection
                             case "inf": defaultValue = "float.PositiveInfinity"; break;
                             case "-inf": defaultValue = "float.NegativeInfinity"; break;
                             case "nan": defaultValue = "float.NaN"; break;
-                            default: defaultValue += "f"; break;
+                            default:
+                                if (!string.IsNullOrWhiteSpace(defaultValue))
+                                {
+                                    defaultValue += "f";
+                                }
+                                break;
                         }
                         break;
                     case FieldDescriptorProto.Type.TypeSfixed64:
                     case FieldDescriptorProto.Type.TypeSint64:
                     case FieldDescriptorProto.Type.TypeInt64:
-                        defaultValue += "l";
+                        if (!string.IsNullOrWhiteSpace(defaultValue))
+                        {
+                            defaultValue += "l";
+                        }
                         break;
                     case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeUint64:
-                        defaultValue += "ul";
+                        if (!string.IsNullOrWhiteSpace(defaultValue))
+                        {
+                            defaultValue += "ul";
+                        }
                         break;
                     case FieldDescriptorProto.Type.TypeFixed32:
                     case FieldDescriptorProto.Type.TypeUint32:
-                        defaultValue += "u";
+                        if (!string.IsNullOrWhiteSpace(defaultValue))
+                        {
+                            defaultValue += "u";
+                        }
                         break;
                     case FieldDescriptorProto.Type.TypeEnum:
                         var enumType = ctx.TryFind<EnumDescriptorProto>(obj.TypeName);
