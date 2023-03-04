@@ -1,5 +1,4 @@
 ﻿using ProtoBuf.Compiler;
-using ProtoBuf.Internal;
 using System;
 
 namespace ProtoBuf.Internal.Serializers
@@ -11,8 +10,9 @@ namespace ProtoBuf.Internal.Serializers
         private readonly IRuntimeProtoSerializerNode _tail;
         public EnumMemberSerializer(Type enumType)
         {
-            if (!enumType.IsEnum) ThrowHelper.ThrowInvalidOperationException("Expected an enum type; got " + enumType.NormalizeName());
             ExpectedType = enumType ?? throw new ArgumentNullException(nameof(enumType));
+            if (!enumType.IsEnum) ThrowHelper.ThrowInvalidOperationException("Expected an enum type; got " + enumType.NormalizeName());
+            
             _tail = Type.GetTypeCode(enumType) switch
             {
                 TypeCode.SByte => SByteSerializer.Instance,
