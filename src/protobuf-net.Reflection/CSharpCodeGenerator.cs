@@ -379,59 +379,73 @@ namespace ProtoBuf.Reflection
             {
                 defaultValue = obj.DefaultValue;
 
-                if (obj.type == FieldDescriptorProto.Type.TypeString)
+                switch (obj.type)
                 {
-                    defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
+                    case FieldDescriptorProto.Type.TypeString:
+                        defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
                         : ("@\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
-                }
-                else if (obj.type == FieldDescriptorProto.Type.TypeDouble)
-                {
-                    switch (defaultValue)
-                    {
-                        case "inf": defaultValue = "double.PositiveInfinity"; break;
-                        case "-inf": defaultValue = "double.NegativeInfinity"; break;
-                        case "nan": defaultValue = "double.NaN"; break;
-                    }
-                }
-                else if (obj.type == FieldDescriptorProto.Type.TypeFloat)
-                {
-                    switch (defaultValue)
-                    {
-                        case "inf": defaultValue = "float.PositiveInfinity"; break;
-                        case "-inf": defaultValue = "float.NegativeInfinity"; break;
-                        case "nan": defaultValue = "float.NaN"; break;
-                    }
-                }
-                else if (obj.type == FieldDescriptorProto.Type.TypeEnum)
-                {
-                    var enumType = ctx.TryFind<EnumDescriptorProto>(obj.TypeName);
-                    if (enumType != null)
-                    {
-                        EnumValueDescriptorProto found = null;
-                        if (!string.IsNullOrEmpty(defaultValue))
+                        break;
+                    case FieldDescriptorProto.Type.TypeDouble:
+                        switch (defaultValue)
                         {
-                            found = enumType.Values.Find(x => x.Name == defaultValue);
+                            case "inf": defaultValue = "double.PositiveInfinity"; break;
+                            case "-inf": defaultValue = "double.NegativeInfinity"; break;
+                            case "nan": defaultValue = "double.NaN"; break;
+                            default: defaultValue += "d"; break;
                         }
-                        else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2)
+                        break;
+                    case FieldDescriptorProto.Type.TypeFloat:
+                        switch (defaultValue)
                         {
-                            // find the first one; if that is a zero, we don't need it after all
-                            found = enumType.Values.FirstOrDefault();
-                            if (found != null && found.Number == 0)
+                            case "inf": defaultValue = "float.PositiveInfinity"; break;
+                            case "-inf": defaultValue = "float.NegativeInfinity"; break;
+                            case "nan": defaultValue = "float.NaN"; break;
+                            default: defaultValue += "f"; break;
+                        }
+                        break;
+                    case FieldDescriptorProto.Type.TypeSfixed64:
+                    case FieldDescriptorProto.Type.TypeSint64:
+                    case FieldDescriptorProto.Type.TypeInt64:
+                        defaultValue += "l";
+                        break;
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        defaultValue += "ul";
+                        break;
+                    case FieldDescriptorProto.Type.TypeFixed32:
+                    case FieldDescriptorProto.Type.TypeUint32:
+                        defaultValue += "u";
+                        break;
+                    case FieldDescriptorProto.Type.TypeEnum:
+                        var enumType = ctx.TryFind<EnumDescriptorProto>(obj.TypeName);
+                        if (enumType != null)
+                        {
+                            EnumValueDescriptorProto found = null;
+                            if (!string.IsNullOrEmpty(defaultValue))
                             {
-                                if (!isOptional) found = null; // we don't need it after all
+                                found = enumType.Values.Find(x => x.Name == defaultValue);
+                            }
+                            else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2)
+                            {
+                                // find the first one; if that is a zero, we don't need it after all
+                                found = enumType.Values.FirstOrDefault();
+                                if (found != null && found.Number == 0)
+                                {
+                                    if (!isOptional) found = null; // we don't need it after all
+                                }
+                            }
+                            // for proto3 the default is 0, so no need to do anything - GetValueOrDefault() will do it all
+
+                            if (found != null)
+                            {
+                                defaultValue = ctx.NameNormalizer.GetName(found);
+                            }
+                            if (!string.IsNullOrWhiteSpace(defaultValue))
+                            {
+                                defaultValue = typeName + "." + defaultValue;
                             }
                         }
-                        // for proto3 the default is 0, so no need to do anything - GetValueOrDefault() will do it all
-
-                        if (found != null)
-                        {
-                            defaultValue = ctx.NameNormalizer.GetName(found);
-                        }
-                        if (!string.IsNullOrWhiteSpace(defaultValue))
-                        {
-                            defaultValue = typeName + "." + defaultValue;
-                        }
-                    }
+                        break;
                 }
             }
 
