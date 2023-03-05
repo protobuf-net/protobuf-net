@@ -91,7 +91,7 @@ syntax = ""proto3"";
 message Bar {}", new[] { ("IncludeInOutput", "False") }
 )));
             Assert.Empty(diagnostics);
-            Assert.Equal(1, result.GeneratedTrees.Length);
+            Assert.Single(result.GeneratedTrees);
         }
 
         [Fact]
