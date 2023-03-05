@@ -51,7 +51,7 @@ public class Foo
         [Theory]
         [InlineData("int", "-2", "-5")]
         public async Task CodeFixValidate_ShouldUpdateDefault_ClassicExample(
-            string propertyType, string attributeDefaultValue, string propertyDefaultValue)
+            string propertyType, string attributeValue, string propertyValue)
         {
             var sourceCode = $@"
 using ProtoBuf;
@@ -61,8 +61,8 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({attributeDefaultValue})]
-    public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
+    [ProtoMember(1), DefaultValue({attributeValue})]
+    public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
             var expectedCode = $@"
@@ -73,14 +73,14 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({propertyDefaultValue})]
-    public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
+    [ProtoMember(1), DefaultValue({propertyValue})]
+    public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
             var diagnosticResult = PrepareDiagnosticResult(
                 DataContractAnalyzer.ShouldUpdateDefault,
                 9, 6, 9, 20,
-                propertyDefaultValue);
+                propertyValue);
 
             await RunCodeFixTestAsync<DataContractAnalyzer>(
                 sourceCode,
