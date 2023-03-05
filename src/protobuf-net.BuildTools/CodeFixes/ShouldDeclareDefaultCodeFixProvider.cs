@@ -21,6 +21,7 @@ namespace ProtoBuf.CodeFixes
     {
         const string CodeFixTitle = "Add [DefaultValue] attribute";
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DataContractAnalyzer.ShouldDeclareDefault.Id);
+        public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
         /// <summary>
         /// Key of for a <see cref="KeyValuePair{TKey, TValue}"/> of diagnostic properties,

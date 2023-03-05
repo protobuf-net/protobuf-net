@@ -62,7 +62,7 @@ namespace BuildToolsUnitTests
             string type, 
             string value, 
             bool shouldReportDiagnostic = true,
-            string additionalClassCSharpCode = null)
+            string? additionalClassCSharpCode = null)
         {
             var diagnostics = await AnalyzeAsync($@"
                 using ProtoBuf;

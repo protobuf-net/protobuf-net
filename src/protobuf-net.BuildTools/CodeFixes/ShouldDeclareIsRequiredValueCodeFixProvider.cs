@@ -21,6 +21,7 @@ namespace ProtoBuf.CodeFixes
     {
         const string CodeFixTitle = "Set [ProtoMember] attribute as Required";
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DataContractAnalyzer.ShouldDeclareIsRequired.Id);
+        public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
