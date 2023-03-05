@@ -102,9 +102,10 @@ namespace Examples.Issues
         [Fact]
         public  void Execute()
         {
+            var model = RuntimeTypeModel.Create();
             // note these are unrelated networks, so we can use the same field-numbers
-            RuntimeTypeModel.Default[typeof(IRule<Ant>)].AddSubType(1, typeof(AntRule1)).AddSubType(2, typeof(AntRule2));
-            RuntimeTypeModel.Default[typeof(IRule<Cat>)].AddSubType(1, typeof(CatRule1)).AddSubType(2, typeof(CatRule2));
+            model[typeof(IRule<Ant>)].AddSubType(1, typeof(AntRule1)).AddSubType(2, typeof(AntRule2));
+            model[typeof(IRule<Cat>)].AddSubType(1, typeof(CatRule1)).AddSubType(2, typeof(CatRule2));
 
             var antRules = new List<IRule<Ant>>();
             antRules.Add(new AntRule1());
@@ -116,7 +117,7 @@ namespace Examples.Issues
 
             using (var fs = File.Create(@"antRules.bin"))
             {
-                ProtoBuf.Serializer.Serialize(fs, antRules);
+                model.Serialize(fs, antRules);
 
                 fs.Close();
             }
@@ -124,14 +125,14 @@ namespace Examples.Issues
             using (var fs = File.OpenRead(@"antRules.bin"))
             {
                 List<IRule<Ant>> list;
-                list = ProtoBuf.Serializer.Deserialize<List<IRule<Ant>>>(fs);
+                list = model.Deserialize<List<IRule<Ant>>>(fs);
 
                 fs.Close();
             }
 
             using (var fs = File.Create(@"catRules.bin"))
             {
-                ProtoBuf.Serializer.Serialize(fs, catRules);
+                model.Serialize(fs, catRules);
 
                 fs.Close();
             }
@@ -139,7 +140,7 @@ namespace Examples.Issues
             using (var fs = File.OpenRead(@"catRules.bin"))
             {
                 List<IRule<Cat>> list;
-                list = ProtoBuf.Serializer.Deserialize<List<IRule<Cat>>>(fs);
+                list = model.Deserialize<List<IRule<Cat>>>(fs);
 
                 fs.Close();
             }

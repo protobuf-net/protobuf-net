@@ -142,7 +142,7 @@ namespace ProtoBuf.Meta
             Member = member ?? throw new ArgumentNullException(nameof(member));
             ParentType = parentType;
             if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-            
+
             if (defaultValue is not null && (defaultValue.GetType() != memberType))
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
@@ -844,10 +844,22 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_NullWrappedCollectionGroup, value); }
         }
 
-        internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName)
+        /// <see href="https://github.com/protobuf-net/protobuf-net/blob/main/docs/nullwrappers.md"/>
+        internal bool HasExtendedNullSupport() => SupportNull || NullWrappedValueGroup || NullWrappedValue;
+        
+        /// <see href="https://github.com/protobuf-net/protobuf-net/blob/main/docs/nullwrappers.md"/>
+        /// <remarks>NullWrappers are needed **only** for items of collections</remarks>
+        internal bool RequiresExtraLayerInSchema() => ItemType is not null && HasExtendedNullSupport();
+        
+        /// <summary>
+        /// Requires `group` to be placed on original valueMember level
+        /// </summary>
+        internal bool RequiresGroupModifier => SupportNull || NullWrappedValueGroup;
+
+        internal string GetSchemaTypeName(HashSet<Type> callstack, bool applyNetObjectProxy, HashSet<string> imports, out string altName, bool considerWrappersProtoTypes = false)
         {
             Type effectiveType = ItemType ?? MemberType;
-            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, CompatibilityLevel, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, imports, out altName);
+            return model.GetSchemaTypeName(callstack, effectiveType, DataFormat, CompatibilityLevel, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, imports, out altName, considerWrappersProtoTypes);
         }
 
         internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>

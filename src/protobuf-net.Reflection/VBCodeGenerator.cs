@@ -549,7 +549,7 @@ namespace ProtoBuf.Reflection
                             .WriteLine($"Private ReadOnly {fieldName} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})").WriteLine();
                     }
                 }
-                else if (UseArray(field))
+                else if (!ctx.RepeatedAsList && UseArray(field))
                 {
                     if (ctx.Supports(VB11))
                     {
@@ -638,7 +638,7 @@ namespace ProtoBuf.Reflection
                         break;
                 }
 
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}{IsNullableType(ctx, field)}").Indent()
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}{GetNullableSuffix(ctx, field, defaultValue, isOptional)}").Indent()
                     .WriteLine("Get").Indent();
 
                 if (!string.IsNullOrWhiteSpace(defaultValue))
@@ -670,7 +670,7 @@ namespace ProtoBuf.Reflection
             {
                 if (ctx.Supports(VB11))
                 {
-                    tw = ctx.Write($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}{IsNullableType(ctx, field)}");
+                    tw = ctx.Write($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}{GetNullableSuffix(ctx, field, defaultValue, isOptional)}");
                     if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue}");
                     tw.WriteLine();
                 }
@@ -871,9 +871,9 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        private string IsNullableType(GeneratorContext ctx, FieldDescriptorProto field)
+        private string GetNullableSuffix(GeneratorContext ctx, FieldDescriptorProto field, string defaultValue, bool isOptional)
         {
-            if (!ctx.IsEnabled("nullablevaluetype") || !ctx.Supports(VB11))
+            if (!(ctx.IsEnabled("nullablevaluetype") && ctx.Supports(VB11) && string.IsNullOrWhiteSpace(defaultValue) && isOptional))
                 return "";
             switch (field.type)
             {

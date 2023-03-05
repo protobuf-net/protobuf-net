@@ -62,14 +62,14 @@ namespace ProtoBuf.unittest
                 WindowStyle = ProcessWindowStyle.Hidden
             };
             using Process proc = Process.Start(psi);
-            if (proc.WaitForExit(10000))
+            if (proc.WaitForExit(20000))
             {
                 Assert.Equal(exitCode, proc.ExitCode); //, path);
                 if (deleteOnSuccess) try { File.Delete(path); } catch { }
             }
             else
             {
-                proc.Kill();
+                try { proc.Kill(); } catch { }
                 throw new TimeoutException("PEVerify " + path);
             }
 #endif

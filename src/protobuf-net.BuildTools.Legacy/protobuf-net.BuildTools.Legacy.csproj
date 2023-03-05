@@ -6,15 +6,15 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
-    <Description>Analyzer and Generator support for protobuf-net, using SDK 3.3.1 (pre .NET 5)</Description>
+    <Description>Analyzer and Generator support for protobuf-net, using build SDK 3</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
-    <DefineConstants>$(DefineConstants);PLAT_NO_RECORDS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_NO_RECORDS;BUILD_TOOLS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Pack="false" PrivateAssets="all" VersionOverride="3.8.0" />
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
@@ -22,11 +22,45 @@
     <!-- compile what we need from protobuf-net directly; package refs cause pure pain in anaylizers-->
     <Compile Include="../protobuf-net.Core/**/*.cs" Link="protobuf-net.Core" />
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
+    <Compile Include="../protobuf-net.Reflection/**/*.cs" Link="protobuf-net.Reflection" />
+    <Compile Remove="../protobuf-net.Reflection/obj/**/*.cs" />
     
     <!-- cross-reference the analyzer code -->
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
-	<Compile Include="../protobuf-net.BuildTools/CodeFixes/**/*.cs" />
+    <Compile Include="../protobuf-net.BuildTools/Generators/ProtoFileGenerator.cs" Link="ProtoFileGenerator.cs" />
   </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/any.proto" Link="google/protobuf/any.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/api.proto" Link="google/protobuf/api.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/descriptor.proto" Link="google/protobuf/descriptor.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/duration.proto" Link="google/protobuf/duration.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/empty.proto" Link="google/protobuf/empty.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/field_mask.proto" Link="google/protobuf/field_mask.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/source_context.proto" Link="google/protobuf/source_context.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/struct.proto" Link="google/protobuf/struct.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/timestamp.proto" Link="google/protobuf/timestamp.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/type.proto" Link="google/protobuf/type.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/wrappers.proto" Link="google/protobuf/wrappers.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/compiler/plugin.proto" Link="google/protobuf/compiler/plugin.proto" />
+
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/calendar_period.proto" Link="google/type/calendar_period.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/color.proto" Link="google/type/color.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/date.proto" Link="google/type/date.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/datetime.proto" Link="google/type/datetime.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/dayofweek.proto" Link="google/type/dayofweek.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/expr.proto" Link="google/type/expr.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/fraction.proto" Link="google/type/fraction.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/latlng.proto" Link="google/type/latlng.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/money.proto" Link="google/type/money.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/month.proto" Link="google/type/month.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/postal_address.proto" Link="google/type/postal_address.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/quaternion.proto" Link="google/type/quaternion.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/google/type/timeofday.proto" Link="google/type/timeofday.proto" />
+
+        <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/bcl.proto" Link="protobuf-net/bcl.proto" />
+        <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/protogen.proto" Link="protobuf-net/protogen.proto" />
+    </ItemGroup>
 </Project>

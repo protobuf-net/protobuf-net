@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.AspNetCore</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.AspNetCore</AssemblyName>
@@ -12,7 +12,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <PackageReference Include="System.IO.Pipelines" Version="6.0.3" Condition="'$(TargetFramework)'=='netcoreapp3.1'"/>
-    <PackageReference Include="System.IO.Pipelines" Version="7.0.0" Condition="'$(TargetFramework)'!='netcoreapp3.1'"/>
+    <PackageReference Include="System.IO.Pipelines" />
   </ItemGroup>
 </Project>

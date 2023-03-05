@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -205,6 +205,10 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Package", "package");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Bytes", "bytes");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullWrappers", "nullwrappers");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "CompatLevel", "compatlevel");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist");
 
                             void AddOption(string readKey, string writeKey)
                             {

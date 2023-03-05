@@ -289,6 +289,7 @@ namespace ProtoBuf.Schemas
             {
                 var defaultValueAttribute = (DefaultValueAttribute)Attribute.GetCustomAttribute(property, typeof(DefaultValueAttribute));
                 Assert.NotNull(defaultValueAttribute);
+                Assert.Equal(typeof(ulong), defaultValueAttribute.Value.GetType());
                 Assert.Equal(18446744073709551615UL, defaultValueAttribute.Value);
             }
         }

@@ -9,7 +9,7 @@ namespace ProtoBuf
     /// see https://protobuf-net.github.io/protobuf-net/nullwrappers for more information.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
-    internal sealed class NullWrappedValueAttribute : Attribute
+    public sealed class NullWrappedValueAttribute : Attribute
     {
         /// <summary>Indicates that the collection message wrapper shold use group encoding; this is more
         /// efficient to write, but may be hard to consume in cross-platform scenarios; this feature is

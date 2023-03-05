@@ -11,11 +11,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <DefineConstants>$(DefineConstants);BUILD_TOOLS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- build time deps -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Pack="false" PrivateAssets="all" />
 
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="protobuf-net.BuildTools.props" Pack="true" PackagePath="build" />
@@ -38,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ensure any changes are also reflected in protobuf-net.BuildTools.Legacy -->
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/any.proto" Link="google/protobuf/any.proto" />
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/api.proto" Link="google/protobuf/api.proto" />
     <EmbeddedResource Include="../protobuf-net.Reflection/google/protobuf/descriptor.proto" Link="google/protobuf/descriptor.proto" />

@@ -83,7 +83,7 @@ namespace Examples.Dictionary
             };
 
             var clone = Serializer.DeepClone(lookup);
-            
+
             AssertEqual(lookup, clone);
         }
         static void AssertEqual<TKey, TValue>(
@@ -99,7 +99,128 @@ namespace Examples.Dictionary
             }
         }
     }
-    
+
+    public class DictionaryOfIReadOnlyDictionarySerializerTests
+    {
+        [ProtoContract]
+        class ReadOnlyDictionaryData<T>
+        {
+            public ReadOnlyDictionaryData() {}
+
+            public ReadOnlyDictionaryData(Dictionary<int, T> data)
+            {
+                Data = data;
+            }
+
+            [ProtoMember(1)]
+            public IReadOnlyDictionary<int, T> Data { get; }
+        }
+
+        [ProtoContract]
+        class NonEmptyReadOnlyDictionaryData
+        {
+            public NonEmptyReadOnlyDictionaryData()
+            {
+                var temp = new Dictionary<int, string>();
+                temp[2] = "something";
+                Data = temp;
+            }
+
+            public NonEmptyReadOnlyDictionaryData(Dictionary<int, string> data)
+            {
+                Data = data;
+            }
+
+            [ProtoMember(1)]
+            public IReadOnlyDictionary<int, string> Data { get; }
+        }
+
+        [Fact]
+        public void TestNestedDictionaryWithStrings()
+        {
+            var obj = new Dictionary<int, string>();
+            obj[0] = "abc";
+            obj[1] = "def";
+            obj[7] = "abc";
+            var input = new ReadOnlyDictionaryData<string>(obj);
+
+            var clone = Serializer.DeepClone(input);
+            Assert.NotSame(input, clone);
+            AssertEqual(input.Data, clone.Data);
+        }
+
+        [Fact]
+        public void TestNestedDictionaryWithSimpleData()
+        {
+            var obj = new Dictionary<int, SimpleData>();
+            obj[0] = new SimpleData(5);
+            obj[4] = new SimpleData(72);
+            obj[7] = new SimpleData(72);
+            var input = new ReadOnlyDictionaryData<SimpleData>(obj);
+
+            var clone = Serializer.DeepClone(input);
+            Assert.NotSame(input, clone);
+            AssertEqual(input.Data, clone.Data);
+        }
+
+        [Fact]
+        public void RoundtripDictionary()
+        {
+            IReadOnlyDictionary<int, string> lookup = new Dictionary<int, string>
+            {
+                [0] = "abc",
+                [4] = "def",
+                [7] = "abc"
+            };
+
+            var clone = Serializer.DeepClone(lookup);
+
+            AssertEqual(lookup, clone);
+        }
+
+        [Fact]
+        public void TestNonEmptyDictionaryStrings()
+        {
+            var obj = new Dictionary<int, string>();
+            obj[0] = "abc";
+            obj[1] = "def";
+            var input = new NonEmptyReadOnlyDictionaryData(obj);
+
+            var clone = Serializer.DeepClone(input);
+            Assert.NotSame(input, clone);
+            Assert.Equal(input.Data[0], clone.Data[0]);
+            Assert.Equal(input.Data[1], clone.Data[1]);
+            Assert.Equal("something", clone.Data[2]);
+        }
+
+        [Fact]
+        public void TestNonEmptyDictionaryOverwriteStrings()
+        {
+            var obj = new Dictionary<int, string>();
+            obj[0] = "abc";
+            obj[2] = "def";
+            var input = new NonEmptyReadOnlyDictionaryData(obj);
+
+            var clone = Serializer.DeepClone(input);
+            Assert.NotSame(input, clone);
+            Assert.Equal(input.Data[0], clone.Data[0]);
+            Assert.Equal("def", clone.Data[2]);
+        }
+
+        static void AssertEqual<TKey, TValue>(
+            IReadOnlyDictionary<TKey, TValue> expected,
+            IReadOnlyDictionary<TKey, TValue> actual)
+        {
+            Assert.NotSame(expected, actual);
+            Assert.Equal(expected.Count, actual.Count);
+            foreach (var pair in expected)
+            {
+                Assert.True(actual.TryGetValue(pair.Key, out TValue value));
+                Assert.Equal(pair.Value, value);
+            }
+        }
+    }
+
     public class EmptyDictionaryTests
     {
         [Fact]

@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+
+        <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="disabled.proto" />
+        <None Remove="enabled.proto" />
+        <None Remove="vanilla.proto" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="disabled.proto" NullWrappers="false" ListSet="false" RepeatedAsList="false" />
+        <AdditionalFiles Include="enabled.proto" NullWrappers="true" ListSet="true" RepeatedAsList="true" />
+        <AdditionalFiles Include="vanilla.proto" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+
+        <PackageReference Include="protobuf-net.BuildTools">
+            <!-- !!update and uncomment this version!! -->
+            <!--<VersionOverride>3.2.4-g4c40875979</VersionOverride>-->
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+
+        <PackageReference Include="xunit"/>
+        <PackageReference Include="xunit.runner.visualstudio">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    </ItemGroup>
+
+</Project>

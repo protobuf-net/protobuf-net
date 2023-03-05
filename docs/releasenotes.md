@@ -12,7 +12,26 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: protogen support for emitting pre-coded custom serializers
 - future: build-time tooling from code-first (aka "generators")
 
-## pending
+## unreleased
+
+## 3.2.12
+
+- fix bug with default values not including literal suffixes (#1037)
+- fix SDKs used by BuildTools[.Legacy]
+
+## 3.2.8
+
+- add support for deserializing into uninitialized `IReadOnlyDictionary<TKey, TValue>` (#1022 by ladeak)
+- fix missing namespace in `[CompatibilityLevel]` in code-gen (#1026)
+
+## 3.2.0
+
+- implement `[NullWrappedValue]` (compile-time annotation for `ValueMember.SupportNull`, see 3.1.26)
+- add `[NullWrappedValue]` support in schema tools in both directions (#1001 by DeagleGross)
+- allow nullable primitives for optional values (#856 by dxdjgl, #855, #1016)
+- update dependencies
+- drop netcoreapp3.1 (still supported indirectly via netstandard2.1)
+- (build) switch to central package management
 
 ## 3.1.33
 
@@ -22,7 +41,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 - support `Memory<byte>`, `ReadOnlyMemory<byte>` and `ArraySegment<byte>` as `bytes` payloads
 - add reader/writer API for `Span<byte>`/`ReadOnlySpan<byte>`
-- add support for full assembly metadata (bring forward #998 by mihaicodrean
+- add support for full assembly metadata (bring forward #998 by mihaicodrean)
 - update `protoc` and Google reference proto files
 
 ## 3.1.26
