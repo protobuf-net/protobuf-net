@@ -271,15 +271,15 @@ namespace ProtoBuf.BuildTools.Internal
                                                             .Build()
                                         ));
                                     }
-                                    else if (ShouldUpdateDefaultValueAttribute(context, member, memberInitValue))
+                                    else if (ShouldUpdateDefaultValueAttribute(context, member, memberInitValue, out var blame))
                                     {
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldUpdateDefault,
-                                            location: Utils.PickLocation(ref context, member.Blame),
+                                            location: Utils.PickLocation(ref context, blame),
                                             messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueDiagnosticArgKey, memberValueStringRepresentation)
+                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.UpdateValueDiagnosticArgKey, memberValueStringRepresentation)
                                                             .Build()
                                         ));
                                     }
@@ -291,7 +291,7 @@ namespace ProtoBuf.BuildTools.Internal
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldDeclareIsRequired,
                                             location: Utils.PickLocation(ref context, member.Blame),
-                                            messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
+                                            messageArgs: new object[] { member.MemberName },
                                             additionalLocations: null,
                                             properties: null
                                         ));
@@ -398,26 +398,13 @@ namespace ProtoBuf.BuildTools.Internal
                 SpecialType.System_Decimal or _ 
                     => MemberInitValueKind.NonConstantExpression 
             };
-
-            // // Enum calculation
-            // if (checkType.TypeKind == TypeKind.Enum
-            //     && valueNode is MemberAccessExpressionSyntax access
-            //     && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
-            //     && access.Expression.ToString() == checkType.Name)
-            // {
-            //     string fieldName = access.Name.Identifier.ValueText;
-            //     IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
-            //     if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0") 
-            //     {
-            //         // defaultValue = $"{checkType.Name}.{fieldName}";
-            //         return MemberInitValueKind.ConstantExpression;
-            //     }
-            // }
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
-        private bool ShouldUpdateDefaultValueAttribute(SyntaxNodeAnalysisContext context, Member member, object? memberInitValue)
+        private bool ShouldUpdateDefaultValueAttribute(SyntaxNodeAnalysisContext context, Member member, object? memberInitValue, out Location? defaultValueAttributeLocation)
         {
+            defaultValueAttributeLocation = null;
+            
             var defaultValueAttrData = GetDefaultValueAttributeData(member);
             if (defaultValueAttrData is null) return false;
 
@@ -427,7 +414,8 @@ namespace ProtoBuf.BuildTools.Internal
             if (constructorArg.Value is null && memberInitValue is not null) return true;
             if (constructorArg.Value is not null && memberInitValue is null) return true;
 
-            // both of them are not null - lets compare using boxed interpretations of values
+            // both of values are not null - lets compare using boxed interpretations of values
+            defaultValueAttributeLocation = defaultValueAttrData.GetLocation(defaultValueAttrData.AttributeClass);
             return !constructorArg.Value!.Equals(memberInitValue);
         }
 

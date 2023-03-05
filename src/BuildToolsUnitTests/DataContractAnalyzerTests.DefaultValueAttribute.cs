@@ -57,14 +57,21 @@ namespace BuildToolsUnitTests
         [InlineData("decimal", "1.618033m", false)]
         [InlineData("string", "string.Empty", false)]
         [InlineData("string", "\"\"", false)]
-        public async Task ReportsShouldDeclareDefault(string type, string value, bool shouldReportDiagnostic = true)
+        [InlineData("string", "MyConst", false, "const string MyConst = \"hello\"")]
+        public async Task ReportsShouldDeclareDefault(
+            string type, 
+            string value, 
+            bool shouldReportDiagnostic = true,
+            string additionalClassCSharpCode = null)
         {
             var diagnostics = await AnalyzeAsync($@"
                 using ProtoBuf;
-                using System;
+                using System;              
 
                 [ProtoContract]
-                public class Foo {{ 
+                public class Foo {{
+                    {(!string.IsNullOrEmpty(additionalClassCSharpCode) ? additionalClassCSharpCode : string.Empty)}
+ 
                     [ProtoMember(1)] public {type} FieldBar = {value};
                     [ProtoMember(2)] public {type} PropertyBar {{ get; set; }} = {value};
                 }}            

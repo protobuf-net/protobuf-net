@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.CodeAnalysis.CodeFixes;
+﻿using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
@@ -9,7 +8,6 @@ using Microsoft.CodeAnalysis;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.Versioning;
-using ProtoBuf.BuildTools.Analyzers;
 
 namespace BuildToolsUnitTests.CodeFixes.Abstractions
 {

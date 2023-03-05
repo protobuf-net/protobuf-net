@@ -6,7 +6,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.BuildTools.Internal;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
@@ -40,12 +39,11 @@ namespace ProtoBuf.CodeFixes
                 var diagnosticTextSpan = new TextSpan(diagnosticLocationSpan.Start, diagnosticLocationSpan.Length);
 
                 var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-                var protoMemberAttributeSyntax = root.FindNode(diagnosticTextSpan) as AttributeSyntax;
+                var protoMemberAttributeSyntax = root?.FindNode(diagnosticTextSpan) as AttributeSyntax;
                 if (protoMemberAttributeSyntax is null) return;
 
                 if (!TryBuildDiagnosticArguments(diagnostic, out var diagnosticArguments)) return;                
-
-                // Register a code action that will invoke the fix.
+                
                 context.RegisterCodeFix(
                     CodeAction.Create(
                         title: CodeFixTitle,
@@ -77,6 +75,8 @@ namespace ProtoBuf.CodeFixes
             CancellationToken cancellationToken)
         {
             var attributeList = protoMemberAttributeSyntax.Parent as AttributeListSyntax;
+            if (attributeList is null) return document;
+            
             var updatedArgumentList = attributeList.AddAttributes(
                 SyntaxFactory.Attribute(
                     SyntaxFactory.ParseName("DefaultValue"),
@@ -87,6 +87,8 @@ namespace ProtoBuf.CodeFixes
             );
 
             var oldRoot = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+            if (oldRoot is null) return document;
+            
             var newRoot = oldRoot.ReplaceNode(attributeList, updatedArgumentList);
             return document.WithSyntaxRoot(newRoot);
 
@@ -120,7 +122,7 @@ namespace ProtoBuf.CodeFixes
 
         private static bool TryBuildDiagnosticArguments(Diagnostic diagnostic, out DiagnosticArguments diagnosticArguments)
         {
-            if (diagnostic.Properties is null || diagnostic.Properties.Count == 0)
+            if (diagnostic.Properties.Count == 0)
             {
                 diagnosticArguments = default;
                 return false;

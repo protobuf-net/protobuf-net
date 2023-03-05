@@ -8,16 +8,16 @@ using Xunit;
 
 namespace BuildToolsUnitTests.CodeFixes
 {
-    public class ShouldUpdateDefaultCodeFixProviderTests : CodeFixProviderTestsBase<ShouldUpdateDefaultValueCodeFixProvider>
+    public class ShouldDeclareIsRequiredCodeFixProviderTests : CodeFixProviderTestsBase<ShouldDeclareIsRequiredValueCodeFixProvider>
     {
         private readonly DiagnosticResult[] _standardExpectedDiagnostics = new[] {
             new DiagnosticResult(DataContractAnalyzer.MissingCompatibilityLevel)
         };
 
         [Theory]
-        [InlineData("int", "-2")]
-        public async Task CodeFixValidate_ShouldUpdateDefault_NonProtoMemberAttributeExists(
-            string propertyType, string propertyDefaultValue)
+        [InlineData("decimal", "1.6m")]
+        public async Task CodeFixValidate_ShouldDeclareIsRequired_ClassicExample(
+            string propertyType, string propertyValue)
         {
             var sourceCode = $@"
 using ProtoBuf;
@@ -26,75 +26,63 @@ using System;
 [ProtoContract]
 public class Foo
 {{
-    public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
-}}
-";
-
-            var expectedCode = $@"
-using ProtoBuf;
-using System;
-
-[ProtoContract]
-public class Foo
-{{
-    public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
-}}
-";
-
-            await RunCodeFixTestAsync<DataContractAnalyzer>(
-                sourceCode,
-                expectedCode,
-                diagnosticResult: null, // no diagnostic expected!
-                standardExpectedDiagnostics: _standardExpectedDiagnostics);
-        }
-
-        [Theory]
-        [InlineData("bool", "true", "false")]
-        [InlineData("DayOfWeek", "DayOfWeek.Monday", "DayOfWeek.Tuesday")]
-        [InlineData("char", "'x'", "'y'")]
-        [InlineData("sbyte", "1", "2")]
-        [InlineData("byte", "0x2", "0b_0011")]
-        [InlineData("short", "0b0000_0011", "0x5")]
-        [InlineData("ushort", "4", "5")]
-        [InlineData("int", "-2", "-1")]
-        [InlineData("uint", "6u", "5u")]
-        [InlineData("long", "1234567890123456789L", "123")]
-        [InlineData("ulong", "6758493021UL", "124")]
-        [InlineData("float", "2.71828f", "2.1f")]
-        [InlineData("double", "3.14159265", "3.14")]
-        [InlineData("nint", "1", "2")]
-        [InlineData("nuint", "2", "1")]
-        [InlineData("string", "\"hello\"", "\"hello world!\"")]
-        public async Task CodeFixValidate_ShouldUpdateDefault_ClassicExample(
-            string propertyType, string attributeValue, string propertyValue)
-        {
-            var sourceCode = $@"
-using ProtoBuf;
-using System;
-using System.ComponentModel;
-
-[ProtoContract]
-public class Foo
-{{
-    [ProtoMember(1), DefaultValue({attributeValue})]
+    [ProtoMember(1)]
     public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
             var expectedCode = $@"
 using ProtoBuf;
 using System;
-using System.ComponentModel;
 
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({propertyValue})]
+    [ProtoMember(1, IsRequired = true)]
     public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
             var diagnosticResult = PrepareDiagnosticResult(
-                DataContractAnalyzer.ShouldUpdateDefault,
-                9, 22, 9, $"[DefaultValue({attributeValue})]".Length + 22 - 2,
+                DataContractAnalyzer.ShouldDeclareIsRequired,
+                8, 6, 8, 20,
+                propertyValue);
+
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
+                sourceCode,
+                expectedCode,
+                diagnosticResult,
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
+        }
+        
+        [Theory]
+        [InlineData("decimal", "1.6m")]
+        public async Task CodeFixValidate_ShouldDeclareIsRequired_WhenIsRequiredExistsButIsFalse(
+            string propertyType, string propertyValue)
+        {
+            var sourceCode = $@"
+using ProtoBuf;
+using System;
+
+[ProtoContract]
+public class Foo
+{{
+    [ProtoMember(1, IsRequired = false)]
+    public {propertyType} Bar {{ get; set; }} = {propertyValue};
+}}";
+
+            var expectedCode = $@"
+using ProtoBuf;
+using System;
+
+[ProtoContract]
+public class Foo
+{{
+    [ProtoMember(1, IsRequired = true)]
+    public {propertyType} Bar {{ get; set; }} = {propertyValue};
+}}";
+
+            var diagnosticResult = PrepareDiagnosticResult(
+                DataContractAnalyzer.ShouldDeclareIsRequired,
+                8, 6, 8, 40,
                 propertyValue);
 
             await RunCodeFixTestAsync<DataContractAnalyzer>(
