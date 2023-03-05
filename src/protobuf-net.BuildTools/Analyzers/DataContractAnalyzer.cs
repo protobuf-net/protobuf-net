@@ -282,7 +282,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context)
         {
             if (context.ContainingSymbol is not INamedTypeSymbol type) return;
-
+            
             switch (type?.TypeKind)
             {
                 case TypeKind.Class:

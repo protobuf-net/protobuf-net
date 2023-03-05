@@ -36,6 +36,7 @@ namespace ProtoBuf.BuildTools.Internal
                     _ => null
                 };
 
+                if (memberSymbol?.TypeKind == TypeKind.Enum) return SpecialType.System_Enum;
                 return memberSymbol?.SpecialType;
             }
         }

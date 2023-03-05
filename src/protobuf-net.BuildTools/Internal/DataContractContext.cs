@@ -8,12 +8,10 @@ using ProtoBuf.CodeFixes;
 using ProtoBuf.Internal.Models;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using ProtoBuf.Internal;
-using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -251,48 +249,49 @@ namespace ProtoBuf.BuildTools.Internal
                         }
                         else
                         {
-                            var memberDefaultValueState = CalculateMemberDefaultValueState(member, out var defaultValue);
+                            var memberDefaultValueState = CalculateMemberInitialValue(context, member, out var memberInitSyntaxNode, out var memberInitValue);
+                            var memberValueStringRepresentation = memberInitSyntaxNode?.ToString() ?? string.Empty;
+                            
                             switch (memberDefaultValueState)
                             {
-                                case MemberDefaultValueState.NotSet:
+                                case MemberInitValueKind.NotSet:
                                     // no diagnostic
                                     break;
 
-                                case MemberDefaultValueState.ConstantExpression:
-                                    if (string.IsNullOrEmpty(defaultValue)) break;
-                                    if (ShouldDeclareDefault(member))
+                                case MemberInitValueKind.ConstantExpression:
+                                    if (ShouldDeclareDefault(member, memberInitValue))
                                     {
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldDeclareDefault,
                                             location: Utils.PickLocation(ref context, member.Blame),
-                                            messageArgs: new object[] { member.MemberName, defaultValue! },
+                                            messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue!)
+                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, memberValueStringRepresentation)
                                                             .Build()
                                         ));
                                     }
-                                    else if (ShouldUpdateDefaultValueAttribute(member, defaultValue!))
+                                    else if (ShouldUpdateDefaultValueAttribute(context, member, memberInitValue))
                                     {
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldUpdateDefault,
                                             location: Utils.PickLocation(ref context, member.Blame),
-                                            messageArgs: new object[] { member.MemberName, defaultValue! },
+                                            messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueDiagnosticArgKey, defaultValue!)
+                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueDiagnosticArgKey, memberValueStringRepresentation)
                                                             .Build()
                                         ));
                                     }
                                     break;
 
-                                case MemberDefaultValueState.NonConstantExpression:
+                                case MemberInitValueKind.NonConstantExpression:
                                     if (ShouldDeclareIsRequired(member))
                                     {
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldDeclareIsRequired,
                                             location: Utils.PickLocation(ref context, member.Blame),
-                                            messageArgs: new object[] { member.MemberName, defaultValue! },
+                                            messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: null
                                         ));
@@ -330,171 +329,167 @@ namespace ProtoBuf.BuildTools.Internal
             }
         }
 
-        private MemberDefaultValueState CalculateMemberDefaultValueState(Member member, out string? defaultValue)
+        private MemberInitValueKind CalculateMemberInitialValue(
+            SyntaxNodeAnalysisContext context,
+            Member member, 
+            out CSharpSyntaxNode? initialValueSyntaxNode,
+            out object? memberInitialValue)
         {
             var declaration = member.Symbol.DeclaringSyntaxReferences.FirstOrDefault();
             if (declaration is null)
             {
-                defaultValue = null;
-                return MemberDefaultValueState.NotSet;
+                initialValueSyntaxNode = null;
+                memberInitialValue = null;
+                return MemberInitValueKind.NotSet;
             }
 
-            ITypeSymbol? checkType = member.Symbol switch
+            var memberSpecialType = member.SymbolSpecialType;
+            if (memberSpecialType is null)
             {
-                IPropertySymbol propSym => propSym.Type,
-                IFieldSymbol fieldSym => fieldSym.Type,
-                _ => null
-            };
-
-            if (checkType is null)
-            {
-                defaultValue = null;
-                return MemberDefaultValueState.NotSet;
+                initialValueSyntaxNode = null;
+                memberInitialValue = null;
+                return MemberInitValueKind.NotSet;
             }
 
             EqualsValueClauseSyntax? equalsValue = null;
-            SyntaxNode? memberNode = declaration.GetSyntax();
-            if (memberNode != null && (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator)))
+            var memberNode = declaration.GetSyntax();
+            if (memberNode.IsKind(SyntaxKind.PropertyDeclaration) || memberNode.IsKind(SyntaxKind.VariableDeclarator))
             {
                 equalsValue = memberNode.ChildNodes().FirstOrDefault(node => node.IsKind(SyntaxKind.EqualsValueClause)) as EqualsValueClauseSyntax;
             }
 
             if (equalsValue is null)
             {
-                defaultValue = null;
-                return MemberDefaultValueState.NotSet;
+                initialValueSyntaxNode = null;
+                memberInitialValue = null;
+                return MemberInitValueKind.NotSet;
             }
 
-            SyntaxNode? valueNode = equalsValue?.ChildNodes().LastOrDefault();
-
-            // Enum calculation
-            if (checkType.TypeKind == TypeKind.Enum
-                && valueNode is MemberAccessExpressionSyntax access
-                && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
-                && access.Expression.ToString() == checkType.Name)
+            initialValueSyntaxNode = equalsValue?.ChildNodes().LastOrDefault() as CSharpSyntaxNode;
+            if (initialValueSyntaxNode is null)
             {
-                string fieldName = access.Name.Identifier.ValueText;
-                IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
-                if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0")
-                {
-                    defaultValue = $"{checkType.Name}.{fieldName}";
-                    return MemberDefaultValueState.ConstantExpression;
-                }
+                initialValueSyntaxNode = null;
+                memberInitialValue = null;
+                return MemberInitValueKind.NotSet;
+            }
+            
+            // calculating the member initial value using semantic model 
+            var semanticModel = context.SemanticModel;
+            var constantValue = semanticModel.GetConstantValue(initialValueSyntaxNode!);
+            if (!constantValue.HasValue || constantValue.Value is null)
+            {
+                initialValueSyntaxNode = null;
+                memberInitialValue = null;
+                return MemberInitValueKind.NotSet;
             }
 
-            // scalarValue calculation
-            if (IsScalarValueType(checkType.SpecialType))
+            memberInitialValue = constantValue.Value;
+            return memberSpecialType switch
             {
-                return CalculateDefaultValueScalarValues(out defaultValue);
-            }
-
-            defaultValue = equalsValue!.ToString();
-            return MemberDefaultValueState.NonConstantExpression;
-
-            bool IsScalarValueType(SpecialType type) => type switch
-            {
-                SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte or SpecialType.System_Byte
-                or SpecialType.System_Int16 or SpecialType.System_UInt16 or SpecialType.System_Int32 or SpecialType.System_UInt32
-                or SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_Single
-                or SpecialType.System_Double or SpecialType.System_IntPtr or SpecialType.System_UIntPtr => true,
+                SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte
+                or SpecialType.System_Byte or SpecialType.System_Int16 or SpecialType.System_UInt16
+                or SpecialType.System_Int32 or SpecialType.System_UInt32 or SpecialType.System_Int64 
+                or SpecialType.System_UInt64 or SpecialType.System_Single or SpecialType.System_Double 
+                or SpecialType.System_IntPtr or SpecialType.System_UIntPtr 
+                or SpecialType.System_Enum
+                or SpecialType.System_String // we can check some of scenarios - for example '= "hello world"' 
+                    => MemberInitValueKind.ConstantExpression,
                 
-                SpecialType.System_Decimal or _ => false,
+                SpecialType.System_Decimal or _ 
+                    => MemberInitValueKind.NonConstantExpression 
             };
 
-            MemberDefaultValueState CalculateDefaultValueScalarValues(out string? scalarDefaultValue)
-            {
-                SpecialType specialType = checkType!.SpecialType;
-                if (specialType == SpecialType.System_Boolean && valueNode.IsKind(SyntaxKind.TrueLiteralExpression))
-                {
-                    scalarDefaultValue = "true";
-                    return MemberDefaultValueState.ConstantExpression;
-                }
-                else if (specialType == SpecialType.System_Char && valueNode.IsKind(SyntaxKind.CharacterLiteralExpression))
-                {
-                    scalarDefaultValue = valueNode.ToString();
-                    return !_nullCharLiterals.Contains(scalarDefaultValue)
-                        ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
-                }
-                else if (specialType != SpecialType.None
-                    && (valueNode.IsKind(SyntaxKind.NumericLiteralExpression) || valueNode.IsKind(SyntaxKind.UnaryMinusExpression)))
-                {
-                    scalarDefaultValue = valueNode.ToString();
-                    string literalValue = scalarDefaultValue.TrimEnd(_trimmableNumericSuffixes).Replace("_", string.Empty);
-
-                    if (specialType == SpecialType.System_Single || specialType == SpecialType.System_Double)
-                    {
-                        literalValue = literalValue.TrimEnd(_floatNumericSuffixes);
-                        return double.TryParse(literalValue, out double value) && value != 0
-                            ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
-                    }
-                    else if (literalValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || literalValue.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return literalValue.Skip(2).Any(ch => ch != '0')
-                            ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
-                    }
-                    // care: we use decimal here, because it can parse any numeric values,
-                    // however 'decimal' itself is not a type which has the ConstantExpression time
-                    // so this validation can be confusing, since it is not launched for any `decimal` fields
-                    // because of `IsScalarValueType()`
-                    else if (decimal.TryParse(literalValue, out decimal decimalValue))
-                    {
-                        return decimalValue != 0
-                            ? MemberDefaultValueState.ConstantExpression : MemberDefaultValueState.NotSet;
-                    }
-                }
-
-                scalarDefaultValue = null;
-                return MemberDefaultValueState.NotSet;
-            }
+            // // Enum calculation
+            // if (checkType.TypeKind == TypeKind.Enum
+            //     && valueNode is MemberAccessExpressionSyntax access
+            //     && access.IsKind(SyntaxKind.SimpleMemberAccessExpression)
+            //     && access.Expression.ToString() == checkType.Name)
+            // {
+            //     string fieldName = access.Name.Identifier.ValueText;
+            //     IFieldSymbol field = checkType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(field => field.Name == fieldName);
+            //     if (field.HasConstantValue && string.Format(CultureInfo.InvariantCulture, "{0}", field.ConstantValue) != "0") 
+            //     {
+            //         // defaultValue = $"{checkType.Name}.{fieldName}";
+            //         return MemberInitValueKind.ConstantExpression;
+            //     }
+            // }
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
-        private bool ShouldUpdateDefaultValueAttribute(Member member, string memberDefaultValueRawExpression)
+        private bool ShouldUpdateDefaultValueAttribute(SyntaxNodeAnalysisContext context, Member member, object? memberInitValue)
         {
             var defaultValueAttrData = GetDefaultValueAttributeData(member);
             if (defaultValueAttrData is null) return false;
 
             // we are interested in the only single argument of [DefaultValue] attribute's constructor
             var constructorArg = defaultValueAttrData.ConstructorArguments.FirstOrDefault();
-            if (constructorArg.IsNull) return true;
-            
-            return !constructorArg.HasSameValueBySpecialType(
-                memberDefaultValueRawExpression,
-                overrideSpecialType: member.SymbolSpecialType);
+            if (constructorArg.IsNull && memberInitValue is not null) return true;
+            if (constructorArg.Value is null && memberInitValue is not null) return true;
+            if (constructorArg.Value is not null && memberInitValue is null) return true;
+
+            // both of them are not null - lets compare using boxed interpretations of values
+            return !constructorArg.Value!.Equals(memberInitValue);
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
         private bool ShouldDeclareIsRequired(Member member) => !member.IsRequired;
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
-        private bool ShouldDeclareDefault(Member member)
+        private bool ShouldDeclareDefault(Member member, object? memberInitValue)
         {
-            ITypeSymbol? checkType = member.Symbol switch
-            {
-                IPropertySymbol propSym => propSym.Type,
-                IFieldSymbol fieldSym => fieldSym.Type,
-                _ => null
-            };
-            
-            if (checkType is null)
+            var memberSpecialType = member.SymbolSpecialType;
+            if (memberSpecialType is null)
             {
                 return false;
             }
-            if (checkType.TypeKind == TypeKind.Enum)
-            {
-                return !(HasDefaultAttributeOrShouldSerializeMethod() || HasShouldSerializeMethod());
-            }
-            
+
             if (member.IsRequired)
             {
                 return false;
             }
 
-            return !(HasDefaultAttributeOrShouldSerializeMethod() || HasShouldSerializeMethod());
+            if(HasDefaultAttribute() || HasShouldSerializeMethod())
+            {
+                // we already have required attributes defined
+                return false;
+            }
             
-            bool HasDefaultAttributeOrShouldSerializeMethod() => GetDefaultValueAttributeData(member) is not null;
+            bool HasDefaultAttribute() => GetDefaultValueAttributeData(member) is not null;
             bool HasShouldSerializeMethod() => member.Symbol.ContainingType.GetMembers().OfType<IMethodSymbol>()
                 .FirstOrDefault(method => method.Name == "ShouldSerialize" + member.Name && method.ReturnType.SpecialType == SpecialType.System_Boolean) != null;
+
+            if (memberInitValue is null)
+            {
+                // can not compare the default values to null
+                return false;
+            }
+
+            // we know, that there are none of the required attributes defined, however if value is default
+            // (for example `int Prop {get;} = 0;`
+            // then there is no need to place an attribute with the same default value as type's default
+
+            var memberInitialValueIsTypeDefault = memberSpecialType switch
+            {
+                SpecialType.System_Boolean => memberInitValue.Equals(false),
+                SpecialType.System_String => Equals(memberInitValue, string.Empty),
+                
+                // enums have underlying numeric types, and default one is 0
+                SpecialType.System_Enum => memberInitValue.Equals(0), 
+
+                // numbers
+                SpecialType.System_Char or SpecialType.System_SByte
+                or SpecialType.System_Byte or SpecialType.System_Int16 or SpecialType.System_UInt16
+                or SpecialType.System_Int32 or SpecialType.System_UInt32 or SpecialType.System_Int64 
+                or SpecialType.System_UInt64 or SpecialType.System_Single or SpecialType.System_Double 
+                or SpecialType.System_IntPtr or SpecialType.System_UIntPtr 
+                    => memberInitValue.Equals(0),
+
+                // for other types the behavior of default value is unknown
+                // so we dont need to report any diagnostic
+                _ => false
+            };
+
+            return !memberInitialValueIsTypeDefault;
         }
 
         AttributeData? GetDefaultValueAttributeData(Member member) => member.Symbol.GetAttributes()

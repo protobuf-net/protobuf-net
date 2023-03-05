@@ -1,6 +1,6 @@
 ﻿namespace ProtoBuf.Internal.Models
 {
-    internal enum MemberDefaultValueState
+    internal enum MemberInitValueKind
     {
         NotSet,
         ConstantExpression,

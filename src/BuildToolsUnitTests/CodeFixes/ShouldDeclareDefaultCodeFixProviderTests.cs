@@ -136,7 +136,7 @@ public class Foo
                 diagnosticResult,
                 standardExpectedDiagnostics: _standardExpectedDiagnostics);
         }
-
+        
         [Theory]
         [InlineData("bool", "true")]
         [InlineData("DayOfWeek", "DayOfWeek.Monday")]
@@ -153,7 +153,7 @@ public class Foo
         [InlineData("double", "3.14159265")]
         [InlineData("nint", "1")]
         [InlineData("nuint", "2")]
-        public async Task CodeFixValidate_ShouldDeclareDefault_ClassicExample(
+        public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnosticClassicExample(
             string propertyType, string propertyDefaultValue)
         {
             var sourceCode = $@"
@@ -179,7 +179,7 @@ public class Foo
     [ProtoMember(1), DefaultValue({propertyDefaultValue})]
     public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
 }}";
-
+            
             var diagnosticResult = PrepareDiagnosticResult(
                 DataContractAnalyzer.ShouldDeclareDefault,
                 8, 6, 8, 20,
