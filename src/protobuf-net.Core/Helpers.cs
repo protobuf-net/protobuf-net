@@ -1,7 +1,6 @@
 ﻿
 using System;
 using System.IO;
-using System.Text;
 using System.Reflection;
 using ProtoBuf.Internal;
 
@@ -70,11 +69,11 @@ namespace ProtoBuf
         internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property is null) return null;
-            MethodInfo method = property.GetGetMethod(nonPublic);
+            var method = property.GetGetMethod(nonPublic);
             if (method is null && !nonPublic && allowInternal)
             { // could be "internal" or "protected internal"; look for a non-public, then back-check
                 method = property.GetGetMethod(true);
-                if (method is null && !(method.IsAssembly || method.IsFamilyOrAssembly))
+                if (method is not null && !(method.IsAssembly || method.IsFamilyOrAssembly))
                 {
                     method = null;
                 }
@@ -86,11 +85,11 @@ namespace ProtoBuf
         {
             if (property is null) return null;
 
-            MethodInfo method = property.GetSetMethod(nonPublic);
+            var method = property.GetSetMethod(nonPublic);
             if (method is null && !nonPublic && allowInternal)
             { // could be "internal" or "protected internal"; look for a non-public, then back-check
                 method = property.GetGetMethod(true);
-                if (method is null && !(method.IsAssembly || method.IsFamilyOrAssembly))
+                if (method is not null && !(method.IsAssembly || method.IsFamilyOrAssembly))
                 {
                     method = null;
                 }
@@ -131,10 +130,10 @@ namespace ProtoBuf
 
         internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
         {
-            BindingFlags flags = publicOnly ? BindingFlags.Public | BindingFlags.Instance : BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic;
-            PropertyInfo[] props = type.GetProperties(flags);
-            FieldInfo[] fields = type.GetFields(flags);
-            MemberInfo[] members = new MemberInfo[fields.Length + props.Length];
+            var flags = publicOnly ? BindingFlags.Public | BindingFlags.Instance : BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic;
+            var props = type.GetProperties(flags);
+            var fields = type.GetFields(flags);
+            var members = new MemberInfo[fields.Length + props.Length];
             props.CopyTo(members, 0);
             fields.CopyTo(members, props.Length);
             return members;

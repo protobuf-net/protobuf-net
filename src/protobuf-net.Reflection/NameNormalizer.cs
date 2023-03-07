@@ -135,8 +135,8 @@ namespace ProtoBuf.Reflection
         {
             var ns = definition?.Options?.GetOptions()?.Namespace;
             if (!string.IsNullOrWhiteSpace(ns)) return ns;
-            ns = definition.Options?.CsharpNamespace;
-            if (string.IsNullOrWhiteSpace(ns)) ns = GetName(definition.Package);
+            ns = definition?.Options?.CsharpNamespace;
+            if (string.IsNullOrWhiteSpace(ns)) ns = GetName(definition?.Package);
 
             if (string.IsNullOrEmpty(ns)) ns = definition?.DefaultPackage;
 
