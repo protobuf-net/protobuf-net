@@ -14,6 +14,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+## 3.2.12
+
+- fix bug with default values not including literal suffixes (#1037)
 - fix SDKs used by BuildTools[.Legacy]
 
 ## 3.2.8
