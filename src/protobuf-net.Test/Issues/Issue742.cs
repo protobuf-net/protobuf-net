@@ -10,7 +10,8 @@ namespace ProtoBuf.Test.Issues
         public void TestNullBasicTypeSerialization()
         {
             long? nullableLong = 11;
-            var serialized = Serialize<long?>(nullableLong);
+            var (serialized, hex) = Serialize(nullableLong);
+            Assert.Equal("02-08-0B", hex);
             var deserialized = Deserialize<long?>(serialized);
             Assert.True(deserialized == nullableLong);
         }
@@ -23,12 +24,13 @@ namespace ProtoBuf.Test.Issues
             }
         }
 
-        private byte[] Serialize<T>(T toSerialize)
+        private (byte[], string) Serialize<T>(T toSerialize)
         {
             using (var stream = new MemoryStream())
             {
                 Serializer.SerializeWithLengthPrefix(stream, toSerialize, PrefixStyle.Base128);
-                return stream.ToArray();
+                var hex = BitConverter.ToString(stream.GetBuffer(), 0, (int)stream.Length);
+                return (stream.ToArray(), hex);
             }
         }
     }

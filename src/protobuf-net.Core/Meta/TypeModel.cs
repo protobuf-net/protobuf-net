@@ -126,7 +126,7 @@ namespace ProtoBuf.Meta
                 return format == DataFormat.Group ? WireType.StartGroup : WireType.String;
             }
 
-            switch (Helpers.GetTypeCode(type))
+            switch (Helpers.GetTypeCode(type, true))
             {
                 case ProtoTypeCode.Int64:
                 case ProtoTypeCode.UInt64:

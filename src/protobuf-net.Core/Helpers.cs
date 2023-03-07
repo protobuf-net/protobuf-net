@@ -31,9 +31,9 @@ namespace ProtoBuf
         internal static bool IsSubclassOf(Type type, Type baseClass)
             => type.IsSubclassOf(baseClass);
 
-        public static ProtoTypeCode GetTypeCode(Type type, bool resolveNullableValueType = true)
+        public static ProtoTypeCode GetTypeCode(Type type, bool resolveNullableValueType = false)
         {
-            ProtoTypeCode ExtractProtoTypeCode(Type type)
+            static ProtoTypeCode ExtractProtoTypeCode(Type type)
             {
                 var code = Type.GetTypeCode(type);
                 switch (code)
@@ -64,8 +64,8 @@ namespace ProtoBuf
                 if (type == typeof(Memory<byte>)) return ProtoTypeCode.ByteMemory;
                 if (type == typeof(ReadOnlyMemory<byte>)) return ProtoTypeCode.ByteReadOnlyMemory;
                 if (type == typeof(Type)) return ProtoTypeCode.Type;
-            if (type == typeof(IntPtr)) return ProtoTypeCode.IntPtr;
-            if (type == typeof(UIntPtr)) return ProtoTypeCode.UIntPtr;
+                if (type == typeof(IntPtr)) return ProtoTypeCode.IntPtr;
+                if (type == typeof(UIntPtr)) return ProtoTypeCode.UIntPtr;
 
                 return ProtoTypeCode.Unknown;
             }
