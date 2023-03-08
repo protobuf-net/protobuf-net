@@ -51,16 +51,17 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
                 FixedState = { Sources = { expectedCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary }
             };
 
-            //codeFixTest.TestState.OutputKind = OutputKind.DynamicallyLinkedLibrary;
             codeFixTest.SolutionTransforms.Add((solution, projectId) =>
             {
                 var project = solution.GetProject(projectId);
                 project = project!.WithCompilationOptions(project.CompilationOptions!.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
                 return solution;
             });
+            
+            codeFixTest.CodeActionValidationMode = CodeActionValidationMode.SemanticStructure;
 
             AddAdditionalReferences(codeFixTest.TestState);
-            AddAdditionalReferences(codeFixTest.FixedState);            
+            AddAdditionalReferences(codeFixTest.FixedState);
 
             return codeFixTest;
         }

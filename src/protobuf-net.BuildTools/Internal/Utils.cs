@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace ProtoBuf.BuildTools.Internal
 {
@@ -16,7 +15,7 @@ namespace ProtoBuf.BuildTools.Internal
     {
         internal static CompilationUnitSyntax AddUsingsIfNotExist(
             this CompilationUnitSyntax compilationUnitSyntax,
-            params QualifiedNameSyntax[] usingDirectiveNames)
+            params QualifiedNameSyntax[]? usingDirectiveNames)
         {
             if (usingDirectiveNames is null || usingDirectiveNames.Length == 0) return compilationUnitSyntax;
 

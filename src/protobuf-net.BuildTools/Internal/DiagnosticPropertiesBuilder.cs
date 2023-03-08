@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace ProtoBuf.Internal
 {
-    public class DiagnosticPropertiesBuilder
+    internal class DiagnosticPropertiesBuilder
     {
         private readonly ImmutableDictionary<string, string>.Builder _builder 
             = ImmutableDictionary.CreateBuilder<string, string>();
