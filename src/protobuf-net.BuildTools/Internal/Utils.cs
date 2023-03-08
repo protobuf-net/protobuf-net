@@ -15,7 +15,7 @@ namespace ProtoBuf.BuildTools.Internal
     {
         internal static CompilationUnitSyntax AddUsingsIfNotExist(
             this CompilationUnitSyntax compilationUnitSyntax,
-            params QualifiedNameSyntax[]? usingDirectiveNames)
+            params string[]? usingDirectiveNames)
         {
             if (usingDirectiveNames is null || usingDirectiveNames.Length == 0) return compilationUnitSyntax;
 
@@ -24,15 +24,17 @@ namespace ProtoBuf.BuildTools.Internal
             // - IdentifierName
             // - QualifiedNameSyntax
             var existingUsingDirectiveNames = compilationUnitSyntax.Usings
-                .Select(x => x.Name.ToString())
+                .Select(x => x.Name.ToString().Trim())
                 .ToImmutableHashSet();
 
             foreach (var directive in usingDirectiveNames)
             {
-                if (!existingUsingDirectiveNames.Contains(directive.ToString()))
+                var directiveTrimmed = directive.Trim();
+                if (!existingUsingDirectiveNames.Contains(directiveTrimmed))
                 {
                     compilationUnitSyntax = compilationUnitSyntax.AddUsings(
-                        SyntaxFactory.UsingDirective(directive));
+                        SyntaxFactory.UsingDirective(
+                            SyntaxFactory.ParseName(" " + directiveTrimmed)));
                 }
             }
 

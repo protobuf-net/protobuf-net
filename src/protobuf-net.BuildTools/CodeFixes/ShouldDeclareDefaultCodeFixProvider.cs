@@ -110,13 +110,8 @@ namespace ProtoBuf.CodeFixes
                 return document;
             }
 
-            // `System.ComponentModel`
-            var systemComponentModelUsing = SyntaxFactory.QualifiedName(
-                SyntaxFactory.IdentifierName("System"),
-                SyntaxFactory.IdentifierName("ComponentModel"));
-
             compilationUnitSyntax = compilationUnitSyntax
-                .AddUsingsIfNotExist(systemComponentModelUsing);
+                .AddUsingsIfNotExist("System.ComponentModel");
 
             return document.WithSyntaxRoot(compilationUnitSyntax);
         }

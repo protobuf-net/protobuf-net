@@ -159,6 +159,7 @@ public class Foo
             var sourceCode = $@"
 using ProtoBuf;
 using System;
+using System.ComponentModel;
 
 [ProtoContract]
 public class Foo
@@ -167,7 +168,10 @@ public class Foo
     public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
 }}";
 
-            // System.ComponentModel is added as part of code-fix
+            // note: System.ComponentModel is added as part of code-fix
+            // and this behavior is tested in separate class, since "usingDirective" addition produces
+            // wrong line endings, which fail in roslyn codeFix test
+            // https://github.com/dotnet/roslyn/issues/62976
             var expectedCode = $@"
 using ProtoBuf;
 using System;
@@ -182,7 +186,7 @@ public class Foo
             
             var diagnosticResult = PrepareDiagnosticResult(
                 DataContractAnalyzer.ShouldDeclareDefault,
-                8, 6, 8, 20,
+                9, 6, 9, 20,
                 propertyDefaultValue);
 
             await RunCodeFixTestAsync<DataContractAnalyzer>(
