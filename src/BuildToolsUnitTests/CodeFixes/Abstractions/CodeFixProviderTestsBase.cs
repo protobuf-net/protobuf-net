@@ -1,13 +1,13 @@
 ﻿using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Microsoft.CodeAnalysis.Testing;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.Versioning;
-using BuildToolsUnitTests.CodeFixes.Infra;
 
 namespace BuildToolsUnitTests.CodeFixes.Abstractions
 {
@@ -41,10 +41,10 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             await codeFixTest.RunAsync();
         }
 
-        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, LightXUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(string sourceCode, string expectedCode)
+        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(string sourceCode, string expectedCode)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
-            var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, LightXUnitVerifier>
+            var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier>
             {
                 ReferenceAssemblies = new ReferenceAssemblies(CurrentRunningAssemblyTargetFramework.FrameworkDisplayName!),
                 TestState = { Sources = { sourceCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary },
