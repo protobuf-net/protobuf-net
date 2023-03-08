@@ -56,6 +56,7 @@ public class Foo
             var sourceCode = $@"
 using ProtoBuf;
 using System;
+using System.ComponentModel;
 
 [ProtoContract]
 public class Foo
@@ -85,7 +86,7 @@ public class CustomAttribute : Attribute {{ }}";
 
             var diagnosticResult = PrepareDiagnosticResult(
                 DataContractAnalyzer.ShouldDeclareDefault,
-                8, 6, 8, 20,
+                9, 6, 9, 20,
                 propertyDefaultValue);
 
             await RunCodeFixTestAsync<DataContractAnalyzer>(
