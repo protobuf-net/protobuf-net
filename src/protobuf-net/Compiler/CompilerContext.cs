@@ -328,7 +328,7 @@ namespace ProtoBuf.Compiler
 
         private readonly ILGenerator il;
 
-        private void Emit(OpCode opcode)
+        internal void Emit(OpCode opcode)
         {
             il.Emit(opcode);
             TraceCompile(opcode.ToString());
@@ -358,6 +358,9 @@ namespace ProtoBuf.Compiler
             il.Emit(OpCodes.Ldc_R8, value);
             TraceCompile(OpCodes.Ldc_R8 + ": " + value);
         }
+
+        public void LoadValue(ulong value)
+            => LoadValue((long)value); // there is no ldc.u8
 
         public void LoadValue(long value)
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace ProtoBuf.Internal.Serializers
 {
@@ -175,7 +176,7 @@ namespace ProtoBuf.Internal.Serializers
                     EmitBeq(ctx, label, expected);
                     break;
                 case ProtoTypeCode.UInt64:
-                    ctx.LoadValue((long)(ulong)defaultValue);
+                    ctx.LoadValue((ulong)defaultValue);
                     EmitBeq(ctx, label, expected);
                     break;
                 case ProtoTypeCode.Double:
@@ -224,6 +225,20 @@ namespace ProtoBuf.Internal.Serializers
                         ctx.EmitCall(typeof(DateTime).GetMethod("FromBinary"));
 
                         EmitBeq(ctx, label, expected);
+                        break;
+                    }
+                case ProtoTypeCode.IntPtr:
+                    {
+                        ctx.Emit(OpCodes.Conv_I8); // might be 32-bit system; no-op on 64-bit
+                        ctx.LoadValue(((IntPtr)defaultValue).ToInt64());
+                        EmitBeq(ctx, label, typeof(long));
+                        break;
+                    }
+                case ProtoTypeCode.UIntPtr:
+                    {
+                        ctx.Emit(OpCodes.Conv_U8); // might be 32-bit system; no-op on 64-bit
+                        ctx.LoadValue(((UIntPtr)defaultValue).ToUInt64());
+                        EmitBeq(ctx, label, typeof(ulong));
                         break;
                     }
                 default:

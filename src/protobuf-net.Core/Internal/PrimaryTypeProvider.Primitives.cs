@@ -25,22 +25,11 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<char>,
         IMeasuringSerializer<Uri>,
         IMeasuringSerializer<Type>,
+        IMeasuringSerializer<IntPtr>,
+        IMeasuringSerializer<UIntPtr>,
 
         IFactory<string>,
         IFactory<byte[]>,
-
-        ISerializer<int?>,
-        ISerializer<long?>,
-        ISerializer<bool?>,
-        ISerializer<float?>,
-        ISerializer<double?>,
-        ISerializer<byte?>,
-        ISerializer<ushort?>,
-        ISerializer<uint?>,
-        ISerializer<ulong?>,
-        ISerializer<sbyte?>,
-        ISerializer<short?>,
-        ISerializer<char?>,
 
         IMeasuringSerializer<int?>,
         IMeasuringSerializer<long?>,
@@ -54,6 +43,8 @@ namespace ProtoBuf.Internal
         IMeasuringSerializer<sbyte?>,
         IMeasuringSerializer<short?>,
         IMeasuringSerializer<char?>,
+        IMeasuringSerializer<IntPtr?>,
+        IMeasuringSerializer<UIntPtr?>,
 
         IValueChecker<string>,
         IValueChecker<int>,
@@ -69,6 +60,8 @@ namespace ProtoBuf.Internal
         IValueChecker<sbyte>,
         IValueChecker<short>,
         IValueChecker<char>,
+        IValueChecker<IntPtr>,
+        IValueChecker<UIntPtr>,
         IValueChecker<Uri>,
         IValueChecker<Type>,
 
@@ -83,7 +76,9 @@ namespace ProtoBuf.Internal
         IValueChecker<ulong?>,
         IValueChecker<sbyte?>,
         IValueChecker<short?>,
-        IValueChecker<char?>
+        IValueChecker<char?>,
+        IValueChecker<IntPtr?>,
+        IValueChecker<UIntPtr?>
 
     {
         string ISerializer<string>.Read(ref ProtoReader.State state, string value) => state.ReadString();
@@ -444,5 +439,45 @@ namespace ProtoBuf.Internal
             => ((IMeasuringSerializer<char>)this).Measure(context, wireType, value.Value);
         int IMeasuringSerializer<bool?>.Measure(ISerializationContext context, WireType wireType, bool? value)
             => ((IMeasuringSerializer<bool>)this).Measure(context, wireType, value.Value);
+
+
+        SerializerFeatures ISerializer<IntPtr>.Features => SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
+        SerializerFeatures ISerializer<UIntPtr>.Features => SerializerFeatures.WireTypeVarint | SerializerFeatures.CategoryScalar;
+        SerializerFeatures ISerializer<IntPtr?>.Features => ((ISerializer<IntPtr>)this).Features;
+        SerializerFeatures ISerializer<UIntPtr?>.Features => ((ISerializer<UIntPtr>)this).Features;
+
+        void ISerializer<IntPtr?>.Write(ref ProtoWriter.State state, IntPtr? value) => ((ISerializer<IntPtr>)this).Write(ref state, value.Value);
+        IntPtr? ISerializer<IntPtr?>.Read(ref ProtoReader.State state, IntPtr? value) => ((ISerializer<IntPtr>)this).Read(ref state, value.GetValueOrDefault());
+        void ISerializer<UIntPtr?>.Write(ref ProtoWriter.State state, UIntPtr? value) => ((ISerializer<UIntPtr>)this).Write(ref state, value.Value);
+        UIntPtr? ISerializer<UIntPtr?>.Read(ref ProtoReader.State state, UIntPtr? value) => ((ISerializer<UIntPtr>)this).Read(ref state, value.GetValueOrDefault());
+
+        void ISerializer<IntPtr>.Write(ref ProtoWriter.State state, IntPtr value) => state.WriteIntPtr(value);
+        IntPtr ISerializer<IntPtr>.Read(ref ProtoReader.State state, IntPtr value) => state.ReadIntPtr();
+        void ISerializer<UIntPtr>.Write(ref ProtoWriter.State state, UIntPtr value) => state.WriteUIntPtr(value);
+        UIntPtr ISerializer<UIntPtr>.Read(ref ProtoReader.State state, UIntPtr value) => state.ReadUIntPtr();
+
+        int IMeasuringSerializer<IntPtr>.Measure(ISerializationContext context, WireType wireType, IntPtr value)
+            => ((IMeasuringSerializer<long>)this).Measure(context, wireType, value.ToInt64());
+
+        int IMeasuringSerializer<UIntPtr>.Measure(ISerializationContext context, WireType wireType, UIntPtr value)
+            => ((IMeasuringSerializer<ulong>)this).Measure(context, wireType, value.ToUInt64());
+
+        int IMeasuringSerializer<IntPtr?>.Measure(ISerializationContext context, WireType wireType, IntPtr? value)
+            => ((IMeasuringSerializer<long>)this).Measure(context, wireType, value.Value.ToInt64());
+        int IMeasuringSerializer<UIntPtr?>.Measure(ISerializationContext context, WireType wireType, UIntPtr? value)
+            => ((IMeasuringSerializer<ulong>)this).Measure(context, wireType, value.Value.ToUInt64());
+
+        bool IValueChecker<IntPtr>.HasNonTrivialValue(IntPtr value) => value != IntPtr.Zero;
+        bool IValueChecker<IntPtr>.IsNull(IntPtr value) => false;
+
+        bool IValueChecker<UIntPtr>.HasNonTrivialValue(UIntPtr value) => value != UIntPtr.Zero;
+        bool IValueChecker<UIntPtr>.IsNull(UIntPtr value) => false;
+
+        bool IValueChecker<IntPtr?>.HasNonTrivialValue(IntPtr? value) => value.GetValueOrDefault() != IntPtr.Zero;
+        bool IValueChecker<IntPtr?>.IsNull(IntPtr? value) => !value.HasValue;
+
+        bool IValueChecker<UIntPtr?>.HasNonTrivialValue(UIntPtr? value) => value.GetValueOrDefault() != UIntPtr.Zero;
+        bool IValueChecker<UIntPtr?>.IsNull(UIntPtr? value) => !value.HasValue;
+
     }
 }

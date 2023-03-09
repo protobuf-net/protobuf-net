@@ -1250,6 +1250,8 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.UInt64: defaultValue = (ulong)0; break;
                     case ProtoTypeCode.TimeSpan: defaultValue = TimeSpan.Zero; break;
                     case ProtoTypeCode.Guid: defaultValue = Guid.Empty; break;
+                    case ProtoTypeCode.IntPtr: defaultValue = IntPtr.Zero; break;
+                    case ProtoTypeCode.UIntPtr: defaultValue = UIntPtr.Zero; break;
                 }
             }
             if ((attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) is not null)
