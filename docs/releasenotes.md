@@ -14,7 +14,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
-- support `nint` (`IntPtr`) and `nuint` (`UIntPtr`) with layout per `long`/`ulong` (fixes #1042, fixes grpc 282)
+- support `nint` (`IntPtr`) and `nuint` (`UIntPtr`) with layout per `long`/`ulong` (#1043; fixes #1042, fixes grpc 282)
 
 ## 3.2.12
 
