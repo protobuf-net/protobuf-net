@@ -1,7 +1,9 @@
 ﻿using ProtoBuf.Meta;
-using ProtoBuf.Serializers;
+using ProtoBuf.unittest;
 using System;
+using System.ComponentModel;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace ProtoBuf.Test.Issues
@@ -9,23 +11,48 @@ namespace ProtoBuf.Test.Issues
     // https://github.com/protobuf-net/protobuf-net.Grpc/issues/282
     public class Grpc282
     {
-        [Fact]
-        public void Execute()
+        static TypeModel CreateModel<T>(int mode, [CallerMemberName] string name = "")
         {
             var model = RuntimeTypeModel.Create();
-            IntPtrSerializer.Configure(model);
-
-            using var ms = new MemoryStream();
-            model.Serialize(ms, new setCommCellIdRequest
+            model.AutoCompile = false;
+            model.Add<T>();
+            switch (mode)
             {
-                m_pEvAlertObj = 42
-            });
+                case 0:
+                    return model;
+                case 1:
+                    model.CompileInPlace();
+                    return model;
+                case 2:
+                    return PEVerify.CompileAndVerify(model, name);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode));
+            }
+        }
+
+        static T RoundTrip<T>(TypeModel model, T value, string expectedHex)
+        {
+            using var ms = new MemoryStream();
+            model.Serialize<T>(ms, value);
             if (!ms.TryGetBuffer(out var buffer)) buffer = new(ms.ToArray());
             var hex = BitConverter.ToString(buffer.Array, buffer.Offset, buffer.Count);
-            Assert.Equal("10-2A", hex); // Field #2 Varint Value = 42,
+            Assert.Equal(expectedHex, hex);
 
             ms.Position = 0;
-            var clone = model.Deserialize<setCommCellIdRequest>(ms);
+            return model.Deserialize<T>(ms);
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public void ExecuteSimple(int mode)
+        {
+            var model = CreateModel<setCommCellIdRequest>(mode);
+            var clone = RoundTrip(model, new setCommCellIdRequest
+            {
+                m_pEvAlertObj = 42,
+            }, "10-2A"); // Field #2 Varint Value = 42,
             Assert.Equal(42, clone.m_pEvAlertObj);
         }
 
@@ -42,24 +69,59 @@ namespace ProtoBuf.Test.Issues
             public Boolean isDisposed { get; set; }
         }
 
-        public sealed class IntPtrSerializer : ISerializer<nint>, ISerializer<nuint>
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public void ExecuteWithDefaults(int mode)
         {
-            public static void Configure(RuntimeTypeModel model)
+            var model = CreateModel<WithDefaults>(mode);
+            var clone = RoundTrip(model, new WithDefaults
             {
-                model.Add<nint>(false).SerializerType = typeof(IntPtrSerializer);
-                model.Add<nuint>(false).SerializerType = typeof(IntPtrSerializer);
-            }
+                A = 134, C = 136,
+            }, "");
+            Assert.Equal(134, clone.A);
+            Assert.Null(clone.B);
+            Assert.Equal(136U, clone.C);
+            Assert.Null(clone.D);
+        }
 
-            public SerializerFeatures Features
-                => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeVarint;
-            public nint Read(ref ProtoReader.State state, IntPtr value)
-                => new IntPtr(state.ReadInt64());
-            public UIntPtr Read(ref ProtoReader.State state, UIntPtr value)
-                => new UIntPtr(state.ReadUInt64());
-            public void Write(ref ProtoWriter.State state, IntPtr value)
-                => state.WriteInt64(value.ToInt64());
-            public void Write(ref ProtoWriter.State state, UIntPtr value)
-                => state.WriteUInt64(value.ToUInt64());
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public void ExecuteWithNonDefaults(int mode)
+        {
+            var model = CreateModel<WithDefaults>(mode);
+            var clone = RoundTrip(model, new WithDefaults
+            {
+                A = 1,
+                B = 2,
+                C = 3,
+                D = 4,
+            }, "08-01-10-02-18-03-20-04"); // 1/2/3/4 as varints
+            Assert.Equal(1, clone.A);
+            Assert.Equal(2, clone.B);
+            Assert.Equal(3U, clone.C);
+            Assert.Equal(4U, clone.D);
+        }
+
+        [ProtoContract]
+        public class WithDefaults
+        {
+            [ProtoMember(1)]
+            [DefaultValue(134)]
+            public nint A { get; set; } = 134;
+
+            [ProtoMember(2)]
+            public nint? B { get; set; }
+
+            [ProtoMember(3)]
+            [DefaultValue(136)]
+            public nuint C { get; set; } = 136;
+
+            [ProtoMember(4)]
+            public nuint? D { get; set; }
         }
     }
 }

@@ -220,7 +220,18 @@ namespace ProtoBuf.Meta
             }
 
             if (type.IsEnum) return Enum.ToObject(type, value);
-            return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+            try
+            {
+                return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+            }
+            catch (InvalidCastException) when (type == typeof(IntPtr))
+            {
+                return new IntPtr((long)Convert.ChangeType(value, typeof(long), CultureInfo.InvariantCulture));
+            }
+            catch (InvalidCastException) when (type == typeof(UIntPtr))
+            {
+                return new UIntPtr((ulong)Convert.ChangeType(value, typeof(ulong), CultureInfo.InvariantCulture));
+            }
         }
 
         private IRuntimeProtoSerializerNode serializer;
