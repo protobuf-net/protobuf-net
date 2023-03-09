@@ -10,8 +10,8 @@ namespace BuildToolsUnitTests
     public partial class ProtobufFieldAnalyzerTests
     {
         [Theory]
-        [InlineData("decimal", "1.618033m")]
-        public async Task ReportsShouldDeclareIsRequired(string type, string value, bool shouldReportDiagnostic = true)
+        [InlineData("string", "GetString();", "public string GetString() => \"some-value\";")]
+        public async Task ReportsShouldDeclareIsRequired(string type, string value, string? additionalClassCSharpCode = null, bool shouldReportDiagnostic = true)
         {
             var diagnostics = await AnalyzeAsync($@"
                 using ProtoBuf;
@@ -21,7 +21,9 @@ namespace BuildToolsUnitTests
                 public class Foo {{ 
                     [ProtoMember(1)] public {type} FieldBar = {value};
                     [ProtoMember(2)] public {type} PropertyBar {{ get; set; }} = {value};
-                }}            
+
+                    {(!string.IsNullOrEmpty(additionalClassCSharpCode) ? additionalClassCSharpCode : string.Empty)}
+                }}
             ");
             
             var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired).ToList();
@@ -54,11 +56,12 @@ namespace BuildToolsUnitTests
         [InlineData("double", "3.14159265")]
         [InlineData("nint", "1")]
         [InlineData("nuint", "2")]
-        [InlineData("decimal", "1.618033m", false)]
+        [InlineData("decimal", "1.618033m")]
+        [InlineData("string", "\"my-constant\"")]
         [InlineData("string", "string.Empty", false)]
         [InlineData("string", "\"\"", false)]
         [InlineData("string", "MyConst", false, "const string MyConst = \"hello\"")]
-        public async Task ReportsShouldDeclareDefault(
+        public async Task ReportsShouldDeclareDefault_ShortSyntax(
             string type, 
             string value, 
             bool shouldReportDiagnostic = true,
@@ -107,7 +110,7 @@ namespace BuildToolsUnitTests
         [InlineData("double", "3.14", "3.14159265")]
         [InlineData("nint", "2", "1")]
         [InlineData("nuint", "2", "1")]
-        public async Task ReportsShouldUpdateDefault(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
+        public async Task ReportsShouldUpdateDefault_ShortSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
         {
             var diagnostics = await AnalyzeAsync($@"
                 using ProtoBuf;
@@ -118,6 +121,50 @@ namespace BuildToolsUnitTests
                 public class Foo {{ 
                     [ProtoMember(1), DefaultValue({attributeValue})] public {type} FieldBar = {propertyValue};
                     [ProtoMember(2), DefaultValue({attributeValue})] public {type} PropertyBar {{ get; set; }} = {propertyValue};
+                }}            
+            ");
+            
+            var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldUpdateDefault).ToList();
+            if (!shouldReportDiagnostic)
+            {
+                Assert.Empty(diags);
+                return;
+            }
+
+            Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
+            Assert.Collection(diags.Select(diag => diag.GetMessage(CultureInfo.InvariantCulture)),
+                msg => Assert.Equal(string.Format(DataContractAnalyzer.ShouldUpdateDefault.MessageFormat.ToString(), "FieldBar", propertyValue), msg),
+                msg => Assert.Equal(string.Format(DataContractAnalyzer.ShouldUpdateDefault.MessageFormat.ToString(), "PropertyBar", propertyValue), msg)
+            );
+        }
+        
+        [Theory]
+        [InlineData("bool", "false", "true")]
+        [InlineData("DayOfWeek", "DayOfWeek.Tuesday", "DayOfWeek.Monday")]
+        [InlineData("char", "'Y'", "'X'")]
+        [InlineData("sbyte", "2", "1")]
+        [InlineData("byte", "0x1", "0x2")]
+        [InlineData("short", "0b0000_0010", "0b0000_0011")]
+        [InlineData("ushort", "3", "4")]
+        [InlineData("int", "1", "-5")]
+        [InlineData("uint", "5u", "6u")]
+        [InlineData("long", "123456789012345678L", "1")]
+        [InlineData("ulong", "675849302UL", "123")]
+        [InlineData("float", "2.6f", "2.1")]
+        [InlineData("double", "3.14", "3.14159265")]
+        [InlineData("nint", "2", "1")]
+        [InlineData("nuint", "2", "1")]
+        public async Task ReportsShouldUpdateDefault_LongSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{ 
+                    [ProtoMember(1), DefaultValue(typeof({type}), ""{attributeValue}"")] public {type} FieldBar = {propertyValue};
+                    [ProtoMember(2), DefaultValue(typeof({type}), ""{attributeValue}"")] public {type} PropertyBar {{ get; set; }} = {propertyValue};
                 }}            
             ");
             
@@ -162,7 +209,7 @@ public class Foo {
     [ProtoMember(15), DefaultValue(6u)] public uint TestUInt32 {get;set;} = 6u;
     [ProtoMember(16), DefaultValue(1234567890123456789L)] public long TestInt64 {get;set;} = 1234567890123456789L;
     [ProtoMember(17), DefaultValue(6758493021UL)] public ulong TestUInt64 {get;set;} = 6758493021UL;
-    [ProtoMember(18)] public decimal TestDecimal {get;set;} = 1.618033m; // is not a const expression, so no diagnostic
+    [ProtoMember(18), DefaultValue(typeof(decimal), ""1.618033m"")] public decimal TestDecimal {get;set;} = 1.618033m; // is not a const expression, so no diagnostic
     [ProtoMember(19), DefaultValue(2.71828f)] public float TestSingle {get;set;} = 2.71828f;
     [ProtoMember(20), DefaultValue(3.14159265)] public double TestDouble {get;set;} = 3.14159265;
     [ProtoMember(21), DefaultValue(1)] public nint TestIntPtr {get;set;} = 1;

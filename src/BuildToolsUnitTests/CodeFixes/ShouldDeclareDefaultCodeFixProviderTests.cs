@@ -139,6 +139,50 @@ public class Foo
         }
         
         [Theory]
+        [InlineData("decimal", "2.1m")]
+        public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_LongSyntax(string propertyType, string propertyDefaultValue)
+        {
+            var sourceCode = $@"
+using ProtoBuf;
+using System;
+using System.ComponentModel;
+
+[ProtoContract]
+public class Foo
+{{
+    [ProtoMember(1)]
+    public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
+}}";
+
+            // note: System.ComponentModel is added as part of code-fix
+            // and this behavior is tested in separate class, since "usingDirective" addition produces
+            // wrong line endings, which fail in roslyn codeFix test
+            // https://github.com/dotnet/roslyn/issues/62976
+            var expectedCode = $@"
+using ProtoBuf;
+using System;
+using System.ComponentModel;
+
+[ProtoContract]
+public class Foo
+{{
+    [ProtoMember(1), DefaultValue(typeof({propertyType}), ""{propertyDefaultValue}"")]
+    public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
+}}";
+            
+            var diagnosticResult = PrepareDiagnosticResult(
+                DataContractAnalyzer.ShouldDeclareDefault,
+                9, 6, 9, 20,
+                propertyDefaultValue);
+
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
+                sourceCode, 
+                expectedCode, 
+                diagnosticResult,
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
+        }
+        
+        [Theory]
         [InlineData("bool", "true")]
         [InlineData("DayOfWeek", "DayOfWeek.Monday")]
         [InlineData("char", "'x'")]
@@ -154,7 +198,7 @@ public class Foo
         [InlineData("double", "3.14159265")]
         [InlineData("nint", "1")]
         [InlineData("nuint", "2")]
-        public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnosticClassicExample(
+        public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_ShortSyntax(
             string propertyType, string propertyDefaultValue)
         {
             var sourceCode = $@"

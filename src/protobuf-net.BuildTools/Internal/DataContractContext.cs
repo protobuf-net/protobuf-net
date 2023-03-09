@@ -380,7 +380,7 @@ namespace ProtoBuf.BuildTools.Internal
             {
                 initialValueSyntaxNode = null;
                 memberInitialValue = null;
-                return MemberInitValueKind.NotSet;
+                return MemberInitValueKind.NonConstantExpression; 
             }
 
             memberInitialValue = constantValue.Value;
@@ -391,7 +391,8 @@ namespace ProtoBuf.BuildTools.Internal
                 or SpecialType.System_Int32 or SpecialType.System_UInt32 or SpecialType.System_Int64 
                 or SpecialType.System_UInt64 or SpecialType.System_Single or SpecialType.System_Double 
                 or SpecialType.System_IntPtr or SpecialType.System_UIntPtr 
-                or SpecialType.System_Enum
+                or SpecialType.System_Enum 
+                or SpecialType.System_Decimal // use long syntax for defaultValue to set
                 or SpecialType.System_String // we can check some of scenarios - for example '= "hello world"' 
                     => MemberInitValueKind.ConstantExpression,
                 
@@ -408,15 +409,29 @@ namespace ProtoBuf.BuildTools.Internal
             var defaultValueAttrData = GetDefaultValueAttributeData(member);
             if (defaultValueAttrData is null) return false;
 
-            // we are interested in the only single argument of [DefaultValue] attribute's constructor
-            var constructorArg = defaultValueAttrData.ConstructorArguments.FirstOrDefault();
-            if (constructorArg.IsNull && memberInitValue is not null) return true;
-            if (constructorArg.Value is null && memberInitValue is not null) return true;
-            if (constructorArg.Value is not null && memberInitValue is null) return true;
+            if (defaultValueAttrData.ConstructorArguments.Length == 1)
+            {
+                // we are interested in the only single argument of [DefaultValue] attribute's constructor
+                var constructorArg = defaultValueAttrData.ConstructorArguments.FirstOrDefault();
+                if (constructorArg.IsNull && memberInitValue is not null) return true;
+                if (constructorArg.Value is null && memberInitValue is not null) return true;
+                if (constructorArg.Value is not null && memberInitValue is null) return true;
 
-            // both of values are not null - lets compare using boxed interpretations of values
-            defaultValueAttributeLocation = defaultValueAttrData.GetLocation(defaultValueAttrData.AttributeClass);
-            return !constructorArg.Value!.Equals(memberInitValue);
+                // both of values are not null - lets compare using boxed interpretations of values
+                defaultValueAttributeLocation = defaultValueAttrData.GetLocation(defaultValueAttrData.AttributeClass);
+                return !constructorArg.Value!.Equals(memberInitValue);
+            }
+            
+            if (defaultValueAttrData.ConstructorArguments.Length == 2)
+            {
+                var attrType = defaultValueAttrData.ConstructorArguments[0];
+                var attrStrValue = defaultValueAttrData.ConstructorArguments[1];
+                
+                // TODO parse raw str to object here. Probably we can just use the same code, that asides in DefaultValue ctor
+            }
+            
+            // this is unexpected, because there is not such a ctor overload
+            return false;
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
