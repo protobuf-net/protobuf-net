@@ -2369,6 +2369,8 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.UInt16: return ((ushort)value) == 0;
                     case ProtoTypeCode.UInt32: return ((uint)value) == 0;
                     case ProtoTypeCode.UInt64: return ((ulong)value) == 0;
+                    case ProtoTypeCode.IntPtr: return ((IntPtr)value) == IntPtr.Zero;
+                    case ProtoTypeCode.UIntPtr: return ((UIntPtr)value) == UIntPtr.Zero;
                 }
             }
             catch { }

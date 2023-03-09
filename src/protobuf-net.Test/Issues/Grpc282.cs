@@ -56,6 +56,39 @@ namespace ProtoBuf.Test.Issues
             Assert.Equal(42, clone.m_pEvAlertObj);
         }
 
+        [Theory]
+        [InlineData(typeof(setCommCellIdRequest), @"syntax = ""proto3"";
+package ProtoBuf.Test.Issues;
+
+message setCommCellIdRequest {
+   int64 commCellId = 1;
+   int64 m_pEvAlertObj = 2;
+   bool isDisposed = 3;
+}
+")]
+        [InlineData(typeof(WithDefaults), @"syntax = ""proto3"";
+package ProtoBuf.Test.Issues;
+
+message WithDefaults {
+   int64 A = 1; // default value could not be applied: 134
+   int64 B = 2;
+   uint64 C = 3; // default value could not be applied: 136
+   uint64 D = 4;
+}
+")]
+        [InlineData(typeof(WithDefaults), @"syntax = ""proto2"";
+package ProtoBuf.Test.Issues;
+
+message WithDefaults {
+   optional int64 A = 1 [default = 134];
+   optional int64 B = 2;
+   optional uint64 C = 3 [default = 136];
+   optional uint64 D = 4;
+}
+", ProtoSyntax.Proto2)]
+        public void TestSchema(Type type, string expected, ProtoSyntax syntax = ProtoSyntax.Proto3)
+            => Assert.Equal(expected, RuntimeTypeModel.Create().GetSchema(type, syntax), ignoreLineEndingDifferences: true);
+
         [ProtoContract]
         public class setCommCellIdRequest
         {
