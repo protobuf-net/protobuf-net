@@ -46,8 +46,6 @@ namespace ProtoBuf.Internal
             }
             if (TypeHelper<TKey>.IsReferenceType && TypeHelper<TKey>.ValueChecker.IsNull(key))
                 key = TypeModel.CreateInstance<TKey>(state.Context, _keySerializer);
-            if (TypeHelper<TValue>.IsReferenceType && TypeHelper<TValue>.ValueChecker.IsNull(value))
-                value = TypeModel.CreateInstance<TValue>(state.Context, _valueSerializer);
 
             return new KeyValuePair<TKey, TValue>(key, value);
         }
