@@ -424,10 +424,13 @@ namespace ProtoBuf.BuildTools.Internal
             
             if (defaultValueAttrData.ConstructorArguments.Length == 2)
             {
-                var attrType = defaultValueAttrData.ConstructorArguments[0];
                 var attrStrValue = defaultValueAttrData.ConstructorArguments[1];
                 
-                // TODO parse raw str to object here. Probably we can just use the same code, that asides in DefaultValue ctor
+                var attrTypeData = defaultValueAttrData.ConstructorArguments[0];
+                var attrType = attrTypeData.GetUnderlyingType();
+                var defaultValueCompiledValue = RoslynUtils.DynamicallyParseToValue(attrType!, (string)attrStrValue.Value!);
+                
+                return defaultValueCompiledValue != null && !defaultValueCompiledValue.Equals(memberInitValue);
             }
             
             // this is unexpected, because there is not such a ctor overload
