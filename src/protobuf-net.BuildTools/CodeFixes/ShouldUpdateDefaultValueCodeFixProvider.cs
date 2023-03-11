@@ -26,7 +26,17 @@ namespace ProtoBuf.CodeFixes
         /// Key of for a <see cref="KeyValuePair{TKey,TValue}"/> of diagnostic properties,
         /// containing <see cref="DefaultValueAttribute"/> constructor value to be inserted into code
         /// </summary>
-        public const string UpdateValueDiagnosticArgKey = "UpdateValueDiagnosticArgKey";
+        internal const string DefaultValueStringRepresentationArgKey = "DefaultValueStringRepresentationArgKey";
+        
+        /// <summary>
+        /// 'object.ToString()' representation.
+        /// </summary>
+        internal const string DefaultValueCalculatedArgKey = "DefaultValueCalculatedArgKey";
+        
+        /// <summary>
+        /// <see cref="SpecialType"/> value of member type. Helps to consider which syntax to use
+        /// </summary>
+        internal const string MemberSpecialTypeArgKey = "MemberSpecialTypeArgKey";
 
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
@@ -88,7 +98,7 @@ namespace ProtoBuf.CodeFixes
                 return false;
             }
 
-            if (!diagnostic.Properties.TryGetValue(UpdateValueDiagnosticArgKey, out var defaultValue))
+            if (!diagnostic.Properties.TryGetValue(DefaultValueStringRepresentationArgKey, out var defaultValue))
             {
                 diagnosticArguments = default;
                 return false;

@@ -1,46 +1,15 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Reflection;
 
 namespace ProtoBuf.BuildTools.Internal
 {
     internal static class Utils
     {
-        internal static CompilationUnitSyntax AddUsingsIfNotExist(
-            this CompilationUnitSyntax compilationUnitSyntax,
-            params string[]? usingDirectiveNames)
-        {
-            if (usingDirectiveNames is null || usingDirectiveNames.Length == 0) return compilationUnitSyntax;
-
-            // build a hashset for efficient lookup
-            // comparison is done based on string value, because different usings can have different types of identifiers:
-            // - IdentifierName
-            // - QualifiedNameSyntax
-            var existingUsingDirectiveNames = compilationUnitSyntax.Usings
-                .Select(x => x.Name.ToString().Trim())
-                .ToImmutableHashSet();
-
-            foreach (var directive in usingDirectiveNames)
-            {
-                var directiveTrimmed = directive.Trim();
-                if (!existingUsingDirectiveNames.Contains(directiveTrimmed))
-                {
-                    compilationUnitSyntax = compilationUnitSyntax.AddUsings(
-                        SyntaxFactory.UsingDirective(
-                            SyntaxFactory.ParseName(" " + directiveTrimmed)));
-                }
-            }
-
-            return compilationUnitSyntax;
-        }
-
         internal static ImmutableArray<DiagnosticDescriptor> GetDeclared(Type type)
         {
             var fields = type?.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
@@ -55,14 +24,6 @@ namespace ProtoBuf.BuildTools.Internal
                 }
             }
             return builder.ToImmutable();
-        }
-
-        internal static ImmutableDictionary<string, string?> BuildProperties(
-            params KeyValuePair<string, string?>[] keyValuePairs)
-        {
-            var builder = ImmutableDictionary.CreateBuilder<string, string?>();
-            builder.AddRange(keyValuePairs);
-            return builder.ToImmutableDictionary();
         }
 
         internal static Location PickLocation(ref SyntaxNodeAnalysisContext context, Location? preferred)

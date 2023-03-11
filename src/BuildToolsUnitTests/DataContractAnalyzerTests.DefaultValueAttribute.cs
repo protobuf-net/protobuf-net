@@ -139,22 +139,58 @@ namespace BuildToolsUnitTests
         }
         
         [Theory]
-        [InlineData("bool", "false", "true")]
         [InlineData("DayOfWeek", "DayOfWeek.Tuesday", "DayOfWeek.Monday")]
-        [InlineData("char", "'Y'", "'X'")]
-        [InlineData("sbyte", "2", "1")]
+        [InlineData("char", "Y", "'X'")]
         [InlineData("byte", "0x1", "0x2")]
         [InlineData("short", "0b0000_0010", "0b0000_0011")]
+        [InlineData("uint", "5u", "6u")]
+        [InlineData("long", "123456789012345678L", "1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
+        [InlineData("ulong", "675849302UL", "123")]
+        [InlineData("float", "2.6f", "2.1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
+        [InlineData("nint", "2", "1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
+        [InlineData("nuint", "2", "1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
+        public async Task ReportsShouldUpdateDefault_LongSyntax_InvalidSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{ 
+                    [ProtoMember(1), DefaultValue(typeof({type}), ""{attributeValue}"")] public {type} FieldBar = {propertyValue};
+                    [ProtoMember(2), DefaultValue(typeof({type}), ""{attributeValue}"")] public {type} PropertyBar {{ get; set; }} = {propertyValue};
+                }}            
+            ");
+            
+            var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldUpdateDefault).ToList();
+            if (!shouldReportDiagnostic)
+            {
+                Assert.Empty(diags);
+                return;
+            }
+
+            Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
+            Assert.Collection(diags.Select(diag => diag.GetMessage(CultureInfo.InvariantCulture)),
+                msg => Assert.Equal(string.Format(DataContractAnalyzer.ShouldUpdateDefault.MessageFormat.ToString(), "FieldBar", propertyValue), msg),
+                msg => Assert.Equal(string.Format(DataContractAnalyzer.ShouldUpdateDefault.MessageFormat.ToString(), "PropertyBar", propertyValue), msg)
+            );
+        }
+        
+        [Theory]
+        [InlineData("bool", "false", "true")]
+        [InlineData("DayOfWeek", "Tuesday", "DayOfWeek.Monday")]
+        [InlineData("char", "Y", "'X'")]
+        [InlineData("sbyte", "2", "1")]
+        [InlineData("byte", "0x1", "0x2")]
         [InlineData("ushort", "3", "4")]
         [InlineData("int", "1", "-5")]
-        [InlineData("uint", "5u", "6u")]
-        [InlineData("long", "123456789012345678L", "1")]
-        [InlineData("ulong", "675849302UL", "123")]
-        [InlineData("float", "2.6f", "2.1")]
+        [InlineData("uint", "5", "6u")]
+        [InlineData("long", "123456789012345678", "1")]
+        [InlineData("ulong", "675849302U", "123")]
+        [InlineData("float", "2.6", "2.1")]
         [InlineData("double", "3.14", "3.14159265")]
-        [InlineData("nint", "2", "1")]
-        [InlineData("nuint", "2", "1")]
-        public async Task ReportsShouldUpdateDefault_LongSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
+        public async Task ReportsShouldUpdateDefault_LongSyntax_ValidAttributeSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
         {
             var diagnostics = await AnalyzeAsync($@"
                 using ProtoBuf;

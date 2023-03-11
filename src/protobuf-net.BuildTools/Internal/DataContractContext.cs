@@ -267,7 +267,9 @@ namespace ProtoBuf.BuildTools.Internal
                                             messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueDiagnosticArgKey, memberValueStringRepresentation)
+                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
+                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
+                                                            .Add(ShouldDeclareDefaultCodeFixProvider.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
                                     }
@@ -279,7 +281,9 @@ namespace ProtoBuf.BuildTools.Internal
                                             messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.UpdateValueDiagnosticArgKey, memberValueStringRepresentation)
+                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
+                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
+                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
                                     }
@@ -378,6 +382,14 @@ namespace ProtoBuf.BuildTools.Internal
             var constantValue = semanticModel.GetConstantValue(initialValueSyntaxNode!);
             if (!constantValue.HasValue || constantValue.Value is null)
             {
+                // static fields are not considered as `constantValue`,
+                // so we can manually go over some known assignments (i.e. `string.Empty`)
+                if (CalculateKnownMemberAssignment(out var valueKind, initialValueSyntaxNode, out memberInitialValue)
+                    && valueKind != null)
+                {
+                    return valueKind.Value;
+                }
+                
                 initialValueSyntaxNode = null;
                 memberInitialValue = null;
                 return MemberInitValueKind.NonConstantExpression; 
@@ -399,6 +411,24 @@ namespace ProtoBuf.BuildTools.Internal
                 SpecialType.System_Decimal or _ 
                     => MemberInitValueKind.NonConstantExpression 
             };
+
+            bool CalculateKnownMemberAssignment(
+                out MemberInitValueKind? valueKind,
+                CSharpSyntaxNode initialValueSyntaxNode,
+                out object? memberInitialValue)
+            {
+                if (memberSpecialType == SpecialType.System_String &&
+                    initialValueSyntaxNode.ToString() == "string.Empty")
+                {
+                    valueKind = MemberInitValueKind.ConstantExpression;
+                    memberInitialValue = string.Empty;
+                    return true;
+                }
+
+                memberInitialValue = null;
+                valueKind = MemberInitValueKind.NonConstantExpression;
+                return false;
+            }
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
@@ -425,11 +455,20 @@ namespace ProtoBuf.BuildTools.Internal
             if (defaultValueAttrData.ConstructorArguments.Length == 2)
             {
                 var attrStrValue = defaultValueAttrData.ConstructorArguments[1];
-                
                 var attrTypeData = defaultValueAttrData.ConstructorArguments[0];
                 var attrType = attrTypeData.GetUnderlyingType();
-                var defaultValueCompiledValue = RoslynUtils.DynamicallyParseToValue(attrType!, (string)attrStrValue.Value!);
                 
+                object? defaultValueCompiledValue;
+                try
+                {
+                    defaultValueCompiledValue = RoslynUtils.DynamicallyParseToValue(attrType!, (string)attrStrValue.Value!);
+                }
+                catch
+                {
+                    // if parsing input data fails - lets report a diagnostic
+                    return true;
+                }
+
                 return defaultValueCompiledValue != null && !defaultValueCompiledValue.Equals(memberInitValue);
             }
             

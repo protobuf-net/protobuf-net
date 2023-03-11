@@ -1,7 +1,5 @@
 ﻿using BuildToolsUnitTests.Abstractions;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ProtoBuf.BuildTools.Internal;
+using ProtoBuf.Internal;
 using Xunit;
 
 namespace BuildToolsUnitTests.Internal

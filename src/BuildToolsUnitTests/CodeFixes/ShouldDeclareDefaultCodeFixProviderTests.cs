@@ -139,8 +139,8 @@ public class Foo
         }
         
         [Theory]
-        [InlineData("decimal", "2.1m")]
-        public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_LongSyntax(string propertyType, string propertyDefaultValue)
+        [InlineData("decimal", "2.1", "2.1m")]
+        public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_LongSyntax(string propertyType, string attributeValue, string propertyDefaultValue)
         {
             var sourceCode = $@"
 using ProtoBuf;
@@ -166,7 +166,7 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue(typeof({propertyType}), ""{propertyDefaultValue}"")]
+    [ProtoMember(1), DefaultValue(typeof({propertyType}), ""{attributeValue}"")]
     public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
 }}";
             

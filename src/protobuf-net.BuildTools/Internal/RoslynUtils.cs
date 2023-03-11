@@ -1,24 +1,67 @@
 ﻿#nullable enable
 using System;
+using System.Collections.Immutable;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ProtoBuf.Internal
 {
     internal static class RoslynUtils
     {
+        public static CompilationUnitSyntax AddUsingsIfNotExist(
+            this CompilationUnitSyntax compilationUnitSyntax,
+            params string[]? usingDirectiveNames)
+        {
+            if (usingDirectiveNames is null || usingDirectiveNames.Length == 0) return compilationUnitSyntax;
+
+            // build a hashset for efficient lookup
+            // comparison is done based on string value, because different usings can have different types of identifiers:
+            // - IdentifierName
+            // - QualifiedNameSyntax
+            var existingUsingDirectiveNames = compilationUnitSyntax.Usings
+                .Select(x => x.Name.ToString().Trim())
+                .ToImmutableHashSet();
+
+            foreach (var directive in usingDirectiveNames)
+            {
+                var directiveTrimmed = directive.Trim();
+                if (!existingUsingDirectiveNames.Contains(directiveTrimmed))
+                {
+                    compilationUnitSyntax = compilationUnitSyntax.AddUsings(
+                        SyntaxFactory.UsingDirective(
+                            SyntaxFactory.ParseName(" " + directiveTrimmed)));
+                }
+            }
+
+            return compilationUnitSyntax;
+        }
+        
         public static Type? GetUnderlyingType(this TypedConstant typedConstant)
         {
             var namedTypeSymbol = (typedConstant.Value as INamedTypeSymbol);
             if (namedTypeSymbol is null) return null;
+
+            if (namedTypeSymbol is { SpecialType: SpecialType.None, EnumUnderlyingType: { } })
+            {
+                var type = namedTypeSymbol.ToString();
+                try
+                {
+                    return Type.GetType(type);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
             
             return namedTypeSymbol.SpecialType switch
             {
-                SpecialType.None => null,
                 SpecialType.System_Object => typeof(object),
-                SpecialType.System_Enum => typeof(Enum), // TODO probably fix it here 
                 SpecialType.System_Boolean => typeof(bool),
                 SpecialType.System_Char => typeof(char),
                 SpecialType.System_SByte => typeof(sbyte),
@@ -38,6 +81,28 @@ namespace ProtoBuf.Internal
                 _ => null
             };
         }
+
+        public static string GetSpecialTypeCSharpKeyword(this SpecialType type) => type switch
+        {
+            SpecialType.System_Object => "object",
+            SpecialType.System_Boolean => "bool",
+            SpecialType.System_Char => "char",
+            SpecialType.System_SByte => "sbyte",
+            SpecialType.System_Byte => "byte",
+            SpecialType.System_Int16 => "short",
+            SpecialType.System_UInt16 => "ushort",
+            SpecialType.System_Int32 => "int",
+            SpecialType.System_UInt32 => "uint",
+            SpecialType.System_Int64 => "long",
+            SpecialType.System_UInt64 => "ulong",
+            SpecialType.System_Decimal => "decimal",
+            SpecialType.System_Single => "float",
+            SpecialType.System_Double => "double",
+            SpecialType.System_String => "string",
+            SpecialType.System_IntPtr => "nint",
+            SpecialType.System_UIntPtr => "nuint",
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
 
         public static object? DynamicallyParseToValue(Type? type, string? value)
         {

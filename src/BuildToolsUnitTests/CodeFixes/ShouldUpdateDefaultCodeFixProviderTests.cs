@@ -47,6 +47,47 @@ public class Foo
                 diagnosticResult: null, // no diagnostic expected!
                 standardExpectedDiagnostics: _standardExpectedDiagnostics);
         }
+        
+        [Theory]
+        [InlineData("decimal", "2.1", "2.2", "2.2m")]
+        public async Task CodeFixValidate_ShouldUpdateDefault_LongSyntax(
+            string propertyType, string attributeBeforeValue, string attributeAfterValue, string propertyValue)
+        {
+            var sourceCode = $@"
+using ProtoBuf;
+using System;
+using System.ComponentModel;
+
+[ProtoContract]
+public class Foo
+{{
+    [ProtoMember(1), DefaultValue(typeof({propertyValue}), ""{attributeBeforeValue}"")]
+    public {propertyType} Bar {{ get; set; }} = {propertyValue};
+}}";
+
+            var expectedCode = $@"
+using ProtoBuf;
+using System;
+using System.ComponentModel;
+
+[ProtoContract]
+public class Foo
+{{
+    [ProtoMember(1), DefaultValue(typeof({propertyValue}), ""{attributeAfterValue}"")]
+    public {propertyType} Bar {{ get; set; }} = {propertyValue};
+}}";
+
+            var diagnosticResult = PrepareDiagnosticResult(
+                DataContractAnalyzer.ShouldUpdateDefault,
+                9, 22, 9, $"DefaultValue(typeof({propertyValue}), {attributeBeforeValue})]".Length + 22 - 2,
+                propertyValue);
+
+            await RunCodeFixTestAsync<DataContractAnalyzer>(
+                sourceCode,
+                expectedCode,
+                diagnosticResult,
+                standardExpectedDiagnostics: _standardExpectedDiagnostics);
+        }
 
         [Theory]
         [InlineData("bool", "true", "false")]
@@ -65,7 +106,7 @@ public class Foo
         [InlineData("nint", "1", "2")]
         [InlineData("nuint", "2", "1")]
         [InlineData("string", "\"hello\"", "\"hello world!\"")]
-        public async Task CodeFixValidate_ShouldUpdateDefault_ClassicExample(
+        public async Task CodeFixValidate_ShouldUpdateDefault_ShortSyntax(
             string propertyType, string attributeValue, string propertyValue)
         {
             var sourceCode = $@"
