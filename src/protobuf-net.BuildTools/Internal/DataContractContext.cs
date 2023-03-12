@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using ProtoBuf.CodeFixes.DefaultValue;
+using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 using ProtoBuf.Internal;
 
 namespace ProtoBuf.BuildTools.Internal
@@ -267,9 +269,9 @@ namespace ProtoBuf.BuildTools.Internal
                                             messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
-                                                            .Add(ShouldDeclareDefaultCodeFixProvider.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
-                                                            .Add(ShouldDeclareDefaultCodeFixProvider.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
+                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
+                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
+                                                            .Add(DefaultValueCodeFixProviderBase.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
                                     }
@@ -281,9 +283,9 @@ namespace ProtoBuf.BuildTools.Internal
                                             messageArgs: new object[] { member.MemberName, memberValueStringRepresentation },
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
-                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
-                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
-                                                            .Add(ShouldUpdateDefaultValueCodeFixProvider.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
+                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
+                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
+                                                            .Add(DefaultValueCodeFixProviderBase.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
                                     }
@@ -435,9 +437,11 @@ namespace ProtoBuf.BuildTools.Internal
         private bool ShouldUpdateDefaultValueAttribute(SyntaxNodeAnalysisContext context, Member member, object? memberInitValue, out Location? defaultValueAttributeLocation)
         {
             defaultValueAttributeLocation = null;
-            
             var defaultValueAttrData = GetDefaultValueAttributeData(member);
             if (defaultValueAttrData is null) return false;
+            
+            // set the blame location on attribute
+            defaultValueAttributeLocation = defaultValueAttrData.GetLocation(defaultValueAttrData.AttributeClass);
 
             if (defaultValueAttrData.ConstructorArguments.Length == 1)
             {
@@ -448,7 +452,6 @@ namespace ProtoBuf.BuildTools.Internal
                 if (constructorArg.Value is not null && memberInitValue is null) return true;
 
                 // both of values are not null - lets compare using boxed interpretations of values
-                defaultValueAttributeLocation = defaultValueAttrData.GetLocation(defaultValueAttrData.AttributeClass);
                 return !constructorArg.Value!.Equals(memberInitValue);
             }
             

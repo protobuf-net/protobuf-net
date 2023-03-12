@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.CodeFixes;
 using System.Threading.Tasks;
+using ProtoBuf.CodeFixes.DefaultValue;
 using Xunit;
 
 namespace BuildToolsUnitTests.CodeFixes
@@ -49,7 +50,7 @@ public class Foo
         }
         
         [Theory]
-        [InlineData("decimal", "2.1", "2.2", "2.2m")]
+        [InlineData("decimal", "2", "2.2", "2.2m")]
         public async Task CodeFixValidate_ShouldUpdateDefault_LongSyntax(
             string propertyType, string attributeBeforeValue, string attributeAfterValue, string propertyValue)
         {
@@ -61,7 +62,7 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue(typeof({propertyValue}), ""{attributeBeforeValue}"")]
+    [ProtoMember(1), DefaultValue(typeof({propertyType}), ""{attributeBeforeValue}"")]
     public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
@@ -73,13 +74,13 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue(typeof({propertyValue}), ""{attributeAfterValue}"")]
+    [ProtoMember(1), DefaultValue(typeof({propertyType}), ""{attributeAfterValue}"")]
     public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
             var diagnosticResult = PrepareDiagnosticResult(
                 DataContractAnalyzer.ShouldUpdateDefault,
-                9, 22, 9, $"DefaultValue(typeof({propertyValue}), {attributeBeforeValue})]".Length + 22 - 2,
+                9, 22, 9, @$"DefaultValue(typeof({propertyType}), ""{attributeBeforeValue}"")]".Length + 22 - 1,
                 propertyValue);
 
             await RunCodeFixTestAsync<DataContractAnalyzer>(

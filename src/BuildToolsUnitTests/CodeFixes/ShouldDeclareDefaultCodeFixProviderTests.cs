@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.Testing;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.CodeFixes;
 using System.Threading.Tasks;
+using ProtoBuf.CodeFixes.DefaultValue;
 using Xunit;
 
 namespace BuildToolsUnitTests.CodeFixes

@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,31 +13,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
+using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 
-namespace ProtoBuf.CodeFixes
+namespace ProtoBuf.CodeFixes.DefaultValue
 {
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ShouldUpdateDefaultValueCodeFixProvider)), Shared]
-    public class ShouldUpdateDefaultValueCodeFixProvider : CodeFixProvider
+    public class ShouldUpdateDefaultValueCodeFixProvider : DefaultValueCodeFixProviderBase
     {
         const string CodeFixTitle = "Update [DefaultValue] attribute";
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DataContractAnalyzer.ShouldUpdateDefault.Id);
         public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
-
-        /// <summary>
-        /// Key of for a <see cref="KeyValuePair{TKey,TValue}"/> of diagnostic properties,
-        /// containing <see cref="DefaultValueAttribute"/> constructor value to be inserted into code
-        /// </summary>
-        internal const string DefaultValueStringRepresentationArgKey = "DefaultValueStringRepresentationArgKey";
-        
-        /// <summary>
-        /// 'object.ToString()' representation.
-        /// </summary>
-        internal const string DefaultValueCalculatedArgKey = "DefaultValueCalculatedArgKey";
-        
-        /// <summary>
-        /// <see cref="SpecialType"/> value of member type. Helps to consider which syntax to use
-        /// </summary>
-        internal const string MemberSpecialTypeArgKey = "MemberSpecialTypeArgKey";
 
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
@@ -75,7 +61,7 @@ namespace ProtoBuf.CodeFixes
             if (argumentList is null) return document.Project.Solution;
             
             var updatedArgumentList = argumentList.WithArguments(
-                SyntaxFactory.SeparatedList(new[] { BuildDefaultValueArgumentSyntax() })
+                BuildDefaultValueAttributeArguments(diagnosticArguments)
             );
 
             var oldRoot = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
@@ -84,33 +70,6 @@ namespace ProtoBuf.CodeFixes
             var newRoot = oldRoot.ReplaceNode(argumentList, updatedArgumentList);
             document = document.WithSyntaxRoot(newRoot);
             return document.Project.Solution;
-
-            AttributeArgumentSyntax BuildDefaultValueArgumentSyntax()
-                => SyntaxFactory.AttributeArgument(
-                    default, default, SyntaxFactory.ParseExpression(diagnosticArguments.DefaultValue));
-        }
-        
-        private static bool TryBuildDiagnosticArguments(Diagnostic diagnostic, out DiagnosticArguments diagnosticArguments)
-        {
-            if (diagnostic.Properties.Count == 0)
-            {
-                diagnosticArguments = default;
-                return false;
-            }
-
-            if (!diagnostic.Properties.TryGetValue(DefaultValueStringRepresentationArgKey, out var defaultValue))
-            {
-                diagnosticArguments = default;
-                return false;
-            }
-
-            diagnosticArguments = new() { DefaultValue = defaultValue };
-            return true;
-        }
-
-        private struct DiagnosticArguments
-        {
-            public string DefaultValue { get; set; }
         }
     }
 }
