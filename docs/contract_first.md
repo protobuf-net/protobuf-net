@@ -45,6 +45,7 @@ Additional configuration options can be specified at attributes against each `<A
 - `CompatLevel` - controls whether well-known types should be marked with CompatibilityLevel instead of DataFormat
 - `NullableValueType` - use `int?` etc for optional value types
 - `RepeatedAsList` - use `List<T>` etc instead of `T[]` for *all* collections (i.e. including primitives)
+- `IncludeInOutput` - controls whether the file is included in the output; this can be useful for adding a file to the virtual file system for importing without generating code as it might be generated elsewhere
 
 ## That doesn't work for you?
 
