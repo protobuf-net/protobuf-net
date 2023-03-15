@@ -214,11 +214,24 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.TimeSpan: return TimeSpan.Parse(s);
                     case ProtoTypeCode.Uri: return s; // Uri is decorated as string
                     case ProtoTypeCode.Guid: return new Guid(s);
+                    case ProtoTypeCode.IntPtr: return new IntPtr(long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));
+                    case ProtoTypeCode.UIntPtr: return new UIntPtr(ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture));
                 }
             }
 
             if (type.IsEnum) return Enum.ToObject(type, value);
-            return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+            try
+            {
+                return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+            }
+            catch (InvalidCastException) when (type == typeof(IntPtr))
+            {
+                return new IntPtr((long)Convert.ChangeType(value, typeof(long), CultureInfo.InvariantCulture));
+            }
+            catch (InvalidCastException) when (type == typeof(UIntPtr))
+            {
+                return new UIntPtr((ulong)Convert.ChangeType(value, typeof(ulong), CultureInfo.InvariantCulture));
+            }
         }
 
         private IRuntimeProtoSerializerNode serializer;
@@ -679,6 +692,12 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.Type:
                     defaultWireType = WireType.String;
                     return SystemTypeSerializer.Instance;
+                case ProtoTypeCode.IntPtr:
+                    defaultWireType = GetIntWireType(dataFormat, 64);
+                    return IntPtrSerializer.Instance;
+                case ProtoTypeCode.UIntPtr:
+                    defaultWireType = GetIntWireType(dataFormat, 64);
+                    return UIntPtrSerializer.Instance;
             }
             IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable is object)

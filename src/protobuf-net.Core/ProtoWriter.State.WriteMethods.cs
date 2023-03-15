@@ -189,6 +189,18 @@ namespace ProtoBuf
             public void WriteBoolean(bool value) => WriteUInt32(value ? (uint)1 : (uint)0);
 
             /// <summary>
+            /// Writes a native integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void WriteIntPtr(IntPtr value) => WriteInt64(value.ToInt64());
+
+            /// <summary>
+            /// Writes a native integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void WriteUIntPtr(UIntPtr value) => WriteUInt64(value.ToUInt64());
+
+            /// <summary>
             /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
             /// </summary>
             public void WriteUInt32(uint value)
