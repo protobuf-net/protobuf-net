@@ -121,16 +121,16 @@ namespace ProtoBuf.Serializers
         /// </summary>
         public void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
         {
-            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
-            var serializerFeatures = serializer.Features;
-            if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
-            features.InheritFrom(serializerFeatures);
-
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {
                 WriteNullWrapped(ref state, fieldNumber, features, values, serializer);
                 return;
             }
+
+            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
+            var serializerFeatures = serializer.Features;
+            if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
+            features.InheritFrom(serializerFeatures);
 
             int count = TryGetCount(values);
 
@@ -327,15 +327,15 @@ namespace ProtoBuf.Serializers
         /// </summary>
         public TCollection ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
         {
-            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
-            var serializerFeatures = serializer.Features;
-            if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
-            features.InheritFrom(serializerFeatures);
-
             if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
             {
                 return ReadNullWrapped(ref state, features, values, serializer);
             }
+
+            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
+            var serializerFeatures = serializer.Features;
+            if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
+            features.InheritFrom(serializerFeatures);
 
             if (features.HasAny(SerializerFeatures.OptionWrappedValue))
                 features |= SerializerFeatures.OptionWrappedValueFieldPresence;
