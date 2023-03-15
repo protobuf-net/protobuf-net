@@ -104,6 +104,18 @@ namespace ProtoBuf.Serializers
         void IRepeatedSerializer<TCollection>.WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values)
             => WriteRepeated(ref state, fieldNumber, features, values, default);
 
+        private void WriteNullWrapped(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
+        {
+            if (!(TypeHelper<TCollection>.CanBeNull && TypeHelper<TCollection>.ValueChecker.IsNull(values)))
+            {
+                state.WriteFieldHeader(fieldNumber, features.HasAny(SerializerFeatures.OptionWrappedCollectionGroup) ? WireType.StartGroup : WireType.String);
+                features &= ~(SerializerFeatures.OptionWrappedCollection | SerializerFeatures.OptionWrappedCollectionGroup);
+                var tok = state.StartSubItem(null); // will need to do something here
+                WriteRepeated(ref state, TypeModel.ListItemTag, features, values, serializer);
+                state.EndSubItem(tok);
+            }
+        }
+
         /// <summary>
         /// Serialize a sequence of values to the supplied writer
         /// </summary>
@@ -113,6 +125,12 @@ namespace ProtoBuf.Serializers
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);
+
+            if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
+            {
+                WriteNullWrapped(ref state, fieldNumber, features, values, serializer);
+                return;
+            }
 
             int count = TryGetCount(values);
 
@@ -278,6 +296,32 @@ namespace ProtoBuf.Serializers
         TCollection IRepeatedSerializer<TCollection>.ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values)
             => ReadRepeated(ref state, features, values, default);
 
+        private TCollection ReadNullWrapped(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
+        {
+            features &= ~(SerializerFeatures.OptionWrappedCollection | SerializerFeatures.OptionWrappedCollectionGroup);
+            int fieldNumber;
+            var tok = state.StartSubItem();
+            bool needInit = true;
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            {
+                if (fieldNumber == TypeModel.ListItemTag)
+                {
+                    values = ReadRepeated(ref state, features, values, serializer);
+                    needInit = false;
+                }
+                else
+                {
+                    state.SkipField();
+                }
+            }
+            state.EndSubItem(tok);
+            if (needInit)
+            {
+                values = Initialize(values, state.Context);
+            }
+            return values;
+        }
+
         /// <summary>
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
@@ -287,6 +331,11 @@ namespace ProtoBuf.Serializers
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);
+
+            if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
+            {
+                return ReadNullWrapped(ref state, features, values, serializer);
+            }
 
             if (features.HasAny(SerializerFeatures.OptionWrappedValue))
                 features |= SerializerFeatures.OptionWrappedValueFieldPresence;
