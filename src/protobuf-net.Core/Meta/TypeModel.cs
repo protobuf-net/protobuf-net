@@ -1408,13 +1408,6 @@ namespace ProtoBuf.Meta
                 T obj = default;
                 if (serializer is IFactory<T> factory) obj = factory.Create(context);
 
-                if (obj is null && serializer is not null && serializer.Features.GetCategory() == SerializerFeatures.CategoryMessage)
-                {
-                    // get the serializer to do the work, by reading an empty state
-                    // (zero bytes is a default object in protobuf)
-                    obj = TryReadEmptyMessage(context, serializer);
-                }
-
                 // note we already know this is a ref-type
                 if (obj is null) obj = ActivatorCreate<T>();
                 return obj;
@@ -1422,23 +1415,6 @@ namespace ProtoBuf.Meta
             else
             {
                 return default;
-            }
-
-            static T TryReadEmptyMessage(ISerializationContext context, ISerializer<T> serializer)
-            {
-                var state = ProtoReader.State.Create(default(ReadOnlyMemory<byte>), context?.Model, context?.UserState);
-                try
-                {
-                    return serializer.Read(ref state, default);
-                }
-                catch
-                {
-                    return default;
-                }
-                finally
-                {
-                    state.Dispose();
-                }
             }
         }
 

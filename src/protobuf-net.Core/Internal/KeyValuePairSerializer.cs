@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -45,11 +46,38 @@ namespace ProtoBuf.Internal
                 }
             }
             if (TypeHelper<TKey>.IsReferenceType && TypeHelper<TKey>.ValueChecker.IsNull(key))
-                key = TypeModel.CreateInstance<TKey>(state.Context, _keySerializer);
+                key = CreateDefault<TKey>(state.Context, _keySerializer);
             if (TypeHelper<TValue>.IsReferenceType && TypeHelper<TValue>.ValueChecker.IsNull(value))
-                value = TypeModel.CreateInstance<TValue>(state.Context, _valueSerializer);
+                value = CreateDefault<TValue>(state.Context, _valueSerializer);
 
             return new KeyValuePair<TKey, TValue>(key, value);
+        }
+        static T CreateDefault<T>(ISerializationContext context, ISerializer<T> serializer)
+        {
+            if (serializer is not null && serializer.Features.GetCategory() == SerializerFeatures.CategoryMessage)
+            {
+                // get the serializer to do the work, by reading an empty state
+                // (zero bytes is a default object in protobuf)
+                return TryReadEmptyMessage(context, serializer);
+            }
+            return TypeModel.CreateInstance<T>(context, serializer);
+
+            static T TryReadEmptyMessage(ISerializationContext context, ISerializer<T> serializer)
+            {
+                var state = ProtoReader.State.Create(default(ReadOnlyMemory<byte>), context?.Model, context?.UserState);
+                try
+                {
+                    return serializer.Read(ref state, default);
+                }
+                catch
+                {
+                    return TypeModel.CreateInstance<T>(context, serializer);
+                }
+                finally
+                {
+                    state.Dispose();
+                }
+            }
         }
 
         public void Write(ref ProtoWriter.State state, KeyValuePair<TKey, TValue> value)
