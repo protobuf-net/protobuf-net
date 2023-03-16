@@ -295,7 +295,7 @@ namespace ProtoBuf.Serializers
         T ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, T values);
     }
 
-    public interface IRepeatedSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue> : IRepeatedSerializer<TCollection>
+    internal interface IRepeatedSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue> : IRepeatedSerializer<TCollection>
     {
         /// <summary>
         /// Serialize a sequence of values to the supplied writer using the specified value-serializer
