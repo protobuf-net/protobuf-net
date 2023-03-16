@@ -283,7 +283,6 @@ namespace ProtoBuf
             // var tok = state.StartSubItem(null, PrefixStyle.Base128);
             // state.EndSubItem(tok);
 
-#pragma warning disable CS0618 // StartSubItem/EndSubItem
             switch (WireType)
             {
                 case WireType.String:
@@ -291,12 +290,12 @@ namespace ProtoBuf
                     break;
                 case WireType.StartGroup:
                     state.WriteHeaderCore(state.FieldNumber, WireType.EndGroup);
+                    WireType = WireType.None; // reset
                     break;
                 default:
                     ThrowHelper.ThrowArgumentOutOfRangeException(nameof(WireType));
                     break;
             }
-#pragma warning restore CS0618
         }
 
         internal virtual void WriteWrappedItem<T>(ref State state, SerializerFeatures features, T value, ISerializer<T> serializer)
