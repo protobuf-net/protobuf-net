@@ -87,11 +87,15 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Base class for simple collection serializers
     /// </summary>
-    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : ISerializer<TCollection>, IFactory<TCollection>
+    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
         TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
 
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
+
+        void IRepeatedSerializer<TCollection>.WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values) => WriteRepeated(ref state, fieldNumber, features, values, default);
+
+        TCollection IRepeatedSerializer<TCollection>.ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values) => ReadRepeated(ref state, features, values, default);
 
         TCollection ISerializer<TCollection>.Read(ref ProtoReader.State state, TCollection value)
         {
