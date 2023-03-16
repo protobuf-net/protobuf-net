@@ -87,7 +87,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Base class for simple collection serializers
     /// </summary>
-    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : IRepeatedSerializer<TCollection, TItem>, IFactory<TCollection>
+    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : ISerializer<TCollection>, IFactory<TCollection>
     {
         TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
 
@@ -101,9 +101,6 @@ namespace ProtoBuf.Serializers
 
         void ISerializer<TCollection>.Write(ref ProtoWriter.State state, TCollection value)
             => ThrowHelper.ThrowInvalidOperationException("Should have used " + nameof(IRepeatedSerializer<TCollection>.WriteRepeated));
-
-        void IRepeatedSerializer<TCollection>.WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values)
-            => WriteRepeated(ref state, fieldNumber, features, values, default);
 
         private void WriteNullWrapped(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
         {
@@ -295,9 +292,6 @@ namespace ProtoBuf.Serializers
                 return -1;
             }
         }
-
-        TCollection IRepeatedSerializer<TCollection>.ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values)
-            => ReadRepeated(ref state, features, values, default);
 
         private TCollection ReadNullWrapped(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
         {

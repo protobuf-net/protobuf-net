@@ -265,11 +265,20 @@ namespace ProtoBuf
 #pragma warning restore CS0618
         }
 
-        internal virtual void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, IRepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+        internal virtual void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = state.StartSubItem(null);
             serializer.WriteRepeated(ref state, TypeModel.ListItemTag, features, values, valueSerializer);
+            state.EndSubItem(tok);
+#pragma warning restore CS0618
+        }
+
+        internal virtual void WriteWrappedMap<TCollection, TKey, TValue>(ref State state, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey, TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = state.StartSubItem(null);
+            serializer.WriteMap(ref state, TypeModel.ListItemTag, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
             state.EndSubItem(tok);
 #pragma warning restore CS0618
         }
@@ -575,7 +584,7 @@ namespace ProtoBuf
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
 
-        internal static long MeasureRepeated<TCollection, TItem>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, IRepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+        internal static long MeasureRepeated<TCollection, TItem>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
         {
             long length;
             object obj = default;
@@ -591,6 +600,33 @@ namespace ProtoBuf
             var oldState = writer.ResetWriteState();
             var nulState = new State(writer);
             serializer.WriteRepeated(ref nulState, fieldNumber, features, values, valueSerializer);
+            length = nulState.GetPosition();
+            writer.SetWriteState(oldState); // make sure we leave it how we found it
+
+            // cache it if we can
+            if (obj is not null)
+            {   // we know it isn't null; we'd have exited above
+                writer.netCache.SetKnownLength(obj, null, length);
+            }
+            return length;
+        }
+
+        internal static long MeasureMap<TCollection, TKey, TValue>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey,TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+        {
+            long length;
+            object obj = default;
+            if (TypeHelper<TCollection>.IsReferenceType)
+            {
+                obj = values;
+                if (obj is null) return 0;
+                if (writer.netCache.TryGetKnownLength(obj, null, out length))
+                    return length;
+            }
+
+            // do the actual work
+            var oldState = writer.ResetWriteState();
+            var nulState = new State(writer);
+            serializer.WriteMap(ref nulState, fieldNumber, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
             length = nulState.GetPosition();
             writer.SetWriteState(oldState); // make sure we leave it how we found it
 

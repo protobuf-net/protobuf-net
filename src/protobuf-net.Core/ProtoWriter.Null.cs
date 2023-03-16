@@ -87,9 +87,15 @@ namespace ProtoBuf
                 var len = MeasureAny<T>(this, TypeModel.ListItemTag, features, value, serializer ?? TypeModel.GetSerializer<T>(Model));
                 AdvanceSubMessage(ref state, len, PrefixStyle.Base128); // only supported styles are group+varint
             }
-            internal override void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, IRepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+            internal override void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
             {
                 var len = MeasureRepeated<TCollection, TItem>(this, TypeModel.ListItemTag, features, values, serializer, valueSerializer ?? TypeModel.GetSerializer<TItem>(Model));
+                AdvanceSubMessage(ref state, len, PrefixStyle.Base128); // only supported styles are group+varint
+            }
+
+            internal override void WriteWrappedMap<TCollection, TKey, TValue>(ref State state, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey, TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+            {
+                var len = MeasureMap<TCollection, TKey, TValue>(this, TypeModel.ListItemTag, features, values, serializer, keyFeatures, valueFeatures, keySerializer, valueSerializer);
                 AdvanceSubMessage(ref state, len, PrefixStyle.Base128); // only supported styles are group+varint
             }
 

@@ -11,11 +11,11 @@ using static ProtoBuf.Test.BufferWriteCountTests;
 
 namespace ProtoBuf.Test
 {
-    public class NullCollections
+    public class NullMaps
     {
         public ITestOutputHelper Log { get; }
 
-        public NullCollections(ITestOutputHelper log)
+        public NullMaps(ITestOutputHelper log)
             => Log = log;
 
         [Fact]
@@ -51,7 +51,7 @@ message ManualWrappedEquivalent {
    WrapperLayer Wrapper = 4;
 }
 message WrapperLayer {
-   repeated Foo Foos = 1;
+   map<int32,Foo> Foos = 1;
 }
 ")]
         [InlineData(typeof(ManualWrappedGroupEquivalent), @"syntax = ""proto3"";
@@ -64,7 +64,7 @@ message ManualWrappedGroupEquivalent {
    group WrapperLayer Wrapper = 4;
 }
 message WrapperLayer {
-   repeated Foo Foos = 1;
+   map<int32,Foo> Foos = 1;
 }
 ")]
         public void SchemaGenerationSucceeds(Type type, string expected)
@@ -82,15 +82,15 @@ message WrapperLayer {
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "22-00")]
-        [InlineData(1, "22-04-0A-02-08-00")]
-        [InlineData(10, "22-28-0A-02-08-00-0A-02-08-01-0A-02-08-02-0A-02-08-03-0A-02-08-04-0A-02-08-05-0A-02-08-06-0A-02-08-07-0A-02-08-08-0A-02-08-09")]
+        [InlineData(1, "22-06-0A-04-12-02-08-00")]
+        [InlineData(10, "22-4E-0A-04-12-02-08-00-0A-06-08-01-12-02-08-01-0A-06-08-02-12-02-08-02-0A-06-08-03-12-02-08-03-0A-06-08-04-12-02-08-04-0A-06-08-05-12-02-08-05-0A-06-08-06-12-02-08-06-0A-06-08-07-12-02-08-07-0A-06-08-08-12-02-08-08-0A-06-08-09-12-02-08-09")]
         public void TestWithNullWrappedCollection(int count, string? hex = null) => Test<WithNullWrappedCollection>(count, true, hex);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "23-24")]
-        [InlineData(1, "23-0A-02-08-00-24")]
-        [InlineData(10, "23-0A-02-08-00-0A-02-08-01-0A-02-08-02-0A-02-08-03-0A-02-08-04-0A-02-08-05-0A-02-08-06-0A-02-08-07-0A-02-08-08-0A-02-08-09-24")]
+        [InlineData(1, "23-0A-04-12-02-08-00-24")]
+        [InlineData(10, "23-0A-04-12-02-08-00-0A-06-08-01-12-02-08-01-0A-06-08-02-12-02-08-02-0A-06-08-03-12-02-08-03-0A-06-08-04-12-02-08-04-0A-06-08-05-12-02-08-05-0A-06-08-06-12-02-08-06-0A-06-08-07-12-02-08-07-0A-06-08-08-12-02-08-08-0A-06-08-09-12-02-08-09-24")]
         public void TestWithNullWrappedGroupCollection(int count, string? hex = null) => Test<WithNullWrappedGroupCollection>(count, true, hex);
 
         [Theory]
@@ -98,60 +98,73 @@ message WrapperLayer {
         [InlineData(0, "22-00")]
         [InlineData(1, "22-06-0A-04-0A-02-08-00")]
         [InlineData(10, "22-3C-0A-04-0A-02-08-00-0A-04-0A-02-08-01-0A-04-0A-02-08-02-0A-04-0A-02-08-03-0A-04-0A-02-08-04-0A-04-0A-02-08-05-0A-04-0A-02-08-06-0A-04-0A-02-08-07-0A-04-0A-02-08-08-0A-04-0A-02-08-09")]
-        public void TestWithNullWrappedCollection_WrappedValues(int count, string? hex = null) => Test<WithNullWrappedCollection_WrappedValues>(count, true, hex);
+        public void TestWithNullWrappedCollection_WrappedValues(int count, string? hex = null) => Test<WithNullWrappedCollection_WrappedValues>(count, true, hex, true);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "23-24")]
         [InlineData(1, "23-0A-04-0A-02-08-00-24")]
         [InlineData(10, "23-0A-04-0A-02-08-00-0A-04-0A-02-08-01-0A-04-0A-02-08-02-0A-04-0A-02-08-03-0A-04-0A-02-08-04-0A-04-0A-02-08-05-0A-04-0A-02-08-06-0A-04-0A-02-08-07-0A-04-0A-02-08-08-0A-04-0A-02-08-09-24")]
-        public void TestWithNullWrappedGroupCollection_WrappedValues(int count, string? hex = null) => Test<WithNullWrappedGroupCollection_WrappedValues>(count, true, hex);
+        public void TestWithNullWrappedGroupCollection_WrappedValues(int count, string? hex = null) => Test<WithNullWrappedGroupCollection_WrappedValues>(count, true, hex, true);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "")]
-        [InlineData(1, "22-02-08-00")]
-        [InlineData(10, "22-02-08-00-22-02-08-01-22-02-08-02-22-02-08-03-22-02-08-04-22-02-08-05-22-02-08-06-22-02-08-07-22-02-08-08-22-02-08-09")]
+        [InlineData(1, "22-04-12-02-08-00")]
+        [InlineData(10, "22-04-12-02-08-00-22-06-08-01-12-02-08-01-22-06-08-02-12-02-08-02-22-06-08-03-12-02-08-03-22-06-08-04-12-02-08-04-22-06-08-05-12-02-08-05-22-06-08-06-12-02-08-06-22-06-08-07-12-02-08-07-22-06-08-08-12-02-08-08-22-06-08-09-12-02-08-09")]
         public void TestVanilla(int count, string? hex = null) => Test<Vanilla>(count, false, hex);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "22-00")]
-        [InlineData(1, "22-04-0A-02-08-00")]
-        [InlineData(10, "22-28-0A-02-08-00-0A-02-08-01-0A-02-08-02-0A-02-08-03-0A-02-08-04-0A-02-08-05-0A-02-08-06-0A-02-08-07-0A-02-08-08-0A-02-08-09")]
+        [InlineData(1, "22-06-0A-04-12-02-08-00")]
+        [InlineData(10, "22-4E-0A-04-12-02-08-00-0A-06-08-01-12-02-08-01-0A-06-08-02-12-02-08-02-0A-06-08-03-12-02-08-03-0A-06-08-04-12-02-08-04-0A-06-08-05-12-02-08-05-0A-06-08-06-12-02-08-06-0A-06-08-07-12-02-08-07-0A-06-08-08-12-02-08-08-0A-06-08-09-12-02-08-09")]
         public void TestManualWrappedEquivalent(int count, string? hex = null) => Test<ManualWrappedEquivalent>(count, true, hex);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "23-24")]
-        [InlineData(1, "23-0A-02-08-00-24")]
-        [InlineData(10, "23-0A-02-08-00-0A-02-08-01-0A-02-08-02-0A-02-08-03-0A-02-08-04-0A-02-08-05-0A-02-08-06-0A-02-08-07-0A-02-08-08-0A-02-08-09-24")]
+        [InlineData(1, "23-0A-04-12-02-08-00-24")]
+        [InlineData(10, "23-0A-04-12-02-08-00-0A-06-08-01-12-02-08-01-0A-06-08-02-12-02-08-02-0A-06-08-03-12-02-08-03-0A-06-08-04-12-02-08-04-0A-06-08-05-12-02-08-05-0A-06-08-06-12-02-08-06-0A-06-08-07-12-02-08-07-0A-06-08-08-12-02-08-08-0A-06-08-09-12-02-08-09-24")]
         public void TestManualWrappedGroupEquivalent(int count, string? hex = null) => Test<ManualWrappedGroupEquivalent>(count, true, hex);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "22-00")]
-        [InlineData(1, "22-06-0A-04-0A-02-08-00")]
-        [InlineData(10, "22-3C-0A-04-0A-02-08-00-0A-04-0A-02-08-01-0A-04-0A-02-08-02-0A-04-0A-02-08-03-0A-04-0A-02-08-04-0A-04-0A-02-08-05-0A-04-0A-02-08-06-0A-04-0A-02-08-07-0A-04-0A-02-08-08-0A-04-0A-02-08-09")]
-        public void TestManualWrappedEquivalent_WrappedValues(int count, string? hex = null) => Test<ManualWrappedEquivalent_WrappedValues>(count, true, hex);
+        [InlineData(1, "22-06-0A-04-12-02-08-00")]
+        [InlineData(10, "22-4E-0A-04-12-02-08-00-0A-06-08-01-12-02-08-01-0A-06-08-02-12-02-08-02-0A-06-08-03-12-02-08-03-0A-06-08-04-12-02-08-04-0A-06-08-05-12-02-08-05-0A-06-08-06-12-02-08-06-0A-06-08-07-12-02-08-07-0A-06-08-08-12-02-08-08-0A-06-08-09-12-02-08-09")]
+        public void TestManualWrappedEquivalent_WrappedValues(int count, string? hex = null) => Test<ManualWrappedEquivalent_WrappedValues>(count, true, hex, true);
 
         [Theory]
         [InlineData(-1, "")]
         [InlineData(0, "23-24")]
-        [InlineData(1, "23-0A-04-0A-02-08-00-24")]
-        [InlineData(10, "23-0A-04-0A-02-08-00-0A-04-0A-02-08-01-0A-04-0A-02-08-02-0A-04-0A-02-08-03-0A-04-0A-02-08-04-0A-04-0A-02-08-05-0A-04-0A-02-08-06-0A-04-0A-02-08-07-0A-04-0A-02-08-08-0A-04-0A-02-08-09-24")]
-        public void TestManualWrappedGroupEquivalent_WrappedValues(int count, string? hex = null) => Test<ManualWrappedGroupEquivalent_WrappedValues>(count, true, hex);
+        [InlineData(1, "23-0A-04-12-02-08-00-24")]
+        [InlineData(10, "23-0A-04-12-02-08-00-0A-06-08-01-12-02-08-01-0A-06-08-02-12-02-08-02-0A-06-08-03-12-02-08-03-0A-06-08-04-12-02-08-04-0A-06-08-05-12-02-08-05-0A-06-08-06-12-02-08-06-0A-06-08-07-12-02-08-07-0A-06-08-08-12-02-08-08-0A-06-08-09-12-02-08-09-24")]
+        public void TestManualWrappedGroupEquivalent_WrappedValues(int count, string? hex = null) => Test<ManualWrappedGroupEquivalent_WrappedValues>(count, true, hex, true);
 
 
-        private void Test<T>(int count, bool preserveEmpty, string? expectedHex) where T : class, ITestScenario, new()
+        private void Test<T>(int count, bool preserveEmpty, string? expectedHex, bool usesWrappedValues = false) where T : class, ITestScenario, new()
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add<T>();
-            Test<T>(model, count, preserveEmpty, expectedHex, true);
-            model.CompileInPlace();
-            Test<T>(model, count, preserveEmpty, expectedHex, false);
-            Test<T>(PEVerify.CompileAndVerify(model), count, preserveEmpty, expectedHex, false);
+            if (usesWrappedValues)
+            {
+                var ex = Assert.Throws<NotSupportedException>(() => RunTests());
+                Assert.Equal("Wrapped values in maps are not currently supported", ex.Message);
+            }
+            else
+            {
+                RunTests();
+            }
+
+            void RunTests()
+            {
+                Test<T>(model, count, preserveEmpty, expectedHex, true);
+                model.CompileInPlace();
+                Test<T>(model, count, preserveEmpty, expectedHex, false);
+                Test<T>(PEVerify.CompileAndVerify(model), count, preserveEmpty, expectedHex, false);
+            }
         }
 
         private void Test<T>(TypeModel model, int count, bool preserveEmpty, string? expectedHex, bool logHex) where T : class, ITestScenario, new()
@@ -159,10 +172,10 @@ message WrapperLayer {
             T obj = new();
             if (count >= 0)
             {
-                var list = obj.Foos = new List<Foo>();
+                var list = obj.Foos = new Dictionary<int, Foo>();
                 for (int i = 0; i < count; i++)
                 {
-                    list.Add(new(i));
+                    list.Add(i, new(i));
                 }
             }
             using var ms = new MemoryStream();
@@ -213,7 +226,7 @@ message WrapperLayer {
         public class Vanilla : ITestScenario
         {
             [ProtoMember(4)]
-            public List<Foo>? Foos { get; set; }
+            public Dictionary<int, Foo>? Foos { get; set; }
         }
 
         [ProtoContract]
@@ -223,15 +236,15 @@ message WrapperLayer {
             public class WrapperLayer
             {
                 public WrapperLayer() => Foos = new();
-                public WrapperLayer(List<Foo> foos) => Foos = foos;
+                public WrapperLayer(Dictionary<int, Foo> foos) => Foos = foos;
 
                 [ProtoMember(1)]
-                public List<Foo> Foos { get; set; }
+                public Dictionary<int, Foo> Foos { get; set; }
             }
 
             [ProtoMember(4)]
             public WrapperLayer? Wrapper {get;set;}
-            List<Foo>? ITestScenario.Foos
+            Dictionary<int, Foo>? ITestScenario.Foos
             {
                 get => Wrapper?.Foos;
                 set
@@ -259,15 +272,15 @@ message WrapperLayer {
             public class WrapperLayer
             {
                 public WrapperLayer() => Foos = new();
-                public WrapperLayer(List<Foo> foos) => Foos = foos;
+                public WrapperLayer(Dictionary<int, Foo> foos) => Foos = foos;
 
                 [ProtoMember(1), NullWrappedValue]
-                public List<Foo> Foos { get; set; }
+                public Dictionary<int, Foo> Foos { get; set; }
             }
 
             [ProtoMember(4)]
             public WrapperLayer? Wrapper { get; set; }
-            List<Foo>? ITestScenario.Foos
+            Dictionary<int, Foo>? ITestScenario.Foos
             {
                 get => Wrapper?.Foos;
                 set
@@ -295,15 +308,15 @@ message WrapperLayer {
             public class WrapperLayer
             {
                 public WrapperLayer() => Foos = new();
-                public WrapperLayer(List<Foo> foos) => Foos = foos;
+                public WrapperLayer(Dictionary<int, Foo> foos) => Foos = foos;
 
                 [ProtoMember(1)]
-                public List<Foo> Foos { get; set; }
+                public Dictionary<int, Foo> Foos { get; set; }
             }
 
             [ProtoMember(4, DataFormat = DataFormat.Group)]
             public WrapperLayer? Wrapper { get; set; }
-            List<Foo>? ITestScenario.Foos
+            Dictionary<int, Foo>? ITestScenario.Foos
             {
                 get => Wrapper?.Foos;
                 set
@@ -331,15 +344,15 @@ message WrapperLayer {
             public class WrapperLayer
             {
                 public WrapperLayer() => Foos = new();
-                public WrapperLayer(List<Foo> foos) => Foos = foos;
+                public WrapperLayer(Dictionary<int, Foo> foos) => Foos = foos;
 
                 [ProtoMember(1), NullWrappedValue]
-                public List<Foo> Foos { get; set; }
+                public Dictionary<int, Foo> Foos { get; set; }
             }
 
             [ProtoMember(4, DataFormat = DataFormat.Group)]
             public WrapperLayer? Wrapper { get; set; }
-            List<Foo>? ITestScenario.Foos
+            Dictionary<int, Foo>? ITestScenario.Foos
             {
                 get => Wrapper?.Foos;
                 set
@@ -372,33 +385,33 @@ message WrapperLayer {
         public class WithNullWrappedCollection : ITestScenario
         {
             [ProtoMember(4), NullWrappedCollection]
-            public List<Foo>? Foos { get; set; }
+            public Dictionary<int, Foo>? Foos { get; set; }
         }
 
         [ProtoContract]
         public class WithNullWrappedGroupCollection : ITestScenario
         {
             [ProtoMember(4), NullWrappedCollection(AsGroup = true)]
-            public List<Foo>? Foos { get; set; }
+            public Dictionary<int, Foo>? Foos { get; set; }
         }
 
         [ProtoContract]
         public class WithNullWrappedCollection_WrappedValues : ITestScenario
         {
             [ProtoMember(4), NullWrappedCollection, NullWrappedValue]
-            public List<Foo>? Foos { get; set; }
+            public Dictionary<int, Foo>? Foos { get; set; }
         }
 
         [ProtoContract]
         public class WithNullWrappedGroupCollection_WrappedValues : ITestScenario
         {
             [ProtoMember(4), NullWrappedCollection(AsGroup = true), NullWrappedValue]
-            public List<Foo>? Foos { get; set; }
+            public Dictionary<int, Foo>? Foos { get; set; }
         }
 
         public interface ITestScenario
         {
-            List<Foo>? Foos { get; set; }
+            Dictionary<int, Foo>? Foos { get; set; }
         }
 
         public sealed class Foo

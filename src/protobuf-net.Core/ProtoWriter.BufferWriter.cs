@@ -251,7 +251,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal override void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, IRepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+            internal override void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
             {
                 switch (WireType)
                 {
@@ -279,6 +279,41 @@ namespace ProtoBuf
                     case WireType.StartGroup:
                         // forwards-only; can use default implementation
                         base.WriteWrappedCollection<TCollection, TItem>(ref state, features, values, serializer, valueSerializer);
+                        return;
+                    default:
+                        // if we aren't using length-prefix or group... what are we even?
+                        ThrowHelper.ThrowArgumentOutOfRangeException(nameof(WireType));
+                        return;
+                }
+            }
+
+            internal override void WriteWrappedMap<TCollection, TKey, TValue>(ref State state, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey, TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+            {
+                switch (WireType)
+                {
+                    case WireType.String:
+                        long calculatedLength = MeasureMap<TCollection, TKey, TValue>(_nullWriter, TypeModel.ListItemTag, features, values, serializer, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+
+                        // write length-prefix as varint
+                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+
+                        if (calculatedLength != 0)
+                        {
+                            var oldPos = GetPosition(ref state);
+                            serializer.WriteMap(ref state, TypeModel.ListItemTag, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+                            var newPos = GetPosition(ref state);
+
+                            var actualLength = (newPos - oldPos);
+                            if (actualLength != calculatedLength)
+                            {
+                                ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                            }
+                        }
+
+                        return;
+                    case WireType.StartGroup:
+                        // forwards-only; can use default implementation
+                        base.WriteWrappedMap(ref state, features, values, serializer, keyFeatures, valueFeatures, keySerializer, valueSerializer);
                         return;
                     default:
                         // if we aren't using length-prefix or group... what are we even?

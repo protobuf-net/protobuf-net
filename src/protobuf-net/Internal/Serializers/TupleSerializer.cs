@@ -47,7 +47,7 @@ namespace ProtoBuf.Internal.Serializers
                 }
                 else if (repeated.IsMap)
                 {
-                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, compatibilityLevel, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1);
+                    serializer = ValueMember.CreateMap(repeated, model, DataFormat.Default, compatibilityLevel, DataFormat.Default, DataFormat.Default, asReference, false, true, false, i + 1, null);
                 }
                 else
                 {
