@@ -222,7 +222,7 @@ namespace ProtoBuf.Serializers
     }
 
     ///// <summary>
-    ///// Allows a provider to offer indirect access to serivces; note that this is a *secondary* API; the
+    ///// Allows a provider to offer indirect access to services; note that this is a *secondary* API; the
     ///// primary API is for the provider to implement ISerializer-T for the intended T; however, to offer
     ///// indirect access to known serializers, when asked for a type, provide the appropriate ISerializer-T
     ///// for that type. This method can (and often will) return null. The implementation can also return
@@ -293,6 +293,14 @@ namespace ProtoBuf.Serializers
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
         T ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, T values);
+    }
+
+    public interface IRepeatedSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue> : IRepeatedSerializer<TCollection>
+    {
+        /// <summary>
+        /// Serialize a sequence of values to the supplied writer using the specified value-serializer
+        /// </summary>
+        void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TValue> valueSerializer);
     }
 
     /// <summary>

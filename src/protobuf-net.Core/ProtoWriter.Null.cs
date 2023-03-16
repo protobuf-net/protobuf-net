@@ -78,10 +78,21 @@ namespace ProtoBuf
 
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
             {
-                if (serializer is null) serializer = TypeModel.GetSerializer<T>(Model);
-                var len = Measure<T>(this, value, serializer);
+                var len = Measure<T>(this, value, serializer ?? TypeModel.GetSerializer<T>(Model));
                 AdvanceSubMessage(ref state, len, style);
             }
+
+            internal override void WriteWrappedItem<T>(ref State state, SerializerFeatures features, T value, ISerializer<T> serializer)
+            {
+                var len = MeasureAny<T>(this, TypeModel.ListItemTag, features, value, serializer ?? TypeModel.GetSerializer<T>(Model));
+                AdvanceSubMessage(ref state, len, PrefixStyle.Base128); // only supported styles are group+varint
+            }
+            internal override void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, IRepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+            {
+                var len = MeasureRepeated<TCollection, TItem>(this, TypeModel.ListItemTag, features, values, serializer, valueSerializer ?? TypeModel.GetSerializer<TItem>(Model));
+                AdvanceSubMessage(ref state, len, PrefixStyle.Base128); // only supported styles are group+varint
+            }
+
             private void AdvanceSubMessage(ref State state, long length, PrefixStyle style)
             {
                 long preamble;

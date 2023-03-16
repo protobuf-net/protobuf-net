@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -86,7 +87,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Base class for simple collection serializers
     /// </summary>
-    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
+    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : IRepeatedSerializer<TCollection, TItem>, IFactory<TCollection>
     {
         TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
 
@@ -106,13 +107,15 @@ namespace ProtoBuf.Serializers
 
         private void WriteNullWrapped(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
         {
+            Debug.Assert(features.IsRepeated(), "repeated feature expected");
+            Debug.Assert(features.HasAny(SerializerFeatures.OptionWrappedCollection), "wrapped collection handling expected");
+
             if (!(TypeHelper<TCollection>.CanBeNull && TypeHelper<TCollection>.ValueChecker.IsNull(values)))
             {
-                state.WriteFieldHeader(fieldNumber, features.HasAny(SerializerFeatures.OptionWrappedCollectionGroup) ? WireType.StartGroup : WireType.String);
-                features &= ~(SerializerFeatures.OptionWrappedCollection | SerializerFeatures.OptionWrappedCollectionGroup);
-                var tok = state.StartSubItem(null); // will need to do something here
-                WriteRepeated(ref state, TypeModel.ListItemTag, features, values, serializer);
-                state.EndSubItem(tok);
+                state.WriteFieldHeader(fieldNumber, ProtoWriter.State.AssertWrappedAndGetWireType(ref features, out _));
+                Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedCollection), "wrapped collection handling should have been removed");
+
+                state.GetWriter().WriteWrappedCollection(ref state, features, values, this, serializer);
             }
         }
 

@@ -3,6 +3,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -322,16 +323,29 @@ namespace ProtoBuf.Test
             }
         }
 
-        sealed class CountingWriter : IBufferWriter<byte>, IDisposable
+        internal class StreamCopyingBufferWriter : CountingWriter
+        {
+            private readonly Stream _destination;
+            public StreamCopyingBufferWriter(Stream destination)
+                => _destination = destination ?? throw new ArgumentNullException(nameof(destination));
+
+            public override void Advance(int count)
+            {
+                base.Advance(count);
+                _destination.Write(Underlying, 0, count);
+            }
+        }
+
+        internal class CountingWriter : IBufferWriter<byte>, IDisposable
         {
             private byte[] _buffer = Array.Empty<byte>();
             private bool _haveValidBuffer; // you're only allowed to call Advance *once* per fetch
-
-            public void Advance(int count)
+            protected byte[] Underlying => _buffer;
+            public virtual void Advance(int count)
             {
                 if (!_haveValidBuffer) throw new InvalidOperationException(
                         $"{nameof(Advance)} was called with {count}, but the buffer was not valid");
-                if (count < 0) throw new ArgumentOutOfRangeException(
+                if (count < 0 || count > _buffer.Length) throw new ArgumentOutOfRangeException(
                     nameof(count), $"Invalid count: {count}");
                 _haveValidBuffer = false;
                 TotalBytes += count;
