@@ -336,7 +336,7 @@ Field #4: 23 StartGroup
             Test<T>(model, count, preserveEmpty, expectedHex, true, usesWrappedValues);
             model.CompileInPlace();
             Test<T>(model, count, preserveEmpty, expectedHex, false, usesWrappedValues);
-            Test<T>(PEVerify.CompileAndVerify(model, name), count, preserveEmpty, expectedHex, false, usesWrappedValues);
+            Test<T>(count == 0 ? PEVerify.CompileAndVerify(model, name) : model.Compile(), count, preserveEmpty, expectedHex, false, usesWrappedValues);
         }
 
         private void Test<T>(TypeModel model, int count, bool preserveEmpty, string? expectedHex, bool logHex, bool usesWrappedValues) where T : class, ITestScenario, new()

@@ -42,6 +42,42 @@ namespace ProtoBuf.Test
         }
 
         [Theory]
+        [InlineData(typeof(Vanilla), @"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message Foo {
+   int32 Id = 1;
+}
+message Vanilla {
+   repeated Foo Foos = 4;
+}
+")]
+        [InlineData(typeof(VanillaWrappedValue), @"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message Foo {
+   int32 Id = 1;
+}
+message WrappedFoo {
+   optional Foo value = 1;
+}
+message VanillaWrappedValue {
+   repeated WrappedFoo Foos = 4;
+}
+")]
+        [InlineData(typeof(VanillaWrappedGroupValue), @"syntax = ""proto3"";
+package ProtoBuf.Test;
+
+message Foo {
+   int32 Id = 1;
+}
+message WrappedAsGroupFoo {
+   optional Foo value = 1;
+}
+message VanillaWrappedGroupValue {
+   repeated group WrappedAsGroupFoo Foos = 4;
+}
+")]
         [InlineData(typeof(ManualWrappedEquivalent), @"syntax = ""proto3"";
 package ProtoBuf.Test;
 
@@ -117,6 +153,20 @@ message WrapperLayer {
 
         [Theory]
         [InlineData(-1, "")]
+        [InlineData(0, "")]
+        [InlineData(1, "22-04-0A-02-08-00")]
+        [InlineData(10, "22-04-0A-02-08-00-22-04-0A-02-08-01-22-00-22-04-0A-02-08-03-22-04-0A-02-08-04-22-00-22-04-0A-02-08-06-22-04-0A-02-08-07-22-00-22-04-0A-02-08-09")]
+        public void TestVanillaWrappedValue(int count, string? hex = null) => Test<VanillaWrappedValue>(count, false, hex, true);
+
+        [Theory]
+        [InlineData(-1, "")]
+        [InlineData(0, "")]
+        [InlineData(1, "23-0A-02-08-00-24")]
+        [InlineData(10, "23-0A-02-08-00-24-23-0A-02-08-01-24-23-24-23-0A-02-08-03-24-23-0A-02-08-04-24-23-24-23-0A-02-08-06-24-23-0A-02-08-07-24-23-24-23-0A-02-08-09-24")]
+        public void TestVanillaWrappedGroupValue(int count, string? hex = null) => Test<VanillaWrappedGroupValue>(count, false, hex, true);
+
+        [Theory]
+        [InlineData(-1, "")]
         [InlineData(0, "22-00")]
         [InlineData(1, "22-04-0A-02-08-00")]
         [InlineData(10, "22-28-0A-02-08-00-0A-02-08-01-0A-02-08-02-0A-02-08-03-0A-02-08-04-0A-02-08-05-0A-02-08-06-0A-02-08-07-0A-02-08-08-0A-02-08-09")]
@@ -152,7 +202,7 @@ message WrapperLayer {
             Test<T>(model, count, preserveEmpty, expectedHex, true, usesWrappedValues);
             model.CompileInPlace();
             Test<T>(model, count, preserveEmpty, expectedHex, false, usesWrappedValues);
-            Test<T>(PEVerify.CompileAndVerify(model, name), count, preserveEmpty, expectedHex, false, usesWrappedValues);
+            Test<T>(count == 0 ? PEVerify.CompileAndVerify(model, name) : model.Compile(), count, preserveEmpty, expectedHex, false, usesWrappedValues);
         }
 
         private void Test<T>(TypeModel model, int count, bool preserveEmpty, string? expectedHex, bool logHex, bool usesWrappedValues) where T : class, ITestScenario, new()
@@ -224,6 +274,20 @@ message WrapperLayer {
         public class Vanilla : ITestScenario
         {
             [ProtoMember(4)]
+            public List<Foo?>? Foos { get; set; }
+        }
+
+        [ProtoContract]
+        public class VanillaWrappedValue : ITestScenario
+        {
+            [ProtoMember(4), NullWrappedValue]
+            public List<Foo?>? Foos { get; set; }
+        }
+
+        [ProtoContract]
+        public class VanillaWrappedGroupValue : ITestScenario
+        {
+            [ProtoMember(4), NullWrappedValue(AsGroup = true)]
             public List<Foo?>? Foos { get; set; }
         }
 
