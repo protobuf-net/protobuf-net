@@ -159,6 +159,10 @@ class SomeMessage
 }
 ```
 
+Note that protobuf-net is forgiving and when *deserializing* can silently accept *either* encoding, so for usage that *only* uses protobuf-net; however,
+the bytes from *serializing* will be different between the two, which may upset other non-protobuf-net consumers. Most serializers will prefer
+non-grouped data, so it may be worth considering *removing* the `AsGroup = true` here (although vexingly, [it has performance advantages](https://github.com/protocolbuffers/protobuf/issues/9134)).
+
 ## Null collections
 
 In the above, we can see that `[NullWrappedValue]` applies to the *values* in a collection; sometimes - much more rarely - we
@@ -181,7 +185,8 @@ class SomeMessage
 ```
 
 As before, a runtime fault is thrown if `[NullWrappedCollection]` is encountered on an unexpected type; `[NullWrappedCollection]` *also*
-supports the same `AsGroup` concept (although it is not expected to be used in many scenarios). Conveniently, `[NullWrappedCollection]`
+supports the same `AsGroup` concept (although it is not expected to be used in many scenarios), and the same comments on `AsGroup` apply from
+the previous section. Conveniently, `[NullWrappedCollection]`
 can be combined with `[NullWrappedValue]` without difficulty, as they apply at different scopes.
 
 With these features, most common null scenarios can be conveniently and robustly handled.
