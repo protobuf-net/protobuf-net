@@ -2106,9 +2106,9 @@ namespace ProtoBuf.Meta
                     bool hasOption = false;
                     if (member.IsMap)
                     {
-                        if (member.NullWrappedCollection)
+                        if (member.NullWrappedCollection || member.NullWrappedValue)
                         {
-                            throw new NotSupportedException("Schema generation for null-wrapped collections is not currently implemented; poke @mgravell with a big stick if you need this!");
+                            throw new NotSupportedException("Schema generation for null-wrapped maps and maps with null-wrapped values is not currently implemented; poke @mgravell with a big stick if you need this!");
                         }
                         repeated = model.TryGetRepeatedProvider(member.MemberType);
                         repeated.ResolveMapTypes(out var keyType, out var valueType);

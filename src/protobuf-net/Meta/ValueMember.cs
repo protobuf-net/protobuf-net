@@ -442,13 +442,14 @@ namespace ProtoBuf.Meta
             if (overwriteList) features |= SerializerFeatures.OptionClearCollection;
 
             member?.ComposeListFeatures(ref features);
-            if (features.HasAny(SerializerFeatures.OptionWrappedValue))
-            {
-                ThrowHelper.ThrowNotSupportedException("Wrapped values in maps are not currently supported");
-            }
+
+            // transfer OptionWrappedValue and OptionWrappedValueGroup from the serializer features to the value features
+            var valueFeatures = valueWireType.AsFeatures();
+            valueFeatures |= features & (SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
+            features &= ~(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
 
             return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
-                keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueWireType.AsFeatures(), valueCompatibilityLevel, valueFormat);
+                keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueFeatures, valueCompatibilityLevel, valueFormat);
         }
 
         void ComposeListFeatures(ref SerializerFeatures listFeatures)
