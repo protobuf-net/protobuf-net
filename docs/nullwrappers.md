@@ -159,7 +159,7 @@ class SomeMessage
 }
 ```
 
-Note that protobuf-net is forgiving and when *deserializing* can silently accept *either* encoding, so for usage that *only* uses protobuf-net; however,
+On the topic of `AsGroup`: note that protobuf-net is forgiving and when *deserializing* can interchangeably accept *either* length-prefixed or group encoding, so for usage that *only* uses protobuf-net; however,
 the bytes from *serializing* will be different between the two, which may upset other non-protobuf-net consumers. Most serializers will prefer
 non-grouped data, so it may be worth considering *removing* the `AsGroup = true` here (although vexingly, [it has performance advantages](https://github.com/protocolbuffers/protobuf/issues/9134)).
 
