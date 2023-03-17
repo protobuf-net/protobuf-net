@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -71,12 +72,29 @@ namespace ProtoBuf.Serializers
         public void WriteMap(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values,
             SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
         {
+            if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
+            {
+                WriteNullWrapped(ref state, features, fieldNumber, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+                return;
+            }
+
             var pairSerializer = GetSerializer(state.Model, keyFeatures, valueFeatures, keySerializer, valueSerializer);
             features.InheritFrom(pairSerializer.Features);
             var wireType = features.GetWireType();
 
             Write(ref state, fieldNumber, wireType, values, pairSerializer);
         }
+
+        private void WriteNullWrapped(ref ProtoWriter.State state, SerializerFeatures features, int fieldNumber, TCollection values,
+            SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+        {
+            Debug.Assert(features.HasAny(SerializerFeatures.OptionWrappedCollection));
+            state.WriteFieldHeader(fieldNumber, ProtoWriter.State.AssertWrappedAndGetWireType(ref features, out var _));
+            Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedCollection));
+
+            state.GetWriter().WriteWrappedMap(ref state, features, values, this, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+        }
+
 
         internal abstract void Write(ref ProtoWriter.State state, int fieldNumber, WireType wireType, TCollection values, in KeyValuePairSerializer<TKey, TValue> pairSerializer);
 
@@ -116,6 +134,11 @@ namespace ProtoBuf.Serializers
         public TCollection ReadMap(ref ProtoReader.State state, SerializerFeatures features, TCollection values,
             SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer = null, ISerializer<TValue> valueSerializer = null)
         {
+            if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
+            {
+                return ReadNullWrapped(ref state, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+            }
+
             var ctx = state.Context;
             var pairSerializer = GetSerializer(state.Model, keyFeatures, valueFeatures, keySerializer, valueSerializer);
             features.InheritFrom(pairSerializer.Features);
@@ -132,6 +155,32 @@ namespace ProtoBuf.Serializers
             }
             return values;
 
+        }
+
+        private TCollection ReadNullWrapped(ref ProtoReader.State state, SerializerFeatures features, TCollection values, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+        {
+            features &= ~(SerializerFeatures.OptionWrappedCollection | SerializerFeatures.OptionWrappedCollectionGroup);
+            int fieldNumber;
+            var tok = state.StartSubItem();
+            bool needInit = true;
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            {
+                if (fieldNumber == TypeModel.ListItemTag)
+                {
+                    values = ReadMap(ref state, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+                    needInit = false;
+                }
+                else
+                {
+                    state.SkipField();
+                }
+            }
+            state.EndSubItem(tok);
+            if (needInit)
+            {
+                values = Initialize(values, state.Context);
+            }
+            return values;
         }
     }
 

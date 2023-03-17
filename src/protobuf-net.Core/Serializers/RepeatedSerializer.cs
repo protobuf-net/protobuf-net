@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -92,6 +93,10 @@ namespace ProtoBuf.Serializers
 
         SerializerFeatures ISerializer<TCollection>.Features => SerializerFeatures.CategoryRepeated;
 
+        void IRepeatedSerializer<TCollection>.WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values) => WriteRepeated(ref state, fieldNumber, features, values, default);
+
+        TCollection IRepeatedSerializer<TCollection>.ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values) => ReadRepeated(ref state, features, values, default);
+
         TCollection ISerializer<TCollection>.Read(ref ProtoReader.State state, TCollection value)
         {
             ThrowHelper.ThrowInvalidOperationException("Should have used " + nameof(IRepeatedSerializer<TCollection>.ReadRepeated));
@@ -101,14 +106,31 @@ namespace ProtoBuf.Serializers
         void ISerializer<TCollection>.Write(ref ProtoWriter.State state, TCollection value)
             => ThrowHelper.ThrowInvalidOperationException("Should have used " + nameof(IRepeatedSerializer<TCollection>.WriteRepeated));
 
-        void IRepeatedSerializer<TCollection>.WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values)
-            => WriteRepeated(ref state, fieldNumber, features, values, default);
+        private void WriteNullWrapped(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
+        {
+            Debug.Assert(features.IsRepeated(), "repeated feature expected");
+            Debug.Assert(features.HasAny(SerializerFeatures.OptionWrappedCollection), "wrapped collection handling expected");
+
+            if (!(TypeHelper<TCollection>.CanBeNull && TypeHelper<TCollection>.ValueChecker.IsNull(values)))
+            {
+                state.WriteFieldHeader(fieldNumber, ProtoWriter.State.AssertWrappedAndGetWireType(ref features, out _));
+                Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedCollection), "wrapped collection handling should have been removed");
+
+                state.GetWriter().WriteWrappedCollection(ref state, features, values, this, serializer);
+            }
+        }
 
         /// <summary>
         /// Serialize a sequence of values to the supplied writer
         /// </summary>
         public void WriteRepeated(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
         {
+            if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
+            {
+                WriteNullWrapped(ref state, fieldNumber, features, values, serializer);
+                return;
+            }
+
             serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
@@ -275,14 +297,42 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        TCollection IRepeatedSerializer<TCollection>.ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values)
-            => ReadRepeated(ref state, features, values, default);
+        private TCollection ReadNullWrapped(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer)
+        {
+            features &= ~(SerializerFeatures.OptionWrappedCollection | SerializerFeatures.OptionWrappedCollectionGroup);
+            int fieldNumber;
+            var tok = state.StartSubItem();
+            bool needInit = true;
+            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            {
+                if (fieldNumber == TypeModel.ListItemTag)
+                {
+                    values = ReadRepeated(ref state, features, values, serializer);
+                    needInit = false;
+                }
+                else
+                {
+                    state.SkipField();
+                }
+            }
+            state.EndSubItem(tok);
+            if (needInit)
+            {
+                values = Initialize(values, state.Context);
+            }
+            return values;
+        }
 
         /// <summary>
         /// Deserializes a sequence of values from the supplied reader
         /// </summary>
         public TCollection ReadRepeated(ref ProtoReader.State state, SerializerFeatures features, TCollection values, ISerializer<TItem> serializer = null)
         {
+            if (features.HasAny(SerializerFeatures.OptionWrappedCollection))
+            {
+                return ReadNullWrapped(ref state, features, values, serializer);
+            }
+
             serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));

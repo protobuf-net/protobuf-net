@@ -1,7 +1,6 @@
 ﻿using ProtoBuf.Meta;
 using ProtoBuf.unittest;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;

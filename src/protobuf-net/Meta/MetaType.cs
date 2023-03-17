@@ -210,7 +210,7 @@ namespace ProtoBuf.Meta
             }
         }
         /// <summary>
-        /// Assigns the callbacks to use during serialiation/deserialization.
+        /// Assigns the callbacks to use during serialization/deserialization.
         /// </summary>
         /// <param name="beforeSerialize">The method (or null) called before serialization begins.</param>
         /// <param name="afterSerialize">The method (or null) called when serialization is complete.</param>
@@ -421,7 +421,7 @@ namespace ProtoBuf.Meta
             Type = type;
             if (type.IsArray)
             {
-                // we'all allow add, to allow proxy generation, but
+                // we'll allow add, to allow proxy generation, but
                 // don't play with it too much!
                 SetFlag(TypeOptions.Frozen, true, false);
             }
@@ -626,7 +626,7 @@ namespace ProtoBuf.Meta
         [Flags]
         internal enum AttributeFamily
         {
-            None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4, AutoTuple = 8
+            None = 0, ProtoBuf = 1, DataContractSerializer = 2, XmlSerializer = 4, AutoTuple = 8
         }
         private static Type GetBaseType(MetaType type)
         {
@@ -959,7 +959,7 @@ namespace ProtoBuf.Meta
                     case "System.Runtime.Serialization.DataContractAttribute":
                         if (!model.AutoAddProtoContractTypesOnly)
                         {
-                            family |= AttributeFamily.DataContractSerialier;
+                            family |= AttributeFamily.DataContractSerializer;
                         }
                         break;
                 }
@@ -1167,7 +1167,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerialier))
+            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerializer))
             {
                 attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
                 if (attrib is not null)
@@ -2106,6 +2106,10 @@ namespace ProtoBuf.Meta
                     bool hasOption = false;
                     if (member.IsMap)
                     {
+                        if (member.NullWrappedCollection || member.NullWrappedValue)
+                        {
+                            throw new NotSupportedException("Schema generation for null-wrapped maps and maps with null-wrapped values is not currently implemented; poke @mgravell with a big stick if you need this!");
+                        }
                         repeated = model.TryGetRepeatedProvider(member.MemberType);
                         repeated.ResolveMapTypes(out var keyType, out var valueType);
 
@@ -2133,6 +2137,11 @@ namespace ProtoBuf.Meta
 
                         void WriteValueMember(string schemaModelTypeName, bool hasGroupModifier = false)
                         {
+                            if (member.NullWrappedCollection)
+                            {
+                                throw new NotSupportedException("Schema generation for null-wrapped collections is not currently implemented; poke @mgravell with a big stick if you need this!");
+                            }
+
                             string ordinality = member.ItemType is not null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
                             NewLine(builder, indent + 1).Append(ordinality);
 

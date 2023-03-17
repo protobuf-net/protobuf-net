@@ -11,7 +11,7 @@ namespace ProtoBuf
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public sealed class NullWrappedValueAttribute : Attribute
     {
-        /// <summary>Indicates that the collection message wrapper shold use group encoding; this is more
+        /// <summary>Indicates that the collection message wrapper should use group encoding; this is more
         /// efficient to write, but may be hard to consume in cross-platform scenarios; this feature is
         /// usually used for compatibility with protobuf-net v2 <c>SupportNull</c> usage</summary>
         public bool AsGroup { get; set; }
@@ -21,9 +21,9 @@ namespace ProtoBuf
     /// see https://protobuf-net.github.io/protobuf-net/nullwrappers for more information.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
-    internal sealed class NullWrappedCollectionAttribute : Attribute
+    public sealed class NullWrappedCollectionAttribute : Attribute
     {
-        /// <summary>Indicates that the collection message wrapper shold use group encoding; this is more efficient to write, but may be hard to consume in cross-platform scenarios.</summary>
+        /// <summary>Indicates that the collection message wrapper should use group encoding; this is more efficient to write, but may be hard to consume in cross-platform scenarios.</summary>
         public bool AsGroup { get; set; }
     }
 }

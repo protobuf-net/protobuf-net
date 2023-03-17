@@ -420,7 +420,7 @@ namespace ProtoBuf.Meta
 
         internal static IRuntimeProtoSerializerNode CreateMap(RepeatedSerializerStub repeated, RuntimeTypeModel model, DataFormat dataFormat,
             CompatibilityLevel compatibilityLevel,
-            DataFormat keyFormat, DataFormat valueFormat, bool asReference, bool dynamicType, bool isMap, bool overwriteList, int fieldNumber)
+            DataFormat keyFormat, DataFormat valueFormat, bool asReference, bool dynamicType, bool isMap, bool overwriteList, int fieldNumber, ValueMember member)
         {
             static Type FlattenRepeated(RuntimeTypeModel model, Type type)
             {   // for the purposes of choosing features, we want to look inside things like arrays/lists/etc
@@ -441,10 +441,45 @@ namespace ProtoBuf.Meta
             if (!isMap) features |= SerializerFeatures.OptionFailOnDuplicateKey;
             if (overwriteList) features |= SerializerFeatures.OptionClearCollection;
 
+            member?.ComposeListFeatures(ref features);
+
+            // transfer OptionWrappedValue and OptionWrappedValueGroup from the serializer features to the value features
+            var valueFeatures = valueWireType.AsFeatures();
+            valueFeatures |= features & (SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
+            features &= ~(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup);
+
             return MapDecorator.Create(repeated, keyType, valueType, fieldNumber, features,
-                keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueWireType.AsFeatures(), valueCompatibilityLevel, valueFormat);
+                keyWireType.AsFeatures(), keyCompatibilityLevel, keyFormat, valueFeatures, valueCompatibilityLevel, valueFormat);
         }
 
+        void ComposeListFeatures(ref SerializerFeatures listFeatures)
+        {
+            if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
+            if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
+#pragma warning disable CS0618
+            if (SupportNull)
+            {
+                if (NullWrappedValue || NullWrappedCollection || IsPacked)
+                {
+                    ThrowHelper.ThrowNotSupportedException($"{nameof(SupportNull)} cannot be combined with {nameof(IsPacked)}, {nameof(NullWrappedValue)} or {nameof(NullWrappedCollection)}");
+                }
+                listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup;
+            }
+#pragma warning restore CS0618
+            else
+            {
+                if (NullWrappedCollection)
+                {
+                    listFeatures |= SerializerFeatures.OptionWrappedCollection;
+                    if (NullWrappedCollectionGroup) listFeatures |= SerializerFeatures.OptionWrappedCollectionGroup;
+                }
+                if (NullWrappedValue)
+                {
+                    listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence;
+                    if (NullWrappedValueGroup) listFeatures |= SerializerFeatures.OptionWrappedValueGroup;
+                }
+            }
+        }
         private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
@@ -466,50 +501,25 @@ namespace ProtoBuf.Meta
                             AsReference = MetaType.GetAsReferenceDefault(valueType);
                         }
 #endif
-                        ser = CreateMap(repeated, model, DataFormat, CompatibilityLevel, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber);
+                        ser = CreateMap(repeated, model, DataFormat, CompatibilityLevel, MapKeyFormat, MapValueFormat, AsReference, DynamicType, IsMap, OverwriteList, FieldNumber, this);
                     }
                     else
                     {
                         _ = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, repeated.ItemType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
 
                         SerializerFeatures listFeatures = wireType.AsFeatures(); // | SerializerFeatures.OptionReturnNothingWhenUnchanged;
-                        if (!IsPacked) listFeatures |= SerializerFeatures.OptionPackedDisabled;
-                        if (OverwriteList) listFeatures |= SerializerFeatures.OptionClearCollection;
-#pragma warning disable CS0618
-                        if (SupportNull)
-                        {
-                            if (NullWrappedValue || NullWrappedCollection || IsPacked)
-                            {
-                                ThrowHelper.ThrowNotSupportedException($"{nameof(SupportNull)} cannot be combined with {nameof(IsPacked)}, {nameof(NullWrappedValue)} or {nameof(NullWrappedCollection)}");
-                            }
-                            listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup;
-                        }
-#pragma warning restore CS0618
-                        else
-                        {
-                            if (NullWrappedCollection)
-                            {
-                                listFeatures |= SerializerFeatures.OptionWrappedCollection;
-                                if (NullWrappedCollectionGroup) listFeatures |= SerializerFeatures.OptionWrappedCollectionGroup;
-                            }
-                            if (NullWrappedValue)
-                            {
-                                listFeatures |= SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence;
-                                if (NullWrappedValueGroup) listFeatures |= SerializerFeatures.OptionWrappedValueGroup;
-                            }
-                        }
+                        ComposeListFeatures(ref listFeatures);
 
                         ser = RepeatedDecorator.Create(repeated, FieldNumber, listFeatures, CompatibilityLevel, DataFormat);
                     }
                 }
                 else
                 {
-
+                    if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
                     ser = TryGetCoreSerializer(model, DataFormat, CompatibilityLevel, MemberType, out WireType wireType, AsReference, DynamicType, OverwriteList, allowComplexTypes: true);
                     if (ser is null) ThrowHelper.NoSerializerDefined(MemberType);
                     if (NullWrappedValue)
                     {
-                        if (NullWrappedCollection) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedCollection)} can only be used with collection types");
                         var valueFeatures = SerializerFeatures.OptionWrappedValue;
                         if (NullWrappedValueGroup) valueFeatures |= SerializerFeatures.OptionWrappedValueGroup;
                         if (MemberType.IsValueType && Nullable.GetUnderlyingType(MemberType) is null) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with non-nullable values");

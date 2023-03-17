@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -123,7 +124,7 @@ namespace ProtoBuf
         /// <summary>
         /// Indicates the end of a nested record.
         /// </summary>
-        /// <param name="token">The token obtained from StartubItem.</param>
+        /// <param name="token">The token obtained from StartSubItem.</param>
         /// <param name="writer">The destination.</param>
         [MethodImpl(HotPath)]
         [Obsolete(PreferWriteMessage, false)]
@@ -240,7 +241,7 @@ namespace ProtoBuf
         {
             if (_depth == 0 && _needFlush && ImplDemandFlushOnDispose)
             {
-                ThrowHelper.ThrowInvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
+                ThrowHelper.ThrowInvalidOperationException("Writer was disposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
             recursionStack?.Clear();
             ClearKnownObjects();
@@ -261,6 +262,57 @@ namespace ProtoBuf
             var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null, style);
             (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
             state.EndSubItem(tok, style);
+#pragma warning restore CS0618
+        }
+
+        internal virtual void WriteWrappedCollection<TCollection, TItem>(ref State state, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = state.StartSubItem(null);
+            serializer.WriteRepeated(ref state, TypeModel.ListItemTag, features, values, valueSerializer);
+            state.EndSubItem(tok);
+#pragma warning restore CS0618
+        }
+
+        internal virtual void WriteWrappedMap<TCollection, TKey, TValue>(ref State state, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey, TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = state.StartSubItem(null);
+            serializer.WriteMap(ref state, TypeModel.ListItemTag, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+            state.EndSubItem(tok);
+#pragma warning restore CS0618
+        }
+
+        internal void WriteEmptyWrappedItem(ref State state)
+        {
+            // semantically, this is the same as the two lines below; just:
+            // without the indirection and without needing to have
+            // writer-specific implementations (since we can go forwards-only)
+            //
+            // var tok = state.StartSubItem(null, PrefixStyle.Base128);
+            // state.EndSubItem(tok);
+
+            switch (WireType)
+            {
+                case WireType.String:
+                    AdvanceAndReset(ImplWriteVarint32(ref state, 0));
+                    break;
+                case WireType.StartGroup:
+                    state.WriteHeaderCore(state.FieldNumber, WireType.EndGroup);
+                    WireType = WireType.None; // reset
+                    break;
+                default:
+                    ThrowHelper.ThrowArgumentOutOfRangeException(nameof(WireType));
+                    break;
+            }
+        }
+
+        internal virtual void WriteWrappedItem<T>(ref State state, SerializerFeatures features, T value, ISerializer<T> serializer)
+        {
+#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
+            var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & features.ApplyRecursionCheck() ? (object)value : null, PrefixStyle.Base128);
+            state.WriteAny<T>(TypeModel.ListItemTag, features, value, serializer);
+            state.EndSubItem(tok);
 #pragma warning restore CS0618
         }
 
@@ -363,7 +415,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes any buffered data (if possible) to the underlying stream.
         /// </summary>
-        /// <param name="state">Wwriter state</param>
+        /// <param name="state">writer state</param>
         /// <remarks>It is not always possible to fully flush, since some sequences
         /// may require values to be back-filled into the byte-stream.</remarks>
         private protected abstract bool TryFlush(ref State state);
@@ -532,6 +584,74 @@ namespace ProtoBuf
         public static void WriteType(Type value, ProtoWriter writer)
             => writer.DefaultState().WriteType(value);
 
+        internal static long MeasureRepeated<TCollection, TItem>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, RepeatedSerializer<TCollection, TItem> serializer, ISerializer<TItem> valueSerializer)
+        {
+            long length;
+            object obj = default;
+            if (TypeHelper<TCollection>.IsReferenceType)
+            {
+                obj = values;
+                if (obj is null) return 0;
+                if (writer.netCache.TryGetKnownLength(obj, null, out length))
+                    return length;
+            }
+
+            // do the actual work
+            var oldState = writer.ResetWriteState();
+            var nulState = new State(writer);
+            serializer.WriteRepeated(ref nulState, fieldNumber, features, values, valueSerializer);
+            length = nulState.GetPosition();
+            writer.SetWriteState(oldState); // make sure we leave it how we found it
+
+            // cache it if we can
+            if (obj is not null)
+            {   // we know it isn't null; we'd have exited above
+                writer.netCache.SetKnownLength(obj, null, length);
+            }
+            return length;
+        }
+
+        internal static long MeasureMap<TCollection, TKey, TValue>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, TCollection values, MapSerializer<TCollection, TKey,TValue> serializer, SerializerFeatures keyFeatures, SerializerFeatures valueFeatures, ISerializer<TKey> keySerializer, ISerializer<TValue> valueSerializer)
+        {
+            long length;
+            object obj = default;
+            if (TypeHelper<TCollection>.IsReferenceType)
+            {
+                obj = values;
+                if (obj is null) return 0;
+                if (writer.netCache.TryGetKnownLength(obj, null, out length))
+                    return length;
+            }
+
+            // do the actual work
+            var oldState = writer.ResetWriteState();
+            var nulState = new State(writer);
+            serializer.WriteMap(ref nulState, fieldNumber, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
+            length = nulState.GetPosition();
+            writer.SetWriteState(oldState); // make sure we leave it how we found it
+
+            // cache it if we can
+            if (obj is not null)
+            {   // we know it isn't null; we'd have exited above
+                writer.netCache.SetKnownLength(obj, null, length);
+            }
+            return length;
+        }
+
+        internal static long MeasureAny<T>(NullProtoWriter writer, int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer)
+        {
+            // note: not using cache here is intentional, since we're calling from the wrapped-item path; we don't
+            // want to get confused between the wrapped and non-wrapped variants
+
+            var oldState = writer.ResetWriteState();
+            var nulState = new State(writer);
+            nulState.WriteAny<T>(fieldNumber, features, value, serializer);
+            var length = nulState.GetPosition();
+            writer.SetWriteState(oldState); // make sure we leave it how we found it
+
+            return length;
+        }
+
         internal static long Measure<T>(NullProtoWriter writer, T value, ISerializer<T> serializer)
         {
             long length;
@@ -552,7 +672,7 @@ namespace ProtoBuf
             writer.SetWriteState(oldState); // make sure we leave it how we found it
 
             // cache it if we can
-            if (TypeHelper<T>.IsReferenceType)
+            if (obj is not null)
             {   // we know it isn't null; we'd have exited above
                 writer.netCache.SetKnownLength(obj, null, length);
             }
