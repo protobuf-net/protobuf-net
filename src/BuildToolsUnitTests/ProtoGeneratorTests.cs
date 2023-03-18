@@ -77,6 +77,24 @@ message Bar {}", null)
         }
 
         [Fact]
+        public async Task DefinitionIsNotIncludedInOutput()
+        {
+            (var result, var diagnostics) = await GenerateAsync(Texts(
+                ("/foo/google/protobuf/a.proto", @"
+syntax = ""proto3"";
+import ""google/protobuf/b.proto"";
+message Foo {
+    Bar bar = 1;
+}", new[] { ("ImportPaths", "../../") }),
+("/foo/google/protobuf/b.proto", @"
+syntax = ""proto3"";
+message Bar {}", new[] { ("IncludeInOutput", "False") }
+)));
+            Assert.Empty(diagnostics);
+            Assert.Single(result.GeneratedTrees);
+        }
+
+        [Fact]
         public async Task DeepImportFailsWithoutExtraImport()
         {
             (var result, var diagnostics) = await GenerateAsync(Texts(
