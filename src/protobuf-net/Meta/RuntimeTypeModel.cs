@@ -1988,12 +1988,14 @@ namespace ProtoBuf.Meta
                             _ => "int32",
                         };
                     case ProtoTypeCode.UInt64:
+                    case ProtoTypeCode.UIntPtr:
                         return dataFormat switch
                         {
                             DataFormat.FixedSize => "fixed64",
                             _ => "uint64",
                         };
                     case ProtoTypeCode.Int64:
+                    case ProtoTypeCode.IntPtr:
                         return dataFormat switch
                         {
                             DataFormat.ZigZag => "sint64",

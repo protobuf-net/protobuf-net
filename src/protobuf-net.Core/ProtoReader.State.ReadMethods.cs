@@ -66,6 +66,18 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Reads a native integer from the stream; if the value exceeds the native width, an error will occur; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public IntPtr ReadIntPtr() => new(ReadInt64());
+
+            /// <summary>
+            /// Reads a native integer from the stream; if the value exceeds the native width, an error will occur; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public UIntPtr ReadUIntPtr() => new(ReadUInt64());
+
+            /// <summary>
             /// Reads an unsigned 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
             /// </summary>
             [MethodImpl(HotPath)]

@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -189,6 +190,18 @@ namespace ProtoBuf
             public void WriteBoolean(bool value) => WriteUInt32(value ? (uint)1 : (uint)0);
 
             /// <summary>
+            /// Writes a native integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void WriteIntPtr(IntPtr value) => WriteInt64(value.ToInt64());
+
+            /// <summary>
+            /// Writes a native integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void WriteUIntPtr(UIntPtr value) => WriteUInt64(value.ToUInt64());
+
+            /// <summary>
             /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
             /// </summary>
             public void WriteUInt32(uint value)
@@ -328,6 +341,7 @@ namespace ProtoBuf
             [MethodImpl(ProtoReader.HotPath)]
             public void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
+                Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedValue), "wrapped value handling has not been processed correctly");
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
                     WriteFieldHeader(fieldNumber, features.IsGroup() ? WireType.StartGroup : WireType.String);
@@ -396,18 +410,19 @@ namespace ProtoBuf
                     return;
                 }
                 WriteFieldHeader(fieldNumber, wrapperFormat);
-#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
-                var tok = StartSubItem(TypeHelper<T>.IsReferenceType & features.ApplyRecursionCheck() ? (object)value : null, PrefixStyle.Base128);
-#pragma warning restore CS0618
+
                 if (!isNull && (fieldPresence || TypeHelper<T>.ValueChecker.HasNonTrivialValue(value)))
                 {   // only write the field if it has a meaningful value (note: we already remove the relevant wrap options,
                     // so: not recursive); if we're using field-presence, we write any non-null value; otherwise,
                     // (think 'wrappers.proto') we only write non-zero values
-                    WriteAny<T>(1, features, value, serializer);
+
+                    Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedValue), "should not be wrapped");
+                    GetWriter().WriteWrappedItem<T>(ref this, features, value, serializer);
                 }
-#pragma warning disable CS0618 // we don't want to use WriteMessage here; this is a pseudo message layer
-                EndSubItem(tok);
-#pragma warning restore CS0618
+                else
+                {
+                    GetWriter().WriteEmptyWrappedItem(ref this);
+                }
             }
 
             /// <summary>
@@ -418,7 +433,7 @@ namespace ProtoBuf
                 serializer ??= TypeModel.GetSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
-                if (features.HasAny(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedCollection))
+                if (features.HasAny(SerializerFeatures.OptionWrappedValue))
                 {
                     WriteWrapped<T>(fieldNumber, features, value, serializer);
                     return;

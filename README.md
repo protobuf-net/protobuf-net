@@ -12,8 +12,9 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 ---
 
 ## Supported Runtimes
-- .NET Framework 4.6.1+
-- .NET Standard 2.0+
+- .NET 6.0+ (.NET 5 etc will use .NET Standard 2.1)
+- .NET Standard 2.0, 2.1
+- .NET Framework 4.6.2+
 
 ## Build tools
 
