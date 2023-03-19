@@ -1,5 +1,5 @@
 ﻿using BuildToolsUnitTests.Abstractions;
-using ProtoBuf.Internal;
+using ProtoBuf.Internal.Extensions;
 using Xunit;
 
 namespace BuildToolsUnitTests.Internal

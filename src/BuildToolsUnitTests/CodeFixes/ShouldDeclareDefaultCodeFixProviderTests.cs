@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using ProtoBuf.BuildTools.Analyzers;
-using ProtoBuf.CodeFixes;
 using System.Threading.Tasks;
 using ProtoBuf.CodeFixes.DefaultValue;
 using Xunit;
@@ -141,6 +140,12 @@ public class Foo
         
         [Theory]
         [InlineData("decimal", "2.1", "2.1m")]
+        [InlineData("nint", "1", "1")]
+        [InlineData("nuint", "2", "2")]
+        [InlineData("sbyte", "1", "1")]
+        [InlineData("uint", "6u", "6u")]
+        [InlineData("ulong", "6758493021UL", "6758493021UL")]
+        [InlineData("ushort", "4", "4")]
         public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_LongSyntax(string propertyType, string attributeValue, string propertyDefaultValue)
         {
             var sourceCode = $@"
@@ -187,18 +192,12 @@ public class Foo
         [InlineData("bool", "true")]
         [InlineData("DayOfWeek", "DayOfWeek.Monday")]
         [InlineData("char", "'x'")]
-        [InlineData("sbyte", "1")]
         [InlineData("byte", "0x2")]
         [InlineData("short", "0b0000_0011")]
-        [InlineData("ushort", "4")]
         [InlineData("int", "-2")]
-        [InlineData("uint", "6u")]
         [InlineData("long", "1234567890123456789L")]
-        [InlineData("ulong", "6758493021UL")]
         [InlineData("float", "2.71828f")]
         [InlineData("double", "3.14159265")]
-        [InlineData("nint", "1")]
-        [InlineData("nuint", "2")]
         public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_ShortSyntax(
             string propertyType, string propertyDefaultValue)
         {

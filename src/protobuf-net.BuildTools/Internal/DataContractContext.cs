@@ -4,27 +4,18 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
-using ProtoBuf.CodeFixes;
 using ProtoBuf.Internal.Models;
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
-using ProtoBuf.CodeFixes.DefaultValue;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 using ProtoBuf.Internal;
+using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.BuildTools.Internal
 {
     internal sealed class DataContractContext
     {
-        // Trim handles the UL and LU compound suffixes. We can't trim D or F suffixes on hex literals.
-        private static readonly char[] _trimmableNumericSuffixes = new[] { 'L', 'U', 'M', 'l', 'u', 'm', };
-        private static readonly char[] _floatNumericSuffixes = new[] { 'D', 'F', 'd', 'f' };
-        private static readonly HashSet<string> _nullCharLiterals = new(
-            new char[] { '\0', '\u0000', '\x0', '\x00', '\x000', '\x0000' }.Select(ch => $"'{ch}'"));
-
         private List<Ignore>? _ignores;
         private List<Member>? _members;
         private List<Reservation>? _reservations;
@@ -253,7 +244,7 @@ namespace ProtoBuf.BuildTools.Internal
                         {
                             var memberDefaultValueState = CalculateMemberInitialValue(context, member, out var memberInitSyntaxNode, out var memberInitValue);
                             var memberValueStringRepresentation = memberInitSyntaxNode?.ToString() ?? string.Empty;
-                            
+
                             switch (memberDefaultValueState)
                             {
                                 case MemberInitValueKind.NotSet:
@@ -464,7 +455,7 @@ namespace ProtoBuf.BuildTools.Internal
                 object? defaultValueCompiledValue;
                 try
                 {
-                    defaultValueCompiledValue = RoslynUtils.DynamicallyParseToValue(attrType!, (string)attrStrValue.Value!);
+                    defaultValueCompiledValue = Utils.DynamicallyParseToValue(attrType!, (string)attrStrValue.Value!);
                 }
                 catch
                 {

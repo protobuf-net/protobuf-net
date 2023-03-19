@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ProtoBuf.Internal;
+using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
 {
@@ -79,12 +79,17 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
         /// Some of known types can not use easy "[<see cref="DefaultValueAttribute"/>(value)]" syntax
         /// and instead we can use <see cref="DefaultValueAttribute"/>(typeof(type), "rawValue") syntax
         /// </summary>
-        private static bool UseShortSyntax(SpecialType specialType) => specialType switch
+        private static bool UseShortSyntax(SpecialType specialType)
         {
-            SpecialType.System_Decimal => false,
-            _ => true
-        };
-        
+            return specialType switch
+            {
+                SpecialType.System_Decimal or SpecialType.System_UInt64 or 
+                SpecialType.System_UInt32 or SpecialType.System_UInt16 or 
+                SpecialType.System_SByte => false,
+                _ => true
+            };
+        }
+
         private static SeparatedSyntaxList<AttributeArgumentSyntax> BuildDefaultValueShortArgumentSyntax(DiagnosticArguments diagnosticArguments)
             => SyntaxFactory.SeparatedList(new []
             {

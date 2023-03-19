@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 using ProtoBuf.Internal;
+using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue
 {

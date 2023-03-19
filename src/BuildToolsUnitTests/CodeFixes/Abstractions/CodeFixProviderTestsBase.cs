@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.Versioning;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace BuildToolsUnitTests.CodeFixes.Abstractions
 {
@@ -23,10 +24,11 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             string sourceCode,
             string expectedCode,
             DiagnosticResult? diagnosticResult = null,
+            string targetFramework = null,
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
-            var codeFixTest = BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode);
+            var codeFixTest = BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode, targetFramework);
 
             if (diagnosticResult is not null)
             {
@@ -41,23 +43,22 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             await codeFixTest.RunAsync();
         }
 
-        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(string sourceCode, string expectedCode)
+        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
+            string sourceCode, string expectedCode, string targetFramework = null)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
+            if (string.IsNullOrEmpty(targetFramework))
+            {
+                targetFramework = CurrentRunningAssemblyTargetFramework.FrameworkDisplayName!;   
+            }
+
             var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier>
             {
-                ReferenceAssemblies = new ReferenceAssemblies(CurrentRunningAssemblyTargetFramework.FrameworkDisplayName!),
+                ReferenceAssemblies = new ReferenceAssemblies(targetFramework),
                 TestState = { Sources = { sourceCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary },
                 FixedState = { Sources = { expectedCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary }
             };
 
-            codeFixTest.SolutionTransforms.Add((solution, projectId) =>
-            {
-                var project = solution.GetProject(projectId);
-                project = project!.WithCompilationOptions(project.CompilationOptions!.WithOutputKind(OutputKind.DynamicallyLinkedLibrary));
-                return solution;
-            });
-            
             codeFixTest.CodeActionValidationMode = CodeActionValidationMode.SemanticStructure;
 
             AddAdditionalReferences(codeFixTest.TestState);

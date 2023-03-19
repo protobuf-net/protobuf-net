@@ -4,12 +4,60 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
 
 namespace ProtoBuf.BuildTools.Internal
 {
     internal static class Utils
     {
+        public static object? DynamicallyParseToValue(Type? type, string? value)
+        {
+            if (type == null)
+            {
+                return null;
+            }
+            
+            if (TryConvertFromInvariantString(type, value, out var convertedValue))
+            {
+                return convertedValue;
+            }
+
+            if (type.IsSubclassOf(typeof(Enum)) && value != null)
+            {
+                return Enum.Parse(type, value, true);
+            }
+
+            if (type == typeof(TimeSpan) && value != null)
+            {
+                return TimeSpan.Parse(value);
+            }
+
+            return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+
+            // Looking for ad hoc created TypeDescriptor.ConvertFromInvariantString(Type, string)
+            bool TryConvertFromInvariantString(
+                Type typeToConvert,
+                string? stringValue,
+                out object? conversionResult)
+            {
+                conversionResult = null;
+
+                try
+                {
+                    var typeDescriptor = TypeDescriptor.GetConverter(typeToConvert);
+                    conversionResult = typeDescriptor.ConvertFromInvariantString(stringValue);
+                }
+                catch
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+        
         internal static ImmutableArray<DiagnosticDescriptor> GetDeclared(Type type)
         {
             var fields = type?.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
