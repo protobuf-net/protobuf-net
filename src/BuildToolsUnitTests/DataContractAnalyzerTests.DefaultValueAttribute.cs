@@ -11,6 +11,8 @@ namespace BuildToolsUnitTests
     {
         [Theory]
         [InlineData("string", "GetString();", "public string GetString() => \"some-value\";")]
+        [InlineData("nint", "1")]
+        [InlineData("nuint", "1")]
         public async Task ReportsShouldDeclareIsRequired(string type, string value, string? additionalClassCSharpCode = null, bool shouldReportDiagnostic = true)
         {
             var diagnostics = await AnalyzeAsync($@"
@@ -54,8 +56,6 @@ namespace BuildToolsUnitTests
         [InlineData("ulong", "6758493021UL")]
         [InlineData("float", "2.71828f")]
         [InlineData("double", "3.14159265")]
-        [InlineData("nint", "1")]
-        [InlineData("nuint", "2")]
         [InlineData("decimal", "1.618033m")]
         [InlineData("string", "\"my-constant\"")]
         [InlineData("string", "string.Empty", false)]
@@ -108,8 +108,6 @@ namespace BuildToolsUnitTests
         [InlineData("ulong", "675849302UL", "123")]
         [InlineData("float", "2.6f", "2.1")]
         [InlineData("double", "3.14", "3.14159265")]
-        [InlineData("nint", "2", "1")]
-        [InlineData("nuint", "2", "1")]
         public async Task ReportsShouldUpdateDefault_ShortSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
         {
             var diagnostics = await AnalyzeAsync($@"
@@ -147,8 +145,6 @@ namespace BuildToolsUnitTests
         [InlineData("long", "123456789012345678L", "1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
         [InlineData("ulong", "675849302UL", "123")]
         [InlineData("float", "2.6f", "2.1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
-        [InlineData("nint", "2", "1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
-        [InlineData("nuint", "2", "1")] // syntax is non valid for [DefaultValue(typeof(), "...")]
         public async Task ReportsShouldUpdateDefault_LongSyntax_InvalidSyntax(string type, string attributeValue, string propertyValue, bool shouldReportDiagnostic = true)
         {
             var diagnostics = await AnalyzeAsync($@"

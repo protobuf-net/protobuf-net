@@ -43,7 +43,7 @@ namespace ProtoBuf.BuildTools.Internal
                 out object? conversionResult)
             {
                 conversionResult = null;
-
+                
                 try
                 {
                     var typeDescriptor = TypeDescriptor.GetConverter(typeToConvert);
@@ -53,7 +53,7 @@ namespace ProtoBuf.BuildTools.Internal
                 {
                     return false;
                 }
-
+                
                 return true;
             }
         }

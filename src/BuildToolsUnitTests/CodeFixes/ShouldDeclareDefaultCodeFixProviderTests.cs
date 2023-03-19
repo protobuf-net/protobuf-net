@@ -140,11 +140,9 @@ public class Foo
         
         [Theory]
         [InlineData("decimal", "2.1", "2.1m")]
-        [InlineData("nint", "1", "1")]
-        [InlineData("nuint", "2", "2")]
         [InlineData("sbyte", "1", "1")]
-        [InlineData("uint", "6u", "6u")]
-        [InlineData("ulong", "6758493021UL", "6758493021UL")]
+        [InlineData("uint", "6", "6u")]
+        [InlineData("ulong", "6758493021", "6758493021UL")]
         [InlineData("ushort", "4", "4")]
         public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_LongSyntax(string propertyType, string attributeValue, string propertyDefaultValue)
         {

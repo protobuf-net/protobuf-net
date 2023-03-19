@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -387,21 +388,28 @@ namespace ProtoBuf.BuildTools.Internal
                 memberInitialValue = null;
                 return MemberInitValueKind.NonConstantExpression; 
             }
-
+            
             memberInitialValue = constantValue.Value;
+            var memberType = memberSpecialType.Value.ToType();
+            if (memberSpecialType.Value.IsPrimitiveValueType() && memberType != null)
+            {
+                memberInitialValue = Convert.ChangeType(memberInitialValue, memberType);
+            }
+
             return memberSpecialType switch
             {
                 SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_SByte
                 or SpecialType.System_Byte or SpecialType.System_Int16 or SpecialType.System_UInt16
                 or SpecialType.System_Int32 or SpecialType.System_UInt32 or SpecialType.System_Int64 
-                or SpecialType.System_UInt64 or SpecialType.System_Single or SpecialType.System_Double 
-                or SpecialType.System_IntPtr or SpecialType.System_UIntPtr 
+                or SpecialType.System_UInt64 or SpecialType.System_Single or SpecialType.System_Double
                 or SpecialType.System_Enum 
                 or SpecialType.System_Decimal // use long syntax for defaultValue to set
                 or SpecialType.System_String // we can check some of scenarios - for example '= "hello world"' 
                     => MemberInitValueKind.ConstantExpression,
                 
-                SpecialType.System_Decimal or _ 
+                SpecialType.System_Decimal or 
+                SpecialType.System_IntPtr or SpecialType.System_UIntPtr // cant be used due to [DefaultValue] restrictions 
+                or _ 
                     => MemberInitValueKind.NonConstantExpression 
             };
 
@@ -441,8 +449,18 @@ namespace ProtoBuf.BuildTools.Internal
                 if (constructorArg.IsNull && memberInitValue is not null) return true;
                 if (constructorArg.Value is null && memberInitValue is not null) return true;
                 if (constructorArg.Value is not null && memberInitValue is null) return true;
-
-                // both of values are not null - lets compare using boxed interpretations of values
+                
+                var memberSpecialType = member.SymbolSpecialType!.Value;
+                if (memberSpecialType.IsPrimitiveValueType())
+                {
+                    // we have to ensure both boxed-values are of same type due to implementation details
+                    // of primitive types .Equals()
+                    var memberType = memberSpecialType.ToType();
+                    var constructorArgValueCasted = Convert.ChangeType(constructorArg.Value, memberType!);
+                    return !constructorArgValueCasted!.Equals(memberInitValue);
+                }
+                
+                // compare using boxed interpretations of values
                 return !constructorArg.Value!.Equals(memberInitValue);
             }
             
@@ -460,6 +478,9 @@ namespace ProtoBuf.BuildTools.Internal
                 catch
                 {
                     // if parsing input data fails - lets report a diagnostic
+                    // note: it can happen, if i.e. member is short, and attribute has value of '6u'
+                    // which can't be parsed by DefaultValue attribute implementation (TypeDescriptor.ConvertFromInvariantString())
+                    // so it makes sense to report diagnostic to let user know we expect to change the value somehow.
                     return true;
                 }
 

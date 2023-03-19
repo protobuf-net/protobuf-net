@@ -51,8 +51,8 @@ public class Foo
         [Theory]
         [InlineData("decimal", "2", "2.2", "2.2m")]
         [InlineData("sbyte", "1", "2", "2")]
-        [InlineData("uint", "6u", "5u", "5u")]
-        [InlineData("ulong", "6758493021UL", "124", "124")]
+        [InlineData("uint", "6", "5", "5u")]
+        [InlineData("ulong", "6758493021U", "124", "124")]
         [InlineData("ushort", "4", "5", "5")]
         public async Task CodeFixValidate_ShouldUpdateDefault_LongSyntax(
             string propertyType, string attributeBeforeValue, string attributeAfterValue, string propertyValue)
@@ -103,8 +103,6 @@ public class Foo
         [InlineData("long", "1234567890123456789L", "123")]
         [InlineData("float", "2.71828f", "2.1f")]
         [InlineData("double", "3.14159265", "3.14")]
-        [InlineData("nint", "1", "2")]
-        [InlineData("nuint", "2", "1")]
         [InlineData("string", "\"hello\"", "\"hello world!\"")]
         public async Task CodeFixValidate_ShouldUpdateDefault_ShortSyntax(
             string propertyType, string attributeValue, string propertyValue)

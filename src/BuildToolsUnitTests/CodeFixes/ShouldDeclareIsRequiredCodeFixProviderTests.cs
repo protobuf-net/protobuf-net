@@ -16,6 +16,8 @@ namespace BuildToolsUnitTests.CodeFixes
 
         [Theory]
         [InlineData("string", "GetString()", "public static string GetString() => \"my-const\";")]
+        [InlineData("nint", "1")]
+        [InlineData("nuint", "1")]
         public async Task CodeFixValidate_ShouldDeclareIsRequired_ClassicExample(
             string propertyType, string propertyValue, string? additionalClassCSharpCode = null)
         {
