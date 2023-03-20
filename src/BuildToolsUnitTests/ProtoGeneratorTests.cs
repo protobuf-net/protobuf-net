@@ -95,6 +95,42 @@ message Bar {}", new[] { ("IncludeInOutput", "False") }
         }
 
         [Fact]
+        public async Task IncludeInOutputGarbageInput()
+        {
+            (var result, var diagnostics) = await GenerateAsync(Texts(
+                ("/foo/google/protobuf/a.proto", @"
+syntax = ""proto3"";
+import ""google/protobuf/b.proto"";
+message Foo {
+    Bar bar = 1;
+}", new[] { ("ImportPaths", "../../") }),
+                ("/foo/google/protobuf/b.proto", @"
+syntax = ""proto3"";
+message Bar {}", new[] { ("IncludeInOutput", "Garbage") }
+                )));
+            Assert.Empty(diagnostics);
+            Assert.Equal(2, result.GeneratedTrees.Length);
+        }
+
+        [Fact]
+        public async Task IncludeInOutputNoInput()
+        {
+            (var result, var diagnostics) = await GenerateAsync(Texts(
+                ("/foo/google/protobuf/a.proto", @"
+syntax = ""proto3"";
+import ""google/protobuf/b.proto"";
+message Foo {
+    Bar bar = 1;
+}", new[] { ("ImportPaths", "../../") }),
+                ("/foo/google/protobuf/b.proto", @"
+syntax = ""proto3"";
+message Bar {}", new[] { ("IncludeInOutput", "") }
+                )));
+            Assert.Empty(diagnostics);
+            Assert.Equal(2, result.GeneratedTrees.Length);
+        }
+
+        [Fact]
         public async Task DeepImportFailsWithoutExtraImport()
         {
             (var result, var diagnostics) = await GenerateAsync(Texts(

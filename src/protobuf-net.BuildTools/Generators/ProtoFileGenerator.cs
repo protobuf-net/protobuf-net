@@ -152,10 +152,9 @@ namespace ProtoBuf.BuildTools.Generators
                     }
 
                     bool includeInOutput = true;
-                    if (userOptions is not null && userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + "IncludeInOutput", out var optionValue) && !string.IsNullOrWhiteSpace(optionValue) && bool.TryParse(optionValue, out includeInOutput))
+                    if (userOptions is not null && userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + "IncludeInOutput", out var optionValue) && bool.TryParse(optionValue, out var tmpIncludeInOutput))
                     {
-                        // Do nothing here as includeInOutput will be overwritten by .TryParse,
-                        // if a value was successfully read and parsed.
+                        includeInOutput = tmpIncludeInOutput;
                     }
                     
                     if (!set.Add(name, includeInOutput))
