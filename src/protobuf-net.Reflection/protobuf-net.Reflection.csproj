@@ -21,4 +21,7 @@
   <ItemGroup>
     <Folder Include="google\type\" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Humanizer.Core"/>
+  </ItemGroup>
 </Project>
