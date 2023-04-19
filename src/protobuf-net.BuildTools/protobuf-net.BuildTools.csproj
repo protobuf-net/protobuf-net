@@ -70,4 +70,7 @@
     <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/bcl.proto" Link="protobuf-net/bcl.proto" />
     <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/protogen.proto" Link="protobuf-net/protogen.proto" />
   </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Humanizer.Core"/>
+	</ItemGroup>
 </Project>
