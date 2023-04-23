@@ -5,6 +5,7 @@
     <RootNamespace>BuildToolsUnitTests</RootNamespace>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
+	<LangVersion>11</LangVersion>  
   </PropertyGroup>
 
   <ItemGroup>

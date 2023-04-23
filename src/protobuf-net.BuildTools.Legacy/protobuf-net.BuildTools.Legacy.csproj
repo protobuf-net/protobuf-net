@@ -11,6 +11,7 @@
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
     <DefineConstants>$(DefineConstants);PLAT_NO_RECORDS;BUILD_TOOLS</DefineConstants>
+	<LangVersion>11</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

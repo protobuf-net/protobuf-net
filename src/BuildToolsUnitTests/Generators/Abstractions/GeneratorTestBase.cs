@@ -1,9 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
+using System.Collections;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-namespace BuildToolsUnitTests
+namespace BuildToolsUnitTests.Generators.Abstractions
 {
     public abstract class GeneratorTestBase<TGenerator> where TGenerator : ISourceGenerator
     {
@@ -39,7 +41,29 @@ namespace BuildToolsUnitTests
             }
         }
 
-        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
+        protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
+            string[] cSharpProjectSourceTexts,
+            AdditionalText[] additionalTexts = null,
+            ImmutableDictionary<string, string>? globalOptions = null,
+            [CallerMemberName] string? callerMemberName = null,
+            bool debugLog = true)
+        {
+            var addSourcesProjectModifier = (Project project) =>
+            {
+                var index = 1;
+                foreach (var sourceText in cSharpProjectSourceTexts)
+                {
+                    var newDoc = project.AddDocument("sourceFile_" + index++ + ".cs", sourceText);
+                    project = newDoc.Project;
+                }
+
+                return project;
+            };
+
+            return GenerateAsync(additionalTexts, globalOptions, addSourcesProjectModifier, callerMemberName, debugLog);
+        }
+
+        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts = null, ImmutableDictionary<string, string>? globalOptions = null,
             Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
@@ -109,6 +133,6 @@ namespace BuildToolsUnitTests
         protected virtual Project SetupProject(Project project) => project;
 
 
-        
+
     }
 }

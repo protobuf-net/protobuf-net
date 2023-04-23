@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using BuildToolsUnitTests.Generators.Abstractions;
+using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Generators;
 using System;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace BuildToolsUnitTests
+namespace BuildToolsUnitTests.Generators
 {
     public class ProtoGeneratorTests : GeneratorTestBase<ProtoFileGenerator>
     {
@@ -139,7 +140,7 @@ syntax = ""proto3"";
 import ""google/protobuf/b.proto"";
 message Foo {
     Bar bar = 1;
-}", Array.Empty<(string,string)>()),
+}", Array.Empty<(string, string)>()),
 ("/foo/google/protobuf/b.proto", @"
 syntax = ""proto3"";
 message Bar {}", null)
