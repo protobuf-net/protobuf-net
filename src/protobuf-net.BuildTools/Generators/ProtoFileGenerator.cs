@@ -117,9 +117,9 @@ namespace ProtoBuf.BuildTools.Generators
                     if (userOptions is not null && userOptions.TryGetValue(Literals.AdditionalFileMetadataPrefix + "ImportPaths", out var extraPaths) && !string.IsNullOrWhiteSpace(extraPaths))
                     {
                         var baseUri = new Uri("file://" + schema.Value.Path, UriKind.Absolute);
-                        if (extraPaths.IndexOf(';') >= 0)
+                        if (extraPaths.IndexOf(',') >= 0)
                         {
-                            foreach (var part in extraPaths.Split(';'))
+                            foreach (var part in extraPaths.Split(','))
                             {
                                 AddExtraPath(part);
                             }
