@@ -1,10 +1,13 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.CodeAnalysis.CSharp;
+using ProtoBuf.Internal.RoslynUtils;
 
 namespace ProtoBuf.Generators
 {
@@ -30,7 +33,7 @@ namespace ProtoBuf.Generators
 
             void LogDebugInfo()
             {
-                Log?.Invoke($"Execute with debug log enabled");
+                Log?.Invoke("Execute with debug log enabled");
 
                 Version?
                     pbnetVersion = context.Compilation.GetProtobufNetVersion(),
@@ -57,7 +60,10 @@ namespace ProtoBuf.Generators
             return compilation.SyntaxTrees
                 .SelectMany(t => t.GetRoot(cancellationToken).DescendantNodes())
                 .OfType<ClassDeclarationSyntax>()
-                //.Where(classDeclaration => classDeclaration.)
+                    // taking only classes with `partial` modifier
+                .Where(syntax => syntax.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
+                    // only classes which have `ProtoUnion` attribute
+                .Where(classDeclaration => classDeclaration.ContainsAttribute<ProtoUnionAttribute>(compilation))
                 .ToArray();
         }
     }

@@ -12,9 +12,12 @@ namespace BuildToolsUnitTests.Generators
         {
             (var result, var diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
-                @"public class Bar
+                @"
+                [ProtoUnion<int>(""Abc"", 1, ""Bar"")]
+                [ProtoUnion<string>(""Abc"", 2, ""Blap"")]
+                partial class Foo
                 {
-                    public string Name { get; set; }
+                    
                 }"
             });
 
