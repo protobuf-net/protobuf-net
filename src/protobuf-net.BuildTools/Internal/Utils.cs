@@ -44,6 +44,8 @@ namespace ProtoBuf.BuildTools.Internal
 
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
+        internal static bool InSystemRuntimeSerializationNamespace(this INamedTypeSymbol symbol)
+            => InNamespace(symbol, "System", "Runtime", "Serialization");
 
         internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
         {

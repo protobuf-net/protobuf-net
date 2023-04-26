@@ -6,6 +6,7 @@ using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf.BuildTools.Analyzers
 {
@@ -375,6 +376,7 @@ namespace ProtoBuf.BuildTools.Analyzers
                 switch (ac.Name)
                 {
                     case nameof(ProtoContractAttribute) when ac.InProtoBufNamespace():
+                    case nameof(DataContractAttribute) when ac.InSystemRuntimeSerializationNamespace():
                         Context().SetContract(type, attrib);
                         break;
                     case nameof(ProtoIncludeAttribute) when ac.InProtoBufNamespace():
@@ -412,6 +414,9 @@ namespace ProtoBuf.BuildTools.Analyzers
                             {
                                 case nameof(ProtoMemberAttribute) when ac.InProtoBufNamespace():
                                     Context().AddMember(member, attrib, member.Name);
+                                    break;
+                                case nameof(DataMemberAttribute) when ac.InSystemRuntimeSerializationNamespace():
+                                    Context().AddMemberFromSystemRuntimeSerialization(member, attrib, member.Name);
                                     break;
                                 case nameof(ProtoIgnoreAttribute) when ac.InProtoBufNamespace():
                                     Context().AddIgnore(member, attrib, member.Name);

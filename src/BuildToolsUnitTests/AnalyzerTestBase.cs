@@ -9,6 +9,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
@@ -40,6 +41,8 @@ namespace BuildToolsUnitTests
         protected Task<ICollection<Diagnostic>> AnalyzeAsync(string? sourceCode = null, [CallerMemberName] string? callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true) =>
             AnalyzeAsync(project => string.IsNullOrWhiteSpace(sourceCode) ? project : project.AddDocument(callerMemberName + ".cs", sourceCode).Project, callerMemberName, ignoreCompatibilityLevelAdvice, ignorePreferAsyncAdvice);
 
+        protected Task<ICollection<Diagnostic>> AnalyzeAsync(string sourceCode, Func<Project, Project> projectModifier, [CallerMemberName] string? callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true) =>
+            AnalyzeAsync(project => projectModifier(project.AddDocument(callerMemberName + ".cs", sourceCode).Project), callerMemberName, ignoreCompatibilityLevelAdvice, ignorePreferAsyncAdvice);
         protected async Task<ICollection<Diagnostic>> AnalyzeAsync(Func<Project, Project> projectModifier, [CallerMemberName] string? callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true)
         {
             _ = callerMemberName;
