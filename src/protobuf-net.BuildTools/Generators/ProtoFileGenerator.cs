@@ -12,48 +12,21 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ProtoBuf.Generators.Abstractions;
 
 namespace ProtoBuf.BuildTools.Generators
 {
     /// <summary>
     /// Generates protobuf-net types from .proto schemas
     /// </summary>
-    [Generator]
-    public sealed class ProtoFileGenerator : ISourceGenerator, ILoggingAnalyzer
+    public sealed class ProtoFileGenerator : GeneratorBase
     {
-        private event Action<string>? Log;
-        event Action<string>? ILoggingAnalyzer.Log
-        {
-            add => this.Log += value;
-            remove => this.Log -= value;
-        }
-
-        void ISourceGenerator.Initialize(GeneratorInitializationContext context) { }
-
-        void ISourceGenerator.Execute(GeneratorExecutionContext context)
+        public override void Execute(GeneratorExecutionContext context)
         {
             try
             {
                 var log = Log;
-                log?.Invoke($"Execute with debug log enabled");
-
-                Version?
-                    pbnetVersion = context.Compilation.GetProtobufNetVersion(),
-                    pbnetGrpcVersion = context.Compilation.GetReferenceVersion("protobuf-net.Grpc"),
-                    wcfVersion = context.Compilation.GetReferenceVersion("System.ServiceModel.Primitives");
-
-                log?.Invoke($"Referencing protobuf-net {ShowVersion(pbnetVersion)}, protobuf-net.Grpc {ShowVersion(pbnetGrpcVersion)}, WCF {ShowVersion(wcfVersion)}");
-
-                string ShowVersion(Version? version)
-                    => version is null ? "(n/a)" : $"v{version}";
-
-                if (log is not null)
-                {
-                    foreach (var ran in context.Compilation.ReferencedAssemblyNames.OrderBy(x => x.Name))
-                    {
-                        log($"reference: {ran.Name} v{ran.Version}");
-                    }
-                }
+               Startup(context);
 
                 var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).Select(at => new NormalizedAdditionalText(at)).ToImmutableArray();
                 if (schemas.IsDefaultOrEmpty)
@@ -189,11 +162,11 @@ namespace ProtoBuf.BuildTools.Generators
                         var options = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                         if (langver is not null) options.Add("langver", langver);
 
-                        var services = pbnetGrpcVersion switch
+                        var services = ProtobufGrpcVersion switch
                         {   // automatically generate services *if* the consumer is referencing either the WCF or gRPC bits
-                            not null when wcfVersion is not null => "grpc;wcf",
+                            not null when WcfVersion is not null => "grpc;wcf",
                             not null => "grpc",
-                            null when wcfVersion is not null => "wcf",
+                            null when WcfVersion is not null => "wcf",
                             _ => null,
                         };
                         if (services is not null)
@@ -272,9 +245,8 @@ namespace ProtoBuf.BuildTools.Generators
             }
             catch (Exception ex)
             {
-                if (Log is null) throw;
-                Log.Invoke($"Exception: '{ex.Message}' ({ex.GetType().Name})");
-                Log.Invoke(ex.StackTrace);
+                Log($"Exception: '{ex.Message}' ({ex.GetType().Name})");
+                Log(ex.StackTrace);
             }
         }
 

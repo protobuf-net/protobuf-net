@@ -5,56 +5,44 @@ using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
+using ProtoBuf.Generators.Abstractions;
 using ProtoBuf.Internal.RoslynUtils;
+using ProtoBuf.Reflection;
 
 namespace ProtoBuf.Generators
 {
     /// <summary>
     /// Generates ProtoUnion-classes implementation
     /// </summary>
-    [Generator]
-    public sealed class ProtoUnionGenerator : ISourceGenerator, ILoggingAnalyzer
+    public sealed class ProtoUnionGenerator : GeneratorBase
     {
-        private event Action<string>? Log;
-        event Action<string>? ILoggingAnalyzer.Log
+        public override void Execute(GeneratorExecutionContext context)
         {
-            add => this.Log += value;
-            remove => this.Log -= value;
-        }
-
-        public void Initialize(GeneratorInitializationContext context) { }
-
-        public void Execute(GeneratorExecutionContext context)
-        {
-            LogDebugInfo();
-            var unionClasses = GetUnionClassesToGenerate(context.Compilation, context.CancellationToken);
-
-            void LogDebugInfo()
+            Startup(context);
+            var unionClassesToGenerate = GetUnionClassesToGenerate(context.Compilation, context.CancellationToken);
+            if (!unionClassesToGenerate.Any())
             {
-                Log?.Invoke("Execute with debug log enabled");
-
-                Version?
-                    pbnetVersion = context.Compilation.GetProtobufNetVersion(),
-                    pbnetGrpcVersion = context.Compilation.GetReferenceVersion("protobuf-net.Grpc"),
-                    wcfVersion = context.Compilation.GetReferenceVersion("System.ServiceModel.Primitives");
-
-                Log?.Invoke($"Referencing protobuf-net {ShowVersion(pbnetVersion)}, protobuf-net.Grpc {ShowVersion(pbnetGrpcVersion)}, WCF {ShowVersion(wcfVersion)}");
-
-                string ShowVersion(Version? version)
-                    => version is null ? "(n/a)" : $"v{version}";
-
-                if (Log is not null)
-                {
-                    foreach (var ran in context.Compilation.ReferencedAssemblyNames.OrderBy(x => x.Name))
-                    {
-                        Log($"reference: {ran.Name} v{ran.Version}");
-                    }
-                }
+                Log("No classes marked with ProtoUnion attribute found, skipping protoUnionGenerator");
+            }
+            
+            foreach (var unionClass in unionClassesToGenerate)
+            {
+                var codeFile = BuildCodeFile(unionClass);
+                if (codeFile is null) continue;
+                
+                context.AddSource(codeFile.Name, SourceText.From(codeFile.Text, Encoding.UTF8));
             }
         }
 
+        CodeFile? BuildCodeFile(ClassDeclarationSyntax classDeclarationSyntax)
+        {
+            return new CodeFile("", "");
+        }
+        
         private ClassDeclarationSyntax[] GetUnionClassesToGenerate(Compilation compilation, CancellationToken cancellationToken)
         {
             return compilation.SyntaxTrees
@@ -62,8 +50,8 @@ namespace ProtoBuf.Generators
                 .OfType<ClassDeclarationSyntax>()
                     // taking only classes with `partial` modifier
                 .Where(syntax => syntax.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
-                    // only classes which have `ProtoUnion` attribute
-                .Where(classDeclaration => classDeclaration.ContainsAttribute<ProtoUnionAttribute>(compilation))
+                    // only classes which have at least one `ProtoUnion` attribute
+                .Where(classDeclaration => classDeclaration.ContainsAttribute(compilation, typeof(ProtoUnionAttribute)))
                 .ToArray();
         }
     }
