@@ -11,11 +11,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
-using ProtoBuf.Internal;
 using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue
 {
+    /// <summary>
+    /// Implements a CodeFix on 'ShouldDeclareDefaultValue' diagnostic
+    /// </summary>
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ShouldDeclareDefaultCodeFixProvider)), Shared]
     public class ShouldDeclareDefaultCodeFixProvider : DefaultValueCodeFixProviderBase
     {

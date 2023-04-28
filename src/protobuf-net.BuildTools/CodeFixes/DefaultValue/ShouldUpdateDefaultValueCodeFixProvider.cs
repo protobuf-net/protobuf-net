@@ -1,22 +1,21 @@
-﻿using System;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Analyzers;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue
 {
+    /// <summary>
+    /// Implements a CodeFix on 'ShouldUpdateDefaultValue' diagnostic
+    /// </summary>
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ShouldUpdateDefaultValueCodeFixProvider)), Shared]
     public class ShouldUpdateDefaultValueCodeFixProvider : DefaultValueCodeFixProviderBase
     {

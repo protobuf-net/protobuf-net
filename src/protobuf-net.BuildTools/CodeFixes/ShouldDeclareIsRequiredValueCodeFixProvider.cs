@@ -4,9 +4,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Analyzers;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Composition;
 using System.Linq;
 using System.Threading;
@@ -16,6 +14,9 @@ using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.CodeFixes
 {
+    /// <summary>
+    /// Implements a CodeFix on 'ShouldDeclareIsRequired' diagnostic
+    /// </summary>
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ShouldDeclareIsRequiredValueCodeFixProvider)), Shared]
     public class ShouldDeclareIsRequiredValueCodeFixProvider : CodeFixProvider
     {

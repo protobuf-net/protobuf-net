@@ -9,6 +9,9 @@ using ProtoBuf.Internal.Extensions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
 {
+    /// <summary>
+    /// Base functionality for DefaultValue related Roslyn code-fix implementations
+    /// </summary>
     public abstract class DefaultValueCodeFixProviderBase : CodeFixProvider
     {
         /// <summary>
@@ -27,12 +30,12 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
         /// </summary>
         internal const string MemberSpecialTypeArgKey = "MemberSpecialTypeArgKey";
         
-        protected static SeparatedSyntaxList<AttributeArgumentSyntax> BuildDefaultValueAttributeArguments(DiagnosticArguments diagnosticArguments) =>
+        protected internal static SeparatedSyntaxList<AttributeArgumentSyntax> BuildDefaultValueAttributeArguments(DiagnosticArguments diagnosticArguments) =>
             UseShortSyntax(diagnosticArguments.MemberSpecialType)
                 ? BuildDefaultValueShortArgumentSyntax(diagnosticArguments)
                 : BuildDefaultValueLongArgumentSyntax(diagnosticArguments);
 
-        protected static bool TryBuildDiagnosticArguments(Diagnostic diagnostic, out DiagnosticArguments diagnosticArguments)
+        protected internal static bool TryBuildDiagnosticArguments(Diagnostic diagnostic, out DiagnosticArguments diagnosticArguments)
         {
             if (diagnostic.Properties.Count == 0)
             {
@@ -68,7 +71,7 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
             return true;
         }
         
-        protected struct DiagnosticArguments
+        protected internal struct DiagnosticArguments
         {
             public string DefaultValueStringRepresentation { get; set; }
             public string DefaultValueCalculated { get; set; }
