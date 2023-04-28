@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace ProtoBuf.Internal.Extensions
+namespace ProtoBuf.Internal.Roslyn.Extensions
 {
     internal static class CompilationUnitSyntaxExtensions
     {

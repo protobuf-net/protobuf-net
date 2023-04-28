@@ -11,7 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
-using ProtoBuf.Internal.Extensions;
+using ProtoBuf.Internal.Roslyn.Extensions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue
 {

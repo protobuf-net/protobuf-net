@@ -77,7 +77,7 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({propertyDefaultValue})]
+    [ProtoMember(1), DefaultValue(({propertyType}){propertyDefaultValue})]
     [Custom]
     public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
 }}
@@ -122,7 +122,7 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({propertyDefaultValue})]
+    [ProtoMember(1), DefaultValue(({propertyType}){propertyDefaultValue})]
     public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
 }}";
 
@@ -188,7 +188,7 @@ public class Foo
         
         [Theory]
         [InlineData("bool", "true")]
-        [InlineData("DayOfWeek", "DayOfWeek.Monday")]
+        [InlineData("DayOfWeek", "DayOfWeek.Monday", false)]
         [InlineData("char", "'x'")]
         [InlineData("byte", "0x2")]
         [InlineData("short", "0b0000_0011")]
@@ -197,7 +197,7 @@ public class Foo
         [InlineData("float", "2.71828f")]
         [InlineData("double", "3.14159265")]
         public async Task CodeFixValidate_ShouldDeclareDefault_ReportsDiagnostic_ShortSyntax(
-            string propertyType, string propertyDefaultValue)
+            string propertyType, string propertyDefaultValue, bool isCasted = true)
         {
             var sourceCode = $@"
 using ProtoBuf;
@@ -215,6 +215,9 @@ public class Foo
             // and this behavior is tested in separate class, since "usingDirective" addition produces
             // wrong line endings, which fail in roslyn codeFix test
             // https://github.com/dotnet/roslyn/issues/62976
+
+            var castExpression = isCasted ? $"({propertyType})" : string.Empty;
+            
             var expectedCode = $@"
 using ProtoBuf;
 using System;
@@ -223,7 +226,7 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({propertyDefaultValue})]
+    [ProtoMember(1), DefaultValue({castExpression}{propertyDefaultValue})]
     public {propertyType} Bar {{ get; set; }} = {propertyDefaultValue};
 }}";
             

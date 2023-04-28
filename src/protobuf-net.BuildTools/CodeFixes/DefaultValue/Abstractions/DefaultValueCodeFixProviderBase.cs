@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ProtoBuf.Internal.Extensions;
+using ProtoBuf.Internal.Roslyn.Extensions;
 
 namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
 {
@@ -76,6 +76,19 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
             public string DefaultValueStringRepresentation { get; set; }
             public string DefaultValueCalculated { get; set; }
             public SpecialType MemberSpecialType { get; set; }
+
+            public string GetCastedRepresentation()
+            {
+                if (MemberSpecialType == SpecialType.System_Enum)
+                {
+                    return DefaultValueStringRepresentation;
+                }
+                
+                return string.Format(
+                    "({0}){1}",
+                    MemberSpecialType.GetSpecialTypeCSharpKeyword(),
+                    DefaultValueStringRepresentation);
+            }
         }
         
         /// <summary>
@@ -97,7 +110,7 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
             => SyntaxFactory.SeparatedList(new []
             {
                 SyntaxFactory.AttributeArgument(
-                    default, default, SyntaxFactory.ParseExpression(diagnosticArguments.DefaultValueStringRepresentation))
+                    default, default, SyntaxFactory.ParseExpression(diagnosticArguments.GetCastedRepresentation()))
             });
         
         private static SeparatedSyntaxList<AttributeArgumentSyntax> BuildDefaultValueLongArgumentSyntax(DiagnosticArguments diagnosticArguments)

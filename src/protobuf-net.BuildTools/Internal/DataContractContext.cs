@@ -11,7 +11,7 @@ using System.ComponentModel;
 using System.Linq;
 using ProtoBuf.CodeFixes.DefaultValue.Abstractions;
 using ProtoBuf.Internal;
-using ProtoBuf.Internal.Extensions;
+using ProtoBuf.Internal.Roslyn.Extensions;
 
 namespace ProtoBuf.BuildTools.Internal
 {

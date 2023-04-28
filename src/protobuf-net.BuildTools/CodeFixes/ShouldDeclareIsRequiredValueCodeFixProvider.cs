@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp;
-using ProtoBuf.Internal.Extensions;
+using ProtoBuf.Internal.Roslyn.Extensions;
 
 namespace ProtoBuf.CodeFixes
 {

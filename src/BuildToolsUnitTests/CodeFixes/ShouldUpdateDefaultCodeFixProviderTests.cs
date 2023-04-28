@@ -95,7 +95,7 @@ public class Foo
 
         [Theory]
         [InlineData("bool", "true", "false")]
-        [InlineData("DayOfWeek", "DayOfWeek.Monday", "DayOfWeek.Tuesday")]
+        [InlineData("DayOfWeek", "DayOfWeek.Monday", "DayOfWeek.Tuesday", false)]
         [InlineData("char", "'x'", "'y'")]
         [InlineData("byte", "0x2", "0b_0011")]
         [InlineData("short", "0b0000_0011", "0x5")]
@@ -105,7 +105,7 @@ public class Foo
         [InlineData("double", "3.14159265", "3.14")]
         [InlineData("string", "\"hello\"", "\"hello world!\"")]
         public async Task CodeFixValidate_ShouldUpdateDefault_ShortSyntax(
-            string propertyType, string attributeValue, string propertyValue)
+            string propertyType, string attributeValue, string propertyValue, bool isCasted = true)
         {
             var sourceCode = $@"
 using ProtoBuf;
@@ -119,6 +119,8 @@ public class Foo
     public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 
+            var castExpression = isCasted ? $"({propertyType})" : string.Empty;
+
             var expectedCode = $@"
 using ProtoBuf;
 using System;
@@ -127,7 +129,7 @@ using System.ComponentModel;
 [ProtoContract]
 public class Foo
 {{
-    [ProtoMember(1), DefaultValue({propertyValue})]
+    [ProtoMember(1), DefaultValue({castExpression}{propertyValue})]
     public {propertyType} Bar {{ get; set; }} = {propertyValue};
 }}";
 

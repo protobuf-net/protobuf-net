@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace ProtoBuf.Internal.Extensions
+namespace ProtoBuf.Internal.Roslyn.Extensions
 {
     internal static class NameEqualsSyntaxExtensions
     {

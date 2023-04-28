@@ -2,7 +2,7 @@
 using System;
 using Microsoft.CodeAnalysis;
 
-namespace ProtoBuf.Internal.Extensions
+namespace ProtoBuf.Internal.Roslyn.Extensions
 {
     internal static class SpecialTypeExtensions
     {
