@@ -255,6 +255,7 @@ namespace ProtoBuf.BuildTools.Internal
                                 case MemberInitValueKind.ConstantExpression:
                                     if (ShouldDeclareDefault(member, memberInitValue))
                                     {
+#pragma warning disable RS1022
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldDeclareDefault,
                                             location: Utils.PickLocation(ref context, member.Blame),
@@ -266,9 +267,11 @@ namespace ProtoBuf.BuildTools.Internal
                                                             .Add(DefaultValueCodeFixProviderBase.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
+#pragma warning restore RS1022
                                     }
                                     else if (ShouldUpdateDefaultValueAttribute(context, member, memberInitValue, out var blame))
                                     {
+#pragma warning disable RS1022
                                         context.ReportDiagnostic(Diagnostic.Create(
                                             descriptor: DataContractAnalyzer.ShouldUpdateDefault,
                                             location: Utils.PickLocation(ref context, blame),
@@ -280,6 +283,7 @@ namespace ProtoBuf.BuildTools.Internal
                                                             .Add(DefaultValueCodeFixProviderBase.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
+#pragma warning restore RS1022
                                     }
                                     break;
 
