@@ -21,9 +21,13 @@ namespace ProtoBuf.CodeFixes
     public class ShouldDeclareIsRequiredValueCodeFixProvider : CodeFixProvider
     {
         const string CodeFixTitle = "Set [ProtoMember] attribute as Required";
+        
+        /// <inheritdoc/>
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DataContractAnalyzer.ShouldDeclareIsRequired.Id);
+        /// <inheritdoc/>
         public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
+        /// <inheritdoc/>
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             // probably Roslyn does the check by itself, but lets check that there are diagnostics to investigate it

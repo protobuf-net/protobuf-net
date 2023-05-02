@@ -29,12 +29,21 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
         /// <see cref="SpecialType"/> value of member type. Helps to consider which syntax to use
         /// </summary>
         internal const string MemberSpecialTypeArgKey = "MemberSpecialTypeArgKey";
-        
+
+        /// <inheritdoc/>
+        public abstract override FixAllProvider GetFixAllProvider();
+
+        /// <summary>
+        /// Build attribute syntax of different type according to diagnostic argument special type
+        /// </summary>
         protected internal static SeparatedSyntaxList<AttributeArgumentSyntax> BuildDefaultValueAttributeArguments(DiagnosticArguments diagnosticArguments) =>
             UseShortSyntax(diagnosticArguments.MemberSpecialType)
                 ? BuildDefaultValueShortArgumentSyntax(diagnosticArguments)
                 : BuildDefaultValueLongArgumentSyntax(diagnosticArguments);
 
+        /// <summary>
+        /// Build input-model of code-fix
+        /// </summary>
         protected internal static bool TryBuildDiagnosticArguments(Diagnostic diagnostic, out DiagnosticArguments diagnosticArguments)
         {
             if (diagnostic.Properties.Count == 0)
@@ -71,13 +80,30 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
             return true;
         }
         
+        /// <summary>
+        /// Input-model of code-fix
+        /// </summary>
         protected internal struct DiagnosticArguments
         {
+            /// <summary>
+            /// Original string value of field definition 
+            /// </summary>
             public string DefaultValueStringRepresentation { get; set; }
+            
+            /// <summary>
+            /// Recalculated representation of default value
+            /// </summary>
             public string DefaultValueCalculated { get; set; }
+            
+            /// <summary>
+            /// Roslyn special type representation of a field
+            /// </summary>
             public SpecialType MemberSpecialType { get; set; }
-
-            public string GetCastedRepresentation()
+            
+            /// <summary>
+            /// Returns default value string representation with a cast to type included
+            /// </summary>
+            internal string GetCastedRepresentation()
             {
                 if (MemberSpecialType == SpecialType.System_Enum)
                 {

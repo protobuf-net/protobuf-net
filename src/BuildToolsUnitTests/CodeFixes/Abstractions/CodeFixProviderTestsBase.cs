@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.Versioning;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace BuildToolsUnitTests.CodeFixes.Abstractions
 {
@@ -24,7 +23,7 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             string sourceCode,
             string expectedCode,
             DiagnosticResult? diagnosticResult = null,
-            string targetFramework = null,
+            string? targetFramework = null,
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
@@ -44,7 +43,7 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
         }
 
         CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
-            string sourceCode, string expectedCode, string targetFramework = null)
+            string sourceCode, string expectedCode, string? targetFramework = null)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
             if (string.IsNullOrEmpty(targetFramework))
@@ -75,7 +74,7 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
 
         private static void AddStandardDiagnostics(SolutionState solutionState, params DiagnosticResult[] diagnosticResults)
         {
-            if (diagnosticResults is null || diagnosticResults.Length <= 0) return;
+            if (diagnosticResults.Length <= 0) return;
             foreach (var diagnosticResult in diagnosticResults)
             {
                 solutionState.ExpectedDiagnostics.Add(diagnosticResult);

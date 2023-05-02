@@ -22,9 +22,13 @@ namespace ProtoBuf.CodeFixes.DefaultValue
     public class ShouldDeclareDefaultCodeFixProvider : DefaultValueCodeFixProviderBase
     {
         const string CodeFixTitle = "Add [DefaultValue] attribute";
+        
+        /// <inheritdoc/>
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(DataContractAnalyzer.ShouldDeclareDefault.Id);
+        /// <inheritdoc/>
         public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
+        /// <inheritdoc/>
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             // probably Roslyn does the check by itself, but lets check that there are diagnostics to investigate it
