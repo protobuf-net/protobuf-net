@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ProtoBuf.BuildTools.Analyzers
@@ -13,6 +14,7 @@ namespace ProtoBuf.BuildTools.Analyzers
     /// Reports common usage errors in code that uses protobuf-net
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    [SuppressMessage("AnalyzerReferenceCodeFix", "RS1022", Justification = "Its fine to reference codeFix implementations from analyzer directly: https://github.com/dotnet/roslyn-analyzers/issues/5341")]
     public class DataContractAnalyzer : DiagnosticAnalyzer
     {
         internal static readonly DiagnosticDescriptor InvalidFieldNumber = new(
