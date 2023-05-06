@@ -31,7 +31,7 @@ change the version/contents from the copy baked into the tool. Normally, standar
 
 Additional configuration options can be specified at attributes against each `<AdditionalFiles>` node, to fine tune your options; this is very similar to the options available with the command-line tools:
 
-- `ImportPaths` - specifies a semi-colon delimited list of additional import locations; usually this isn't required, as schemas are resolved relative to each file; this is resolved relative to the current file, and
+- `ImportPaths` - specifies a comma delimited list of additional import locations; usually this isn't required, as schemas are resolved relative to each file; this is resolved relative to the current file, and
   can indicate "upwards" locations like `../..` - but the actual lookup happens *purely* within the virtual file system of `<AdditionalFiles>` nodes - it does not allow external file access
    - as an example of when this is useful, consider [`type.proto`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/type.proto), which has an import of `google/protobuf/any.proto`, which is actually
      in the **same folder**; adding `ImportPaths="../../"` means that `../../google/protobuf/any.proto` will successfully resolve back to the same location
