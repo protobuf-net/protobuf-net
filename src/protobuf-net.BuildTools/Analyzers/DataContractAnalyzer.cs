@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ProtoBuf.BuildTools.Analyzers
@@ -13,6 +14,7 @@ namespace ProtoBuf.BuildTools.Analyzers
     /// Reports common usage errors in code that uses protobuf-net
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    [SuppressMessage("AnalyzerReferenceCodeFix", "RS1022", Justification = "Its fine to reference codeFix implementations from analyzer directly: https://github.com/dotnet/roslyn-analyzers/issues/5341")]
     public class DataContractAnalyzer : DiagnosticAnalyzer
     {
         internal static readonly DiagnosticDescriptor InvalidFieldNumber = new(
@@ -178,6 +180,24 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor ShouldUpdateDefault = new(
+            id: "PBN0021",
+            title: nameof(DataContractAnalyzer) + "." + nameof(ShouldUpdateDefault),
+            messageFormat: "Field '{0}' should update [DefaultValue({1})] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
+        internal static readonly DiagnosticDescriptor ShouldDeclareIsRequired = new(
+            id: "PBN0022",
+            title: nameof(DataContractAnalyzer) + "." + nameof(ShouldDeclareIsRequired),
+            messageFormat: "Field '{0}' should use [ProtoMember(..., IsRequired=true)] to ensure its value is passed since it's initialized to a non-default value.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>
@@ -264,7 +284,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context)
         {
             if (context.ContainingSymbol is not INamedTypeSymbol type) return;
-
+            
             switch (type?.TypeKind)
             {
                 case TypeKind.Class:
