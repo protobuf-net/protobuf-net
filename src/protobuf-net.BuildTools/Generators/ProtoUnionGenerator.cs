@@ -10,6 +10,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.Generators.Abstractions;
+using ProtoBuf.Internal.Models;
 using ProtoBuf.Internal.RoslynUtils;
 using ProtoBuf.Reflection;
 
@@ -26,31 +27,66 @@ namespace ProtoBuf.Generators
             var unionClassesToGenerate = GetUnionClassesToGenerate(context.Compilation, context.CancellationToken);
             if (!unionClassesToGenerate.Any())
             {
-                Log("No classes marked with ProtoUnion attribute found, skipping protoUnionGenerator");
+                Log($"No classes marked with {nameof(ProtoUnionAttribute)} found, skipping {nameof(ProtoUnionGenerator)}");
             }
             
             foreach (var unionClass in unionClassesToGenerate)
             {
-                var codeFile = BuildCodeFile(unionClass);
+                if (!IsValidForGeneration(ref context, unionClass)) continue;
+                
+                var codeFile = BuildCodeFile(context.Compilation, unionClass);
                 if (codeFile is null) continue;
                 
                 context.AddSource(codeFile.Name, SourceText.From(codeFile.Text, Encoding.UTF8));
             }
         }
 
-        CodeFile? BuildCodeFile(ClassDeclarationSyntax classDeclarationSyntax)
+        CodeFile? BuildCodeFile(Compilation compilation, ClassDeclarationSyntax classSyntax)
         {
+            var protoUnionFields = GetProtoUnionFields(compilation, classSyntax);
+            if (!protoUnionFields.Any())
+            {
+                Log($"No protoUnionFields parsed, codeFile generation is stopped for {classSyntax}");
+                return null;
+            }
+            
             return new CodeFile("", "");
         }
+
+        private ISet<ProtoUnionField> GetProtoUnionFields(Compilation compilation, ClassDeclarationSyntax classSyntax)
+        {
+            var attributes = classSyntax.GetAttributeSyntaxesOfType(typeof(ProtoUnionAttribute));
+            var protoUnionFields = new HashSet<ProtoUnionField>();
+            foreach (var attributeSyntax in attributes)
+            {
+                if (!ProtoUnionField.TryCreate(compilation, attributeSyntax, out var field))
+                {
+                    Log($"Failed to parse protoUnionField from {attributeSyntax.ToFullString()}");
+                    continue;
+                }
+                
+                protoUnionFields.Add(field);
+            }
+
+            return protoUnionFields;
+        }
         
-        private ClassDeclarationSyntax[] GetUnionClassesToGenerate(Compilation compilation, CancellationToken cancellationToken)
+        private static bool IsValidForGeneration(ref GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
+        {
+            if (!classSyntax.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                // context.ReportDiagnostic(Diagnostic.Create());
+                return false;
+            }
+
+            return true;
+        }
+        
+        private static ClassDeclarationSyntax[] GetUnionClassesToGenerate(Compilation compilation, CancellationToken cancellationToken)
         {
             return compilation.SyntaxTrees
                 .SelectMany(t => t.GetRoot(cancellationToken).DescendantNodes())
                 .OfType<ClassDeclarationSyntax>()
-                    // taking only classes with `partial` modifier
-                .Where(syntax => syntax.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
-                    // only classes which have at least one `ProtoUnion` attribute
                 .Where(classDeclaration => classDeclaration.ContainsAttribute(compilation, typeof(ProtoUnionAttribute)))
                 .ToArray();
         }

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using ProtoBuf.BuildTools.Generators;
 using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests.Generators.Abstractions
