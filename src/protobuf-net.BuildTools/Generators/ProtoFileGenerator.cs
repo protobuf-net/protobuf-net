@@ -1,10 +1,8 @@
 #nullable enable
 using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -34,45 +32,13 @@ namespace ProtoBuf.BuildTools.Generators
                     log?.Invoke("No .proto schemas found");
                     return;
                 }
+                
+                if (!TryDetectCodeGenerator(context, out var codeGenerator, out var langver))
+                {
+                    return;
+                }
 
                 // find anything that matches our files
-                CodeGenerator generator;
-                string? langver = null;
-
-                switch (context.Compilation.Language)
-                {
-                    case "C#":
-                        generator = CSharpCodeGenerator.Default;
-                        if (context.ParseOptions is CSharpParseOptions cs)
-                        {
-                            langver = cs.LanguageVersion switch
-                            {
-                                LanguageVersion.CSharp1 => "1",
-                                LanguageVersion.CSharp2 => "2",
-                                LanguageVersion.CSharp3 => "3",
-                                LanguageVersion.CSharp4 => "4",
-                                LanguageVersion.CSharp5 => "5",
-                                LanguageVersion.CSharp6 => "6",
-                                LanguageVersion.CSharp7 => "7",
-                                LanguageVersion.CSharp7_1 => "7.1",
-                                LanguageVersion.CSharp7_2 => "7.2",
-                                LanguageVersion.CSharp7_3 => "7.3",
-                                LanguageVersion.CSharp8 => "8",
-                                LanguageVersion.CSharp9 => "9",
-                                _ => null
-                            };
-                        }
-                        break;
-                    //case "VB": // completely untested, and pretty sure this isn't even a "thing"
-                    //    generator = VBCodeGenerator.Default;
-                    //    langver = "14.0"; // TODO: lookup from context
-                    //    break;
-                    default:
-                        log?.Invoke($"Unexpected language: {context.Compilation.Language}");
-                        return; // nothing doing
-                }
-                log?.Invoke($"Detected {generator.Name} v{langver}");
-
                 var fileSystem = new AdditionalFilesFileSystem(log, schemas);
                 foreach (var schema in schemas)
                 {
@@ -206,7 +172,7 @@ namespace ProtoBuf.BuildTools.Generators
                             }
                         }
 
-                        var files = generator.Generate(set, options: options);
+                        var files = codeGenerator.Generate(set, options: options);
                         var root = Directory.GetCurrentDirectory();
                         foreach (var file in files)
                         {

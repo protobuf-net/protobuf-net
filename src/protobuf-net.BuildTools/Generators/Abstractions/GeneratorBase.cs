@@ -2,7 +2,9 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal;
+using ProtoBuf.Reflection;
 
 namespace ProtoBuf.Generators.Abstractions
 {
@@ -45,6 +47,51 @@ namespace ProtoBuf.Generators.Abstractions
                     Log($"reference: {ran.Name} v{ran.Version}");
                 }
             }
+        }
+
+        protected bool TryDetectCodeGenerator(
+            GeneratorExecutionContext context,
+            out CodeGenerator? codeGenerator, 
+            out string? langVer)
+        {
+            switch (context.Compilation.Language)
+            {
+                case "C#":
+                    codeGenerator = CSharpCodeGenerator.Default;
+                    langVer = default;
+                    if (context.ParseOptions is CSharpParseOptions cs)
+                    {
+                        langVer = cs.LanguageVersion switch
+                        {
+                            LanguageVersion.CSharp1 => "1",
+                            LanguageVersion.CSharp2 => "2",
+                            LanguageVersion.CSharp3 => "3",
+                            LanguageVersion.CSharp4 => "4",
+                            LanguageVersion.CSharp5 => "5",
+                            LanguageVersion.CSharp6 => "6",
+                            LanguageVersion.CSharp7 => "7",
+                            LanguageVersion.CSharp7_1 => "7.1",
+                            LanguageVersion.CSharp7_2 => "7.2",
+                            LanguageVersion.CSharp7_3 => "7.3",
+                            LanguageVersion.CSharp8 => "8",
+                            LanguageVersion.CSharp9 => "9",
+                            _ => null
+                        };
+                    }
+                    break;
+                //case "VB": // completely untested, and pretty sure this isn't even a "thing"
+                //    generator = VBCodeGenerator.Default;
+                //    langver = "14.0"; // TODO: lookup from context
+                //    break;
+                default:
+                    Log($"Unexpected language: {context.Compilation.Language}");
+                    codeGenerator = null;
+                    langVer = null;
+                    return false;
+            }
+            
+            Log($"Detected {codeGenerator.Name} v{langVer}");
+            return true;
         }
     }
 }

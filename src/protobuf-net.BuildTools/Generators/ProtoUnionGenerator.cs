@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.Generators.Abstractions;
 using ProtoBuf.Internal.Models;
+using ProtoBuf.Internal.ProtoUnion;
 using ProtoBuf.Internal.RoslynUtils;
 using ProtoBuf.Reflection;
 
@@ -24,33 +25,58 @@ namespace ProtoBuf.Generators
         public override void Execute(GeneratorExecutionContext context)
         {
             Startup(context);
+            if (!TryDetectCodeGenerator(context, out var codeGenerator, out var langVersion))
+            {
+                Log("Failed to find suitable codeGenerator");
+                return;
+            }
+            if (codeGenerator is not CSharpCodeGenerator cSharpCodeGenerator)
+            {
+                Log("Non CSharp code gen is not supported for ProtoUnion");
+                return;
+            }
+            
             var unionClassesToGenerate = GetUnionClassesToGenerate(context.Compilation, context.CancellationToken);
             if (!unionClassesToGenerate.Any())
             {
                 Log($"No classes marked with {nameof(ProtoUnionAttribute)} found, skipping {nameof(ProtoUnionGenerator)}");
+                return;
             }
-            
+
+            var descriptors = new List<ProtoUnionClassDescriptor>();
             foreach (var unionClass in unionClassesToGenerate)
             {
                 if (!IsValidForGeneration(ref context, unionClass)) continue;
-                
-                var codeFile = BuildCodeFile(context.Compilation, unionClass);
-                if (codeFile is null) continue;
-                
-                context.AddSource(codeFile.Name, SourceText.From(codeFile.Text, Encoding.UTF8));
+                var descriptor = BuildProtoUnionClassDescriptor(context, unionClass);
+                if (descriptor is not null) descriptors.Add(descriptor);
+            }
+
+            if (!descriptors.Any())
+            {
+                Log($"No '{nameof(ProtoUnionClassDescriptor)}' were built successfully, no protoUnions to generate");
+                return;
+            }
+
+            foreach (var file in cSharpCodeGenerator.Generate(descriptors))
+            {
+                context.AddSource(file.Name, SourceText.From(file.Text, Encoding.UTF8));
             }
         }
 
-        CodeFile? BuildCodeFile(Compilation compilation, ClassDeclarationSyntax classSyntax)
+        ProtoUnionClassDescriptor? BuildProtoUnionClassDescriptor(GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
         {
-            var protoUnionFields = GetProtoUnionFields(compilation, classSyntax);
+            var protoUnionFields = GetProtoUnionFields(context.Compilation, classSyntax);
             if (!protoUnionFields.Any())
             {
                 Log($"No protoUnionFields parsed, codeFile generation is stopped for {classSyntax}");
                 return null;
             }
-            
-            return new CodeFile("", "");
+
+            return new ProtoUnionClassDescriptor
+            {
+                // todo add class name and other stuff here
+                UnionFields = protoUnionFields
+            };
         }
 
         private ISet<ProtoUnionField> GetProtoUnionFields(Compilation compilation, ClassDeclarationSyntax classSyntax)
@@ -64,7 +90,7 @@ namespace ProtoBuf.Generators
                     Log($"Failed to parse protoUnionField from {attributeSyntax.ToFullString()}");
                     continue;
                 }
-                
+
                 protoUnionFields.Add(field);
             }
 

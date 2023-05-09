@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace ProtoBuf.Internal.Models
+namespace ProtoBuf.Internal.ProtoUnion
 {
     internal sealed class ProtoUnionField
     {
@@ -11,12 +11,12 @@ namespace ProtoBuf.Internal.Models
         public string UnionName { get; set; }
         public int FieldNumber { get; set; }
         public string MemberName { get; set; }
-
+    
         public static bool TryCreate(Compilation compilation, AttributeSyntax attributeSyntax, out ProtoUnionField protoUnionField)
         {
             if (attributeSyntax.Name.Arity == 0) return TryCreateNonGeneric(compilation, attributeSyntax, out protoUnionField);
             if (attributeSyntax.Name.Arity == 1) return TryCreateGeneric(compilation, attributeSyntax, out protoUnionField);
-
+    
             protoUnionField = null;
             return false;
         }
@@ -37,7 +37,7 @@ namespace ProtoBuf.Internal.Models
             }
             
             var semanticModel = compilation.GetSemanticModel(attributeSyntax.SyntaxTree);
-
+    
             var typeArgSyntax = arguments.First();
             var typeArg = semanticModel.GetDeclaredSymbol(typeArgSyntax);
             var a = semanticModel.GetTypeInfo(typeArgSyntax);
@@ -78,7 +78,7 @@ namespace ProtoBuf.Internal.Models
                 protoUnionField = null;
                 return false;
             }
-
+    
             if (!TryParseStringArg(semanticModel, arguments[0], out var unionName) ||
                 !TryParseIntArg(semanticModel, arguments[1], out var fieldNumber) ||
                 !TryParseStringArg(semanticModel, arguments[2], out var memberName))
@@ -86,7 +86,7 @@ namespace ProtoBuf.Internal.Models
                 protoUnionField = null;
                 return false;
             }
-
+    
             protoUnionField = new ProtoUnionField
             {
                 Type = genericType,
@@ -96,7 +96,7 @@ namespace ProtoBuf.Internal.Models
             };
             return true;
         }
-
+    
         static bool TryParseStringArg(SemanticModel semanticModel, AttributeArgumentSyntax attributeArgumentSyntax, out string result)
         {
             var constantValue = semanticModel.GetConstantValue(attributeArgumentSyntax.Expression);
@@ -105,13 +105,13 @@ namespace ProtoBuf.Internal.Models
                 result = null;
                 return false;
             }
-
+    
             if (constantValue.Value is not string)
             {
                 result = null;
                 return false;
             }
-
+    
             result = (string)constantValue.Value;
             return true;
         }
@@ -124,17 +124,17 @@ namespace ProtoBuf.Internal.Models
                 result = default;
                 return false;
             }
-
+    
             if (constantValue.Value is not int)
             {
                 result = default;
                 return false;
             }
-
+    
             result = (int)constantValue.Value;
             return true;
         }
-
+    
         private static Type ResolveType(ITypeSymbol typeSymbol)
         {
             return typeSymbol.SpecialType switch
@@ -157,7 +157,7 @@ namespace ProtoBuf.Internal.Models
                 _ => null,
             };
         }
-
+    
         private bool Equals(ProtoUnionField other)
         {
             return Type == other.Type 
@@ -165,12 +165,12 @@ namespace ProtoBuf.Internal.Models
                    && FieldNumber == other.FieldNumber
                    && MemberName == other.MemberName;
         }
-
+    
         public override bool Equals(object obj)
         {
             return ReferenceEquals(this, obj) || obj is ProtoUnionField other && Equals(other);
         }
-
+    
         public override int GetHashCode()
         {
             unchecked

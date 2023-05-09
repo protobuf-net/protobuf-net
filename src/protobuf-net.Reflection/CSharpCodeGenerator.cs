@@ -11,7 +11,7 @@ namespace ProtoBuf.Reflection
     /// <summary>
     /// A code generator that writes C#
     /// </summary>
-    public class CSharpCodeGenerator : CommonCodeGenerator
+    public partial class CSharpCodeGenerator : CommonCodeGenerator
     {
         /// <summary>
         /// Reusable code-generator instance

@@ -21,4 +21,14 @@
   <ItemGroup>
     <Folder Include="google\type\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
+      <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="CSharpCodeGenerator.ProtoUnions.cs">
+      <DependentUpon>CSharpCodeGenerator.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>
