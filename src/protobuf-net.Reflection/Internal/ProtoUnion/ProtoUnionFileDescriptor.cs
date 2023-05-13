@@ -2,9 +2,10 @@
 
 namespace ProtoBuf.Internal.ProtoUnion
 {
-    internal sealed class ProtoUnionClassDescriptor
+    internal sealed class ProtoUnionFileDescriptor
     {
-        public string ClassName { get; set; }
+        public string Filename { get; set; }
+        public string Class { get; set; }
         public string Namespace { get; set; }
         public ICollection<ProtoUnionField> UnionFields { get; set; }
     }

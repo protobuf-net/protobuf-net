@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -43,17 +44,17 @@ namespace ProtoBuf.Generators
                 return;
             }
 
-            var descriptors = new List<ProtoUnionClassDescriptor>();
+            var descriptors = new List<ProtoUnionFileDescriptor>();
             foreach (var unionClass in unionClassesToGenerate)
             {
                 if (!IsValidForGeneration(ref context, unionClass)) continue;
-                var descriptor = BuildProtoUnionClassDescriptor(context, unionClass);
+                var descriptor = BuildProtoUnionFileDescriptor(context, unionClass);
                 if (descriptor is not null) descriptors.Add(descriptor);
             }
 
             if (!descriptors.Any())
             {
-                Log($"No '{nameof(ProtoUnionClassDescriptor)}' were built successfully, no protoUnions to generate");
+                Log($"No '{nameof(ProtoUnionFileDescriptor)}' were built successfully, no protoUnions to generate");
                 return;
             }
 
@@ -63,7 +64,7 @@ namespace ProtoBuf.Generators
             }
         }
 
-        ProtoUnionClassDescriptor? BuildProtoUnionClassDescriptor(GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
+        ProtoUnionFileDescriptor? BuildProtoUnionFileDescriptor(GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
         {
             var protoUnionFields = GetProtoUnionFields(context.Compilation, classSyntax);
             if (!protoUnionFields.Any())
@@ -72,9 +73,19 @@ namespace ProtoBuf.Generators
                 return null;
             }
 
-            return new ProtoUnionClassDescriptor
+            var filename = Path.GetFileName(classSyntax.SyntaxTree.FilePath);
+            var namespaceSyntax = classSyntax.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            if (namespaceSyntax is null)
             {
-                // todo add class name and other stuff here
+                Log($"Namespace could not be found for {classSyntax}");
+                return null;
+            }
+
+            return new ProtoUnionFileDescriptor
+            {
+                Filename = filename,
+                Class = classSyntax.Identifier.ToString(),
+                Namespace = namespaceSyntax.Name.ToString(),
                 UnionFields = protoUnionFields
             };
         }

@@ -12,13 +12,15 @@ namespace BuildToolsUnitTests.Generators
         {
             (var result, var diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
-                @"using ProtoBuf;
-
-                [ProtoUnion(typeof(int), ""Abc"", 1, ""Bar"")]
-                [ProtoUnion(typeof(string), ""Abc"", 2, ""Blap"")]
-                partial class Foo
+                @"
+                using ProtoBuf;
+                namespace MySpace
                 {
-                    
+                    [ProtoUnion(typeof(int), ""Abc"", 1, ""Bar"")]
+                    [ProtoUnion(typeof(string), ""Abc"", 2, ""Blap"")]
+                    partial class Foo
+                    {  
+                    }
                 }"
             });
 
@@ -32,12 +34,13 @@ namespace BuildToolsUnitTests.Generators
             (var result, var diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
                 @"using ProtoBuf;
-
-                [ProtoUnion<int>(""Abc"", 1, ""Bar"")]
-                [ProtoUnion<string>(""Abc"", 2, ""Blap"")]
-                partial class Foo
+                namespace MySpace
                 {
-                    
+                    [ProtoUnion<int>(""Abc"", 1, ""Bar"")]
+                    [ProtoUnion<string>(""Abc"", 2, ""Blap"")]
+                    partial class Foo
+                    {    
+                    }
                 }"
             });
 

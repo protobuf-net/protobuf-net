@@ -149,6 +149,22 @@ namespace ProtoBuf.Reflection
             tw.WriteLine();
         }
 
+        protected void WriteClassHeader(GeneratorContext ctx, string @class, string visibilityModifiers = null, bool isPartial = false)
+        {
+            var headerBuilder = new StringBuilder();
+            if (!string.IsNullOrEmpty(visibilityModifiers)) headerBuilder.Append(visibilityModifiers + ' ');
+            if (isPartial) headerBuilder.Append("partial ");
+            headerBuilder.Append($"class {@class}");
+            
+            ctx.WriteLine(headerBuilder.ToString());
+            ctx.WriteLine("{").Indent().WriteLine();
+        }
+
+        protected void WriteClassFooter(GeneratorContext ctx, string @class)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
+        }
+        
         /// <inheritdoc/>
         protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
         {
