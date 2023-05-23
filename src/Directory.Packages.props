@@ -4,6 +4,7 @@
         <PackageVersion Include="BlazorInputFile" Version="0.2.0" />
         
         <PackageVersion Include="coverlet.collector" Version="3.2.0" />
+        <PackageVersion Include="FluentAssertions" Version="6.11.0" />
         
         <!-- exclude due to F# build problems -->
         <!--<PackageVersion Include="FSharp.Core" Version="7.0.0" />-->

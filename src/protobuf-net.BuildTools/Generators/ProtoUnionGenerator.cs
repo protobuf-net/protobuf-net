@@ -80,14 +80,14 @@ namespace ProtoBuf.Generators
                 Log($"Namespace could not be found for {classSyntax}");
                 return null;
             }
-
-            return new ProtoUnionFileDescriptor
-            {
-                Filename = filename,
-                Class = classSyntax.Identifier.ToString(),
-                Namespace = namespaceSyntax.Name.ToString(),
-                UnionFields = protoUnionFields
-            };
+            
+            var unionTypes = BuildUnionTypes(protoUnionFields);
+            return new ProtoUnionFileDescriptor(
+                filename,
+                @class: classSyntax.Identifier.ToString(),
+                @namespace: namespaceSyntax.Name.ToString(),
+                unionFields: protoUnionFields,
+                unionTypes: unionTypes);
         }
 
         private ISet<ProtoUnionField> GetProtoUnionFields(Compilation compilation, ClassDeclarationSyntax classSyntax)
@@ -126,6 +126,55 @@ namespace ProtoBuf.Generators
                 .OfType<ClassDeclarationSyntax>()
                 .Where(classDeclaration => classDeclaration.ContainsAttribute(compilation, typeof(ProtoUnionAttribute)))
                 .ToArray();
+        }
+        
+        private IReadOnlyDictionary<string, DiscriminatedUnionType> BuildUnionTypes(ICollection<ProtoUnionField> fields)
+        {
+            return fields
+                .GroupBy(f => f.UnionName)
+                .ToDictionary(unionFields => unionFields.Key, CalculateUnionFieldsType);
+
+            DiscriminatedUnionType CalculateUnionFieldsType(IEnumerable<ProtoUnionField> unionFields)
+            {
+                var count32 = false;
+                var count64 = false;
+                var count128 = false;
+                var countReference = false;
+
+                foreach (var field in unionFields)
+                {
+                    switch (field.UnionType)
+                    {
+                        case ProtoUnionField.PropertyUnionType.Is32:
+                            count32 = true;
+                            break;
+                        case ProtoUnionField.PropertyUnionType.Is64:
+                            count64 = true;
+                            break;
+                        case ProtoUnionField.PropertyUnionType.Is128:
+                            count128 = true;
+                            break;
+                        case ProtoUnionField.PropertyUnionType.Reference:
+                            countReference = true;
+                            break;
+                    }
+                }
+                
+                if (count128)
+                {
+                    return countReference ? DiscriminatedUnionType.Object128 : DiscriminatedUnionType.Standard128;
+                }
+                if (count64)
+                {
+                    return countReference ? DiscriminatedUnionType.Object64 : DiscriminatedUnionType.Standard64;
+                }
+                if (count32)
+                {
+                    return countReference ? DiscriminatedUnionType.Object32 : DiscriminatedUnionType.Standard32;
+                }
+                
+                return DiscriminatedUnionType.Object;
+            }
         }
     }
 }

@@ -157,12 +157,17 @@ namespace ProtoBuf.Reflection
             headerBuilder.Append($"class {@class}");
             
             ctx.WriteLine(headerBuilder.ToString());
-            ctx.WriteLine("{").Indent().WriteLine();
+            ctx.WriteLine("{").Indent();
         }
 
         protected void WriteClassFooter(GeneratorContext ctx, string @class)
         {
             ctx.Outdent().WriteLine("}").WriteLine();
+        }
+
+        protected void WriteProtoBufUsing(GeneratorContext ctx)
+        {
+            ctx.WriteLine("using ProtoBuf;").WriteLine();
         }
         
         /// <inheritdoc/>

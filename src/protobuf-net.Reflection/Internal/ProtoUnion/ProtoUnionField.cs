@@ -2,16 +2,38 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ProtoBuf.Internal.Roslyn.Extensions;
 
 namespace ProtoBuf.Internal.ProtoUnion
 {
     internal sealed class ProtoUnionField
     {
-        public Type Type { get; set; }
-        public string UnionName { get; set; }
-        public int FieldNumber { get; set; }
-        public string MemberName { get; set; }
-    
+        /// <summary>
+        /// Type as used in a code. For example 'int', 'bool', etc
+        /// </summary>
+        public string CSharpType { get; private set; }
+        /// <summary>
+        /// Name of corresponding union usage from <see cref="DiscriminatedUnion32"/> or analogous discriminated union
+        /// </summary>
+        public string UnionUsageFieldName { get; private set; }
+        /// <summary>
+        /// Specifies if property is reference\value and size (if is value type)
+        /// </summary>
+        public PropertyUnionType UnionType { get; private set; }
+
+        /// <summary>
+        /// Name of a union specified by user
+        /// </summary>
+        public string UnionName { get; private set; }
+        /// <summary>
+        /// Proto member number 
+        /// </summary>
+        public int FieldNumber { get; private set; }
+        /// <summary>
+        /// Name of a generated property
+        /// </summary>
+        public string MemberName { get; private set; }
+
         public static bool TryCreate(Compilation compilation, AttributeSyntax attributeSyntax, out ProtoUnionField protoUnionField)
         {
             if (attributeSyntax.Name.Arity == 0) return TryCreateNonGeneric(compilation, attributeSyntax, out protoUnionField);
@@ -23,6 +45,8 @@ namespace ProtoBuf.Internal.ProtoUnion
         
         private static bool TryCreateNonGeneric(Compilation compilation, AttributeSyntax attributeSyntax, out ProtoUnionField protoUnionField)
         {
+            throw new NotImplementedException();
+            
             if (attributeSyntax.ArgumentList is null)
             {
                 protoUnionField = null;
@@ -71,17 +95,30 @@ namespace ProtoBuf.Internal.ProtoUnion
                 return false;
             }
             
-            var genericTypeSymbol = namedTypeSymbol.TypeArguments.First();
-            var genericType = ResolveType(genericTypeSymbol);
-            if (genericType is null)
+            var genericTypeSymbol = namedTypeSymbol.TypeArguments.FirstOrDefault();
+            if (genericTypeSymbol is null)
             {
                 protoUnionField = null;
                 return false;
             }
     
-            if (!TryParseStringArg(semanticModel, arguments[0], out var unionName) ||
-                !TryParseIntArg(semanticModel, arguments[1], out var fieldNumber) ||
-                !TryParseStringArg(semanticModel, arguments[2], out var memberName))
+            if (!arguments[0].TryParseStringArg(semanticModel, out var unionName) ||
+                !arguments[1].TryParseIntArg(semanticModel, out var fieldNumber) ||
+                !arguments[2].TryParseStringArg(semanticModel, out var memberName))
+            {
+                protoUnionField = null;
+                return false;
+            }
+
+            var unionType = CalculateUnionType(genericTypeSymbol);
+            if (!unionType.HasValue)
+            {
+                protoUnionField = null;
+                return false;
+            }
+
+            var unionUsageFieldName = CalculateUnionUsageFieldName(genericTypeSymbol);
+            if (unionUsageFieldName is null)
             {
                 protoUnionField = null;
                 return false;
@@ -89,98 +126,54 @@ namespace ProtoBuf.Internal.ProtoUnion
     
             protoUnionField = new ProtoUnionField
             {
-                Type = genericType,
+                CSharpType = genericTypeSymbol.ToDisplayString(),
                 UnionName = unionName,
                 FieldNumber = fieldNumber,
-                MemberName = memberName
+                MemberName = memberName,
+                UnionType = unionType.Value,
+                UnionUsageFieldName = unionUsageFieldName
             };
             return true;
         }
-    
-        static bool TryParseStringArg(SemanticModel semanticModel, AttributeArgumentSyntax attributeArgumentSyntax, out string result)
+
+        private static string CalculateUnionUsageFieldName(ITypeSymbol typeSymbol) => typeSymbol.SpecialType switch
         {
-            var constantValue = semanticModel.GetConstantValue(attributeArgumentSyntax.Expression);
-            if (!constantValue.HasValue)
-            {
-                result = null;
-                return false;
-            }
-    
-            if (constantValue.Value is not string)
-            {
-                result = null;
-                return false;
-            }
-    
-            result = (string)constantValue.Value;
-            return true;
-        }
-        
-        static bool TryParseIntArg(SemanticModel semanticModel, AttributeArgumentSyntax attributeArgumentSyntax, out int result)
+            SpecialType.System_Int32 => nameof(DiscriminatedUnion128Object.Int32),
+            SpecialType.System_UInt32 => nameof(DiscriminatedUnion128Object.UInt32),
+            SpecialType.System_Int64 => nameof(DiscriminatedUnion128Object.Int64),
+            SpecialType.System_String => nameof(DiscriminatedUnion128Object.Object),
+            _ => null
+        };
+
+        private static PropertyUnionType? CalculateUnionType(ITypeSymbol typeSymbol) => typeSymbol.SpecialType switch
         {
-            var constantValue = semanticModel.GetConstantValue(attributeArgumentSyntax.Expression);
-            if (!constantValue.HasValue)
-            {
-                result = default;
-                return false;
-            }
-    
-            if (constantValue.Value is not int)
-            {
-                result = default;
-                return false;
-            }
-    
-            result = (int)constantValue.Value;
-            return true;
-        }
-    
-        private static Type ResolveType(ITypeSymbol typeSymbol)
+            // SpecialType.System_Object => expr,
+            // SpecialType.System_Enum => expr,
+            // SpecialType.System_Boolean => expr,
+            // SpecialType.System_Char => expr,
+            // SpecialType.System_SByte => expr,
+            // SpecialType.System_Byte => expr,
+            // SpecialType.System_Int16 => expr,
+            // SpecialType.System_UInt16 => expr,
+            SpecialType.System_Int32 => PropertyUnionType.Is32,
+            SpecialType.System_UInt32 => PropertyUnionType.Is32,
+            // SpecialType.System_Int64 => expr,
+            // SpecialType.System_UInt64 => expr,
+            // SpecialType.System_Decimal => expr,
+            // SpecialType.System_Single => expr,
+            // SpecialType.System_Double => expr,
+            // SpecialType.System_DateTime => expr,
+            SpecialType.System_String => PropertyUnionType.Reference,
+            _ => null
+        };
+
+
+        public enum PropertyUnionType
         {
-            return typeSymbol.SpecialType switch
-            {
-                SpecialType.System_Object => typeof(object),
-                SpecialType.System_Boolean => typeof(bool),
-                SpecialType.System_Char => typeof(char),
-                SpecialType.System_SByte => typeof(sbyte),
-                SpecialType.System_Byte => typeof(byte),
-                SpecialType.System_Int16 => typeof(short),
-                SpecialType.System_UInt16 => typeof(ushort),
-                SpecialType.System_Int32 => typeof(int),
-                SpecialType.System_UInt32 => typeof(uint),
-                SpecialType.System_Int64 => typeof(long),
-                SpecialType.System_UInt64 => typeof(ulong),
-                SpecialType.System_Decimal => typeof(decimal),
-                SpecialType.System_Single => typeof(float),
-                SpecialType.System_Double => typeof(double),
-                SpecialType.System_String => typeof(string),
-                _ => null,
-            };
-        }
-    
-        private bool Equals(ProtoUnionField other)
-        {
-            return Type == other.Type 
-                   && UnionName == other.UnionName
-                   && FieldNumber == other.FieldNumber
-                   && MemberName == other.MemberName;
-        }
-    
-        public override bool Equals(object obj)
-        {
-            return ReferenceEquals(this, obj) || obj is ProtoUnionField other && Equals(other);
-        }
-    
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = (Type != null ? Type.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (UnionName != null ? UnionName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ FieldNumber;
-                hashCode = (hashCode * 397) ^ (MemberName != null ? MemberName.GetHashCode() : 0);
-                return hashCode;
-            }
+            Is32,
+            Is64,
+            Is128,
+            Reference
         }
     }
 }
