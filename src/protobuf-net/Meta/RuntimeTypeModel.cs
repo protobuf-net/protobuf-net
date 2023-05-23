@@ -2049,6 +2049,7 @@ namespace ProtoBuf.Meta
                         }
                         return dataFormat == DataFormat.FixedSize ? "bytes" : "string";
                     case ProtoTypeCode.Type: return "string";
+                    case ProtoTypeCode.Uri: return "string";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }
             }
