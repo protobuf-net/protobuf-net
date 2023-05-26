@@ -2,26 +2,21 @@
 
 namespace ProtoBuf.Internal.ProtoUnion
 {
-    internal sealed record ProtoUnionFileDescriptor
+    internal sealed record ProtoUnionFileDescriptor(
+        string Filename,
+        string Class,
+        string Namespace,
+        string UnionName,
+        DiscriminatedUnionType UnionType,
+        ICollection<ProtoUnionField> UnionFields)
     {
-        public string Filename { get; }
-        public string Class { get; }
-        public string Namespace { get; }
-        public ICollection<ProtoUnionField> UnionFields { get; }
-        public IReadOnlyDictionary<string, DiscriminatedUnionType> UnionTypes { get; }
+        public string Filename { get; } = Filename;
+        public string Class { get; } = Class;
+        public string Namespace { get; } = Namespace;
 
-        public ProtoUnionFileDescriptor(
-            string filename,
-            string @class,
-            string @namespace,
-            ICollection<ProtoUnionField> unionFields,
-            IReadOnlyDictionary<string, DiscriminatedUnionType> unionTypes)
-        {
-            Filename = filename;
-            Class = @class;
-            Namespace = @namespace;
-            UnionFields = unionFields;
-            UnionTypes = unionTypes;
-        }
+        public string UnionName { get; } = UnionName;
+        public DiscriminatedUnionType UnionType { get; } = UnionType;
+
+        public ICollection<ProtoUnionField> UnionFields { get; } = UnionFields;
     }
 }
