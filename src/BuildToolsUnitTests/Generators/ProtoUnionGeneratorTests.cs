@@ -1,6 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.IO;
+using System.Linq;
 using BuildToolsUnitTests.Generators.Abstractions;
-using ProtoBuf.Generators;
 using System.Threading.Tasks;
 using BuildToolsUnitTests.Extensions;
 using FluentAssertions;
@@ -16,29 +17,7 @@ namespace BuildToolsUnitTests.Generators
     public class ProtoUnionGeneratorTests : GeneratorTestBase<ProtoUnionGenerator>
     {
         public ProtoUnionGeneratorTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
-        
-        // [Fact]
-        // public async Task GenerateProtoUnion_NonGenericAttribute()
-        // {
-        //     (var result, var diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
-        //     {
-        //         @"
-        //         using ProtoBuf;
-        //         namespace MySpace
-        //         {
-        //             [ProtoUnion(typeof(int), ""Abc"", 1, ""Bar"")]
-        //             [ProtoUnion(typeof(string), ""Abc"", 2, ""Blap"")]
-        //             partial class Foo
-        //             {  
-        //             }
-        //         }"
-        //     });
-        //
-        //     diagnostics.Should().BeEmpty();
-        //     result.GeneratedTrees.Length.Should().Be(1);
-        //     var typeInfo = GetGeneratedTypeAsync(result);
-        // }
-        
+
         [Fact]
         public async Task GenerateProtoUnion_GenericAttribute_BasicScenario()
         {
@@ -63,6 +42,41 @@ namespace BuildToolsUnitTests.Generators
             typeInfo!.CheckPropertyType("Bar", typeof(int?));
             typeInfo!.CheckPropertyType("Blap", typeof(string));
             typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion32Object));
+        }
+        
+        [Fact]
+        public async Task GenerateProtoUnion_GenericAttribute_DifferentUnions()
+        {
+            var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
+            {
+                @"using ProtoBuf;
+                namespace MySpace
+                {
+                    [ProtoUnion<int>(""Qwe"", 1, ""Bar_int"")]
+                    [ProtoUnion<string>(""Qwe"", 2, ""Bar_string"")]
+
+                    [ProtoUnion<int>(""Rty"", 3, ""Blap_int"")]
+                    [ProtoUnion<string>(""Rty"", 4, ""Blap_string"")]
+                    partial class Foo
+                    {    
+                    }
+                }"
+            });
+
+            diagnostics.Should().BeEmpty();
+            result.GeneratedTrees.Length.Should().Be(2);
+            
+            var qweTypeInfo = await GetGeneratedTypeAsync(result, filePathFilter: filePath => Path.GetFileName(filePath).Contains("Qwe"));
+            qweTypeInfo.Should().NotBeNull();
+            qweTypeInfo!.CheckPropertyType("Bar_int", typeof(int?));
+            qweTypeInfo!.CheckPropertyType("Bar_string", typeof(string));
+            qweTypeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Qwe"), typeof(DiscriminatedUnion32Object));
+            
+            var rtyTypeInfo = await GetGeneratedTypeAsync(result, filePathFilter: filePath => Path.GetFileName(filePath).Contains("Rty"));
+            rtyTypeInfo.Should().NotBeNull();
+            rtyTypeInfo!.CheckPropertyType("Blap_int", typeof(int?));
+            rtyTypeInfo!.CheckPropertyType("Blap_string", typeof(string));
+            rtyTypeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Rty"), typeof(DiscriminatedUnion32Object));
         }
         
         [Fact]
@@ -97,15 +111,28 @@ namespace BuildToolsUnitTests.Generators
             
             var typeInfo = await GetGeneratedTypeAsync(result);
             typeInfo.Should().NotBeNull();
-            typeInfo!.CheckPropertyType("Bar", typeof(int?));
-            typeInfo!.CheckPropertyType("Blap", typeof(string));
-            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion32Object));
+            typeInfo!.CheckPropertyType("Bar_bool", typeof(bool?));
+            typeInfo!.CheckPropertyType("Bar_int", typeof(int?));
+            typeInfo!.CheckPropertyType("Bar_uint", typeof(uint?));
+            typeInfo!.CheckPropertyType("Bar_float", typeof(float?));
+            typeInfo!.CheckPropertyType("Bar_long", typeof(long?));
+            typeInfo!.CheckPropertyType("Bar_ulong", typeof(ulong?));
+            typeInfo!.CheckPropertyType("Bar_string", typeof(string));
+            typeInfo!.CheckPropertyType("Bar_timeSpan", typeof(TimeSpan?));
+            typeInfo!.CheckPropertyType("Bar_dateTime", typeof(DateTime?));
+            typeInfo!.CheckPropertyType("Bar_guid", typeof(Guid?));
+            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion128Object));
         }
 
-        private async Task<System.Reflection.TypeInfo?> GetGeneratedTypeAsync(GeneratorDriverRunResult generatorDriverRunResult, string typeName = "MySpace.Foo")
+        private async Task<System.Reflection.TypeInfo?> GetGeneratedTypeAsync(
+            GeneratorDriverRunResult generatorDriverRunResult,
+            string typeName = "MySpace.Foo",
+            Func<string, bool>? filePathFilter = null)
         {
-            var sourceCodeText = await generatorDriverRunResult.GeneratedTrees.First().GetTextAsync();
-            TestOutputHelper?.WriteLine("Generated sourceCode: \n----\n" + sourceCodeText + "\n");
+            var sourceCodeText = filePathFilter is not null
+                ? await generatorDriverRunResult.GeneratedTrees.First(x => filePathFilter!(x.FilePath)).GetTextAsync() 
+                : await generatorDriverRunResult.GeneratedTrees.First().GetTextAsync();
+            TestOutputHelper?.WriteLine($"Generated sourceCode: \n----\n {sourceCodeText}\n");
             
             var assembly = TryBuildAssemblyFromSourceCode(sourceCodeText.ToString());
             return assembly.DefinedTypes.FirstOrDefault(type => type.FullName == typeName);

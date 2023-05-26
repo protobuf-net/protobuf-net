@@ -11,7 +11,9 @@ namespace ProtoBuf.Reflection
         {
             foreach (var fileDescriptor in protoUnionClassDescriptors)
             {
-                var fileName = Path.ChangeExtension(fileDescriptor.Filename + $"_{fileDescriptor.UnionName}", DefaultFileExtension);
+                var fileName = Path.ChangeExtension(
+                    Path.GetFileNameWithoutExtension(fileDescriptor.Filename) + $"_{fileDescriptor.UnionName}",
+                    DefaultFileExtension);
             
                 string generatedFileText;
                 using (var buffer = new StringWriter())
