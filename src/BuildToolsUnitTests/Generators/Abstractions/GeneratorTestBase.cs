@@ -42,6 +42,18 @@ namespace BuildToolsUnitTests.Generators.Abstractions
         }
 
         protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
+            string csharpCodeText,
+            string sourceFileName,
+            AdditionalText[] additionalTexts = null,
+            ImmutableDictionary<string, string>? globalOptions = null,
+            [CallerMemberName] string? callerMemberName = null,
+            bool debugLog = true)
+        {
+            var addSourcesProjectModifier = (Project project) => project.AddDocument(sourceFileName + ".cs", csharpCodeText).Project;
+            return GenerateAsync(additionalTexts, globalOptions, addSourcesProjectModifier, callerMemberName, debugLog);
+        }
+        
+        protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
             string[] cSharpProjectSourceTexts,
             AdditionalText[] additionalTexts = null,
             ImmutableDictionary<string, string>? globalOptions = null,
@@ -49,7 +61,7 @@ namespace BuildToolsUnitTests.Generators.Abstractions
             bool debugLog = true)
         {
             var addSourcesProjectModifier = (Project project) =>
-            {
+            { 
                 var index = 1;
                 foreach (var sourceText in cSharpProjectSourceTexts)
                 {

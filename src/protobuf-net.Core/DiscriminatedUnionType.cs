@@ -6,18 +6,20 @@
     /// Specifies the type of discriminated union implementation used.
     /// See: <see cref="DiscriminatedUnion32"/>, <see cref="DiscriminatedUnion32Object"/>, etc. 
     /// </summary>
+    [Flags]
     public enum DiscriminatedUnionType
     {
-        Object,
+        None                      = 0,
+        Standard32                = 1 << 0,
+        Standard64                = 1 << 1,
+        Standard128               = 1 << 2,
         
-        Standard32,
-        Object32,
+        Object                    = 1 << 3,
+        Object32                  = 1 << 4,
+        Object64                  = 1 << 5,
+        Object128                 = 1 << 6,
         
-        Standard64,
-        Object64,
-        
-        Standard128,
-        Object128
+        IsObjectable = Object | Object32 | Object64 | Object128
     }
     
     /// <summary>
