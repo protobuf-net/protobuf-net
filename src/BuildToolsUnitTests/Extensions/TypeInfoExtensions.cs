@@ -22,6 +22,16 @@ namespace BuildToolsUnitTests.Extensions
         public static void CheckPropertyType(
             this TypeInfo typeInfo,
             string propertyName,
+            string expectedTypeName)
+        {
+            var property = typeInfo.GetProperty(propertyName);
+            property.Should().NotBeNull();
+            property!.PropertyType.FullName.Should().Be(expectedTypeName);
+        } 
+        
+        public static void CheckPropertyType(
+            this TypeInfo typeInfo,
+            string propertyName,
             Type expectedType)
         {
             var property = typeInfo.GetProperty(propertyName);

@@ -143,6 +143,7 @@ namespace BuildToolsUnitTests.Generators
                     [ProtoUnion<TimeSpan>(""Abc"", 8, ""Bar_timeSpan"")]
                     [ProtoUnion<DateTime>(""Abc"", 9, ""Bar_dateTime"")]
                     [ProtoUnion<Guid>(""Abc"", 10, ""Bar_guid"")]
+                    [ProtoUnion<MyData>(""Abc"", 11, ""Bar_class"")]
                     partial class Foo
                     {
                     }
@@ -151,8 +152,19 @@ namespace BuildToolsUnitTests.Generators
 
             diagnostics.Should().BeEmpty();
             result.GeneratedTrees.Length.Should().Be(1);
-            
-            var typeInfo = await GetGeneratedTypeAsync(result);
+
+            var typeInfo = await GetGeneratedTypeAsync(
+                result,
+                additionalSourceCodeToInclude: """
+                    namespace MySpace
+                    {
+                        public class MyData 
+                        {
+                            public string Id { get; set; }
+                        }
+                    }
+                """);
+
             typeInfo.Should().NotBeNull();
             typeInfo!.CheckPropertyType("Bar_bool", typeof(bool?));
             typeInfo!.CheckPropertyType("Bar_int", typeof(int?));
@@ -164,11 +176,13 @@ namespace BuildToolsUnitTests.Generators
             typeInfo!.CheckPropertyType("Bar_timeSpan", typeof(TimeSpan?));
             typeInfo!.CheckPropertyType("Bar_dateTime", typeof(DateTime?));
             typeInfo!.CheckPropertyType("Bar_guid", typeof(Guid?));
+            typeInfo!.CheckPropertyType("Bar_class", expectedTypeName: "MySpace.MyData");
             typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion128Object));
         }
 
         private async Task<System.Reflection.TypeInfo?> GetGeneratedTypeAsync(
             GeneratorDriverRunResult generatorDriverRunResult,
+            string additionalSourceCodeToInclude = null,
             string typeName = "MySpace.Foo",
             Func<string, bool>? filePathFilter = null)
         {
@@ -176,8 +190,14 @@ namespace BuildToolsUnitTests.Generators
                 ? await generatorDriverRunResult.GeneratedTrees.First(x => filePathFilter!(x.FilePath)).GetTextAsync() 
                 : await generatorDriverRunResult.GeneratedTrees.First().GetTextAsync();
             TestOutputHelper?.WriteLine($"Generated sourceCode: \n----\n {sourceCodeText}\n");
+
+            var sourceCode = sourceCodeText.ToString();
+            if (!string.IsNullOrEmpty(additionalSourceCodeToInclude))
+            {
+                sourceCode += "\n\n" + additionalSourceCodeToInclude;
+            }
             
-            var assembly = TryBuildAssemblyFromSourceCode(sourceCodeText.ToString());
+            var assembly = TryBuildAssemblyFromSourceCode(sourceCode);
             return assembly.DefinedTypes.FirstOrDefault(type => type.FullName == typeName);
         }
     }
