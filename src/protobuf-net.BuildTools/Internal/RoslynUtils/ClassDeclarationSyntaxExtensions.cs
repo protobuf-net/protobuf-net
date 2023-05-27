@@ -15,7 +15,7 @@ internal static class ClassDeclarationSyntaxExtensions
         if (!attributeLists.Any()) return false;
         
         var attributeDatas = attributeLists.First().GetAttributeDatas(compilation);
-        var searchedAttributeDefined = attributeDatas.FirstOrDefault(data => data.AttributeClass!.Name == attribute.Name);
+        var searchedAttributeDefined = attributeDatas.FirstOrDefault(data => data.AttributeClass!.MetadataName == attribute.Name);
         if (searchedAttributeDefined is not null) return true;
 
         return false;
@@ -38,8 +38,10 @@ internal static class ClassDeclarationSyntaxExtensions
                 }
                 else if (attr.Name.Arity == 1)
                 {
-                    var attributeUsageName = attr.Name.ToString(); 
-                    if (attributeUsageName.Substring(0, attributeUsageName.IndexOf('<')) + "Attribute" == searchedAttributeType.Name)
+                    var attributeUsageName = attr.Name.ToString();
+                    var searchedAttributeName = searchedAttributeType.Name;
+
+                    if (attributeUsageName.Substring(0, attributeUsageName.IndexOf('<')) + "Attribute" == searchedAttributeName.Substring(0, searchedAttributeName.IndexOf('`')))
                         result.Add(attr);
                 }
             }

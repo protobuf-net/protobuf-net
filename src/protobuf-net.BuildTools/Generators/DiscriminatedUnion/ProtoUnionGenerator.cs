@@ -38,7 +38,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             var unionClassesToGenerate = GetUnionClassesToGenerate(context.Compilation, context.CancellationToken);
             if (!unionClassesToGenerate.Any())
             {
-                Log($"No classes marked with {nameof(ProtoUnionAttribute)} found, skipping {nameof(ProtoUnionGenerator)}");
+                Log($"No classes marked with ProtoUnion attribute found, skipping {nameof(ProtoUnionGenerator)}");
                 return;
             }
 
@@ -78,7 +78,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             return compilation.SyntaxTrees
                 .SelectMany(t => t.GetRoot(cancellationToken).DescendantNodes())
                 .OfType<ClassDeclarationSyntax>()
-                .Where(classDeclaration => classDeclaration.ContainsAttribute(compilation, typeof(ProtoUnionAttribute)))
+                .Where(classDeclaration => classDeclaration.ContainsAttribute(compilation, typeof(ProtoUnionAttribute<>)))
                 .ToArray();
         }
     }

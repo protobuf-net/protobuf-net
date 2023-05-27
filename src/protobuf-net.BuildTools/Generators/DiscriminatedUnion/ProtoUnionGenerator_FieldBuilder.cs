@@ -15,9 +15,10 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
         /// <summary>
         /// Build map of unionNames to protoFields of corresponding union
         /// </summary>
-        private IReadOnlyDictionary<string, ICollection<ProtoUnionField?>> GetUnionsProtoFieldsMap(Compilation compilation, ClassDeclarationSyntax classSyntax)
+        private IReadOnlyDictionary<string, ICollection<ProtoUnionField?>> GetUnionsProtoFieldsMap(
+            Compilation compilation, ClassDeclarationSyntax classSyntax)
         {
-            var attributes = classSyntax.GetAttributeSyntaxesOfType(typeof(ProtoUnionAttribute));
+            var attributes = classSyntax.GetAttributeSyntaxesOfType(typeof(ProtoUnionAttribute<>));
             var unionsProtoFieldsMap = new Dictionary<string, ICollection<ProtoUnionField?>>();
             foreach (var attributeSyntax in attributes)
             {
@@ -28,28 +29,34 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 }
 
                 var unionName = field!.UnionName;
-                if (!unionsProtoFieldsMap.ContainsKey(unionName)) unionsProtoFieldsMap[unionName] = new List<ProtoUnionField>()!;
+                if (!unionsProtoFieldsMap.ContainsKey(unionName))
+                    unionsProtoFieldsMap[unionName] = new List<ProtoUnionField>()!;
                 unionsProtoFieldsMap[unionName].Add(field);
             }
 
             return unionsProtoFieldsMap;
         }
-        
-        private bool TryCreate(Compilation compilation, AttributeSyntax attributeSyntax, out ProtoUnionField? protoUnionField)
+
+        private bool TryCreate(Compilation compilation, AttributeSyntax attributeSyntax,
+            out ProtoUnionField? protoUnionField)
         {
-            if (attributeSyntax.Name.Arity == 0) return TryCreateNonGeneric(compilation, attributeSyntax, out protoUnionField);
-            if (attributeSyntax.Name.Arity == 1) return TryCreateGeneric(compilation, attributeSyntax, out protoUnionField);
-    
+            if (attributeSyntax.Name.Arity == 0)
+                return TryCreateNonGeneric(compilation, attributeSyntax, out protoUnionField);
+            if (attributeSyntax.Name.Arity == 1)
+                return TryCreateGeneric(compilation, attributeSyntax, out protoUnionField);
+
             protoUnionField = null;
             return false;
         }
-        
-        private bool TryCreateNonGeneric(Compilation compilation, AttributeSyntax attributeSyntax, out ProtoUnionField? protoUnionField)
+
+        private bool TryCreateNonGeneric(Compilation compilation, AttributeSyntax attributeSyntax,
+            out ProtoUnionField? protoUnionField)
         {
             throw new NotImplementedException();
         }
-        
-        private bool TryCreateGeneric(Compilation compilation, AttributeSyntax attributeSyntax, out ProtoUnionField? protoUnionField)
+
+        private bool TryCreateGeneric(Compilation compilation, AttributeSyntax attributeSyntax,
+            out ProtoUnionField? protoUnionField)
         {
             if (attributeSyntax.ArgumentList is null)
             {
@@ -57,7 +64,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 protoUnionField = null;
                 return false;
             }
-            
+
             var arguments = attributeSyntax.ArgumentList.Arguments;
             if (arguments.Count != 3)
             {
@@ -65,7 +72,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 protoUnionField = null;
                 return false;
             }
-            
+
             var semanticModel = compilation.GetSemanticModel(attributeSyntax.SyntaxTree);
             var attributeTypeInfo = semanticModel.GetTypeInfo(attributeSyntax);
             var namedTypeSymbol = (attributeTypeInfo.Type ?? attributeTypeInfo.ConvertedType) as INamedTypeSymbol;
@@ -74,14 +81,14 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 protoUnionField = null;
                 return false;
             }
-            
+
             var genericTypeSymbol = namedTypeSymbol.TypeArguments.FirstOrDefault();
             if (genericTypeSymbol is null)
             {
                 protoUnionField = null;
                 return false;
             }
-    
+
             if (!arguments[0].TryParseStringArg(semanticModel, out var unionName) ||
                 !arguments[1].TryParseIntArg(semanticModel, out var fieldNumber) ||
                 !arguments[2].TryParseStringArg(semanticModel, out var memberName))
