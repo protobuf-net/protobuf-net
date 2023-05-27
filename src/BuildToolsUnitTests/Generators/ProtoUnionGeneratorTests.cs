@@ -23,15 +23,17 @@ namespace BuildToolsUnitTests.Generators
         {
             var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
-                @"using ProtoBuf;
+                """
+                using ProtoBuf;
                 namespace MySpace
                 {
-                    [ProtoUnion<int>(""Abc"", 1, ""Bar"")]
-                    [ProtoUnion<string>(""Abc"", 2, ""Blap"")]
+                    [ProtoUnion<int>("Abc", 1, "Bar")]
+                    [ProtoUnion<string>("Abc", 2, "Blap")]
                     partial class Foo
                     {    
                     }
-                }"
+                }
+                """
             });
 
             diagnostics.Should().BeEmpty();
@@ -48,19 +50,20 @@ namespace BuildToolsUnitTests.Generators
         public async Task GenerateProtoUnion_GenericAttribute_DifferentUnions()
         {
             var (result, diagnostics) = await GenerateAsync(
-                csharpCodeText: 
-                    @"using ProtoBuf;
+                csharpCodeText: """
+                    using ProtoBuf;
                     namespace MySpace
                     {
-                        [ProtoUnion<int>(""Qwe"", 1, ""Bar_int"")]
-                        [ProtoUnion<string>(""Qwe"", 2, ""Bar_string"")]
+                        [ProtoUnion<int>("Qwe", 1, "Bar_int")]
+                        [ProtoUnion<string>("Qwe", 2, "Bar_string")]
 
-                        [ProtoUnion<int>(""Rty"", 3, ""Blap_int"")]
-                        [ProtoUnion<string>(""Rty"", 4, ""Blap_string"")]
+                        [ProtoUnion<int>("Rty", 3, "Blap_int")]
+                        [ProtoUnion<string>("Rty", 4, "Blap_string")]
                         partial class Foo
                         {    
                         }
-                    }",
+                    }
+                """,
                 sourceFileName: "Foo");
 
             diagnostics.Should().BeEmpty();
@@ -84,25 +87,26 @@ namespace BuildToolsUnitTests.Generators
         {
             var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
-                @"
+                """
                 using ProtoBuf;
                 using System;
 
                 namespace MySpace
                 {
-                    [ProtoUnion<bool>(""Abc"", 1, ""Bar_bool"")]
-                    [ProtoUnion<int>(""Abc"", 2, ""Bar_int"")]
-                    [ProtoUnion<uint>(""Abc"", 3, ""Bar_uint"")]
-                    [ProtoUnion<float>(""Abc"", 4, ""Bar_float"")]
-                    [ProtoUnion<long>(""Abc"", 5, ""Bar_long"")]
-                    [ProtoUnion<ulong>(""Abc"", 6, ""Bar_ulong"")]
-                    [ProtoUnion<TimeSpan>(""Abc"", 8, ""Bar_timeSpan"")]
-                    [ProtoUnion<DateTime>(""Abc"", 9, ""Bar_dateTime"")]
-                    [ProtoUnion<Guid>(""Abc"", 10, ""Bar_guid"")]
+                    [ProtoUnion<bool>("Abc", 1, "Bar_bool")]
+                    [ProtoUnion<int>("Abc", 2, "Bar_int")]
+                    [ProtoUnion<uint>("Abc", 3, "Bar_uint")]
+                    [ProtoUnion<float>("Abc", 4, "Bar_float")]
+                    [ProtoUnion<long>("Abc", 5, "Bar_long")]
+                    [ProtoUnion<ulong>("Abc", 6, "Bar_ulong")]
+                    [ProtoUnion<TimeSpan>("Abc", 8, "Bar_timeSpan")]
+                    [ProtoUnion<DateTime>("Abc", 9, "Bar_dateTime")]
+                    [ProtoUnion<Guid>("Abc", 10, "Bar_guid")]
                     partial class Foo
                     {
                     }
-                }"
+                }
+                """
             });
 
             diagnostics.Should().BeEmpty();
@@ -127,27 +131,32 @@ namespace BuildToolsUnitTests.Generators
         {
             var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
-                @"
+                """
                 using ProtoBuf;
                 using System;
 
                 namespace MySpace
                 {
-                    [ProtoUnion<bool>(""Abc"", 1, ""Bar_bool"")]
-                    [ProtoUnion<int>(""Abc"", 2, ""Bar_int"")]
-                    [ProtoUnion<uint>(""Abc"", 3, ""Bar_uint"")]
-                    [ProtoUnion<float>(""Abc"", 4, ""Bar_float"")]
-                    [ProtoUnion<long>(""Abc"", 5, ""Bar_long"")]
-                    [ProtoUnion<ulong>(""Abc"", 6, ""Bar_ulong"")]
-                    [ProtoUnion<string>(""Abc"", 7, ""Bar_string"")]
-                    [ProtoUnion<TimeSpan>(""Abc"", 8, ""Bar_timeSpan"")]
-                    [ProtoUnion<DateTime>(""Abc"", 9, ""Bar_dateTime"")]
-                    [ProtoUnion<Guid>(""Abc"", 10, ""Bar_guid"")]
-                    [ProtoUnion<MyData>(""Abc"", 11, ""Bar_class"")]
+                    [ProtoUnion<bool>("Abc", 1, "Bar_bool")]
+                    [ProtoUnion<int>("Abc", 2, "Bar_int")]
+                    [ProtoUnion<uint>("Abc", 3, "Bar_uint")]
+                    [ProtoUnion<float>("Abc", 4, "Bar_float")]
+                    [ProtoUnion<long>("Abc", 5, "Bar_long")]
+                    [ProtoUnion<ulong>("Abc", 6, "Bar_ulong")]
+                    [ProtoUnion<string>("Abc", 7, "Bar_string")]
+                    [ProtoUnion<TimeSpan>("Abc", 8, "Bar_timeSpan")]
+                    [ProtoUnion<DateTime>("Abc", 9, "Bar_dateTime")]
+                    [ProtoUnion<Guid>("Abc", 10, "Bar_guid")]
+                    [ProtoUnion<MyData>("Abc", 11, "Bar_class")]
                     partial class Foo
                     {
                     }
-                }"
+
+                    public class MyData
+                    {
+                    }
+                }
+                """
             });
 
             diagnostics.Should().BeEmpty();
