@@ -83,6 +83,82 @@ namespace BuildToolsUnitTests.Generators
         }
         
         [Fact]
+        public async Task GenerateProtoUnion_GenericAttribute_32AllPropertyTypes()
+        {
+            var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
+            {
+                """
+                using ProtoBuf;
+                using System;
+
+                namespace MySpace
+                {
+                    [ProtoUnion<bool>("Abc", 1, "Bar_bool")]
+                    [ProtoUnion<int>("Abc", 2, "Bar_int")]
+                    [ProtoUnion<uint>("Abc", 3, "Bar_uint")]
+                    [ProtoUnion<float>("Abc", 4, "Bar_float")]
+                    partial class Foo
+                    {
+                    }
+                }
+                """
+            });
+
+            diagnostics.Should().BeEmpty();
+            result.GeneratedTrees.Length.Should().Be(1);
+            
+            var typeInfo = await GetGeneratedTypeAsync(result);
+            typeInfo.Should().NotBeNull();
+            typeInfo!.CheckPropertyType("Bar_bool", typeof(bool?));
+            typeInfo!.CheckPropertyType("Bar_int", typeof(int?));
+            typeInfo!.CheckPropertyType("Bar_uint", typeof(uint?));
+            typeInfo!.CheckPropertyType("Bar_float", typeof(float?));
+            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion32));
+        }
+        
+        [Fact]
+        public async Task GenerateProtoUnion_GenericAttribute_64AllPropertyTypes()
+        {
+            var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
+            {
+                """
+                using ProtoBuf;
+                using System;
+
+                namespace MySpace
+                {
+                    [ProtoUnion<bool>("Abc", 1, "Bar_bool")]
+                    [ProtoUnion<int>("Abc", 2, "Bar_int")]
+                    [ProtoUnion<uint>("Abc", 3, "Bar_uint")]
+                    [ProtoUnion<float>("Abc", 4, "Bar_float")]
+                    [ProtoUnion<long>("Abc", 5, "Bar_long")]
+                    [ProtoUnion<ulong>("Abc", 6, "Bar_ulong")]
+                    [ProtoUnion<TimeSpan>("Abc", 8, "Bar_timeSpan")]
+                    [ProtoUnion<DateTime>("Abc", 9, "Bar_dateTime")]
+                    partial class Foo
+                    {
+                    }
+                }
+                """
+            });
+
+            diagnostics.Should().BeEmpty();
+            result.GeneratedTrees.Length.Should().Be(1);
+            
+            var typeInfo = await GetGeneratedTypeAsync(result);
+            typeInfo.Should().NotBeNull();
+            typeInfo!.CheckPropertyType("Bar_bool", typeof(bool?));
+            typeInfo!.CheckPropertyType("Bar_int", typeof(int?));
+            typeInfo!.CheckPropertyType("Bar_uint", typeof(uint?));
+            typeInfo!.CheckPropertyType("Bar_float", typeof(float?));
+            typeInfo!.CheckPropertyType("Bar_long", typeof(long?));
+            typeInfo!.CheckPropertyType("Bar_ulong", typeof(ulong?));
+            typeInfo!.CheckPropertyType("Bar_timeSpan", typeof(TimeSpan?));
+            typeInfo!.CheckPropertyType("Bar_dateTime", typeof(DateTime?));
+            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion64));
+        }
+        
+        [Fact]
         public async Task GenerateProtoUnion_GenericAttribute_128AllPropertyTypes()
         {
             var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
@@ -124,6 +200,165 @@ namespace BuildToolsUnitTests.Generators
             typeInfo!.CheckPropertyType("Bar_dateTime", typeof(DateTime?));
             typeInfo!.CheckPropertyType("Bar_guid", typeof(Guid?));
             typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion128));
+        }
+        
+        [Fact]
+        public async Task GenerateProtoUnion_GenericAttribute_ObjectAllPropertyTypes()
+        {
+            var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
+            {
+                """
+                using ProtoBuf;
+                using System;
+
+                namespace MySpace
+                {
+                    [ProtoUnion<string>("Abc", 7, "Bar_string")]
+                    [ProtoUnion<MyData>("Abc", 10, "Bar_class")]
+                    partial class Foo
+                    {
+                    }
+
+                    public class MyData
+                    {
+                    }
+                }
+                """
+            });
+
+            diagnostics.Should().BeEmpty();
+            result.GeneratedTrees.Length.Should().Be(1);
+
+            var typeInfo = await GetGeneratedTypeAsync(
+                result,
+                additionalSourceCodeToInclude: """
+                    namespace MySpace
+                    {
+                        public class MyData 
+                        {
+                            public string Id { get; set; }
+                        }
+                    }
+                """);
+
+            typeInfo.Should().NotBeNull();
+            typeInfo!.CheckPropertyType("Bar_string", typeof(string));
+            typeInfo!.CheckPropertyType("Bar_class", expectedTypeName: "MySpace.MyData");
+            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnionObject));
+        }
+        
+        [Fact]
+        public async Task GenerateProtoUnion_GenericAttribute_32ObjectAllPropertyTypes()
+        {
+            var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
+            {
+                """
+                using ProtoBuf;
+                using System;
+
+                namespace MySpace
+                {
+                    [ProtoUnion<bool>("Abc", 1, "Bar_bool")]
+                    [ProtoUnion<int>("Abc", 2, "Bar_int")]
+                    [ProtoUnion<uint>("Abc", 3, "Bar_uint")]
+                    [ProtoUnion<float>("Abc", 4, "Bar_float")]
+                    [ProtoUnion<string>("Abc", 7, "Bar_string")]
+                    [ProtoUnion<MyData>("Abc", 10, "Bar_class")]
+                    partial class Foo
+                    {
+                    }
+
+                    public class MyData
+                    {
+                    }
+                }
+                """
+            });
+
+            diagnostics.Should().BeEmpty();
+            result.GeneratedTrees.Length.Should().Be(1);
+
+            var typeInfo = await GetGeneratedTypeAsync(
+                result,
+                additionalSourceCodeToInclude: """
+                    namespace MySpace
+                    {
+                        public class MyData 
+                        {
+                            public string Id { get; set; }
+                        }
+                    }
+                """);
+
+            typeInfo.Should().NotBeNull();
+            typeInfo!.CheckPropertyType("Bar_bool", typeof(bool?));
+            typeInfo!.CheckPropertyType("Bar_int", typeof(int?));
+            typeInfo!.CheckPropertyType("Bar_uint", typeof(uint?));
+            typeInfo!.CheckPropertyType("Bar_float", typeof(float?));
+            typeInfo!.CheckPropertyType("Bar_string", typeof(string));
+            typeInfo!.CheckPropertyType("Bar_class", expectedTypeName: "MySpace.MyData");
+            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion32Object));
+        }
+        
+        [Fact]
+        public async Task GenerateProtoUnion_GenericAttribute_64ObjectAllPropertyTypes()
+        {
+            var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
+            {
+                """
+                using ProtoBuf;
+                using System;
+
+                namespace MySpace
+                {
+                    [ProtoUnion<bool>("Abc", 1, "Bar_bool")]
+                    [ProtoUnion<int>("Abc", 2, "Bar_int")]
+                    [ProtoUnion<uint>("Abc", 3, "Bar_uint")]
+                    [ProtoUnion<float>("Abc", 4, "Bar_float")]
+                    [ProtoUnion<long>("Abc", 5, "Bar_long")]
+                    [ProtoUnion<ulong>("Abc", 6, "Bar_ulong")]
+                    [ProtoUnion<string>("Abc", 7, "Bar_string")]
+                    [ProtoUnion<TimeSpan>("Abc", 8, "Bar_timeSpan")]
+                    [ProtoUnion<DateTime>("Abc", 9, "Bar_dateTime")]
+                    [ProtoUnion<MyData>("Abc", 10, "Bar_class")]
+                    partial class Foo
+                    {
+                    }
+
+                    public class MyData
+                    {
+                    }
+                }
+                """
+            });
+
+            diagnostics.Should().BeEmpty();
+            result.GeneratedTrees.Length.Should().Be(1);
+
+            var typeInfo = await GetGeneratedTypeAsync(
+                result,
+                additionalSourceCodeToInclude: """
+                    namespace MySpace
+                    {
+                        public class MyData 
+                        {
+                            public string Id { get; set; }
+                        }
+                    }
+                """);
+
+            typeInfo.Should().NotBeNull();
+            typeInfo!.CheckPropertyType("Bar_bool", typeof(bool?));
+            typeInfo!.CheckPropertyType("Bar_int", typeof(int?));
+            typeInfo!.CheckPropertyType("Bar_uint", typeof(uint?));
+            typeInfo!.CheckPropertyType("Bar_float", typeof(float?));
+            typeInfo!.CheckPropertyType("Bar_long", typeof(long?));
+            typeInfo!.CheckPropertyType("Bar_ulong", typeof(ulong?));
+            typeInfo!.CheckPropertyType("Bar_string", typeof(string));
+            typeInfo!.CheckPropertyType("Bar_timeSpan", typeof(TimeSpan?));
+            typeInfo!.CheckPropertyType("Bar_dateTime", typeof(DateTime?));
+            typeInfo!.CheckPropertyType("Bar_class", expectedTypeName: "MySpace.MyData");
+            typeInfo!.CheckFieldType(CSharpCodeGenerator.GetUnionField("Abc"), typeof(DiscriminatedUnion64Object));
         }
         
         [Fact]
