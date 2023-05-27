@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.Internal.ProtoUnion;
 using ProtoBuf.Internal.Roslyn.Extensions;
 using ProtoBuf.Internal.RoslynUtils;
@@ -15,14 +16,13 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
         /// <summary>
         /// Build map of unionNames to protoFields of corresponding union
         /// </summary>
-        private IReadOnlyDictionary<string, ICollection<ProtoUnionField?>> GetUnionsProtoFieldsMap(
-            Compilation compilation, ClassDeclarationSyntax classSyntax)
+        private IReadOnlyDictionary<string, ICollection<ProtoUnionField>> GetUnionsProtoFieldsMap(ref GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
         {
             var attributes = classSyntax.GetAttributeSyntaxesOfType(typeof(ProtoUnionAttribute<>));
-            var unionsProtoFieldsMap = new Dictionary<string, ICollection<ProtoUnionField?>>();
+            var unionsProtoFieldsMap = new Dictionary<string, ICollection<ProtoUnionField>>();
             foreach (var attributeSyntax in attributes)
             {
-                if (!TryCreate(compilation, attributeSyntax, out var field))
+                if (!TryCreate(ref context, attributeSyntax, out var field))
                 {
                     Log($"Failed to parse protoUnionField from {attributeSyntax.ToFullString()}");
                     continue;
@@ -37,26 +37,20 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             return unionsProtoFieldsMap;
         }
 
-        private bool TryCreate(Compilation compilation, AttributeSyntax attributeSyntax,
-            out ProtoUnionField? protoUnionField)
+        private bool TryCreate(ref GeneratorExecutionContext context, AttributeSyntax attributeSyntax, out ProtoUnionField? protoUnionField)
         {
-            if (attributeSyntax.Name.Arity == 0)
-                return TryCreateNonGeneric(compilation, attributeSyntax, out protoUnionField);
-            if (attributeSyntax.Name.Arity == 1)
-                return TryCreateGeneric(compilation, attributeSyntax, out protoUnionField);
-
-            protoUnionField = null;
-            return false;
+            if (attributeSyntax.Name.Arity == 0) return TryCreateNonGeneric(ref context, attributeSyntax, out protoUnionField);
+            if (attributeSyntax.Name.Arity == 1) return TryCreateGeneric(ref context, attributeSyntax, out protoUnionField);
+            
+            throw new ArgumentException($"Could not recognize {attributeSyntax.ToFullString()}");
         }
 
-        private bool TryCreateNonGeneric(Compilation compilation, AttributeSyntax attributeSyntax,
-            out ProtoUnionField? protoUnionField)
+        private bool TryCreateNonGeneric(ref GeneratorExecutionContext context, AttributeSyntax attributeSyntax, out ProtoUnionField? protoUnionField)
         {
             throw new NotImplementedException();
         }
 
-        private bool TryCreateGeneric(Compilation compilation, AttributeSyntax attributeSyntax,
-            out ProtoUnionField? protoUnionField)
+        private bool TryCreateGeneric(ref GeneratorExecutionContext context, AttributeSyntax attributeSyntax, out ProtoUnionField? protoUnionField)
         {
             if (attributeSyntax.ArgumentList is null)
             {
@@ -73,7 +67,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 return false;
             }
 
-            var semanticModel = compilation.GetSemanticModel(attributeSyntax.SyntaxTree);
+            var semanticModel = context.Compilation.GetSemanticModel(attributeSyntax.SyntaxTree);
             var attributeTypeInfo = semanticModel.GetTypeInfo(attributeSyntax);
             var namedTypeSymbol = (attributeTypeInfo.Type ?? attributeTypeInfo.ConvertedType) as INamedTypeSymbol;
             if (namedTypeSymbol is null)
@@ -96,18 +90,16 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 protoUnionField = null;
                 return false;
             }
-
-            var unionType = CalculateUnionType(genericTypeSymbol);
-            var unionUsageFieldName = CalculateUnionUsageFieldName(genericTypeSymbol);
-
+            
             protoUnionField = new ProtoUnionField(
                 unionName: unionName,
                 fieldNumber: fieldNumber,
                 memberName: memberName,
-                unionType: unionType,
-                unionUsageFieldName: unionUsageFieldName,
+                unionType: CalculateUnionType(genericTypeSymbol),
+                unionUsageFieldName: CalculateUnionUsageFieldName(genericTypeSymbol),
                 cSharpType: genericTypeSymbol.ToDisplayString());
-            return true;
+            
+            return IsProtoUnionFieldValid(ref context, attributeSyntax, protoUnionField);
         }
 
         private static string CalculateUnionUsageFieldName(ITypeSymbol typeSymbol) => typeSymbol switch
@@ -146,5 +138,35 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 _ => ProtoUnionField.PropertyUnionType.Reference
             }
         };
+
+        /// <summary>
+        /// Reports diagnostics, if values are not supported and returns false.
+        /// Returns true otherwise.
+        /// </summary>
+        private bool IsProtoUnionFieldValid(ref GeneratorExecutionContext context, AttributeSyntax attributeSyntax, ProtoUnionField protoUnionField)
+        {
+            var isValid = true;
+            var syntaxTree = attributeSyntax.SyntaxTree;
+
+            if (string.IsNullOrWhiteSpace(protoUnionField.UnionName))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.DiscriminatedUnionNameShouldNotBeEmpty,
+                    location: Location.Create(syntaxTree, attributeSyntax.Span))
+                );
+                isValid = false;
+            }
+            
+            if (string.IsNullOrWhiteSpace(protoUnionField.MemberName))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.DiscriminatedUnionMemberNameShouldNotBeEmpty,
+                    location: Location.Create(syntaxTree, attributeSyntax.Span))
+                );
+                isValid = false;
+            }
+
+            return isValid;
+        }
     }
 }

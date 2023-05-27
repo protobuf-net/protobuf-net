@@ -1,14 +1,13 @@
 ﻿#nullable enable
-using System;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.Generators.Abstractions;
 using ProtoBuf.Internal.ProtoUnion;
 using ProtoBuf.Internal.RoslynUtils;
@@ -62,15 +61,24 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             }
         }
         
+        /// <returns>Returns true, if class is valid for generation of DiscriminatedUnion, false otherwise.</returns>
+        /// <remarks>Not all of the validations are happening here, to not parse fully data here.</remarks>
         private static bool IsValidForGeneration(ref GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
         {
+            var isValid = true;
+            var syntaxTree = classSyntax.SyntaxTree;
+
             if (!classSyntax.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword)))
             {
-                // context.ReportDiagnostic(Diagnostic.Create());
-                return false;
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.DiscriminatedUnionShouldBePartial,
+                    location: Location.Create(syntaxTree, classSyntax.Identifier.Span))
+                );
+                
+                isValid  = false;
             }
 
-            return true;
+            return isValid;
         }
         
         private static ClassDeclarationSyntax[] GetUnionClassesToGenerate(Compilation compilation, CancellationToken cancellationToken)

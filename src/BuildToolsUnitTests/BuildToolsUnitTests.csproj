@@ -30,6 +30,9 @@
     <Compile Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
       <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
     </Compile>
+    <Compile Update="Generators\ProtoUnionGeneratorTests.DiagnosticsReports.cs">
+      <DependentUpon>ProtoUnionGeneratorTests.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

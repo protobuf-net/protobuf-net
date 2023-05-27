@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.Internal.ProtoUnion;
 
 namespace ProtoBuf.Generators.DiscriminatedUnion
@@ -21,10 +22,10 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 return Array.Empty<ProtoUnionFileDescriptor>();
             }
             
-            var unionsFieldsMap = GetUnionsProtoFieldsMap(context.Compilation, classSyntax);
-            if (!unionsFieldsMap.Any())
+            var unionsFieldsMap = GetUnionsProtoFieldsMap(ref context, classSyntax);
+            if (!IsUnionsFieldsCollectionValidlyParsed(ref context, classSyntax, unionsFieldsMap))
             {
-                Log($"No protoUnionFields parsed, codeFile generation is stopped for {classSyntax}");
+                Log($"protoUnionsFields are not parsed correctly, codeFile generation is stopped for {classSyntax}");
                 return Array.Empty<ProtoUnionFileDescriptor>();
             }
 
@@ -32,13 +33,15 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             foreach (var unionFieldsMap in unionsFieldsMap)
             {
                 var unionType = CalculateUnionFieldsSharedType(unionFieldsMap.Value!);
-                fileDescriptors.Add(new ProtoUnionFileDescriptor(
+                var fileDescriptor = new ProtoUnionFileDescriptor(
                     filename,
                     Class: classSyntax.Identifier.ToString(),
                     Namespace: namespaceSyntax.Name.ToString(),
                     UnionName: unionFieldsMap.Key,
                     UnionType: unionType,
-                    UnionFields: unionFieldsMap.Value));
+                    UnionFields: unionFieldsMap.Value);
+                
+                fileDescriptors.Add(fileDescriptor);
             }
 
             return fileDescriptors;
@@ -84,6 +87,41 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             }
                 
             return DiscriminatedUnionType.Object;
+        }
+
+        /// <summary>
+        /// Reports recognized diagnostics and returns false if found.
+        /// Returns true otherwise
+        /// </summary>
+        private bool IsUnionsFieldsCollectionValidlyParsed(
+            ref GeneratorExecutionContext context,
+            ClassDeclarationSyntax classSyntax,
+            IReadOnlyDictionary<string, ICollection<ProtoUnionField>> unionsFieldsMap)
+        {
+            var isValid = true;
+            var syntaxTree = classSyntax.SyntaxTree;
+
+            if (unionsFieldsMap.Any() == false) return false;
+
+            var fieldNumbers = unionsFieldsMap.Values.SelectMany(x => x.Select(y => y.FieldNumber));
+            if (HasDuplicates(fieldNumbers, EqualityComparer<int>.Default))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.DiscriminatedUnionFieldNumbersShouldBeUnique,
+                    location: Location.Create(syntaxTree, classSyntax.Identifier.Span))
+                );
+                isValid = false;
+            }
+
+            return isValid;
+            
+            bool HasDuplicates<T>(
+                IEnumerable<T> source,
+                IEqualityComparer<T> comparer)
+            {
+                var checkBuffer = new HashSet<T>(comparer);
+                return source.Any(t => !checkBuffer.Add(t));
+            }
         }
     }
 }

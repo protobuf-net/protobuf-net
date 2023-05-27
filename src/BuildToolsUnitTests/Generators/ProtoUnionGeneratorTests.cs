@@ -14,7 +14,7 @@ using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests.Generators
 {
-    public class ProtoUnionGeneratorTests : GeneratorTestBase<ProtoUnionGenerator>
+    public partial class ProtoUnionGeneratorTests : GeneratorTestBase<ProtoUnionGenerator>
     {
         public ProtoUnionGeneratorTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper) { }
 

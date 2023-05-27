@@ -196,6 +196,39 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionShouldBePartial = new(
+            id: "PBN0023",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionShouldBePartial),
+            messageFormat: $"Class marked with '{typeof(ProtoUnionAttribute<>).Name}' must have partial modifier to be generated",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionNameShouldNotBeEmpty = new(
+            id: "PBN0024",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionNameShouldNotBeEmpty),
+            messageFormat: "Union name can not be empty or null",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionMemberNameShouldNotBeEmpty = new(
+            id: "PBN0025",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionMemberNameShouldNotBeEmpty),
+            messageFormat: "Union's member name can not be empty or null",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionFieldNumbersShouldBeUnique = new(
+            id: "PBN0026",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionFieldNumbersShouldBeUnique),
+            messageFormat: "Union members' fieldNumbers must be unique per class",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
 
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
