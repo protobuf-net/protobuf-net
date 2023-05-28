@@ -63,8 +63,8 @@ namespace ProtoBuf.Reflection
 
         void WriteDiscriminatedUnionMember(GeneratorContext ctx, ProtoUnionField field, DiscriminatedUnionType discriminatedUnionType)
         {
-            // using value.Value to not fallback to "object" ctor overload 
-            var setValueParameter = (discriminatedUnionType & DiscriminatedUnionType.IsObjectable) == 0  ? "value.Value" : "value";
+            // using value.Value to not fallback to "object" ctor overload in all usages 
+            var setValueParameter = field.UnionType == ProtoUnionField.PropertyUnionType.Reference ? "value" : "value.Value";
             
             ctx.WriteLine($"[ProtoMember({field.FieldNumber})]")
                 .WriteLine($"public {field.CSharpType}? {field.MemberName}")
