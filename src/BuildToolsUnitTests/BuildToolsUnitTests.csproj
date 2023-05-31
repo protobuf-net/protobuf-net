@@ -11,7 +11,6 @@
   <ItemGroup>
     <!--<PackageReference Include="Microsoft.Build" />-->
     <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
-    <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" />
