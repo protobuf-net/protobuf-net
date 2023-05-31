@@ -149,6 +149,9 @@ namespace ProtoBuf.Reflection
             tw.WriteLine();
         }
 
+        /// <summary>
+        /// Writes a class header
+        /// </summary>
         protected void WriteClassHeader(GeneratorContext ctx, string @class, string visibilityModifiers = null, bool isPartial = false)
         {
             var headerBuilder = new StringBuilder();
@@ -160,11 +163,17 @@ namespace ProtoBuf.Reflection
             ctx.WriteLine("{").Indent();
         }
 
+        /// <summary>
+        /// Writes class footer
+        /// </summary>
         protected void WriteClassFooter(GeneratorContext ctx, string @class)
         {
             ctx.Outdent().WriteLine("}").WriteLine();
         }
 
+        /// <summary>
+        /// Writes a using directive for protobuf-net
+        /// </summary>
         protected void WriteProtoBufUsing(GeneratorContext ctx)
         {
             ctx.WriteLine("using ProtoBuf;").WriteLine();

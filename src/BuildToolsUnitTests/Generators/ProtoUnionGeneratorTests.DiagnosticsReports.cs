@@ -152,7 +152,7 @@ namespace BuildToolsUnitTests.Generators
                 using ProtoBuf;
                 
                 [ProtoUnion<int>("Abc", 1, "Qwe")]
-                [ProtoUnion<int>("Abc", 1, "Rty")]
+                [ProtoUnion<int>("Abc", 2, "Rty")]
                 partial class Foo
                 {    
                 }

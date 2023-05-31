@@ -174,7 +174,7 @@ namespace ProtoBuf.BuildTools.Generators
                             }
                         }
 
-                        var files = codeGenerator.Generate(set, options: options);
+                        var files = codeGenerator!.Generate(set, options: options);
                         var root = Directory.GetCurrentDirectory();
                         foreach (var file in files)
                         {

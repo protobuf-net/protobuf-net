@@ -44,7 +44,7 @@ namespace BuildToolsUnitTests.Generators.Abstractions
         protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
             string csharpCodeText,
             string sourceFileName,
-            AdditionalText[] additionalTexts = null,
+            AdditionalText[]? additionalTexts = null,
             ImmutableDictionary<string, string>? globalOptions = null,
             [CallerMemberName] string? callerMemberName = null,
             bool debugLog = true)
@@ -55,7 +55,7 @@ namespace BuildToolsUnitTests.Generators.Abstractions
         
         protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
             string[] cSharpProjectSourceTexts,
-            AdditionalText[] additionalTexts = null,
+            AdditionalText[]? additionalTexts = null,
             ImmutableDictionary<string, string>? globalOptions = null,
             [CallerMemberName] string? callerMemberName = null,
             bool debugLog = true)
@@ -75,7 +75,7 @@ namespace BuildToolsUnitTests.Generators.Abstractions
             return GenerateAsync(additionalTexts, globalOptions, addSourcesProjectModifier, callerMemberName, debugLog);
         }
 
-        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts = null, ImmutableDictionary<string, string>? globalOptions = null,
+        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[]? additionalTexts = null, ImmutableDictionary<string, string>? globalOptions = null,
             Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))

@@ -1,5 +1,8 @@
 ﻿namespace ProtoBuf.Internal.ProtoUnion
 {
+    /// <summary>
+    /// Contains metadata for the discriminated union member.
+    /// </summary>
     public sealed class ProtoUnionField
     {
         /// <summary>
@@ -38,11 +41,30 @@
             CSharpType = cSharpType;
         }
 
+        /// <summary>
+        /// Represents type of discriminated union property in terms of size and referenc'ability.
+        /// Is used for determining inner <see cref="DiscriminatedUnionType"/> of the corresponding union.
+        /// </summary>
         public enum PropertyUnionType
         {
+            /// <summary>
+            /// Type of property is of 32 bit size
+            /// </summary>
             Is32,
+
+            /// <summary>
+            /// Type of property is of 64 bit size
+            /// </summary>
             Is64,
+
+            /// <summary>
+            /// Type of property is of 128 bit size
+            /// </summary>
             Is128,
+
+            /// <summary>
+            /// Property is of reference type
+            /// </summary>
             Reference
         }
     }

@@ -121,7 +121,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             }
 
             var memberNames = unionsFieldsMap.Values.SelectMany(x => x.Select(y => y.MemberName));
-            if (HasDuplicates(memberNames, out duplicateInfo))
+            if (HasDuplicates(memberNames, out duplicateInfo, StringComparer.InvariantCulture))
             {
                 isValid = false;
                 context.ReportDiagnostic(Diagnostic.Create(
@@ -133,10 +133,13 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
 
             return isValid;
             
-            bool HasDuplicates<T>(IEnumerable<T> source, out string duplicateInfo)
+            bool HasDuplicates<T>(
+                IEnumerable<T> source,
+                out string duplicateInfo,
+                IEqualityComparer<T>? comparer = null)
             {
                 duplicateInfo = string.Empty;
-                var checkBuffer = new HashSet<T>(EqualityComparer<T>.Default);
+                var checkBuffer = new HashSet<T>(comparer ?? EqualityComparer<T>.Default);
 
                 foreach (var item in source)
                 {

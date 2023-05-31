@@ -9,17 +9,40 @@
     [Flags]
     public enum DiscriminatedUnionType
     {
+        /// <summary>
+        /// Zero value. No union type specified
+        /// </summary>
         None                      = 0,
+
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnion32"/> type
+        /// </summary>
         Standard32                = 1 << 0,
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnion64"/> type
+        /// </summary>
         Standard64                = 1 << 1,
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnion128"/> type
+        /// </summary>
         Standard128               = 1 << 2,
         
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnionObject"/> type
+        /// </summary>
         Object                    = 1 << 3,
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnion32Object"/> type
+        /// </summary>
         Object32                  = 1 << 4,
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnion64Object"/> type
+        /// </summary>
         Object64                  = 1 << 5,
+        /// <summary>
+        /// Represents <see cref="DiscriminatedUnion128Object"/> type
+        /// </summary>
         Object128                 = 1 << 6,
-        
-        IsObjectable = Object | Object32 | Object64 | Object128
     }
     
     /// <summary>
