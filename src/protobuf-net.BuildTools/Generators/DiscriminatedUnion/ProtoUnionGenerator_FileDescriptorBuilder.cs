@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.Internal.ProtoUnion;
+using ProtoBuf.Internal.RoslynUtils;
 
 namespace ProtoBuf.Generators.DiscriminatedUnion
 {
@@ -15,7 +16,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
         private ICollection<ProtoUnionFileDescriptor> BuildProtoUnionFileDescriptors(ref GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
         {
             var filename = Path.GetFileName(classSyntax.SyntaxTree.FilePath);
-            if (!TryParseClassNamespaceName(classSyntax, out var @namespace))
+            if (!classSyntax.TryParseClassNamespaceName(out var @namespace))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     descriptor: DataContractAnalyzer.DiscriminatedUnionNamespaceNotFound,
@@ -49,26 +50,6 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
             }
 
             return fileDescriptors;
-        }
-
-        private static bool TryParseClassNamespaceName(ClassDeclarationSyntax classSyntax, out string @namespace)
-        {
-            var namespaceSyntax = classSyntax.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            if (namespaceSyntax is not null)
-            {
-                @namespace = namespaceSyntax.Name.ToString();
-                return true;
-            }
-
-            var fileScopedNamespaceSyntax = classSyntax.Ancestors().OfType<FileScopedNamespaceDeclarationSyntax>().FirstOrDefault();
-            if (fileScopedNamespaceSyntax is not null)
-            {
-                @namespace = fileScopedNamespaceSyntax.Name.ToString();
-                return true;
-            }
-
-            @namespace = string.Empty;
-            return false;
         }
         
         private static DiscriminatedUnionType CalculateUnionFieldsSharedType(IEnumerable<ProtoUnionField> unionFields)

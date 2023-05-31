@@ -3,12 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ProtoBuf.BuildTools.Internal;
 
 namespace ProtoBuf.Internal.RoslynUtils;
 
 internal static class ClassDeclarationSyntaxExtensions
 {
+    public static bool TryParseClassNamespaceName(this ClassDeclarationSyntax classSyntax, out string @namespace)
+    {
+        var namespaceSyntax = classSyntax.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+        if (namespaceSyntax is not null)
+        {
+            @namespace = namespaceSyntax.Name.ToString();
+            return true;
+        }
+
+        var fileScopedNamespaceSyntax = classSyntax.Ancestors().OfType<FileScopedNamespaceDeclarationSyntax>().FirstOrDefault();
+        if (fileScopedNamespaceSyntax is not null)
+        {
+            @namespace = fileScopedNamespaceSyntax.Name.ToString();
+            return true;
+        }
+
+        @namespace = string.Empty;
+        return false;
+    }
+
     public static bool ContainsAttribute(this ClassDeclarationSyntax classDeclarationSyntax, Compilation compilation, Type attribute)
     {
         var attributeLists = classDeclarationSyntax.AttributeLists;
