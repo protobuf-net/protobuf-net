@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using BuildToolsUnitTests.Extensions;
 using FluentAssertions;
 using ProtoBuf.BuildTools.Analyzers;
 using Xunit;
