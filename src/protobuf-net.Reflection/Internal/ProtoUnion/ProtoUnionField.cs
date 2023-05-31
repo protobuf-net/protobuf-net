@@ -31,6 +31,9 @@
         /// </summary>
         public string MemberName { get; }
         
+        /// <summary>
+        /// Instantiates <see cref="ProtoUnionField"/>
+        /// </summary>
         public ProtoUnionField(string unionName, int fieldNumber, string memberName, PropertyUnionType unionType, string unionUsageFieldName, string cSharpType)
         {
             MemberName = memberName;

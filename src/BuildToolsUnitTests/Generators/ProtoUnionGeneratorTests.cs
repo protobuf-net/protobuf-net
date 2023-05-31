@@ -426,7 +426,7 @@ namespace BuildToolsUnitTests.Generators
 
         private async Task<System.Reflection.TypeInfo?> GetGeneratedTypeAsync(
             GeneratorDriverRunResult generatorDriverRunResult,
-            string additionalSourceCodeToInclude = null,
+            string? additionalSourceCodeToInclude = null,
             string typeName = "MySpace.Foo",
             Func<string, bool>? filePathFilter = null)
         {

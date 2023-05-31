@@ -13,7 +13,7 @@ namespace ProtoBuf
         /// Declares a member of a discriminated union.
         /// </summary>
         /// <param name="unionName">name of discriminated union</param>
-        /// <param name="fieldNumber">unique (per class) fieldNumber used for <see cref="ProtoMemberAttribute"> definition</param>
+        /// <param name="fieldNumber">unique (per class) fieldNumber used for <see cref="ProtoMemberAttribute"/> definition</param>
         /// <param name="memberName">name of discriminated union member.</param>
         public ProtoUnionAttribute(string unionName, int fieldNumber, string memberName)
         {
