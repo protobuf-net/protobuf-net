@@ -29,6 +29,7 @@
     <Compile Include="../protobuf-net.BuildTools/Internal/**/*.cs" Link="Internal" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
+    <Compile Include="../protobuf-net.BuildTools/CodeFixes/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Generators/ProtoFileGenerator.cs" Link="ProtoFileGenerator.cs" />
   </ItemGroup>
 
