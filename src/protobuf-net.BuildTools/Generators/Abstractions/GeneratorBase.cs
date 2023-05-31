@@ -8,7 +8,9 @@ using ProtoBuf.Reflection;
 
 namespace ProtoBuf.Generators.Abstractions
 {
-    [Generator]
+    /// <summary>
+    /// Abstraction for ProtoBuf source generators
+    /// </summary>
     public abstract class GeneratorBase : ISourceGenerator, ILoggingAnalyzer
     {
         private event Action<string>? Logger;
@@ -18,15 +20,27 @@ namespace ProtoBuf.Generators.Abstractions
             remove => Logger -= value;
         }
 
+        /// <summary>ProtoBuf Version used in source generator</summary>
         protected Version? ProtobufVersion;
+        /// <summary>ProtoBuf.Grpc Version used in source generator</summary>
         protected Version? ProtobufGrpcVersion;
+        /// <summary>Wcf Version used in source generator</summary>
         protected Version? WcfVersion;
         
+        /// <inheritdoc cref="ISourceGenerator.Initialize"/>
         public virtual void Initialize(GeneratorInitializationContext context) { }
-        public abstract void Execute(GeneratorExecutionContext context);
         
+        /// <inheritdoc cref="ISourceGenerator.Execute(GeneratorExecutionContext)"/>
+        public abstract void Execute(GeneratorExecutionContext context);
+
+        /// <summary>
+        /// Emits source generator processing message
+        /// </summary>
         protected void Log(string message) => Logger?.Invoke(message);
 
+        /// <summary>
+        /// Metadata information retrieval and validation
+        /// </summary>
         protected void Startup(GeneratorExecutionContext context)
         {
             Log("Execute with debug log enabled");
@@ -49,6 +63,10 @@ namespace ProtoBuf.Generators.Abstractions
             }
         }
 
+        /// <summary>
+        /// Determines if the specified compilation is valid for generation
+        /// and returns a codeGenerator to use
+        /// </summary>
         protected bool TryDetectCodeGenerator(
             GeneratorExecutionContext context,
             out CodeGenerator? codeGenerator, 

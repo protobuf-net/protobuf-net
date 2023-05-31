@@ -17,8 +17,10 @@ namespace ProtoBuf.BuildTools.Generators
     /// <summary>
     /// Generates protobuf-net types from .proto schemas
     /// </summary>
+    [Generator]
     public sealed class ProtoFileGenerator : GeneratorBase
     {
+        /// <inheritdoc/>
         public override void Execute(GeneratorExecutionContext context)
         {
             try

@@ -18,8 +18,10 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
     /// <summary>
     /// Generates implementation of the classes marked with `ProtoUnion`
     /// </summary>
+    [Generator]
     public sealed partial class ProtoUnionGenerator : GeneratorBase
     {
+        /// <inheritdoc/>
         public override void Execute(GeneratorExecutionContext context)
         {
             Startup(context);
