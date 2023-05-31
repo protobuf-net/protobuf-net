@@ -15,15 +15,19 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
         private ICollection<ProtoUnionFileDescriptor> BuildProtoUnionFileDescriptors(ref GeneratorExecutionContext context, ClassDeclarationSyntax classSyntax)
         {
             var filename = Path.GetFileName(classSyntax.SyntaxTree.FilePath);
-            var namespaceSyntax = classSyntax.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
-            if (namespaceSyntax is null)
+            if (!TryParseClassNamespaceName(classSyntax, out var @namespace))
             {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.DiscriminatedUnionNamespaceNotFound,
+                    location: Location.Create(classSyntax.SyntaxTree, classSyntax.Identifier.Span))
+                );
+
                 Log($"Namespace could not be found for {classSyntax}");
                 return Array.Empty<ProtoUnionFileDescriptor>();
             }
             
             var unionsFieldsMap = GetUnionsProtoFieldsMap(ref context, classSyntax);
-            if (!IsUnionsFieldsCollectionValidlyParsed(ref context, classSyntax, unionsFieldsMap))
+            if (!IsUnionsFieldsCollectionValid(ref context, classSyntax, unionsFieldsMap))
             {
                 Log($"protoUnionsFields are not parsed correctly, codeFile generation is stopped for {classSyntax}");
                 return Array.Empty<ProtoUnionFileDescriptor>();
@@ -36,7 +40,7 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
                 var fileDescriptor = new ProtoUnionFileDescriptor(
                     filename,
                     Class: classSyntax.Identifier.ToString(),
-                    Namespace: namespaceSyntax.Name.ToString(),
+                    Namespace: @namespace,
                     UnionName: unionFieldsMap.Key,
                     UnionType: unionType,
                     UnionFields: unionFieldsMap.Value);
@@ -46,8 +50,28 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
 
             return fileDescriptors;
         }
+
+        private static bool TryParseClassNamespaceName(ClassDeclarationSyntax classSyntax, out string @namespace)
+        {
+            var namespaceSyntax = classSyntax.Ancestors().OfType<NamespaceDeclarationSyntax>().FirstOrDefault();
+            if (namespaceSyntax is not null)
+            {
+                @namespace = namespaceSyntax.Name.ToString();
+                return true;
+            }
+
+            var fileScopedNamespaceSyntax = classSyntax.Ancestors().OfType<FileScopedNamespaceDeclarationSyntax>().FirstOrDefault();
+            if (fileScopedNamespaceSyntax is not null)
+            {
+                @namespace = fileScopedNamespaceSyntax.Name.ToString();
+                return true;
+            }
+
+            @namespace = string.Empty;
+            return false;
+        }
         
-        DiscriminatedUnionType CalculateUnionFieldsSharedType(IEnumerable<ProtoUnionField> unionFields)
+        private static DiscriminatedUnionType CalculateUnionFieldsSharedType(IEnumerable<ProtoUnionField> unionFields)
         {
             var count32 = false;
             var count64 = false;
@@ -93,34 +117,56 @@ namespace ProtoBuf.Generators.DiscriminatedUnion
         /// Reports recognized diagnostics and returns false if found.
         /// Returns true otherwise
         /// </summary>
-        private bool IsUnionsFieldsCollectionValidlyParsed(
+        private bool IsUnionsFieldsCollectionValid(
             ref GeneratorExecutionContext context,
             ClassDeclarationSyntax classSyntax,
             IReadOnlyDictionary<string, ICollection<ProtoUnionField>> unionsFieldsMap)
         {
+            string duplicateInfo;
             var isValid = true;
             var syntaxTree = classSyntax.SyntaxTree;
 
             if (unionsFieldsMap.Any() == false) return false;
 
             var fieldNumbers = unionsFieldsMap.Values.SelectMany(x => x.Select(y => y.FieldNumber));
-            if (HasDuplicates(fieldNumbers, EqualityComparer<int>.Default))
+            if (HasDuplicates(fieldNumbers, out duplicateInfo))
             {
+                isValid = false;
                 context.ReportDiagnostic(Diagnostic.Create(
                     descriptor: DataContractAnalyzer.DiscriminatedUnionFieldNumbersShouldBeUnique,
-                    location: Location.Create(syntaxTree, classSyntax.Identifier.Span))
+                    location: Location.Create(syntaxTree, classSyntax.Identifier.Span),
+                    messageArgs: duplicateInfo)
                 );
+            }
+
+            var memberNames = unionsFieldsMap.Values.SelectMany(x => x.Select(y => y.MemberName));
+            if (HasDuplicates(memberNames, out duplicateInfo))
+            {
                 isValid = false;
+                context.ReportDiagnostic(Diagnostic.Create(
+                    descriptor: DataContractAnalyzer.DiscriminatedUnionMemberNamesShouldBeUnique,
+                    location: Location.Create(syntaxTree, classSyntax.Identifier.Span),
+                    messageArgs: duplicateInfo)
+                );
             }
 
             return isValid;
             
-            bool HasDuplicates<T>(
-                IEnumerable<T> source,
-                IEqualityComparer<T> comparer)
+            bool HasDuplicates<T>(IEnumerable<T> source, out string duplicateInfo)
             {
-                var checkBuffer = new HashSet<T>(comparer);
-                return source.Any(t => !checkBuffer.Add(t));
+                duplicateInfo = string.Empty;
+                var checkBuffer = new HashSet<T>(EqualityComparer<T>.Default);
+
+                foreach (var item in source)
+                {
+                    if (!checkBuffer.Add(item))
+                    {
+                        duplicateInfo = item!.ToString();
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
     }

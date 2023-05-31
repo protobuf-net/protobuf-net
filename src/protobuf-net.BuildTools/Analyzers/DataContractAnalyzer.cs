@@ -224,7 +224,23 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DiscriminatedUnionFieldNumbersShouldBeUnique = new(
             id: "PBN0026",
             title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionFieldNumbersShouldBeUnique),
-            messageFormat: "Union members' fieldNumbers must be unique per class",
+            messageFormat: "Union members' fieldNumbers must be unique per class. Duplicate '{0}' was found.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionMemberNamesShouldBeUnique = new(
+            id: "PBN0027",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionMemberNamesShouldBeUnique),
+            messageFormat: "Union member names must be unique per class. Duplicate '{0}' was found.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionNamespaceNotFound = new(
+            id: "PBN0028",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionNamespaceNotFound),
+            messageFormat: "Union's namespace is not found. Wrap a discriminatedUnion class in 'namespace { ... }' syntax",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
