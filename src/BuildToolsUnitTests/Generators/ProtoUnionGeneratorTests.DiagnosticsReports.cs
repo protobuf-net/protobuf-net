@@ -9,7 +9,7 @@ namespace BuildToolsUnitTests.Generators
     public partial class ProtoUnionGeneratorTests
     {
         [Fact]
-        public async Task GenerateProtoUnion_FileScopedNamespaceSyntax_DoesNotReportDiagnostic()
+        public async Task GenerateProtoUnion_FileScopedNamespaceSyntax_ReportsDiagnostic()
         {
             var (result, diagnostics) = await GenerateAsync(cSharpProjectSourceTexts: new[]
             {
@@ -25,11 +25,8 @@ namespace BuildToolsUnitTests.Generators
                 """
             });
 
-            diagnostics.Length.Should().Be(0);
-            result.GeneratedTrees.Length.Should().Be(1);
-
-            var typeInfo = await GetGeneratedTypeAsync(result);
-            typeInfo!.Namespace.Should().Be("MySpace");
+            diagnostics.Length.Should().Be(1);
+            diagnostics.First().Descriptor.Should().Be(DataContractAnalyzer.DiscriminatedUnionNamespaceNotFound);
         }
 
         [Fact]

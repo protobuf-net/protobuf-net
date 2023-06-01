@@ -17,13 +17,6 @@ internal static class ClassDeclarationSyntaxExtensions
             return true;
         }
 
-        var fileScopedNamespaceSyntax = classSyntax.Ancestors().OfType<FileScopedNamespaceDeclarationSyntax>().FirstOrDefault();
-        if (fileScopedNamespaceSyntax is not null)
-        {
-            @namespace = fileScopedNamespaceSyntax.Name.ToString();
-            return true;
-        }
-
         @namespace = string.Empty;
         return false;
     }
