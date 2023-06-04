@@ -428,6 +428,76 @@ namespace ProtoBuf
         public static Guid ReadGuidString(ref ProtoReader.State state)
             => GuidHelper.Read(ref state); // note that this is forgiving and handles 16/32/36 formats
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Parses a DateOnly from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static DateOnly ReadDateOnly(ProtoReader source)
+        {
+            ProtoReader.State state = source.DefaultState();
+            return ReadDateOnly(ref state);
+        }
+
+        /// <summary>
+        /// Parses a DateOnly from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static DateOnly ReadDateOnly(ref ProtoReader.State state)
+            => DateOnly.FromDayNumber(state.ReadInt32());
+
+        /// <summary>
+        /// Writes a DateOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDateOnly(DateOnly value, ProtoWriter dest)
+        {
+            ProtoWriter.State state = dest.DefaultState();
+            WriteDateOnly(ref state, value);
+        }
+
+        /// <summary>
+        /// Writes a DateOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDateOnly(ref ProtoWriter.State state, DateOnly value)
+            => state.WriteInt32(value.DayNumber);
+
+        /// <summary>
+        /// Parses a TimeOnly from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static TimeOnly ReadTimeOnly(ProtoReader source)
+        {
+            ProtoReader.State state = source.DefaultState();
+            return ReadTimeOnly(ref state);
+        }
+
+        /// <summary>
+        /// Parses a TimeOnly from a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static TimeOnly ReadTimeOnly(ref ProtoReader.State state)
+            => new TimeOnly(state.ReadInt64());
+
+        /// <summary>
+        /// Writes a TimeOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteTimeOnly(TimeOnly value, ProtoWriter dest)
+        {
+            ProtoWriter.State state = dest.DefaultState();
+            WriteTimeOnly(ref state, value);
+        }
+
+        /// <summary>
+        /// Writes a TimeOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteTimeOnly(ref ProtoWriter.State state, TimeOnly value)
+            => state.WriteInt64(value.Ticks);
+#endif
+
 #if FEAT_DYNAMIC_REF
         private const int
             FieldExistingObjectKey = 1,

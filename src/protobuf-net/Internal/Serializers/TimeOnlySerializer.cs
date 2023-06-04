@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal.Serializers
 #if NET6_0_OR_GREATER
     internal sealed class TimeOnlySerializer : IRuntimeProtoSerializerNode
     {
-        bool IRuntimeProtoSerializerNode.IsScalar => true;
+        bool IRuntimeProtoSerializerNode.IsScalar => false;
         private TimeOnlySerializer() { }
         internal static readonly TimeOnlySerializer Instance = new TimeOnlySerializer();
 
@@ -21,21 +21,21 @@ namespace ProtoBuf.Internal.Serializers
         public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value is null); // since replaces
-            return new TimeOnly(state.ReadInt64());
+            return BclHelpers.ReadTimeOnly(ref state);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            state.WriteInt64(((TimeOnly)value).Ticks);
+            BclHelpers.WriteTimeOnly(ref state, (TimeOnly)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt64), valueFrom);
+            ctx.EmitStateBasedWrite(nameof(BclHelpers.WriteTimeOnly), valueFrom, typeof(BclHelpers));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt64), ExpectedType);
+            ctx.EmitStateBasedRead(typeof(BclHelpers), nameof(BclHelpers.ReadTimeOnly), ExpectedType);
         }
     }
 #endif

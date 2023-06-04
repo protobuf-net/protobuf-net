@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal.Serializers
 #if NET6_0_OR_GREATER
     internal sealed class DateOnlySerializer : IRuntimeProtoSerializerNode
     {
-        bool IRuntimeProtoSerializerNode.IsScalar => true;
+        bool IRuntimeProtoSerializerNode.IsScalar => false;
         private DateOnlySerializer() { }
         internal static readonly DateOnlySerializer Instance = new DateOnlySerializer();
 
@@ -21,21 +21,21 @@ namespace ProtoBuf.Internal.Serializers
         public object Read(ref ProtoReader.State state, object value)
         {
             Debug.Assert(value is null); // since replaces
-            return DateOnly.FromDayNumber(state.ReadInt32());
+            return BclHelpers.ReadDateOnly(ref state);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            state.WriteInt32(((DateOnly)value).DayNumber);
+            BclHelpers.WriteDateOnly(ref state, (DateOnly)value);
         }
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitStateBasedWrite(nameof(ProtoWriter.State.WriteInt32), valueFrom);
+            ctx.EmitStateBasedWrite(nameof(BclHelpers.WriteDateOnly), valueFrom, typeof(BclHelpers));
         }
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitStateBasedRead(nameof(ProtoReader.State.ReadInt32), ExpectedType);
+            ctx.EmitStateBasedRead(typeof(BclHelpers), nameof(BclHelpers.ReadDateOnly), ExpectedType);
         }
     }
 #endif
