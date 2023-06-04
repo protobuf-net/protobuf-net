@@ -164,9 +164,7 @@ namespace ProtoBuf.Meta
             }
             return WireType.None;
         }
-
-        /// <summary>
-        /// Indicates whether a type is known to the model
+        /// <summary>        /// Indicates whether a type is known to the model
         /// </summary>
         internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
