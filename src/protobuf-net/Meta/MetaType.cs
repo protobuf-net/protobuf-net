@@ -2366,6 +2366,10 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Byte: return ((byte)value) == 0;
                     case ProtoTypeCode.Char: return ((char)value) == '\0';
                     case ProtoTypeCode.DateTime: return ((DateTime)value) == default;
+#if NET6_0_OR_GREATER
+                    case ProtoTypeCode.DateOnly: return ((DateOnly)value) == default;
+                    case ProtoTypeCode.TimeOnly: return ((TimeOnly)value) == default;
+#endif
                     case ProtoTypeCode.Decimal: return ((decimal)value) == 0M;
                     case ProtoTypeCode.Double: return ((double)value) == 0;
                     case ProtoTypeCode.Int16: return ((short)value) == 0;

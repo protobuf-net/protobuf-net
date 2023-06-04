@@ -129,10 +129,16 @@ namespace ProtoBuf.Meta
             switch (Helpers.GetTypeCode(type))
             {
                 case ProtoTypeCode.Int64:
+#if NET6_0_OR_GREATER
+                case ProtoTypeCode.TimeOnly:
+#endif
                 case ProtoTypeCode.UInt64:
                     return format == DataFormat.FixedSize ? WireType.Fixed64 : WireType.Varint;
                 case ProtoTypeCode.Int16:
                 case ProtoTypeCode.Int32:
+#if NET6_0_OR_GREATER
+                case ProtoTypeCode.DateOnly:
+#endif
                 case ProtoTypeCode.UInt16:
                 case ProtoTypeCode.UInt32:
                 case ProtoTypeCode.Boolean:
@@ -158,7 +164,9 @@ namespace ProtoBuf.Meta
             }
             return WireType.None;
         }
-        /// <summary>        /// Indicates whether a type is known to the model
+
+        /// <summary>
+        /// Indicates whether a type is known to the model
         /// </summary>
         internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?

@@ -200,6 +200,10 @@ namespace ProtoBuf.Meta
                         if (s.Length == 1) return s[0];
                         throw new FormatException("Single character expected: \"" + s + "\"");
                     case ProtoTypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
+#if NET6_0_OR_GREATER
+                    case ProtoTypeCode.DateOnly: return DateOnly.Parse(s, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.TimeOnly: return TimeOnly.Parse(s, CultureInfo.InvariantCulture);
+#endif
                     case ProtoTypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case ProtoTypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case ProtoTypeCode.Int16: return short.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -708,6 +712,14 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.UIntPtr:
                     defaultWireType = GetIntWireType(dataFormat, 64);
                     return UIntPtrSerializer.Instance;
+#if NET6_0_OR_GREATER
+                case ProtoTypeCode.DateOnly:
+                    defaultWireType = GetIntWireType(dataFormat, 32);
+                    return DateOnlySerializer.Instance;
+                case ProtoTypeCode.TimeOnly:
+                    defaultWireType = GetIntWireType(dataFormat, 64);
+                    return TimeOnlySerializer.Instance;
+#endif
             }
             IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable is object)

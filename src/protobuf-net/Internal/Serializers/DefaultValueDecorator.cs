@@ -241,6 +241,17 @@ namespace ProtoBuf.Internal.Serializers
                         EmitBeq(ctx, label, typeof(ulong));
                         break;
                     }
+#if NET6_0_OR_GREATER
+                case ProtoTypeCode.DateOnly:
+                    {
+                        ctx.LoadValue(((DateOnly)defaultValue).DayNumber);
+                        ctx.EmitCall(typeof(DateOnly).GetMethod("FromDayNumber"));
+
+                        EmitBeq(ctx, label, expected);
+                        break;
+                    }
+                //TODO: support TimeOnly
+#endif
                 default:
                     throw new NotSupportedException("Type cannot be represented as a default value: " + expected.FullName);
             }

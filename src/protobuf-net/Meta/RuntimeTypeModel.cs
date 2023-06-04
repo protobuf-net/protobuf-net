@@ -1980,6 +1980,9 @@ namespace ProtoBuf.Meta
                         };
                     case ProtoTypeCode.SByte:
                     case ProtoTypeCode.Int16:
+#if NET6_0_OR_GREATER
+                    case ProtoTypeCode.DateOnly:
+#endif
                     case ProtoTypeCode.Int32:
                         return dataFormat switch
                         {
@@ -1995,6 +1998,9 @@ namespace ProtoBuf.Meta
                             _ => "uint64",
                         };
                     case ProtoTypeCode.Int64:
+#if NET6_0_OR_GREATER
+                    case ProtoTypeCode.TimeOnly:
+#endif
                     case ProtoTypeCode.IntPtr:
                         return dataFormat switch
                         {
