@@ -9,7 +9,7 @@ using Xunit.Abstractions;
 using static ProtoBuf.Test.BufferWriteCountTests;
 
 #nullable enable
-
+#pragma warning disable CS8613, CS8614, CS8616, CS8617 // nullability compat
 namespace ProtoBuf.Test
 {
     public class NullMaps
