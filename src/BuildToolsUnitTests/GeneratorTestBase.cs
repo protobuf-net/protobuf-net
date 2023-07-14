@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
+using ProtoBuf.Grpc.Configuration;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Immutable;

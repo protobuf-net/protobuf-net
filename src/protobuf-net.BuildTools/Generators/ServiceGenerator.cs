@@ -43,19 +43,18 @@ namespace ProtoBuf.BuildTools.Generators
                     return null;
                 }
 
-                Log?.Invoke($"Discovered interface: '{type}'");
-
                 AttributeData? sa = null, sca = null;
                 foreach (var attrib in type.GetAttributes())
                 {
                     var ac = attrib.AttributeClass;
-                    if (ac is null || ac.ContainingType is not null) continue;
+
+                    if (ac is null || ac.ContainingType is not null) continue; // we don't expect any known attributes to be inner types
                     if (ac.Name == "ServiceAttribute" &&
                         IsProtobufGrpcConfigurationNamespace(ac.ContainingNamespace))
                     {
                         sa = attrib;
                     }
-                    else if (ac.Name == "ServiceContractAttribute " &&
+                    else if (ac.Name == "ServiceContractAttribute" &&
                         ac.ContainingNamespace is
                         {
                             Name: "ServiceModel",
@@ -66,7 +65,7 @@ namespace ProtoBuf.BuildTools.Generators
                             }
                         })
                     {
-                        sa = attrib;
+                        sca = attrib;
                     }
                 }
 
@@ -99,30 +98,30 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         static bool IsProtobufGrpcConfigurationNamespace(INamespaceSymbol ns) => ns is
+        {
+            Name: "Configuration",
+            ContainingNamespace:
             {
-                Name: "Configuration",
+                Name: "Grpc",
                 ContainingNamespace:
                 {
-                    Name: "Grpc",
-                    ContainingNamespace:
-                    {
-                        Name: "ProtoBuf",
-                        ContainingNamespace.IsGlobalNamespace: true
-                    }
+                    Name: "ProtoBuf",
+                    ContainingNamespace.IsGlobalNamespace: true
                 }
-            };
+            }
+        };
 
-    private void Generate(SourceProductionContext context, (Compilation Compilation, ImmutableArray<ServiceDeclaration> Right) tuple)
-    {
-    }
-
-    private sealed class ServiceDeclaration
-    {
-        public ServiceDeclaration(ITypeSymbol type)
+        private void Generate(SourceProductionContext context, (Compilation Compilation, ImmutableArray<ServiceDeclaration> Right) tuple)
         {
-            Type = type;
         }
-        public ITypeSymbol Type { get; }
+
+        private sealed class ServiceDeclaration
+        {
+            public ServiceDeclaration(ITypeSymbol type)
+            {
+                Type = type;
+            }
+            public ITypeSymbol Type { get; }
+        }
     }
-}
 }
