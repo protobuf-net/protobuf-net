@@ -15,7 +15,7 @@ namespace BuildToolsUnitTests
         [Fact]
         public async Task BasicGenerateWorks()
         {
-            (var result, var diagnostics) = await GenerateAsync(Text("test.proto", @"syntax = ""proto3""; message Foo {}"));
+            (var result, var diagnostics, _) = await GenerateAsync(Text("test.proto", @"syntax = ""proto3""; message Foo {}"));
 
             Assert.Empty(diagnostics);
             Assert.Single(result.GeneratedTrees);
@@ -24,7 +24,7 @@ namespace BuildToolsUnitTests
         [Fact]
         public async Task GenerateWithImport()
         {
-            (var result, var diagnostics) = await GenerateAsync(
+            (var result, var diagnostics, _) = await GenerateAsync(
                 Texts(
                     ("/code/x/y/foo.proto", @"
 syntax = ""proto3"";
@@ -48,7 +48,7 @@ message Bar {
         [Fact]
         public async Task EmbeddedImportWorks()
         {
-            (var result, var diagnostics) = await GenerateAsync(Text("test.proto", @"
+            (var result, var diagnostics, _) = await GenerateAsync(Text("test.proto", @"
 syntax = ""proto3"";
 import ""google/protobuf/timestamp.proto"";
 message Foo {
@@ -61,7 +61,7 @@ message Foo {
         [Fact]
         public async Task DeepImportWorksWithExtraImport()
         {
-            (var result, var diagnostics) = await GenerateAsync(Texts(
+            (var result, var diagnostics, _) = await GenerateAsync(Texts(
                 ("/foo/google/protobuf/a.proto", @"
 syntax = ""proto3"";
 import ""google/protobuf/b.proto"";
@@ -79,7 +79,7 @@ message Bar {}", null)
         [Fact]
         public async Task DefinitionIsNotIncludedInOutput()
         {
-            (var result, var diagnostics) = await GenerateAsync(Texts(
+            (var result, var diagnostics, _) = await GenerateAsync(Texts(
                 ("/foo/google/protobuf/a.proto", @"
 syntax = ""proto3"";
 import ""google/protobuf/b.proto"";
@@ -97,7 +97,7 @@ message Bar {}", new[] { ("IncludeInOutput", "False") }
         [Fact]
         public async Task IncludeInOutputGarbageInput()
         {
-            (var result, var diagnostics) = await GenerateAsync(Texts(
+            (var result, var diagnostics, _) = await GenerateAsync(Texts(
                 ("/foo/google/protobuf/a.proto", @"
 syntax = ""proto3"";
 import ""google/protobuf/b.proto"";
@@ -115,7 +115,7 @@ message Bar {}", new[] { ("IncludeInOutput", "Garbage") }
         [Fact]
         public async Task IncludeInOutputNoInput()
         {
-            (var result, var diagnostics) = await GenerateAsync(Texts(
+            (var result, var diagnostics, _) = await GenerateAsync(Texts(
                 ("/foo/google/protobuf/a.proto", @"
 syntax = ""proto3"";
 import ""google/protobuf/b.proto"";
@@ -133,7 +133,7 @@ message Bar {}", new[] { ("IncludeInOutput", "") }
         [Fact]
         public async Task DeepImportFailsWithoutExtraImport()
         {
-            (var result, var diagnostics) = await GenerateAsync(Texts(
+            (var result, var diagnostics, _) = await GenerateAsync(Texts(
                 ("/foo/google/protobuf/a.proto", @"
 syntax = ""proto3"";
 import ""google/protobuf/b.proto"";

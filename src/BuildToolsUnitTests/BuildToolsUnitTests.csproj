@@ -1,36 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <RootNamespace>BuildToolsUnitTests</RootNamespace>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <RootNamespace>BuildToolsUnitTests</RootNamespace>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <!--<PackageReference Include="Microsoft.Build" />-->
-    <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" />
-    
-    <PackageReference Include="System.Collections.Immutable" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-  </ItemGroup>
+    <ItemGroup>
+        <!--<PackageReference Include="Microsoft.Build" />-->
+        <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" />
 
-  <ItemGroup>
-    <Compile Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
-      <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
+        <PackageReference Include="System.Collections.Immutable" />
+        <PackageReference Include="System.ServiceModel.Primitives" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="ServiceTests/**/*.*.cs" />
+        <None Include="ServiceTests/**/*.*" />
+        <None Update="ServiceTests/**/*.*" CopyToOutputDirectory="PreserveNewest" />
 
-  <ItemGroup>
-    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
-  </ItemGroup>
+        <None Update="**/*.output.*">
+            <DependentUpon>$([System.String]::Copy(%(Filename)).Replace('.output', '.input.cs'))</DependentUpon>
+        </None>
+        <None Update="**/*.output.netfx.*">
+            <DependentUpon>$([System.String]::Copy(%(Filename)).Replace('.output.netfx', '.input.cs'))</DependentUpon>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
+            <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
+    </ItemGroup>
 </Project>
