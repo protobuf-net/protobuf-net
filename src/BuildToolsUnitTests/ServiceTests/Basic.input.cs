@@ -1,23 +1,37 @@
 ﻿using System.ServiceModel;
 using ProtoBuf.Grpc.Configuration;
 
-interface INonGrpc
+partial interface INonGrpc
 {
 
 }
 
-[ServiceContract]
-interface IWcfGrpc
+namespace Somewheres
 {
+    [ServiceContract]
+    partial interface IWcfGrpc
+    {
 
-}
+    }
 
-[Service]
-interface IPBGrpc
-{
+    partial class Foo
+    {
+        partial struct Bar
+        {
+            [Service]
+            partial interface IPBGrpc
+            {
 
-}
-interface ISomeBasicService : IGrpcService
-{
+            }
+        }
+    }
+
+    namespace Deeper
+    {
+        partial interface ISomeBasicService : IGrpcService
+        {
+
+        }
+    }
 
 }
