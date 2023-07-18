@@ -119,6 +119,7 @@ namespace ProtoBuf.BuildTools.Generators
         private void Generate(SourceProductionContext context, (Compilation Compilation, ImmutableArray<ServiceDeclaration> Right) tuple)
         {
             var sb = CodeWriter.Create();
+            int typeIndex = 0;
             foreach (var grp  in tuple.Right.GroupBy(x => x.Type.ContainingSymbol, SymbolEqualityComparer.Default))
             {
                 if (HasNonPartialType(grp.Key, context, out var ns)) continue;
@@ -140,7 +141,20 @@ namespace ProtoBuf.BuildTools.Generators
                         continue;
                     }
 
+                    sb.Append("// [global::ClientProxyAttribute(typeof(ServiceProxy").Append(typeIndex)
+                        .Append("))]").NewLine();
                     sb.Append("partial ").Append(CodeWriter.TypeLabel(type)).Append(" ").Append(type.Name).Indent().Outdent();
+                    sb.NewLine();
+                    sb.Append("sealed file class ServiceProxy").Append(typeIndex).Append(" : global::Grpc.Core.ClientBase<ServiceProxy").Append(typeIndex).Append(">").Indent();
+
+                    sb.Append("protected override ServiceProxy").Append(typeIndex).Append(" NewInstance(global::Grpc.Core.ClientBaseConfiguration configuration) => new ServiceProxy").Append(typeIndex).Append("(configuration);").NewLine()
+                        .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ChannelBase channel) : base(channel) {}").NewLine()
+                        .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}").NewLine()
+                        .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ClientBaseConfiguration configuration) : base(configuration) {}").NewLine()
+                        .Append("public ServiceProxy").Append(typeIndex).Append("() : base() {}").NewLine();
+
+                    sb.Outdent();
+                    typeIndex++;
                 }
                 sb.Outdent(nestLevels);
             }

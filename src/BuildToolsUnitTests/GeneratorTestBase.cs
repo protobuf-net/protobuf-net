@@ -1,17 +1,22 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Grpc.Core;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Grpc.Configuration;
 using ProtoBuf.Meta;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.ServiceModel;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
+using static ProtoBuf.Generators.ServiceGenerator;
 
 namespace BuildToolsUnitTests
 {
@@ -72,7 +77,7 @@ namespace BuildToolsUnitTests
         protected void Log(string message) => _testOutputHelper?.WriteLine(message);
 
         protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics, int ErrorCount)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
-            Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true, SyntaxTree[]? trees = null)
+            Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true, SyntaxTree[]? trees = null, StringBuilder? buildOutput = null)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
             {
@@ -122,13 +127,10 @@ namespace BuildToolsUnitTests
             {
                 compilation = compilation.AddSyntaxTrees(trees);
             }
-            driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
-            if (_testOutputHelper is object)
+            driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var diagnostics);
+            foreach (var d in diagnostics)
             {
-                foreach (var d in diagnostics)
-                {
-                    _testOutputHelper.WriteLine(d.ToString());
-                }
+                OutputDiagnostic(d);
             }
 
             var runResult = driver.GetRunResult();
@@ -137,8 +139,66 @@ namespace BuildToolsUnitTests
                 if (result.Exception is not null) throw result.Exception;
             }
 
-            var errorCount = runResult.Diagnostics.Count(x => x.Severity >= DiagnosticSeverity.Error);
+            var errorCount = ShowDiagnostics("Output code", outputCompilation, buildOutput, "CS1701", "CS1702");
             return (runResult, diagnostics, errorCount);
+
+            void OutputDiagnostic(Diagnostic d)
+            {
+                Output("", true);
+                var loc = d.Location.GetMappedLineSpan();
+                Output($"{d.Severity} {d.Id} {loc.Path} L{loc.StartLinePosition.Line + 1} C{loc.StartLinePosition.Character + 1}");
+                Output(d.GetMessage(CultureInfo.InvariantCulture));
+            }
+            void Output(string message, bool force = false)
+            {
+                if (force || !string.IsNullOrWhiteSpace(message))
+                {
+                    _testOutputHelper?.WriteLine(message);
+                    buildOutput?.AppendLine(message.Replace('\\', '/')); // need to normalize paths
+                }
+            }
+        }
+        static int ShowDiagnostics(string caption, Compilation compilation, StringBuilder? diagnosticsTo, params string[] ignore)
+        {
+            void Output(string message, bool force = false)
+            {
+                if (force || !string.IsNullOrWhiteSpace(message))
+                {
+                    diagnosticsTo?.AppendLine(message.Replace('\\', '/')); // need to normalize paths
+                }
+            }
+            int errorCountTotal = 0;
+            foreach (var tree in compilation.SyntaxTrees)
+            {
+                var rawDiagnostics = compilation.GetSemanticModel(tree).GetDiagnostics();
+                var diagnostics = Normalize(rawDiagnostics, ignore);
+                errorCountTotal += rawDiagnostics.Count(x => x.Severity == DiagnosticSeverity.Error);
+
+                if (diagnostics.Any())
+                {
+                    Output($"{caption} has {diagnostics.Count} diagnostics from '{tree.FilePath}':");
+                    foreach (var d in diagnostics)
+                    {
+                        OutputDiagnostic(d);
+                        if (d.Severity >= DiagnosticSeverity.Error) errorCountTotal++;
+                    }
+                }
+            }
+            return errorCountTotal;
+
+            void OutputDiagnostic(Diagnostic d)
+            {
+                Output("", true);
+                var loc = d.Location.GetMappedLineSpan();
+                Output($"{d.Severity} {d.Id} {loc.Path} L{loc.StartLinePosition.Line + 1} C{loc.StartLinePosition.Character + 1}");
+                Output(d.GetMessage(CultureInfo.InvariantCulture));
+            }
+            static List<Diagnostic> Normalize(ImmutableArray<Diagnostic> diagnostics, string[] ignore) => (
+                from d in diagnostics
+                where !ignore.Contains(d.Id)
+                let loc = d.Location
+                orderby loc.SourceTree?.FilePath, loc.SourceSpan.Start, d.Id, d.ToString()
+                select d).ToList();
         }
 
         protected virtual bool ReferenceProtoBuf => true;
@@ -161,7 +221,8 @@ namespace BuildToolsUnitTests
                     .AddMetadataReference(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location))
                     .AddMetadataReference(MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location))
                     .AddMetadataReference(MetadataReference.CreateFromFile(typeof(ServiceAttribute).Assembly.Location))
-                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(ServiceContractAttribute).Assembly.Location));
+                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(ServiceContractAttribute).Assembly.Location))
+                    .AddMetadataReference(MetadataReference.CreateFromFile(typeof(ClientBase).Assembly.Location));
             }
 
             project = projectModifier?.Invoke(project) ?? project;

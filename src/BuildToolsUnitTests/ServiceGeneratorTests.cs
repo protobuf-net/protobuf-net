@@ -39,7 +39,7 @@ public class ServiceGeneratorTests : GeneratorTestBase<ServiceGenerator>
         var sb = new StringBuilder();
         var result = await GenerateAsync(Array.Empty<AdditionalText>(), trees: new[] {
             ParseTree(sourceText, path)
-        });
+        }, buildOutput: sb);
 
         var results = Assert.Single(result.Result.Results);
         string actualCode = results.GeneratedSources.Any() ? results.GeneratedSources.Single().SourceText?.ToString() ?? "" : "";

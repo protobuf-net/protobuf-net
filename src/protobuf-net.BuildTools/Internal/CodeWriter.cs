@@ -3,6 +3,7 @@
 using Microsoft.CodeAnalysis;
 using System;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 
@@ -50,6 +51,12 @@ internal sealed class CodeWriter
 
     public CodeWriter Append(bool value) => Append(value ? "true" : "false");
     public CodeWriter Append(int? value) => value.HasValue ? Append(value.GetValueOrDefault()) : this;
+
+    internal CodeWriter Append(int value)
+    {
+        Core.Append(value.ToString(CultureInfo.InvariantCulture));
+        return this;
+    }
 
     public CodeWriter Append(string? value)
     {
