@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -66,6 +67,8 @@ internal sealed class CodeWriter
         }
         return this;
     }
+    public CodeWriter AppendVerbatimLiteral(string? value) => Append(
+       value is null ? "null" : SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(value)).ToFullString());
 
     public static string GetTypeName(ITypeSymbol? value)
     {

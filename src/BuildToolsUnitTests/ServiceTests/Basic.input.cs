@@ -3,7 +3,7 @@ using ProtoBuf.Grpc.Configuration;
 
 partial interface INonGrpc
 {
-
+    Foo Do(Foo value);
 }
 
 namespace Somewheres
@@ -11,7 +11,7 @@ namespace Somewheres
     [ServiceContract]
     partial interface IWcfGrpc
     {
-
+        Foo Do(Foo value);
     }
 
     partial class Foo
@@ -21,7 +21,7 @@ namespace Somewheres
             [Service]
             partial interface IPBGrpc
             {
-
+                Foo Do(Foo value);
             }
         }
     }
@@ -30,8 +30,10 @@ namespace Somewheres
     {
         partial interface ISomeBasicService : IGrpcService
         {
-
+            Foo Do(Foo value);
         }
     }
 
 }
+
+class Foo { }

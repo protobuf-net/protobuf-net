@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Internal;
 using System;
+using System.Buffers;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -120,7 +121,7 @@ namespace ProtoBuf.BuildTools.Generators
         {
             var sb = CodeWriter.Create();
             int typeIndex = 0;
-            foreach (var grp  in tuple.Right.GroupBy(x => x.Type.ContainingSymbol, SymbolEqualityComparer.Default))
+            foreach (var grp in tuple.Right.GroupBy(x => x.PrimaryType.ContainingSymbol, SymbolEqualityComparer.Default))
             {
                 if (HasNonPartialType(grp.Key, context, out var ns)) continue;
 
@@ -134,25 +135,36 @@ namespace ProtoBuf.BuildTools.Generators
 
                 foreach (var svc in grp)
                 {
-                    var type = svc.Type;
-                    if (!IsPartial(type))
+                    var primaryType = svc.PrimaryType;
+                    if (!IsPartial(primaryType))
                     {
-                        RequirePartialType(context, type);
+                        RequirePartialType(context, primaryType);
                         continue;
                     }
 
                     sb.Append("// [global::ClientProxyAttribute(typeof(ServiceProxy").Append(typeIndex)
                         .Append("))]").NewLine();
-                    sb.Append("partial ").Append(CodeWriter.TypeLabel(type)).Append(" ").Append(type.Name).Indent().Outdent();
+                    sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent().Outdent();
                     sb.NewLine();
-                    sb.Append("sealed file class ServiceProxy").Append(typeIndex).Append(" : global::Grpc.Core.ClientBase<ServiceProxy").Append(typeIndex).Append(">").Indent();
+                    sb.Append("sealed file class ServiceProxy").Append(typeIndex).Append(" : global::Grpc.Core.ClientBase<ServiceProxy").Append(typeIndex).Append(">");
 
-                    sb.Append("protected override ServiceProxy").Append(typeIndex).Append(" NewInstance(global::Grpc.Core.ClientBaseConfiguration configuration) => new ServiceProxy").Append(typeIndex).Append("(configuration);").NewLine()
-                        .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ChannelBase channel) : base(channel) {}").NewLine()
+                    sb.Indent();
+
+                    sb.Append("// public ServiceProxy").Append(typeIndex).Append("() : base() {}").NewLine()
+                        .Append("// public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ChannelBase channel) : base(channel) {}").NewLine()
                         .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}").NewLine()
-                        .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ClientBaseConfiguration configuration) : base(configuration) {}").NewLine()
-                        .Append("public ServiceProxy").Append(typeIndex).Append("() : base() {}").NewLine();
+                        .Append("private ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}").NewLine()
+                        .Append("protected override ServiceProxy").Append(typeIndex).Append(" NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new ServiceProxy").Append(typeIndex).Append("(configuration);").NewLine()
+                        .NewLine()
+                        .Append("private const string _pbn_ServiceName = ").AppendVerbatimLiteral(svc.ServiceName).Append(";").NewLine();
 
+                    int methodIndex = 0;
+                    foreach (var method in svc.Methods)
+                    {
+                        sb.NewLine().Append("private static readonly global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append("> _pbn_Method").Append(methodIndex).Append(" = new global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append(">(")
+                            .Append("global::Grpc.Core.MethodType.").Append(method.MethodKind).Append(", _pbn_ServiceName, ").AppendVerbatimLiteral(method.MethodName)
+                            .Append(", null!, null!);").NewLine();
+                    }
                     sb.Outdent();
                     typeIndex++;
                 }
@@ -201,7 +213,7 @@ namespace ProtoBuf.BuildTools.Generators
                     ns = type.ContainingNamespace;
                     type = type.ContainingType;
                 }
-                if (ns is { IsGlobalNamespace: true})
+                if (ns is { IsGlobalNamespace: true })
                 {
                     // export as null
                     ns = null;
@@ -214,9 +226,80 @@ namespace ProtoBuf.BuildTools.Generators
         {
             public ServiceDeclaration(INamedTypeSymbol type)
             {
-                Type = type;
+                PrimaryType = type;
+
+                // TODO: namespace qualification, service lookup, etc
+                ServiceName = type.Name;
+
+                var members = type.GetMembers();
+                if (members.Length > 0)
+                {
+                    int count = 0;
+                    var lease = ArrayPool<MethodDeclaration>.Shared.Rent(members.Length);
+                    foreach (var member in members)
+                    {
+                        if (member is IMethodSymbol method)
+                        {
+                            var svcMethod = MethodDeclaration.TryCreate(method);
+                            if (svcMethod is not null)
+                            {
+                                lease[count++] = svcMethod;
+                            }
+                        }
+                    }
+                    Methods = ImmutableArray.Create(lease, 0, count);
+                    ArrayPool<MethodDeclaration>.Shared.Return(lease);
+                }
             }
-            public INamedTypeSymbol Type { get; }
+            public INamedTypeSymbol PrimaryType { get; }
+            public ImmutableArray<MethodDeclaration> Methods { get; }
+            public string ServiceName { get; }
+        }
+
+        private sealed class MethodDeclaration
+        {
+            public static MethodDeclaration? TryCreate(IMethodSymbol method)
+            {
+                if (method.ReturnsVoid || method.Parameters.IsDefaultOrEmpty) return null;
+
+                var req = method.Parameters[0].Type;
+                var resp = method.ReturnType;
+                var flags = MethodFlags.None;
+                return req is INamedTypeSymbol namedReq && resp is INamedTypeSymbol namedResp ? new(method, namedReq, namedResp, flags) : null;
+            }
+
+            [Flags]
+            public enum MethodFlags
+            {
+                None = 0,
+                RequestStreaming = 1 << 0,
+                ResponseStreaming = 2 << 0,
+            }
+
+            private MethodDeclaration(IMethodSymbol method, INamedTypeSymbol requestType, INamedTypeSymbol responseType, MethodFlags flags)
+            {
+                Method = method;
+
+                // TODO: lots more
+                MethodName = method.Name;
+                RequestType = requestType;
+                ResponseType = responseType;
+                Flags = flags;
+            }
+            public IMethodSymbol Method { get; }
+
+            public string MethodName { get; }
+            public INamedTypeSymbol RequestType { get; }
+            public INamedTypeSymbol ResponseType { get; }
+            public MethodFlags Flags { get; }
+
+            public string MethodKind => (Flags & (MethodFlags.RequestStreaming | MethodFlags.ResponseStreaming)) switch
+            {
+                MethodFlags.None => "Unary",
+                MethodFlags.RequestStreaming => "ClientStreaming",
+                MethodFlags.ResponseStreaming => "ServerStreaming",
+                _ => "DuplexStreaming",
+            };
         }
     }
 }

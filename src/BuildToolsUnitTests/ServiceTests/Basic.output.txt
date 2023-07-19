@@ -1,37 +1,10 @@
-Output code has 12 diagnostics from 'protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs':
+Output code has 3 diagnostics from 'protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs':
 
 Error CS0116 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L9 C12
 A namespace cannot directly contain members such as fields, methods or statements
 
-Error CS0534 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L9 C23
-'ServiceProxy0' does not implement inherited abstract member 'ClientBase<ServiceProxy0>.NewInstance(ClientBase.ClientBaseConfiguration)'
-
-Error CS0234 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L11 C72
-The type or namespace name 'ClientBaseConfiguration' does not exist in the namespace 'Grpc.Core' (are you missing an assembly reference?)
-
-Error CS0234 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L14 C48
-The type or namespace name 'ClientBaseConfiguration' does not exist in the namespace 'Grpc.Core' (are you missing an assembly reference?)
-
-Error CS1519 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L32 C25
+Error CS1519 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L36 C25
 Invalid token 'class' in class, record, struct, or interface member declaration
 
-Error CS0534 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L32 C31
-'Foo.Bar.ServiceProxy1' does not implement inherited abstract member 'ClientBase<Foo.Bar.ServiceProxy1>.NewInstance(ClientBase.ClientBaseConfiguration)'
-
-Error CS0234 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L34 C80
-The type or namespace name 'ClientBaseConfiguration' does not exist in the namespace 'Grpc.Core' (are you missing an assembly reference?)
-
-Error CS0234 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L37 C56
-The type or namespace name 'ClientBaseConfiguration' does not exist in the namespace 'Grpc.Core' (are you missing an assembly reference?)
-
-Error CS0116 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L55 C12
+Error CS0116 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L63 C12
 A namespace cannot directly contain members such as fields, methods or statements
-
-Error CS0534 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L55 C23
-'ServiceProxy2' does not implement inherited abstract member 'ClientBase<ServiceProxy2>.NewInstance(ClientBase.ClientBaseConfiguration)'
-
-Error CS0234 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L57 C72
-The type or namespace name 'ClientBaseConfiguration' does not exist in the namespace 'Grpc.Core' (are you missing an assembly reference?)
-
-Error CS0234 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L60 C48
-The type or namespace name 'ClientBaseConfiguration' does not exist in the namespace 'Grpc.Core' (are you missing an assembly reference?)
