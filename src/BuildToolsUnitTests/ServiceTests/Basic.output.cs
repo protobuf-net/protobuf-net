@@ -1,24 +1,11 @@
 namespace Somewheres
 {
-    // [global::ClientProxyAttribute(typeof(ServiceProxy0))]
+    // [global::ClientProxyAttribute(typeof(GeneratedServiceProxy0))]
     partial interface IWcfGrpc
     {
 
     }
 
-    sealed file class ServiceProxy0 : global::Grpc.Core.ClientBase<ServiceProxy0>
-    {
-        // public ServiceProxy0() : base() {}
-        // public ServiceProxy0(global::Grpc.Core.ChannelBase channel) : base(channel) {}
-        public ServiceProxy0(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}
-        private ServiceProxy0(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
-        protected override ServiceProxy0 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new ServiceProxy0(configuration);
-
-        private const string _pbn_ServiceName = "IWcfGrpc";
-
-        private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_ServiceName, "Do", null!, null!);
-
-    }
 
 }
 namespace Somewheres
@@ -27,23 +14,29 @@ namespace Somewheres
     {
         partial struct Bar
         {
-            // [global::ClientProxyAttribute(typeof(ServiceProxy1))]
+            // [global::ClientProxyAttribute(typeof(GeneratedServiceProxy1))]
             partial interface IPBGrpc
             {
 
             }
 
-            sealed file class ServiceProxy1 : global::Grpc.Core.ClientBase<ServiceProxy1>
+            sealed class GeneratedServiceProxy1 : global::Grpc.Core.ClientBase<GeneratedServiceProxy1>, global::Somewheres.Foo.Bar.IPBGrpc
             {
-                // public ServiceProxy1() : base() {}
-                // public ServiceProxy1(global::Grpc.Core.ChannelBase channel) : base(channel) {}
-                public ServiceProxy1(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}
-                private ServiceProxy1(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
-                protected override ServiceProxy1 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new ServiceProxy1(configuration);
+                // public GeneratedServiceProxy1() : base() {}
+                // public GeneratedServiceProxy1(global::Grpc.Core.ChannelBase channel) : base(channel) {}
+                public GeneratedServiceProxy1(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}
+                private GeneratedServiceProxy1(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
+                protected override GeneratedServiceProxy1 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy1(configuration);
 
-                private const string _pbn_ServiceName = "IPBGrpc";
 
-                private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_ServiceName, "Do", null!, null!);
+                private const string _pbn_Service0 = "IPBGrpc";
+                private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_Service0, "Do", null!, null!);
+
+                // implement global::Somewheres.Foo.Bar.IPBGrpc
+                global::Somewheres.Foo global::Somewheres.Foo.Bar.IPBGrpc.Do(global::Somewheres.Foo value)
+                {
+                    throw new global::System.NotImplementedException("Do"); // via _pbn_Method0
+                }
 
             }
 
@@ -54,24 +47,51 @@ namespace Somewheres
 }
 namespace Somewheres.Deeper
 {
-    // [global::ClientProxyAttribute(typeof(ServiceProxy2))]
+    // [global::ClientProxyAttribute(typeof(GeneratedServiceProxy2))]
     partial interface ISomeBasicService
     {
 
     }
 
-    sealed file class ServiceProxy2 : global::Grpc.Core.ClientBase<ServiceProxy2>
+
+}
+sealed file class GeneratedServiceProxy0 : global::Grpc.Core.ClientBase<GeneratedServiceProxy0>, global::Somewheres.IWcfGrpc
+{
+    // public GeneratedServiceProxy0() : base() {}
+    // public GeneratedServiceProxy0(global::Grpc.Core.ChannelBase channel) : base(channel) {}
+    public GeneratedServiceProxy0(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}
+    private GeneratedServiceProxy0(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
+    protected override GeneratedServiceProxy0 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy0(configuration);
+
+
+    private const string _pbn_Service0 = "IWcfGrpc";
+    private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_Service0, "Do", null!, null!);
+
+    // implement global::Somewheres.IWcfGrpc
+    global::Somewheres.Foo global::Somewheres.IWcfGrpc.Do(global::Somewheres.Foo value)
     {
-        // public ServiceProxy2() : base() {}
-        // public ServiceProxy2(global::Grpc.Core.ChannelBase channel) : base(channel) {}
-        public ServiceProxy2(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}
-        private ServiceProxy2(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
-        protected override ServiceProxy2 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new ServiceProxy2(configuration);
-
-        private const string _pbn_ServiceName = "ISomeBasicService";
-
-        private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_ServiceName, "Do", null!, null!);
-
+        throw new global::System.NotImplementedException("Do"); // via _pbn_Method0
     }
+
+}
+sealed file class GeneratedServiceProxy2 : global::Grpc.Core.ClientBase<GeneratedServiceProxy2>, global::Somewheres.Deeper.ISomeBasicService
+{
+    // public GeneratedServiceProxy2() : base() {}
+    // public GeneratedServiceProxy2(global::Grpc.Core.ChannelBase channel) : base(channel) {}
+    public GeneratedServiceProxy2(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}
+    private GeneratedServiceProxy2(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
+    protected override GeneratedServiceProxy2 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy2(configuration);
+
+
+    private const string _pbn_Service0 = "ISomeBasicService";
+    private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_Service0, "Do", null!, null!);
+
+    // implement global::Somewheres.Deeper.ISomeBasicService
+    global::Somewheres.Foo global::Somewheres.Deeper.ISomeBasicService.Do(global::Somewheres.Foo value)
+    {
+        throw new global::System.NotImplementedException("Do"); // via _pbn_Method0
+    }
+
+    // implement global::ProtoBuf.Grpc.Configuration.IGrpcService
 
 }

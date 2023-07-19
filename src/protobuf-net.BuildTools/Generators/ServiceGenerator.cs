@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Internal;
 using System;
-using System.Buffers;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -43,45 +43,9 @@ namespace ProtoBuf.BuildTools.Generators
         {
             try
             {
-                if (context.Node is not InterfaceDeclarationSyntax interfaceDeclaration
-                    || context.SemanticModel.GetDeclaredSymbol(context.Node, token) is not INamedTypeSymbol { TypeKind: TypeKind.Interface } type)
-                {
-                    return null;
-                }
-
-                AttributeData? sa = null, sca = null;
-                foreach (var attrib in type.GetAttributes())
-                {
-                    var ac = attrib.AttributeClass;
-
-                    if (ac is null || ac.ContainingType is not null) continue; // we don't expect any known attributes to be inner types
-                    if (ac.Name == "ServiceAttribute" &&
-                        IsProtobufGrpcConfigurationNamespace(ac.ContainingNamespace))
-                    {
-                        sa = attrib;
-                    }
-                    else if (ac.Name == "ServiceContractAttribute" &&
-                        ac.ContainingNamespace is
-                        {
-                            Name: "ServiceModel",
-                            ContainingNamespace:
-                            {
-                                Name: "System",
-                                ContainingNamespace.IsGlobalNamespace: true
-                            }
-                        })
-                    {
-                        sca = attrib;
-                    }
-                }
-
-                if (sa is null && sca is null && !ImplementsIGrpcService(type))
-                {
-                    return null;
-                }
-
-                Log?.Invoke($"Discovered service: '{type}' via {(sa ?? sca)?.AttributeClass?.Name ?? "IGrpcService"}");
-                return new ServiceDeclaration(type);
+                return context.Node is InterfaceDeclarationSyntax interfaceDeclaration
+                    && context.SemanticModel.GetDeclaredSymbol(context.Node, token) is INamedTypeSymbol { TypeKind: TypeKind.Interface } type
+                    ? ServiceDeclaration.TryCreate(type) : null;
             }
             catch (Exception ex)
             {
@@ -119,10 +83,18 @@ namespace ProtoBuf.BuildTools.Generators
 
         private void Generate(SourceProductionContext context, (Compilation Compilation, ImmutableArray<ServiceDeclaration> Right) tuple)
         {
+            const string ServiceProxyName = "GeneratedServiceProxy";
+
+            if (tuple.Right.IsDefaultOrEmpty) return; // nothing to do
+
             var sb = CodeWriter.Create();
-            int typeIndex = 0;
-            foreach (var grp in tuple.Right.GroupBy(x => x.PrimaryType.ContainingSymbol, SymbolEqualityComparer.Default))
+
+            List<(ServiceDeclaration Service, int Token)> topLevelProxies = new(tuple.Right.Length);
+            int nextToken = 0;
+            Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens = new(SymbolEqualityComparer.Default);
+            foreach (var grp in tuple.Right.GroupBy(x => x.Service.Type.ContainingSymbol, SymbolEqualityComparer.Default))
             {
+                int token = nextToken++;
                 if (HasNonPartialType(grp.Key, context, out var ns)) continue;
 
                 if (ns is not null)
@@ -135,40 +107,91 @@ namespace ProtoBuf.BuildTools.Generators
 
                 foreach (var svc in grp)
                 {
-                    var primaryType = svc.PrimaryType;
+                    var primaryType = svc.Service.Type;
                     if (!IsPartial(primaryType))
                     {
                         RequirePartialType(context, primaryType);
                         continue;
                     }
 
-                    sb.Append("// [global::ClientProxyAttribute(typeof(ServiceProxy").Append(typeIndex)
-                        .Append("))]").NewLine();
+                    sb.Append("// [global::ClientProxyAttribute(typeof(" + ServiceProxyName).Append(token).Append("))]").NewLine();
                     sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent().Outdent();
                     sb.NewLine();
-                    sb.Append("sealed file class ServiceProxy").Append(typeIndex).Append(" : global::Grpc.Core.ClientBase<ServiceProxy").Append(typeIndex).Append(">");
 
-                    sb.Indent();
-
-                    sb.Append("// public ServiceProxy").Append(typeIndex).Append("() : base() {}").NewLine()
-                        .Append("// public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ChannelBase channel) : base(channel) {}").NewLine()
-                        .Append("public ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}").NewLine()
-                        .Append("private ServiceProxy").Append(typeIndex).Append("(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}").NewLine()
-                        .Append("protected override ServiceProxy").Append(typeIndex).Append(" NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new ServiceProxy").Append(typeIndex).Append("(configuration);").NewLine()
-                        .NewLine()
-                        .Append("private const string _pbn_ServiceName = ").AppendVerbatimLiteral(svc.ServiceName).Append(";").NewLine();
-
-                    int methodIndex = 0;
-                    foreach (var method in svc.Methods)
+                    if (IsFullyAccessible(primaryType))
                     {
-                        sb.NewLine().Append("private static readonly global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append("> _pbn_Method").Append(methodIndex).Append(" = new global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append(">(")
-                            .Append("global::Grpc.Core.MethodType.").Append(method.MethodKind).Append(", _pbn_ServiceName, ").AppendVerbatimLiteral(method.MethodName)
-                            .Append(", null!, null!);").NewLine();
+                        // defer and write at top level
+                        topLevelProxies.Add((svc, token));
                     }
-                    sb.Outdent();
-                    typeIndex++;
+                    else
+                    {
+                        // write immediately as nested
+                        WriteProxy(sb, svc, methodTokens, token, false);
+                    }
+
+                    static bool IsFullyAccessible(ITypeSymbol type)
+                    {
+                        while (type.ContainingType is not null)
+                        {
+                            switch (type.ContainingType.DeclaredAccessibility)
+                            {
+                                case Accessibility.Public:
+                                case Accessibility.Internal:
+                                case Accessibility.ProtectedOrInternal:
+                                    break; // fine
+                                default:
+                                    return false; // not going to be accessible
+                            }
+                            type = type.ContainingType;
+                        }
+                        return true;
+                    }
+
+
                 }
                 sb.Outdent(nestLevels);
+            }
+
+            foreach (var pair in topLevelProxies)
+            {
+                WriteProxy(sb, pair.Service, methodTokens, pair.Token, true);
+            }
+
+            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, bool topLevel)
+            {
+                methodTokens.Clear();
+
+                var primaryType = proxy.Service.Type;
+                sb.Append("sealed").Append(topLevel ? " file" : "").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
+
+                sb.Indent();
+
+                sb.Append("// public " + ServiceProxyName).Append(token).Append("() : base() {}").NewLine()
+                    .Append("// public " + ServiceProxyName).Append(token).Append("(global::Grpc.Core.ChannelBase channel) : base(channel) {}").NewLine()
+                    .Append("public " + ServiceProxyName).Append(token).Append("(global::Grpc.Core.CallInvoker callInvoker) : base(callInvoker) {}").NewLine()
+                    .Append("private " + ServiceProxyName).Append(token).Append("(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}").NewLine()
+                    .Append("protected override " + ServiceProxyName).Append(token).Append(" NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new " + ServiceProxyName).Append(token).Append("(configuration);").NewLine()
+                    .NewLine();
+
+                // write all the static service key/method members
+                int subServiceIndex = 0, methodIndex = 0;
+                foreach (var subService in proxy.Methods.GroupBy(x => x.Service))
+                {
+                    sb.NewLine().Append("private const string _pbn_Service").Append(subServiceIndex).Append(" = ").AppendVerbatimLiteral(subService.Key.Name).Append(";").NewLine();
+                    foreach (var method in subService)
+                    {
+                        sb.Append("private static readonly global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append("> _pbn_Method").Append(methodIndex).Append(" = new global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append(">(")
+                            .Append("global::Grpc.Core.MethodType.").Append(method.MethodKind).Append(", _pbn_Service").Append(subServiceIndex).Append(", ").AppendVerbatimLiteral(method.MethodName)
+                            .Append(", null!, null!);").NewLine();
+                        methodTokens.Add(method.Method, (methodIndex++, method));
+                    }
+                }
+
+                // write the methods
+                AddServiceImplementations(sb, methodTokens, primaryType);
+
+                sb.Outdent();
+
             }
 
             var s = sb.ToStringRecycle();
@@ -222,50 +245,204 @@ namespace ProtoBuf.BuildTools.Generators
             }
         }
 
-        private sealed class ServiceDeclaration
+        private static void AddServiceImplementations(CodeWriter sb,
+            Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> tokens, INamedTypeSymbol type)
         {
-            public ServiceDeclaration(INamedTypeSymbol type)
+            sb.NewLine().Append("// implement ").Append(type).NewLine();
+            foreach (var member in type.GetMembers())
             {
-                PrimaryType = type;
-
-                // TODO: namespace qualification, service lookup, etc
-                ServiceName = type.Name;
-
-                var members = type.GetMembers();
-                if (members.Length > 0)
+                if (member.IsStatic)
                 {
-                    int count = 0;
-                    var lease = ArrayPool<MethodDeclaration>.Shared.Rent(members.Length);
-                    foreach (var member in members)
-                    {
-                        if (member is IMethodSymbol method)
+                    sb.Append("// skip ").Append(member.Name).NewLine();
+                    continue; // only want regular instance members, not default implementations etc
+                }
+                switch (member)
+                {
+                    case IMethodSymbol method:
+                        sb.Append(method.ReturnType).Append(" ").Append(type).Append(".").Append(member.Name);
+                        bool first;
+                        if (method.Arity != 0)
                         {
-                            var svcMethod = MethodDeclaration.TryCreate(method);
-                            if (svcMethod is not null)
+                            sb.Append("<");
+                            first = true;
+                            foreach (var t in method.TypeArguments)
                             {
-                                lease[count++] = svcMethod;
+                                sb.Append(first ? "" : ", ").Append(t.Name);
+                                first = false;
                             }
+                            sb.Append(">");
                         }
-                    }
-                    Methods = ImmutableArray.Create(lease, 0, count);
-                    ArrayPool<MethodDeclaration>.Shared.Return(lease);
+                        sb.Append("(");
+                        first = true;
+                        foreach (var p in method.Parameters)
+                        {
+                            sb.Append(first ? "" : ", ").Append(p.Type).Append(" ").Append(p.Name);
+                            first = false;
+                        }
+                        sb.Append(")");
+
+                        if (tokens.TryGetValue(method, out var pair))
+                        {
+                            sb.Indent();
+                            sb.Append("throw new global::System.NotImplementedException(").AppendVerbatimLiteral(pair.Method.MethodName).Append("); // via _pbn_Method").Append(pair.Token);
+                            sb.Outdent();
+                        }
+                        else if (method is { Name: nameof(IDisposable.Dispose) } && type is
+                        {
+                            Name: nameof(IDisposable), ContainingType: null,
+                            ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true }
+                        })
+                        {
+                            sb.Append(" { }");
+                        }
+                        else if (method is { Name: nameof(IAsyncDisposable.DisposeAsync) } && type is
+                        {
+                            Name: nameof(IAsyncDisposable), ContainingType: null,
+                            ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true }
+                        })
+                        {
+                            sb.Append(" => default;");
+                        }
+                        else
+                        {
+                            sb.Append(" => throw new global::System.NotSupportedException();");
+                        }
+                        break;
+                    default:
+                        sb.Append($"#error {member.Kind} {member.Name}").NewLine();
+                        break;
                 }
             }
-            public INamedTypeSymbol PrimaryType { get; }
-            public ImmutableArray<MethodDeclaration> Methods { get; }
-            public string ServiceName { get; }
+
+
+            foreach (var iType in type.Interfaces)
+            {
+                AddServiceImplementations(sb, tokens, iType);
+            }
         }
 
-        private sealed class MethodDeclaration
+        private sealed class ServiceDeclaration
         {
-            public static MethodDeclaration? TryCreate(IMethodSymbol method)
+            static void AddMethods(List<MethodDeclaration> methods, in ServiceEndpoint service)
             {
-                if (method.ReturnsVoid || method.Parameters.IsDefaultOrEmpty) return null;
+                foreach (var member in service.Type.GetMembers())
+                {
+                    if (member is IMethodSymbol method &&
+                        MethodDeclaration.TryCreate(service, method, out var svcMethod))
+                    {
+                        methods.Add(svcMethod);
+                    }
+                }
 
-                var req = method.Parameters[0].Type;
-                var resp = method.ReturnType;
-                var flags = MethodFlags.None;
-                return req is INamedTypeSymbol namedReq && resp is INamedTypeSymbol namedResp ? new(method, namedReq, namedResp, flags) : null;
+                // cascade sub-services
+                foreach (var iType in service.Type.Interfaces)
+                {
+                    if (ServiceEndpoint.TryCreate(iType, out var iService))
+                    {
+                        AddMethods(methods, iService);
+                    }
+                }
+            }
+
+            public static ServiceDeclaration? TryCreate(INamedTypeSymbol type)
+                => ServiceEndpoint.TryCreate(type, out var service) ? new(service) : null;
+
+
+            private ServiceDeclaration(in ServiceEndpoint service)
+            {
+                Service = service;
+
+                List<MethodDeclaration> methods = new();
+                AddMethods(methods, service);
+                Methods = ImmutableArray.CreateRange(methods);
+            }
+
+
+            public ServiceEndpoint Service { get; }
+            public ImmutableArray<MethodDeclaration> Methods { get; }
+        }
+
+        public readonly struct ServiceEndpoint : IEquatable<ServiceEndpoint>
+        {
+            static bool IsService(INamedTypeSymbol type, out string serviceName)
+            {
+                AttributeData? sa = null, sca = null;
+                foreach (var attrib in type.GetAttributes())
+                {
+                    var ac = attrib.AttributeClass;
+
+                    if (ac is null || ac.ContainingType is not null) continue; // we don't expect any known attributes to be inner types
+                    if (ac.Name == "ServiceAttribute" &&
+                        IsProtobufGrpcConfigurationNamespace(ac.ContainingNamespace))
+                    {
+                        sa = attrib;
+                    }
+                    else if (ac.Name == "ServiceContractAttribute" &&
+                        ac.ContainingNamespace is
+                        {
+                            Name: "ServiceModel",
+                            ContainingNamespace:
+                            {
+                                Name: "System",
+                                ContainingNamespace.IsGlobalNamespace: true
+                            }
+                        })
+                    {
+                        sca = attrib;
+                    }
+                }
+
+                if (sa is null && sca is null && !ImplementsIGrpcService(type))
+                {
+                    serviceName = "";
+                    return false;
+                }
+
+                serviceName = type.Name;
+                return true;
+            }
+
+            public readonly INamedTypeSymbol Type;
+            public readonly string Name;
+
+            internal static bool TryCreate(INamedTypeSymbol type, out ServiceEndpoint service)
+            {
+                if (IsService(type, out var name))
+                {
+                    service = new(type, name);
+                    return true;
+                }
+                service = default;
+                return false;
+            }
+            private ServiceEndpoint(INamedTypeSymbol type, string name)
+            {
+                Type = type;
+                Name = name;
+            }
+            public override string ToString() => Name;
+            public override int GetHashCode() => SymbolEqualityComparer.Default.GetHashCode(Type);
+            public override bool Equals(object obj) => obj is ServiceEndpoint other && Equals(other);
+            public bool Equals(ServiceEndpoint other) => SymbolEqualityComparer.Default.Equals(Type, other.Type);
+        }
+
+        private readonly struct MethodDeclaration
+        {
+            public static bool TryCreate(in ServiceEndpoint service, IMethodSymbol method, out MethodDeclaration decl)
+            {
+                if (!(method.ReturnsVoid || method.Parameters.IsDefaultOrEmpty))
+                {
+                    var req = method.Parameters[0].Type;
+                    var resp = method.ReturnType;
+                    var flags = MethodFlags.None;
+                    if (req is INamedTypeSymbol namedReq && resp is INamedTypeSymbol namedResp)
+                    {
+                        decl = new(service, method, namedReq, namedResp, flags);
+                        return true;
+                    }
+                }
+                decl = default;
+                return false;
             }
 
             [Flags]
@@ -276,8 +453,9 @@ namespace ProtoBuf.BuildTools.Generators
                 ResponseStreaming = 2 << 0,
             }
 
-            private MethodDeclaration(IMethodSymbol method, INamedTypeSymbol requestType, INamedTypeSymbol responseType, MethodFlags flags)
+            private MethodDeclaration(in ServiceEndpoint service, IMethodSymbol method, INamedTypeSymbol requestType, INamedTypeSymbol responseType, MethodFlags flags)
             {
+                Service = service;
                 Method = method;
 
                 // TODO: lots more
@@ -287,7 +465,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Flags = flags;
             }
             public IMethodSymbol Method { get; }
-
+            public ServiceEndpoint Service { get; }
             public string MethodName { get; }
             public INamedTypeSymbol RequestType { get; }
             public INamedTypeSymbol ResponseType { get; }
