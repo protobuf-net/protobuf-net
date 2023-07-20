@@ -88,6 +88,9 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (tuple.Right.IsDefaultOrEmpty) return; // nothing to do
 
+            // check whether [Proxy] is available to us
+            if (tuple.Compilation.GetTypeByMetadataName("ProtoBuf.Grpc.Configuration.ProxyAttribute") is null) return;
+
             var sb = CodeWriter.Create();
 
             List<(ServiceDeclaration Service, int Token)> topLevelProxies = new(tuple.Right.Length);
@@ -115,10 +118,19 @@ namespace ProtoBuf.BuildTools.Generators
                         continue;
                     }
 
-                    sb.Append("// [global::ClientProxyAttribute(typeof(" + ServiceProxyName).Append(token).Append("))]").NewLine();
-                    sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent().Outdent();
-                    sb.NewLine();
+                    bool writeNested = IsAtLeast(primaryType, LanguageVersion.CSharp8);
+                    sb.Append("[global::ProtoBuf.Grpc.Configuration.ProxyAttribute(typeof(" + ServiceProxyName).Append(token).Append("))]").NewLine();
+                    sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent();
+                    if (writeNested)
+                    {
+                        WriteProxy(sb, svc, methodTokens, token, false, "private");
+                    }
+                    sb.Outdent().NewLine();
 
+                    if (writeNested)
+                    {
+                        // already written
+                    }
                     if (IsFullyAccessible(primaryType))
                     {
                         // defer and write at top level
@@ -127,7 +139,7 @@ namespace ProtoBuf.BuildTools.Generators
                     else
                     {
                         // write immediately as nested
-                        WriteProxy(sb, svc, methodTokens, token, false);
+                        WriteProxy(sb, svc, methodTokens, token, false, "private");
                     }
 
                     static bool IsFullyAccessible(ITypeSymbol type)
@@ -155,35 +167,33 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (topLevelProxies.Count != 0)
             {
-                bool useFileModifier = IsAtLeast(LanguageVersion.CSharp11);
                 foreach (var pair in topLevelProxies)
                 {
-                    WriteProxy(sb, pair.Service, methodTokens, pair.Token, true);
-                }
-
-                bool IsAtLeast(LanguageVersion version)
-                {
-                    foreach (var pair in topLevelProxies)
-                    {
-                        var decl = pair.Service.Service.Type.DeclaringSyntaxReferences;
-                        foreach (var d in decl)
-                        {
-                            if (d.SyntaxTree.Options is CSharpParseOptions options)
-                            {
-                                return options.LanguageVersion >= version;
-                            }
-                        }
-                    }
-                    return false;
+                    bool useFileModifier = IsAtLeast(pair.Service.Service.Type, LanguageVersion.CSharp11);
+                    WriteProxy(sb, pair.Service, methodTokens, pair.Token, useFileModifier, "internal");
                 }
             }
 
-            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, bool asFile)
+            static bool IsAtLeast(INamedTypeSymbol type, LanguageVersion version)
+            {
+                var decl = type.DeclaringSyntaxReferences;
+                foreach (var d in decl)
+                {
+                    if (d.SyntaxTree.Options is CSharpParseOptions options)
+                    {
+                        return options.LanguageVersion >= version;
+                    }
+                }
+                return false;
+            }
+
+            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, bool asFile, string accessibility)
             {
                 methodTokens.Clear();
 
+                if (asFile) accessibility = "";
                 var primaryType = proxy.Service.Type;
-                sb.Append("sealed").Append(asFile ? " file" : "").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
+                sb.Append(accessibility).Append(string.IsNullOrEmpty(accessibility) ? "" : " ").Append("sealed").Append(asFile ? " file" : "").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
 
                 sb.Indent();
 
