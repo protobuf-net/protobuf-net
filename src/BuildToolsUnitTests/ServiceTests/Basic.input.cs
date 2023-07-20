@@ -1,4 +1,5 @@
-﻿using System.ServiceModel;
+﻿using System;
+using System.ServiceModel;
 using ProtoBuf.Grpc.Configuration;
 
 partial interface INonGrpc
@@ -12,6 +13,12 @@ namespace Somewheres
     partial interface IWcfGrpc
     {
         Foo Do(Foo value);
+
+        // trouble, deliberately
+        event EventHandler SomeEvent;
+        string Name { get; }
+        public abstract static IWcfGrpc operator +(IWcfGrpc a, IWcfGrpc b);
+        void Bar() => throw new InvalidOperationException();
     }
 
     partial class Foo

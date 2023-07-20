@@ -20,6 +20,14 @@ namespace Somewheres
             {
                 throw new global::System.NotImplementedException("Do"); // via _pbn_Method0
             }
+            event global::System.EventHandler global::Somewheres.IWcfGrpc.SomeEvent
+            {
+                add => throw new global::System.NotSupportedException();
+                remove => throw new global::System.NotSupportedException();
+
+            }
+            string global::Somewheres.IWcfGrpc.Name => throw new global::System.NotSupportedException();
+            static global::Somewheres.IWcfGrpc global::Somewheres.IWcfGrpc.operator +(global::Somewheres.IWcfGrpc a, global::Somewheres.IWcfGrpc b) => throw new global::System.NotSupportedException();
 
         }
 
