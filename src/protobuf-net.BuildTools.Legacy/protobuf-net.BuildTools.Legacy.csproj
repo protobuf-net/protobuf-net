@@ -10,7 +10,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
-    <DefineConstants>$(DefineConstants);PLAT_NO_RECORDS;BUILD_TOOLS</DefineConstants>
+    <DefineConstants>$(DefineConstants);PLAT_NO_RECORDS;LEGACY_BUILD_TOOLS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

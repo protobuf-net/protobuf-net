@@ -19,7 +19,8 @@ namespace ProtoBuf.Internal.Roslyn.Extensions
             // - IdentifierName
             // - QualifiedNameSyntax
             var existingUsingDirectiveNames = compilationUnitSyntax.Usings
-                .Select(x => x.Name.ToString().Trim())
+                .Where(x => x.Name is not null)
+                .Select(x => x.Name!.ToString().Trim())
                 .ToImmutableHashSet();
 
             foreach (var directive in usingDirectiveNames)

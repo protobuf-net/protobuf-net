@@ -10,6 +10,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using static ProtoBuf.Generators.ServiceGenerator;
 
 namespace ProtoBuf.BuildTools.Generators
@@ -152,17 +153,37 @@ namespace ProtoBuf.BuildTools.Generators
                 sb.Outdent(nestLevels);
             }
 
-            foreach (var pair in topLevelProxies)
+            if (topLevelProxies.Count != 0)
             {
-                WriteProxy(sb, pair.Service, methodTokens, pair.Token, true);
+                bool useFileModifier = IsAtLeast(LanguageVersion.CSharp11);
+                foreach (var pair in topLevelProxies)
+                {
+                    WriteProxy(sb, pair.Service, methodTokens, pair.Token, true);
+                }
+
+                bool IsAtLeast(LanguageVersion version)
+                {
+                    foreach (var pair in topLevelProxies)
+                    {
+                        var decl = pair.Service.Service.Type.DeclaringSyntaxReferences;
+                        foreach (var d in decl)
+                        {
+                            if (d.SyntaxTree.Options is CSharpParseOptions options)
+                            {
+                                return options.LanguageVersion >= version;
+                            }
+                        }
+                    }
+                    return false;
+                }
             }
 
-            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, bool topLevel)
+            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, bool asFile)
             {
                 methodTokens.Clear();
 
                 var primaryType = proxy.Service.Type;
-                sb.Append("sealed").Append(topLevel ? " file" : "").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
+                sb.Append("sealed").Append(asFile ? " file" : "").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
 
                 sb.Indent();
 

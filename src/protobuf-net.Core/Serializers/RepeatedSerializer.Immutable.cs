@@ -73,7 +73,7 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableArray<T> AddRange(ImmutableArray<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(
-#if BUILD_TOOLS // can't ref the updated lib
+#if LEGACY_BUILD_TOOLS // can't ref the updated lib
                 newValues
 #else
                 new ReadOnlySpan<T>(newValues.Array, newValues.Offset, newValues.Count)

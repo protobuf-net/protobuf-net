@@ -25,7 +25,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor InvalidMemberKind = new(
             id: "PBN2001",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(InvalidMemberKind),
-            messageFormat: "This member is not a method; only methods are supported for gRPC services.",
+            messageFormat: "This member is not a method; only methods are supported for gRPC services",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -33,7 +33,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor InvalidPayloadType = new(
             id: "PBN2002",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(InvalidPayloadType),
-            messageFormat: "The data parameter of a gRPC method must currently be Void, a reference-type data contract, or an async sequence of the same.",
+            messageFormat: "The data parameter of a gRPC method must currently be Void, a reference-type data contract, or an async sequence of the same",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -41,7 +41,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor InvalidReturnType = new(
             id: "PBN2003",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(InvalidReturnType),
-            messageFormat: "The return value of a gRPC method must currently be Void, a reference-type data contract, or an task / async sequence of the same.",
+            messageFormat: "The return value of a gRPC method must currently be Void, a reference-type data contract, or an task / async sequence of the same",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -49,7 +49,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor GenericMethod = new(
             id: "PBN2004",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(GenericMethod),
-            messageFormat: "The gRPC method can not be generic.",
+            messageFormat: "The gRPC method can not be generic",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -57,7 +57,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor GenericService = new(
             id: "PBN2005",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(GenericService),
-            messageFormat: "The gRPC service can not be generic.",
+            messageFormat: "The gRPC service can not be generic",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -65,7 +65,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor InvalidContextType = new(
             id: "PBN2006",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(InvalidContextType),
-            messageFormat: "The context parameter of a gRPC method must be CallContext or CancellationToken.",
+            messageFormat: "The context parameter of a gRPC method must be CallContext or CancellationToken",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -73,7 +73,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor InvalidParameters = new(
             id: "PBN2007",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(InvalidParameters),
-            messageFormat: "Invalid signature; gRPC methods expect a single optional payload and a single optional context.",
+            messageFormat: "Invalid signature; gRPC methods expect a single optional payload and a single optional context",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -81,7 +81,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor PossiblyNotSerializable = new(
             id: "PBN2008",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(PossiblyNotSerializable),
-            messageFormat: "gRPC methods require inputs/outputs that can be marshalled with gRPC; this type *may* be usable with gRPC, but it could not be verified.",
+            messageFormat: "gRPC methods require inputs/outputs that can be marshalled with gRPC; this type *may* be usable with gRPC, but it could not be verified",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -89,7 +89,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor PreferAsync = new(
             id: "PBN2009",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(PreferAsync),
-            messageFormat: "gRPC methods should be async when possible.",
+            messageFormat: "gRPC methods should be async when possible",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
@@ -97,7 +97,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor StreamingSyncMethod = new(
             id: "PBN2010",
             title: nameof(ServiceContractAnalyzer) + "." + nameof(StreamingSyncMethod),
-            messageFormat: "gRPC methods that take streaming parameters cannot be synchronous.",
+            messageFormat: "gRPC methods that take streaming parameters cannot be synchronous",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);

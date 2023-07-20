@@ -16,8 +16,8 @@
 
         <PackageReference Include="System.Collections.Immutable" />
         <PackageReference Include="System.ServiceModel.Primitives" />
-        <PackageReference Include="protobuf-net.Core" Aliases="pbn"/>
-        <PackageReference Include="protobuf-net" Aliases="pbn"/>
+        <PackageReference Include="protobuf-net.Core" Aliases="pbn" />
+        <PackageReference Include="protobuf-net" Aliases="pbn" />
         <PackageReference Include="protobuf-net.Grpc" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio">

@@ -1,7 +1,0 @@
-Output code has 2 diagnostics from 'protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs':
-
-Error CS0116 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L58 C8
-A namespace cannot directly contain members such as fields, methods or statements
-
-Error CS0116 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ServiceGenerator/protobuf-net.services.generated.cs L77 C8
-A namespace cannot directly contain members such as fields, methods or statements

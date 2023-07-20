@@ -1,15 +1,15 @@
 <Project>
     <ItemGroup>
-        <PackageVersion Include="BenchmarkDotNet" Version="0.13.5" />
+        <PackageVersion Include="BenchmarkDotNet" Version="0.13.6" />
         <PackageVersion Include="BlazorInputFile" Version="0.2.0" />
         
-        <PackageVersion Include="coverlet.collector" Version="3.2.0" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.0" />
         
         <!-- exclude due to F# build problems -->
         <!--<PackageVersion Include="FSharp.Core" Version="7.0.0" />-->
 
-        <PackageVersion Include="Google.Protobuf" Version="3.22.0" />
-        <PackageVersion Include="Grpc.Net.Client" Version="2.51.0" />
+        <PackageVersion Include="Google.Protobuf" Version="3.23.4" />
+        <PackageVersion Include="Grpc.Net.Client" Version="2.55.0" />
 
         <PackageVersion Include="Iesi.Collections" Version="4.0.5" />
 
@@ -19,24 +19,24 @@
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
         <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
         <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
         <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
 
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.6.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.1" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" Version="1.1.1" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" Version="1.1.1" />
 
-        <PackageVersion Include="Nerdbank.GitVersioning" Version="3.5.119" PrivateAssets="All" />
-        <PackageVersion Include="Newtonsoft.Json" Version="13.0.2" />
+        <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.133" PrivateAssets="All" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageVersion Include="NHibernate" Version="[4.1.1.4000]" />
-        <PackageVersion Include="NodaTime" Version="3.1.6" />
+        <PackageVersion Include="NodaTime" Version="3.1.9" />
         <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
 
-        <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.2.2" />
+        <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.2.8" />
         <PackageVersion Include="protobuf-net" Version="3.2.26" />
         <PackageVersion Include="protobuf-net.Core" Version="3.2.26" />
-        <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.8" />
+        <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.27" />
         <PackageVersion Include="protobuf-net.Grpc" Version="1.1.1" />
         <PackageVersion Include="protobuf-net.Grpc.Reflection" Version="1.1.1" />
 
@@ -56,7 +56,7 @@
         <PackageVersion Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
         <PackageVersion Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
         <PackageVersion Include="System.ServiceModel.Primitives" Version="4.10.0" />
-        <PackageVersion Include="System.Text.Json" Version="7.0.2"/>
+        <PackageVersion Include="System.Text.Json" Version="7.0.3"/>
         <PackageVersion Include="System.Threading" Version="4.3.0" />
         <PackageVersion Include="System.Threading.Channels" Version="7.0.0" />
         <PackageVersion Include="System.Threading.Thread" Version="4.3.0" />
@@ -65,8 +65,8 @@
         <!-- exclude due to F# build problems; look in Directory.build.props -->
         <!--<PackageVersion Include="System.ValueTuple" Version="4.5.0" />-->
 
-        <PackageVersion Include="xunit" Version="2.4.2" />
-        <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.5" />
+        <PackageVersion Include="xunit" Version="2.5.0" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.0" />
         <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
     </ItemGroup>
 </Project>

@@ -20,7 +20,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor InvalidFieldNumber = new(
             id: "PBN0001",
             title: nameof(DataContractAnalyzer) + "." + nameof(InvalidFieldNumber),
-            messageFormat: "The specified field number {0} is invalid; the valid range is 1-536870911, omitting 19000-19999.",
+            messageFormat: "The specified field number {0} is invalid; the valid range is 1-536870911, omitting 19000-19999",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -28,7 +28,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor MemberNotFound = new(
             id: "PBN0002",
             title: nameof(DataContractAnalyzer) + "." + nameof(MemberNotFound),
-            messageFormat: "The specified type member '{0}' could not be resolved.",
+            messageFormat: "The specified type member '{0}' could not be resolved",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -36,7 +36,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DuplicateFieldNumber = new(
             id: "PBN0003",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateFieldNumber),
-            messageFormat: "The specified field number {0} is duplicated; field numbers must be unique between all declared members and includes on a single type.",
+            messageFormat: "The specified field number {0} is duplicated; field numbers must be unique between all declared members and includes on a single type",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -44,7 +44,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ReservedFieldName = new(
             id: "PBN0004",
             title: nameof(DataContractAnalyzer) + "." + nameof(ReservedFieldName),
-            messageFormat: "The specified field name '{0}' is explicitly reserved.",
+            messageFormat: "The specified field name '{0}' is explicitly reserved",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -52,7 +52,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ReservedFieldNumber = new(
             id: "PBN0005",
             title: nameof(DataContractAnalyzer) + "." + nameof(ReservedFieldNumber),
-            messageFormat: "The specified field number {0} is explicitly reserved.",
+            messageFormat: "The specified field number {0} is explicitly reserved",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -60,7 +60,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DuplicateFieldName = new(
             id: "PBN0006",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateFieldName),
-            messageFormat: "The specified field name '{0}' is duplicated; field names should be unique between all declared members on a single type.",
+            messageFormat: "The specified field name '{0}' is duplicated; field names should be unique between all declared members on a single type",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -68,7 +68,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DuplicateReservation = new(
             id: "PBN0007",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateReservation),
-            messageFormat: "The reservations {0} and {1} overlap each-other.",
+            messageFormat: "The reservations {0} and {1} overlap each-other",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
@@ -76,7 +76,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
             id: "PBN0008",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateMemberName),
-            messageFormat: "The underlying member '{0}' is described multiple times.",
+            messageFormat: "The underlying member '{0}' is described multiple times",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -84,7 +84,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new(
             id: "PBN0009",
             title: nameof(DataContractAnalyzer) + "." + nameof(ShouldBeProtoContract),
-            messageFormat: "The type is not marked as a proto-contract; additional annotations will be ignored.",
+            messageFormat: "The type is not marked as a proto-contract; additional annotations will be ignored",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -92,7 +92,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             id: "PBN0010",
             title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredAndIgnored),
-            messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored.",
+            messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -100,7 +100,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor DuplicateInclude = new(
             id: "PBN0011",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateInclude),
-            messageFormat: "The type '{0}' is declared as an include multiple times.",
+            messageFormat: "The type '{0}' is declared as an include multiple times",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -108,7 +108,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor IncludeNonDerived = new(
             id: "PBN0012",
             title: nameof(DataContractAnalyzer) + "." + nameof(IncludeNonDerived),
-            messageFormat: "The type '{0}' is declared as an include, but is not a direct sub-type.",
+            messageFormat: "The type '{0}' is declared as an include, but is not a direct sub-type",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -117,7 +117,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor IncludeNotDeclared = new(
             id: "PBN0013",
             title: nameof(DataContractAnalyzer) + "." + nameof(IncludeNotDeclared),
-            messageFormat: "The base-type '{0}' is a proto-contract, but no include is declared for '{1}' and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set.",
+            messageFormat: "The base-type '{0}' is a proto-contract, but no include is declared for '{1}' and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -125,7 +125,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor SubTypeShouldBeProtoContract = new(
             id: "PBN0014",
             title: nameof(DataContractAnalyzer) + "." + nameof(SubTypeShouldBeProtoContract),
-            messageFormat: "The base-type '{0}' is a proto-contract and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set; '{1}' should also be a proto-contract.",
+            messageFormat: "The base-type '{0}' is a proto-contract and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set; '{1}' should also be a proto-contract",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -133,7 +133,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ConstructorMissing = new(
             id: "PBN0015",
             title: nameof(DataContractAnalyzer) + "." + nameof(ConstructorMissing),
-            messageFormat: "There is no suitable (parameterless) constructor available for the proto-contract, and the " + nameof(ProtoContractAttribute.SkipConstructor) + " flag is not set.",
+            messageFormat: "There is no suitable (parameterless) constructor available for the proto-contract, and the " + nameof(ProtoContractAttribute.SkipConstructor) + " flag is not set",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -141,7 +141,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor MissingCompatibilityLevel = new(
             id: "PBN0016",
             title: nameof(DataContractAnalyzer) + "." + nameof(MissingCompatibilityLevel),
-            messageFormat: "It is recommended to declare a module or assembly level " + nameof(CompatibilityLevel) + " (or declare it for each contract type); new projects should use the highest currently available - old projects should use " + nameof(CompatibilityLevel.Level200) + " unless fully considered.",
+            messageFormat: "It is recommended to declare a module or assembly level " + nameof(CompatibilityLevel) + " (or declare it for each contract type); new projects should use the highest currently available - old projects should use " + nameof(CompatibilityLevel.Level200) + " unless fully considered",
             helpLinkUri: "https://protobuf-net.github.io/protobuf-net/compatibilitylevel.html",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
@@ -150,7 +150,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor EnumValueRedundant = new(
             id: "PBN0017",
             title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueRedundant),
-            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration is redundant; it is recommended to omit it.",
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration is redundant; it is recommended to omit it",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
@@ -158,7 +158,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor EnumValueNotSupported = new(
             id: "PBN0018",
             title: nameof(DataContractAnalyzer) + "." + nameof(EnumValueNotSupported),
-            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards.",
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Value) + " declaration conflicts with the underlying value; this scenario is not supported from protobuf-net v3 onwards",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -166,7 +166,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor EnumNameRedundant = new(
             id: "PBN0019",
             title: nameof(DataContractAnalyzer) + "." + nameof(EnumNameRedundant),
-            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Name) + " declaration is redundant; it is recommended to omit it.",
+            messageFormat: "This " + nameof(ProtoEnumAttribute) + "." + nameof(ProtoEnumAttribute.Name) + " declaration is redundant; it is recommended to omit it",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
@@ -174,7 +174,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ShouldDeclareDefault = new(
             id: "PBN0020",
             title: nameof(DataContractAnalyzer) + "." + nameof(ShouldDeclareDefault),
-            messageFormat: "Field '{0}' should use [DefaultValue({1})] to ensure its value is sent since it's initialized to a non-default value.",
+            messageFormat: "Field '{0}' should use [DefaultValue({1})] to ensure its value is sent since it's initialized to a non-default value",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
@@ -183,7 +183,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ShouldUpdateDefault = new(
             id: "PBN0021",
             title: nameof(DataContractAnalyzer) + "." + nameof(ShouldUpdateDefault),
-            messageFormat: "Field '{0}' should update [DefaultValue({1})] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute.",
+            messageFormat: "Field '{0}' should update [DefaultValue({1})] attribute usage to ensure the same value is being assigned to both 'type member' and '[DefaultValue]' attribute",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
@@ -192,7 +192,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor ShouldDeclareIsRequired = new(
             id: "PBN0022",
             title: nameof(DataContractAnalyzer) + "." + nameof(ShouldDeclareIsRequired),
-            messageFormat: "Field '{0}' should use [ProtoMember(..., IsRequired=true)] to ensure its value is passed since it's initialized to a non-default value.",
+            messageFormat: "Field '{0}' should use [ProtoMember(..., IsRequired=true)] to ensure its value is passed since it's initialized to a non-default value",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
