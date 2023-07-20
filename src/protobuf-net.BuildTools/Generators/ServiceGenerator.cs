@@ -46,7 +46,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return context.Node is InterfaceDeclarationSyntax interfaceDeclaration
                     && context.SemanticModel.GetDeclaredSymbol(context.Node, token) is INamedTypeSymbol { TypeKind: TypeKind.Interface } type
-                    ? ServiceDeclaration.TryCreate(type) : null;
+                    ? ServiceDeclaration.TryCreate(context.Node, type) : null;
             }
             catch (Exception ex)
             {
@@ -117,7 +117,7 @@ namespace ProtoBuf.BuildTools.Generators
                         continue;
                     }
 
-                    bool writeNested = IsAtLeast(primaryType, LanguageVersion.CSharp8);
+                    bool writeNested = IsAtLeast(svc.Syntax, LanguageVersion.CSharp8);
                     sb.Append("[global::ProtoBuf.Grpc.Configuration.ProxyAttribute(typeof(" + ServiceProxyName).Append(token).Append("))]").NewLine();
                     sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent();
                     if (writeNested)
@@ -139,18 +139,9 @@ namespace ProtoBuf.BuildTools.Generators
                 sb.Outdent(nestLevels);
             }
 
-            static bool IsAtLeast(INamedTypeSymbol type, LanguageVersion version)
-            {
-                var decl = type.DeclaringSyntaxReferences;
-                foreach (var d in decl)
-                {
-                    if (d.SyntaxTree.Options is CSharpParseOptions options)
-                    {
-                        return options.LanguageVersion >= version;
-                    }
-                }
-                return false;
-            }
+            static bool IsAtLeast(SyntaxNode syntax, LanguageVersion version) =>
+                syntax?.SyntaxTree.Options is CSharpParseOptions options
+                    && options.LanguageVersion >= version;
 
             static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, string accessibility)
             {
@@ -339,20 +330,21 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
-            public static ServiceDeclaration? TryCreate(INamedTypeSymbol type)
-                => ServiceEndpoint.TryCreate(type, out var service) ? new(service) : null;
+            public static ServiceDeclaration? TryCreate(SyntaxNode syntax, INamedTypeSymbol type)
+                => ServiceEndpoint.TryCreate(type, out var service) ? new(syntax, service) : null;
 
 
-            private ServiceDeclaration(in ServiceEndpoint service)
+            private ServiceDeclaration(SyntaxNode syntax, in ServiceEndpoint service)
             {
                 Service = service;
+                Syntax = syntax;
 
                 List<MethodDeclaration> methods = new();
                 AddMethods(methods, service);
                 Methods = ImmutableArray.CreateRange(methods);
             }
 
-
+            public SyntaxNode Syntax { get; }
             public ServiceEndpoint Service { get; }
             public ImmutableArray<MethodDeclaration> Methods { get; }
         }
