@@ -93,12 +93,10 @@ namespace ProtoBuf.BuildTools.Generators
 
             var sb = CodeWriter.Create();
 
-            List<(ServiceDeclaration Service, int Token)> topLevelProxies = new(tuple.Right.Length);
             int nextToken = 0;
             Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens = new(SymbolEqualityComparer.Default);
             foreach (var grp in tuple.Right.GroupBy(x => x.Service.Type.ContainingSymbol, SymbolEqualityComparer.Default))
             {
-                int token = nextToken++;
                 if (HasNonPartialType(grp.Key, context, out var ns)) continue;
 
                 if (ns is not null)
@@ -111,6 +109,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                 foreach (var svc in grp)
                 {
+                    int token = nextToken++;
                     var primaryType = svc.Service.Type;
                     if (!IsPartial(primaryType))
                     {
@@ -123,7 +122,7 @@ namespace ProtoBuf.BuildTools.Generators
                     sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent();
                     if (writeNested)
                     {
-                        WriteProxy(sb, svc, methodTokens, token, false, "private");
+                        WriteProxy(sb, svc, methodTokens, token, "private");
                     }
                     sb.Outdent().NewLine();
 
@@ -131,47 +130,13 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         // already written
                     }
-                    if (IsFullyAccessible(primaryType))
-                    {
-                        // defer and write at top level
-                        topLevelProxies.Add((svc, token));
-                    }
                     else
                     {
-                        // write immediately as nested
-                        WriteProxy(sb, svc, methodTokens, token, false, "private");
+                        // write alongside
+                        WriteProxy(sb, svc, methodTokens, token, "private");
                     }
-
-                    static bool IsFullyAccessible(ITypeSymbol type)
-                    {
-                        while (type.ContainingType is not null)
-                        {
-                            switch (type.ContainingType.DeclaredAccessibility)
-                            {
-                                case Accessibility.Public:
-                                case Accessibility.Internal:
-                                case Accessibility.ProtectedOrInternal:
-                                    break; // fine
-                                default:
-                                    return false; // not going to be accessible
-                            }
-                            type = type.ContainingType;
-                        }
-                        return true;
-                    }
-
-
                 }
                 sb.Outdent(nestLevels);
-            }
-
-            if (topLevelProxies.Count != 0)
-            {
-                foreach (var pair in topLevelProxies)
-                {
-                    bool useFileModifier = IsAtLeast(pair.Service.Service.Type, LanguageVersion.CSharp11);
-                    WriteProxy(sb, pair.Service, methodTokens, pair.Token, useFileModifier, "internal");
-                }
             }
 
             static bool IsAtLeast(INamedTypeSymbol type, LanguageVersion version)
@@ -187,13 +152,12 @@ namespace ProtoBuf.BuildTools.Generators
                 return false;
             }
 
-            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, bool asFile, string accessibility)
+            static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, string accessibility)
             {
                 methodTokens.Clear();
 
-                if (asFile) accessibility = "";
                 var primaryType = proxy.Service.Type;
-                sb.Append(accessibility).Append(string.IsNullOrEmpty(accessibility) ? "" : " ").Append("sealed").Append(asFile ? " file" : "").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
+                sb.Append(accessibility).Append(string.IsNullOrEmpty(accessibility) ? "" : " ").Append("sealed").Append(" class " + ServiceProxyName).Append(token).Append(" : global::Grpc.Core.ClientBase<" + ServiceProxyName).Append(token).Append(">, ").Append(primaryType);
 
                 sb.Indent();
 
