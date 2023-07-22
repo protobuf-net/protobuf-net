@@ -47,6 +47,31 @@ internal static class ServiceBinder // ported from ServiceBinder in the gRPC bit
         return !string.IsNullOrWhiteSpace(name);
     }
 
+    public static bool IsOperationContract(IMethodSymbol method, out string name)
+    {
+        if (method.ContainingType.SpecialType == SpecialType.System_Object || method.DeclaredAccessibility != Accessibility.Public)
+        {
+            name = null;
+            return false;
+        }
+
+        string? opName = null;
+        var attribs = method.GetAttributes();
+        if (attribs.IsDefined(IsOperationAttribute))
+        {
+            attribs.TryGetAnyNonWhitespaceString(IsOperationAttribute, "Name", out opName);
+        }
+        else if (attribs.IsDefined(IsOperationContractAttribute))
+        {
+            attribs.TryGetAnyNonWhitespaceString(IsOperationContractAttribute, "Name", out opName);
+        }
+        if (string.IsNullOrWhiteSpace(opName))
+            opName = GetDefaultName(method);
+        name = opName;
+        return !string.IsNullOrWhiteSpace(name);
+    }
+
+
     private static string GetDefaultName(INamedTypeSymbol contractType)
     {
         var serviceName = contractType.Name;
@@ -85,6 +110,16 @@ internal static class ServiceBinder // ported from ServiceBinder in the gRPC bit
                 sb.Append(obj.Name).Append(".");
             }
         }
+    }
+
+    private static string GetDefaultName(IMethodSymbol method)
+    {
+        var opName = method.Name;
+        if (opName.EndsWith("Async"))
+        {
+            opName = opName.Substring(0, opName.Length - 5);
+        }
+        return opName ?? "";
     }
 
     static ImmutableArray<AttributeData> GetAllAttributes(this ITypeSymbol type)
@@ -223,6 +258,46 @@ internal static class ServiceBinder // ported from ServiceBinder in the gRPC bit
         attrib is
         {
             Name: "ServiceContractAttribute",
+            TypeKind: TypeKind.Class,
+            ContainingType: null,
+            IsGenericType: false,
+            ContainingNamespace:
+            {
+                Name: "ServiceModel",
+                ContainingNamespace:
+                {
+                    Name: "System",
+                    ContainingNamespace.IsGlobalNamespace: true
+                }
+            }
+        };
+
+    private static readonly Func<INamedTypeSymbol, bool> IsOperationAttribute = attrib =>
+    attrib is
+    {
+        Name: "OperationAttribute",
+        TypeKind: TypeKind.Class,
+        ContainingType: null,
+        IsGenericType: false,
+        ContainingNamespace:
+        {
+            Name: "Configuration",
+            ContainingNamespace:
+            {
+                Name: "Grpc",
+                ContainingNamespace:
+                {
+                    Name: "ProtoBuf",
+                    ContainingNamespace.IsGlobalNamespace: true
+                }
+            }
+        }
+    };
+
+    private static readonly Func<INamedTypeSymbol, bool> IsOperationContractAttribute = attrib =>
+        attrib is
+        {
+            Name: "OperationContractAttribute",
             TypeKind: TypeKind.Class,
             ContainingType: null,
             IsGenericType: false,

@@ -492,14 +492,14 @@ namespace ProtoBuf.BuildTools.Generators
         {
             public static bool TryCreate(in ServiceEndpoint service, IMethodSymbol method, out MethodDeclaration decl)
             {
-                if (!(SkipMember(method, out _, false) || method.ReturnsVoid || method.Parameters.IsDefaultOrEmpty))
+                if (!SkipMember(method, out _, false) && ServiceBinder.IsOperationContract(method, out var name))
                 {
                     var req = method.Parameters[0].Type;
                     var resp = method.ReturnType;
                     var flags = MethodFlags.None;
                     if (req is INamedTypeSymbol namedReq && resp is INamedTypeSymbol namedResp)
                     {
-                        decl = new(service, method, namedReq, namedResp, flags);
+                        decl = new(service, method, namedReq, namedResp, flags, name);
                         return true;
                     }
                 }
@@ -515,13 +515,11 @@ namespace ProtoBuf.BuildTools.Generators
                 ResponseStreaming = 2 << 0,
             }
 
-            private MethodDeclaration(in ServiceEndpoint service, IMethodSymbol method, INamedTypeSymbol requestType, INamedTypeSymbol responseType, MethodFlags flags)
+            private MethodDeclaration(in ServiceEndpoint service, IMethodSymbol method, INamedTypeSymbol requestType, INamedTypeSymbol responseType, MethodFlags flags, string name)
             {
                 Service = service;
                 Method = method;
-
-                // TODO: lots more
-                MethodName = method.Name;
+                MethodName = name;
                 RequestType = requestType;
                 ResponseType = responseType;
                 Flags = flags;
