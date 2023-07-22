@@ -228,21 +228,62 @@ namespace ProtoBuf.BuildTools.Generators
             }
         }
 
+        static bool SkipMember(ISymbol symbol, out bool silently, bool forInterface)
+        {
+            silently = false;
+            if (symbol is IMethodSymbol method)
+            {
+                if (!method.IsAbstract)
+                {
+                    // DIM exists; lean on it
+                    silently = true;
+                    return true;
+                }
+                switch (method.MethodKind)
+                {
+                    case MethodKind.EventAdd:
+                    case MethodKind.EventRaise:
+                    case MethodKind.EventRemove:
+                    case MethodKind.PropertyGet:
+                    case MethodKind.PropertySet:
+                    case MethodKind.UserDefinedOperator when !forInterface:
+                    case MethodKind.BuiltinOperator when !forInterface:
+                        // handled separately
+                        silently = true;
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private static void AddServiceImplementations(CodeWriter sb,
             Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> tokens, INamedTypeSymbol type)
         {
             sb.NewLine().Append("// implement ").Append(type).NewLine();
             foreach (var member in type.GetMembers())
             {
-                if (member.IsStatic)
+                if (SkipMember(member, out bool silently, true))
                 {
-                    sb.Append("// skip ").Append(member.Name).NewLine();
+                    if (!silently)
+                    {
+                        sb.Append("// skip ").Append(member.Name).NewLine();
+                    }
                     continue; // only want regular instance members, not default implementations etc
                 }
                 switch (member)
                 {
                     case IMethodSymbol method:
-                        sb.Append(method.ReturnType).Append(" ").Append(type).Append(".").Append(member.Name);
+                        sb.Append(method.IsStatic ? "static " : "").Append(method.ReturnType).Append(" ").Append(type).Append(".");
+                        switch (method.MethodKind)
+                        {
+                            case MethodKind.BuiltinOperator:
+                            case MethodKind.UserDefinedOperator:
+                                sb.Append("operator ").Append(GetOperatorName(method));
+                                break;
+                            default:
+                                sb.Append(method.Name);
+                                break;
+                        }
                         bool first;
                         if (method.Arity != 0)
                         {
@@ -276,7 +317,7 @@ namespace ProtoBuf.BuildTools.Generators
                             ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true }
                         })
                         {
-                            sb.Append(" { }");
+                            sb.Append(" { }").NewLine();
                         }
                         else if (method is { Name: nameof(IAsyncDisposable.DisposeAsync) } && type is
                         {
@@ -284,12 +325,33 @@ namespace ProtoBuf.BuildTools.Generators
                             ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true }
                         })
                         {
-                            sb.Append(" => default;");
+                            sb.Append(" => default;").NewLine();
                         }
                         else
                         {
-                            sb.Append(" => throw new global::System.NotSupportedException();");
+                            sb.Append(" => throw new global::System.NotSupportedException();").NewLine();
                         }
+                        break;
+                    case IPropertySymbol prop:
+                        sb.Append(prop.Type).Append(" ").Append(type).Append(".").Append(member.Name);
+                        if (prop.GetMethod is not null && prop.SetMethod is null)
+                        {
+                            sb.Append(" => throw new global::System.NotSupportedException();").NewLine();
+                        }
+                        else
+                        {
+                            sb.Indent();
+                            if (prop.GetMethod is not null) sb.Append("get => throw new global::System.NotSupportedException();").NewLine();
+                            if (prop.SetMethod is not null) sb.Append("set => throw new global::System.NotSupportedException();").NewLine();
+                            sb.Outdent();
+                        }
+                        break;
+                    case IEventSymbol evt:
+                        sb.Append("event ").Append(evt.Type).Append(" ").Append(type).Append(".").Append(member.Name);
+                        sb.Indent();
+                        if (evt.AddMethod is not null) sb.Append("add => throw new global::System.NotSupportedException();").NewLine();
+                        if (evt.RemoveMethod is not null) sb.Append("remove => throw new global::System.NotSupportedException();").NewLine();
+                        sb.Outdent();
                         break;
                     default:
                         sb.Append($"#error {member.Kind} {member.Name}").NewLine();
@@ -303,6 +365,47 @@ namespace ProtoBuf.BuildTools.Generators
                 AddServiceImplementations(sb, tokens, iType);
             }
         }
+
+        private static string GetOperatorName(IMethodSymbol method)
+            => method.Name switch
+            {
+                "op_Addition" => "+",
+                "op_Subtraction" => "-",
+                "op_Multiply" => "*",
+                "op_Division" => "/",
+                "op_CheckedAddition" => "checked +",
+                "op_CheckedSubtraction" => "checked -",
+                "op_CheckedMultiply" => "checked *",
+                "op_CheckedDivision" => "checked /",
+
+                "op_UnaryNegation" => "-",
+                "op_Increment" => "++",
+                "op_Decrement" => "--",
+                "op_CheckedUnaryNegation" => "checked -",
+                "op_CheckedIncrement" => "checked ++",
+                "op_CheckedDecrement" => "checked --",
+
+                "op_True" => "true",
+                "op_False" => "false",
+                "op_UnaryPlus" => "+",
+                "op_LogicalNot" => "!",
+                "op_OnesComplement" => "~",
+
+                "op_Modulus" => "%",
+                "op_BitwiseAnd" => "&",
+                "op_BitwiseOr" => "|",
+                "op_ExclusiveOr" => "^",
+                "op_LeftShift" => "<<",
+                "op_RightShift" => ">>",
+                "op_UnsignedRightShift" => ">>>",
+                "op_Equality" => "==",
+                "op_Inequality" => "!=",
+                "op_GreaterThan" => ">",
+                "op_LessThan" => "<",
+                "op_GreaterThanOrEqual" => ">=",
+                "op_LessThanOrEqual" => "<=",
+                _ => method.Name,
+            };
 
         private sealed class ServiceDeclaration
         {
@@ -414,7 +517,7 @@ namespace ProtoBuf.BuildTools.Generators
         {
             public static bool TryCreate(in ServiceEndpoint service, IMethodSymbol method, out MethodDeclaration decl)
             {
-                if (!(method.ReturnsVoid || method.Parameters.IsDefaultOrEmpty))
+                if (!(SkipMember(method, out _, false) || method.ReturnsVoid || method.Parameters.IsDefaultOrEmpty))
                 {
                     var req = method.Parameters[0].Type;
                     var resp = method.ReturnType;
