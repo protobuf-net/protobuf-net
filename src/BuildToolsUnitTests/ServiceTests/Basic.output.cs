@@ -25,7 +25,6 @@ namespace Somewheres
 
     }
 
-
 }
 namespace Somewheres
 {
@@ -57,7 +56,6 @@ namespace Somewheres
                 }
 
             }
-
 
         }
 
@@ -92,6 +90,5 @@ namespace Somewheres.Deeper
         }
 
     }
-
 
 }

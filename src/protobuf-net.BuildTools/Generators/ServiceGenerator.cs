@@ -117,22 +117,19 @@ namespace ProtoBuf.BuildTools.Generators
                         continue;
                     }
 
-                    bool writeNested = IsAtLeast(svc.Syntax, LanguageVersion.CSharp8);
                     sb.Append("[global::ProtoBuf.Grpc.Configuration.ProxyAttribute(typeof(" + ServiceProxyName).Append(token).Append("))]").NewLine();
-                    sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name).Indent();
-                    if (writeNested)
+                    sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name);
+                    if (IsAtLeast(svc.Syntax, LanguageVersion.CSharp8))
                     {
+                        // write nested
+                        sb.Indent();
                         WriteProxy(sb, svc, methodTokens, token, "private");
-                    }
-                    sb.Outdent().NewLine();
-
-                    if (writeNested)
-                    {
-                        // already written
+                        sb.Outdent();
                     }
                     else
                     {
                         // write alongside
+                        sb.Append(" { }").NewLine().NewLine();
                         WriteProxy(sb, svc, methodTokens, token, "private");
                     }
                 }
