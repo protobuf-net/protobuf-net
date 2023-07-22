@@ -119,7 +119,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                     sb.Append("[global::ProtoBuf.Grpc.Configuration.ProxyAttribute(typeof(" + ServiceProxyName).Append(token).Append("))]").NewLine();
                     sb.Append("partial ").Append(CodeWriter.TypeLabel(primaryType)).Append(" ").Append(primaryType.Name);
-                    if (IsAtLeast(svc.Syntax, LanguageVersion.CSharp8))
+                    if (svc.IsAtLeast(LanguageVersion.CSharp8))
                     {
                         // write nested
                         sb.Indent();
@@ -135,10 +135,6 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 sb.Outdent(nestLevels);
             }
-
-            static bool IsAtLeast(SyntaxNode syntax, LanguageVersion version) =>
-                syntax?.SyntaxTree.Options is CSharpParseOptions options
-                    && options.LanguageVersion >= version;
 
             static void WriteProxy(CodeWriter sb, ServiceDeclaration proxy, Dictionary<IMethodSymbol, (int Token, MethodDeclaration Method)> methodTokens, int token, string accessibility)
             {
@@ -157,15 +153,31 @@ namespace ProtoBuf.BuildTools.Generators
                     .NewLine();
 
                 // write all the static service key/method members
-                int subServiceIndex = 0, methodIndex = 0;
+                int methodIndex = 0;
                 foreach (var subService in proxy.Methods.GroupBy(x => x.Service))
                 {
-                    sb.NewLine().Append("private const string _pbn_Service").Append(subServiceIndex).Append(" = ").AppendVerbatimLiteral(subService.Key.Name).Append(";").NewLine();
                     foreach (var method in subService)
                     {
-                        sb.Append("private static readonly global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append("> _pbn_Method").Append(methodIndex).Append(" = new global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append(">(")
-                            .Append("global::Grpc.Core.MethodType.").Append(method.MethodKind).Append(", _pbn_Service").Append(subServiceIndex).Append(", ").AppendVerbatimLiteral(method.MethodName)
-                            .Append(", null!, null!);").NewLine();
+                        sb.Append("private static readonly global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append("> _pbn_Method").Append(methodIndex).Append(" = new");
+
+                        if (proxy.IsAtLeast(LanguageVersion.CSharp9))
+                        {
+                            sb.Append("("); // implicit new
+                        }
+                        else
+                        {
+                            // explicit new
+                            sb.Append(" global::Grpc.Core.Method<").Append(method.RequestType).Append(", ").Append(method.ResponseType).Append(">(");
+                        }
+                        // constructor parameters
+                        sb.NewLine().Indent(false)
+                            .Append("global::Grpc.Core.MethodType.").Append(method.MethodKind).Append(", ")
+                            .AppendVerbatimLiteral(subService.Key.Name)
+                            .Append(", ").AppendVerbatimLiteral(method.MethodName).Append(",").NewLine()
+                            .Append("global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<")
+                            .Append(method.RequestType).Append(">(),").NewLine()
+                            .Append("global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<")
+                            .Append(method.ResponseType).Append(">());").NewLine().Outdent(false);
                         methodTokens.Add(method.Method, (methodIndex++, method));
                     }
                 }
@@ -433,6 +445,9 @@ namespace ProtoBuf.BuildTools.Generators
             public static ServiceDeclaration? TryCreate(SyntaxNode syntax, INamedTypeSymbol type)
                 => ServiceEndpoint.TryCreate(type, out var service) ? new(syntax, service) : null;
 
+            internal bool IsAtLeast(LanguageVersion version)
+                => Syntax?.SyntaxTree.Options is CSharpParseOptions options
+                && options.LanguageVersion >= version;
 
             private ServiceDeclaration(SyntaxNode syntax, in ServiceEndpoint service)
             {

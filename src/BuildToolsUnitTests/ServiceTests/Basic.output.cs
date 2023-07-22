@@ -11,9 +11,10 @@ namespace Somewheres
             private GeneratedServiceProxy0(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
             protected override GeneratedServiceProxy0 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy0(configuration);
 
-
-            private const string _pbn_Service0 = "IWcfGrpc";
-            private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_Service0, "Do", null!, null!);
+            private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new(
+                global::Grpc.Core.MethodType.Unary, "IWcfGrpc", "Do",
+                global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>(),
+                global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>());
 
             // implement global::Somewheres.IWcfGrpc
             global::Somewheres.Foo global::Somewheres.IWcfGrpc.Do(global::Somewheres.Foo value)
@@ -51,9 +52,10 @@ namespace Somewheres
                     private GeneratedServiceProxy1(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
                     protected override GeneratedServiceProxy1 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy1(configuration);
 
-
-                    private const string _pbn_Service0 = "IPBGrpc";
-                    private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_Service0, "Do", null!, null!);
+                    private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new(
+                        global::Grpc.Core.MethodType.Unary, "IPBGrpc", "Do",
+                        global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>(),
+                        global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>());
 
                     // implement global::Somewheres.Foo.Bar.IPBGrpc
                     global::Somewheres.Foo global::Somewheres.Foo.Bar.IPBGrpc.Do(global::Somewheres.Foo value)
@@ -83,9 +85,10 @@ namespace Somewheres.Deeper
             private GeneratedServiceProxy2(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) : base(configuration) {}
             protected override GeneratedServiceProxy2 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy2(configuration);
 
-
-            private const string _pbn_Service0 = "ISomeBasicService";
-            private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo>(global::Grpc.Core.MethodType.Unary, _pbn_Service0, "Do", null!, null!);
+            private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new(
+                global::Grpc.Core.MethodType.Unary, "ISomeBasicService", "Do",
+                global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>(),
+                global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>());
 
             // implement global::Somewheres.Deeper.ISomeBasicService
             global::Somewheres.Foo global::Somewheres.Deeper.ISomeBasicService.Do(global::Somewheres.Foo value)
