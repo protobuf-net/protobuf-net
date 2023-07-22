@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 
-namespace ProtoBuf.Generators;
+namespace ProtoBuf.BuildTools.Generators;
 
 partial class ServiceGenerator
 {

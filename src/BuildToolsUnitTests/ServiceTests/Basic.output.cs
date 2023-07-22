@@ -12,7 +12,7 @@ namespace Somewheres
             protected override GeneratedServiceProxy0 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy0(configuration);
 
             private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new(
-                global::Grpc.Core.MethodType.Unary, "IWcfGrpc", "Do",
+                global::Grpc.Core.MethodType.Unary, "Somewheres.WcfGrpc", "Do",
                 global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>(),
                 global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>());
 
@@ -53,7 +53,7 @@ namespace Somewheres
                     protected override GeneratedServiceProxy1 NewInstance(global::Grpc.Core.ClientBase.ClientBaseConfiguration configuration) => new GeneratedServiceProxy1(configuration);
 
                     private static readonly global::Grpc.Core.Method<global::Somewheres.Foo, global::Somewheres.Foo> _pbn_Method0 = new(
-                        global::Grpc.Core.MethodType.Unary, "IPBGrpc", "Do",
+                        global::Grpc.Core.MethodType.Unary, "Somewheres.Foo.Bar.PBGrpc", "Do",
                         global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>(),
                         global::ProtoBuf.Grpc.Configuration.BinderConfiguration.Default.GetMarshaller<global::Somewheres.Foo>());
 

@@ -16,7 +16,6 @@ using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
-using static ProtoBuf.Generators.ServiceGenerator;
 
 namespace BuildToolsUnitTests
 {

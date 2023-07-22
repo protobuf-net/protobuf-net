@@ -10,8 +10,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using static ProtoBuf.Generators.ServiceGenerator;
 
 namespace ProtoBuf.BuildTools.Generators
 {
@@ -466,50 +464,12 @@ namespace ProtoBuf.BuildTools.Generators
 
         public readonly struct ServiceEndpoint : IEquatable<ServiceEndpoint>
         {
-            static bool IsService(INamedTypeSymbol type, out string serviceName)
-            {
-                AttributeData? sa = null, sca = null;
-                foreach (var attrib in type.GetAttributes())
-                {
-                    var ac = attrib.AttributeClass;
-
-                    if (ac is null || ac.ContainingType is not null) continue; // we don't expect any known attributes to be inner types
-                    if (ac.Name == "ServiceAttribute" &&
-                        IsProtobufGrpcConfigurationNamespace(ac.ContainingNamespace))
-                    {
-                        sa = attrib;
-                    }
-                    else if (ac.Name == "ServiceContractAttribute" &&
-                        ac.ContainingNamespace is
-                        {
-                            Name: "ServiceModel",
-                            ContainingNamespace:
-                            {
-                                Name: "System",
-                                ContainingNamespace.IsGlobalNamespace: true
-                            }
-                        })
-                    {
-                        sca = attrib;
-                    }
-                }
-
-                if (sa is null && sca is null && !ImplementsIGrpcService(type))
-                {
-                    serviceName = "";
-                    return false;
-                }
-
-                serviceName = type.Name;
-                return true;
-            }
-
             public readonly INamedTypeSymbol Type;
             public readonly string Name;
 
             internal static bool TryCreate(INamedTypeSymbol type, out ServiceEndpoint service)
             {
-                if (IsService(type, out var name))
+                if (ServiceBinder.IsServiceContract(type, out var name))
                 {
                     service = new(type, name);
                     return true;
