@@ -14,6 +14,13 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+- support Roslyn [DefaultValue] analyzer (#1040 by @deaglegross)
+
+## 3.2.26
+
+- support `IncludeInOutput` on .proto additional files, to exclude from code-gen (#1032, #1046, #1047, #1062 by @kmosegaard and @dxdjgl)
+- support `Uri` in schema-generation as `string` (#1072 by @Matti-Koopa)
+
 ## 3.2.16
 
 - implement `[NullWrappedCollection]`, usage [as here](https://protobuf-net.github.io/protobuf-net/nullwrappers#null-collections) (#1044)
