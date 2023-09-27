@@ -6,7 +6,7 @@ namespace ProtoBuf.Internal.Serializers
 {
     internal sealed class TimeOnlySerializer : IRuntimeProtoSerializerNode
     {
-        bool IRuntimeProtoSerializerNode.IsScalar => false;
+        bool IRuntimeProtoSerializerNode.IsScalar => true;
         private TimeOnlySerializer() { }
         internal static readonly TimeOnlySerializer Instance = new TimeOnlySerializer();
 

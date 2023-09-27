@@ -2034,11 +2034,12 @@ namespace ProtoBuf.Meta
                                     return ".bcl.TimeSpan";
                                 }
                         }
+#if NET6_0_OR_GREATER
                     case ProtoTypeCode.DateOnly:
                         return "int32";
                     case ProtoTypeCode.TimeOnly:
-                        imports.Add(CommonImports.Duration);
-                        return ".google.protobuf.Duration";
+                        return "int64";
+#endif
                     case ProtoTypeCode.Decimal:
                         if (compatibilityLevel < CompatibilityLevel.Level300)
                         {

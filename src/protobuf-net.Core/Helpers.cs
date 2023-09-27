@@ -191,7 +191,9 @@ namespace ProtoBuf
         ByteReadOnlyMemory = 107,
         IntPtr = 108,
         UIntPtr = 109,
+#if NET6_0_OR_GREATER
         DateOnly = 110,
         TimeOnly = 111,
+#endif
     }
 }

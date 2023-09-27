@@ -194,6 +194,10 @@ namespace ProtoBuf
         }
 
         [MethodImpl(ProtoReader.HotPath)]
+        internal static int MeasureInt32(int value)
+            => value < 0 ? 10 : MeasureUInt32((uint)value);
+
+        [MethodImpl(ProtoReader.HotPath)]
         internal static int MeasureUInt32(uint value)
         {
 #if PLAT_INTRINSICS
@@ -207,6 +211,10 @@ namespace ProtoBuf
             return count;
 #endif
         }
+
+        [MethodImpl(ProtoReader.HotPath)]
+        internal static int MeasureInt64(long value)
+            => value < 0 ? 10 : MeasureUInt64((ulong)value);
 
         [MethodImpl(ProtoReader.HotPath)]
         internal static int MeasureUInt64(ulong value)

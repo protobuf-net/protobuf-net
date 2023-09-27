@@ -15,11 +15,10 @@ namespace ProtoBuf.Test
             var model = RuntimeTypeModel.Create();
             Assert.Equal(@"syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""google/protobuf/duration.proto"";
 
 message SomeType {
    int32 Date = 1;
-   .google.protobuf.Duration Time = 2;
+   int64 Time = 2;
 }
 ", model.GetSchema(typeof(SomeType)), ignoreLineEndingDifferences: true);
         }
@@ -30,11 +29,10 @@ message SomeType {
             var model = RuntimeTypeModel.Create();
             Assert.Equal(@"syntax = ""proto3"";
 package ProtoBuf.Test;
-import ""google/protobuf/duration.proto"";
 
 message SomeTypeWithArrays {
    repeated int32 Dates = 1;
-   repeated .google.protobuf.Duration Times = 2;
+   repeated int64 Times = 2;
 }
 ", model.GetSchema(typeof(SomeTypeWithArrays)), ignoreLineEndingDifferences: true);
         }
@@ -73,12 +71,10 @@ message SomeTypeWithArrays {
             using var ms = new MemoryStream();
             model.Serialize(ms, obj);
             var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-            Assert.Equal("08-E5-8B-2D-12-0A-08-B4-CF-02-10-80-E4-87-AF-03", hex);
+            Assert.Equal("08-E5-8B-2D-10-80-85-85-B0-BF-0C", hex);
             /*
-        Field #1: 08 Varint Value = 738789, Hex = E5-8B-2D                  == 2023-09-27
-        Field #2: 12 String Length = 10, Hex = 0A, UTF8 = "���䇯"
-            Field #1: 08 Varint Value = 42932, Hex = B4-CF-02               == 11:55:32
-            Field #2: 10 Varint Value = 904000000, Hex = 80-E4-87-AF-03     == .904s
+            Field #1: 08 Varint Value = 738789, Hex = E5-8B-2D
+            Field #2: 10 Varint Value = 429329040000, Hex = 80-85-85-B0-BF-0C
              */
 
 
@@ -101,14 +97,8 @@ message SomeTypeWithArrays {
             using var ms = new MemoryStream();
             model.Serialize(ms, obj);
             var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-            Assert.Equal("08-E5-8B-2D-12-0A-08-B4-CF-02-10-80-E4-87-AF-03", hex);
-            /*
-        Field #1: 08 Varint Value = 738789, Hex = E5-8B-2D                  == 2023-09-27
-        Field #2: 12 String Length = 10, Hex = 0A, UTF8 = "���䇯"
-            Field #1: 08 Varint Value = 42932, Hex = B4-CF-02               == 11:55:32
-            Field #2: 10 Varint Value = 904000000, Hex = 80-E4-87-AF-03     == .904s
-             */
-
+            Assert.Equal("08-E5-8B-2D-10-80-85-85-B0-BF-0C", hex);
+            // same payload
 
             ms.Position = 0;
             var clone = model.Deserialize<SomeTypeWithArrays>(ms);

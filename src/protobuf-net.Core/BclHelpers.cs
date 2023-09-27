@@ -242,7 +242,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static TimeOnly ReadTimeOnly(ref ProtoReader.State state)
-            => state.ReadMessage<TimeOnly>(default, default, SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => new TimeOnly(state.ReadInt64());
 #endif
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteTimeOnly(ref ProtoWriter.State state, TimeOnly value)
-            => state.WriteMessage<TimeOnly>(SerializerFeatures.OptionSkipRecursionCheck, value, SerializerCache<PrimaryTypeProvider>.InstanceField);
+            => state.WriteInt64(value.Ticks);
 #endif
 
         /// <summary>

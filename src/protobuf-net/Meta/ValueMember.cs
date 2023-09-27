@@ -713,7 +713,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.Varint;
                     return DateOnlySerializer.Instance;
                 case ProtoTypeCode.TimeOnly:
-                    defaultWireType = WireType.String;
+                    defaultWireType = WireType.Varint;
                     return TimeOnlySerializer.Instance;
 #endif
             }
