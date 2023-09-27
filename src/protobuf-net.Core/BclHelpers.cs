@@ -229,6 +229,22 @@ namespace ProtoBuf
             }
         }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Writes a DateOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static DateOnly ReadDateOnly(ref ProtoReader.State state)
+            => DateOnly.FromDayNumber(state.ReadInt32());
+
+        /// <summary>
+        /// Writes a TimeOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static TimeOnly ReadTimeOnly(ref ProtoReader.State state)
+            => new TimeOnly(state.ReadInt64());
+#endif
+
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
@@ -247,6 +263,22 @@ namespace ProtoBuf
         {
             WriteDateTimeImpl(ref state, value, false);
         }
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Writes a DateOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteDateOnly(ref ProtoWriter.State state, DateOnly value)
+            => state.WriteInt32(value.DayNumber);
+
+        /// <summary>
+        /// Writes a TimeOnly to a protobuf stream
+        /// </summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static void WriteTimeOnly(ref ProtoWriter.State state, TimeOnly value)
+            => state.WriteInt64(value.Ticks);
+#endif
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>

@@ -708,6 +708,14 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.UIntPtr:
                     defaultWireType = GetIntWireType(dataFormat, 64);
                     return UIntPtrSerializer.Instance;
+#if NET6_0_OR_GREATER
+                case ProtoTypeCode.DateOnly:
+                    defaultWireType = WireType.Varint;
+                    return DateOnlySerializer.Instance;
+                case ProtoTypeCode.TimeOnly:
+                    defaultWireType = WireType.Varint;
+                    return TimeOnlySerializer.Instance;
+#endif
             }
             IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable is object)

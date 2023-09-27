@@ -99,7 +99,7 @@ namespace ProtoBuf.Internal
             {
                 WireType.Fixed32 => 4,
                 WireType.Fixed64 => 8,
-                WireType.Varint => value < 0 ? 10 : ProtoWriter.MeasureUInt32((uint)value),
+                WireType.Varint => ProtoWriter.MeasureInt32(value),
                 WireType.SignedVarint => ProtoWriter.MeasureUInt32(ProtoWriter.Zig(value)),
                 _ => -1,
             };
@@ -251,7 +251,7 @@ namespace ProtoBuf.Internal
             {
                 WireType.Fixed32 => 4,
                 WireType.Fixed64 => 8,
-                WireType.Varint => value < 0 ? 10 : ProtoWriter.MeasureUInt32((uint)value),
+                WireType.Varint => ProtoWriter.MeasureInt32(value),
                 WireType.SignedVarint => ProtoWriter.MeasureUInt32(ProtoWriter.Zig(value)),
                 _ => -1,
             };
@@ -264,7 +264,7 @@ namespace ProtoBuf.Internal
             {
                 WireType.Fixed32 => 4,
                 WireType.Fixed64 => 8,
-                WireType.Varint => value < 0 ? 10 : ProtoWriter.MeasureUInt32((uint)value),
+                WireType.Varint => ProtoWriter.MeasureInt32(value),
                 WireType.SignedVarint => ProtoWriter.MeasureUInt32(ProtoWriter.Zig(value)),
                 _ => -1,
             };

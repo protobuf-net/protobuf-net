@@ -71,7 +71,7 @@ namespace ProtoBuf.WellKnownTypes
         /// <summary>Converts a DateTime to a Timestamp</summary>
         public Timestamp(DateTime value)
         {
-            Seconds = PrimaryTypeProvider.ToDurationSeconds(value - TimestampEpoch, out var nanoseconds, true);
+            Seconds = PrimaryTypeProvider.ToDurationSeconds((value - TimestampEpoch).Ticks, out var nanoseconds, true);
             Nanoseconds = nanoseconds;
         }
 
