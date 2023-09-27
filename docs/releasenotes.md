@@ -14,6 +14,8 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+## 3.2.30
+
 - support `DateOnly` and `TimeOnly` (#1100 by @mgravell, fixes #977)
 - support Roslyn [DefaultValue] analyzer (#1040 by @deaglegross)
 
