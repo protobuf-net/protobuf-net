@@ -85,11 +85,11 @@ namespace ProtoBuf.Internal
         internal static void WriteDuration(ref ProtoWriter.State state, Duration value)
             => WriteSecondsNanos(ref state, value.Seconds, value.Nanoseconds, false);
 
-        internal static long ToDurationSeconds(TimeSpan value, out int nanos, bool isTimestamp)
+        internal static long ToDurationSeconds(long ticks, out int nanos, bool isTimestamp)
         {
-            nanos = (int)(((value.Ticks % TimeSpan.TicksPerSecond) * 1000000)
+            nanos = (int)(((ticks % TimeSpan.TicksPerSecond) * 1000000)
                 / TimeSpan.TicksPerMillisecond);
-            var seconds = value.Ticks / TimeSpan.TicksPerSecond;
+            var seconds = ticks / TimeSpan.TicksPerSecond;
             NormalizeSecondsNanoseconds(ref seconds, ref nanos, isTimestamp);
             return seconds;
         }
@@ -194,14 +194,18 @@ namespace ProtoBuf.WellKnownTypes
         }
 
         /// <summary>Converts a TimeSpan to a Duration</summary>
-        public Duration(TimeSpan value)
+        public Duration(TimeSpan value) : this(value.Ticks) { }
+
+        internal Duration(long ticks)
         {
-            Seconds = PrimaryTypeProvider.ToDurationSeconds(value, out var nanoseconds, false);
+            Seconds = PrimaryTypeProvider.ToDurationSeconds(ticks, out var nanoseconds, false);
             Nanoseconds = nanoseconds;
         }
 
         /// <summary>Converts a Duration to a TimeSpan</summary>
-        public TimeSpan AsTimeSpan() => TimeSpan.FromTicks(PrimaryTypeProvider.ToTicks(Seconds, Nanoseconds));
+        public TimeSpan AsTimeSpan() => TimeSpan.FromTicks(ToTicks());
+
+        internal long ToTicks() => PrimaryTypeProvider.ToTicks(Seconds, Nanoseconds);
 
         /// <summary>Converts a Duration to a TimeSpan</summary>
         public static implicit operator TimeSpan(Duration value) => value.AsTimeSpan();

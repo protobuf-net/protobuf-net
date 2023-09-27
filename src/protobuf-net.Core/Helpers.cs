@@ -64,6 +64,10 @@ namespace ProtoBuf
             if (type == typeof(Type)) return ProtoTypeCode.Type;
             if (type == typeof(IntPtr)) return ProtoTypeCode.IntPtr;
             if (type == typeof(UIntPtr)) return ProtoTypeCode.UIntPtr;
+#if NET6_0_OR_GREATER
+            if (type == typeof(DateOnly)) return ProtoTypeCode.DateOnly;
+            if (type == typeof(TimeOnly)) return ProtoTypeCode.TimeOnly;
+#endif
 
             return ProtoTypeCode.Unknown;
         }
@@ -187,5 +191,7 @@ namespace ProtoBuf
         ByteReadOnlyMemory = 107,
         IntPtr = 108,
         UIntPtr = 109,
+        DateOnly = 110,
+        TimeOnly = 111,
     }
 }
