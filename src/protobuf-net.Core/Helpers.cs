@@ -94,7 +94,7 @@ namespace ProtoBuf
             var method = property.GetSetMethod(nonPublic);
             if (method is null && !nonPublic && allowInternal)
             { // could be "internal" or "protected internal"; look for a non-public, then back-check
-                method = property.GetGetMethod(true);
+                method = property.GetSetMethod(true);
                 if (method is not null && !(method.IsAssembly || method.IsFamilyOrAssembly))
                 {
                     method = null;
