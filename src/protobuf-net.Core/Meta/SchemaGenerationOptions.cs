@@ -68,6 +68,10 @@ namespace ProtoBuf.Meta
         /// Record the sub-type relationship formally in schemas
         /// </summary>
         PreserveSubType = 1 << 1,
+        /// <summary>
+        /// Prepend enum name to enum fields
+        /// </summary>
+        PrefixEnumValuesWithEnumName = 1 << 2
     }
 
 

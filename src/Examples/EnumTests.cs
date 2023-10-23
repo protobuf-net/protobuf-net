@@ -75,6 +75,29 @@ enum blah {
 ", proto, ignoreLineEndingDifferences: true);
         }
 
+        [Fact]
+        public void EnumPrefixGenerationTest()
+        {
+            var options = new SchemaGenerationOptions { Syntax = ProtoSyntax.Proto2 };
+            options.Types.Add(typeof(EnumFoo));
+            options.Flags |= SchemaGenerationFlags.PrefixEnumValuesWithEnumName;
+            
+            string proto = Serializer.GetProto(options);
+
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.DesignIdeas;
+
+message EnumFoo {
+   optional blah Bar = 1 [default = B];
+}
+enum blah {
+   blah_B = 0;
+   blah_A = -1;
+   blah_C = 1;
+}
+", proto, ignoreLineEndingDifferences: true);
+        }
+
 
         [Fact]
         public void TestNonNullValues()
