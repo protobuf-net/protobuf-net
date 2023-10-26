@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -64,6 +65,34 @@ public class Foo
 }}");
             Assert.Empty(diagnostics);
         }
+
+        [Fact]
+        public async Task DoesntReportOnPartialClassDefinition()
+        {
+            var diagnostics = await AnalyzeMultiFileAsync(
+                new List<string> {
+@"
+using ProtoBuf;
+[ProtoContract(SkipConstructor = true)]
+public partial class Foo
+{
+    [ProtoMember(2)]
+    [System.ComponentModel.DefaultValue(3)]
+    public int Bar {get;set;} =3;
+} ",
+//next file
+@"
+public partial class Foo
+{
+    public Foo(int bar){
+        Bar = bar;
+    }
+    public Foo (){}
+} "});
+            Assert.Empty(diagnostics);
+        }
+
+
 
         [Theory]
         [InlineData(0)]

@@ -372,7 +372,7 @@ namespace ProtoBuf.BuildTools.Internal
             }
             
             // calculating the member initial value using semantic model 
-            var semanticModel = context.SemanticModel;
+            var semanticModel = context.Compilation.GetSemanticModel(memberNode.SyntaxTree);
             var constantValue = semanticModel.GetConstantValue(initialValueSyntaxNode!);
             if (!constantValue.HasValue || constantValue.Value is null)
             {
