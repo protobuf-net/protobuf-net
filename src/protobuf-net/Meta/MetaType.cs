@@ -1720,7 +1720,12 @@ namespace ProtoBuf.Meta
         public EnumMember[] GetEnumValues()
         {
             if (!HasEnums) return Array.Empty<EnumMember>();
-            return Enums.ToArray();
+
+            var arr = Enums.ToArray();
+#if !NET7_0_OR_GREATER
+            Array.Sort(arr);
+#endif
+            return arr;
         }
 
         /// <summary>
