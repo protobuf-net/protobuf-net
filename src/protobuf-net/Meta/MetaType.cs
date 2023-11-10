@@ -1720,7 +1720,7 @@ namespace ProtoBuf.Meta
         public EnumMember[] GetEnumValues()
         {
             if (!HasEnums) return Array.Empty<EnumMember>();
-            // todo: there might be a need to sort enums based on proto version...
+
             var arr = Enums.ToArray();
             Array.Sort(arr);
             return arr;
@@ -2028,9 +2028,7 @@ namespace ProtoBuf.Meta
             }
             else if (Type.IsEnum)
             {
-                // todo: potentially pass in syntax here or use a factory to create a comparer?
                 var enums = GetEnumValues();
-
 
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
