@@ -65,6 +65,18 @@ namespace BuildToolsUnitTests
             return diagnostics;
         }
 
+        protected async Task<ICollection<Diagnostic>> AnalyzeMultiFileAsync(List<string> sourceCode, [CallerMemberName] string? callerMemberName = null, bool ignoreCompatibilityLevelAdvice = true, bool ignorePreferAsyncAdvice = true)
+        {
+            return await AnalyzeAsync(project =>
+            {
+                for (int i = 0; i < sourceCode.Count; i++)
+                {
+                    project = project.AddDocument($"{callerMemberName}_{i}_.cs", sourceCode[i]).Project;
+                }
+                return project;
+            }, callerMemberName, ignoreCompatibilityLevelAdvice, ignorePreferAsyncAdvice);
+        }
+
         protected async Task<(Project Project, Compilation Compilation)> ObtainProjectAndCompilationAsync(Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null)
         {
             _ = callerMemberName;
