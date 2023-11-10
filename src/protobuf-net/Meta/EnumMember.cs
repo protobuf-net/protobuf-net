@@ -125,9 +125,17 @@ namespace ProtoBuf.Meta
             var thisValue = TryGetInt32();
             var otherValue = other.TryGetInt32();
 
-            if (!thisValue.HasValue && !otherValue.HasValue) return 0;
-            if (!thisValue.HasValue && otherValue.HasValue) return -1;
-            if (thisValue.HasValue && !otherValue.HasValue) return 1;
+            if (!thisValue.HasValue || !otherValue.HasValue) return 0;
+
+            if (thisValue.Value < 0 && otherValue.Value < 0)
+            { 
+                return otherValue.Value.CompareTo(thisValue.Value);
+            }
+            if ((thisValue.Value < 0 && otherValue.Value >= 0) || (thisValue.Value >= 0 && otherValue.Value < 0))
+            {
+                return 1;
+            }
+
             return thisValue.Value.CompareTo(otherValue.Value);
         }
     }
