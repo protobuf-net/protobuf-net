@@ -3,7 +3,6 @@ using Xunit;
 
 namespace ProtoBuf.Test.Issues
 {
-#if !NET7_0_OR_GREATER
     public class Issue1102
     {
         [Fact]
@@ -116,5 +115,4 @@ enum FooEnum {
             Z
         }
     }
-#endif
 }
