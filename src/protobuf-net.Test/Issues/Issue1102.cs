@@ -1,10 +1,77 @@
-﻿using System.Reflection;
+﻿using ProtoBuf.Meta;
+using System.Reflection;
 using Xunit;
 
 namespace ProtoBuf.Test.Issues
 {
     public class Issue1102
     {
+
+        [Fact]
+        public void TestEnumOrderWithNegativesAndOutOfRangeValues()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.UseImplicitZeroDefaults = false;
+
+            string proto = model.GetSchema(typeof(HazOutOfRangeAndNegatives), ProtoSyntax.Proto3);
+
+            Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Test.Issues;
+
+message HazOutOfRangeAndNegatives {
+   int64 OutOfRange = 1; // declared as invalid enum: OutOfRangeEnum
+   InRangeEnum InRange = 2;
+}
+enum InRangeEnum {
+   ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)
+   A = 1;
+   C = 2147483647;
+   B = -4;
+   E = -2147483647;
+}
+/* for context only
+enum OutOfRangeEnum {
+   ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)
+   A = 1;
+   C = 2147483647;
+   B = -4;
+   // D = 2147483648; // note: enums should be valid 32-bit integers
+   E = -2147483647;
+   // F = -2147483649; // note: enums should be valid 32-bit integers
+}
+*/
+", proto, ignoreLineEndingDifferences: true);
+        }
+
+        public enum InRangeEnum : long
+        {
+            A = 1,
+            B = -4,
+            C = int.MaxValue,
+            E = -int.MaxValue,
+        }
+
+        public enum OutOfRangeEnum : long
+        {
+            A = 1,
+            B = -4,
+            C = int.MaxValue,
+            D = ((long)int.MaxValue) + 1,
+            E = -int.MaxValue,
+            F = ((long)int.MinValue) - 1,
+        }
+
+        [ProtoContract]
+        public class HazOutOfRangeAndNegatives
+        {
+            [ProtoMember(1)]
+            public OutOfRangeEnum OutOfRange { get; set; }
+
+            [ProtoMember(2)]
+            public InRangeEnum InRange { get; set; }
+        }
+
+
         [Fact]
         public void TestEnumOrderInProtoMatchesDefinitionOrder()
         {

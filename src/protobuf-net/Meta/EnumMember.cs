@@ -131,9 +131,13 @@ namespace ProtoBuf.Meta
             { 
                 return otherValue.Value.CompareTo(thisValue.Value);
             }
-            if ((thisValue.Value < 0 && otherValue.Value >= 0) || (thisValue.Value >= 0 && otherValue.Value < 0))
+            if (thisValue.Value < 0)
             {
                 return 1;
+            }
+            if (otherValue.Value < 0)
+            {
+                return -1;
             }
 
             return thisValue.Value.CompareTo(otherValue.Value);
