@@ -127,8 +127,8 @@ enum OutOfRangeEnum {
    A = 1;
    B = 4;
    C = 2147483647;
-   // D = 2147483648; // note: enums should be valid 32-bit integers
    E = -2147483647;
+   // D = 2147483648; // note: enums should be valid 32-bit integers
    // F = -2147483649; // note: enums should be valid 32-bit integers
 }
 */

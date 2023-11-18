@@ -26,17 +26,17 @@ enum InRangeEnum {
    ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)
    A = 1;
    C = 2147483647;
-   B = -4;
    E = -2147483647;
+   B = -4;
 }
 /* for context only
 enum OutOfRangeEnum {
    ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)
    A = 1;
    C = 2147483647;
+   E = -2147483647;
    B = -4;
    // D = 2147483648; // note: enums should be valid 32-bit integers
-   E = -2147483647;
    // F = -2147483649; // note: enums should be valid 32-bit integers
 }
 */
