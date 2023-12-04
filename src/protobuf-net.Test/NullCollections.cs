@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 using static ProtoBuf.Test.BufferWriteCountTests;
@@ -193,6 +194,8 @@ message WrapperLayer {
         [InlineData(10, "23-0A-04-0A-02-08-00-0A-04-0A-02-08-01-0A-00-0A-04-0A-02-08-03-0A-04-0A-02-08-04-0A-00-0A-04-0A-02-08-06-0A-04-0A-02-08-07-0A-00-0A-04-0A-02-08-09-24")]
         public void TestManualWrappedGroupEquivalent_WrappedValues(int count, string? hex = null) => Test<ManualWrappedGroupEquivalent_WrappedValues>(count, true, hex, true);
 
+        static int _next;
+        private static int Next() => Interlocked.Increment(ref _next);
 
         private void Test<T>(int count, bool preserveEmpty, string? expectedHex, bool usesWrappedValues = false, [CallerMemberName] string name = "") where T : class, ITestScenario, new()
         {
@@ -202,7 +205,7 @@ message WrapperLayer {
             Test<T>(model, count, preserveEmpty, expectedHex, true, usesWrappedValues);
             model.CompileInPlace();
             Test<T>(model, count, preserveEmpty, expectedHex, false, usesWrappedValues);
-            Test<T>(count == 0 ? PEVerify.CompileAndVerify(model, name) : model.Compile(), count, preserveEmpty, expectedHex, false, usesWrappedValues);
+            Test<T>(count == 0 ? PEVerify.CompileAndVerify(model, name + Next()) : model.Compile(), count, preserveEmpty, expectedHex, false, usesWrappedValues);
         }
 
         private void Test<T>(TypeModel model, int count, bool preserveEmpty, string? expectedHex, bool logHex, bool usesWrappedValues) where T : class, ITestScenario, new()

@@ -24,7 +24,8 @@
         <DefaultLanguage>en-US</DefaultLanguage>
         <IncludeSymbols>false</IncludeSymbols>
         <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
-        <LangVersion>9.0</LangVersion>
+        <LangVersion>12</LangVersion>
+        <Features>strict</Features>
         <CodeAnalysisRuleset>$(MSBuildThisFileDirectory)Shared.ruleset</CodeAnalysisRuleset>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
