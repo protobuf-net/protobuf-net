@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;

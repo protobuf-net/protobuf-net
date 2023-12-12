@@ -1,14 +1,6 @@
-﻿#if PLAT_DYNAMIC_ACCESS_ATTR
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-// forwards, just to make it explicit that we mean the same
-[assembly: TypeForwardedTo(typeof(DynamicallyAccessedMembersAttribute))]
-[assembly: TypeForwardedTo(typeof(DynamicallyAccessedMemberTypes))]
-#endif
-
-namespace ProtoBuf.Internal
+﻿namespace ProtoBuf.Internal
 {
-    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.CodeAnalysisNew;
     internal sealed class DynamicAccess
     {
         internal const DynamicallyAccessedMemberTypes ContractType
@@ -22,14 +14,7 @@ namespace ProtoBuf.Internal
     }
 }
 
-#if !PLAT_DYNAMIC_ACCESS_ATTR
-// internalized version of https://github.com/dotnet/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/DynamicallyAccessedMembersAttribute.cs
-// and https://github.com/dotnet/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/DynamicallyAccessedMemberTypes.cs
-
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
-namespace System.Diagnostics.CodeAnalysis
+namespace System.Diagnostics.CodeAnalysisNew
 {
     /// <summary>
     /// Indicates that certain members on a specified <see cref="Type"/> are accessed dynamically,
@@ -53,7 +38,7 @@ namespace System.Diagnostics.CodeAnalysis
         AttributeTargets.Field | AttributeTargets.ReturnValue | AttributeTargets.GenericParameter |
         AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Method,
         Inherited = false)]
-    internal sealed class DynamicallyAccessedMembersAttribute : Attribute
+    public sealed class DynamicallyAccessedMembersAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicallyAccessedMembersAttribute"/> class
@@ -79,7 +64,7 @@ namespace System.Diagnostics.CodeAnalysis
     /// bitwise combination of its member values.
     /// </summary>
     [Flags]
-    internal enum DynamicallyAccessedMemberTypes
+    public enum DynamicallyAccessedMemberTypes
     {
         /// <summary>
         /// Specifies no members.
@@ -157,4 +142,3 @@ namespace System.Diagnostics.CodeAnalysis
         All = ~None
     }
 }
-#endif

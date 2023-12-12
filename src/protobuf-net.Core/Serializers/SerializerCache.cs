@@ -1,6 +1,6 @@
 ﻿using ProtoBuf.Internal;
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 

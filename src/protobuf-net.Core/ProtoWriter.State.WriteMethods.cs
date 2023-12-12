@@ -3,7 +3,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.IO;
 using System.Runtime.CompilerServices;
 

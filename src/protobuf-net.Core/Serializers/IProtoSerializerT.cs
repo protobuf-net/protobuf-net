@@ -1,7 +1,7 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

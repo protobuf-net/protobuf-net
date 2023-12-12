@@ -1,5 +1,5 @@
 ﻿using ProtoBuf.Internal;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 
 namespace ProtoBuf
 {

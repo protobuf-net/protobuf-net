@@ -3,7 +3,7 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Configurations>Debug;Release</Configurations>

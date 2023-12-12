@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Internal;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.Text;
 using System.Threading;
 

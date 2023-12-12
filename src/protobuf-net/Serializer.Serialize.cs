@@ -2,7 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.IO;
 using System.Runtime.Serialization;
 

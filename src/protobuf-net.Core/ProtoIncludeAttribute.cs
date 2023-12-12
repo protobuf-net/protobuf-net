@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 

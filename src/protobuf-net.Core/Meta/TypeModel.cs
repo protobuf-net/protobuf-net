@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -116,7 +116,7 @@ namespace ProtoBuf.Meta
         [Obsolete("This API is no longer required and may be removed in a future release")]
         protected internal Type MapType(Type type, bool demand) => type;
 
-        [SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0066:Convert switch statement to expression", Justification = "Readability")]
         internal static WireType GetWireType(TypeModel model, DataFormat format, Type type)
         {
             if (type.IsEnum) return WireType.Varint;
@@ -158,7 +158,9 @@ namespace ProtoBuf.Meta
             }
             return WireType.None;
         }
-        /// <summary>        /// Indicates whether a type is known to the model
+
+        /// <summary>
+        /// Indicates whether a type is known to the model
         /// </summary>
         internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?

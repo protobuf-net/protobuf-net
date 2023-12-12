@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysisNew;
 using System.Linq;
 
 namespace ProtoBuf.BuildTools.Analyzers
