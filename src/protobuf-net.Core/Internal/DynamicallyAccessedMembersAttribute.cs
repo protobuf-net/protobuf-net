@@ -1,12 +1,4 @@
-﻿#if PLAT_DYNAMIC_ACCESS_ATTR
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-// forwards, just to make it explicit that we mean the same
-[assembly: TypeForwardedTo(typeof(DynamicallyAccessedMembersAttribute))]
-[assembly: TypeForwardedTo(typeof(DynamicallyAccessedMemberTypes))]
-#endif
-
-namespace ProtoBuf.Internal
+﻿namespace ProtoBuf.Internal
 {
     using System.Diagnostics.CodeAnalysis;
     internal sealed class DynamicAccess
