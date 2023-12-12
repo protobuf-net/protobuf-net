@@ -4,7 +4,7 @@
     <RootNamespace>ProtoBuf</RootNamespace>
     <Title>protobuf-net</Title>
     <Description>ServiceModel (WCF) extensions for protobuf-net</Description>
-    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
