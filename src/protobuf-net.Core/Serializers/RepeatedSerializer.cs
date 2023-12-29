@@ -5,8 +5,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using static System.Collections.Specialized.BitVector32;
 
 namespace ProtoBuf.Serializers
 {
@@ -74,7 +76,18 @@ namespace ProtoBuf.Serializers
             where TCollection : Stack<T>
             => SerializerCache<StackSerializer<TCollection, T>>.InstanceField;
 
+        /// <summary>Create a serializer that operates on sets</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static RepeatedSerializer<TCollection, T> CreateSet<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+            where TCollection : ISet<T>
+            => SerializerCache<SetSerializer<TCollection, T>>.InstanceField;
 
+#if NET6_0_OR_GREATER
+        /// <summary>Create a serializer that operates on sets</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+            => SerializerCache<ReadOnlySetSerializer<T>>.InstanceField;
+#endif
 
         /// <summary>Reverses a range of values</summary>
         [MethodImpl(ProtoReader.HotPath)] // note: not "in" because ArraySegment<T> isn't "readonly" on all TFMs
@@ -400,7 +413,7 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
         }
     }
-   
+
     sealed class ListSerializer<T> : ListSerializer<List<T>, T>
     {
         protected override List<T> Initialize(List<T> values, ISerializationContext context)
@@ -620,4 +633,93 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
         }
     }
+
+    sealed class SetSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+        where TCollection : ISet<T>
+    {
+        protected override TCollection Initialize(TCollection values, ISerializationContext context) =>
+            values ?? (typeof(TCollection).IsInterface ? (TCollection)(object)new HashSet<T>() : TypeModel.ActivatorCreate<TCollection>());
+
+        protected override TCollection Clear(TCollection values, ISerializationContext context)
+        {
+            values.Clear();
+            return values;
+        }
+
+        protected override int TryGetCount(TCollection values) => values is null ? 0 : values.Count;
+
+        protected override TCollection AddRange(TCollection values, ref ArraySegment<T> newValues, ISerializationContext context)
+        {
+            values.UnionWith(newValues);
+            return values;
+        }
+
+        internal override long Measure(TCollection values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            return Measure(ref iter, serializer, context, wireType);
+        }
+
+        internal override void WritePacked(ref ProtoWriter.State state, TCollection values, IMeasuringSerializer<T> serializer, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, TCollection values, ISerializer<T> serializer, SerializerFeatures features)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
+        }
+    }
+
+#if NET6_0_OR_GREATER
+    sealed class ReadOnlySetSerializer<T> : RepeatedSerializer<IReadOnlySet<T>, T>
+    {
+        protected override IReadOnlySet<T> Initialize(IReadOnlySet<T> values, ISerializationContext context) => values ?? new HashSet<T>();
+
+        protected override IReadOnlySet<T> Clear(IReadOnlySet<T> values, ISerializationContext context)
+        {
+            if (values is ISet<T> target && !target.IsReadOnly)
+            {
+                target.Clear();
+                return values;
+            }
+            return new HashSet<T>();
+        }
+
+        protected override int TryGetCount(IReadOnlySet<T> values) => values is null ? 0 : values.Count;
+
+        protected override IReadOnlySet<T> AddRange(IReadOnlySet<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
+        {
+            if (values is ISet<T> target && !target.IsReadOnly)
+            {
+                target.UnionWith(newValues);
+                return values;
+            }
+
+            var resultSet = new HashSet<T>(values.Count + newValues.Count);
+            resultSet.UnionWith(values);
+            resultSet.UnionWith(newValues);
+            return resultSet;
+        }
+        internal override long Measure(IReadOnlySet<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            return Measure(ref iter, serializer, context, wireType);
+        }
+
+        internal override void WritePacked(ref ProtoWriter.State state, IReadOnlySet<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
+        {
+            var iter = values.GetEnumerator();
+            WritePacked(ref state, ref iter, serializer, wireType);
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, IReadOnlySet<T> values, ISerializer<T> serializer, SerializerFeatures features)
+        {
+            var iter = values.GetEnumerator();
+            Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
+        }
+    }
+#endif
 }

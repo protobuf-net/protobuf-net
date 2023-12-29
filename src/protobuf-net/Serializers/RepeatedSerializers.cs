@@ -96,6 +96,11 @@ namespace ProtoBuf.Serializers
             Add(typeof(IReadOnlyDictionary<,>), (root, current, targs) => Resolve(typeof(MapSerializer), nameof(MapSerializer.CreateIReadOnlyDictionary), targs));
             Add(typeof(Queue<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateQueue), new[] { root, targs[0] }), false);
             Add(typeof(Stack<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateStack), new[] { root, targs[0] }), false);
+            Add(typeof(HashSet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateSet), new[] { root, targs[0] }));
+            Add(typeof(ISet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateSet), new[] { root, targs[0] }));
+#if NET6_0_OR_GREATER
+            Add(typeof(IReadOnlySet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateReadOnySet), new[] { targs[0] }));
+#endif
 
             // fallbacks, these should be at the end
             Add(typeof(IEnumerable<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateEnumerable), new[] { root, targs[0] }), false);
