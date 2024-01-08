@@ -10,6 +10,7 @@ skip_commits:
 install:
   - choco install dotnet-sdk --version 6.0.406
   - choco install dotnet-sdk --version 7.0.200
+  - choco install dotnet-sdk --version 8.0.100
 
 environment:
   Appveyor: true

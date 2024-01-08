@@ -31,6 +31,7 @@
   <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" />
     <PackageReference Include="Iesi.Collections" />
+    <PackageReference Include="System.Buffers" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)' == 'net'">
     <Reference Include="System" />
