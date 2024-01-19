@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
-using System;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -197,6 +196,55 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionShouldBePartial = new(
+            id: "PBN0023",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionShouldBePartial),
+            messageFormat: $"Class marked with '{typeof(ProtoUnionAttribute<>).Name}' must have partial modifier to be generated",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionNameShouldNotBeEmpty = new(
+            id: "PBN0024",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionNameShouldNotBeEmpty),
+            messageFormat: "Union name can not be empty or null",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionMemberNameShouldNotBeEmpty = new(
+            id: "PBN0025",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionMemberNameShouldNotBeEmpty),
+            messageFormat: "Union's member name can not be empty or null",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionFieldNumbersShouldBeUnique = new(
+            id: "PBN0026",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionFieldNumbersShouldBeUnique),
+            messageFormat: "Union members' fieldNumbers must be unique per class. Duplicate '{0}' was found.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionMemberNamesShouldBeUnique = new(
+            id: "PBN0027",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionMemberNamesShouldBeUnique),
+            messageFormat: "Union member names must be unique per class. Duplicate '{0}' was found.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor DiscriminatedUnionNamespaceNotFound = new(
+            id: "PBN0028",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DiscriminatedUnionNamespaceNotFound),
+            messageFormat: "Union's namespace is not found. Wrap a discriminatedUnion class in 'namespace { ... }' syntax",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
 
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 

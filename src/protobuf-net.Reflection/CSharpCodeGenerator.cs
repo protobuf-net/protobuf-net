@@ -11,7 +11,7 @@ namespace ProtoBuf.Reflection
     /// <summary>
     /// A code generator that writes C#
     /// </summary>
-    public class CSharpCodeGenerator : CommonCodeGenerator
+    public partial class CSharpCodeGenerator : CommonCodeGenerator
     {
         /// <summary>
         /// Reusable code-generator instance
@@ -149,6 +149,36 @@ namespace ProtoBuf.Reflection
             tw.WriteLine();
         }
 
+        /// <summary>
+        /// Writes a class header
+        /// </summary>
+        protected void WriteClassHeader(GeneratorContext ctx, string @class, string visibilityModifiers = null, bool isPartial = false)
+        {
+            var headerBuilder = new StringBuilder();
+            if (!string.IsNullOrEmpty(visibilityModifiers)) headerBuilder.Append(visibilityModifiers + ' ');
+            if (isPartial) headerBuilder.Append("partial ");
+            headerBuilder.Append($"class {@class}");
+            
+            ctx.WriteLine(headerBuilder.ToString());
+            ctx.WriteLine("{").Indent();
+        }
+
+        /// <summary>
+        /// Writes class footer
+        /// </summary>
+        protected void WriteClassFooter(GeneratorContext ctx, string @class)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
+        }
+
+        /// <summary>
+        /// Writes a using directive for protobuf-net
+        /// </summary>
+        protected void WriteProtoBufUsing(GeneratorContext ctx)
+        {
+            ctx.WriteLine("using ProtoBuf;").WriteLine();
+        }
+        
         /// <inheritdoc/>
         protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
         {

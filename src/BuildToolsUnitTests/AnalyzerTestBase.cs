@@ -90,7 +90,7 @@ namespace BuildToolsUnitTests
 
             if (ReferenceProtoBuf)
             {                  
-                project = project.ReferenceMetadataReferences(MetadataReferenceHelpers.ProtoBufReferences);
+                project = project.ReferenceMetadataReferences(MetadataReferenceHelpers.ProtobufBuildToolsReferences);
             }
 
             project = projectModifier?.Invoke(project) ?? project;

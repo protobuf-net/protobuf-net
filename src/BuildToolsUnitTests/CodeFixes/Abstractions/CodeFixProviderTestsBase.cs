@@ -68,7 +68,7 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
 
         private static void AddAdditionalReferences(SolutionState solutionState)
         {
-            solutionState.AdditionalReferences.AddRange(MetadataReferenceHelpers.ProtoBufReferences);
+            solutionState.AdditionalReferences.AddRange(MetadataReferenceHelpers.ProtobufBuildToolsReferences);
             solutionState.AdditionalReferences.AddRange(MetadataReferenceHelpers.WellKnownReferences);
         }
 

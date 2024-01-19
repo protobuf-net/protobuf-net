@@ -12,6 +12,7 @@
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <DevelopmentDependency>true</DevelopmentDependency>
     <DefineConstants>$(DefineConstants);BUILD_TOOLS</DefineConstants>
+	<LangVersion>11</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +27,9 @@
     <Compile Remove="../protobuf-net.Core/obj/**/*.cs" />
     <Compile Include="../protobuf-net.Reflection/**/*.cs" Link="protobuf-net.Reflection" />
     <Compile Remove="../protobuf-net.Reflection/obj/**/*.cs" />
+    <Compile Update="Generators\DiscriminatedUnion\ProtoUnionGenerator_FieldBuilder">
+      <DependentUpon>ProtoUnionGenerator.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

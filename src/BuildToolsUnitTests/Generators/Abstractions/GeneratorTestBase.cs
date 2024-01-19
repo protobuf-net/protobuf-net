@@ -5,13 +5,15 @@ using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-namespace BuildToolsUnitTests
+namespace BuildToolsUnitTests.Generators.Abstractions
 {
     public abstract class GeneratorTestBase<TGenerator> where TGenerator : ISourceGenerator
     {
@@ -23,23 +25,57 @@ namespace BuildToolsUnitTests
         protected static ImmutableDictionary<string, string> Options(params (string key, string value)[] pairs) => pairs.ToImmutableDictionary(pair => pair.key, pair => pair.value);
 
         // utility anaylzer data, with thanks to Samo Prelog
-        private readonly ITestOutputHelper? _testOutputHelper;
-        protected GeneratorTestBase(ITestOutputHelper? testOutputHelper = null) => _testOutputHelper = testOutputHelper;
+        protected readonly ITestOutputHelper? TestOutputHelper;
+        protected GeneratorTestBase(ITestOutputHelper? testOutputHelper = null) => TestOutputHelper = testOutputHelper;
 
         protected virtual TGenerator Generator
         {
             get
             {
                 var obj = Activator.CreateInstance<TGenerator>();
-                if (obj is ILoggingAnalyzer logging && _testOutputHelper is not null)
+                if (obj is ILoggingAnalyzer logging && TestOutputHelper is not null)
                 {
-                    logging.Log += s => _testOutputHelper.WriteLine(s);
+                    logging.Log += s => TestOutputHelper.WriteLine(s);
                 }
                 return obj;
             }
         }
 
-        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[] additionalTexts, ImmutableDictionary<string, string>? globalOptions = null,
+        protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
+            string csharpCodeText,
+            string sourceFileName,
+            AdditionalText[]? additionalTexts = null,
+            ImmutableDictionary<string, string>? globalOptions = null,
+            [CallerMemberName] string? callerMemberName = null,
+            bool debugLog = true)
+        {
+            var addSourcesProjectModifier = (Project project) => project.AddDocument(sourceFileName + ".cs", csharpCodeText).Project;
+            return GenerateAsync(additionalTexts, globalOptions, addSourcesProjectModifier, callerMemberName, debugLog);
+        }
+        
+        protected Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(
+            string[] cSharpProjectSourceTexts,
+            AdditionalText[]? additionalTexts = null,
+            ImmutableDictionary<string, string>? globalOptions = null,
+            [CallerMemberName] string? callerMemberName = null,
+            bool debugLog = true)
+        {
+            var addSourcesProjectModifier = (Project project) =>
+            { 
+                var index = 1;
+                foreach (var sourceText in cSharpProjectSourceTexts)
+                {
+                    var newDoc = project.AddDocument("sourceFile_" + index++ + ".cs", sourceText);
+                    project = newDoc.Project;
+                }
+
+                return project;
+            };
+
+            return GenerateAsync(additionalTexts, globalOptions, addSourcesProjectModifier, callerMemberName, debugLog);
+        }
+
+        protected async Task<(GeneratorDriverRunResult Result, ImmutableArray<Diagnostic> Diagnostics)> GenerateAsync(AdditionalText[]? additionalTexts = null, ImmutableDictionary<string, string>? globalOptions = null,
             Func<Project, Project>? projectModifier = null, [CallerMemberName] string? callerMemberName = null, bool debugLog = true)
         {
             if (!typeof(TGenerator).IsDefined(typeof(GeneratorAttribute)))
@@ -69,13 +105,14 @@ namespace BuildToolsUnitTests
             GeneratorDriver driver = CSharpGeneratorDriver.Create(new ISourceGenerator[] { Generator }, additionalTexts, parseOptions: parseOptions, optionsProvider: optionsProvider);
             (var project, var compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
             var result = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
-            if (_testOutputHelper is object)
+            if (TestOutputHelper is object)
             {
                 foreach (var d in diagnostics)
                 {
-                    _testOutputHelper.WriteLine(d.ToString());
+                    TestOutputHelper.WriteLine(d.ToString());
                 }
             }
+            
             return (result.GetRunResult(), diagnostics);
         }
 
@@ -108,7 +145,37 @@ namespace BuildToolsUnitTests
 
         protected virtual Project SetupProject(Project project) => project;
 
+        protected Assembly TryBuildAssemblyFromSourceCode(string sourceCode, string assemblyName = "MyAssembly", bool withProtobufReferences = true)
+        {
+            var syntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
 
-        
+            var metadataReferences = withProtobufReferences
+                ? MetadataReferenceHelpers.ProtobufReferences
+                : MetadataReferenceHelpers.CoreLibReference;
+
+            var compilation = CSharpCompilation.Create(
+                assemblyName,
+                new[] { syntaxTree },
+                metadataReferences,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            using var dllStream = new MemoryStream();
+            using var pdbStream = new MemoryStream();
+            var emitResult = compilation.Emit(dllStream, pdbStream);
+            if (!emitResult.Success)
+            {
+                var errors = new StringBuilder();
+                foreach (var diagnostic in emitResult.Diagnostics)
+                {
+                    errors.AppendLine(diagnostic.ToString());
+                }
+                
+                TestOutputHelper?.WriteLine("Errors on sourceCode compilation: \n-----\n");
+                TestOutputHelper?.WriteLine(errors.ToString());
+            }
+
+            dllStream.Position = pdbStream.Position = 0;
+            return Assembly.Load(dllStream.ToArray(), pdbStream.ToArray());
+        } 
     }
 }

@@ -1,10 +1,8 @@
 #nullable enable
 using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using ProtoBuf.BuildTools.Internal;
-using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -12,6 +10,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ProtoBuf.Generators.Abstractions;
 
 namespace ProtoBuf.BuildTools.Generators
 {
@@ -19,41 +18,15 @@ namespace ProtoBuf.BuildTools.Generators
     /// Generates protobuf-net types from .proto schemas
     /// </summary>
     [Generator]
-    public sealed class ProtoFileGenerator : ISourceGenerator, ILoggingAnalyzer
+    public sealed class ProtoFileGenerator : GeneratorBase
     {
-        private event Action<string>? Log;
-        event Action<string>? ILoggingAnalyzer.Log
-        {
-            add => this.Log += value;
-            remove => this.Log -= value;
-        }
-
-        void ISourceGenerator.Initialize(GeneratorInitializationContext context) { }
-
-        void ISourceGenerator.Execute(GeneratorExecutionContext context)
+        /// <inheritdoc/>
+        public override void Execute(GeneratorExecutionContext context)
         {
             try
             {
                 var log = Log;
-                log?.Invoke($"Execute with debug log enabled");
-
-                Version?
-                    pbnetVersion = context.Compilation.GetProtobufNetVersion(),
-                    pbnetGrpcVersion = context.Compilation.GetReferenceVersion("protobuf-net.Grpc"),
-                    wcfVersion = context.Compilation.GetReferenceVersion("System.ServiceModel.Primitives");
-
-                log?.Invoke($"Referencing protobuf-net {ShowVersion(pbnetVersion)}, protobuf-net.Grpc {ShowVersion(pbnetGrpcVersion)}, WCF {ShowVersion(wcfVersion)}");
-
-                string ShowVersion(Version? version)
-                    => version is null ? "(n/a)" : $"v{version}";
-
-                if (log is not null)
-                {
-                    foreach (var ran in context.Compilation.ReferencedAssemblyNames.OrderBy(x => x.Name))
-                    {
-                        log($"reference: {ran.Name} v{ran.Version}");
-                    }
-                }
+               Startup(context);
 
                 var schemas = context.AdditionalFiles.Where(at => at.Path.EndsWith(".proto")).Select(at => new NormalizedAdditionalText(at)).ToImmutableArray();
                 if (schemas.IsDefaultOrEmpty)
@@ -61,45 +34,13 @@ namespace ProtoBuf.BuildTools.Generators
                     log?.Invoke("No .proto schemas found");
                     return;
                 }
+                
+                if (!TryDetectCodeGenerator(context, out var codeGenerator, out var langver))
+                {
+                    return;
+                }
 
                 // find anything that matches our files
-                CodeGenerator generator;
-                string? langver = null;
-
-                switch (context.Compilation.Language)
-                {
-                    case "C#":
-                        generator = CSharpCodeGenerator.Default;
-                        if (context.ParseOptions is CSharpParseOptions cs)
-                        {
-                            langver = cs.LanguageVersion switch
-                            {
-                                LanguageVersion.CSharp1 => "1",
-                                LanguageVersion.CSharp2 => "2",
-                                LanguageVersion.CSharp3 => "3",
-                                LanguageVersion.CSharp4 => "4",
-                                LanguageVersion.CSharp5 => "5",
-                                LanguageVersion.CSharp6 => "6",
-                                LanguageVersion.CSharp7 => "7",
-                                LanguageVersion.CSharp7_1 => "7.1",
-                                LanguageVersion.CSharp7_2 => "7.2",
-                                LanguageVersion.CSharp7_3 => "7.3",
-                                LanguageVersion.CSharp8 => "8",
-                                LanguageVersion.CSharp9 => "9",
-                                _ => null
-                            };
-                        }
-                        break;
-                    //case "VB": // completely untested, and pretty sure this isn't even a "thing"
-                    //    generator = VBCodeGenerator.Default;
-                    //    langver = "14.0"; // TODO: lookup from context
-                    //    break;
-                    default:
-                        log?.Invoke($"Unexpected language: {context.Compilation.Language}");
-                        return; // nothing doing
-                }
-                log?.Invoke($"Detected {generator.Name} v{langver}");
-
                 var fileSystem = new AdditionalFilesFileSystem(log, schemas);
                 foreach (var schema in schemas)
                 {
@@ -189,11 +130,11 @@ namespace ProtoBuf.BuildTools.Generators
                         var options = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
                         if (langver is not null) options.Add("langver", langver);
 
-                        var services = pbnetGrpcVersion switch
+                        var services = ProtobufGrpcVersion switch
                         {   // automatically generate services *if* the consumer is referencing either the WCF or gRPC bits
-                            not null when wcfVersion is not null => "grpc;wcf",
+                            not null when WcfVersion is not null => "grpc;wcf",
                             not null => "grpc",
-                            null when wcfVersion is not null => "wcf",
+                            null when WcfVersion is not null => "wcf",
                             _ => null,
                         };
                         if (services is not null)
@@ -233,7 +174,7 @@ namespace ProtoBuf.BuildTools.Generators
                             }
                         }
 
-                        var files = generator.Generate(set, options: options);
+                        var files = codeGenerator!.Generate(set, options: options);
                         var root = Directory.GetCurrentDirectory();
                         foreach (var file in files)
                         {
@@ -272,9 +213,8 @@ namespace ProtoBuf.BuildTools.Generators
             }
             catch (Exception ex)
             {
-                if (Log is null) throw;
-                Log.Invoke($"Exception: '{ex.Message}' ({ex.GetType().Name})");
-                Log.Invoke(ex.StackTrace);
+                Log($"Exception: '{ex.Message}' ({ex.GetType().Name})");
+                Log(ex.StackTrace);
             }
         }
 

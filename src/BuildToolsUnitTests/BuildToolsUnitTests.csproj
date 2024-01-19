@@ -5,11 +5,13 @@
     <RootNamespace>BuildToolsUnitTests</RootNamespace>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
+	<LangVersion>11</LangVersion>  
   </PropertyGroup>
 
   <ItemGroup>
     <!--<PackageReference Include="Microsoft.Build" />-->
     <!--<PackageReference Include="Microsoft.Build.Utilities.Core" />-->
+    <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing.XUnit" />
@@ -27,6 +29,9 @@
   <ItemGroup>
     <Compile Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
       <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Generators\ProtoUnionGeneratorTests.DiagnosticsReports.cs">
+      <DependentUpon>ProtoUnionGeneratorTests.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 

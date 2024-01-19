@@ -3,21 +3,32 @@ using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.Meta;
 using System.Linq;
 using System.Reflection;
+using ProtoBuf;
 
 namespace BuildToolsUnitTests
 {
     internal  static class MetadataReferenceHelpers
     {
-        public static MetadataReference[] WellKnownReferences = new[]
-        {
+        public static MetadataReference[] CoreLibReference = {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+        };
+        
+        public static MetadataReference[] WellKnownReferences = {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(CSharpCompilation).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(Compilation).Assembly.Location)
         };
 
-        public static MetadataReference[] ProtoBufReferences = new[]
-        {
+        public static MetadataReference[] ProtobufReferences = {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+            MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
+            MetadataReference.CreateFromFile(typeof(ProtoMemberAttribute).Assembly.Location)
+        };
+        
+        public static MetadataReference[] ProtobufBuildToolsReferences = {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
             MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location)
