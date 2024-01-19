@@ -14,6 +14,8 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+- support of deserializing `ISet<T>` and `IReadOnlySet<T>` (ladeak)
+
 ## 3.2.30
 
 - support `DateOnly` and `TimeOnly` (#1100 by @mgravell, fixes #977)

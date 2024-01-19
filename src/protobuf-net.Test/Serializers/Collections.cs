@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IEnumerable<int>), typeof(EnumerableSerializer<IEnumerable<int>, IEnumerable<int>, int>))]
         [InlineData(typeof(IList<int>), typeof(EnumerableSerializer<IList<int>, IList<int>, int>))]
         [InlineData(typeof(Dictionary<int, string>), typeof(DictionarySerializer<int, string>))]
-        [InlineData(typeof(IDictionary<int, string>), typeof(DictionarySerializer<IDictionary<int,string>,int, string>))]
+        [InlineData(typeof(IDictionary<int, string>), typeof(DictionarySerializer<IDictionary<int, string>, int, string>))]
         [InlineData(typeof(IReadOnlyDictionary<int, string>), typeof(DictionaryOfIReadOnlyDictionarySerializer<int, string>))]
         [InlineData(typeof(ImmutableArray<int>), typeof(ImmutableArraySerializer<int>))]
         [InlineData(typeof(ImmutableDictionary<int, string>), typeof(ImmutableDictionarySerializer<int, string>))]
@@ -32,8 +32,8 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(IImmutableDictionary<int, string>), typeof(ImmutableIDictionarySerializer<int, string>))]
         [InlineData(typeof(Queue<int>), typeof(QueueSerializer<Queue<int>, int>))]
         [InlineData(typeof(Stack<int>), typeof(StackSerializer<Stack<int>, int>))]
-        [InlineData(typeof(CustomGenericCollection<int>), typeof(EnumerableSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>,int>))]
-        [InlineData(typeof(CustomNonGenericCollection), typeof(EnumerableSerializer<CustomNonGenericCollection,CustomNonGenericCollection,bool>))]
+        [InlineData(typeof(CustomGenericCollection<int>), typeof(EnumerableSerializer<CustomGenericCollection<int>, CustomGenericCollection<int>, int>))]
+        [InlineData(typeof(CustomNonGenericCollection), typeof(EnumerableSerializer<CustomNonGenericCollection, CustomNonGenericCollection, bool>))]
         [InlineData(typeof(IReadOnlyCollection<string>), typeof(EnumerableSerializer<IReadOnlyCollection<string>, IReadOnlyCollection<string>, string>))]
         [InlineData(typeof(CustomNonGenericReadOnlyCollection), typeof(EnumerableSerializer<CustomNonGenericReadOnlyCollection, CustomNonGenericReadOnlyCollection, string>))]
         [InlineData(typeof(CustomGenericReadOnlyCollection<string>), typeof(EnumerableSerializer<CustomGenericReadOnlyCollection<string>, CustomGenericReadOnlyCollection<string>, string>))]
@@ -58,6 +58,11 @@ namespace ProtoBuf.Serializers
         [InlineData(typeof(Dictionary<int, int[]>), typeof(DictionarySerializer<int, int[]>))]
         [InlineData(typeof(Dictionary<int[], int[]>), typeof(DictionarySerializer<int[], int[]>))]
 
+        [InlineData(typeof(HashSet<int>), typeof(SetSerializer<HashSet<int>, int>))]
+        [InlineData(typeof(ISet<int>), typeof(SetSerializer<ISet<int>, int>))]
+#if NET6_0_OR_GREATER
+        [InlineData(typeof(IReadOnlySet<int>), typeof(ReadOnlySetSerializer<int>))]
+#endif
         public void TestWhatProviderWeGet(Type type, Type expected)
         {
             var provider = RepeatedSerializers.TryGetRepeatedProvider(type);
@@ -155,7 +160,8 @@ namespace ProtoBuf.Serializers
         public class CustomGenericCollection<T> : IList<T>
         {
             #region nope
-            T IList<T>.this[int index] {
+            T IList<T>.this[int index]
+            {
                 get => throw new NotImplementedException();
                 set => throw new NotImplementedException();
             }
