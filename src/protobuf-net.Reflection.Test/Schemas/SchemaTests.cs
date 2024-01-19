@@ -220,7 +220,7 @@ namespace ProtoBuf.Schemas
             _output.WriteLine(sourceFiles[0]);
             using var vb = new VBCodeProvider(new Dictionary<string, string>
             {
-                { "CompilerVersion", "v3.5"}
+                // { "CompilerVersion", "v3.5"}
             });
             var p = new CompilerParameters
             {
@@ -257,7 +257,7 @@ namespace ProtoBuf.Schemas
 
             using var csharp = new CSharpCodeProvider(new Dictionary<string, string>
             {
-                { "CompilerVersion", "v3.5"}
+                // { "CompilerVersion", "v3.5"}
             });
             var p = new CompilerParameters
             {

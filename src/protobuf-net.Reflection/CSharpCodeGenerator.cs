@@ -126,7 +126,7 @@ namespace ProtoBuf.Reflection
         protected override string GetLanguageVersion(FileDescriptorProto obj)
             => obj?.Options?.GetOptions()?.CSharpLanguageVersion;
 
-        private const string AdditionalSuppressionCodes = ", IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192, CS8981";
+        private const string AdditionalSuppressionCodes = ", CS8981, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192";
 
         /// <summary>
         /// Start a file
