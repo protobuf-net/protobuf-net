@@ -69,8 +69,8 @@ message EnumFoo {
 }
 enum blah {
    B = 0;
-   A = -1;
    C = 1;
+   A = -1;
 }
 ", proto, ignoreLineEndingDifferences: true);
         }
@@ -93,8 +93,8 @@ message NonNullValues {
 }
 enum blah {
    B = 0;
-   A = -1;
    C = 1;
+   A = -1;
 }
 ", proto, ignoreLineEndingDifferences: true);
         }
@@ -127,8 +127,8 @@ enum OutOfRangeEnum {
    A = 1;
    B = 4;
    C = 2147483647;
-   // D = 2147483648; // note: enums should be valid 32-bit integers
    E = -2147483647;
+   // D = 2147483648; // note: enums should be valid 32-bit integers
    // F = -2147483649; // note: enums should be valid 32-bit integers
 }
 */
@@ -178,8 +178,8 @@ message NullValues {
 }
 enum blah {
    B = 0;
-   A = -1;
    C = 1;
+   A = -1;
 }
 ", proto, ignoreLineEndingDifferences: true);
         }

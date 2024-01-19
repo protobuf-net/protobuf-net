@@ -1720,7 +1720,10 @@ namespace ProtoBuf.Meta
         public EnumMember[] GetEnumValues()
         {
             if (!HasEnums) return Array.Empty<EnumMember>();
-            return Enums.ToArray();
+
+            var arr = Enums.ToArray();
+            Array.Sort(arr);
+            return arr;
         }
 
         /// <summary>
@@ -2026,7 +2029,6 @@ namespace ProtoBuf.Meta
             else if (Type.IsEnum)
             {
                 var enums = GetEnumValues();
-
 
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");

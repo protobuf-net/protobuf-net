@@ -8,7 +8,7 @@ namespace ProtoBuf.Meta
     /// Describes a named constant integer, i.e. an enum value
     /// </summary>
     [StructLayout(LayoutKind.Auto)]
-    public readonly struct EnumMember : IEquatable<EnumMember>
+    public readonly struct EnumMember : IEquatable<EnumMember>, IComparable<EnumMember>
     {
         /// <summary>
         /// Gets the declared name of this enum member
@@ -118,6 +118,27 @@ namespace ProtoBuf.Meta
         {
             if (string.IsNullOrWhiteSpace(Name))
                 ThrowHelper.ThrowInvalidOperationException("All enum declarations must have valid names");
+        }
+
+        public int CompareTo(EnumMember other)
+        {
+            var thisValue = TryGetInt32();
+            var otherValue = other.TryGetInt32();
+
+            if (!thisValue.HasValue && !otherValue.HasValue) return 0;
+            if (!thisValue.HasValue) return 1;
+            if (!otherValue.HasValue) return -1;
+
+            if (thisValue.Value < 0 && otherValue.Value >= 0)
+            {
+                return 1;
+            }
+            if (otherValue.Value < 0 && thisValue.Value >= 0)
+            {
+                return -1;
+            }
+
+            return thisValue.Value.CompareTo(otherValue.Value);
         }
     }
 }
