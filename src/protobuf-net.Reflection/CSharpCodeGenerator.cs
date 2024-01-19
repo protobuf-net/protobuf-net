@@ -126,7 +126,7 @@ namespace ProtoBuf.Reflection
         protected override string GetLanguageVersion(FileDescriptorProto obj)
             => obj?.Options?.GetOptions()?.CSharpLanguageVersion;
 
-        private const string AdditionalSuppressionCodes = ", IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192";
+        private const string AdditionalSuppressionCodes = ", CS8981, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192";
 
         /// <summary>
         /// Start a file
@@ -141,7 +141,7 @@ namespace ProtoBuf.Reflection
                .WriteLine("// </auto-generated>")
                .WriteLine()
                .WriteLine("#region Designer generated code")
-               .Write($"#pragma warning disable {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021, {prefix}8981");
+               .Write($"#pragma warning disable {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
                 tw.Write(AdditionalSuppressionCodes);
@@ -168,7 +168,7 @@ namespace ProtoBuf.Reflection
         protected override void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
             var prefix = ctx.Supports(CSharp6) ? "CS" : "";
-            var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021, {prefix}8981");
+            var tw = ctx.Write($"#pragma warning restore {prefix}0612, {prefix}0618, {prefix}1591, {prefix}3021");
             if (ctx.Supports(CSharp6))
             {
                 tw.Write(AdditionalSuppressionCodes);
