@@ -76,7 +76,7 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
             // </auto-generated>
 
             #region Designer generated code
-            #pragma warning disable CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
+            #pragma warning disable CS0612, CS0618, CS1591, CS3021, CS8981, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
             [global::ProtoBuf.ProtoContract()]
             public partial class WrappedTest : global::ProtoBuf.IExtensible
             {{
@@ -90,7 +90,7 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
 
             }}
 
-            #pragma warning restore CS0612, CS0618, CS1591, CS3021, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
+            #pragma warning restore CS0612, CS0618, CS1591, CS3021, CS8981, IDE0079, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
             #endregion
         ";
     }
