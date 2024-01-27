@@ -197,6 +197,11 @@ namespace ProtoBuf.Meta
         public bool HasSubtypes => _subTypes is not null && _subTypes.Count != 0;
 
         /// <summary>
+        /// Returns the number of defined subtypes on the current type
+        /// </summary>
+        public int SubtypesCount => _subTypes?.Count ?? 0;
+
+        /// <summary>
         /// Returns the set of callbacks defined for this type
         /// </summary>
         public CallbackSet Callbacks => callbacks ??= new CallbackSet(this);
