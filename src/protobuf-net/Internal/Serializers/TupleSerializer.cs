@@ -138,11 +138,8 @@ namespace ProtoBuf.Internal.Serializers
         bool IProtoTypeSerializer.CanCreateInstance() { return false; }
 
         private Type GetMemberType(int index)
-        {
-            Type result = Helpers.GetMemberType(members[index]);
-            if (result is null) throw new InvalidOperationException();
-            return result;
-        }
+            => Helpers.GetMemberType(members[index]) ?? throw new InvalidOperationException();
+
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using Compiler.Local loc = ctx.GetLocalWithValue(ctor.DeclaringType, valueFrom);

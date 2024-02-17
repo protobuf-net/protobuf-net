@@ -262,7 +262,7 @@ namespace Examples.Dictionary
             var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
 
             Assert.NotNull(clone);
-            Assert.Equal(0, clone.Count);
+            Assert.Empty(clone);
 
         }
         [Fact]
@@ -276,7 +276,7 @@ namespace Examples.Dictionary
             var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
 
             Assert.NotNull(clone);
-            Assert.Equal(1, clone.Count);
+            Assert.Single(clone);
             Assert.Equal(123, clone["abc"]);
         }
     }
@@ -375,7 +375,7 @@ etc
             Assert.Equal("abc, jkl", allKeys);
 
             var inner = data["abc"];
-            Assert.Equal(1, inner.Keys.Count); //, message);
+            Assert.Single(inner.Keys); //, message);
             Assert.Equal("ghi", inner["def"]); //, message);
             inner = data["jkl"];
             Assert.Equal(2, inner.Keys.Count); //, message);

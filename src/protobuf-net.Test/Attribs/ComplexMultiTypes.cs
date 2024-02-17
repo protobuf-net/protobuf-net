@@ -120,7 +120,7 @@ namespace ProtoBuf.unittest.Attribs
 
             Assert.Equal(typeof(EntityDTO), result.GetType()); //, message + ":type");
             Assert.Equal(1, result.Id); //, message + ":Id");
-            Assert.Equal(0, result.Components.Count); //, message + ":Count");
+            Assert.Empty(result.Components); //, message + ":Count");
         }
 
         [Fact]

@@ -60,7 +60,7 @@ namespace ProtoBuf.ServiceModel
 
         private static bool IsKnownType(TypeModel model, Type type, out bool isList)
         {
-            if (model is object && type is object)
+            if (model is not null && type is not null)
             {
                 if (model.CanSerialize(type, true, true, true, out var category))
                 {

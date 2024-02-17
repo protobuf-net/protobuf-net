@@ -103,13 +103,13 @@ namespace ProtoBuf.Serializers
         [StructLayout(LayoutKind.Auto)]
         struct Enumerator : IEnumerator<T>
         {
-            public void Reset() => ThrowHelper.ThrowNotSupportedException();
+            public readonly void Reset() => ThrowHelper.ThrowNotSupportedException();
             public Enumerator(ImmutableArray<T> array) => _iter = array.GetEnumerator();
             private ImmutableArray<T>.Enumerator _iter;
             public T Current => _iter.Current;
             object IEnumerator.Current => _iter.Current;
             public bool MoveNext() => _iter.MoveNext();
-            public void Dispose() { }
+            public readonly void Dispose() { }
         }
     }
 
@@ -330,11 +330,11 @@ namespace ProtoBuf.Serializers
             T IEnumerator<T>.Current => _iter.Current;
             object IEnumerator.Current => _iter.Current;
 
-            void IDisposable.Dispose() { }
+            readonly void IDisposable.Dispose() { }
 
             bool IEnumerator.MoveNext() => _iter.MoveNext();
 
-            void IEnumerator.Reset() => ThrowHelper.ThrowNotImplementedException();
+            readonly void IEnumerator.Reset() => ThrowHelper.ThrowNotImplementedException();
         }
     }
     sealed class ImmutableIStackSerializer<T> : RepeatedSerializer<IImmutableStack<T>, T>
@@ -443,11 +443,11 @@ namespace ProtoBuf.Serializers
             T IEnumerator<T>.Current => _iter.Current;
             object IEnumerator.Current => _iter.Current;
 
-            void IDisposable.Dispose() { }
+            readonly void IDisposable.Dispose() { }
 
             bool IEnumerator.MoveNext() => _iter.MoveNext();
 
-            void IEnumerator.Reset() => ThrowHelper.ThrowNotImplementedException();
+            readonly void IEnumerator.Reset() => ThrowHelper.ThrowNotImplementedException();
         }
     }
     sealed class ImmutableIQueueSerializer<T> : RepeatedSerializer<IImmutableQueue<T>, T>

@@ -175,7 +175,7 @@ namespace ProtoBuf.unittest.Serializers
             var orig = new TypeWithIDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
             var model = RuntimeTypeModel.Create();
             var clone = (TypeWithIDictionary)model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
 
             model.Compile("TypeWithIDictionary", "TypeWithIDictionary.dll");
@@ -183,11 +183,11 @@ namespace ProtoBuf.unittest.Serializers
 
             model.CompileInPlace();
             clone = (TypeWithIDictionary)model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
 
             clone = (TypeWithIDictionary)model.Compile().DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
         }
 

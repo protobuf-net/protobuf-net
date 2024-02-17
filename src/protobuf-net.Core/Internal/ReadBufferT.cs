@@ -14,11 +14,12 @@ namespace ProtoBuf.Internal
     internal struct ReadBuffer<T> : IDisposable, ICollection<T>, IReadOnlyCollection<T>, ICollection
     {
         public void Clear() => _count = 0;
-        bool ICollection<T>.IsReadOnly => false;
-        public void CopyTo(T[] array, int arrayIndex = 0)
+
+        readonly bool ICollection<T>.IsReadOnly => false;
+        public readonly void CopyTo(T[] array, int arrayIndex = 0)
             => Array.Copy(_arr, 0, array, arrayIndex, _count);
 
-        void ICollection.CopyTo(Array array, int index)
+        readonly void ICollection.CopyTo(Array array, int index)
             => Array.Copy(_arr, 0, array, index, _count);
 
         public T[] ToArray()
@@ -43,10 +44,8 @@ namespace ProtoBuf.Internal
             Array.Copy(_arr, 0, arr, oldLen, _count);
             return arr;
         }
-        
 
-
-        bool ICollection<T>.Contains(T item)
+        readonly bool ICollection<T>.Contains(T item)
             => Array.IndexOf(_arr, item, 0, _count) >= 0;
         bool ICollection<T>.Remove(T item)
         {
@@ -57,7 +56,7 @@ namespace ProtoBuf.Internal
             Array.Copy(_arr, index + 1, _arr, index, _count - index);
             return true;
         }
-        public IEnumerator<T> GetEnumerator() => _arr.Take(_count).GetEnumerator();
+        public readonly IEnumerator<T> GetEnumerator() => _arr.Take(_count).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -65,8 +64,9 @@ namespace ProtoBuf.Internal
         private T[] _arr;
         private int _count;
 
-        bool ICollection.IsSynchronized => false;
-        object ICollection.SyncRoot => _arr;
+        readonly bool ICollection.IsSynchronized => false;
+
+        readonly object ICollection.SyncRoot => _arr;
 
         private ReadBuffer(int minimumLength)
         {
@@ -91,12 +91,12 @@ namespace ProtoBuf.Internal
             }
         }
 
-        public bool IsEmpty => _count == 0;
+        public readonly bool IsEmpty => _count == 0;
 
-        public int Count => _count;
+        public readonly int Count => _count;
 
-        public ArraySegment<T> Segment => new ArraySegment<T>(_arr, 0, _count);
-        public Span<T> Span => new Span<T>(_arr, 0, _count);
+        public readonly ArraySegment<T> Segment => new ArraySegment<T>(_arr, 0, _count);
+        public readonly Span<T> Span => new Span<T>(_arr, 0, _count);
 
         public void Dispose()
         {

@@ -339,7 +339,7 @@ namespace ProtoBuf
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style)
             {
-                if (serializer is null) serializer = TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.GetSerializer<T>(Model);
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
 
                 switch (style)
@@ -378,7 +378,7 @@ namespace ProtoBuf
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
                 where T : class
             {
-                if (serializer is null) serializer = TypeModel.GetSubTypeSerializer<T>(Model);
+                serializer ??= TypeModel.GetSubTypeSerializer<T>(Model);
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
                 
                 // we'll always use varint here

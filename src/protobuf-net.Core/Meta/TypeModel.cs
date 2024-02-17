@@ -1409,7 +1409,7 @@ namespace ProtoBuf.Meta
                 if (serializer is IFactory<T> factory) obj = factory.Create(context);
 
                 // note we already know this is a ref-type
-                if (obj is null) obj = ActivatorCreate<T>();
+                obj ??= ActivatorCreate<T>();
                 return obj;
             }
             else
@@ -1905,7 +1905,7 @@ namespace ProtoBuf.Meta
                 int i = name.IndexOf(',');
                 string fullName = (i > 0 ? name.Substring(0, i) : name).Trim();
 
-                if (assembly is null) assembly = Assembly.GetCallingAssembly();
+                assembly ??= Assembly.GetCallingAssembly();
 
                 Type type = assembly?.GetType(fullName);
                 if (type is not null) return type;

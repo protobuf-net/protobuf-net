@@ -49,7 +49,7 @@ namespace BuildToolsUnitTests
 
             var parseOptions = new CSharpParseOptions(kind: SourceCodeKind.Regular, documentationMode: DocumentationMode.Parse);
 
-            if (globalOptions is null) globalOptions = ImmutableDictionary<string, string>.Empty;
+            globalOptions ??= ImmutableDictionary<string, string>.Empty;
             if (debugLog) globalOptions = globalOptions.SetItem("pbn_debug_log", "true");
 
             var optionsProvider = TestAnalyzeConfigOptionsProvider.Empty.WithGlobalOptions(new TestAnalyzerConfigOptions(globalOptions));

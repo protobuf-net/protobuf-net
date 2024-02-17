@@ -33,9 +33,9 @@ namespace ProtoBuf.Meta // note: choice of API is deliberate; ProtoBuf.Meta caus
             static void Add(RuntimeTypeModel model, Type type, string name, string origin, Type serializerType)
             {
                 var mt = model.Add(type, true);
-                if (name is object) mt.Name = name;
-                if (origin is object) mt.Origin = origin;
-                if (serializerType is object) mt.SerializerType = serializerType;
+                if (name is not null) mt.Name = name;
+                if (origin is not null) mt.Origin = origin;
+                if (serializerType is not null) mt.SerializerType = serializerType;
             }
         }
 
