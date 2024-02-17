@@ -345,7 +345,7 @@ namespace ProtoBuf.Reflection
             var value = token.Value;
             if (string.IsNullOrEmpty(value)) return;
 
-            if (ms == null) ms = new MemoryStream(value.Length);
+            ms ??= new MemoryStream(value.Length);
             uint escapedCodePoint = 0;
             int escapeLength = 0;
             for (int i = 0; i < value.Length; i++)

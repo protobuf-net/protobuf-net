@@ -386,7 +386,7 @@ namespace ProtoBuf.Reflection
             // get the oneof, ignoring 'synthetic' oneofs from proto3-optional
             // (the CountTotal check would *also* work for this, but: let's be explicit and intentional)
             oneOf = (field.ShouldSerializeOneofIndex() && !field.Proto3Optional) ? oneOfs[field.OneofIndex] : null;
-            if (oneOf is object && !ctx.OneOfEnums && oneOf.CountTotal == 1)
+            if (oneOf is not null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
@@ -578,10 +578,7 @@ namespace ProtoBuf.Reflection
                 if (options != null) options.TryGetValue("langver", out langver); // explicit option first
                 if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
 
-                if (nameNormalizer == null)
-                {
-                    nameNormalizer = NameNormalizer.Default;
-                }
+                nameNormalizer ??= NameNormalizer.Default;
                 nameNormalizer.IsCaseSensitive = generator.IsCaseSensitive;
 
                 File = file;

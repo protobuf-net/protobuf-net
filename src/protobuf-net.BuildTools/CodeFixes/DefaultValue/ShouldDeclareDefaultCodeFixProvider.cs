@@ -43,7 +43,7 @@ namespace ProtoBuf.CodeFixes.DefaultValue
                 var protoMemberAttributeSyntax = root?.FindNode(diagnosticTextSpan) as AttributeSyntax;
                 if (protoMemberAttributeSyntax is null) return;
 
-                if (!TryBuildDiagnosticArguments(diagnostic, out var diagnosticArguments)) return;                
+                if (!TryBuildDiagnosticArguments(diagnostic, out var diagnosticArguments)) return;
                 
                 context.RegisterCodeFix(
                     CodeAction.Create(

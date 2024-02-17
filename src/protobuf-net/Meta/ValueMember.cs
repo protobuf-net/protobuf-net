@@ -523,7 +523,7 @@ namespace ProtoBuf.Meta
                         var valueFeatures = SerializerFeatures.OptionWrappedValue;
                         if (NullWrappedValueGroup) valueFeatures |= SerializerFeatures.OptionWrappedValueGroup;
                         if (MemberType.IsValueType && Nullable.GetUnderlyingType(MemberType) is null) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with non-nullable values");
-                        if (_defaultValue is object) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with default values");
+                        if (_defaultValue is not null) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with default values");
                         if (IsRequired) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with required values");
                         if (IsPacked) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} cannot be used with packed values");
                         if (DataFormat != DataFormat.Default) ThrowHelper.ThrowNotSupportedException($"{nameof(NullWrappedValue)} can only be used with {nameof(DataFormat)}.{nameof(DataFormat.Default)}");

@@ -208,7 +208,7 @@ DA-02-01-64                     field 43 = "d"
         [ProtoContract]
         struct Foo : ITypedExtensible
         {
-            IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
+            readonly IExtension ITypedExtensible.GetExtensionObject(Type type, bool createIfMissing)
                 => throw new NotImplementedException("shouldn't be called");
         }
 

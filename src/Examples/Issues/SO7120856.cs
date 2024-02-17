@@ -63,12 +63,12 @@ namespace Examples.Issues
             }
 #endif
 
-            public int X
+            public readonly int X
             {
                 get { return _x; }
             }
 
-            public int Z
+            public readonly int Z
             {
                 get { return _z; }
             }
@@ -145,13 +145,13 @@ namespace Examples.Issues
             }
 #endif
             [DataMember(Order = 1)]
-            public int X
+            public readonly int X
             {
                 get { return _x; }
             }
 
             [DataMember(Order = 2)]
-            public int Z
+            public readonly int Z
             {
                 get { return _z; }
             }

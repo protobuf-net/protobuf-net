@@ -30,14 +30,14 @@ namespace SampleDto
     public struct CustomerStruct
     {
         private int id;
-        public int Id { get { return id; } set { id = value; } }
+        public int Id { readonly get { return id; } set { id = value; } }
         public string Name;
 #if !FX11
         private double? howMuch;
-        public double? HowMuch { get { return howMuch; } set { howMuch = value; } }
+        public double? HowMuch { readonly get { return howMuch; } set { howMuch = value; } }
         public bool? HasValue;
 #endif
-        public override string ToString()
+        public override readonly string ToString()
         {
             string s = id + ": " + Name;
 #if !FX11

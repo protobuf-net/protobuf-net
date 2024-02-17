@@ -34,7 +34,7 @@ namespace ProtoBuf.Test
                     // configure all Nullable<T> properties as wrapped
                     foreach (var field in e.MetaType.GetFields())
                     {
-                        if (Nullable.GetUnderlyingType(field.MemberType) is object)
+                        if (Nullable.GetUnderlyingType(field.MemberType) is not null)
                         {
                             field.NullWrappedValue = true;
                         }

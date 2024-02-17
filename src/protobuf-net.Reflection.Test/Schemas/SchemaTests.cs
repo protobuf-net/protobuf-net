@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -296,7 +297,7 @@ namespace ProtoBuf.Schemas
 
         [Theory]
         [MemberData(nameof(GetSchemas))]
-        public void CompareProtoToParser(string path, bool includeImports)
+        public async Task CompareProtoToParser(string path, bool includeImports)
         {
             if (path == "google/protobuf/map_unittest_proto3.proto") return; // TODO known oddity
 
@@ -333,8 +334,8 @@ namespace ProtoBuf.Schemas
                 }
                 exitCode = proc.ExitCode;
                 string err = "", @out = "";
-                if (stdout.Wait(1000)) @out = stdout.Result;
-                if (stderr.Wait(1000)) err = stderr.Result;
+                if (await stdout.WaitForAsync(1000)) @out = await stdout;
+                if (await stdout.WaitForAsync(1000)) err = await stderr;
 
                 if (!string.IsNullOrWhiteSpace(@out))
                 {
@@ -381,8 +382,8 @@ namespace ProtoBuf.Schemas
                 }
                 exitCode = proc.ExitCode;
                 string err = "", @out = "";
-                if (stdout.Wait(1000)) @out = stdout.Result;
-                if (stderr.Wait(1000)) err = stderr.Result;
+                if (await stdout.WaitForAsync(1000)) @out = await stdout;
+                if (await stderr.WaitForAsync(1000)) err = await stderr;
 
                 if (!string.IsNullOrWhiteSpace(@out))
                 {
@@ -522,5 +523,28 @@ namespace ProtoBuf.Schemas
             }
             return sb.ToString();
         }
+    }
+
+    static class TaskExtensions
+    {
+#if NETFRAMEWORK
+        public static Task<bool> WaitForAsync(this Task task, int timeout)
+            => task.Wait(timeout) ? SharedTrue : SharedFalse;
+
+        private static readonly Task<bool> SharedTrue = Task.FromResult(true), SharedFalse = Task.FromResult(false);
+#else
+        public async static Task<bool> WaitForAsync(this Task task, int timeout)
+        {
+            try
+            {
+                await task.WaitAsync(TimeSpan.FromMilliseconds(timeout));
+                return true;
+            }
+            catch (TimeoutException)
+            {
+                return false;
+            }
+        }
+#endif
     }
 }

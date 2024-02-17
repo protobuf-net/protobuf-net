@@ -135,7 +135,7 @@ namespace ProtoBuf.Tests
             public A Read(ref ProtoReader.State state, A value)
             {
                 int fieldHeader;
-                if (value == null) value = new A();
+                value ??= new A();
                 while ((fieldHeader = state.ReadFieldHeader()) > 0)
                 {
                     switch (fieldHeader)

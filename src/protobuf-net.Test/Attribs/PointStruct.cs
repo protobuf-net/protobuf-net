@@ -48,8 +48,8 @@ namespace ProtoBuf.unittest.Attribs
         {
             [ProtoMember(1)] private readonly int x;
             [ProtoMember(2)] private readonly int y;
-            public int X { get { return x; } }
-            public int Y { get { return y; } }
+            public readonly int X { get { return x; } }
+            public readonly int Y { get { return y; } }
             public Point(int x, int y)
             {
                 this.x = x;

@@ -369,12 +369,12 @@ namespace ProtoBuf.Serializers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CreateIfNeeded() => _ = Value;
 
-        internal object RawValue => _value;
+        internal readonly object RawValue => _value;
 
         /// <summary>
         /// Indicates whether an instance currently exists
         /// </summary>
-        public bool HasValue => _value is not null;
+        public readonly bool HasValue => _value is not null;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private T Cast()

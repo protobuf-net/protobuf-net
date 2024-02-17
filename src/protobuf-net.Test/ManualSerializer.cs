@@ -424,7 +424,7 @@ namespace ProtoBuf
 
         D ISerializer<D>.Read(ref ProtoReader.State state, D value)
         {
-            if (value == null) value = state.CreateInstance<D>(this);
+            value ??= state.CreateInstance<D>(this);
             int field;
             while ((field = state.ReadFieldHeader()) != 0)
             {

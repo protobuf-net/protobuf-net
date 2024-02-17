@@ -23,7 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection // guidance is to use this na
             }
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IConfigureOptions<MvcOptions>, MvcProtoBufNetOptionsSetup>());
-            if (setupAction is object) builder.Services.Configure(setupAction);
+            if (setupAction is not null) builder.Services.Configure(setupAction);
             return builder;
         }
 
@@ -38,7 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection // guidance is to use this na
             }
 
             builder.Services.TryAddEnumerable(ServiceDescriptor.Transient<IConfigureOptions<MvcOptions>, MvcProtoBufNetOptionsSetup>());
-            if (setupAction is object) builder.Services.Configure(setupAction);
+            if (setupAction is not null) builder.Services.Configure(setupAction);
             return builder;
         }
     }

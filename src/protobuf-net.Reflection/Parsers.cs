@@ -657,7 +657,7 @@ namespace Google.Protobuf.Reflection
                     }
                 }
             };
-            if (msgType.Options == null) msgType.Options = new MessageOptions();
+            msgType.Options ??= new MessageOptions();
             msgType.Options.MapEntry = true;
             NestedTypes.Add(msgType);
 
@@ -3047,7 +3047,7 @@ namespace ProtoBuf.Reflection
 
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
-                if (obj == null) obj = new T();
+                obj ??= new T();
                 bool any = false;
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
                 {
@@ -3092,7 +3092,7 @@ namespace ProtoBuf.Reflection
                 }
                 else
                 {
-                    if (obj == null) obj = new T();
+                    obj ??= new T();
                     if (singleKey == "deprecated")
                     {
                         obj.Deprecated = tokens.ConsumeBoolean();

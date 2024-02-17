@@ -18,6 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		src\Directory.Packages.props = src\Directory.Packages.props
 		global.json = global.json
 		NuGet.Config = NuGet.Config
+		protobuf-net.png = protobuf-net.png
 		protobuf-net.svg = protobuf-net.svg
 		src\Tools\protogen.proto = src\Tools\protogen.proto
 		README.md = README.md
@@ -95,7 +96,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "protobuf-net.FSharp.Test", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.FSharp", "src\protobuf-net.FSharp\protobuf-net.FSharp.csproj", "{763193DB-D730-4898-AB6B-986880AB18BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildToolsSmokeTests", "src\BuildToolsSmokeTests\BuildToolsSmokeTests.csproj", "{5BF248A8-1B2A-474C-9B62-A5173AD1BD55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildToolsSmokeTests", "src\BuildToolsSmokeTests\BuildToolsSmokeTests.csproj", "{5BF248A8-1B2A-474C-9B62-A5173AD1BD55}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

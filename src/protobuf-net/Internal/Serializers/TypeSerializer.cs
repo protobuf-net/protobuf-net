@@ -120,7 +120,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public virtual T Read(ref ProtoReader.State state, T value)
         {
-            if (value is null) value = (T)CreateInstance(state.Context);
+            value ??= (T)CreateInstance(state.Context);
 
             Callback(ref value, TypeModel.CallbackType.BeforeDeserialize, state.Context);
             DeserializeBody(ref state, ref value, (ref T o) => o, (ref T o, T v) => o = v);

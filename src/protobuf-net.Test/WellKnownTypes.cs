@@ -183,8 +183,7 @@ namespace ProtoBuf.Schemas
 
         private void AssertKnownValue(TimeSpan expected, Duration valueToSerialize, Duration valueToDeserialize = null)
         {
-            if (valueToDeserialize == null)
-                valueToDeserialize = valueToSerialize; // assume they are te same
+            valueToDeserialize ??= valueToSerialize; // assume they are te same
 
             Log($"valueToSerialize: {valueToSerialize}, {valueToSerialize.Seconds} / {valueToSerialize.Nanos}");
             Log($"expected: {expected}");

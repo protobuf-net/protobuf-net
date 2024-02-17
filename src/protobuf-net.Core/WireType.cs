@@ -23,7 +23,9 @@ namespace ProtoBuf
         /// <summary>
         /// Base-128 variable-length encoding
         /// </summary>
+#pragma warning disable CA1069 // duplicate enum value
         Varint = 0,
+#pragma warning restore CA1069 // duplicate enum value
 
         /// <summary>
         /// Fixed-length 8-byte encoding
@@ -65,6 +67,8 @@ namespace ProtoBuf
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+#pragma warning disable CA1069 // duplicate enum value
         SignedVarint = Varint | (1 << 3),
+#pragma warning restore CA1069 // duplicate enum value
     }
 }
