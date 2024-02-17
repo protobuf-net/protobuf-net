@@ -4,7 +4,6 @@
     <Title>protobuf-net.Reflection</Title>
     <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
     <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
-    <LangVersion>10</LangVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Configurations>Debug;Release;VS</Configurations>
