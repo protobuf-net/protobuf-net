@@ -46,7 +46,7 @@ internal abstract class CodeGenCodeGenerator
         }
         set.Process();
         var results = new List<CodeFile>();
-        var ctx = new CodeGenParseContext();
+        var ctx = new CodeGenDescriptorParseContext();
         var cgSet = CodeGenSet.Parse(set, ctx);
 
         try

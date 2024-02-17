@@ -178,6 +178,14 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor UnknownError = new(
+            id: "PBN0021",
+            title: nameof(DataContractAnalyzer) + "." + nameof(UnknownError),
+            messageFormat: "An unknown error occured during processing: '{0}' ({1})",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>

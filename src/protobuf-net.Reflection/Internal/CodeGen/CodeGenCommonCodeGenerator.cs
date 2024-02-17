@@ -500,7 +500,7 @@ internal abstract partial class CodeGenCommonCodeGenerator : CodeGenCodeGenerato
         internal CodeGenGeneratorContext(CodeGenCommonCodeGenerator generator, IDiagnosticSink diagnosticSink, CodeGenFile file, TextWriter output, string indentToken, Dictionary<string, string> options)
         {
             string langver = null;
-            if (options != null) options.TryGetValue("langver", out langver); // explicit option first
+            options?.TryGetValue("langver", out langver); // explicit option first
             if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
 
             var emit = CodeGenGenerate.All;

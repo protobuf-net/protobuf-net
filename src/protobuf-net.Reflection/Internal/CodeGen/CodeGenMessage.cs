@@ -69,13 +69,16 @@ internal class CodeGenMessage : CodeGenLocatedType
     public bool ShouldSerializePackage() => !string.IsNullOrWhiteSpace(Package);
 
 
-    internal static CodeGenMessage Parse(DescriptorProto message, string fullyQualifiedPrefix, CodeGenParseContext context, string package)
+    internal static CodeGenMessage Parse(DescriptorProto message, string fullyQualifiedPrefix, CodeGenDescriptorParseContext context, string package)
     {
         var name = context.NameNormalizer.GetName(message);
-        var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix, message);
+        var newMessage = new CodeGenMessage(name, fullyQualifiedPrefix, message)
+        {
+            OriginalName = message.Name,
+            Package = package,
+            IsDeprecated = message.Options?.Deprecated ?? false
+        };
         context.Register(message.FullyQualifiedName, newMessage);
-        newMessage.OriginalName = message.Name;
-        newMessage.Package = package;
 
         if (message.Fields.Count > 0)
         {

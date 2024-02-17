@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.ComponentModel;
 using Google.Protobuf.Reflection;
 using ProtoBuf.Internal.CodeGen;
 
@@ -30,12 +31,14 @@ internal class CodeGenServiceMethod : CodeGenEntity
 
     public CodeGenServiceMethodParametersDescriptor ParametersDescriptor { get; set; }
         = CodeGenServiceMethodParametersDescriptor.None;
+    [DefaultValue(false)]
+    public bool IsDeprecated { get; set; }
 
     internal void FixupPlaceholders(CodeGenParseContext context)
     {
     }
 
-    internal static CodeGenServiceMethod Parse(MethodDescriptorProto method, CodeGenParseContext context)
+    internal static CodeGenServiceMethod Parse(MethodDescriptorProto method, CodeGenDescriptorParseContext context)
     {
         var name = context.NameNormalizer.GetName(method);
         var newMethod = new CodeGenServiceMethod(name, method)
@@ -50,7 +53,8 @@ internal class CodeGenServiceMethod : CodeGenEntity
             {
                 RawType = context.GetContractType(method.OutputType),
                 Representation = method.ServerStreaming ? CodeGenTypeRepresentation.AsyncEnumerable : CodeGenTypeRepresentation.ValueTask
-            }
+            },
+            IsDeprecated = method.Options?.Deprecated ?? false,
         };
 
         return newMethod;

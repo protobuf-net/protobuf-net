@@ -4,14 +4,14 @@ using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.Reflection.Internal.CodeGen;
 using System.Linq;
 
-namespace ProtoBuf.Internal.CodeGen.Parsers;
+namespace ProtoBuf.Internal.CodeGen;
 
-internal static partial class ParseUtils
+internal partial class CodeGenSemanticModelParser
 {
-    public static CodeGenServiceMethod? ParseOperation(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
+    public CodeGenServiceMethod? ParseOperation(IMethodSymbol symbol)
     {
-        var responseType = ParseResponseType(in ctx, symbol);
-        var (requestType, parametersDescriptor) = ParseParameters(in ctx, symbol);
+        var responseType = ParseResponseType(symbol);
+        var (requestType, parametersDescriptor) = ParseParameters(symbol);
 
         return new CodeGenServiceMethod(symbol.Name, symbol)
         {
@@ -21,7 +21,7 @@ internal static partial class ParseUtils
         };
     }
 
-    private static (CodeGenServiceMethod.Type? requestType, CodeGenServiceMethodParametersDescriptor parametersDescriptor) ParseParameters(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
+    private (CodeGenServiceMethod.Type? requestType, CodeGenServiceMethodParametersDescriptor parametersDescriptor) ParseParameters(IMethodSymbol symbol)
     {
         var parameters = symbol.Parameters;
         CodeGenServiceMethod.Type? requestType = null;
@@ -45,18 +45,18 @@ internal static partial class ParseUtils
             
             // after we have passed predefined types,
             // we know it is a user message type. Let's parse it!
-            requestType = ParseServiceMethodType(in ctx, parameter.Type);
+            requestType = ParseServiceMethodType(parameter.Type);
         }
 
         return (requestType, parametersDescriptor);
-    } 
-    
-    private static CodeGenServiceMethod.Type ParseResponseType(in CodeGenFileParseContext ctx, IMethodSymbol symbol)
-    {
-        return ParseServiceMethodType(ctx, symbol.ReturnType);
     }
 
-    private static CodeGenServiceMethod.Type ParseServiceMethodType(in CodeGenFileParseContext ctx, ITypeSymbol typeSymbol)
+    private CodeGenServiceMethod.Type ParseResponseType(IMethodSymbol symbol)
+    {
+        return ParseServiceMethodType(symbol.ReturnType);
+    }
+
+    private CodeGenServiceMethod.Type ParseServiceMethodType(ITypeSymbol typeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)typeSymbol;
         if (namedTypeSymbol.Arity == 0)
@@ -64,7 +64,7 @@ internal static partial class ParseUtils
             // simply it is a raw type
             return new CodeGenServiceMethod.Type
             {
-                RawType = ctx.Context.GetContractType(typeSymbol.ToString()),
+                RawType = Context.GetContractType(typeSymbol.ToString()),
                 Representation = CodeGenTypeRepresentation.Raw
             }; 
         }
@@ -74,7 +74,7 @@ internal static partial class ParseUtils
 
         return new CodeGenServiceMethod.Type
         {
-            RawType = typeArgumentTypeDefinition is null ? CodeGenType.Unknown : ctx.Context.GetContractType(typeArgumentTypeDefinition.GetFullyQualifiedType()),
+            RawType = typeArgumentTypeDefinition is null ? CodeGenType.Unknown : Context.GetContractType(typeArgumentTypeDefinition.GetFullyQualifiedType()),
             Representation = DetermineGenericTypeRepresentation(genericTypeDefinition)
         };
     }

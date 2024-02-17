@@ -1,23 +1,25 @@
 ﻿#nullable enable
 using Google.Protobuf.Reflection;
+using ProtoBuf.Internal.CodeGen;
+using ProtoBuf.Reflection.Internal.CodeGen.Collections;
 using System.Collections.Generic;
 using System.IO;
-using ProtoBuf.Reflection.Internal.CodeGen.Collections;
-using ProtoBuf.Internal.CodeGen;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
 internal class CodeGenSet
 {
+
+    public CodeGenSet(IDiagnosticSink? diagnosticsSink) => DiagnosticSink = diagnosticsSink;
+
+    public IDiagnosticSink? DiagnosticSink { get; }
+
     public ICollection<CodeGenFile> Files { get; } = new NonNullableList<CodeGenFile>();
     public bool ShouldSerializeFiles() => Files.Count > 0;
-    internal IDiagnosticSink? DiagnosticSink { get; }
 
-    public CodeGenSet(IDiagnosticSink? diagnosticSink) => DiagnosticSink = diagnosticSink;
-
-    public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenParseContext context, IDiagnosticSink? diagnosticSink = null)
+    public static CodeGenSet Parse(FileDescriptorSet descriptorSet, CodeGenDescriptorParseContext context)
     {
-        var set = new CodeGenSet(diagnosticSink);
+        var set = new CodeGenSet(null);
         foreach (var file in descriptorSet.Files)
         {
             if (!file.IncludeInOutput) continue;

@@ -6,12 +6,13 @@ using ProtoBuf.Reflection.Internal.CodeGen;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
 namespace ProtoBuf.Internal.CodeGen;
 
-internal class CodeGenSemanticModelParser : IDiagnosticSink
+internal partial class CodeGenSemanticModelParser : CodeGenParseContext
 {
     //public static CodeGenSet Parse(ISymbol symbol)
     //{
@@ -19,42 +20,19 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
     //    return Parse(codeGenSet, symbol);
     //}
 
-    public CodeGenSemanticModelParser(IDiagnosticSink? diagnosticSink = null) => set = new CodeGenSet(diagnosticSink);
+    public CodeGenSemanticModelParser(IDiagnosticSink? diagnostics = null)
+    {
+        set = new(diagnostics);
+    }
     public CodeGenSemanticModelParser(in GeneratorExecutionContext executionContext)
     {
         _executionContext = executionContext;
-        set = new CodeGenSet(this);
+        set = new(null);
     }
 
     private readonly GeneratorExecutionContext? _executionContext;
 
-    private readonly CodeGenParseContext codeGenParseContext = new CodeGenParseContext();
-    internal CodeGenParseContext Context => codeGenParseContext;
     private readonly CodeGenSet set;
-    private CodeGenFile? defaultFile;
-    private CodeGenFile DefaultFile
-    {
-        get
-        {
-            if (defaultFile is null)
-            {
-                defaultFile = new CodeGenFile("protogen.generated.cs");
-                _defaultContext = new CodeGenFileParseContext(defaultFile, this);
-                set.Files.Add(defaultFile);
-            }
-            return defaultFile;
-        }
-    }
-
-    private CodeGenFileParseContext _defaultContext;
-    public ref readonly CodeGenFileParseContext DefaultContext
-    {
-        get
-        {
-            if (defaultFile is null) _ = DefaultFile;
-            return ref _defaultContext;
-        }
-    }
 
     public int Parse(Compilation compilation, SyntaxTree syntaxTree)
     {
@@ -62,67 +40,79 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
         int count = 0;
         var ext = Path.GetExtension(syntaxTree.FilePath);
         var file = new CodeGenFile(Path.ChangeExtension(syntaxTree.FilePath, "generated" + ext));
-        var ctx = new CodeGenFileParseContext(file, this);
-        foreach (var symbol in semanticModel.LookupNamespacesAndTypes(0))
+        var candidates = semanticModel.LookupNamespacesAndTypes(0);
+        if (candidates.Length != 0)
         {
-            bool fromTree = false;
-            foreach (var src in symbol.DeclaringSyntaxReferences)
+            foreach (var symbol in candidates)
             {
-                if (src.SyntaxTree == syntaxTree)
+                switch (symbol.Kind)
                 {
-                    fromTree = true;
-                    break;
+                    case SymbolKind.Namespace when symbol is INamespaceSymbol ns && FromTree(symbol, syntaxTree):
+                        RecurseNamespace(ns);
+                        break;
+                    case SymbolKind.NamedType when symbol is INamedTypeSymbol type && FromTree(symbol, syntaxTree):
+                        RecurseNamedType(type);
+                        break;
                 }
-            }
-            if (fromTree)
-            {
-                count += ParseAll(symbol, in ctx);
             }
         }
         if (!file.IsEmpty) set.Files.Add(file);
         return count;
-    }
-    private int ParseAll(ISymbol symbol, in CodeGenFileParseContext ctx)
-    {
-        int count = 0;
-        if (symbol is INamedTypeSymbol type)
+
+        static bool FromTree(ISymbol symbol, SyntaxTree tree)
         {
-            if (Parse(type, in ctx)) count++;
-        }
-        if (symbol is INamespaceSymbol ns)
-        {
-            foreach (var member in ns.GetMembers())
+            foreach (var src in symbol.DeclaringSyntaxReferences)
             {
-                count += ParseAll(member, in ctx);
+                if (src.SyntaxTree == tree)
+                {
+                    return true;
+                }
             }
+            return false;
         }
-        return count;
+
     }
 
-    public bool Parse(INamedTypeSymbol type) => Parse(type, in DefaultContext);
-
-    private bool Parse(INamedTypeSymbol type, in CodeGenFileParseContext ctx)
+    private void RecurseNamespace(INamespaceSymbol symbol)
     {
-        switch (ParseUtils.ParseNamedType(in ctx, type))
+        foreach (var type in symbol.GetTypeMembers())
         {
-            case CodeGenMessage msg:
-                ctx.File.Messages.Add(msg);
-                return true;
-            case CodeGenEnum enm:
-                ctx.File.Enums.Add(enm);
-                return true;
-            case CodeGenService svc:
-                ctx.File.Services.Add(svc);
-                return true;
+            RecurseNamedType(type);
         }
-        return false;
+        foreach (var ns in symbol.GetNamespaceMembers())
+        {
+            RecurseNamespace(ns);
+        }
+    }
+
+    static bool HasProtoGenerate(ISymbol symbol)
+    {
+        return HasLocal(symbol) || HasLocal(symbol.ContainingModule) || HasLocal(symbol.ContainingAssembly);
+        static bool HasLocal(ISymbol symbol)
+        {
+            foreach (var attrib in symbol.GetAttributes())
+            {
+                var ac = attrib.AttributeClass;
+                if (ac is not null && ac.InProtoBufNamespace() && ac.Name == "ProtoGenerateAttribute") return true;
+            }
+            return false;
+        }
+    }
+
+    private void RecurseNamedType(INamedTypeSymbol type)
+    {
+        ParseNamedType(type);
+        foreach (var inner in type.GetTypeMembers())
+        {
+            RecurseNamedType(inner);
+        }
     }
     public CodeGenSet Process()
     {
         // note: if message/enum type is consumed before it is defined, we simplify things
         // by using a place-holder initially (via the protobuf FQN); we need to go back over the
         // tree, and substitute out any such place-holders for the final types
-        codeGenParseContext.FixupPlaceholders();
+        FixupPlaceholders();
 
         //// throwing errors, which happened during parsing
         //// warnings will be available later for logging output
@@ -133,8 +123,58 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
     }
 
     // is this a new symbol?
-    internal bool HasConsidered(ISymbol symbol)
-        => !(_seen ??= new HashSet<ISymbol>(SymbolEqualityComparer.Default)).Add(symbol);
+    internal bool TryGetType(ISymbol symbol, out CodeGenType type)
+    {
+        if (!_knownSymbols.TryGetValue(symbol, out type))
+        {
+            type = CodeGenType.Unknown;
+            return false;
+        }
+        return true;
+    }
+    internal void Add(ISymbol symbol, CodeGenType type)
+    {
+        _knownSymbols.Add(symbol, type);
+        var parent = symbol.ContainingSymbol;
+        if (parent is null)
+        {
+
+        }
+        else if (parent is INamedTypeSymbol named)
+        {
+            ParseNamedType(named);
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unexpected parent: {parent.GetType().FullName}");
+        }
+    }
+
+    private void ParseAttribute<T>(ISymbol symbol, AttributeData attrib, T obj, Func<string, bool, T, TypedConstant, bool> handler) where T : class
+    {
+        var ctorArgs = attrib.ConstructorArguments;
+        if (!ctorArgs.IsDefaultOrEmpty)
+        {
+            var paramDefs = attrib.AttributeConstructor?.Parameters ?? ImmutableArray<IParameterSymbol>.Empty;
+            var lim = Math.Min(ctorArgs.Length, paramDefs.Length);
+            for (int i = 0; i < lim; i++)
+            {
+                if (!handler(paramDefs[i].Name, true, obj, ctorArgs[i]))
+                {
+                    ReportDiagnostic(ParseUtils.UnhandledAttributeValue, symbol,
+                        attrib.AttributeClass?.Name ?? "", paramDefs[i].Name);
+                }
+            }
+        }
+        foreach (var pair in attrib.NamedArguments)
+        {
+            if (!handler(pair.Key, false, obj, pair.Value))
+            {
+                ReportDiagnostic(ParseUtils.UnhandledAttributeValue, symbol,
+                    attrib.AttributeClass?.Name ?? "", pair.Key);
+            }
+        }
+    }
 
     internal void ReportDiagnostic(DiagnosticDescriptor diagnostic, ISymbol source, params object[] messageArgs)
     {
@@ -143,15 +183,31 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
             var loc = source.Locations.FirstOrDefault();
             _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(diagnostic, loc, messageArgs));
         }
-        else if (set.DiagnosticSink is { } sink)
+
+        if (set.DiagnosticSink is { } diagnostics)
         {
             // intended for debug
             var mapped = new CodeGenDiagnostic(diagnostic.Id,
                 (string?)diagnostic.Title ?? "", (string ?)diagnostic.MessageFormat ?? "",
                 (CodeGenDiagnostic.DiagnosticSeverity)diagnostic.DefaultSeverity);
-            sink.ReportDiagnostic(mapped, LocationWrapper.Create(source), messageArgs);
+            diagnostics.ReportDiagnostic(mapped, LocationWrapper.Create(source), messageArgs);
         }
     }
+
+    internal override void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
+    {
+        if (_executionContext.HasValue)
+        {
+            var mapped = MapDescriptor(diagnostic);
+            var loc = (located.Origin as ISymbol)?.Locations.FirstOrDefault();
+            if (_executionContext.HasValue)
+            {
+                _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(mapped, loc, messageArgs));
+            }
+        }
+        set.DiagnosticSink?.ReportDiagnostic(diagnostic, located, messageArgs);
+    }
+
     sealed private class LocationWrapper : ILocated
     {
         public object? Origin { get; }
@@ -159,15 +215,15 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
         internal static ILocated? Create(ISymbol? loc)  => loc is null ? null : new LocationWrapper(loc);
     }
 
-    void IDiagnosticSink.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
-    {
-        if (_executionContext.HasValue)
-        {
-            var loc = (located.Origin as ISymbol)?.Locations.FirstOrDefault();
-            var mapped = MapDescriptor(diagnostic);
-            _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(mapped, loc, messageArgs));
-        }
-    }
+    //void IDiagnosticSink.ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
+    //{
+    //    if (_executionContext.HasValue)
+    //    {
+    //        var loc = (located.Origin as ISymbol)?.Locations.FirstOrDefault();
+    //        var mapped = MapDescriptor(diagnostic);
+    //        _executionContext.GetValueOrDefault().ReportDiagnostic(Diagnostic.Create(mapped, loc, messageArgs));
+    //    }
+    //}
 
     private DiagnosticDescriptor MapDescriptor(CodeGenDiagnostic diagnostic)
     {
@@ -178,7 +234,33 @@ internal class CodeGenSemanticModelParser : IDiagnosticSink
         }
         return found;
     }
+
     private static readonly ConcurrentDictionary<string, DiagnosticDescriptor> s_MappedDescriptors = new();
 
-    private HashSet<ISymbol>? _seen;
+    private readonly Dictionary<ISymbol, CodeGenType> _knownSymbols = new(SymbolEqualityComparer.Default);
+
+    protected override IEnumerable<CodeGenType> GetKnownTypes() => _knownSymbols.Values;
+
+    protected override bool TryResolve(CodeGenPlaceholderType placeholder, out CodeGenType value)
+    {
+        value = CodeGenType.Unknown;
+        return placeholder is CodeGenSymbolPlaceholderType symbolic && _knownSymbols.TryGetValue(symbolic.Symbol, out value);
+    }
+
+    public CodeGenType GetContractType(ISymbol symbol)
+    {
+        if (symbol is null) return CodeGenType.Unknown;
+        if (!_knownSymbols.TryGetValue(symbol, out var found))
+        {
+            found = new CodeGenSymbolPlaceholderType(symbol);
+            _knownSymbols.Add(symbol, found);
+        }
+        return found;
+    }
+    sealed class CodeGenSymbolPlaceholderType : CodeGenPlaceholderType
+    {
+        public ISymbol Symbol { get; }
+        public CodeGenSymbolPlaceholderType(ISymbol symbol) : base(symbol.Name, symbol.GetFullyQualifiedPrefix())
+            => Symbol = symbol;
+    }
 }

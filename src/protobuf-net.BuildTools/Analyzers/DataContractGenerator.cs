@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.Internal.CodeGen;
 using ProtoBuf.Reflection.Internal.CodeGen;
+using System;
+using System.Linq;
 
 namespace ProtoBuf.BuildTools.Analyzers;
 
@@ -11,17 +13,24 @@ public sealed class DataContractGenerator : ISourceGenerator
 
     void ISourceGenerator.Execute(GeneratorExecutionContext context)
     {
-        var parser = new CodeGenSemanticModelParser(in context);
-        foreach (var tree in context.Compilation.SyntaxTrees)
+        try
         {
-            parser.Parse(context.Compilation, tree);
+            var parser = new CodeGenSemanticModelParser(in context);
+            foreach (var tree in context.Compilation.SyntaxTrees)
+            {
+                parser.Parse(context.Compilation, tree);
+            }
+            var parsedFromCode = parser.Process();
+            if (parsedFromCode.Files.Count == 0) return;
+            var generator = new CodeGenCSharpCodeGenerator();
+            foreach (var codeFile in generator.Generate(parsedFromCode))
+            {
+                context.AddSource(codeFile.Name, codeFile.Text);
+            }
         }
-        var parsedFromCode = parser.Process();
-        if (parsedFromCode.Files.Count == 0) return;
-        var generator = new CodeGenCSharpCodeGenerator();
-        foreach (var codeFile in generator.Generate(parsedFromCode))
+        catch (Exception ex)
         {
-            context.AddSource(codeFile.Name, codeFile.Text);
+            context.ReportDiagnostic(Diagnostic.Create(DataContractAnalyzer.UnknownError, null, ex.Message, ex?.GetType()?.Name));
         }
     }
 

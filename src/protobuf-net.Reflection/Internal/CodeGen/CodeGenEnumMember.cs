@@ -23,7 +23,9 @@ internal class CodeGenEnumValue : CodeGenEntity
     
     [DefaultValue(Access.Public)]
     public Access Access { get; set; } = Access.Public;
-    
+    [DefaultValue(false)]
+    public bool IsDeprecated { get; set; }
+
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     
     internal static CodeGenEnumValue Parse(EnumValueDescriptorProto enumValue, CodeGenParseContext context)
@@ -31,7 +33,8 @@ internal class CodeGenEnumValue : CodeGenEntity
         var name = context.NameNormalizer.GetName(enumValue);
         var newEnumValue = new CodeGenEnumValue(enumValue.Number, name, enumValue)
         {
-            OriginalName = enumValue.Name
+            OriginalName = enumValue.Name,
+            IsDeprecated = enumValue.Options?.Deprecated ?? false,
         };
 
         return newEnumValue;

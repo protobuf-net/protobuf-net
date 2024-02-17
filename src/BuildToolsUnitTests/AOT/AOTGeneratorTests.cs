@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Analyzers;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -19,7 +18,7 @@ public class AOTGeneratorTests : GeneratorTestBase<DataContractGenerator>
     [Fact]
     public async Task ProtoContractOneTree()
     {
-        var result = await RunAsync(@"[ProtoBuf.ProtoContract] partial class Foo {}");
+        var result = await RunAsync(@"[ProtoBuf.ProtoGenerate, ProtoBuf.ProtoContract] partial class Foo {}");
         Assert.Single(result.GeneratedTrees);
     }
 
@@ -90,6 +89,7 @@ public class AOTGeneratorTests : GeneratorTestBase<DataContractGenerator>
         {
             Assert.Equal("PBN4001", Assert.Single(diag.Select(x => x.Id).Distinct()));
         }, @"
+[assembly:ProtoBuf.ProtoGenerate]
 [ProtoBuf.ProtoContract]
 partial class Foo {
     [ProtoBuf.ProtoMember(1)]
@@ -101,7 +101,9 @@ partial class Foo {
     [Fact]
     public async Task PartialOverTwoTrees()
     {
-        var result = await RunAsync(@"partial class Foo {}", @"
+        var result = await RunAsync(@"
+[module:ProtoBuf.ProtoGenerate]
+partial class Foo {}", @"
 using ProtoBuf;
 [ProtoContract] partial class Foo {}");
         Assert.Single(result.GeneratedTrees);

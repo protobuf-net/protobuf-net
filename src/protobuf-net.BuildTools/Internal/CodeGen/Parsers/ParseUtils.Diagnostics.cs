@@ -8,27 +8,19 @@ namespace ProtoBuf.Internal.CodeGen.Parsers;
 
 internal static partial class ParseUtils
 {
-    internal static readonly DiagnosticDescriptor EnumPropertyLacksAttribute = new(
+    internal static readonly DiagnosticDescriptor UnhandledAttribute = new(
             id: "PBN3001",
-            title: nameof(DataContractGenerator) + "." + nameof(EnumPropertyLacksAttribute),
-            messageFormat: $"Failed to find a '{nameof(ProtoMemberAttribute)}' attribute within enum property definition",
+            title: nameof(DataContractGenerator) + "." + nameof(UnhandledAttribute),
+            messageFormat: "The attribute {0} is not currently handled",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Warning,
+            defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor EnumValueLacksAttribute = new(
+    internal static readonly DiagnosticDescriptor UnhandledAttributeValue = new(
             id: "PBN3002",
-            title: nameof(DataContractGenerator) + "." + nameof(EnumValueLacksAttribute),
-            messageFormat: $"Failed to find a '{nameof(ProtoEnumAttribute)}' attribute within enum value definition",
+            title: nameof(DataContractGenerator) + "." + nameof(UnhandledAttributeValue),
+            messageFormat: "The attribute value {0}.{1} is not currently handled",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Warning,
-            isEnabledByDefault: true);
-
-    internal static readonly DiagnosticDescriptor EnumTypeLacksAttribute = new(
-            id: "PBN3003",
-            title: nameof(DataContractGenerator) + "." + nameof(EnumTypeLacksAttribute),
-            messageFormat: $"Failed to find a '{nameof(ProtoContractAttribute)}' attribute within enum type definition",
-            category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Warning,
+            defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 }

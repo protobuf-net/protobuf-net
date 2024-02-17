@@ -35,18 +35,18 @@ internal class CodeGenEnum : CodeGenLocatedType
     public bool ShouldSerializeEnumValues() => _enumValues is { Count: > 0 };
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
 
-    internal static CodeGenEnum Parse(EnumDescriptorProto @enum, string fullyQualifiedPrefix, CodeGenParseContext context, string package)
+    internal static CodeGenEnum Parse(EnumDescriptorProto @enum, string fullyQualifiedPrefix, CodeGenDescriptorParseContext context, string package)
     {
         // note: remember context.Register(@enum.FullyQualifiedName, newEnum);
         var name = context.NameNormalizer.GetName(@enum);
-        
-        var newEnum = new CodeGenEnum(name, fullyQualifiedPrefix, @enum);
-        context.Register(@enum.FullyQualifiedName, newEnum);
-        if (@enum.Options?.Deprecated is not null)
+
+        var newEnum = new CodeGenEnum(name, fullyQualifiedPrefix, @enum)
         {
-            newEnum.IsDeprecated = @enum.Options.Deprecated;
-        }
+            IsDeprecated = @enum.Options?.Deprecated ?? false
+        };
+        context.Register(@enum.FullyQualifiedName, newEnum);
         
+
         if (@enum.Values.Count > 0)
         {
             foreach (var enumValue in @enum.Values)

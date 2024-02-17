@@ -31,14 +31,19 @@ internal class CodeGenService : CodeGenLocatedType
     
     [DefaultValue(Access.Public)]
     public Access Access { get; set; } = Access.Public;
-    
+    [DefaultValue(false)]
+    public bool IsDeprecated { get; set; }
+
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     public bool ShouldSerializePackage() => !string.IsNullOrWhiteSpace(Package);
 
-    internal static CodeGenService Parse(ServiceDescriptorProto service, string fullyQualifiedPrefix, CodeGenParseContext context, string package)
+    internal static CodeGenService Parse(ServiceDescriptorProto service, string fullyQualifiedPrefix, CodeGenDescriptorParseContext context, string package)
     {
         var name = context.NameNormalizer.GetName(service);
-        var newService = new CodeGenService(name, fullyQualifiedPrefix, service);
+        var newService = new CodeGenService(name, fullyQualifiedPrefix, service)
+        {
+            IsDeprecated = service.Options?.Deprecated ?? false,
+        };
         context.Register(service.FullyQualifiedName, newService);
         newService.OriginalName = service.Name;
         newService.Package = package;

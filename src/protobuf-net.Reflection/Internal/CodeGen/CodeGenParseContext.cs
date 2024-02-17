@@ -6,10 +6,13 @@ using System.Collections.Generic;
 
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenParseContext
+internal sealed class CodeGenDescriptorParseContext : CodeGenParseContext
 {
-    public bool UseLegacyArrayStyle { get; set; }
-    public NameNormalizer NameNormalizer { get; set; } = NameNormalizer.Default;
+    private readonly IDiagnosticSink? _diagnostics;
+    public CodeGenDescriptorParseContext(IDiagnosticSink? diagnostics = null)
+        => _diagnostics = diagnostics;
+    internal override void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs)
+        => _diagnostics?.ReportDiagnostic(diagnostic, located, messageArgs);
 
     private readonly Dictionary<string, CodeGenType> _contractTypes = new Dictionary<string, CodeGenType>();
 
@@ -18,17 +21,17 @@ internal class CodeGenParseContext
         if (string.IsNullOrWhiteSpace(fqn)) return CodeGenType.Unknown;
         if (!_contractTypes.TryGetValue(fqn, out var found))
         {
-            found = TryFindWellKnown(fqn) ?? new CodeGenPlaceholderType(fqn);
+            found = TryFindWellKnown(fqn) ?? new CodeGenDescriptorPlaceholderType(fqn);
             _contractTypes.Add(fqn, found);
         }
         return found;
     }
 
     private CodeGenType? TryFindWellKnown(string fqn) => fqn switch
-        {
-            ".bcl.NetObjectProxy" => CodeGenSimpleType.NetObjectProxy,
-            _ => null,
-        };
+    {
+        ".bcl.NetObjectProxy" => CodeGenSimpleType.NetObjectProxy,
+        _ => null,
+    };
 
     public CodeGenType GetMapEntryType(string fqn, CodeGenType key, CodeGenType value, object? origin)
     {
@@ -49,35 +52,9 @@ internal class CodeGenParseContext
         _contractTypes[fqn] = type;
     }
 
-    internal void FixupPlaceholders()
-    {
-        foreach (var type in _contractTypes.Values)
-        {
-            switch (type)
-            {
-                case CodeGenMessage msg:
-                    msg.FixupPlaceholders(this);
-                    break;
-                case CodeGenMapEntryType map:
-                    map.FixupPlaceholders(this);
-                    break;
-            }
-        }
-    }
-
-    internal bool FixupPlaceholder(CodeGenType type, out CodeGenType value)
-    {
-        if (type is CodeGenPlaceholderType placeholder)
-        {
-            if (_contractTypes.TryGetValue(placeholder.Name, out value) && value is not CodeGenPlaceholderType)
-            {
-                return true;
-            }
-            throw new InvalidOperationException($"No non-placeholder was registered for '{placeholder.Name}'");
-        }
-        value = type;
-        return false;
-    }
+    protected override IEnumerable<CodeGenType> GetKnownTypes() => _contractTypes.Values;
+    protected override bool TryResolve(CodeGenPlaceholderType placeholder, out CodeGenType value)
+        => _contractTypes.TryGetValue(placeholder.Name, out value);
 
     internal bool AddMapEntry(DescriptorProto type)
     {
@@ -94,4 +71,47 @@ internal class CodeGenParseContext
         }
         return false;
     }
+}
+internal abstract class CodeGenParseContext
+{
+    public NameNormalizer NameNormalizer { get; set; } = NameNormalizer.Default;
+
+    public bool UseLegacyArrayStyle { get; set; }
+
+    protected abstract IEnumerable<CodeGenType> GetKnownTypes();
+
+    internal void FixupPlaceholders()
+    {
+        foreach (var type in GetKnownTypes())
+        {
+            switch (type)
+            {
+                case CodeGenMessage msg:
+                    msg.FixupPlaceholders(this);
+                    break;
+                case CodeGenMapEntryType map:
+                    map.FixupPlaceholders(this);
+                    break;
+            }
+        }
+    }
+
+    internal abstract void ReportDiagnostic(CodeGenDiagnostic diagnostic, ILocated located, params object[] messageArgs);
+
+    protected abstract bool TryResolve(CodeGenPlaceholderType placeholder, out CodeGenType value);
+    internal bool FixupPlaceholder(CodeGenType type, out CodeGenType value)
+    {
+        if (type is CodeGenPlaceholderType placeholder)
+        {
+            if (TryResolve(placeholder, out value) && value is not null && value is not CodeGenPlaceholderType)
+            {
+                return true;
+            }
+            throw new InvalidOperationException($"No non-placeholder was registered for '{placeholder.Name}'");
+        }
+        value = type;
+        return false;
+    }
+
+
 }

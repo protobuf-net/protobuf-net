@@ -1,10 +1,15 @@
 ﻿#nullable enable
 
+
 namespace ProtoBuf.Reflection.Internal.CodeGen;
 
-internal class CodeGenPlaceholderType : CodeGenType
+internal abstract class CodeGenPlaceholderType : CodeGenType
 {
-    public CodeGenPlaceholderType(string fqn) : base(fqn, "") { }
+    protected CodeGenPlaceholderType(string name, string fullyQualifiedPrefix) : base(name, fullyQualifiedPrefix) { }
 
     internal override string Serialize() => "!!" + Name + "!!";
+}
+internal sealed class CodeGenDescriptorPlaceholderType : CodeGenPlaceholderType
+{
+    public CodeGenDescriptorPlaceholderType(string fqn) : base(fqn, "") { }
 }

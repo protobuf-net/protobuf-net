@@ -15,7 +15,7 @@ internal class CodeGenField : CodeGenEntity
         BackingName = OriginalName = Name = name?.Trim() ?? "";
     }
     public const string PresenceTrackingFieldName = "__pbn_field_presence_";
-    public int FieldNumber { get; }
+    public int FieldNumber { get; set; }
     public CodeGenType Type { get; set; } = CodeGenUnknownType.Instance;
 
     public bool ShouldSerializeType() => false;
@@ -58,12 +58,14 @@ internal class CodeGenField : CodeGenEntity
     public bool ShouldSerializeOriginalName() => OriginalName != Name;
     public bool ShouldSerializeBackingName() => BackingName != Name;
 
-    internal static CodeGenField Parse(FieldDescriptorProto field, CodeGenParseContext context)
+    internal static CodeGenField 
+        Parse(FieldDescriptorProto field, CodeGenDescriptorParseContext context)
     {
         var name = context.NameNormalizer.GetName(field);
         var newField = new CodeGenField(field.Number, name, field)
         {
             OriginalName = field.Name,
+            IsDeprecated = field.Options?.Deprecated ?? false,
             Type = field.type switch
             {
                 FieldDescriptorProto.Type.TypeString => CodeGenSimpleType.String,
