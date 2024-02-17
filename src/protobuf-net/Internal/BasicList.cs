@@ -53,7 +53,7 @@ namespace ProtoBuf.Internal
                 this.node = node;
             }
             void IEnumerator.Reset() { position = -1; }
-            public object Current { get { return node[position]; } }
+            public readonly object Current { get { return node[position]; } }
             public bool MoveNext()
             {
                 int len = node.Length;

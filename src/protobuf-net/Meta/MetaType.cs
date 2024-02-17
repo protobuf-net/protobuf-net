@@ -564,8 +564,7 @@ namespace ProtoBuf.Meta
             if (IsAutoTuple)
             {
                 if (involvedInInheritance) ThrowTupleTypeWithInheritance(Type);
-                ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping);
-                if (ctor is null) throw new InvalidOperationException();
+                ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping) ?? throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
                     args: new object[] { model, ctor, mapping, GetFeatures(), CompatibilityLevel });
             }
@@ -937,7 +936,7 @@ namespace ProtoBuf.Meta
         {
             AttributeFamily family = AttributeFamily.None;
 
-            if (attributes is null) attributes = AttributeMap.Create(type, false);
+            attributes ??= AttributeMap.Create(type, false);
 
             for (int i = 0; i < attributes.Length; i++)
             {
@@ -1316,13 +1315,13 @@ namespace ProtoBuf.Meta
                     }
                 }
 
-                if ((attrib = GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName)) is object)
+                if ((attrib = GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName)) is not null)
                 {
                     vm.NullWrappedValue = true;
                     if (attrib.TryGet(nameof(NullWrappedValueAttribute.AsGroup), out object tmp) && tmp is bool b)
                         vm.NullWrappedValueGroup = b;
                 }
-                if ((attrib = GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName)) is object)
+                if ((attrib = GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName)) is not null)
                 {
                     vm.NullWrappedCollection = true;
                     if (attrib.TryGet(nameof(NullWrappedCollectionAttribute.AsGroup), out object tmp) && tmp is bool b)

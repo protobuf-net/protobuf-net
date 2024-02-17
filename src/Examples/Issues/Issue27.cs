@@ -82,7 +82,7 @@ namespace Examples.Issues
        [DataMember(Order = 2)]
        public TKey2 Key2 { get;  internal set; }
 
-       public override string ToString() {
+       public override readonly string ToString() {
            return Key1.ToString() + ", " + Key2.ToString();
        }
    }

@@ -127,7 +127,7 @@ namespace Benchmark
         {
             SubItemToken tok;
             int field;
-            if (obj == null) obj = new protogen.Database();
+            obj ??= new protogen.Database();
             while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
@@ -152,7 +152,7 @@ namespace Benchmark
         {
             SubItemToken tok;
             int field;
-            if (obj == null) obj = new protogen.Order();
+            obj ??= new protogen.Order();
             while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)
@@ -219,7 +219,7 @@ namespace Benchmark
         private static void Merge(ref ProtoReader.State state, ref protogen.OrderLine obj)
         {
             int field;
-            if (obj == null) obj = new protogen.OrderLine();
+            obj ??= new protogen.OrderLine();
             while ((field = state.ReadFieldHeader()) != 0)
             {
                 switch (field)

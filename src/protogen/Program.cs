@@ -49,7 +49,7 @@ namespace protogen
 
                     if (lhs.StartsWith("+"))
                     {
-                        if (options == null) options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        options ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         options[lhs.Substring(1)] = rhs;
                         continue;
                     }
@@ -135,7 +135,7 @@ namespace protogen
                     if (tmp != ver) Console.WriteLine($"protobuf-net.Reflection {tmp}");
                     return 0;
                 }
-                else if (grpcMode is object)
+                else if (grpcMode is not null)
                 {
 #if GRPC_TOOLS
                     return await GrpcTools.ExecuteAsync(grpcMode, grpcUrl, grpcService, codegen, outPath, options);
@@ -231,10 +231,8 @@ namespace protogen
 
                     if (codegen == null)
                     {
-                        using (var fds = File.Create(outPath))
-                        {
-                            Serializer.Serialize(fds, set);
-                        }
+                        using var fds = File.Create(outPath);
+                        Serializer.Serialize(fds, set);
 
                         return 0;
                     }

@@ -64,13 +64,11 @@ namespace ProtoBuf
             return len;
         }
 
-        private void SerializeCore(ProtoWriter.State state)
+        private readonly void SerializeCore(ProtoWriter.State state)
         {
             try
             {
-                var writer = _writer;
-                if (writer is null) throw new ObjectDisposedException(nameof(MeasureState<T>));
-
+                var writer = _writer ?? throw new ObjectDisposedException(nameof(MeasureState<T>));
                 var targetWriter = state.GetWriter();
                 targetWriter.InitializeFrom(writer);
                 long actual = TypeModel.SerializeImpl<T>(ref state, _value);
@@ -89,18 +87,18 @@ namespace ProtoBuf
             }
         }
 
-        internal int GetLengthHits(out int misses) => _writer.GetLengthHits(out misses);
+        internal readonly int GetLengthHits(out int misses) => _writer.GetLengthHits(out misses);
 
         /// <summary>
         /// Perform the calculated serialization operation against the provided target stream. If the object state changes between the
         /// measure and serialize operations, the behavior is undefined.
         /// </summary>
-        public void Serialize(Stream stream) => SerializeCore(ProtoWriter.State.Create(stream, _model, _userState));
+        public readonly void Serialize(Stream stream) => SerializeCore(ProtoWriter.State.Create(stream, _model, _userState));
 
         /// <summary>
         /// Perform the calculated serialization operation against the provided target writer. If the object state changes between the
         /// measure and serialize operations, the behavior is undefined.
         /// </summary>
-        public void Serialize(IBufferWriter<byte> writer) => SerializeCore(ProtoWriter.State.Create(writer, _model, _userState));
+        public readonly void Serialize(IBufferWriter<byte> writer) => SerializeCore(ProtoWriter.State.Create(writer, _model, _userState));
     }
 }

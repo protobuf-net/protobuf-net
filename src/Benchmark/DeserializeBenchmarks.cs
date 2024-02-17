@@ -79,7 +79,7 @@ namespace Benchmark
         private MemoryStream _exposable;
         private Stream ExposableData()
         {
-            if (_exposable == null) _exposable = new MemoryStream(_data, 0, _data.Length, false, true);
+            _exposable ??= new MemoryStream(_data, 0, _data.Length, false, true);
             _exposable.Position = 0;
             return _exposable;
         }

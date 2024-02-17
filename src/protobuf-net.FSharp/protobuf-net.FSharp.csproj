@@ -6,8 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" VersionOverride="7.0" />
-    <!--<PackageVersion Include="FSharp.Core" Version="7.0.0" />-->
+    <PackageReference Include="FSharp.Core" VersionOverride="8.0.200" />
   </ItemGroup>
 
   <ItemGroup>

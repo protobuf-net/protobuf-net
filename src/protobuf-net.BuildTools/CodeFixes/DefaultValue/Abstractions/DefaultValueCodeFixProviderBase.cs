@@ -103,7 +103,7 @@ namespace ProtoBuf.CodeFixes.DefaultValue.Abstractions
             /// <summary>
             /// Returns default value string representation with a cast to type included
             /// </summary>
-            internal string GetCastedRepresentation()
+            internal readonly string GetCastedRepresentation()
             {
                 if (MemberSpecialType == SpecialType.System_Enum)
                 {

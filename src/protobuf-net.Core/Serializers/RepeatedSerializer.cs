@@ -582,7 +582,7 @@ namespace ProtoBuf.Serializers
         [StructLayout(LayoutKind.Auto)]
         struct Enumerator : IEnumerator<T>
         {
-            public void Reset() => ThrowHelper.ThrowNotSupportedException();
+            public readonly void Reset() => ThrowHelper.ThrowNotSupportedException();
             private readonly T[] _array;
             private int _index;
             public Enumerator(T[] array)
@@ -590,10 +590,11 @@ namespace ProtoBuf.Serializers
                 _array = array;
                 _index = -1;
             }
-            public T Current => _array[_index];
-            object IEnumerator.Current => _array[_index];
+            public readonly T Current => _array[_index];
+
+            readonly object IEnumerator.Current => _array[_index];
             public bool MoveNext() => ++_index < _array.Length;
-            public void Dispose() { }
+            public readonly void Dispose() { }
         }
     }
 

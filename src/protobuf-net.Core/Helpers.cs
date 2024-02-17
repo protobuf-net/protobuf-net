@@ -23,7 +23,7 @@ namespace ProtoBuf
 
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {
-            if (types is null) types = Type.EmptyTypes;
+            types ??= Type.EmptyTypes;
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                 null, types, null);
         }

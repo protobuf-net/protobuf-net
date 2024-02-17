@@ -476,12 +476,12 @@ namespace Examples
             [OnDeserializing]
             public void OnDeserializing() { History += ";OnDeserializing"; }
             [OnSerialized]
-            public void OnSerialized()
+            public readonly void OnSerialized()
             {
                 Interlocked.Increment(ref afterSer);
             }
             [OnSerializing]
-            public void OnSerializing()
+            public readonly void OnSerializing()
             {
                 Interlocked.Increment(ref beforeSer);
             }

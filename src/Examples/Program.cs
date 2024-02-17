@@ -94,7 +94,7 @@ namespace Examples
 
         public static bool CheckBytes<T>(ITestOutputHelper output, T item, TypeModel model, string hex, params byte[] expected)
         {
-            if (model == null) model = RuntimeTypeModel.Default;
+            model ??= RuntimeTypeModel.Default;
             using (MemoryStream ms = new MemoryStream())
             {
                 model.Serialize(ms, item);

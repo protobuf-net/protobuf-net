@@ -45,7 +45,7 @@ namespace ProtoBuf
             /// in the underlying stream, if multiple readers are used on the same stream)
             /// </summary>
             [MethodImpl(HotPath)]
-            public long GetPosition() => _reader._longPosition;
+            public readonly long GetPosition() => _reader._longPosition;
 
             /// <summary>
             /// Reads an unsigned 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -701,7 +701,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal Type DeserializeType(string typeName) => _reader.DeserializeType(typeName);
+            internal readonly Type DeserializeType(string typeName) => _reader.DeserializeType(typeName);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             private void SkipGroup()
@@ -788,7 +788,7 @@ namespace ProtoBuf
             /// a Variant may be updated to SignedVariant. If the hinted wire-type is unrelated then no change is made.
             /// </summary>
             [MethodImpl(HotPath)]
-            public void Hint(WireType wireType) => _reader.Hint(wireType);
+            public readonly void Hint(WireType wireType) => _reader.Hint(wireType);
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowWireTypeException()
@@ -926,7 +926,7 @@ namespace ProtoBuf
             /// <summary>
             /// Indicates the underlying proto serialization format on the wire.
             /// </summary>
-            public WireType WireType
+            public readonly WireType WireType
             {
                 [MethodImpl(HotPath)]
                 get => _reader.WireType;
@@ -938,7 +938,7 @@ namespace ProtoBuf
             /// than a second instance of the same string. Disabled by default. Note that this uses
             /// a <i>custom</i> interner - the system-wide string interner is not used.
             /// </summary>
-            public bool InternStrings
+            public readonly bool InternStrings
             {
                 get => _reader.InternStrings;
                 set => _reader.InternStrings = value;
@@ -947,7 +947,7 @@ namespace ProtoBuf
             /// <summary>
             /// Gets the number of the field being processed.
             /// </summary>
-            public int FieldNumber
+            public readonly int FieldNumber
             {
                 [MethodImpl(HotPath)]
                 get => _reader._fieldNumber;
@@ -1104,7 +1104,7 @@ namespace ProtoBuf
                 return value;
             }
 
-            internal TypeModel Model
+            internal readonly TypeModel Model
             {
                 [MethodImpl(HotPath)]
                 get => _reader?.Model;
@@ -1195,7 +1195,7 @@ namespace ProtoBuf
             /// <summary>
             /// Gets the serialization context associated with this instance;
             /// </summary>
-            public ISerializationContext Context
+            public readonly ISerializationContext Context
             {
                 [MethodImpl(HotPath)]
                 get => _reader;
@@ -1207,7 +1207,7 @@ namespace ProtoBuf
             /// This is used when decoding packed data.
             /// </summary>
             [MethodImpl(HotPath)]
-            public bool HasSubValue(WireType wireType) => ProtoReader.HasSubValue(wireType, _reader);
+            public readonly bool HasSubValue(WireType wireType) => ProtoReader.HasSubValue(wireType, _reader);
 
             /// <summary>
             /// Create an instance of the provided type, respecting any custom factory rules

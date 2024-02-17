@@ -65,7 +65,7 @@ namespace ProtoBuf.ServiceModel
         private static void ReplaceDataContractSerializerOperationBehavior(OperationDescription description)
         {
             DataContractSerializerOperationBehavior dcsOperationBehavior = description.Behaviors.Find<DataContractSerializerOperationBehavior>();
-            if (dcsOperationBehavior is object)
+            if (dcsOperationBehavior is not null)
             {
                 description.Behaviors.Remove(dcsOperationBehavior);
 

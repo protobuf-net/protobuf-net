@@ -578,7 +578,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine($"{GetAccess(GetAccess(field))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                 }
             }
-            else if (oneOf is object)
+            else if (oneOf is not null)
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : (defaultValue + suffix);
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);

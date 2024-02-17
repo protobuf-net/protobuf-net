@@ -175,8 +175,8 @@ namespace Examples
                 this.foo = foo;
                 this.bar = bar;
             }
-            public int Foo { get { return foo; } }
-            public string Bar { get { return bar; } }
+            public readonly int Foo { get { return foo; } }
+            public readonly string Bar { get { return bar; } }
         }
 
         public class BasicTupleReversedOrder

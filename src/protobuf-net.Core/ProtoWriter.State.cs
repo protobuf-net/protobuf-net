@@ -19,7 +19,7 @@ namespace ProtoBuf
         [StructLayout(LayoutKind.Auto)]
         public ref partial struct State
         {
-            internal bool IsActive => !_span.IsEmpty;
+            internal readonly bool IsActive => !_span.IsEmpty;
 
             private Span<byte> _span;
             private Memory<byte> _memory;
@@ -33,7 +33,7 @@ namespace ProtoBuf
 
             private ProtoWriter _writer;
 
-            internal Span<byte> Remaining
+            internal readonly Span<byte> Remaining
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => _span.Slice(OffsetInCurrent);
@@ -78,7 +78,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void ReverseLast32() => _span.Slice(OffsetInCurrent - 4, 4).Reverse();
+            internal readonly void ReverseLast32() => _span.Slice(OffsetInCurrent - 4, 4).Reverse();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void LocalAdvance(int bytes)

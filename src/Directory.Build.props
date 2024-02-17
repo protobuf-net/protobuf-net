@@ -30,6 +30,7 @@
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
         <LibSysValueTuple>4.5.0</LibSysValueTuple>
+        <PackageReadmeFile>readme.md</PackageReadmeFile>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='VS'">
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -57,9 +58,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="../../protobuf-net.png">
-            <Pack>True</Pack>
-            <PackagePath></PackagePath>
-        </None>
+        <None Include="../../protobuf-net.png" Pack="true" PackagePath="/" Visible="false" />
+        <None Include="../../readme.md" Link="readme.md" Pack="true" PackagePath="/" Visible="false" />
     </ItemGroup>
 </Project>

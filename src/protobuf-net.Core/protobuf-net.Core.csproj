@@ -6,7 +6,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.Core</AssemblyName>
-    <LangVersion>10</LangVersion>
     <Title>protobuf-net.Core</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
     <!--<DefineConstants>$(DefineConstants);TRACK_USAGE</DefineConstants>-->

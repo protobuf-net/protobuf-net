@@ -105,7 +105,7 @@ namespace ProtoBuf
                         break;
                     case GrpcMode.Get:
                         Console.WriteLine($"gRPC descriptors fetched: {set?.Files?.Count ?? 0}");
-                        if (set is object)
+                        if (set is not null)
                         {
                             set.Process();
                             foreach (var error in set.GetErrors())

@@ -580,7 +580,7 @@ namespace ProtoBuf.Compiler
         internal void EmitStateBasedWrite(string methodName, Local fromValue, Type type = null, Type argType = null)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            if (type is null) type = typeof(ProtoWriter.State);
+            type ??= typeof(ProtoWriter.State);
 
             Type foundType;
             MethodInfo foundMethod;
@@ -751,8 +751,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                ConstructorInfo ctor = Helpers.GetConstructor(type, parameterTypes, true);
-                if (ctor is null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
+                ConstructorInfo ctor = Helpers.GetConstructor(type, parameterTypes, true) ?? throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
                 EmitCtor(ctor);
             }
         }

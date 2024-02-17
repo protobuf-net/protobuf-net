@@ -37,7 +37,7 @@ namespace ProtoBuf.BuildTools.Internal
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
 
             // Looking for ad hoc created TypeDescriptor.ConvertFromInvariantString(Type, string)
-            bool TryConvertFromInvariantString(
+            static bool TryConvertFromInvariantString(
                 Type typeToConvert,
                 string? stringValue,
                 out object? conversionResult)

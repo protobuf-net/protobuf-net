@@ -582,7 +582,7 @@ namespace ProtoBuf.Reflection
                     }
                 }
             }
-            else if (oneOf is object)
+            else if (oneOf is not null)
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"CType(Nothing, {typeName})" : defaultValue;
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);

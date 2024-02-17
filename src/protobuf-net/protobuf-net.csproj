@@ -7,7 +7,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Configurations>Debug;Release</Configurations>
-    <LangVersion>10</LangVersion>
   </PropertyGroup>
   
   <!-- define configuration per-platform -->

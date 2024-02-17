@@ -866,7 +866,7 @@ namespace ProtoBuf.Meta
                     // we should assume that type is fully configured, though; no need to re-run:
                     applyDefaultBehaviour = false;
                 }
-                if (newType is null) newType = Create(type);
+                newType ??= Create(type);
                 newType.CompatibilityLevel = compatibilityLevel; // usually this will be setting it to "unspecified", which is fine
                 newType.Pending = true;
                 TakeLock(ref opaqueToken);
@@ -908,7 +908,7 @@ namespace ProtoBuf.Meta
         {
             if (handler is not null)
             {
-                if (args is null) args = new TypeAddedEventArgs(metaType);
+                args ??= new TypeAddedEventArgs(metaType);
                 handler(metaType.Model, args);
             }
         }
@@ -2270,8 +2270,7 @@ namespace ProtoBuf.Meta
 
             lock (_serviceCache)
             {
-                if (_externalProviders == null)
-                    _externalProviders = new Hashtable();
+                _externalProviders ??= new Hashtable();
             }
             if (!_externalProviders.ContainsKey(collection))
                 RepeatedSerializers.Add(collection, (root, current, targs) => RepeatedSerializers.Resolve(serializerType, "Create", targs),true,_externalProviders);

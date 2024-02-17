@@ -485,7 +485,7 @@ namespace ProtoBuf
             public void WriteBaseType<T>([DynamicallyAccessedMembers(DynamicAccess.ContractType)] T value, ISubTypeSerializer<T> serializer = null) where T : class
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(ref this, value);
 
-            internal TypeModel Model => _writer?.Model;
+            internal readonly TypeModel Model => _writer?.Model;
 
             /// <summary>
             /// Gets the serializer associated with a specific type
@@ -493,28 +493,28 @@ namespace ProtoBuf
             [MethodImpl(HotPath)]
             public ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>() => TypeModel.GetSerializer<T>(Model);
 
-            internal WireType WireType
+            internal readonly WireType WireType
             {
                 get => _writer.WireType;
                 set => _writer.WireType = value;
             }
 
-            internal int Depth => _writer.Depth;
+            internal readonly int Depth => _writer.Depth;
 
-            internal int FieldNumber
+            internal readonly int FieldNumber
             {
                 get => _writer.fieldNumber;
                 private set => _writer.fieldNumber = value;
             }
 
-            internal long GetPosition() => _writer._position64;
+            internal readonly long GetPosition() => _writer._position64;
 
-            internal ProtoWriter GetWriter() => _writer;
+            internal readonly ProtoWriter GetWriter() => _writer;
 
             /// <summary>
             /// The serialization context associated with this instance
             /// </summary>
-            public ISerializationContext Context => _writer;
+            public readonly ISerializationContext Context => _writer;
 
             /// <summary>
             /// Writes a byte-array to the stream; supported wire-types: String
@@ -696,7 +696,7 @@ namespace ProtoBuf
             /// Abandon any pending unflushed data
             /// </summary>
             [MethodImpl(HotPath)]
-            public void Abandon() => _writer?.Abandon();
+            public readonly void Abandon() => _writer?.Abandon();
 
             void CheckClear() => _writer?.CheckClear(ref this);
 
@@ -770,7 +770,7 @@ namespace ProtoBuf
                 {
                     ThrowHelper.ThrowInvalidOperationException("Cannot serialize sub-objects unless a model is provided");
                 }
-                if (type is null) type = value.GetType();
+                type ??= value.GetType();
                 if (WireType != WireType.None) ThrowInvalidSerializationOperation();
 
                 switch (style)
@@ -951,7 +951,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal void ThrowTooDeep(int depth) => ThrowHelper.ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + depth.ToString());
+            internal readonly void ThrowTooDeep(int depth) => ThrowHelper.ThrowInvalidOperationException("Maximum model depth exceeded (see " + nameof(TypeModel) + "." + nameof(TypeModel.MaxDepth) + "): " + depth.ToString());
 
             /// <summary>
             /// Used for packed encoding; indicates that the next field should be skipped rather than
@@ -959,7 +959,7 @@ namespace ProtoBuf
             /// when the attempt is made to write the (incorrect) field. The wire-type is taken from the
             /// subsequent call to WriteFieldHeader. Only primitive types can be packed.
             /// </summary>
-            public void SetPackedField(int fieldNumber)
+            public readonly void SetPackedField(int fieldNumber)
             {
                 if (fieldNumber <= 0) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fieldNumber));
                 _writer.packedFieldNumber = fieldNumber;
@@ -969,7 +969,7 @@ namespace ProtoBuf
             /// Used for packed encoding; explicitly reset the packed field marker; this is not required
             /// if using StartSubItem/EndSubItem
             /// </summary>
-            public void ClearPackedField(int fieldNumber)
+            public readonly void ClearPackedField(int fieldNumber)
             {
                 if (fieldNumber != _writer.packedFieldNumber)
                     ThrowWrongPackedField(fieldNumber, _writer);

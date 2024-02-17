@@ -27,7 +27,7 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             params DiagnosticResult[] standardExpectedDiagnostics)
                 where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
-            var codeFixTest = BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode, targetFramework);
+            var codeFixTest = CodeFixProviderTestsBase<TCodeFixProvider>.BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(sourceCode, expectedCode, targetFramework);
 
             if (diagnosticResult is not null)
             {
@@ -42,7 +42,7 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             await codeFixTest.RunAsync();
         }
 
-        CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
+        static CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
             string sourceCode, string expectedCode, string? targetFramework = null)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
@@ -55,10 +55,9 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             {
                 ReferenceAssemblies = new ReferenceAssemblies(targetFramework),
                 TestState = { Sources = { sourceCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary },
-                FixedState = { Sources = { expectedCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary }
+                FixedState = { Sources = { expectedCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary },
+                CodeActionValidationMode = CodeActionValidationMode.SemanticStructure
             };
-
-            codeFixTest.CodeActionValidationMode = CodeActionValidationMode.SemanticStructure;
 
             AddAdditionalReferences(codeFixTest.TestState);
             AddAdditionalReferences(codeFixTest.FixedState);
