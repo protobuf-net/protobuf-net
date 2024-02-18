@@ -1360,12 +1360,6 @@ namespace ProtoBuf.Reflection.Internal
                         value.PhpNamespace = str;
                         continue;
                     }
-                    if (num == 0x2a)
-                    {
-                        flag = state.ReadBoolean();
-                        value.PhpGenericServices = flag;
-                        continue;
-                    }
                     if (num == 0x2c)
                     {
                         str = state.ReadString(null);
@@ -1494,12 +1488,6 @@ namespace ProtoBuf.Reflection.Internal
                 {
                     javaPackage = value.PhpNamespace;
                     state.WriteString(0x29, javaPackage, null);
-                }
-                if (value.ShouldSerializePhpGenericServices())
-                {
-                    state.WriteFieldHeader(0x2a, WireType.Variant);
-                    javaMultipleFiles = value.PhpGenericServices;
-                    state.WriteBoolean(javaMultipleFiles);
                 }
                 if (value.ShouldSerializePhpMetadataNamespace())
                 {

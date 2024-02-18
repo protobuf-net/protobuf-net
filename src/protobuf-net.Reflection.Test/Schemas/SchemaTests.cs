@@ -318,7 +318,7 @@ namespace ProtoBuf.Schemas
                 var psi = proc.StartInfo;
                 psi.FileName = protocExe;
 
-                psi.Arguments = $"--experimental_allow_proto3_optional --descriptor_set_out={protocBinPath} {path}";
+                psi.Arguments = $"--experimental_allow_proto3_optional --experimental_editions --descriptor_set_out={protocBinPath} {path}";
                 if (includeComments) psi.Arguments += " --include_source_info";
                 if (includeImports) psi.Arguments += " --include_imports";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;

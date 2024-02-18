@@ -2670,7 +2670,6 @@ namespace Google.Protobuf.Reflection
                 case "cc_generic_services": CcGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
                 case "java_generic_services": JavaGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
                 case "py_generic_services": PyGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
-                case "php_generic_services": PhpGenericServices = ctx.Tokens.ConsumeBoolean(); return true;
                 case "deprecated": Deprecated = ctx.Tokens.ConsumeBoolean(); return true;
                 case "cc_enable_arenas": CcEnableArenas = ctx.Tokens.ConsumeBoolean(); return true;
                 case "objc_class_prefix": ObjcClassPrefix = ctx.Tokens.ConsumeString(); return true;
@@ -2697,7 +2696,26 @@ namespace Google.Protobuf.Reflection
             get { return DescriptorProto.GetRawExtensionData(this); }
             set { DescriptorProto.SetRawExtensionData(this, value); }
         }
-    }
+
+        /// <summary>Deprecated</summary>
+        [Obsolete("This API is retained for binary compatibility only", true)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool PhpGenericServices
+        {
+            get => false;
+            set { }
+        }
+
+        /// <summary>Deprecated</summary>
+        [Obsolete("This API is retained for binary compatibility only", true)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public bool ShouldSerializePhpGenericServices() => false;
+
+        /// <summary>Deprecated</summary>
+        [Obsolete("This API is retained for binary compatibility only", true)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public void ResetPhpGenericServices() { }
+}
 }
 namespace ProtoBuf.Reflection
 {
