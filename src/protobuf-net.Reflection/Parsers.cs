@@ -7,7 +7,6 @@ using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -281,14 +280,25 @@ namespace Google.Protobuf.Reflection
             }
             foreach (var file in Files)
             {
+                var fileFeatures = file.Apply(ParsedFeatures.Create(file), file.Options);
+
                 using var ctx = new ParserContext(file, null, Errors);
                 foreach (var message in file.MessageTypes)
                 {
-                    PreProcessMessage(message, ctx);
+                    PreProcessMessage(message, ctx, fileFeatures);
                 }
-                static void PreProcessMessage(DescriptorProto message, ParserContext ctx)
+                foreach (var enumType in file.EnumTypes)
+                {
+                    PreProcessEnumType(enumType, ctx, fileFeatures);
+                }
+                foreach (var svc in file.Services)
+                {
+                    PreProcessService(svc, ctx, fileFeatures);
+                }
+                static void PreProcessMessage(DescriptorProto message, ParserContext ctx, ParsedFeatures parentFeatures)
                 {
                     if (message == null) return;
+                    var msgFeatures = message.Apply(parentFeatures, message.Options);
                     var options = Extensions.GetOptions(message?.Options);
                     if (options is not null)
                     {
@@ -327,7 +337,41 @@ namespace Google.Protobuf.Reflection
                     }
                     foreach (var subMessage in message.NestedTypes)
                     {
-                        PreProcessMessage(subMessage, ctx);
+                        PreProcessMessage(subMessage, ctx, msgFeatures);
+                    }
+                    foreach (var enumType in message.EnumTypes)
+                    {
+                        PreProcessEnumType(enumType, ctx, msgFeatures);
+                    }
+                    foreach (var field in message.Fields)
+                    {
+                        field.Apply(msgFeatures, field.Options);
+                    }
+                    foreach (var decl in message.OneofDecls)
+                    {
+                        decl.Apply(msgFeatures, decl.Options);
+                    }
+                    //foreach (var extn in message.ExtensionRanges)
+                    //{
+                    //    extn.Apply(msgFeatures, extn.Options); // TODO!!!
+                    //}
+                }
+                static void PreProcessEnumType(EnumDescriptorProto @enum, ParserContext ctx, ParsedFeatures parentFeatures)
+                {
+                    if (@enum is null) return;
+                    var enumFeatures = @enum.Apply(parentFeatures, @enum.Options);
+                    foreach (var opt in @enum.Values)
+                    {
+                        opt.Apply(enumFeatures, opt.Options);
+                    }
+                }
+                static void PreProcessService(ServiceDescriptorProto service, ParserContext ctx, ParsedFeatures parentFeatures)
+                {
+                    if (service is null) return;
+                    var svcFeatures = service.Apply(parentFeatures, service.Options);
+                    foreach (var method in service.Methods)
+                    {
+                        method.Apply(svcFeatures, method.Options);
                     }
                 }
             }
@@ -3057,6 +3101,8 @@ namespace ProtoBuf.Reflection
         bool ReadOne(ParserContext ctx, string key);
         byte[] ExtensionData { get; set; }
         string Extendee { get; }
+
+        FeatureSet Features { get; set; }
     }
 
     internal interface IHazNames
