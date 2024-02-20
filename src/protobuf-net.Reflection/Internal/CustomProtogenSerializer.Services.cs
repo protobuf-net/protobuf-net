@@ -2,6 +2,7 @@
 using Google.Protobuf.Reflection;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using System;
 using System.Collections.Generic;
 
 namespace ProtoBuf.Reflection.Internal
@@ -9,7 +10,8 @@ namespace ProtoBuf.Reflection.Internal
     partial class CustomProtogenSerializer
     {
         // exported and tweaked (naming, invalid C# etc)
-        private sealed class CustomProtogenSerializerServices : ISerializer<FileDescriptorSet>, ISerializer<ProtogenFileOptions>, ISerializer<ProtogenMessageOptions>, ISerializer<ProtogenFieldOptions>, ISerializer<ProtogenEnumOptions>, ISerializer<ProtogenEnumValueOptions>, ISerializer<ProtogenServiceOptions>, ISerializer<ProtogenMethodOptions>, ISerializer<ProtogenOneofOptions>, ISerializer<FileDescriptorProto>, ISerializer<DescriptorProto>, ISerializer<EnumDescriptorProto>, ISerializer<ServiceDescriptorProto>, ISerializer<FieldDescriptorProto>, ISerializer<FileOptions>, ISerializer<SourceCodeInfo>, ISerializer<DescriptorProto.ExtensionRange>, ISerializer<OneofDescriptorProto>, ISerializer<MessageOptions>, ISerializer<DescriptorProto.ReservedRange>, ISerializer<EnumValueDescriptorProto>, ISerializer<EnumOptions>, ISerializer<EnumDescriptorProto.EnumReservedRange>, ISerializer<MethodDescriptorProto>, ISerializer<ServiceOptions>, ISerializer<FieldOptions>, ISerializer<UninterpretedOption>, ISerializer<SourceCodeInfo.Location>, ISerializer<ExtensionRangeOptions>, ISerializer<OneofOptions>, ISerializer<EnumValueOptions>, ISerializer<MethodOptions>, ISerializer<UninterpretedOption.NamePart>, ISerializerProxy<Access>, ISerializerProxy<Access?>
+        private sealed class CustomProtogenSerializerServices : ISerializer<FileDescriptorSet>, ISerializer<ProtogenFileOptions>, ISerializer<ProtogenMessageOptions>, ISerializer<ProtogenFieldOptions>, ISerializer<ProtogenEnumOptions>, ISerializer<ProtogenEnumValueOptions>, ISerializer<ProtogenServiceOptions>, ISerializer<ProtogenMethodOptions>, ISerializer<ProtogenOneofOptions>, ISerializer<FileDescriptorProto>, ISerializer<DescriptorProto>, ISerializer<EnumDescriptorProto>, ISerializer<ServiceDescriptorProto>, ISerializer<FieldDescriptorProto>, ISerializer<FileOptions>, ISerializer<SourceCodeInfo>, ISerializer<DescriptorProto.ExtensionRange>, ISerializer<OneofDescriptorProto>, ISerializer<MessageOptions>, ISerializer<DescriptorProto.ReservedRange>, ISerializer<EnumValueDescriptorProto>, ISerializer<EnumOptions>, ISerializer<EnumDescriptorProto.EnumReservedRange>, ISerializer<MethodDescriptorProto>, ISerializer<ServiceOptions>, ISerializer<FieldOptions>, ISerializer<UninterpretedOption>, ISerializer<SourceCodeInfo.Location>, ISerializer<ExtensionRangeOptions>, ISerializer<OneofOptions>, ISerializer<EnumValueOptions>, ISerializer<MethodOptions>, ISerializer<UninterpretedOption.NamePart>, ISerializerProxy<Access>, ISerializerProxy<Access?>,
+          ISerializer<FieldOptions.EditionDefault>, ISerializer<FeatureSet>
         {
             SerializerFeatures ISerializer<DescriptorProto>.Features =>
                 (SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString);
@@ -888,6 +890,36 @@ namespace ProtoBuf.Reflection.Internal
                         value.Weak = flag;
                         continue;
                     }
+                    if (num == 15)
+                    {
+                        value.UnverifiedLazy = state.ReadBoolean();
+                        continue;
+                    }
+                    if (num == 16)
+                    {
+                        value.DebugRedact = state.ReadBoolean();
+                        continue;
+                    }
+                    if (num == 17)
+                    {
+                        value.Retention = (FieldOptions.OptionRetention) state.ReadInt32();
+                        continue;
+                    }
+                    if (num == 19)
+                    {
+                        RepeatedSerializer.CreateList<FieldOptions.OptionTargetType>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, value.Targets, EnumSerializer.CreateInt32<FieldOptions.OptionTargetType>());
+                        continue;
+                    }
+                    if (num == 20)
+                    {
+                        RepeatedSerializer.CreateList<FieldOptions.EditionDefault>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.EditionDefaults, this);
+                        continue;
+                    }
+                    if (num == 21)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -938,6 +970,34 @@ namespace ProtoBuf.Reflection.Internal
                     packed = value.Weak;
                     state.WriteBoolean(packed);
                 }
+                if (value.ShouldSerializeUnverifiedLazy())
+                {
+                    state.WriteFieldHeader(15, WireType.Varint);
+                    state.WriteBoolean(value.UnverifiedLazy);
+                }
+                if (value.ShouldSerializeDebugRedact())
+                {
+                    state.WriteFieldHeader(16, WireType.Varint);
+                    state.WriteBoolean(value.DebugRedact);
+                }
+                if (value.ShouldSerializeRetention())
+                {
+                    state.WriteFieldHeader(17, WireType.Varint);
+                    state.WriteInt32((int)value.Retention);
+                }
+                if (value.Targets is { Count: > 0})
+                {
+                    RepeatedSerializer.CreateList<FieldOptions.OptionTargetType>().WriteRepeated(ref state, 19, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, value.Targets, EnumSerializer.CreateInt32<FieldOptions.OptionTargetType>());
+                }
+                if (value.EditionDefaults is { Count: > 0})
+                {
+                    RepeatedSerializer.CreateList<FieldOptions.EditionDefault>().WriteRepeated(ref state, 20, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.EditionDefaults, this);
+                }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(21, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
+                }
+
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
                 {
@@ -951,6 +1011,59 @@ namespace ProtoBuf.Reflection.Internal
                 IExtensible instance = value;
                 state.AppendExtensionData(instance);
             }
+
+            SerializerFeatures ISerializer<FieldOptions.EditionDefault>.Features =>
+   (SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString);
+
+            FieldOptions.EditionDefault ISerializer<FieldOptions.EditionDefault>.Read(ref ProtoReader.State state, FieldOptions.EditionDefault value)
+            {
+                int num;
+                value ??= new();
+                while ((num = state.ReadFieldHeader()) > 0)
+                {
+                    switch (num)
+                    {
+                        case 2:
+                            value.Value = state.ReadString();
+                            continue;
+                        case 3:
+                            value.Edition = (Edition)state.ReadInt32();
+                            continue;
+                        default:
+                            state.AppendExtensionData(value);
+                            continue;
+                    }
+                }
+                return value;
+            }
+
+            void ISerializer<FieldOptions.EditionDefault>.Write(ref ProtoWriter.State state, FieldOptions.EditionDefault value)
+            {
+                if (value.ShouldSerializeValue())
+                {
+                    state.WriteString(2, value.Value);
+                }
+                if (value.ShouldSerializeEdition())
+                {
+                    state.WriteInt32Varint(3, (int)value.Edition);
+                }
+                state.AppendExtensionData(value);
+            }
+
+            SerializerFeatures ISerializer<FeatureSet>.Features =>
+               (SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString);
+
+            FeatureSet ISerializer<FeatureSet>.Read(ref ProtoReader.State state, FeatureSet value)
+            {
+                throw new NotImplementedException(); // TODO
+            }
+
+            void ISerializer<FeatureSet>.Write(ref ProtoWriter.State state, FeatureSet value)
+            {
+                throw new NotImplementedException(); // TODO
+            }
+
+
 
             SerializerFeatures ISerializer<FileDescriptorProto>.Features =>
                 (SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString);

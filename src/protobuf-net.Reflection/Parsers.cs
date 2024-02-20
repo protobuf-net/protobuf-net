@@ -3,9 +3,11 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
 using ProtoBuf.Reflection.Internal;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -185,7 +187,8 @@ namespace Google.Protobuf.Reflection
                 {
                     return typeof(FileDescriptorSet)
                     .Assembly.GetManifestResourceStream(resourceName);
-                } catch { }
+                }
+                catch { }
             }
             return null;
         }
@@ -363,7 +366,7 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// Serializes this instance using the provided serializer (which does not need to be protobuf)
         /// </summary>
-        public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
+        public T Serialize<T>(Func<FileDescriptorSet, object, T> customSerializer, bool includeImports, object state = null)
         {
             T result;
             if (includeImports || Files.All(static x => x.IncludeInOutput))
@@ -387,11 +390,13 @@ namespace Google.Protobuf.Reflection
         public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
             Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
-            Serialize(static (fds,o) => {
+            Serialize(static (fds, o) =>
+            {
 
                 var tuple = (Tuple<TypeModel, Stream>)o;
                 tuple.Item1.Serialize(tuple.Item2, fds);
-                return true; }, includeImports, state);
+                return true;
+            }, includeImports, state);
         }
 
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
@@ -512,7 +517,7 @@ namespace Google.Protobuf.Reflection
 
             static void GenerateSyntheticOneOfs(DescriptorProto obj)
             {
-                foreach(var field in obj.Fields)
+                foreach (var field in obj.Fields)
                 {
                     if (field.Proto3Optional && !field.ShouldSerializeOneofIndex())
                     {
@@ -1171,7 +1176,7 @@ namespace Google.Protobuf.Reflection
             var result = new string[pieces.Length + 1];
             int target = pieces.Length;
             string s = result[target--] = ".";
-            for (int i = 0; i < pieces.Length;i++)
+            for (int i = 0; i < pieces.Length; i++)
             {
                 s = result[target--] = s + pieces[i] + ".";
             }
@@ -1188,7 +1193,7 @@ namespace Google.Protobuf.Reflection
                 { // could be anything...
                     typeName = typeName.Substring(1); // remove the root
                 }
-                else if(typeName.StartsWith("." + Package + "."))
+                else if (typeName.StartsWith("." + Package + "."))
                 { // looks like a match
                     typeName = typeName.Substring(Package.Length + 2);
                 }
@@ -1508,6 +1513,7 @@ namespace Google.Protobuf.Reflection
                     AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, true, 0, false);
                     // second pass applies the data
                     AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, false, 0, false);
+
                     state.Close();
                 }
                 finally
@@ -1586,13 +1592,19 @@ namespace Google.Protobuf.Reflection
         }
         private static void AppendOptions(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, List<OptionHive> options, bool resolveOnly, int depth, bool messageSet)
         {
-            foreach (var option in options)
-                AppendOption(file, ref state, ctx, extendee, option, resolveOnly, depth, messageSet);
-
-            if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
+            if (options is { Count: > 0 })
             {
-                // ascending field order
-                options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
+                foreach (var option in options)
+                    AppendOption(file, ref state, ctx, extendee, option, resolveOnly, depth, messageSet);
+
+                if (resolveOnly && options.Count > 1)
+                {
+                    // fun historical fact: protoc *used to* write root fields in *file* order, but sub-fields in *field* order; hence we used
+                    // to only sort if depth != 0; however, this is no longer the case
+
+                    // apply ascending field order
+                    options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
+                }
             }
         }
         private static void AppendOption(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
@@ -1873,8 +1885,16 @@ namespace Google.Protobuf.Reflection
                                     {
                                         if (ShouldWrite(field, value.AggregateValue, @enum.Values.FirstOrDefault()?.Name))
                                         {
-                                            state.WriteFieldHeader(field.Number, WireType.Varint);
-                                            state.WriteInt32(found.Number);
+                                            if (field.label == FieldDescriptorProto.Label.LabelRepeated)
+                                            {
+                                                // protoc now writes as packed; only impacts a few tests, but: let's try to preserve that; in theory we could roll this out to other primitives
+                                                RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, field.Number, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedAlways, new List<int> { found.Number });
+                                            }
+                                            else
+                                            {
+                                                state.WriteFieldHeader(field.Number, WireType.Varint);
+                                                state.WriteInt32(found.Number);
+                                            }
                                         }
                                     }
                                 }
@@ -2565,6 +2585,37 @@ namespace Google.Protobuf.Reflection
         }
         internal bool Applied { get; set; }
         internal Token Token { get; set; }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            var name = string.Join(".", Names);
+            if (ShouldSerializeStringValue())
+            {
+                return name + "=" + StringValue;
+            }
+            if (ShouldSerializeIdentifierValue())
+            {
+                return name + "=" + IdentifierValue;
+            }
+            if (ShouldSerializeDoubleValue())
+            {
+                return name + "=" + DoubleValue;
+            }
+            if (ShouldSerializeAggregateValue())
+            {
+                return name + "=" + AggregateValue;
+            }
+            if (ShouldSerializeNegativeIntValue())
+            {
+                return name + "=" + NegativeIntValue;
+            }
+            if (ShouldSerializePositiveIntValue())
+            {
+                return name + "=" + PositiveIntValue;
+            }
+            return name + "=" + "???";
+        }
     }
 
     /// <summary>
@@ -2630,6 +2681,10 @@ namespace Google.Protobuf.Reflection
                 case "lazy": Lazy = ctx.Tokens.ConsumeBoolean(); return true;
                 case "packed": Packed = ctx.Tokens.ConsumeBoolean(); return true;
                 case "weak": Weak = ctx.Tokens.ConsumeBoolean(); return true;
+                case "retention": Retention = ctx.Tokens.ConsumeEnum<OptionRetention>(); return true;
+                case "debug_redact": DebugRedact = ctx.Tokens.ConsumeBoolean(); return true;
+                case "unverified_lazy": UnverifiedLazy = ctx.Tokens.ConsumeBoolean(); return true;
+                case "targets": Targets.Add(ctx.Tokens.ConsumeEnum<OptionTargetType>()); return true;
                 default: return false;
             }
         }
@@ -2644,6 +2699,47 @@ namespace Google.Protobuf.Reflection
         {
             get { return DescriptorProto.GetRawExtensionData(this); }
             set { DescriptorProto.SetRawExtensionData(this, value); }
+        }
+
+        partial class EditionDefault
+        {
+            internal static EditionDefault Parse(ParserContext ctx)
+            {
+                EditionDefault ed = new();
+                try
+                {
+                    while (!ctx.Tokens.Is(TokenType.Symbol, "}"))
+                    {
+                        var tok = ctx.Tokens.Read();
+                        ctx.Tokens.Consume(TokenType.AlphaNumeric);
+                        ctx.Tokens.Consume(TokenType.Symbol, ":");
+                        switch (tok.Value)
+                        {
+                            case "edition":
+                                ed.Edition = ctx.Tokens.ConsumeEnum<Edition>();
+                                break;
+                            case "value":
+                                ed.Value = ctx.Tokens.ConsumeString();
+                                break;
+                            default:
+                                tok.Throw(ErrorCode.UnexpectedField, "Expected 'edition' or 'value'");
+                                break;
+                        }
+
+                        // expect either end-object or a comma-delimiter
+                        if (!ctx.Tokens.Is(TokenType.Symbol, "}"))
+                        {
+                            ctx.Tokens.Consume(TokenType.Symbol, ",");
+                        }
+                    }
+                }
+                catch (ParserException ex)
+                {
+                    ctx.Errors.Add(new(ex));
+                    ctx.Tokens.SkipToEndObject();
+                }
+                return ed;
+            }
         }
     }
 
@@ -2715,7 +2811,7 @@ namespace Google.Protobuf.Reflection
         [Obsolete("This API is retained for binary compatibility only", true)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public void ResetPhpGenericServices() { }
-}
+    }
 }
 namespace ProtoBuf.Reflection
 {
@@ -2739,16 +2835,16 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Gets the fully qualified name of an enum
         /// </summary>
-        public static string GetFullyQualifiedName(this EnumDescriptorProto @enum) 
+        public static string GetFullyQualifiedName(this EnumDescriptorProto @enum)
             => @enum.FullyQualifiedName;
 
         /// <summary>
         /// Gets the fully qualified name of a message
         /// </summary>
-        public static string GetFullyQualifiedName(this DescriptorProto message) 
+        public static string GetFullyQualifiedName(this DescriptorProto message)
             => message.FullyQualifiedName;
     }
-    
+
     internal static class ErrorExtensions
     {
         public static void Warn(this List<Error> errors, Token token, string message, ErrorCode code)
@@ -3065,6 +3161,13 @@ namespace ProtoBuf.Reflection
 
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
+                if (nameParts.Count == 1 && !nameParts[0].IsExtension && nameParts[0].name_part == "edition_defaults" && (obj ??= new()) is FieldOptions field)
+                {
+                    field.EditionDefaults.Add(FieldOptions.EditionDefault.Parse(this));
+                    tokens.Consume(TokenType.Symbol, "}");
+                    return;
+                }
+
                 obj ??= new T();
                 bool any = false;
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
@@ -3259,7 +3362,7 @@ namespace ProtoBuf.Reflection
         {
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
             return s.IndexOfAny(ExponentChars) < 0 ? s
-                :  val.ToString("0e+00", CultureInfo.InvariantCulture);
+                : val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()

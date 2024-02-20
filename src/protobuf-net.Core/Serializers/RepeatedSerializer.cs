@@ -153,7 +153,7 @@ namespace ProtoBuf.Serializers
 
             var category = serializerFeatures.GetCategory();
             var wireType = features.GetWireType();
-            if (TypeHelper<TItem>.CanBePacked && !features.IsPackedDisabled() && (count == 0 || count > 1) && serializer is IMeasuringSerializer<TItem> measurer)
+            if (TypeHelper<TItem>.CanBePacked && !features.IsPackedDisabled() && (count == 0 || count > 1 || features.IsPackedAlways()) && serializer is IMeasuringSerializer<TItem> measurer)
             {
                 if (category != SerializerFeatures.CategoryScalar) serializerFeatures.ThrowInvalidCategory();
                 if (count == 0)

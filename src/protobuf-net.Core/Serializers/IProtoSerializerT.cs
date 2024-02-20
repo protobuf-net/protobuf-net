@@ -132,6 +132,11 @@ namespace ProtoBuf.Serializers
         ///// </summary>
         //OptionReturnNothingWhenUnchanged = 1 << n,
 
+        /// <summary>
+        /// When using packed encoding; preferes packed encoding even for single elements
+        /// </summary>
+        OptionPackedAlways = 1 << 16,
+
 
         // RESERVED: 1 << 30, see FromAux
     }
@@ -179,6 +184,10 @@ namespace ProtoBuf.Serializers
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsPackedDisabled(this SerializerFeatures features) // note: can't pack if wrapping is enabled
             => (features & (SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue)) != 0;
+
+        [MethodImpl(ProtoReader.HotPath)]
+        public static bool IsPackedAlways(this SerializerFeatures features) // note: can't pack if wrapping is enabled
+            => (features & (SerializerFeatures.OptionPackedAlways)) != 0;
 
         [MethodImpl(ProtoReader.HotPath)]
         public static bool IsScalar(this SerializerFeatures features)

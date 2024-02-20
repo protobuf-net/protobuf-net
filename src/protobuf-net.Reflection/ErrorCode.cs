@@ -51,5 +51,6 @@
         MessageKindNullWrapperSingleField = 43,
         MessageKindNullWrapperFieldOne = 44,
         InvalidUtf8 = 45,
+        UnexpectedField = 46,
     }
 }
