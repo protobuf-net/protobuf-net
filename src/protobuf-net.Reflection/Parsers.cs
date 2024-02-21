@@ -3514,6 +3514,10 @@ namespace ProtoBuf.Reflection
         private static readonly char[] ExponentChars = { 'e', 'E' };
         private static string Format(float val)
         {
+            if (IsRoundableInteger(val))
+            {
+                return val.ToString("0e+00", CultureInfo.InvariantCulture);
+            }
             string s = val.ToString(CultureInfo.InvariantCulture);
             return s.IndexOfAny(ExponentChars) < 0 ? s
                 : val.ToString("0e+00", CultureInfo.InvariantCulture);
@@ -3521,9 +3525,33 @@ namespace ProtoBuf.Reflection
 
         private static string Format(double val)
         {
-            string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
+            if (IsRoundableInteger(val))
+            {
+                return val.ToString("0e+00", CultureInfo.InvariantCulture);
+            }
+            string s = val.ToString(CultureInfo.InvariantCulture);
             return s.IndexOfAny(ExponentChars) < 0 ? s
                 : val.ToString("0e+00", CultureInfo.InvariantCulture);
+        }
+
+        static bool IsRoundableInteger(double val)
+        {
+            // looking for integers that are XXXX00000
+            // such that XXXXe+NN is shorter
+            if (Math.Abs(val) > 100000)
+            {
+                try
+                {
+                    checked
+                    {
+                        var i64 = (long)val;
+                        return val == i64 && (i64 % 100000) == 0;
+                    }
+                }
+                catch
+                { }
+            }
+            return false;
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()
