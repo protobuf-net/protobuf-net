@@ -345,7 +345,17 @@ namespace Google.Protobuf.Reflection
                     }
                     foreach (var field in message.Fields)
                     {
-                        field.Apply(msgFeatures, field.Options);
+                        var features = field.Apply(msgFeatures, field.Options);
+                        if (features.IsProto2 && field.label == FieldDescriptorProto.Label.LabelRequired)
+                        {
+                            features = field.Apply(features.With(FeatureSet.FieldPresence.LegacyRequired));
+                        }
+
+                        if (features.FieldPresence == FeatureSet.FieldPresence.Implicit
+                            && field.ShouldSerializeDefaultValue())
+                        {
+                            ctx.Errors.Add(field.TypeToken.DefaultValueNotAllowed(field.Name));
+                        }
                     }
                     foreach (var decl in message.OneofDecls)
                     {
@@ -717,7 +727,7 @@ namespace Google.Protobuf.Reflection
         {
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
-            tokens.Previous.RequireProto2(ctx);
+            tokens.Previous.RequireNotProto3(ctx);
 
             while (true)
             {
@@ -729,11 +739,17 @@ namespace Google.Protobuf.Reflection
                 }
                 // the end is off by one
                 if (to != int.MaxValue) to++;
-                ExtensionRanges.Add(new ExtensionRange { Start = from, End = to });
+
+                var range = new ExtensionRange { Start = from, End = to };
+                if (tokens.ConsumeIf(TokenType.Symbol, "["))
+                {
+                    range.Options = ctx.ParseOptionBlock(range.Options);
+                }
+                ExtensionRanges.Add(range);
 
                 if (tokens.ConsumeIf(TokenType.Symbol, ","))
                 {
-                    tokens.Consume();
+                    // ok, read the next portion
                 }
                 else if (tokens.ConsumeIf(TokenType.Symbol, ";"))
                 {
@@ -751,21 +767,32 @@ namespace Google.Protobuf.Reflection
             where TRange : class, IReservedRange, new()
             where TField : IField
         {
+            static bool AllowBarReservedNames(Edition value) => value is not Edition.EditionProto2 or Edition.EditionProto3;
+            static bool IsAlpha(string value) => !string.IsNullOrEmpty(value) && !char.IsDigit(value[0]);
+
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
             var token = tokens.Read(); // test the first one to determine what we're doing
             switch (token.Type)
             {
                 case TokenType.StringLiteral:
+                case TokenType.AlphaNumeric when AllowBarReservedNames(ctx.Edition) && IsAlpha(token.Value):
                     while (true)
                     {
-                        var name = tokens.Consume(TokenType.StringLiteral);
-                        var conflict = reserved.Fields.Find(x => x.Name == name);
-                        if (conflict != null)
+                        var name = tokens.ConsumeString();
+                        if (IsAlpha(name))
                         {
-                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by {label} {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
+                            var conflict = reserved.Fields.Find(x => x.Name == name);
+                            if (conflict != null)
+                            {
+                                ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by {label} {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
+                            }
+                            reserved.ReservedNames.Add(name);
                         }
-                        reserved.ReservedNames.Add(name);
+                        else
+                        {
+                            ctx.Errors.Error(tokens.Previous, $"Cannot mix named/numbered reservations", ErrorCode.ParseFailReservedRange);
+                        }
 
                         if (tokens.ConsumeIf(TokenType.Symbol, ","))
                         {
@@ -883,9 +910,10 @@ namespace Google.Protobuf.Reflection
             get { return DescriptorProto.GetRawExtensionData(this); }
             set { DescriptorProto.SetRawExtensionData(this, value); }
         }
-        bool ISchemaOptions.Deprecated { get { return false; } set { } }
+        bool ISchemaOptions.Deprecated { get => false;  set { } }
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
     }
+
     /// <summary>
     /// The protocol compiler can output a FileDescriptorSet containing the .proto
     /// files it parses.
@@ -1066,7 +1094,7 @@ namespace Google.Protobuf.Reflection
             ctx.Fill(this);
 
             // finish up
-            if (string.IsNullOrWhiteSpace(Syntax))
+            if (!ShouldSerializeEdition() && string.IsNullOrWhiteSpace(Syntax))
             {
                 ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
             }
@@ -2613,6 +2641,30 @@ namespace Google.Protobuf.Reflection
         }
     }
 
+    partial class ExtensionRangeOptions : ISchemaOptions
+    {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(ExtensionRangeOptions);
+
+        bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
+        }
+
+        bool ISchemaOptions.Deprecated { get => false; set { } }
+    }
+
     /// <summary>
     /// Options relating to a service
     /// </summary>
@@ -3059,7 +3111,7 @@ namespace ProtoBuf.Reflection
 
         private static readonly Error[] noErrors = new Error[0];
 
-        internal Error(Token token, string message, bool isError, ErrorCode code)
+        internal Error(in Token token, string message, bool isError, ErrorCode code)
         {
             ColumnNumber = token.ColumnNumber;
             LineNumber = token.LineNumber;
@@ -3275,9 +3327,9 @@ namespace ProtoBuf.Reflection
                 if (singleKey == "default" && isField)
                 {
                     string defaultValue = tokens.ConsumeString(field.type == FieldDescriptorProto.Type.TypeBytes);
-                    nameParts[0].Token.RequireProto2(this);
+                    bool isValid = nameParts[0].Token.RequireNotProto3(this);
                     ParseDefault(tokens.Previous, field.type, ref defaultValue);
-                    if (defaultValue != null)
+                    if (defaultValue != null && isValid)
                     {
                         field.DefaultValue = defaultValue;
                     }
@@ -3294,6 +3346,8 @@ namespace ProtoBuf.Reflection
                     {
                         obj.Deprecated = tokens.ConsumeBoolean();
                     }
+                    else if (singleKey is not null && singleKey.StartsWith("features.") && TryParseFeature(tokens, singleKey, obj))
+                    { } // handled
                     else if (singleKey == null || !obj.ReadOne(this, singleKey))
                     {
                         var newOption = new UninterpretedOption
@@ -3305,6 +3359,33 @@ namespace ProtoBuf.Reflection
                         obj.UninterpretedOptions.Add(newOption);
                     }
                 }
+            }
+        }
+        bool TryParseFeature(Peekable<Token> tokens, string key, ISchemaOptions obj)
+        {
+            var features = obj.Features ??= new();
+            switch (key)
+            {
+                case "features.enum_type":
+                    features.enum_type = tokens.ConsumeEnum<FeatureSet.EnumType>();
+                    return true;
+                case "features.field_presence":
+                    features.field_presence = tokens.ConsumeEnum<FeatureSet.FieldPresence>();
+                    return true;
+                case "features.json_format":
+                    features.json_format = tokens.ConsumeEnum<FeatureSet.JsonFormat>();
+                    return true;
+                case "features.message_encoding":
+                    features.message_encoding = tokens.ConsumeEnum<FeatureSet.MessageEncoding>();
+                    return true;
+                case "features.repeated_field_encoding":
+                    features.repeated_field_encoding = tokens.ConsumeEnum<FeatureSet.RepeatedFieldEncoding>();
+                    return true;
+                case "features.utf8_validation":
+                    features.utf8_validation = tokens.ConsumeEnum<FeatureSet.Utf8Validation>();
+                    return true;
+                default:
+                    return false;
             }
         }
 

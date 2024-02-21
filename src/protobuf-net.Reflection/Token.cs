@@ -75,7 +75,22 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        internal bool RequireNotProto3(ParserContext ctx)
+        {
+            if (ctx.Edition == Edition.EditionProto3)
+            {
+                var msg = "'" + Value + "' is not allowed with " + FileDescriptorProto.SyntaxProto3 + " syntax";
+                ctx.Errors.Error(this, msg, ErrorCode.ProtoSyntaxRequireProto2);
+                return false;
+            }
+            return true;
+        }
+
         internal Error TypeNotFound(string typeName = null) => new Error(this,
             $"type not found: '{(string.IsNullOrWhiteSpace(typeName) ? Value : typeName)}'", true, ErrorCode.TypeNotFound);
+
+
+        internal Error DefaultValueNotAllowed(string fieldName)
+            => new Error(this, $"default value not allowed on field: '{fieldName}'", true, ErrorCode.DefaultValueNotHandled);
     }
 }
