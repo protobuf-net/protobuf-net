@@ -1094,7 +1094,11 @@ namespace Google.Protobuf.Reflection
             ctx.Fill(this);
 
             // finish up
-            if (!ShouldSerializeEdition() && string.IsNullOrWhiteSpace(Syntax))
+            if (ShouldSerializeEdition())
+            {
+                Syntax = "editions"; // to mirror protoc
+            }
+            else if (string.IsNullOrWhiteSpace(Syntax))
             {
                 ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
             }

@@ -661,18 +661,24 @@ namespace ProtoBuf.Reflection.Internal
                 }
                 while ((num = state.ReadFieldHeader()) > 0)
                 {
-                    if (num == 50)
+                    switch (num)
                     {
-                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
-                        continue;
+                        //case 2:
+                        //    RepeatedSerializer.CreateList<ExtensionRangeOptions.Declaration>().ReadRepeated(
+                        //        ref state, SerializerFeatures.OptionPackedDisabled | SerializerFeatures.WireTypeString,
+                        //        value.Declarations, this);
+                        //    continue;
+                        case 50:
+                            value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                            continue;
+                        case 999:
+                            List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
+                            RepeatedSerializer.CreateList<UninterpretedOption>().ReadRepeated(ref state, SerializerFeatures.OptionPackedDisabled | SerializerFeatures.WireTypeString, uninterpretedOptions, this);
+                            continue;
+                        default:
+                            state.AppendExtensionData(value);
+                            continue;
                     }
-                    if (num != 0x3e7)
-                    {
-                        state.AppendExtensionData(value);
-                        continue;
-                    }
-                    List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
-                    RepeatedSerializer.CreateList<UninterpretedOption>().ReadRepeated(ref state, SerializerFeatures.OptionPackedDisabled | SerializerFeatures.WireTypeString, uninterpretedOptions, this);
                 }
                 return value;
             }
@@ -1221,6 +1227,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.WeakDependencies = publicDependencies;
                         continue;
                     }
+                    if (num == 14)
+                    {
+                        value.Edition = (Edition)state.ReadInt32();
+                        continue;
+                    }
                     if (num != 12)
                     {
                         state.AppendExtensionData(value);
@@ -1328,6 +1339,10 @@ namespace ProtoBuf.Reflection.Internal
                 {
                     name = value.Syntax;
                     state.WriteString(12, name, null);
+                }
+                if (value.ShouldSerializeEdition())
+                {
+                    state.WriteInt32Varint(14, (int)value.Edition);
                 }
                 IExtensible instance = value;
                 state.AppendExtensionData(instance);
