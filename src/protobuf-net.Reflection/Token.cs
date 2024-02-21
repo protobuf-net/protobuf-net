@@ -68,7 +68,7 @@ namespace ProtoBuf.Reflection
 
         internal void RequireProto2(ParserContext ctx)
         {
-            if(ctx.Syntax != FileDescriptorProto.SyntaxProto2)
+            if(ctx.Edition != Edition.EditionProto2)
             {
                 var msg = "'" + Value + "' requires " + FileDescriptorProto.SyntaxProto2 + " syntax";
                 ctx.Errors.Error(this, msg, ErrorCode.ProtoSyntaxRequireProto2);

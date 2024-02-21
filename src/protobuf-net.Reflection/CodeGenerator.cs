@@ -395,7 +395,7 @@ namespace ProtoBuf.Reflection
                 && oneOf is null // exclude "oneof" - tracked via the discriminator
                 && field.type != FieldDescriptorProto.Type.TypeMessage // handled via obj-ref
                 && field.type != FieldDescriptorProto.Type.TypeGroup // handled via obj-ref
-                && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional);
+                && (ctx.Edition == Edition.EditionProto2 || field.Proto3Optional);
         }
 
         /// <summary>
@@ -548,9 +548,26 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public TextWriter Output { get; }
             /// <summary>
-            /// The effective syntax of this code-generation cycle, defaulting to "proto2" if not explicity specified
+            /// The effective syntax of this code-generation cycle, defaulting to "proto2" if not explicitly specified
             /// </summary>
+            [Obsolete(nameof(Edition) + " should be used instead", true)]
             public string Syntax => string.IsNullOrWhiteSpace(File.Syntax) ? FileDescriptorProto.SyntaxProto2 : File.Syntax;
+
+            /// <summary>
+            /// The effective edition of this code-generation cycle, defaulting to "proto2" if not explicitly specified
+            /// </summary>
+            public Edition Edition => edition == Edition.EditionUnknown ? edition = EditionSlow() : edition;
+
+            private Edition edition;
+
+            private Edition EditionSlow()
+            {
+                if (File.ShouldSerializeEdition())
+                {
+                    return File.Edition;
+                }
+                return FieldDescriptorProto.ParseSyntaxToEdition(File.Syntax);
+            }
 
             /// <summary>
             /// Whether to emit enums and discriminators for oneof groups

@@ -425,7 +425,7 @@ namespace ProtoBuf.Reflection
                             {
                                 found = enumType.Values.Find(x => x.Name == defaultValue);
                             }
-                            else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2)
+                            else if (ctx.Edition == Edition.EditionProto2)
                             {
                                 // find the first one; if that is a zero, we don't need it after all
                                 found = enumType.Values.FirstOrDefault();
@@ -491,7 +491,7 @@ namespace ProtoBuf.Reflection
                 {
                     tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
                 }
-                if (field.IsPackedField(ctx.Syntax))
+                if (field.IsPackedField(ctx.Edition))
                 {
                     tw.Write($", IsPacked = true");
                 }

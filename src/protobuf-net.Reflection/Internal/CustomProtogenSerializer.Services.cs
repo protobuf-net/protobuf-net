@@ -476,6 +476,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.Deprecated = flag;
                         continue;
                     }
+                    if (num == 7)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -502,6 +507,10 @@ namespace ProtoBuf.Reflection.Internal
                     state.WriteFieldHeader(3, WireType.Variant);
                     allowAlias = value.Deprecated;
                     state.WriteBoolean(allowAlias);
+                }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(7, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
                 }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
@@ -597,6 +606,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.Deprecated = flag;
                         continue;
                     }
+                    if (num == 2)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -616,6 +630,10 @@ namespace ProtoBuf.Reflection.Internal
                     state.WriteFieldHeader(1, WireType.Variant);
                     bool deprecated = value.Deprecated;
                     state.WriteBoolean(deprecated);
+                }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
                 }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
@@ -643,6 +661,11 @@ namespace ProtoBuf.Reflection.Internal
                 }
                 while ((num = state.ReadFieldHeader()) > 0)
                 {
+                    if (num == 50)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -657,6 +680,10 @@ namespace ProtoBuf.Reflection.Internal
             void ISerializer<ExtensionRangeOptions>.Write(ref ProtoWriter.State state, ExtensionRangeOptions value)
             {
                 TypeModel.ThrowUnexpectedSubtype<ExtensionRangeOptions>(value);
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(50, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
+                }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
                 {
@@ -1055,12 +1082,33 @@ namespace ProtoBuf.Reflection.Internal
 
             FeatureSet ISerializer<FeatureSet>.Read(ref ProtoReader.State state, FeatureSet value)
             {
-                throw new NotImplementedException(); // TODO
+                value ??= new();
+                int field;
+                while ((field = state.ReadFieldHeader()) > 0)
+                {
+                    switch (field)
+                    {
+                        case 1: value.field_presence = (FeatureSet.FieldPresence)state.ReadInt32(); continue;
+                        case 2: value.enum_type = (FeatureSet.EnumType)state.ReadInt32(); continue;
+                        case 3: value.repeated_field_encoding = (FeatureSet.RepeatedFieldEncoding)state.ReadInt32(); continue;
+                        case 4: value.utf8_validation = (FeatureSet.Utf8Validation)state.ReadInt32(); continue;
+                        case 5: value.message_encoding = (FeatureSet.MessageEncoding)state.ReadInt32(); continue;
+                        case 6: value.json_format = (FeatureSet.JsonFormat)state.ReadInt32(); continue;
+                        default: state.AppendExtensionData(value); continue;
+                    }
+                }
+                return value;
             }
 
             void ISerializer<FeatureSet>.Write(ref ProtoWriter.State state, FeatureSet value)
             {
-                throw new NotImplementedException(); // TODO
+                if (value.ShouldSerializefield_presence()) state.WriteInt32Varint(1, (int)value.field_presence);
+                if (value.ShouldSerializeenum_type()) state.WriteInt32Varint(2, (int)value.enum_type);
+                if (value.ShouldSerializerepeated_field_encoding()) state.WriteInt32Varint(3, (int)value.repeated_field_encoding);
+                if (value.ShouldSerializeutf8_validation()) state.WriteInt32Varint(4, (int)value.utf8_validation);
+                if (value.ShouldSerializemessage_encoding()) state.WriteInt32Varint(5, (int)value.message_encoding);
+                if (value.ShouldSerializejson_format()) state.WriteInt32Varint(6, (int)value.json_format);
+                state.AppendExtensionData(value);
             }
 
 
@@ -1493,6 +1541,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.RubyPackage = str;
                         continue;
                     }
+                    if (num == 50)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -1612,6 +1665,10 @@ namespace ProtoBuf.Reflection.Internal
                     javaPackage = value.RubyPackage;
                     state.WriteString(0x2d, javaPackage, null);
                 }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(50, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
+                }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
                 {
@@ -1663,6 +1720,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.MapEntry = flag;
                         continue;
                     }
+                    if (num == 12)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -1701,6 +1763,10 @@ namespace ProtoBuf.Reflection.Internal
                     state.WriteFieldHeader(7, WireType.Variant);
                     messageSetWireFormat = value.MapEntry;
                     state.WriteBoolean(messageSetWireFormat);
+                }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(12, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
                 }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
@@ -1850,6 +1916,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.idempotency_level = level;
                         continue;
                     }
+                    if (num == 35)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -1866,14 +1937,18 @@ namespace ProtoBuf.Reflection.Internal
                 TypeModel.ThrowUnexpectedSubtype<MethodOptions>(value);
                 if (value.ShouldSerializeDeprecated())
                 {
-                    state.WriteFieldHeader(0x21, WireType.Variant);
+                    state.WriteFieldHeader(33, WireType.Variant);
                     bool deprecated = value.Deprecated;
                     state.WriteBoolean(deprecated);
                 }
                 if (value.ShouldSerializeidempotency_level())
                 {
                     int num = (int)value.idempotency_level;
-                    state.WriteInt32Varint(0x22, num);
+                    state.WriteInt32Varint(34, num);
+                }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(35, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
                 }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
@@ -1952,6 +2027,11 @@ namespace ProtoBuf.Reflection.Internal
                 }
                 while ((num = state.ReadFieldHeader()) > 0)
                 {
+                    if (num == 1)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -1966,6 +2046,10 @@ namespace ProtoBuf.Reflection.Internal
             void ISerializer<OneofOptions>.Write(ref ProtoWriter.State state, OneofOptions value)
             {
                 TypeModel.ThrowUnexpectedSubtype<OneofOptions>(value);
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
+                }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)
                 {
@@ -2065,6 +2149,11 @@ namespace ProtoBuf.Reflection.Internal
                         value.Deprecated = flag;
                         continue;
                     }
+                    if (num == 34)
+                    {
+                        value.Features = state.ReadMessage<FeatureSet>(SerializerFeatures.WireTypeString, value.Features, this);
+                        continue;
+                    }
                     if (num != 0x3e7)
                     {
                         state.AppendExtensionData(value);
@@ -2081,9 +2170,13 @@ namespace ProtoBuf.Reflection.Internal
                 TypeModel.ThrowUnexpectedSubtype<ServiceOptions>(value);
                 if (value.ShouldSerializeDeprecated())
                 {
-                    state.WriteFieldHeader(0x21, WireType.Variant);
+                    state.WriteFieldHeader(33, WireType.Variant);
                     bool deprecated = value.Deprecated;
                     state.WriteBoolean(deprecated);
+                }
+                if (value.Features is not null)
+                {
+                    state.WriteMessage(34, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, value.Features, this);
                 }
                 List<UninterpretedOption> uninterpretedOptions = value.UninterpretedOptions;
                 if (uninterpretedOptions == null)

@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Reflection.Internal;
+﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection.Internal;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -116,6 +117,7 @@ namespace ProtoBuf.Reflection
                 lookup = tmp;
             }
         }
+
         internal static T ConsumeEnum<T>(this Peekable<Token> tokens) where T : struct
         {
             var token = tokens.Read();
@@ -125,6 +127,17 @@ namespace ProtoBuf.Reflection
                 token.Throw(ErrorCode.InvalidEnum, "Unable to parse " + typeof(T).Name);
             return val;
         }
+
+        internal static Edition ParseEdition(this Peekable<Token> tokens)
+        {   // lacks the enum prefix; compensate by prepending
+            var token = tokens.Read();
+            var value = "EDITION_" + tokens.ConsumeString();
+
+            if (!EnumCache<Edition>.TryGet(value, out Edition val))
+                token.Throw(ErrorCode.InvalidEnum, "Unable to parse " + typeof(Edition).Name);
+            return val;
+        }
+
 
         internal static bool TryParseUInt32(string token, out uint val, uint? max = null)
         {

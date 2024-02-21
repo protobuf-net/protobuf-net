@@ -307,7 +307,7 @@ namespace Google.Protobuf.Reflection
                             case MessageKind.None:
                                 break; // nothing to do
                             case MessageKind.NullWrapper:
-                                if (ctx.Syntax != FileDescriptorProto.SyntaxProto3)
+                                if (ctx.Edition == Edition.EditionProto2)
                                 {
                                     ctx.Errors.Warn(message.SourceLocation, $"Null wrapper message '{message.Name}' requires {FileDescriptorProto.SyntaxProto3} syntax", ErrorCode.MessageKindNullWrapperProto3);
                                 }
@@ -1016,6 +1016,18 @@ namespace Google.Protobuf.Reflection
                         ctx.Errors.Error(tokens.Previous, $"unknown syntax '{Syntax}'", ErrorCode.ProtoSyntaxInvalid);
                         break;
                 }
+                tokens.Consume(TokenType.Symbol, ";");
+                ctx.AbortState = AbortState.None;
+            }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "edition"))
+            {
+                ctx.AbortState = AbortState.Statement;
+                if (MessageTypes.Count > 0 || EnumTypes.Count > 0 || Extensions.Count > 0)
+                {
+                    ctx.Errors.Error(tokens.Previous, "edition must be set before types are defined", ErrorCode.ProtoSyntaxPreceedTypes);
+                }
+                tokens.Consume(TokenType.Symbol, "=");
+                Edition = tokens.ParseEdition();
                 tokens.Consume(TokenType.Symbol, ";");
                 ctx.AbortState = AbortState.None;
             }
@@ -2115,16 +2127,34 @@ namespace Google.Protobuf.Reflection
         [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public bool IsPacked(string syntax)
-            => IsPackedField(syntax);
+            => IsPackedField(ParseSyntaxToEdition(syntax));
 
-        internal bool IsPackedField(string syntax)
+        internal static Edition ParseSyntaxToEdition(string syntax)
+        {
+            switch (syntax)
+            {
+                case FileDescriptorProto.SyntaxProto2:
+                    return Edition.EditionProto2;
+                case FileDescriptorProto.SyntaxProto3:
+                    return Edition.EditionProto3;
+            }
+            if (string.Equals(syntax, FileDescriptorProto.SyntaxProto2, StringComparison.OrdinalIgnoreCase))
+                return Edition.EditionProto2;
+            if (string.Equals(syntax, FileDescriptorProto.SyntaxProto3, StringComparison.OrdinalIgnoreCase))
+                return Edition.EditionProto3;
+            if (string.IsNullOrWhiteSpace(syntax))
+                return Edition.EditionProto2;
+            return Edition.EditionUnknown;
+        }
+
+        internal bool IsPackedField(Edition edition)
         {
             if (label != Label.LabelRepeated) return false;
 
             var exp = Options?.Packed;
             if (exp.HasValue) return exp.GetValueOrDefault();
 
-            return syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type);
+            return edition != Edition.EditionProto2 && FieldDescriptorProto.CanPack(type);
         }
 
         /// <inheritdoc/>
@@ -2167,7 +2197,7 @@ namespace Google.Protobuf.Reflection
                 label = Label.LabelOptional;
                 explicitOptional = true;
             }
-            else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2 && !isOneOf)
+            else if (ctx.Edition == Edition.EditionProto2 && !isOneOf)
             {
                 // required in proto2
                 throw tokens.Read().Throw(ErrorCode.ExpectedArity, "expected 'repeated' / 'required' / 'optional'");
@@ -2259,7 +2289,7 @@ namespace Google.Protobuf.Reflection
                 label = label,
                 TypeToken = typeToken // internal property that helps give useful error messages
             };
-            if (field.label == Label.LabelOptional && explicitOptional && ctx.Syntax != FileDescriptorProto.SyntaxProto2)
+            if (field.label == Label.LabelOptional && explicitOptional && ctx.Edition != Edition.EditionProto2)
             {
                 field.Proto3Optional = true;
             }
@@ -3487,6 +3517,7 @@ namespace ProtoBuf.Reflection
             _file = file;
         }
 
+        [Obsolete(nameof(Edition) + " should be used instead", true)]
         public string Syntax
         {
             get
@@ -3495,6 +3526,20 @@ namespace ProtoBuf.Reflection
                 return string.IsNullOrEmpty(syntax) ? FileDescriptorProto.SyntaxProto2 : syntax;
             }
         }
+
+        public Edition Edition => edition == Edition.EditionUnknown ? edition = EditionSlow() : edition;
+
+        private Edition edition;
+
+        private Edition EditionSlow()
+        {
+            if (_file.ShouldSerializeEdition())
+            {
+                return _file.Edition;
+            }
+            return FieldDescriptorProto.ParseSyntaxToEdition(_file.Syntax);
+        }
+
 
         private readonly FileDescriptorProto _file;
         public Peekable<Token> Tokens { get; }
