@@ -5,7 +5,7 @@ namespace ProtoBuf.Test.Issues
 {
     public class Issue323
     {
-        const string ExpectedProto = @"syntax = ""proto3"";
+        const string ExpectedProtoWithPrefixedEnumMembers = @"syntax = ""proto3"";
 package ProtoBuf.Test.Issues;
 
 enum TokenType {
@@ -14,13 +14,35 @@ enum TokenType {
 }
 ";
 
+        const string ExpectedProtoWithoutPrefixedEnumMembers = @"syntax = ""proto3"";
+package ProtoBuf.Test.Issues;
+
+enum TokenType {
+   Temporary = 0;
+   Persistent = 1;
+}
+";
+
         [Fact]
-        public void ProtoIncludesEnumNamePrefix()
+        public void GeneratesProtoWithPrefixedEnumMembers()
         {
             string proto = Serializer.GetProto(new SchemaGenerationOptions { Types = { typeof(TokenType) },
                 Syntax = ProtoSyntax.Proto3, Flags = SchemaGenerationFlags.IncludeEnumNamePrefix });
 
-            Assert.Equal(ExpectedProto, proto, ignoreLineEndingDifferences: true);
+            Assert.Equal(ExpectedProtoWithPrefixedEnumMembers, proto, ignoreLineEndingDifferences: true);
+        }
+
+        [Fact]
+        public void GeneratesProtoWithoutPrefixedEnumMembers()
+        {
+            string proto = Serializer.GetProto(new SchemaGenerationOptions
+            {
+                Types = { typeof(TokenType) },
+                Syntax = ProtoSyntax.Proto3,
+                Flags = SchemaGenerationFlags.None,
+            });
+
+            Assert.Equal(ExpectedProtoWithoutPrefixedEnumMembers, proto, ignoreLineEndingDifferences: true);
         }
 
         [ProtoContract]
