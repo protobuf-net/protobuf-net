@@ -2030,7 +2030,7 @@ namespace ProtoBuf.Meta
             else if (Type.IsEnum)
             {
                 var enums = GetEnumValues();
-                string enumNamePrefix = $"{GetSchemaTypeName(callstack)}_";
+                string enumNamePrefix = isEnumNamePrefixSupported ? $"{GetSchemaTypeName(callstack)}_" : "";
 
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
@@ -2066,14 +2066,14 @@ namespace ProtoBuf.Meta
                     var parsed = member.TryGetInt32();
                     if (parsed.HasValue && parsed.Value == 0)
                     {
-                        NewLine(builder, indent + 1).Append(isEnumNamePrefixSupported ? $"{enumNamePrefix}{member.Name}" : member.Name).Append(" = 0;");
+                        NewLine(builder, indent + 1).Append(enumNamePrefix).Append(member.Name).Append(" = 0;");
                         haveWrittenZero = true;
                     }
                 }
 
                 if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
                 {
-                    NewLine(builder, indent + 1).Append(isEnumNamePrefixSupported ? $"{enumNamePrefix}ZERO" : "ZERO").Append(" = 0;")
+                    NewLine(builder, indent + 1).Append(enumNamePrefix).Append("ZERO").Append(" = 0;")
                         .Append(" // proto3 requires a zero value as the first item (it can be named anything)");
                 }
 
@@ -2084,12 +2084,11 @@ namespace ProtoBuf.Meta
                     if (parsed.HasValue)
                     {
                         if (parsed.Value == 0) continue;
-                        NewLine(builder, indent + 1).Append(isEnumNamePrefixSupported ? $"{enumNamePrefix}{member.Name}" : member.Name).Append(" = ").Append(parsed.Value).Append(';');
-
+                        NewLine(builder, indent + 1).Append(enumNamePrefix).Append(member.Name).Append(" = ").Append(parsed.Value).Append(';');
                     }
                     else
                     {
-                        NewLine(builder, indent + 1).Append("// ").Append(isEnumNamePrefixSupported ? $"{enumNamePrefix}{member.Name}" : member.Name)
+                        NewLine(builder, indent + 1).Append("// ").Append(enumNamePrefix).Append(member.Name)
                             .Append(" = ").Append(member.Value).Append(';').Append(" // note: enums should be valid 32-bit integers");
                     }
                 }

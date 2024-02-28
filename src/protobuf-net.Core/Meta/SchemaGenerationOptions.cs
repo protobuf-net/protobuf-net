@@ -69,6 +69,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         PreserveSubType = 1 << 1,
 
+        /// <summary>
+        /// Provides support for adding Prefix to names of Enum members in schemas
+        /// </summary>
         IncludeEnumNamePrefix = 1 << 2,
     }
 
