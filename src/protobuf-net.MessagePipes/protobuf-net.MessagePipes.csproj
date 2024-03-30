@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net6.0;net7.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.MessagePipes</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.MessagePipes</AssemblyName>
@@ -12,12 +12,17 @@
 
   <ItemGroup>
     <PackageReference Include="Pipelines.Sockets.Unofficial" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.IO.Pipelines" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="System.Threading.Channels" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' or '$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="System.IO.Pipelines" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+    <PackageReference Include="System.Threading.Channels" />
   </ItemGroup>
 
   <ItemGroup>

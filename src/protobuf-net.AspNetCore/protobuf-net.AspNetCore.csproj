@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.AspNetCore</RootNamespace>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.AspNetCore</AssemblyName>
@@ -12,6 +12,9 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="System.IO.Pipelines" />
   </ItemGroup>
 </Project>
