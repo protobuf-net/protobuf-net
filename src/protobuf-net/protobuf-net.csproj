@@ -7,8 +7,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Configurations>Debug;Release</Configurations>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
-  
+
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
@@ -29,8 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <None Include="Meta\MetaType.Nullability.cs">
-		  <DependentUpon>Meta\MetaType.cs</DependentUpon>
-	  </None>
+      <None Include="Meta\MetaType.Nullability.cs">
+          <DependentUpon>Meta\MetaType.cs</DependentUpon>
+      </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
