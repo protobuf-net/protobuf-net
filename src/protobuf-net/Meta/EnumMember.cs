@@ -21,13 +21,19 @@ namespace ProtoBuf.Meta
         public object Value { get; }
 
         /// <summary>
+        /// Gets the value indicating whether this enum member is obsolete
+        /// </summary>
+        public bool IsObsolete { get; }
+
+        /// <summary>
         /// Create a new named enum value; the value can be of the expected
         /// enum type, or an appropriate boxed enum value
         /// </summary>
-        public EnumMember(object value, string name)
+        public EnumMember(object value, string name, bool isObsolete = false)
         {
             Name = name;
             Value = value;
+            IsObsolete = isObsolete;
         }
 
         internal bool HasValue => Value is not null && !string.IsNullOrWhiteSpace(Name);
