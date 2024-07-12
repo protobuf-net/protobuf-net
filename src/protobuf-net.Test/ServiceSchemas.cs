@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Meta;
+using ProtoBuf.Meta;
 using ProtoBuf.WellKnownTypes;
 using System;
 using System.Collections;
@@ -228,6 +228,11 @@ message BookDescription {
    int32 ID = 1;
    // Title
    string Title = 2;
+   map<int32,string> Tags = 3;
+   // PriceChanges
+   repeated int32 PriceChanges = 4 [packed = false];
+   // Type
+   BookType Type = 5;
 }
 // BookType
 enum BookType {
@@ -236,6 +241,8 @@ enum BookType {
 }
 // BookDescription
 message BookTypeDescription {
+   // Type
+   BookType Type = 1;
 }
 // BookService
 service BookService {
@@ -260,18 +267,24 @@ service BookService {
             public string Title { get; set; }
 
             [Description("Tags")]
+            [DataMember(Order = 3)]
             public Dictionary<int, string> Tags { get; set; }
 
             [Description("PriceChanges")]
+            [DataMember(Order = 4)]
             public int[] PriceChanges { get; set; }
+
             [Description("Type")]
+            [DataMember(Order = 5)]
             public BookType Type { get; set; }
         }
+
         [Description("BookDescription")]
         [DataContract]
         public class BookTypeDescription
         {
             [Description("Type")]
+            [DataMember(Order = 1)]
             public BookType Type { get; set; }
         }
 
@@ -279,9 +292,11 @@ service BookService {
         [DataContract]
         public enum BookType
         {
+            [DataMember(Order = 1)]
             [Description("Biology")]
             Biology,
 
+            [DataMember(Order = 2)]
             [Description("Biology")]
             Chemistry
         }
