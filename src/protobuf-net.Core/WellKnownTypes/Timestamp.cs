@@ -47,7 +47,7 @@ namespace ProtoBuf.WellKnownTypes
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Timestamp", Serializer = typeof(PrimaryTypeProvider), Origin = "google/protobuf/timestamp.proto")]
     [StructLayout(LayoutKind.Auto)]
-    public readonly struct Timestamp
+    public readonly struct Timestamp : IComparable<Timestamp>, IEquatable<Timestamp>
     {
         /// <summary>
         /// Represents seconds of UTC time since Unix epoch
@@ -88,6 +88,18 @@ namespace ProtoBuf.WellKnownTypes
 
         /// <summary>Converts a Timestamp to a DateTime</summary>
         public DateTime AsDateTime() => TimestampEpoch.AddTicks(PrimaryTypeProvider.ToTicks(Seconds, Nanoseconds));
+
+        public int CompareTo(Timestamp other)
+        {
+            if (Seconds != other.Seconds)
+            {
+                return Seconds.CompareTo(other.Seconds);
+            }
+
+            return Nanoseconds.CompareTo(other.Nanoseconds);
+        }
+
+        public bool Equals(Timestamp other) => Seconds == other.Seconds && Nanoseconds == other.Nanoseconds;
 
         /// <summary>Converts a Timestamp to a DateTime</summary>
         public static implicit operator DateTime(Timestamp value) => value.AsDateTime();
