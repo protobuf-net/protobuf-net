@@ -9,7 +9,7 @@
     <RootNamespace>ProtoBuf.Test</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net6.0'">
+  <PropertyGroup Condition="$(TargetFramework)=='net6.0' or $(TargetFramework)=='net7.0'">
     <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER;PLAT_INIT_ONLY</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
