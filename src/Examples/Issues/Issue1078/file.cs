@@ -14,10 +14,10 @@ public partial class Message : global::ProtoBuf.IExtensible
         => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
     [global::ProtoBuf.ProtoMember(3, Name = @"last_sequence_id")]
-    [global::System.ComponentModel.DefaultValue(-1l)]
+    [global::System.ComponentModel.DefaultValue(-1L)]
     public long LastSequenceId
     {
-        get => __pbn__LastSequenceId ?? -1l;
+        get => __pbn__LastSequenceId ?? -1L;
         set => __pbn__LastSequenceId = value;
     }
     public bool ShouldSerializeLastSequenceId() => __pbn__LastSequenceId != null;

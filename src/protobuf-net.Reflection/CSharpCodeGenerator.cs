@@ -406,7 +406,7 @@ namespace ProtoBuf.Reflection
                     case FieldDescriptorProto.Type.TypeSfixed64:
                     case FieldDescriptorProto.Type.TypeSint64:
                     case FieldDescriptorProto.Type.TypeInt64:
-                        suffix = "l";
+                        suffix = "L";
                         break;
                     case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeUint64:
