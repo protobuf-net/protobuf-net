@@ -6,6 +6,7 @@ using ProtoBuf.WellKnownTypes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -275,7 +276,7 @@ namespace ProtoBuf.Meta
                         {
                             bool isSingleInput = options.Types.Count == 1;
                             var mt = AddType(effectiveType, isSingleInput, isSingleInput);
-                            
+
                         }
                     }
                 }
@@ -359,6 +360,12 @@ namespace ProtoBuf.Meta
             {
                 foreach (var type in inbuiltTypes)
                 {
+                    var descriptionAttribute = type.GetCustomAttribute<DescriptionAttribute>();
+                    if (descriptionAttribute != null)
+                    {
+                        bodyBuilder.AppendLine().Append("// ").Append(descriptionAttribute.Description);
+                    }
+
                     bodyBuilder.AppendLine().Append("message ").Append(type.Name).Append(" {");
                     MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(callstack, type, DataFormat.Default, DefaultCompatibilityLevel, false, false, imports))
                         .Append(" value = 1;").AppendLine().Append('}');
@@ -380,16 +387,30 @@ namespace ProtoBuf.Meta
             {
                 foreach (var service in options.Services)
                 {
+                    if (!string.IsNullOrEmpty(service.Description))
+                    {
+                        MetaType.NewLine(bodyBuilder, 0).Append("// ").Append(service.Description);
+                    }
+
                     MetaType.NewLine(bodyBuilder, 0).Append("service ").Append(service.Name).Append(" {");
                     foreach (var method in service.Methods)
                     {
+                        //var description = method.met
                         var inputName = GetSchemaTypeName(callstack, method.InputType, DataFormat.Default, DefaultCompatibilityLevel, false, false, imports);
                         var replyName = GetSchemaTypeName(callstack, method.OutputType, DataFormat.Default, DefaultCompatibilityLevel, false, false, imports);
-                        MetaType.NewLine(bodyBuilder, 1).Append("rpc ").Append(method.Name).Append(" (")
-                            .Append(method.ClientStreaming ? "stream " : "")
-                            .Append(inputName).Append(") returns (")
-                            .Append(method.ServerStreaming ? "stream " : "")
-                            .Append(replyName).Append(");");
+                        var builder = MetaType.NewLine(bodyBuilder, 1);
+
+                        if (!string.IsNullOrEmpty(method.Description))
+                        {
+                            builder.Append("// ").Append(method.Description);
+                            MetaType.NewLine(bodyBuilder, 1);
+                        }
+
+                        builder.Append("rpc ").Append(method.Name).Append(" (")
+                       .Append(method.ClientStreaming ? "stream " : "")
+                       .Append(inputName).Append(") returns (")
+                       .Append(method.ServerStreaming ? "stream " : "")
+                       .Append(replyName).Append(");");
                     }
                     MetaType.NewLine(bodyBuilder, 0).Append('}');
                 }
@@ -1876,11 +1897,11 @@ namespace ProtoBuf.Meta
             if (type == typeof(byte[])) name = ".google.protobuf.BytesValue";
 
             if (name is null) return false;
-            
+
             imports.Add(CommonImports.WrappersProto);
             return true;
         }
-        
+
         static bool IsWellKnownType(Type type, out string name, HashSet<string> imports)
         {
             if (TypeHelper.IsBytesLike(type))
@@ -1916,7 +1937,7 @@ namespace ProtoBuf.Meta
             {
                 return wrappersProtoTypeParsed;
             }
-            
+
             compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
@@ -1935,7 +1956,7 @@ namespace ProtoBuf.Meta
                 }
 
                 var mt = this[effectiveType];
-                if (mt.HasSurrogate && ValueMember.TryGetCoreSerializer(this, mt.surrogateDataFormat, mt.CompatibilityLevel, mt.surrogateType, out _, false, false, false ,false) is object)
+                if (mt.HasSurrogate && ValueMember.TryGetCoreSerializer(this, mt.surrogateDataFormat, mt.CompatibilityLevel, mt.surrogateType, out _, false, false, false, false) is object)
                 {   // inbuilt basic surrogate
                     return GetSchemaTypeName(callstack, mt.surrogateType, mt.surrogateDataFormat, mt.CompatibilityLevel, false, false, imports);
                 }
@@ -2262,7 +2283,7 @@ namespace ProtoBuf.Meta
         /// <param name="collectionType">type of the collectionn e.g. F# Map</param>
         /// <param name="serializerType">type of the External Serializer</param>
         /// <returns></returns>
-        public RuntimeTypeModel AddSerializer (Type collectionType, Type serializerType)
+        public RuntimeTypeModel AddSerializer(Type collectionType, Type serializerType)
         {
             var collection = collectionType;
             if (collection.IsGenericType)
@@ -2273,7 +2294,7 @@ namespace ProtoBuf.Meta
                 _externalProviders ??= new Hashtable();
             }
             if (!_externalProviders.ContainsKey(collection))
-                RepeatedSerializers.Add(collection, (root, current, targs) => RepeatedSerializers.Resolve(serializerType, "Create", targs),true,_externalProviders);
+                RepeatedSerializers.Add(collection, (root, current, targs) => RepeatedSerializers.Resolve(serializerType, "Create", targs), true, _externalProviders);
 
             return this;
         }

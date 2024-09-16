@@ -13,6 +13,11 @@ namespace ProtoBuf.Meta
         public string Name { get; set; }
 
         /// <summary>
+        /// The description of the method.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// The type sent by the client.
         /// </summary>
         public Type InputType { get; set; } = typeof(Empty);
