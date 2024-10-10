@@ -152,7 +152,8 @@ namespace ProtoBuf.Reflection
         /// <inheritdoc/>
         protected override void WriteNamespaceHeader(GeneratorContext ctx, string @namespace)
         {
-            ctx.WriteLine($"namespace {@namespace}");
+            var escapedNamespace = string.Join(".", @namespace.Split('.').Select(Escape));
+            ctx.WriteLine($"namespace {escapedNamespace}");
             ctx.WriteLine("{").Indent().WriteLine();
         }
 
