@@ -8,6 +8,7 @@
     <NoWarn>$(NoWarn);IDE0060;IDE1006;xUnit1004;SYSLIB0011;CA1507;CA1069;CA1822;CA1825;CA2231</NoWarn>
     <RootNamespace>ProtoBuf.Test</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableUnsafeBinaryFormatterSerialization>True</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
     <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER;PLAT_INIT_ONLY</DefineConstants>
