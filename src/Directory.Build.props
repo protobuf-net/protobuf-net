@@ -30,7 +30,6 @@
 
         <LibSysValueTuple>4.5.0</LibSysValueTuple>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
-        <RollForward>LatestMajor</RollForward>
         <CheckEolTargetFramework>False</CheckEolTargetFramework>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='VS'">

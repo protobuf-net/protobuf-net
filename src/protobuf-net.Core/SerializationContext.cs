@@ -26,6 +26,8 @@ namespace ProtoBuf
         /// </summary>
         internal static SerializationContext Default { get; } = new SerializationContext { frozen = true };
 
+#pragma warning disable SYSLIB0050 // binary formatter - legacy only
+
         private StreamingContextStates state = StreamingContextStates.Persistence;
 
         /// <summary>
@@ -68,6 +70,7 @@ namespace ProtoBuf
             if (userState is SerializationContext ctx) return new StreamingContext(ctx.state, ctx.context);
             return new StreamingContext(StreamingContextStates.Persistence, userState);
         }
+#pragma warning restore SYSLIB0050 // binary formatter - legacy only
 
         /// <summary>
         /// Creates a frozen SerializationContext from a serialization context

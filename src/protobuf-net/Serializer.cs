@@ -88,7 +88,7 @@ namespace ProtoBuf
         /// <typeparam name="TFrom">The type of the object being copied.</typeparam>
         /// <typeparam name="TTo">The type of the new object to be created.</typeparam>
         /// <param name="instance">The existing instance to use as a template.</param>
-        /// <returns>A new instane of type TNewType, with the data from TOldType.</returns>
+        /// <returns>A new instance of type TNewType, with the data from TOldType.</returns>
         public static TTo ChangeType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TFrom, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TTo>(TFrom instance)
         {
             using var ms = new MemoryStream();
@@ -137,7 +137,9 @@ namespace ProtoBuf
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
         public static void Merge<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
+#pragma warning disable SYSLIB0050 // binary formatter - legacy only
             Merge<T>(info, new StreamingContext(StreamingContextStates.Persistence), instance);
+#pragma warning restore SYSLIB0050 // binary formatter - legacy only
         }
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
@@ -169,6 +171,7 @@ namespace ProtoBuf
         public static void PrepareSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => RuntimeTypeModel.Default[typeof(T)].CompileInPlace();
 
+#pragma warning disable SYSLIB0011 // binary formatter - legacy only
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>
@@ -178,6 +181,7 @@ namespace ProtoBuf
         {
             return RuntimeTypeModel.Default.CreateFormatter(typeof(T));
         }
+#pragma warning restore SYSLIB0011 // binary formatter - legacy only
 
         /// <summary>
         /// Reads a sequence of consecutive length-prefixed items from a stream, using
