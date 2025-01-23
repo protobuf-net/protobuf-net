@@ -49,7 +49,7 @@ namespace Examples.Issues
         [Fact]
         public void DefaultToListT()
         {
-            var obj = new Foo { Bars = new Bar[] { new Bar { }, new Bar { } } };
+            var obj = new Foo { Bars = [new Bar { }, new Bar { }] };
 
             var clone = Serializer.DeepClone(obj);
             Assert.Equal(2, clone.Bars.Count);
@@ -61,7 +61,7 @@ namespace Examples.Issues
         {
             var ser = new DataContractSerializer(typeof(FooEnumerable));
             using var ms = new MemoryStream();
-            ser.WriteObject(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ser.WriteObject(ms, new FooEnumerable { Bars = [new Bar { }] });
             ms.Position = 0;
             var clone = (FooEnumerable)ser.ReadObject(ms);
             Assert.NotNull(clone.Bars);
@@ -74,7 +74,7 @@ namespace Examples.Issues
             {
                 var ser = new XmlSerializer(typeof(FooEnumerable));
                 using var ms = new MemoryStream();
-                ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+                ser.Serialize(ms, new FooEnumerable { Bars = [new Bar { }] });
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.Deserialize(ms);
                 Assert.NotNull(clone.Bars);
@@ -87,7 +87,7 @@ namespace Examples.Issues
         {
             var ser = new JavaScriptSerializer();
             using var ms = new MemoryStream();
-            string s = ser.Serialize(new FooEnumerable { Bars = new[] { new Bar { } } });
+            string s = ser.Serialize(new FooEnumerable { Bars = [new Bar { }] });
             ms.Position = 0;
             var clone = (FooEnumerable)ser.Deserialize(s, typeof(FooEnumerable));
             Assert.NotNull(clone.Bars);
@@ -100,7 +100,7 @@ namespace Examples.Issues
         {
             var ser = RuntimeTypeModel.Create();
             using var ms = new MemoryStream();
-            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ser.Serialize(ms, new FooEnumerable { Bars = [new Bar { }] });
             ms.Position = 0;
             var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
             Assert.NotNull(clone.Bars);
@@ -112,11 +112,11 @@ namespace Examples.Issues
         {
             var ser = RuntimeTypeModel.Create();
             using var ms = new MemoryStream();
-            ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+            ser.Serialize(ms, new FooEnumerable { Bars = [new Bar { }] });
             ms.Position = 0;
             // let's make Bars non-null in the target object, with something immutable
             // (an empty array), to see how it goes boom
-            var obj = new FooEnumerable { Bars = Array.Empty<Bar>() };
+            var obj = new FooEnumerable { Bars = [] };
             var ex = Assert.Throws<InvalidOperationException>(() =>
             {
                 var clone = (FooEnumerable)ser.Deserialize(ms, obj, type: typeof(FooEnumerable));
@@ -194,8 +194,7 @@ namespace Examples.Issues
             var clone = (GoalPlanningModel2)model.DeepClone(obj);
             Assert.Null(clone.PublishedGoals); //, caption + ":published");
             Assert.NotNull(clone.ProposedGoals); //, caption + ":proposed");
-            Assert.Equal(1, clone.ProposedGoals.Count); //, caption + ":count");
-            Assert.Equal(23, clone.ProposedGoals[0].X); //, caption + ":X");
+            Assert.Equal(23, Assert.Single(clone.ProposedGoals).X); //, caption + ":X");
         }
 
 #pragma warning disable IDE0060
@@ -206,7 +205,7 @@ namespace Examples.Issues
             Assert.Null(clone.PublishedGoals); //, caption + ":published");
             Assert.NotNull(clone.ProposedGoals); //, caption + ":proposed");
             Assert.Single(clone.ProposedGoals); //, caption + ":count");
-            Assert.Equal(23, clone.ProposedGoals.Single().X); //, caption + ":X");
+            Assert.Equal(23, Assert.Single(clone.ProposedGoals).X); //, caption + ":X");
         }
     }
 }

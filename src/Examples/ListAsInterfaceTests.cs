@@ -47,15 +47,14 @@ namespace Examples
             var clone = Serializer.DeepClone(data);
             Assert.NotNull(clone);
             Assert.NotSame(data, clone);
-            Assert.Equal(1, clone.Count);
-            Assert.Equal("abc", clone[0]);
+            Assert.Equal("abc", Assert.Single(clone));
         }
 
         static void TestList<T>(T original) where T : class, IDataWithList
         {
             Assert.NotNull(original); //, "original should be initialized");
             Assert.NotNull(original.Data); //, "original.Data should be initialized");
-            Assert.Equal(0, original.Data.Count); //, "original.Data should be empty");
+            Assert.Empty(original.Data); //, "original.Data should be empty");
 
             original.Data.Add("abc");
             original.Data.Add("def");

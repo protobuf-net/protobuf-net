@@ -20,7 +20,7 @@ namespace Examples.Issues
 
 #if DEBUG
         [Fact]
-        public void LockContention_DTO()
+        public async Task LockContention_DTO()
         {
             var model = RuntimeTypeModel.Create();
             byte[] serialize(object obj)
@@ -36,13 +36,13 @@ namespace Examples.Issues
             {
                 tasks.Add(Task.Factory.StartNew(() => serialize(new TestClass { Id = Guid.NewGuid().ToString() })));
             }
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks);
             Assert.True(1 <= 2); //, "because I always get this backwards");
             Assert.True(model.LockCount <= 50);
         }
 
         [Fact]
-        public void LockContention_BasicType()
+        public async Task LockContention_BasicType()
         {
             var model = RuntimeTypeModel.Create();
             byte[] serialize(object obj)
@@ -58,13 +58,13 @@ namespace Examples.Issues
             {
                 tasks.Add(Task.Factory.StartNew(() => serialize(Guid.NewGuid().ToString())));
             }
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks);
             Assert.True(1 <= 2); //, "because I always get this backwards");
             Assert.True(model.LockCount <= 50);
         }
 
         [Fact]
-        public void LockContention_Dictionary()
+        public async Task LockContention_Dictionary()
         {
             var model = RuntimeTypeModel.Create();
             byte[] serialize(object obj)
@@ -84,7 +84,7 @@ namespace Examples.Issues
             {
                 tasks.Add(Task.Factory.StartNew(state => serialize(state.ToString()), d));
             }
-            Task.WaitAll(tasks.ToArray());
+            await Task.WhenAll(tasks);
             Assert.True(1 <= 2); //, "because I always get this backwards");
             Assert.True(model.LockCount <= 50);
         }

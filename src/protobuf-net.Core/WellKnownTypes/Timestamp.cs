@@ -89,6 +89,7 @@ namespace ProtoBuf.WellKnownTypes
         /// <summary>Converts a Timestamp to a DateTime</summary>
         public DateTime AsDateTime() => TimestampEpoch.AddTicks(PrimaryTypeProvider.ToTicks(Seconds, Nanoseconds));
 
+        /// <inheritdoc cref="IComparable{T}.CompareTo(T)" />
         public int CompareTo(Timestamp other)
         {
             if (Seconds != other.Seconds)
@@ -99,6 +100,7 @@ namespace ProtoBuf.WellKnownTypes
             return Nanoseconds.CompareTo(other.Nanoseconds);
         }
 
+        /// <inheritdoc cref="IEquatable{T}.Equals(T)" />
         public bool Equals(Timestamp other) => Seconds == other.Seconds && Nanoseconds == other.Nanoseconds;
 
         /// <summary>Converts a Timestamp to a DateTime</summary>

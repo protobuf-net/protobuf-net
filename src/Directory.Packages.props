@@ -35,7 +35,7 @@
 
         <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.133" PrivateAssets="All" />
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageVersion Include="NHibernate" Version="[4.1.1.4000]" />
+        <PackageVersion Include="NHibernate" Version="5.5.2" />
         <PackageVersion Include="NodaTime" Version="3.1.11" />
         <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.1" />
 
@@ -55,7 +55,7 @@
         <PackageVersion Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
         <PackageVersion Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
         <PackageVersion Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
-        <PackageVersion Include="System.Text.Json" Version="8.0.2"/>
+        <PackageVersion Include="System.Text.Json" Version="8.0.5"/>
         <PackageVersion Include="System.Threading" Version="4.3.0" />
         <PackageVersion Include="System.Threading.Channels" Version="7.0.0" />
         <PackageVersion Include="System.Threading.Thread" Version="4.3.0" />
