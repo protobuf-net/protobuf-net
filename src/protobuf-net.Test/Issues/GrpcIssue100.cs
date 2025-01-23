@@ -58,7 +58,7 @@ As sub-object :
                 using var measured = writer.Measure(obj);
                 Assert.Equal(ms.Length, measured.Length);
 
-#if !NET462
+#if !NETFRAMEWORK
 
                 int hitsBefore = measured.GetLengthHits(out int missesBefore);
 

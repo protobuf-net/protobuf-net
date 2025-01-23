@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <WithSpans>true</WithSpans>
@@ -9,11 +9,11 @@
     <RootNamespace>ProtoBuf.Test</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)'=='net6.0' or '$(TargetFramework)'=='net8.0'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
     <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL;PLAT_ARRAY_BUFFER_WRITER;PLAT_INIT_ONLY</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)'=='net462'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net472'">
     <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -28,7 +28,7 @@
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
     <PackageReference Include="Xunit.SkippableFact" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net462'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
     <PackageReference Include="NHibernate" />
     <PackageReference Include="Iesi.Collections" />
     <PackageReference Include="System.Buffers" />
