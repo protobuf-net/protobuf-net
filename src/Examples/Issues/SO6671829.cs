@@ -7,9 +7,10 @@ using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 
+#pragma warning disable CS8981
+
 namespace Examples.Issues
 {
-    
     public class SO6671829
     {
         [Fact]

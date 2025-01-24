@@ -4,7 +4,7 @@
     <RootNamespace>ProtoBuf</RootNamespace>
     <Title>protobuf-net</Title>
     <Description>ServiceModel (WCF) extensions for protobuf-net</Description>
-    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
@@ -15,7 +15,7 @@
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
     <DefineConstants>$(DefineConstants);PLAT_SKIP_LOCALS_INIT</DefineConstants>
   </PropertyGroup>
   

@@ -37,14 +37,16 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static object GetUninitializedObject(Type type)
         {
+#pragma warning disable SYSLIB0050 // this is fine
             return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+#pragma warning restore SYSLIB0050 // this is fine
         }
 
-        internal static readonly DateTime[] EpochOrigin = {
+        internal static readonly DateTime[] EpochOrigin = [
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Local)
-        };
+        ];
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
@@ -354,7 +356,7 @@ namespace ProtoBuf
         {
             var ptr = stackalloc byte[MAX_DECIMAL_BYTES];
             var available = state.ReadBytes(new Span<byte>(ptr, MAX_DECIMAL_BYTES));
-            if (!(Utf8Parser.TryParse(available, out decimal value, out int bytesConsumed) // default acts like 'G'/'E' - accomodating
+            if (!(Utf8Parser.TryParse(available, out decimal value, out int bytesConsumed) // default acts like 'G'/'E' - accommodating
                 && bytesConsumed == available.Length))
                 ThrowHelper.ThrowInvalidOperationException($"Unable to parse decimal: '{Encoding.UTF8.GetString(ptr, available.Length)}'");
             return value;

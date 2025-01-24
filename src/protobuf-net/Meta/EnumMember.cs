@@ -92,7 +92,7 @@ namespace ProtoBuf.Meta
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is EnumMember em && Equals(em);
 
-        /// <summary>Compare two enum-member definitions</summary>
+        /// <inheritdoc cref="IEquatable{T}.Equals(T)"/>
         public bool Equals(EnumMember other) => string.Equals(Name, other.Name) && object.Equals(Value, other.Value);
 
         /// <summary>
@@ -120,6 +120,7 @@ namespace ProtoBuf.Meta
                 ThrowHelper.ThrowInvalidOperationException("All enum declarations must have valid names");
         }
 
+        /// <inheritdoc cref="IComparable{T}.CompareTo(T)"/>
         public int CompareTo(EnumMember other)
         {
             var thisValue = TryGetInt32();

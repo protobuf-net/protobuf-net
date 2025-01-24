@@ -7,7 +7,9 @@ using ProtoBuf.Meta;
 
 namespace Examples
 {
-    
+#pragma warning disable CS0618 // SqlClient (warn once only)
+#warning Migrate to Microsoft.Data.SqlClient
+
     public class TypeTests
     {
         [ProtoContract]

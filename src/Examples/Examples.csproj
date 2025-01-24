@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net462;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
     <DefineConstants Condition="$(CI) != 'true'">$(DefineConstants);LONG_RUNNING</DefineConstants>
     <NoWarn>$(NoWarn);IDE0060;IDE0051;IDE0044;IDE0063;IDE0028;IDE0034;IDE1006;IDE0017;IDE0052;xUnit1004;CA1507;CA1069;CA1822;CA1825</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net6.0'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net462'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net472'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT;PLAT_SPANS;EMIT_DLL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -35,7 +35,7 @@
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
     <PackageReference Include="Xunit.SkippableFact" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net462'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
     <PackageReference Include="NHibernate" />
     <PackageReference Include="Iesi.Collections" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
@@ -52,7 +52,7 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
     <PackageReference Include="System.Configuration.ConfigurationManager" />
     <PackageReference Include="System.Data.SqlClient" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" />
