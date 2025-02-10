@@ -101,7 +101,7 @@ namespace ProtoBuf.Meta
         /// </para>
         /// <para>
         /// If this is disabled, no such assumptions are made and only *explicit*
-        /// default values are processed. This is enabled by default to 
+        /// default values are processed. This is enabled by default to
         /// preserve similar logic to v1.
         /// </para>
         /// </summary>
@@ -275,7 +275,7 @@ namespace ProtoBuf.Meta
                         {
                             bool isSingleInput = options.Types.Count == 1;
                             var mt = AddType(effectiveType, isSingleInput, isSingleInput);
-                            
+
                         }
                     }
                 }
@@ -1180,7 +1180,7 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
-        /// Represents configuration options for compiling a model to 
+        /// Represents configuration options for compiling a model to
         /// a standalone assembly.
         /// </summary>
         public sealed class CompilerOptions
@@ -1216,6 +1216,11 @@ namespace ProtoBuf.Meta
             /// The name of the TypeModel class to create
             /// </summary>
             public string TypeName { get; set; }
+
+            /// <summary>
+            /// Prefix of the type name of the service that provides serializers
+            /// </summary>
+            public string ServicesTypePrefix { get; set; } = "<Services>";
 
 #if PLAT_NO_EMITDLL
             internal const string NoPersistence = "Assembly persistence not supported on this runtime";
@@ -1380,7 +1385,7 @@ namespace ProtoBuf.Meta
             WriteAssemblyAttributes(options, assemblyName, asm);
 
 
-            var serviceType = WriteBasicTypeModel("<Services>" + typeName, module, typeof(object), true);
+            var serviceType = WriteBasicTypeModel(options.ServicesTypePrefix + typeName, module, typeof(object), true);
             // note: the service could benefit from [DynamicallyAccessedMembers(DynamicAccess.Serializer)], but: that only exists
             // (on the public API) in net5+, and those platforms don't allow full dll emit (which is when the linker matters)
             WriteSerializers(scope, serviceType);
@@ -1878,11 +1883,11 @@ namespace ProtoBuf.Meta
             if (type == typeof(byte[])) name = ".google.protobuf.BytesValue";
 
             if (name is null) return false;
-            
+
             imports.Add(CommonImports.WrappersProto);
             return true;
         }
-        
+
         static bool IsWellKnownType(Type type, out string name, HashSet<string> imports)
         {
             if (TypeHelper.IsBytesLike(type))
@@ -1918,7 +1923,7 @@ namespace ProtoBuf.Meta
             {
                 return wrappersProtoTypeParsed;
             }
-            
+
             compatibilityLevel = ValueMember.GetEffectiveCompatibilityLevel(compatibilityLevel, dataFormat);
             effectiveType = DynamicStub.GetEffectiveType(effectiveType);
 
