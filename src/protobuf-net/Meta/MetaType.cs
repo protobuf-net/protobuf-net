@@ -2041,6 +2041,7 @@ namespace ProtoBuf.Meta
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
+                AppendMessageDeprecatedOption(builder, indent);
 
                 if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
@@ -2109,6 +2110,7 @@ namespace ProtoBuf.Meta
 
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
+                AppendMessageDeprecatedOption(builder, indent);
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
@@ -2215,6 +2217,10 @@ namespace ProtoBuf.Meta
                             {
                                 imports.Add(RuntimeTypeModel.CommonImports.Protogen);
                                 AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
+                            }
+                            if (member.Member.GetCustomAttribute<ObsoleteAttribute>() != null)
+                            {
+                                AddOption(builder, ref hasOption).Append("deprecated = true");
                             }
                             CloseOption(builder, ref hasOption).Append(';');
                             if (syntax != ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
@@ -2343,6 +2349,13 @@ namespace ProtoBuf.Meta
                     builder.Append(';');
                     if (!string.IsNullOrWhiteSpace(reservation.Comment))
                         builder.Append(" /* ").Append(reservation.Comment).Append(" */");
+                }
+            }
+            void AppendMessageDeprecatedOption(StringBuilder builder, int indent)
+            {
+                if (Type.GetCustomAttribute<ObsoleteAttribute>() != null)
+                {
+                    NewLine(builder, indent + 1).Append("option deprecated = true;");
                 }
             }
         }
