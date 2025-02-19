@@ -1386,7 +1386,7 @@ namespace ProtoBuf.Meta
             WriteSerializers(scope, serviceType);
             WriteEnumsAndProxies(serviceType);
 
-#if PLAT_NO_EMITDLL
+#if NETSTANDARD2_0
             var finalServiceType = serviceType.CreateTypeInfo().AsType();
 #else
             var finalServiceType = serviceType.CreateType();
@@ -1397,7 +1397,7 @@ namespace ProtoBuf.Meta
 
             WriteConstructorsAndOverrides(modelType, finalServiceType);
 
-#if PLAT_NO_EMITDLL
+#if NETSTANDARD2_0
             Type finalType = modelType.CreateTypeInfo().AsType();
 #else
             Type finalType = modelType.CreateType();
