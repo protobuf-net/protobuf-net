@@ -2,6 +2,7 @@
   <ItemGroup>
     <!-- actual package output dependencies -->
     <PackageVersion Include="Microsoft.Extensions.Caching.Abstractions" Version="9.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.2" />
     <PackageVersion Include="System.Collections.Immutable" Version="7.0.0" />
     <PackageVersion Include="System.Memory" Version="4.5.5" />

@@ -5,13 +5,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ProtoBuf;
 
-internal sealed class ProtoSerializerFactory : IHybridCacheSerializerFactory
+internal sealed class ProtoHybridCacheSerializerFactory : IHybridCacheSerializerFactory
 {
-    private readonly TypeModel model;
-    public ProtoSerializerFactory([FromKeyedServices(typeof(ProtobufNetServiceExtensions))] TypeModel? model = null)
+    internal TypeModel Model { get; }
+    public ProtoHybridCacheSerializerFactory([FromKeyedServices(typeof(HybridCache))] TypeModel? model = null)
     {
-        this.model = model ?? TypeModel.DefaultModel;
+        Model = model ?? RuntimeTypeModel.Default;
     }
+
 #pragma warning disable CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
     public bool TryCreateSerializer<T>(
 #pragma warning restore CS8767 // Nullability of reference types in type of parameter doesn't match implicitly implemented member (possibly because of nullability attributes).
@@ -20,9 +21,9 @@ internal sealed class ProtoSerializerFactory : IHybridCacheSerializerFactory
 #endif
         out IHybridCacheSerializer<T>? serializer)
     {
-        if (model.CanSerializeContractType(typeof(T)))
+        if (Model.CanSerializeContractType(typeof(T)))
         {
-            serializer = new ProtoSerializer<T>(model);
+            serializer = new ProtoHybridCacheSerializer<T>(Model);
             return true;
         }
         serializer = null;

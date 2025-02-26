@@ -14,7 +14,7 @@ public static class ProtobufNetServiceExtensions
     /// </summary>
     public static IServiceCollection AddProtobufNetHybridCachModel(this IServiceCollection services, TypeModel model)
     {
-        services.AddKeyedSingleton<TypeModel>(typeof(ProtobufNetServiceExtensions), model);
+        services.AddKeyedSingleton<TypeModel>(typeof(HybridCache), model);
         return services;
     }
 
@@ -23,7 +23,7 @@ public static class ProtobufNetServiceExtensions
     /// </summary>
     public static IServiceCollection AddProtobufNetHybridCacheSerializer(this IServiceCollection services)
     {
-        services.AddSingleton<IHybridCacheSerializerFactory, ProtoSerializerFactory>();
+        services.AddSingleton<IHybridCacheSerializerFactory, ProtoHybridCacheSerializerFactory>();
         return services;
     }
 
@@ -32,7 +32,7 @@ public static class ProtobufNetServiceExtensions
     /// </summary>
     public static IServiceCollection AddProtobufNetHybridCacheSerializer<T>(this IServiceCollection services)
     {
-        services.AddSingleton<IHybridCacheSerializer<T>, ProtoSerializer<T>>();
+        services.AddSingleton<IHybridCacheSerializer<T>, ProtoHybridCacheSerializer<T>>();
         return services;
     }
 }
