@@ -60,6 +60,4 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(CompatibilityLevelAttribute))]
 [assembly: TypeForwardedTo(typeof(ProtoSyntax))]
 
-#if PLAT_SKIP_LOCALS_INIT
 [module: SkipLocalsInit]
-#endif
