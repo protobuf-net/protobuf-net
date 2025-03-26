@@ -207,6 +207,33 @@ namespace ProtoBuf
         /// Creates a new instance from a protocol-buffer stream that has a length-prefix
         /// on data (to assist with network IO).
         /// </summary>
+        /// <param name="type">The runtime type to be deserialized.</param>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <returns>A new, initialized instance, as a generic object.</returns>
+        public static object DeserializeWithLengthPrefix([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source, PrefixStyle style)
+        {
+            return DeserializeWithLengthPrefix(type, source, style, 0);
+        }
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream that has a length-prefix
+        /// on data (to assist with network IO).
+        /// </summary>
+        /// <param name="type">The runtime type to be deserialized.</param>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <param name="fieldNumber">The expected tag of the item (only used with base-128 prefix style).</param>
+        /// <returns>A new, initialized instance, as a generic object.</returns>
+        public static object DeserializeWithLengthPrefix([DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, Stream source, PrefixStyle style, int fieldNumber)
+        {
+            return RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, type, style, fieldNumber);
+        }
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream that has a length-prefix
+        /// on data (to assist with network IO).
+        /// </summary>
         /// <typeparam name="T">The type to be created.</typeparam>
         /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
         /// <param name="style">How to encode the length prefix.</param>
