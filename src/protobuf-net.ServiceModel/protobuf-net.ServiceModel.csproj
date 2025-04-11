@@ -14,10 +14,6 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'net462'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-    <DefineConstants>$(DefineConstants);PLAT_SKIP_LOCALS_INIT</DefineConstants>
-  </PropertyGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <Reference Include="System.Configuration" />

@@ -148,7 +148,7 @@ namespace ProtoBuf.Compiler
                     il.Emit(OpCodes.Ret);
                 }
 
-#if PLAT_NO_EMITDLL
+#if NETSTANDARD2_0
                 Type finalType = type.CreateTypeInfo().AsType();
 #else
                 Type finalType = type.CreateType();
