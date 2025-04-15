@@ -10,7 +10,7 @@ namespace ProtoBuf.Internal.Serializers
     {
         public static IRuntimeProtoSerializerNode Create(RepeatedSerializerStub stub, int fieldNumber, SerializerFeatures features, CompatibilityLevel compatibilityLevel, DataFormat dataFormat)
         {
-            if (stub is null) ThrowHelper.ThrowArgumentNullException(nameof(stub), $"No suitable repeated serializer resolved for {stub.ForType.NormalizeName()}");
+            if (stub is null) ThrowHelper.ThrowArgumentNullException(nameof(stub), $"No suitable repeated serializer resolved for stub");
             _ = stub.Serializer; // primes and validates
             return (IRuntimeProtoSerializerNode)Activator.CreateInstance(typeof(RepeatedDecorator<,>).MakeGenericType(stub.ForType, stub.ItemType),
                 new object[] { fieldNumber, features, compatibilityLevel, dataFormat, stub });
