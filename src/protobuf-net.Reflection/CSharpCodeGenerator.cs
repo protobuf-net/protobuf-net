@@ -382,7 +382,8 @@ namespace ProtoBuf.Reflection
                 switch (obj.type)
                 {
                     case FieldDescriptorProto.Type.TypeString:
-                        defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
+                        // Default value for string should be null
+                        defaultValue = string.IsNullOrEmpty(defaultValue) ? (ctx.IsEnabled("stringnulldefault") ? null : "\"\"")
                         : ("@\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
                         break;
                     case FieldDescriptorProto.Type.TypeDouble:
@@ -417,6 +418,11 @@ namespace ProtoBuf.Reflection
                         suffix = "u";
                         break;
                     case FieldDescriptorProto.Type.TypeEnum:
+                        if (ctx.IsEnabled("nullablevaluetype"))
+                        {
+                            defaultValue = null;
+                            break;
+                        }
                         var enumType = ctx.TryFind<EnumDescriptorProto>(obj.TypeName);
                         if (enumType != null)
                         {
@@ -1050,6 +1056,7 @@ namespace ProtoBuf.Reflection
                 case FieldDescriptorProto.Type.TypeUint32:
                 case FieldDescriptorProto.Type.TypeFixed64:
                 case FieldDescriptorProto.Type.TypeUint64:
+                case FieldDescriptorProto.Type.TypeEnum:
                     return true;
                 default:
                     return false;
