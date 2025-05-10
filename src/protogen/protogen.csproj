@@ -22,7 +22,7 @@
     <PackageReference Include="protobuf-net.Grpc.Reflection" Condition="'$(GrpcTools)'=='true'" />
     <PackageReference Include="Grpc.Net.Client" Condition="'$(GrpcTools)'=='true'" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="System.Collections.Immutable" />
   </ItemGroup>
 </Project>
