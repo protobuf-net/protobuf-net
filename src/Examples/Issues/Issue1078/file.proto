@@ -1,0 +1,5 @@
+syntax = "proto2";
+
+message Message {
+optional int64  last_sequence_id = 3 [default = -1];
+}

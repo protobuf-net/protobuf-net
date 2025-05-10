@@ -794,7 +794,7 @@ namespace ProtoBuf.Meta
             // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
             // means we need to be able to persist the span as a memory; the only way to do this
             // *safely and reliably* is to pint the span for the duration of the deserialize, and throw the
-            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocs)
+            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocations)
             fixed (byte* ptr = source)
             {
                 FixedMemoryManager wrapper = null;
@@ -877,7 +877,7 @@ namespace ProtoBuf.Meta
             // as an implementation detail, we sometimes need to be able to use iterator blocks etc - which
             // means we need to be able to persist the span as a memory; the only way to do this
             // *safely and reliably* is to pint the span for the duration of the deserialize, and throw the
-            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocs)
+            // pointer into a custom MemoryManager<byte> (pool the manager to reduce allocations)
             fixed (byte* ptr = source)
             {
                 FixedMemoryManager wrapper = null;
@@ -1834,6 +1834,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
 
+#pragma warning disable SYSLIB0011 // binary formatter - legacy only
+
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>
@@ -1879,8 +1881,12 @@ namespace ProtoBuf.Meta
                 }
             }
 
+#pragma warning disable SYSLIB0050 // binary formatter - legacy only
             public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector { get; set; }
+#pragma warning restore SYSLIB0050 // binary formatter - legacy only
         }
+
+#pragma warning restore SYSLIB0011 // binary formatter - legacy only
 
 #if DEBUG // this is used by some unit tests only, to ensure no buffering when buffering is disabled
         /// <summary>

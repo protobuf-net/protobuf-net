@@ -66,7 +66,9 @@ namespace ProtoBuf
         /// <param name="info">The destination SerializationInfo to write to.</param>
         public static void Serialize<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
+#pragma warning disable SYSLIB0050 // binary formatter - legacy only
             Serialize<T>(info, new StreamingContext(StreamingContextStates.Persistence), instance);
+#pragma warning restore SYSLIB0050 // binary formatter - legacy only
         }
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.

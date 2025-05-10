@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -80,7 +80,7 @@ namespace ProtoBuf.Serializers
 #endif
         );
 
-        protected override int TryGetCount(ImmutableArray<T> values) => values.IsEmpty ? 0 : values.Length;
+        protected override int TryGetCount(ImmutableArray<T> values) => values.IsDefaultOrEmpty ? 0 : values.Length;
 
         internal override long Measure(ImmutableArray<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {

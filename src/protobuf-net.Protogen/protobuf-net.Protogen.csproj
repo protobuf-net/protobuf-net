@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <PackAsTool>true</PackAsTool>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -11,6 +11,7 @@
     <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
     <GrpcTools>true</GrpcTools>
     <ApplicationIcon>protobuf-net.ico</ApplicationIcon>
+    <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
   <PropertyGroup Condition="'$(GrpcTools)'=='true'">
     <DefineConstants>$(DefineConstants);GRPC_TOOLS</DefineConstants>

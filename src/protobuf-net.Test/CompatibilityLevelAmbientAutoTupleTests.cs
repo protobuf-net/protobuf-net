@@ -197,7 +197,7 @@ message ValueTuple_Timestamp_String {
             var model = RuntimeTypeModel.Create();
             model.Add<HybridInvalidModel>();
             var ex = Assert.Throws<InvalidOperationException>(() => model.GetSchema(typeof(HybridInvalidModel)));
-            Assert.Equal("The tuple-like type System.ValueTuple`2[System.DateTime,System.TimeSpan] must use a single compatiblity level, but 'Level200' and 'Level300' are both observed; this usually means it is being used in different contexts in the same model.", ex.Message);
+            Assert.Equal("The tuple-like type System.ValueTuple`2[System.DateTime,System.TimeSpan] must use a single compatibility level, but 'Level200' and 'Level300' are both observed; this usually means it is being used in different contexts in the same model.", ex.Message);
         }
 
         [ProtoContract]

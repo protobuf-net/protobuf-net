@@ -46,6 +46,26 @@ namespace ProtoBuf.Issues
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
+        public void CanSerializeUninitializedImmutableArray(bool autoCompile)
+        {
+            var testClass = new UninitializedImmutableArrayTestClass();
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = autoCompile;
+
+            UninitializedImmutableArrayTestClass testClassClone;
+            using (var ms = new MemoryStream())
+            {
+                model.Serialize(ms, testClass);
+                ms.Position = 0;
+                testClassClone = model.Deserialize<UninitializedImmutableArrayTestClass>(ms);
+            }
+
+            Assert.Equal(testClass.Array, testClassClone.Array);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
         public void CanDeserialiseImmutableList(bool autoCompile)
         {
             var testClass = new ImmutableListTestClass(ImmutableList.Create("a", "b", "c"));
@@ -172,6 +192,13 @@ namespace ProtoBuf.Issues
 
             [ProtoMember(1)]
             public ImmutableArray<string> Array {get;}
+        }
+
+        [ProtoContract]
+        public class UninitializedImmutableArrayTestClass
+        {
+            [ProtoMember(1)]
+            public ImmutableArray<int> Array { get; }
         }
 
         [ProtoContract(SkipConstructor = true)]

@@ -5,6 +5,8 @@ using System;
 using System.IO;
 using Xunit;
 using NHibernate.Engine;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace ProtoBuf.unittest.ThirdParty
 {
@@ -55,6 +57,11 @@ namespace ProtoBuf.unittest.ThirdParty
                 return wrapped;
             }
 
+            Task<object> ILazyInitializer.GetImplementationAsync(CancellationToken cancellationToken)
+            {
+                return Task.FromResult<object>(wrapped);
+            }
+
             object ILazyInitializer.Identifier
             {
                 get
@@ -68,6 +75,11 @@ namespace ProtoBuf.unittest.ThirdParty
             }
 
             void ILazyInitializer.Initialize()
+            {
+                throw new NotImplementedException();
+            }
+
+            Task ILazyInitializer.InitializeAsync(CancellationToken cancellationToken)
             {
                 throw new NotImplementedException();
             }

@@ -12,7 +12,6 @@
         <PackageProjectUrl>https://github.com/protobuf-net/protobuf-net</PackageProjectUrl>
         <RepositoryUrl>https://github.com/protobuf-net/protobuf-net</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <!--<PackageIconUrl>https://protogen.marcgravell.com/images/protobuf-net.svg</PackageIconUrl>-->
         <PackageIcon>protobuf-net.png</PackageIcon>
         <Product>protobuf-net ($(TargetFramework))</Product>
         <PackageReleaseNotes>https://protobuf-net.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
@@ -24,13 +23,14 @@
         <DefaultLanguage>en-US</DefaultLanguage>
         <IncludeSymbols>false</IncludeSymbols>
         <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
-        <LangVersion>12</LangVersion>
+        <LangVersion>latest</LangVersion>
         <Features>strict</Features>
         <CodeAnalysisRuleset>$(MSBuildThisFileDirectory)Shared.ruleset</CodeAnalysisRuleset>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
         <LibSysValueTuple>4.5.0</LibSysValueTuple>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <CheckEolTargetFramework>False</CheckEolTargetFramework>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='VS'">
         <GenerateDocumentationFile>true</GenerateDocumentationFile>

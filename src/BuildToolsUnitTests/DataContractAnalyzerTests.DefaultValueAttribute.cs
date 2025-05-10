@@ -262,7 +262,7 @@ public class Foo {
     [ProtoMember(36)] public nuint Test0UIntPtr {get;set;}
 }
 ");
-            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault));
+            Assert.DoesNotContain(diagnostics, x => x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault);
         }
     }
 }
