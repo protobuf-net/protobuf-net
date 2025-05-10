@@ -19,8 +19,10 @@
   <ItemGroup>
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
     <ProjectReference Include="../protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
-    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="protobuf-net.Grpc.Reflection" Condition="'$(GrpcTools)'=='true'" />
     <PackageReference Include="Grpc.Net.Client" Condition="'$(GrpcTools)'=='true'" />
+  </ItemGroup>
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <PackageReference Include="System.Collections.Immutable" />
   </ItemGroup>
 </Project>

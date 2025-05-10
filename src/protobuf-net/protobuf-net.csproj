@@ -8,7 +8,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
-  
+
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'net462'">
     <DefineConstants>$(DefineConstants);PLAT_NO_EMITDLL</DefineConstants>
