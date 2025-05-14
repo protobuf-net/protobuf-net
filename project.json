@@ -1,0 +1,10 @@
+{
+    "name": "com.verloren-droom.protobuf-net",
+    "displayName": "protobuf-net",
+    "description": "",
+    "version": "3.2.0",
+    "unity": "2018.3",
+    "license": "Apache",
+    "dependencies": {
+    },
+}
