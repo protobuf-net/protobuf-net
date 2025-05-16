@@ -343,6 +343,7 @@ Parse PROTO_FILES and generate output based on the options given:
   +compatlevel={yes|no}       Specify whether well-known types should be marked 
                               with CompatibilityLevel instead of DataFormat.
   +nullablevaluetype={yes|no} Use nullable primitives when possible.
+  +stringnulldefault={yes|no} Default value for string is null
   +repeatedaslist={yes|no}    Use List for all repeated fields.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.

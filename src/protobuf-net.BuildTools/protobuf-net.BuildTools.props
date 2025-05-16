@@ -12,6 +12,7 @@
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NullWrappers" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="CompatLevel" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="NullableValueType" />
+        <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="StringNullDefault" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="RepeatedAsList" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="IncludeInOutput" />
     </ItemGroup>
