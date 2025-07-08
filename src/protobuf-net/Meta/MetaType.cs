@@ -5,6 +5,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Reflection;
 using System.Text;
 
@@ -113,10 +114,10 @@ namespace ProtoBuf.Meta
             return AddSubType(fieldNumber, derivedType, DataFormat.Default);
         }
 
-        private static void ThrowSubTypeWithSurrogate(Type type)
+        private static void ThrowSubTypeAndSurrogate(Type type)
         {
             ThrowHelper.ThrowInvalidOperationException(
-                $"Types with surrogates cannot be used in inheritance hierarchies: {type.NormalizeName()}");
+                $"Types with surrogates cannot also declare sub-types: {type.NormalizeName()}");
         }
 
         /// <summary>
@@ -147,8 +148,7 @@ namespace ProtoBuf.Meta
                 {
                     ThrowTupleTypeWithInheritance(derivedType);
                 }
-                if (surrogateType is not null) ThrowSubTypeWithSurrogate(Type);
-                if (derivedMeta.surrogateType is not null) ThrowSubTypeWithSurrogate(derivedType);
+                if (surrogateType is not null) ThrowSubTypeAndSurrogate(Type);
 
                 SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
                 ThrowIfFrozen();
@@ -501,8 +501,11 @@ namespace ProtoBuf.Meta
             return features;
         }
 
-        private bool HasRealInheritance()
-            => (baseType is not null && baseType != this) || (_subTypes?.Count ?? 0) > 0;
+        private bool HasRealInheritance(out bool hasSubTypes)
+        {
+            hasSubTypes = _subTypes is { Count: > 0 };
+            return hasSubTypes || (baseType is not null && baseType != this);
+        }
         private IProtoTypeSerializer BuildSerializer()
         {
             if (SerializerType is not null)
@@ -532,10 +535,10 @@ namespace ProtoBuf.Meta
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
 
-            bool involvedInInheritance = HasRealInheritance();
+            bool involvedInInheritance = HasRealInheritance(out bool hasSubType);
             if (surrogateType is not null)
             {
-                if (involvedInInheritance) ThrowSubTypeWithSurrogate(Type);
+                if (hasSubType) ThrowSubTypeAndSurrogate(Type);
 
                 SerializerFeatures features;
                 // check to see if we can handle that directly without using GetSerializer<surrogateType>()
@@ -553,18 +556,32 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    MetaType mt = model[surrogateType], mtBase;
-                    while ((mtBase = mt.baseType) is not null)
+                    MetaType mt = model[surrogateType];
+                    if (mt.BaseType is not null)
                     {
-                        if (mt.HasRealInheritance()) ThrowSubTypeWithSurrogate(mt.Type);
-                        mt = mtBase;
+                        ThrowHelper.ThrowInvalidOperationException("Surrogate type must refer to the root inheritance type (for now; log an issue if this is a barrier): " + surrogateType.NormalizeName());
                     }
+                    // , mtBase;
+                    //while ((mtBase = mt.baseType) is not null)
+                    //{
+                    //    mt = mtBase;
+                    //}
                     var ser = mt.Serializer;
                     features = ser.Features;
                     serializer = ser;
                 }
-                return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
-                    args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer, features });
+                var root = GetInheritanceRoot();
+                if (root is null)
+                {
+                    return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
+                        args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer, features });
+                }
+                else
+                {
+                    return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<,>).MakeGenericType(root, Type),
+                                            args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer, features });
+                }
+
             }
             if (IsAutoTuple)
             {
@@ -1463,8 +1480,7 @@ namespace ProtoBuf.Meta
                     ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
 
-                if ((BaseType is not null && BaseType != this) || (_subTypes?.Count ?? 0) > 0)
-                    ThrowSubTypeWithSurrogate(Type);
+                if (HasSubtypes) ThrowSubTypeAndSurrogate(Type);
 
                 if (surrogateType.IsGenericTypeDefinition)
                 {
