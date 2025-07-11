@@ -6,74 +6,74 @@ using System.Reflection;
 
 namespace ProtoBuf.Internal.Serializers
 {
-    internal sealed class SurrogateSerializer<TBase, T> : SurrogateSerializer<T>, ISubTypeSerializer<T>
+    internal sealed class SurrogateSerializer<TBase, T> : SurrogateSerializer<T> //, ISubTypeSerializer<T>
         where TBase : class
         where T : class, TBase
     {
         public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IRuntimeProtoSerializerNode rootTail, SerializerFeatures features) : base(declaredType, toTail, fromTail, rootTail, features) { }
         public override Type BaseType => typeof(TBase);
+        // public override bool HasInheritance => true;
+        // public override void Write(ref ProtoWriter.State state, T value)
+        //     => state.WriteBaseType<TBase>(value);
+        //
+        // public override T Read(ref ProtoReader.State state, T value)
+        //     => state.ReadBaseType<TBase, T>(value);
 
-        public override void Write(ref ProtoWriter.State state, T value)
-            => state.WriteBaseType<TBase>(value);
+        // T ISubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
+        //     => (T)Read(ref state, value.RawValue);
+        //
+        // void ISubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
+        //     => Write(ref state, (object)value);
 
-        public override T Read(ref ProtoReader.State state, T value)
-            => state.ReadBaseType<TBase, T>(value);
+        public override bool IsSubType => typeof(TBase) != typeof(T);
 
-        T ISubTypeSerializer<T>.ReadSubType(ref ProtoReader.State state, SubTypeState<T> value)
-            => (T)Read(ref state, value.RawValue);
-
-        void ISubTypeSerializer<T>.WriteSubType(ref ProtoWriter.State state, T value)
-            => Write(ref state, (object)value);
-
-        public override bool IsSubType => true;
-
-        public override void EmitReadRoot(CompilerContext context, Local valueFrom)
-        {
-            if (context.IsService)
-            {
-                using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
-                context.LoadState();
-
-                // sub-state
-                context.LoadSerializationContext(typeof(ISerializationContext));
-                context.LoadValue(tmp);
-                context.EmitCall(typeof(SubTypeState<TBase>)
-                    .GetMethod(nameof(SubTypeState<string>.Create), BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(typeof(T)));
-                context.EmitCall(typeof(ISubTypeSerializer<TBase>)
-                    .GetMethod(nameof(ISubTypeSerializer<string>.ReadSubType), BindingFlags.Public | BindingFlags.Instance));
-                if (typeof(T) != typeof(TBase)) context.Cast(typeof(T));
-            }
-            else
-            {
-                context.LoadState();
-                context.LoadValue(valueFrom);
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
-                context.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
-                    .MakeGenericMethod(typeof(TBase), typeof(T)));
-            }
-        }
-
-        public override void EmitWriteRoot(CompilerContext context, Local valueFrom)
-        {
-            using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
-            if (context.IsService)
-            {
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
-                context.LoadState();
-                context.LoadValue(tmp);
-                context.EmitCall(typeof(ISubTypeSerializer<TBase>)
-                    .GetMethod(nameof(ISubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
-            }
-            else
-            {
-                context.LoadState();
-                context.LoadValue(tmp);
-                context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
-                context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.State.WriteBaseType), BindingFlags.Public | BindingFlags.Instance)
-                    .MakeGenericMethod(typeof(TBase)));
-            }
-        }
+        // public override void EmitReadRoot(CompilerContext context, Local valueFrom)
+        // {
+        //     if (context.IsService)
+        //     {
+        //         using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
+        //         context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
+        //         context.LoadState();
+        //
+        //         // sub-state
+        //         context.LoadSerializationContext(typeof(ISerializationContext));
+        //         context.LoadValue(tmp);
+        //         context.EmitCall(typeof(SubTypeState<TBase>)
+        //             .GetMethod(nameof(SubTypeState<string>.Create), BindingFlags.Public | BindingFlags.Static).MakeGenericMethod(typeof(T)));
+        //         context.EmitCall(typeof(ISubTypeSerializer<TBase>)
+        //             .GetMethod(nameof(ISubTypeSerializer<string>.ReadSubType), BindingFlags.Public | BindingFlags.Instance));
+        //         if (typeof(T) != typeof(TBase)) context.Cast(typeof(T));
+        //     }
+        //     else
+        //     {
+        //         context.LoadState();
+        //         context.LoadValue(valueFrom);
+        //         context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
+        //         context.EmitCall(typeof(ProtoReader.State).GetMethod(nameof(ProtoReader.State.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
+        //             .MakeGenericMethod(typeof(TBase), typeof(T)));
+        //     }
+        // }
+        //
+        // public override void EmitWriteRoot(CompilerContext context, Local valueFrom)
+        // {
+        //     using var tmp = context.GetLocalWithValue(typeof(T), valueFrom);
+        //     if (context.IsService)
+        //     {
+        //         context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
+        //         context.LoadState();
+        //         context.LoadValue(tmp);
+        //         context.EmitCall(typeof(ISubTypeSerializer<TBase>)
+        //             .GetMethod(nameof(ISubTypeSerializer<string>.WriteSubType), BindingFlags.Public | BindingFlags.Instance));
+        //     }
+        //     else
+        //     {
+        //         context.LoadState();
+        //         context.LoadValue(tmp);
+        //         context.LoadSelfAsService<ISubTypeSerializer<TBase>, TBase>(default, default);
+        //         context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.State.WriteBaseType), BindingFlags.Public | BindingFlags.Instance)
+        //             .MakeGenericMethod(typeof(TBase)));
+        //     }
+        // }
     }
     internal class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
@@ -167,17 +167,18 @@ namespace ProtoBuf.Internal.Serializers
             op = null;
             return false;
         }
-
+        
         public MethodInfo GetConversion(bool toTail)
         {
-            Type to = toTail ? declaredType : ExpectedType;
-            Type from = toTail ? ExpectedType : declaredType;
-            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(ExpectedType, from, to, out op))
+            var rootType = BaseType;
+            Type to = toTail ? declaredType : rootType;
+            Type from = toTail ? rootType : declaredType;
+            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(rootType, from, to, out op))
             {
                 return op;
             }
             throw new InvalidOperationException("No suitable conversion operator found for surrogate: " +
-                ExpectedType.FullName + " / " + declaredType.FullName);
+                rootType.FullName + " / " + declaredType.FullName);
         }
 
         public void Write(ref ProtoWriter.State state, object value)
@@ -214,7 +215,7 @@ namespace ProtoBuf.Internal.Serializers
             return value;
         }
 
-        bool IProtoTypeSerializer.HasInheritance => false;
+        public virtual bool HasInheritance => false;
 
         public virtual void EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitRead(ctx, valueFrom);
@@ -222,10 +223,12 @@ namespace ProtoBuf.Internal.Serializers
         public virtual void EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitWrite(ctx, valueFrom);
 
-        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        public virtual void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
+            // inline the tail
             // Debug.Assert(valueFrom is object, "surrogate value on stack-head"); // don't support stack-head for this
-            using Compiler.Local converted = rootTail.RequiresOldValue ? new Compiler.Local(ctx, declaredType) : null;
+            using Compiler.Local converted =
+                rootTail.RequiresOldValue ? new Compiler.Local(ctx, declaredType) : null;
 
             if (rootTail.RequiresOldValue)
             {
@@ -233,15 +236,22 @@ namespace ProtoBuf.Internal.Serializers
                 ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
                 ctx.StoreValue(converted); // store into surrogate local
             }
+
             rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
             ctx.LoadValue(converted); // load from surrogate local
-            ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
+            ctx.EmitCall(fromTail); // static convert op, surrogate-to-primary
+            if (IsSubType && ReturnsValue)
+            {
+                // "return {expr}" to "return (T){expr}"
+                ctx.Cast(ExpectedType);
+            }
             ctx.StoreValue(valueFrom); // store back into primary
         }
 
-        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        public virtual void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
+            // inline the tail
             ctx.LoadValue(valueFrom);
             ctx.EmitCall(toTail);
             rootTail.EmitWrite(ctx, null);

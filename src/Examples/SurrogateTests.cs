@@ -133,7 +133,8 @@ public class SurrogateTests
                     scenario = model.Compile();
                     break;
                 case TestMode.CompileToFile:
-                    scenario = model.Compile("MyModel", $"{Guid.NewGuid()}.dll");
+                    int key = (baseSurrogate ? 1 : 0) | (derivedSurrogate ? 2 : 0);
+                    scenario = model.Compile("MyModel", $"Surrogate_{key}.dll");
                     break;
             }
             ExecuteImpl(scenario);

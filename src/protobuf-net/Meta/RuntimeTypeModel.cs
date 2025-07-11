@@ -1639,6 +1639,7 @@ namespace ProtoBuf.Meta
                 type.DefineMethodOverride(GetFeaturesMethod(serializer.Features), featuresGetter);
 
                 // and we emit the sub-type serializer whenever inheritance is involved
+                Debug.WriteLine($"{serializer.ExpectedType.Name} has inheritance: {serializer.HasInheritance}, {serializer.GetType().Name}");
                 if (serializer.HasInheritance)
                 {
                     serType = typeof(ISubTypeSerializer<>).MakeGenericType(runtimeType);

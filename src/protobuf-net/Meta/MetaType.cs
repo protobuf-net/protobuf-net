@@ -510,7 +510,7 @@ namespace ProtoBuf.Meta
 
             if (repeated is not null)
             {
-                if (surrogateType is not null)
+                if (this.surrogateType is not null)
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
                 }
@@ -528,7 +528,8 @@ namespace ProtoBuf.Meta
                     constructType, factory, GetInheritanceRoot(), GetFeatures());
             }
 
-            bool involvedInInheritance = HasRealInheritance(out bool hasSubType);
+            var rootType = GetRootType(this);
+            var surrogateType = this.surrogateType ?? rootType.surrogateType; // "this" lookup is purely to spot invalid usage
             if (surrogateType is not null)
             {
                 SerializerFeatures features;
@@ -576,6 +577,7 @@ namespace ProtoBuf.Meta
             }
             if (IsAutoTuple)
             {
+                var involvedInInheritance = !ReferenceEquals(this, rootType) || _subTypes is { Count: > 0 };   
                 if (involvedInInheritance) ThrowTupleTypeWithInheritance(Type);
                 ConstructorInfo ctor = ResolveTupleConstructor(Type, out MemberInfo[] mapping) ?? throw new InvalidOperationException();
                 return (IProtoTypeSerializer)Activator.CreateInstance(typeof(TupleSerializer<>).MakeGenericType(Type),
