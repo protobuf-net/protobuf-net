@@ -12,7 +12,7 @@ namespace ProtoBuf.unittest
 {
     static class PEVerify
     {
-#if COREFX
+#if COREFX && !NET9_0_OR_GREATER
 #pragma warning disable IDE0060 // unused params; the idea here is to make the API similar
         public static ProtoBuf.Meta.TypeModel Compile(this ProtoBuf.Meta.RuntimeTypeModel model, string name, string path)
 #pragma warning restore IDE0060 
@@ -26,6 +26,8 @@ namespace ProtoBuf.unittest
             return model.Compile();
         }
 #else
+        
+#if !COREFX
         static readonly string exePath;
         static readonly bool unavailable;
         static PEVerify()
@@ -37,7 +39,8 @@ namespace ProtoBuf.unittest
                 unavailable = true;
             }
         }
-
+#endif
+        
         internal static TypeModel CompileAndVerify(this RuntimeTypeModel model,
             [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
         {
@@ -50,12 +53,19 @@ namespace ProtoBuf.unittest
 #endif
         public static void Verify(string path, int exitCode = 0, bool deleteOnSuccess = true)
         {
-#if !COREFX
-            if (unavailable) return;
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException(path);
             }
+
+            if (new FileInfo(path).Length == 0)
+            {
+                throw new InvalidOperationException($"File is empty: {path}");
+            }
+#if COREFX
+            if (deleteOnSuccess) try { File.Delete(path); } catch { }            
+#else
+            if (unavailable) return;
             ProcessStartInfo psi = new ProcessStartInfo(exePath, path)
             {
                 CreateNoWindow = true,

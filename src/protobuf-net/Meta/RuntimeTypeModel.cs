@@ -1370,6 +1370,20 @@ namespace ProtoBuf.Meta
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.RunAndCollect);
             ModuleBuilder module = asm.DefineDynamicModule(moduleName);
+#elif NET9_0_OR_GREATER
+            AssemblyBuilder asm;
+            ModuleBuilder module;
+            if (save)
+            {
+                asm = new PersistedAssemblyBuilder(an, typeof(object).Assembly);
+                module = asm.DefineDynamicModule(moduleName);
+            }
+            else
+            {
+                asm = AssemblyBuilder.DefineDynamicAssembly(an,
+                    AssemblyBuilderAccess.RunAndCollect);
+                module = asm.DefineDynamicModule(moduleName);
+            }
 #else
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.RunAndCollect);
@@ -1402,14 +1416,26 @@ namespace ProtoBuf.Meta
 #else
             Type finalType = modelType.CreateType();
 #endif
-            if (!string.IsNullOrEmpty(path))
+            
+            if (save)
             {
 #if PLAT_NO_EMITDLL
                 throw new NotSupportedException(CompilerOptions.NoPersistence);
 #else
                 try
                 {
+#if NET9_0_OR_GREATER
+                    using var ms = new MemoryStream();
+                    ((PersistedAssemblyBuilder)asm).Save(ms);
+                    ms.Position = 0;
+                    finalType = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(ms).GetType(typeName)!;
+                    // and write the dll (Save can only be called once)
+                    ms.Position = 0;
+                    using var file = File.Create(path);
+                    ms.CopyTo(file);
+#else
                     asm.Save(path);
+#endif
                 }
                 catch (IOException ex)
                 {

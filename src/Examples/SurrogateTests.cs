@@ -1,5 +1,8 @@
-﻿using ProtoBuf.Meta;
+﻿using System;
+using System.IO;
 using System.Runtime.Serialization;
+using System.ServiceModel;
+using ProtoBuf.Meta;
 using Xunit;
 
 namespace ProtoBuf;
@@ -8,17 +11,27 @@ public class SurrogateTests
 {
     public class BaseClass(int id)
     {
-        public int Id => id;
+        public int Id { get; private set; } = id;
+
+        public void SetId(int value) => Id = value; // this only exists for Compile mode
     }
     public class DerivedClass(int id, int number) : BaseClass(id)
     {
-        public int Number => number;
+        public int Number { get; private set; } = number;
+        
+        public void SetNumber(int value) => Number = value; // this only exists for Compile mode
     }
 
     [ProtoContract]
     [ProtoInclude(1001, typeof(DerivedClassSurrogate))]
     public class BaseClassSurrogate
     {
+        [ProtoMember(1)]
+        public int Id { get; set; }
+
+        [OnDeserializing]
+        public virtual void BeforeDeserialize() { }
+        
         public static implicit operator BaseClassSurrogate(BaseClass value) => value switch
         {
             null => null,
@@ -32,12 +45,6 @@ public class SurrogateTests
             DerivedClassSurrogate derived => new DerivedClass(derived.Id, derived.Number),
             _ => new BaseClass(value.Id),
         };
-
-        [ProtoMember(1)]
-        public int Id { get; set; }
-
-        [OnDeserializing]
-        public virtual void BeforeDeserialize() { }
     }
 
     [ProtoContract]
@@ -45,18 +52,133 @@ public class SurrogateTests
     {
         [ProtoMember(1)]
         public int Number { get; set; }
+
+        public static implicit operator DerivedClassSurrogate(DerivedClass value)
+            => value is null ? null : new DerivedClassSurrogate() { Id = value.Id, Number = value.Number };
+
+        public static implicit operator DerivedClass(DerivedClassSurrogate value)
+            => value is null ? null : new DerivedClass(value.Id, value.Number);
     }
 
-    [Fact]
-    public void Execute()
+    public enum TestMode
+    {
+        Runtime,
+        CompileInPlace,
+        CompileInMemory,
+        CompileToFile,
+    }
+    
+    [Theory]
+    [InlineData(false, false, TestMode.Runtime)]
+    [InlineData(true, false, TestMode.Runtime)]
+    [InlineData(false, false, TestMode.CompileInPlace)]
+    [InlineData(true, false, TestMode.CompileInPlace)]
+    [InlineData(false, false, TestMode.CompileInMemory)]
+    [InlineData(true, false, TestMode.CompileInMemory)]
+#if NETFX || NET9_0_OR_GREATER
+    [InlineData(false, false, TestMode.CompileToFile)]
+    [InlineData(true, false, TestMode.CompileToFile)]
+#endif
+    
+    // not supported: setting surrogate at derived tier
+    [InlineData(false, true, TestMode.Runtime)]
+    [InlineData(true, true, TestMode.Runtime)]
+    [InlineData(false, true, TestMode.CompileInPlace)]
+    [InlineData(true, true, TestMode.CompileInPlace)]
+    [InlineData(false, true, TestMode.CompileInMemory)]
+    [InlineData(true, true, TestMode.CompileInMemory)]
+#if NETFX || NET9_0_OR_GREATER
+    [InlineData(false, true, TestMode.CompileToFile)]
+    [InlineData(true, true, TestMode.CompileToFile)]
+#endif
+    public void Execute(bool baseSurrogate, bool derivedSurrogate, TestMode mode)
     {
 
         RuntimeTypeModel model = RuntimeTypeModel.Create();
+        model.AutoCompile = false;
+        
+        var baseType = model.Add(typeof(BaseClass), false);
+        var derivedType = model.Add(typeof(DerivedClass), false);
+        baseType.AddSubType(1001, typeof(DerivedClass));
 
-        model.Add(typeof(DerivedClass), false);
-        model.Add(typeof(BaseClass), false)
-            .AddSubType(1001, typeof(DerivedClass))
-            .SetSurrogate(typeof(BaseClassSurrogate));
+        if (baseSurrogate)
+        {
+            baseType.SetSurrogate(typeof(BaseClassSurrogate));    
+        }
+        else
+        {
+            baseType.UseConstructor = false;
+            baseType.AddField(1, nameof(BaseClass.Id));
+        }
+
+        if (derivedSurrogate)
+        {
+            derivedType.SetSurrogate(typeof(DerivedClassSurrogate));
+        }
+        else
+        {
+            derivedType.UseConstructor = false;
+            derivedType.AddField(1, nameof(DerivedClass.Number));
+        }
+        
+        try
+        {
+            TypeModel scenario = model;
+            switch (mode)
+            {
+                case TestMode.CompileInPlace:
+                    model.CompileInPlace();
+                    break;
+                case TestMode.CompileInMemory:
+                    scenario = model.Compile();
+                    break;
+                case TestMode.CompileToFile:
+                    scenario = model.Compile("MyModel", $"{Guid.NewGuid()}.dll");
+                    break;
+            }
+            ExecuteImpl(scenario);
+            Assert.False(derivedSurrogate, "expected fault");
+        }
+        catch (InvalidOperationException ex) when (derivedSurrogate)
+        {
+            Assert.Contains("Surrogate type must refer to the root inheritance type", ex.Message);
+        }
+        
+        
+        static void ExecuteImpl(TypeModel model) // see ExpectedPayloads for proofs
+        {
+            var a = Assert.IsType<BaseClass>(RoundTrip(model, new BaseClass(1), "08-01"));
+            Assert.Equal(1, a.Id);
+            
+            var b = Assert.IsType<DerivedClass>(RoundTrip<BaseClass>(model, new DerivedClass(2, 3), "CA-3E-02-08-03-08-02"));
+            Assert.Equal(2, b.Id);
+            Assert.Equal(3, b.Number);
+            
+            var c = Assert.IsType<DerivedClass>(RoundTrip(model, new DerivedClass(4, 5), "CA-3E-02-08-05-08-04"));
+            Assert.Equal(4, c.Id);
+            Assert.Equal(5, c.Number);
+        }
+
+        
+    }
+
+    [Fact]
+    public void ExpectedPayloads()
+    {
+        RoundTrip(RuntimeTypeModel.Default, new BaseClassSurrogate { Id = 1}, "08-01");
+        RoundTrip(RuntimeTypeModel.Default, new DerivedClassSurrogate() { Id = 2, Number = 3}, "CA-3E-02-08-03-08-02");
+        RoundTrip(RuntimeTypeModel.Default, new DerivedClassSurrogate { Id = 4, Number = 5}, "CA-3E-02-08-05-08-04");
+    }
+    
+    private static T RoundTrip<T>(TypeModel model, T value, string expected)
+    {
+        var ms = new MemoryStream();
+        model.Serialize<T>(ms, value);
+        ms.Position = 0;
+        if (!ms.TryGetBuffer(out var segment)) segment = new(ms.ToArray());
+        var actual = BitConverter.ToString(segment.Array!, segment.Offset, segment.Count);
+        Assert.Equal(expected, actual);
+        return model.Deserialize<T>(ms);
     }
 }
 

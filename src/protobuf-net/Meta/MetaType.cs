@@ -114,12 +114,6 @@ namespace ProtoBuf.Meta
             return AddSubType(fieldNumber, derivedType, DataFormat.Default);
         }
 
-        private static void ThrowSubTypeAndSurrogate(Type type)
-        {
-            ThrowHelper.ThrowInvalidOperationException(
-                $"Types with surrogates cannot also declare sub-types: {type.NormalizeName()}");
-        }
-
         /// <summary>
         /// Adds a known sub-type to the inheritance model
         /// </summary>
@@ -148,7 +142,6 @@ namespace ProtoBuf.Meta
                 {
                     ThrowTupleTypeWithInheritance(derivedType);
                 }
-                if (surrogateType is not null) ThrowSubTypeAndSurrogate(Type);
 
                 SubType subType = new SubType(fieldNumber, derivedMeta, dataFormat);
                 ThrowIfFrozen();
@@ -538,8 +531,6 @@ namespace ProtoBuf.Meta
             bool involvedInInheritance = HasRealInheritance(out bool hasSubType);
             if (surrogateType is not null)
             {
-                if (hasSubType) ThrowSubTypeAndSurrogate(Type);
-
                 SerializerFeatures features;
                 // check to see if we can handle that directly without using GetSerializer<surrogateType>()
                 var serializer = ValueMember.TryGetCoreSerializer(Model, surrogateDataFormat, CompatibilityLevel, surrogateType, out _, false, false, false, false);
@@ -1479,8 +1470,6 @@ namespace ProtoBuf.Meta
                 {
                     ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
-
-                if (HasSubtypes) ThrowSubTypeAndSurrogate(Type);
 
                 if (surrogateType.IsGenericTypeDefinition)
                 {
