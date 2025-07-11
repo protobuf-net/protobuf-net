@@ -85,7 +85,7 @@ namespace ProtoBuf.Compiler
             {
                 string name = type.FullName;
                 if (string.IsNullOrEmpty(name)) name = type.Name;
-                throw new InvalidOperationException("It was not possible to prepare a serializer for: " + name, ex);
+                throw new InvalidOperationException($"It was not possible to prepare a serializer for {name}: {ex.Message}", ex);
             }
         }
         /*public static ProtoCallback BuildCallback(IProtoTypeSerializer head)
