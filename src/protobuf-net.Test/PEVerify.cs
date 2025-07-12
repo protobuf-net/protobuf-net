@@ -22,9 +22,10 @@ namespace ProtoBuf.unittest
             return model.Compile();
         }
         internal static TypeModel CompileAndVerify(this RuntimeTypeModel model,
-            [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
+            [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true, bool forceLongBranches = false)
         {
-            return model.Compile();
+            var options = new RuntimeTypeModel.CompilerOptions { ForceLongBranches = forceLongBranches };
+            return model.Compile(options);
         }
 #else
         
@@ -63,12 +64,21 @@ namespace ProtoBuf.unittest
 #endif
         
         internal static TypeModel CompileAndVerify(this RuntimeTypeModel model,
-            [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
+            [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true, bool forceLongBranches = false)
         {
             name = $"{name}_{Interlocked.Increment(ref index)}";
             var path = Path.ChangeExtension(name, "dll");
             if (File.Exists(path)) File.Delete(path);
-            var compiled = model.Compile(name, path);
+            
+            var options = new RuntimeTypeModel.CompilerOptions()
+            {
+                TypeName = name,
+#pragma warning disable CS0618
+                OutputPath = path,
+                ForceLongBranches = true,
+#pragma warning restore CS0618
+            };
+            var compiled = model.Compile(options);
             Verify(path, exitCode, deleteOnSuccess);
             return compiled;
         }

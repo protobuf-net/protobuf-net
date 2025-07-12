@@ -2,10 +2,11 @@
 using System.IO;
 using System.Runtime.Serialization;
 using System.ServiceModel;
+using ProtoBuf;
 using ProtoBuf.Meta;
 using Xunit;
 
-namespace ProtoBuf;
+namespace Examples;
 
 public class SurrogateTests
 {

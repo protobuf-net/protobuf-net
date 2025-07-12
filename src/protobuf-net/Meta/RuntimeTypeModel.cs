@@ -66,7 +66,7 @@ namespace ProtoBuf.Meta
             else _options &= ~option;
         }
 
-        internal CompilerContextScope Scope { get; } = CompilerContextScope.CreateInProcess();
+        internal CompilerContextScope Scope { get; } = CompilerContextScope.CreateInProcess(false);
 
         /// <summary>
         /// Global default that
@@ -1203,11 +1203,13 @@ namespace ProtoBuf.Meta
                 }
             }
 
+#if !PLAT_NO_EMITDLL
             /// <summary>
             /// If specified, then <see cref="Compile"/> will return <c>null</c> rather than
             /// creating an instance of the type-model in memory.
             /// </summary>
             public bool DllOnly { get; set; }
+#endif
             
             /// <summary>
             /// The TargetFrameworkAttribute FrameworkName value to burn into the generated assembly
@@ -1286,6 +1288,8 @@ namespace ProtoBuf.Meta
             /// The accessibility of the generated serializer
             /// </summary>
             public Accessibility Accessibility { get; set; }
+
+            internal bool ForceLongBranches { get; set; }
 
             /// <summary>
             /// Implements a filter for use when generating models from assemblies
@@ -1422,7 +1426,7 @@ namespace ProtoBuf.Meta
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
                                         : asm.DefineDynamicModule(moduleName);
 #endif
-            var scope = CompilerContextScope.CreateForModule(this, module, true, assemblyName);
+            var scope = CompilerContextScope.CreateForModule(this, module, true, assemblyName, options.ForceLongBranches);
             WriteAssemblyAttributes(options, assemblyName, asm);
 
 
@@ -1465,13 +1469,24 @@ namespace ProtoBuf.Meta
                     {
                         using var ms = new MemoryStream();
                         ((PersistedAssemblyBuilder)asm).Save(ms);
+                        
+                        // write the dll (Save can only be called once)
                         ms.Position = 0;
-                        finalType = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(ms)
-                            .GetType(typeName)!;
-                        // and write the dll (Save can only be called once)
+                        using (var file = File.Create(path))
+                        {
+                            ms.CopyTo(file);
+                        }
+
+                        // load into the process
                         ms.Position = 0;
-                        using var file = File.Create(path);
-                        ms.CopyTo(file);
+                        var loaded = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(ms); 
+                        finalType = loaded.GetType(typeName);
+                        if (finalType is null)
+                        {
+                            var all = loaded.GetTypes();
+                            throw new InvalidOperationException("Failed to resolve type from dll: " + typeName);
+                        }
+
                     }
 #else
                     asm.Save(path);
@@ -1486,10 +1501,12 @@ namespace ProtoBuf.Meta
 #endif
             }
 
+#if !PLAT_NO_EMITDLL
             if (options.DllOnly)
             {
                 return null;
             }
+#endif
             return (TypeModel)Activator.CreateInstance(finalType, nonPublic: true);
         }
 

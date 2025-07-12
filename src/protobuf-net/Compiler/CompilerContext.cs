@@ -991,28 +991,29 @@ namespace ProtoBuf.Compiler
 
         internal void Branch(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Br_S : OpCodes.Br;
+            OpCode code = Short(@short) ? OpCodes.Br_S : OpCodes.Br;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
 
         internal void BranchIfFalse(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Brfalse_S : OpCodes.Brfalse;
+            OpCode code = Short(@short) ? OpCodes.Brfalse_S : OpCodes.Brfalse;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
-
+        
+        private bool Short(bool @short) => @short & !Scope.ForceLongBranches;
         internal void BranchIfTrue(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Brtrue_S : OpCodes.Brtrue;
+            OpCode code = Short(@short) ? OpCodes.Brtrue_S : OpCodes.Brtrue;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
 
         internal void BranchIfEqual(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Beq_S : OpCodes.Beq;
+            OpCode code = Short(@short) ? OpCodes.Beq_S : OpCodes.Beq;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
@@ -1029,14 +1030,14 @@ namespace ProtoBuf.Compiler
 
         internal void BranchIfGreater(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Bgt_S : OpCodes.Bgt;
+            OpCode code = Short(@short) ? OpCodes.Bgt_S : OpCodes.Bgt;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
 
         internal void BranchIfLess(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Blt_S : OpCodes.Blt;
+            OpCode code = Short(@short) ? OpCodes.Blt_S : OpCodes.Blt;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
@@ -1134,7 +1135,7 @@ namespace ProtoBuf.Compiler
 
         internal void EndTry(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Leave_S : OpCodes.Leave;
+            OpCode code = Short(@short) ? OpCodes.Leave_S : OpCodes.Leave;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }

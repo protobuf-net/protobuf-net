@@ -14,25 +14,27 @@ namespace ProtoBuf.Compiler
 {
     internal sealed class CompilerContextScope
     {
-        internal static CompilerContextScope CreateInProcess()
+        internal static CompilerContextScope CreateInProcess(bool forceLongBranches)
         {
-            return new CompilerContextScope(null, null, false, null);
+            return new CompilerContextScope(null, null, false, null, forceLongBranches);
         }
 
-        internal static CompilerContextScope CreateForModule(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName)
-            => new CompilerContextScope(model, module, isFullEmit, assemblyName);
+        internal static CompilerContextScope CreateForModule(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName, bool forceLongBranches)
+            => new CompilerContextScope(model, module, isFullEmit, assemblyName, forceLongBranches);
 
-        private CompilerContextScope(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName)
+        private CompilerContextScope(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName, bool forceLongBranches)
         {
             _model = model;
             _module = module;
             IsFullEmit = isFullEmit;
             AssemblyName = assemblyName;
+            ForceLongBranches = forceLongBranches;
         }
 
         internal string AssemblyName { get; }
 
         public bool IsFullEmit { get; }
+        public bool ForceLongBranches { get; }
 
         private ModuleBuilder _module;
         private readonly RuntimeTypeModel _model;

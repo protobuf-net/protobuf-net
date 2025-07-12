@@ -24,7 +24,7 @@ namespace ProtoBuf
             model.Add<ProtogenServiceOptions>();
             model.Add<ProtogenMethodOptions>();
             model.Add<ProtogenOneofOptions>();
-            PEVerify.CompileAndVerify(model, deleteOnSuccess: false);
+            PEVerify.CompileAndVerify(model, deleteOnSuccess: false, forceLongBranches: true);
         }
 
         // doesn't really belong here, but left over from the protobuf-net.Reflection.Test split
