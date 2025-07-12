@@ -87,11 +87,11 @@ namespace ProtoBuf.Compiler
             lock (module)
             {
                 TypeBuilder type;
-                var newTypeName = "<" + callback.Name + ">_helper_" + Uniquify();
+                var newTypeName = $"<{callback.Name}>_helper_{Uniquify()}";
                 try
                 {
                     type = module.DefineType(newTypeName,
-                    TypeAttributes.NotPublic | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Class);
+                    TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Class);
                 }
                 catch (Exception ex)
                 {
@@ -134,11 +134,11 @@ namespace ProtoBuf.Compiler
                 if (IsFullEmit)
                 {
                     var method = type.DefineMethod(callback.Name,
-                        MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.RTSpecialName,
+                        MethodAttributes.Private | MethodAttributes.Static,
                         CallingConventions.Standard, typeof(void), new Type[] { typeof(T), typeof(ISerializationContext) });
                     method.DefineParameter(1, ParameterAttributes.None, "obj");
                     method.DefineParameter(2, ParameterAttributes.None, "context");
-
+                    
                     WriteCall(method.GetILGenerator(), callback);
 
                     var cctor = type.DefineTypeInitializer();

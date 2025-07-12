@@ -8,6 +8,7 @@ namespace ProtoBuf.Internal.Serializers
     {
         Type BaseType { get; }
         bool HasCallbacks(TypeModel.CallbackType callbackType);
+        bool HasSurrogate { get; }
         bool CanCreateInstance();
         object CreateInstance(ISerializationContext context);
         void Callback(object value, TypeModel.CallbackType callbackType, ISerializationContext context);

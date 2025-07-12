@@ -17,6 +17,7 @@ namespace ProtoBuf.Internal.Serializers
     }
     internal class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
+        bool IProtoTypeSerializer.HasSurrogate => true;
         public SerializerFeatures Features => features;
         public virtual bool IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
@@ -194,7 +195,7 @@ namespace ProtoBuf.Internal.Serializers
                 ctx.LoadValue(converted); // load from surrogate local
             }
             ctx.EmitCall(fromTail); // static convert op, surrogate-to-primary
-            if (IsSubType && ReturnsValue)
+            if (IsSubType)
             {
                 // "return {expr}" to "return (T){expr}"
                 ctx.Cast(ExpectedType);

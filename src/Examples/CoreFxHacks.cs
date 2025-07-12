@@ -15,10 +15,14 @@ namespace ProtoBuf
 
             return ms.ToArray();
         }
+        
+#if !NET9_0_OR_GREATER
         public static TypeModel Compile(this RuntimeTypeModel model, string x, string y)
         {
             return model.Compile();
         }
+#endif
+        
         public static bool IsSubclassOf(this Type x, Type y)
         {
             return x.GetTypeInfo().IsSubclassOf(y);

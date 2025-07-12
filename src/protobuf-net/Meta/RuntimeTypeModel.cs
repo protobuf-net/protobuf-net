@@ -1289,7 +1289,12 @@ namespace ProtoBuf.Meta
             /// </summary>
             public Accessibility Accessibility { get; set; }
 
-            internal bool ForceLongBranches { get; set; }
+            /// <summary>
+            /// Forces all branches to use long-form IL syntax.
+            /// </summary>
+            /// <remarks>It is remarkably hard to judge the distance of a jump. When we get it wrong, the IL is invalid. This option
+            /// always uses the longer version - not as efficient, but safer.</remarks>
+            public bool ForceLongBranches { get; set; }
 
             /// <summary>
             /// Implements a filter for use when generating models from assemblies
@@ -1483,7 +1488,6 @@ namespace ProtoBuf.Meta
                         finalType = loaded.GetType(typeName);
                         if (finalType is null)
                         {
-                            var all = loaded.GetTypes();
                             throw new InvalidOperationException("Failed to resolve type from dll: " + typeName);
                         }
 

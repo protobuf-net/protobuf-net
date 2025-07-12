@@ -136,7 +136,12 @@ namespace ProtoBuf.Compiler
             using CompilerContext ctx = new CompilerContext(scope, head.ExpectedType, SignatureType.ReaderScope_Input, true, model, typeof(T), typeof(T));
 
             head.EmitRead(ctx, ctx.InputValue);
-            if (!isScalar) ctx.LoadValue(ctx.InputValue);
+            if (!head.ReturnsValue)
+            {
+                System.Diagnostics.Debug.Assert(!isScalar, "we expect scalars to always return a value");
+                ctx.LoadValue(ctx.InputValue);
+            }
+            
             ctx.Return();
 
             return (ProtoDeserializer<T>)ctx.method.CreateDelegate(typeof(ProtoDeserializer<T>));

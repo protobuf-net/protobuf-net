@@ -38,11 +38,9 @@ namespace ProtoBuf.unittest
             try
             {
                 using var proc = Process.Start("ilverify", "--version");
-                if (proc.Start())
+                if (proc.WaitForExit(2000))
                 {
-                    // TODO: finish this
-                    proc.WaitForExit(TimeSpan.FromSeconds(2));
-                    // unavailable = proc.ExitCode != 0;
+                    // unavailable = proc.ExitCode != 0; // TODO: finish this
                     exePath = "ilverify";
                 }
             }
@@ -84,7 +82,9 @@ namespace ProtoBuf.unittest
         }
 #endif
 
+#if NETFRAMEWORK || NET9_0_OR_GREATER
         private static int index = 0;
+#endif
         
         public static void Verify(string path, int exitCode = 0, bool deleteOnSuccess = true)
         {

@@ -108,6 +108,8 @@ namespace ProtoBuf.Internal.Serializers
     {
         bool IRuntimeProtoSerializerNode.IsScalar => false;
         public virtual bool HasInheritance => false;
+        bool IProtoTypeSerializer.HasSurrogate => false;
+
         public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)
             => ((IRuntimeProtoSerializerNode)this).EmitRead(context, valueFrom);
         public virtual void EmitWriteRoot(CompilerContext context, Local valueFrom)
