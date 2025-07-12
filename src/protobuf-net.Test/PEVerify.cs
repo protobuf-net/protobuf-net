@@ -7,6 +7,7 @@ using Xunit;
 using System.Diagnostics;
 using ProtoBuf.Meta;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace ProtoBuf.unittest
 {
@@ -27,16 +28,36 @@ namespace ProtoBuf.unittest
         }
 #else
         
-#if !COREFX
-        static readonly string exePath;
-        static readonly bool unavailable;
+        static readonly bool unavailable = true;
+        static readonly string exePath = "";
+
+#if COREFX
+        static PEVerify()
+        {
+            try
+            {
+                using var proc = Process.Start("ilverify", "--version");
+                if (proc.Start())
+                {
+                    // TODO: finish this
+                    proc.WaitForExit(TimeSpan.FromSeconds(2));
+                    // unavailable = proc.ExitCode != 0;
+                    exePath = "ilverify";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+        }
+#else
         static PEVerify()
         {
             exePath = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.2 Tools\PEVerify.exe");
-            if (!File.Exists(exePath))
+            unavailable = !File.Exists(exePath);
+            if (unavailable)
             {
                 Console.Error.WriteLine("PEVerify not found at " + exePath);
-                unavailable = true;
             }
         }
 #endif
@@ -44,6 +65,7 @@ namespace ProtoBuf.unittest
         internal static TypeModel CompileAndVerify(this RuntimeTypeModel model,
             [CallerMemberName] string name = null, int exitCode = 0, bool deleteOnSuccess = true)
         {
+            name = $"{name}_{Interlocked.Increment(ref index)}";
             var path = Path.ChangeExtension(name, "dll");
             if (File.Exists(path)) File.Delete(path);
             var compiled = model.Compile(name, path);
@@ -51,8 +73,12 @@ namespace ProtoBuf.unittest
             return compiled;
         }
 #endif
+
+        private static int index = 0;
+        
         public static void Verify(string path, int exitCode = 0, bool deleteOnSuccess = true)
         {
+#if NETFRAMEWORK || NET9_0_OR_GREATER
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException(path);
@@ -62,10 +88,12 @@ namespace ProtoBuf.unittest
             {
                 throw new InvalidOperationException($"File is empty: {path}");
             }
-#if COREFX
-            if (deleteOnSuccess) try { File.Delete(path); } catch { }            
-#else
-            if (unavailable) return;
+            
+            if (unavailable)
+            {
+                if (deleteOnSuccess) try { File.Delete(path); } catch { }
+                return;
+            }
             ProcessStartInfo psi = new ProcessStartInfo(exePath, path)
             {
                 CreateNoWindow = true,

@@ -22,6 +22,7 @@ namespace Examples
 #endif
         public static void AssertValid(string path)
         {
+#if NETFRAMEWORK || NET9_0_OR_GREATER 
             if(!File.Exists(path))
             {
                 throw new FileNotFoundException(path);
@@ -31,6 +32,8 @@ namespace Examples
             {
                 throw new InvalidOperationException($"File is empty: {path}");
             }
+#endif
+
 #if COREFX
             return;
 #else

@@ -1204,6 +1204,12 @@ namespace ProtoBuf.Meta
             }
 
             /// <summary>
+            /// If specified, then <see cref="Compile"/> will return <c>null</c> rather than
+            /// creating an instance of the type-model in memory.
+            /// </summary>
+            public bool DllOnly { get; set; }
+            
+            /// <summary>
             /// The TargetFrameworkAttribute FrameworkName value to burn into the generated assembly
             /// </summary>
             public string TargetFrameworkName { get; set; }
@@ -1328,7 +1334,29 @@ namespace ProtoBuf.Meta
             };
             return Compile(options);
         }
+
+        /// <summary>
+        /// Fully compiles the current model into a static-compiled serialization dll
+        /// (the serialization dll still requires protobuf-net for support services).
+        /// </summary>
+        /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
+        /// <param name="name">The name of the TypeModel class to create</param>
+        /// <param name="path">The path for the new dll</param>
+        /// <returns>An instance of the newly created compiled type-model</returns>
+        public void CompileDll(string name, string path)
+        {
+            var options = new CompilerOptions()
+            {
+                DllOnly = true,
+                TypeName = name,
+#pragma warning disable CS0618
+                OutputPath = path,
+#pragma warning restore CS0618
+            };
+            Compile(options);
+        }
 #endif
+        
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -1380,6 +1408,10 @@ namespace ProtoBuf.Meta
             }
             else
             {
+                if (options.DllOnly)
+                {
+                    throw new InvalidOperationException($"When {nameof(options.DllOnly)} is enabled, {nameof(options.OutputPath)} must be supplied.");
+                }
                 asm = AssemblyBuilder.DefineDynamicAssembly(an,
                     AssemblyBuilderAccess.RunAndCollect);
                 module = asm.DefineDynamicModule(moduleName);
@@ -1425,14 +1457,22 @@ namespace ProtoBuf.Meta
                 try
                 {
 #if NET9_0_OR_GREATER
-                    using var ms = new MemoryStream();
-                    ((PersistedAssemblyBuilder)asm).Save(ms);
-                    ms.Position = 0;
-                    finalType = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(ms).GetType(typeName)!;
-                    // and write the dll (Save can only be called once)
-                    ms.Position = 0;
-                    using var file = File.Create(path);
-                    ms.CopyTo(file);
+                    if (options.DllOnly)
+                    {
+                        ((PersistedAssemblyBuilder)asm).Save(path);
+                    }
+                    else
+                    {
+                        using var ms = new MemoryStream();
+                        ((PersistedAssemblyBuilder)asm).Save(ms);
+                        ms.Position = 0;
+                        finalType = System.Runtime.Loader.AssemblyLoadContext.Default.LoadFromStream(ms)
+                            .GetType(typeName)!;
+                        // and write the dll (Save can only be called once)
+                        ms.Position = 0;
+                        using var file = File.Create(path);
+                        ms.CopyTo(file);
+                    }
 #else
                     asm.Save(path);
 #endif
@@ -1444,6 +1484,11 @@ namespace ProtoBuf.Meta
                 }
                 Debug.WriteLine("Wrote dll:" + path);
 #endif
+            }
+
+            if (options.DllOnly)
+            {
+                return null;
             }
             return (TypeModel)Activator.CreateInstance(finalType, nonPublic: true);
         }
