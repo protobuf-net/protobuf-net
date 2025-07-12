@@ -502,7 +502,7 @@ namespace ProtoBuf.Internal.Serializers
         }
 
         bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return true; } }
-        bool IRuntimeProtoSerializerNode.ReturnsValue { get { return false; } } // updates field directly
+        bool IRuntimeProtoSerializerNode.ReturnsValue => HasInheritance; // updates field directly for simple types
 
         private void LoadFromState(CompilerContext ctx, Local value)
         {

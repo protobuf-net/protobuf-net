@@ -67,6 +67,85 @@ public class SurrogateTests
         CompileInMemory,
         CompileToFile,
     }
+
+    [Theory]
+    [InlineData(false, false, TestMode.Runtime)]
+    [InlineData(true, false, TestMode.Runtime)]
+    [InlineData(false, false, TestMode.CompileInPlace)]
+    [InlineData(true, false, TestMode.CompileInPlace)]
+    [InlineData(false, false, TestMode.CompileInMemory)]
+    [InlineData(true, false, TestMode.CompileInMemory)]
+#if NETFX || NET9_0_OR_GREATER
+    [InlineData(false, false, TestMode.CompileToFile)]
+    [InlineData(true, false, TestMode.CompileToFile)]
+#endif
+    [InlineData(false, true, TestMode.Runtime)]
+    [InlineData(true, true, TestMode.Runtime)]
+    [InlineData(false, true, TestMode.CompileInPlace)]
+    [InlineData(true, true, TestMode.CompileInPlace)]
+    [InlineData(false, true, TestMode.CompileInMemory)]
+    [InlineData(true, true, TestMode.CompileInMemory)]
+#if NETFX || NET9_0_OR_GREATER
+    [InlineData(false, true, TestMode.CompileToFile)]
+    [InlineData(true, true, TestMode.CompileToFile)]
+#endif
+    public void ExecuteWithoutInheritance(bool baseSurrogate, bool derivedSurrogate, TestMode mode)
+    {
+        RuntimeTypeModel model = RuntimeTypeModel.Create();
+        model.AutoCompile = false;
+
+        model.Add(typeof(BaseClassSurrogate), false).AddField(1, nameof(BaseClassSurrogate.Id));
+        model.Add(typeof(DerivedClassSurrogate), false).AddField(1, nameof(DerivedClassSurrogate.Number));
+        var baseType = model.Add(typeof(BaseClass), false);
+        var derivedType = model.Add(typeof(DerivedClass), false);
+        
+
+        if (baseSurrogate)
+        {
+            baseType.SetSurrogate(typeof(BaseClassSurrogate));    
+        }
+        else
+        {
+            baseType.UseConstructor = false;
+            baseType.AddField(1, nameof(BaseClass.Id));
+        }
+
+        if (derivedSurrogate)
+        {
+            derivedType.SetSurrogate(typeof(DerivedClassSurrogate));
+        }
+        else
+        {
+            derivedType.UseConstructor = false;
+            derivedType.AddField(1, nameof(DerivedClass.Number));
+        }
+        
+        TypeModel scenario = model;
+        switch (mode)
+        {
+            case TestMode.CompileInPlace:
+                model.CompileInPlace();
+                break;
+            case TestMode.CompileInMemory:
+                scenario = model.Compile();
+                break;
+            case TestMode.CompileToFile:
+                int key = (baseSurrogate ? 1 : 0) | (derivedSurrogate ? 2 : 0);
+                scenario = model.Compile("MyModel", $"NoSurrogate_{key}.dll");
+                break;
+        }
+        ExecuteImpl(scenario);
+        
+        static void ExecuteImpl(TypeModel model) // see ExpectedPayloads for proofs
+        {
+            var a = Assert.IsType<BaseClass>(RoundTrip(model, new BaseClass(1), "08-01"));
+            Assert.Equal(1, a.Id);
+            
+            var c = Assert.IsType<DerivedClass>(RoundTrip(model, new DerivedClass(4, 5), "08-05"));
+            Assert.Equal(0, c.Id);
+            Assert.Equal(5, c.Number);
+        }
+    }
     
     [Theory]
     [InlineData(false, false, TestMode.Runtime)]
@@ -91,9 +170,8 @@ public class SurrogateTests
     [InlineData(false, true, TestMode.CompileToFile)]
     [InlineData(true, true, TestMode.CompileToFile)]
 #endif
-    public void Execute(bool baseSurrogate, bool derivedSurrogate, TestMode mode)
+    public void ExecuteWithInheritance(bool baseSurrogate, bool derivedSurrogate, TestMode mode)
     {
-
         RuntimeTypeModel model = RuntimeTypeModel.Create();
         model.AutoCompile = false;
         
@@ -159,8 +237,6 @@ public class SurrogateTests
             Assert.Equal(4, c.Id);
             Assert.Equal(5, c.Number);
         }
-
-        
     }
 
     [Fact]

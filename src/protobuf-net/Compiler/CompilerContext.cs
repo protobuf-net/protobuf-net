@@ -11,6 +11,7 @@ using ProtoBuf.Internal;
 using System.Collections;
 using System.Linq;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using ProtoBuf.Internal.Serializers;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -615,7 +616,7 @@ namespace ProtoBuf.Compiler
             MemberInfo member = method ?? throw new ArgumentNullException(nameof(method));
             CheckAccessibility(ref member);
             OpCode opcode;
-            Debug.Assert(method is MethodBuilder || !method.IsDefined(typeof(ObsoleteAttribute), true), "calling an obsolete method: " + method.Name);
+            System.Diagnostics.Debug.Assert(method is MethodBuilder || !method.IsDefined(typeof(ObsoleteAttribute), true), "calling an obsolete method: " + method.Name);
             if (method.IsStatic || method.DeclaringType.IsValueType)
             {
                 opcode = OpCodes.Call;
@@ -700,7 +701,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    Debug.Assert(valueFrom is null); // not expecting a valueFrom in this case
+                    System.Diagnostics.Debug.Assert(valueFrom is null); // not expecting a valueFrom in this case
                 }
                 tail.EmitRead(this, null); // either unwrapped on the stack or not provided
                 if (tail.ReturnsValue)
@@ -742,8 +743,8 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
-            Debug.Assert(type is not null);
-            Debug.Assert(parameterTypes is not null);
+            System.Diagnostics.Debug.Assert(type is not null);
+            System.Diagnostics.Debug.Assert(parameterTypes is not null);
             if (type.IsValueType && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
@@ -1114,7 +1115,7 @@ namespace ProtoBuf.Compiler
                         Branch(endOfSwitch, false);
                     }
                 }
-                Debug.Assert(count == 0, "Should use exactly all switch items");
+                System.Diagnostics.Debug.Assert(count == 0, "Should use exactly all switch items");
                 MarkLabel(endOfSwitch);
             }
         }
@@ -1257,7 +1258,7 @@ namespace ProtoBuf.Compiler
 
         internal void LoadLength(Local arr, bool zeroIfNull)
         {
-            Debug.Assert(arr.Type.IsArray && arr.Type.GetArrayRank() == 1);
+            System.Diagnostics.Debug.Assert(arr.Type.IsArray && arr.Type.GetArrayRank() == 1);
 
             if (zeroIfNull)
             {
@@ -1291,9 +1292,9 @@ namespace ProtoBuf.Compiler
         internal void LoadArrayValue(Local arr, Local i)
         {
             Type type = arr.Type;
-            Debug.Assert(type.IsArray && arr.Type.GetArrayRank() == 1);
+            System.Diagnostics.Debug.Assert(type.IsArray && arr.Type.GetArrayRank() == 1);
             type = type.GetElementType();
-            Debug.Assert(type is not null, "Not an array: " + arr.Type.FullName);
+            System.Diagnostics.Debug.Assert(type is not null, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
             switch (Helpers.GetTypeCode(type))
@@ -1469,6 +1470,21 @@ namespace ProtoBuf.Compiler
         internal bool AllowInternal(PropertyInfo property)
         {
             return NonPublic || InternalsVisible(property.DeclaringType.Assembly);
+        }
+
+        // useful for adding trace points for inspecting/tracing IL
+        [Conditional("DEBUG")]
+        public void Debug([CallerMemberName] string message = null)
+        {
+            if (message is null)
+            {
+                il.Emit(OpCodes.Nop);    
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldstr, message);
+                il.Emit(OpCodes.Pop);
+            }  
         }
     }
 }

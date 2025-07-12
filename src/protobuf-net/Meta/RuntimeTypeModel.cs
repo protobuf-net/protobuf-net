@@ -1622,7 +1622,10 @@ namespace ProtoBuf.Meta
                     else
                     {
                         serializer.EmitRead(ctx, ctx.InputValue);
-                        ctx.LoadValue(ctx.InputValue);
+                        if (!serializer.ReturnsValue)
+                        {
+                            ctx.LoadValue(ctx.InputValue);
+                        }
                     }
                     ctx.Return();
                 }
