@@ -91,7 +91,7 @@ namespace ProtoBuf.Compiler
                 try
                 {
                     type = module.DefineType(newTypeName,
-                    TypeAttributes.NotPublic | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Class);
+                    TypeAttributes.NotPublic | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit | TypeAttributes.Class);
                 }
                 catch (Exception ex)
                 {
