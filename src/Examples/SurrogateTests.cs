@@ -16,10 +16,11 @@ public class SurrogateTests
 
         public void SetId(int value) => Id = value; // this only exists for Compile mode
     }
+
     public class DerivedClass(int id, int number) : BaseClass(id)
     {
         public int Number { get; private set; } = number;
-        
+
         public void SetNumber(int value) => Number = value; // this only exists for Compile mode
     }
 
@@ -27,12 +28,13 @@ public class SurrogateTests
     [ProtoInclude(1001, typeof(DerivedClassSurrogate))]
     public class BaseClassSurrogate
     {
-        [ProtoMember(1)]
-        public int Id { get; set; }
+        [ProtoMember(1)] public int Id { get; set; }
 
         [OnDeserializing]
-        public virtual void BeforeDeserialize() { }
-        
+        public virtual void BeforeDeserialize()
+        {
+        }
+
         public static implicit operator BaseClassSurrogate(BaseClass value) => value switch
         {
             null => null,
@@ -51,8 +53,7 @@ public class SurrogateTests
     [ProtoContract]
     public class DerivedClassSurrogate : BaseClassSurrogate
     {
-        [ProtoMember(1)]
-        public int Number { get; set; }
+        [ProtoMember(1)] public int Number { get; set; }
 
         public static implicit operator DerivedClassSurrogate(DerivedClass value)
             => value is null ? null : new DerivedClassSurrogate() { Id = value.Id, Number = value.Number };
@@ -99,11 +100,11 @@ public class SurrogateTests
         model.Add(typeof(DerivedClassSurrogate), false).AddField(1, nameof(DerivedClassSurrogate.Number));
         var baseType = model.Add(typeof(BaseClass), false);
         var derivedType = model.Add(typeof(DerivedClass), false);
-        
+
 
         if (baseSurrogate)
         {
-            baseType.SetSurrogate(typeof(BaseClassSurrogate));    
+            baseType.SetSurrogate(typeof(BaseClassSurrogate));
         }
         else
         {
@@ -120,7 +121,7 @@ public class SurrogateTests
             derivedType.UseConstructor = false;
             derivedType.AddField(1, nameof(DerivedClass.Number));
         }
-        
+
         TypeModel scenario = model;
         switch (mode)
         {
@@ -132,22 +133,29 @@ public class SurrogateTests
                 break;
             case TestMode.CompileToFile:
                 int key = (baseSurrogate ? 1 : 0) | (derivedSurrogate ? 2 : 0);
-                scenario = model.Compile("MyModel", $"NoSurrogate_{key}.dll");
+                scenario = model.Compile(new RuntimeTypeModel.CompilerOptions
+                {
+                    TypeName = "MyModel",
+#if !(NET && BACK_COMPAT)
+                    OutputPath = $"NoSurrogate_{key}.dll",
+#endif
+                });
                 break;
         }
+
         ExecuteImpl(scenario);
-        
+
         static void ExecuteImpl(TypeModel model) // see ExpectedPayloads for proofs
         {
             var a = Assert.IsType<BaseClass>(RoundTrip(model, new BaseClass(1), "08-01"));
             Assert.Equal(1, a.Id);
-            
+
             var c = Assert.IsType<DerivedClass>(RoundTrip(model, new DerivedClass(4, 5), "08-05"));
             Assert.Equal(0, c.Id);
             Assert.Equal(5, c.Number);
         }
     }
-    
+
     [Theory]
     [InlineData(false, false, TestMode.Runtime)]
     [InlineData(true, false, TestMode.Runtime)]
@@ -155,11 +163,11 @@ public class SurrogateTests
     [InlineData(true, false, TestMode.CompileInPlace)]
     [InlineData(false, false, TestMode.CompileInMemory)]
     [InlineData(true, false, TestMode.CompileInMemory)]
-#if NETFX || NET9_0_OR_GREATER
+#if (NETFX || NET9_0_OR_GREATER) && !(NET && BACK_COMPAT)
     [InlineData(false, false, TestMode.CompileToFile)]
     [InlineData(true, false, TestMode.CompileToFile)]
 #endif
-    
+
     // not supported: setting surrogate at derived tier
     [InlineData(false, true, TestMode.Runtime)]
     [InlineData(true, true, TestMode.Runtime)]
@@ -167,7 +175,7 @@ public class SurrogateTests
     [InlineData(true, true, TestMode.CompileInPlace)]
     [InlineData(false, true, TestMode.CompileInMemory)]
     [InlineData(true, true, TestMode.CompileInMemory)]
-#if NETFX || NET9_0_OR_GREATER
+#if (NETFX || NET9_0_OR_GREATER) && !(NET && BACK_COMPAT)
     [InlineData(false, true, TestMode.CompileToFile)]
     [InlineData(true, true, TestMode.CompileToFile)]
 #endif
@@ -175,14 +183,14 @@ public class SurrogateTests
     {
         RuntimeTypeModel model = RuntimeTypeModel.Create();
         model.AutoCompile = false;
-        
+
         var baseType = model.Add(typeof(BaseClass), false);
         var derivedType = model.Add(typeof(DerivedClass), false);
         baseType.AddSubType(1001, typeof(DerivedClass));
 
         if (baseSurrogate)
         {
-            baseType.SetSurrogate(typeof(BaseClassSurrogate));    
+            baseType.SetSurrogate(typeof(BaseClassSurrogate));
         }
         else
         {
@@ -199,7 +207,7 @@ public class SurrogateTests
             derivedType.UseConstructor = false;
             derivedType.AddField(1, nameof(DerivedClass.Number));
         }
-        
+
         try
         {
             TypeModel scenario = model;
@@ -213,9 +221,16 @@ public class SurrogateTests
                     break;
                 case TestMode.CompileToFile:
                     int key = (baseSurrogate ? 1 : 0) | (derivedSurrogate ? 2 : 0);
-                    scenario = model.Compile("MyModel", $"Surrogate_{key}.dll");
+                    scenario = model.Compile(new RuntimeTypeModel.CompilerOptions
+                    {
+                        TypeName = "MyModel",
+#if !(NET && BACK_COMPAT)
+                        OutputPath = $"Surrogate_{key}.dll",
+#endif
+                    });
                     break;
             }
+
             ExecuteImpl(scenario);
             Assert.False(derivedSurrogate, "expected fault");
         }
@@ -223,17 +238,18 @@ public class SurrogateTests
         {
             Assert.Contains("Surrogate type must refer to the root inheritance type", ex.Message);
         }
-        
-        
+
+
         static void ExecuteImpl(TypeModel model) // see ExpectedPayloads for proofs
         {
             var a = Assert.IsType<BaseClass>(RoundTrip(model, new BaseClass(1), "08-01"));
             Assert.Equal(1, a.Id);
-            
-            var b = Assert.IsType<DerivedClass>(RoundTrip<BaseClass>(model, new DerivedClass(2, 3), "CA-3E-02-08-03-08-02"));
+
+            var b = Assert.IsType<DerivedClass>(RoundTrip<BaseClass>(model, new DerivedClass(2, 3),
+                "CA-3E-02-08-03-08-02"));
             Assert.Equal(2, b.Id);
             Assert.Equal(3, b.Number);
-            
+
             var c = Assert.IsType<DerivedClass>(RoundTrip(model, new DerivedClass(4, 5), "CA-3E-02-08-05-08-04"));
             Assert.Equal(4, c.Id);
             Assert.Equal(5, c.Number);
@@ -243,20 +259,20 @@ public class SurrogateTests
     [Fact]
     public void ExpectedPayloads()
     {
-        RoundTrip(RuntimeTypeModel.Default, new BaseClassSurrogate { Id = 1}, "08-01");
-        RoundTrip(RuntimeTypeModel.Default, new DerivedClassSurrogate() { Id = 2, Number = 3}, "CA-3E-02-08-03-08-02");
-        RoundTrip(RuntimeTypeModel.Default, new DerivedClassSurrogate { Id = 4, Number = 5}, "CA-3E-02-08-05-08-04");
+        RoundTrip(RuntimeTypeModel.Default, new BaseClassSurrogate { Id = 1 }, "08-01");
+        RoundTrip(RuntimeTypeModel.Default, new DerivedClassSurrogate() { Id = 2, Number = 3 }, "CA-3E-02-08-03-08-02");
+        RoundTrip(RuntimeTypeModel.Default, new DerivedClassSurrogate { Id = 4, Number = 5 }, "CA-3E-02-08-05-08-04");
     }
-    
+
     private static T RoundTrip<T>(TypeModel model, T value, string expected)
     {
         var ms = new MemoryStream();
-        model.Serialize<T>(ms, value);
+        model.Serialize(ms, value);
         ms.Position = 0;
         if (!ms.TryGetBuffer(out var segment)) segment = new(ms.ToArray());
         var actual = BitConverter.ToString(segment.Array!, segment.Offset, segment.Count);
         Assert.Equal(expected, actual);
-        return model.Deserialize<T>(ms);
+        return (T)model.Deserialize(ms, null, typeof(T));
     }
 }
 
@@ -397,4 +413,3 @@ public class ComplexSurrogate
     public static Complex Convert(ComplexSurrogate source) => source is null ? null! : new Complex() { Id = source.Id, Number = source.Number };
 }
 */
-
