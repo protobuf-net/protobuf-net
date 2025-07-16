@@ -2,7 +2,7 @@
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net462;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0;net9.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <AssemblyName>protogen</AssemblyName>
     <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
@@ -24,5 +24,8 @@
   </ItemGroup>
   <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="System.Collections.Immutable" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

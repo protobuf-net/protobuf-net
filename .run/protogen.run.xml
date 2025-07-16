@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="protogen" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+    <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/src/protogen/protogen.csproj" />
+    <option name="LAUNCH_PROFILE_TFM" value=".NETFramework,Version=v4.6.2" />
+    <option name="LAUNCH_PROFILE_NAME" value="protogen" />
+    <option name="USE_EXTERNAL_CONSOLE" value="0" />
+    <option name="USE_MONO" value="0" />
+    <option name="RUNTIME_ARGUMENTS" value="" />
+    <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+    <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+    <option name="SEND_DEBUG_REQUEST" value="1" />
+    <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+    <option name="RUNTIME_TYPE" value="coreclr" />
+    <method v="2">
+      <option name="Build" />
+    </method>
+  </configuration>
+</component>

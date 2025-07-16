@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 
 namespace protogen
@@ -13,6 +14,53 @@ namespace protogen
     {
         private static async Task<int> Main(string[] args)
         {
+    #if NET9_0_OR_GREATER
+            var ctx = new System.Runtime.Loader.AssemblyLoadContext("test", true);
+            var final = Path.Combine(Directory.GetCurrentDirectory(), args[0]);
+            Console.WriteLine(final);
+            var asm = ctx.LoadFromAssemblyPath(final);
+            Console.WriteLine(asm.FullName);
+            ctx.Resolving += SomeHandler;
+
+            foreach (var type in asm.ExportedTypes)
+            {
+                if (Consider(type))
+                {
+                    Console.WriteLine(type.FullName);
+                }
+
+                static bool Consider(Type type)
+                {
+                    foreach (var attrib in type.CustomAttributes)
+                    {
+                        if (attrib.AttributeType.FullName == "ProtoBuf.ProtoContractAttribute")
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+            } 
+            Assembly SomeHandler(AssemblyLoadContext ctx, AssemblyName an)
+            {
+                Console.WriteLine($"Resolving assembly {an}");
+                var combined = Path.Combine(final, an.Name!) + ".dll";
+                Console.WriteLine($"Checking for {combined}");
+                if (File.Exists((combined)))
+                    return ctx.LoadFromAssemblyPath(combined);
+                    
+                Console.WriteLine("not found");
+                return null;
+            }
+
+            foreach (var an in asm.GetReferencedAssemblies())
+            {
+                Console.WriteLine(an.FullName);
+            }
+            ctx.Unload();
+            return 0;
+    #endif
             try
             {
                 string outPath = null; // -o{FILE}, --descriptor_set_out={FILE}
