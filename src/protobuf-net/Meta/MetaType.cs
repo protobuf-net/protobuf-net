@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 
@@ -501,6 +502,7 @@ namespace ProtoBuf.Meta
         }
         private IProtoTypeSerializer BuildSerializer()
         {
+            Debug.WriteLine("Building serializer for " + Type.FullName);
             if (SerializerType is not null)
             {
                 return ExternalSerializer.Create(Type, SerializerType);

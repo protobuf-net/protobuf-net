@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using ProtoBuf;
@@ -274,142 +276,140 @@ public class SurrogateTests
         Assert.Equal(expected, actual);
         return (T)model.Deserialize(ms, null, typeof(T));
     }
-}
 
-/*
-using ProtoBuf;
-using ProtoBuf.Meta;
-
-var model = RuntimeTypeModel.Create();
-model.Add(typeof(Base2), true);
-model.Add(typeof(Complex), true);
-model.Add(typeof(ComplexSurrogate), true);
-
-var a = model.Add(typeof(Base), false).AddSubType(2, typeof(Derived));
-var b = model.Add(typeof(Derived), false);
-a.SetSurrogate(typeof(BaseSurogate));
-b.SetSurrogate(typeof(DerivedSurrogate));
-model.CompileInPlace();
-
-var obj = new Derived { Id = 5, Number = 6 };
-var ms = new MemoryStream();
-model.Serialize(ms, obj);
-ms.Position = 0;
-var clone = model.Deserialize(ms, null, typeof(Base));
-Console.WriteLine("Y:" + clone); // Y:Derived:Id=5,Number=6
-
-if (!ms.TryGetBuffer(out var segment)) segment = ms.ToArray();
-Console.WriteLine(BitConverter.ToString(segment.Array!, segment.Offset, segment.Count)); // 1A-02-08-06-08-05
-
-
-Base2 value = new Complex { Id = 5, Number = 6 };
-ms = new MemoryStream();
-model.Serialize(ms, value);
-ms.Position = 0;
-clone = model.Deserialize(ms, null, typeof(Base2));
-Console.WriteLine("Z:" + clone); // Z:Complex:Id=5,Number=6
-
-if (!ms.TryGetBuffer(out segment)) segment = ms.ToArray();
-Console.WriteLine(BitConverter.ToString(segment.Array!, segment.Offset, segment.Count)); // 12-04-50-05-58-06-28-05
-
-public class Base
-{
-    public override string ToString() => $"{GetType().Name}:Id={Id}";
-    public int Id { get; set; }
-}
-public class Derived : Base
-{
-    public override string ToString() => $"{GetType().Name}:Id={Id},Number={Number}";
-    public int Number { get; set; }
-}
-
-[ProtoContract]
-[ProtoInclude(3, typeof(DerivedSurrogate))]
-public class BaseSurogate
-{
-    public static implicit operator Base(BaseSurogate value)
+    [Fact]
+    public void RecursiveModel()
     {
-        Console.WriteLine($"AAA: {value?.GetType().Name}");
-        return value switch
+        var model = RuntimeTypeModel.Create();
+        model.Add(typeof(RecursiveBase), true);
+        model.Add(typeof(RecursiveConcrete), true);
+
+        model.Add(typeof(RecursiveSurrogateBase), true);
+        model.Add(typeof(RecursiveSurrogateConcrete), true);
+
+        model.Add(typeof(RecursiveProperties), true);
+        model.Add(typeof(RecursivePropertiesSurrogate), true);
+
+        model.CompileInPlace();
+
+        RecursiveBase parent = new RecursiveConcrete(12, 42),
+            child = new RecursiveConcrete(15, 23);
+        parent.Properties.Objects.Add(child);
+        Verify(parent);
+
+        var clone = (RecursiveBase)model.DeepClone(parent);
+        Verify(clone);
+
+        static void Verify(RecursiveBase root)
         {
-            null => null!,
-            DerivedSurrogate derived => new Derived() { Id = derived.Id, Number = derived.Number },
-            _ => new Base() { Id = value.Id },
-        };
+            var parent = Assert.IsType<RecursiveConcrete>(root);
+            Assert.Equal(12, parent.BaseId);
+            Assert.Equal(42, parent.SubId);
+            var child = Assert.IsType<RecursiveConcrete>(Assert.Single(parent.Properties.Objects));
+            Assert.Equal(15, child.BaseId);
+            Assert.Equal(23, child.SubId);
+            Assert.Empty(child.Properties.Objects);
+        }
     }
-    public static implicit operator BaseSurogate(Base value)
+
+    [ProtoContract(Surrogate = typeof(RecursiveSurrogateBase))]
+    abstract class RecursiveBase(int baseId)
     {
-        Console.WriteLine($"BBB: {value?.GetType().Name}");
-        return value switch
+        public int BaseId { get; } = baseId;
+        internal abstract RecursiveSurrogateBase ConvertToSurrogate();
+
+        public RecursiveProperties Properties { get; } = new();
+    }
+
+    [ProtoContract(Surrogate = typeof(RecursiveSurrogateConcrete))]
+    sealed class RecursiveConcrete(int baseId, int subId) : RecursiveBase(baseId)
+    {
+        public int SubId { get; } = subId;
+
+        internal override RecursiveSurrogateBase ConvertToSurrogate()
+            => new RecursiveSurrogateConcrete
+            {
+                BaseId = BaseId,
+                SubId = SubId,
+                Properties = Properties,
+            };
+    }
+
+    [ProtoContract]
+    [ProtoInclude(10, typeof(RecursiveSurrogateConcrete))]
+    abstract class RecursiveSurrogateBase
+    {
+        [ProtoMember(1)] public int BaseId { get; set; }
+
+        [ProtoMember(2)] public RecursiveProperties Properties { get; set; }
+
+        protected abstract RecursiveBase ConvertToObject();
+
+        public static implicit operator RecursiveBase(RecursiveSurrogateBase surrogateBase)
+            => surrogateBase?.ConvertToObject();
+        public static implicit operator RecursiveSurrogateBase(RecursiveBase surrogate)
+            => surrogate?.ConvertToSurrogate();
+    }
+
+    [ProtoContract]
+    sealed class RecursiveSurrogateConcrete : RecursiveSurrogateBase
+    {
+        [ProtoMember(1)] public int SubId { get; set; }
+
+        protected override RecursiveBase ConvertToObject()
         {
-            null => null!,
-            Derived derived => new DerivedSurrogate() { Id = derived.Id, Number = derived.Number },
-            _ => new BaseSurogate() { Id = value.Id },
-        };
+            var obj = new RecursiveConcrete(BaseId, SubId);
+            Utils.Fill(Properties, obj.Properties);
+            return obj;
+        }
+
+        public static implicit operator RecursiveConcrete(RecursiveSurrogateConcrete surrogateBase)
+            => (RecursiveConcrete)surrogateBase?.ConvertToObject();
+        public static implicit operator RecursiveSurrogateConcrete(RecursiveConcrete surrogate)
+            => (RecursiveSurrogateConcrete)surrogate?.ConvertToSurrogate();
     }
-    [ProtoMember(1)]
-    public int Id { get; set; }
-}
 
-
-[ProtoContract]
-public class DerivedSurrogate : BaseSurogate
-{
-    public static implicit operator Derived(DerivedSurrogate value)
+    [ProtoContract(Surrogate = typeof(RecursivePropertiesSurrogate))]
+    class RecursiveProperties
     {
-        Console.WriteLine($"CCC: {value?.GetType().Name}");
-        return value is null ? null! : new() { Id = value.Id, Number = value.Number };
+        public List<RecursiveBase> Objects { get; } = new();
     }
-    public static implicit operator DerivedSurrogate(Derived value)
+
+    private static class Utils
     {
-        Console.WriteLine($"DDD: {value?.GetType().Name}");
-        return value is null ? null! : new() { Id = value.Id, Number = value.Number };
+        public static void Fill(RecursiveProperties from, RecursiveProperties to)
+            => Fill(from.Objects, to.Objects);
+        public static void Fill(List<RecursiveBase> from, List<RecursiveBase> to)
+        {
+#if NET8_0_OR_GREATER
+            CollectionsMarshal.SetCount(to, from.Count);
+            from.CopyTo(CollectionsMarshal.AsSpan(to));
+#else
+            to.AddRange(from);
+#endif
+        }
     }
 
-    [ProtoMember(1)]
-    public int Number { get; set; }
+    [ProtoContract]
+    class RecursivePropertiesSurrogate
+    {
+        [ProtoMember(1)] public List<RecursiveBase> Objects { get; } = new();
+
+        public static implicit operator RecursiveProperties(RecursivePropertiesSurrogate source)
+        {
+            if (source is null) return null;
+            var obj = new RecursiveProperties();
+            Utils.Fill(source.Objects, obj.Objects);
+            return obj;
+        }
+
+        public static implicit operator RecursivePropertiesSurrogate(RecursiveProperties source)
+        {
+            if (source is null) return null;
+            var obj = new RecursivePropertiesSurrogate();
+            Utils.Fill(source.Objects, obj.Objects);
+            return obj;
+        }
+    }
 }
 
-
-[ProtoContract]
-[ProtoInclude(1, typeof(Simple))]
-[ProtoInclude(2, typeof(Complex))]
-public abstract class Base2
-{
-    [ProtoMember(5)]
-    public int Id { get; set; }
-
-    public override string ToString() => $"{GetType().Name}:Id={Id}";
-}
-
-[ProtoContract]
-public class Simple : Base2
-{
-
-}
-
-[ProtoContract(Surrogate = typeof(ComplexSurrogate))]
-public class Complex : Base2
-{
-    public int Number { get; set; }
-
-    public override string ToString() => $"{GetType().Name}:Id={Id},Number={Number}";
-}
-
-[ProtoContract(Name = nameof(Complex))]
-public class ComplexSurrogate
-{
-    public override string ToString() => $"{GetType().Name}:Id={Id},Number={Number}";
-
-    [ProtoMember(10)]
-    public int Id { get; set; }
-
-    [ProtoMember(11)]
-    public int Number { get; set; }
-    [ProtoConverter]
-    public static ComplexSurrogate Convert(Complex source) => source is null ? null! : new ComplexSurrogate() { Id = source.Id, Number = source.Number };
-
-    [ProtoConverter]
-    public static Complex Convert(ComplexSurrogate source) => source is null ? null! : new Complex() { Id = source.Id, Number = source.Number };
-}
-*/
