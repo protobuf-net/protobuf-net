@@ -138,7 +138,7 @@ public class SurrogateTests
                 scenario = model.Compile(new RuntimeTypeModel.CompilerOptions
                 {
                     TypeName = "MyModel",
-#if !(NET && BACK_COMPAT)
+#if (NETFX || NET9_0_OR_GREATER) && !(NET && BACK_COMPAT)
                     OutputPath = $"NoSurrogate_{key}.dll",
 #endif
                 });
@@ -226,7 +226,7 @@ public class SurrogateTests
                     scenario = model.Compile(new RuntimeTypeModel.CompilerOptions
                     {
                         TypeName = "MyModel",
-#if !(NET && BACK_COMPAT)
+#if (NETFX || NET9_0_OR_GREATER) && !(NET && BACK_COMPAT)
                         OutputPath = $"Surrogate_{key}.dll",
 #endif
                     });
@@ -277,10 +277,25 @@ public class SurrogateTests
         return (T)model.Deserialize(ms, null, typeof(T));
     }
 
-    [Fact]
-    public void RecursiveModel()
+    public enum Mode
+    {
+        Runtime,
+        CompileInPlace,
+        CompileInMemory,
+        CompileToFile,
+    }
+
+    [Theory]
+    [InlineData(Mode.Runtime)]
+    [InlineData(Mode.CompileInPlace)]
+    [InlineData(Mode.CompileInMemory)]
+#if (NETFX || NET9_0_OR_GREATER) && !(NET && BACK_COMPAT)
+    [InlineData(Mode.CompileToFile)]
+#endif
+    public void RecursiveModel(Mode mode)
     {
         var model = RuntimeTypeModel.Create();
+        model.AutoCompile = false;
         model.Add(typeof(RecursiveBase), true);
         model.Add(typeof(RecursiveConcrete), true);
 
@@ -290,15 +305,43 @@ public class SurrogateTests
         model.Add(typeof(RecursiveProperties), true);
         model.Add(typeof(RecursivePropertiesSurrogate), true);
 
-        model.CompileInPlace();
-
         RecursiveBase parent = new RecursiveConcrete(12, 42),
             child = new RecursiveConcrete(15, 23);
         parent.Properties.Objects.Add(child);
         Verify(parent);
 
-        var clone = (RecursiveBase)model.DeepClone(parent);
-        Verify(clone);
+        object clone;
+        switch (mode)
+        {
+            case Mode.Runtime:
+                clone = model.DeepClone(parent);
+                break;
+            case Mode.CompileInPlace:
+                model.CompileInPlace();
+                clone = model.DeepClone(parent);
+                break;
+            case Mode.CompileInMemory:
+                clone = model.Compile().DeepClone(parent);
+                break;
+            case Mode.CompileToFile:
+                var dll = model.Compile(new RuntimeTypeModel.CompilerOptions
+                {
+                    TypeName = "RecursiveModel",
+#if (NETFX || NET9_0_OR_GREATER) && !(NET && BACK_COMPAT)
+                    OutputPath = "RecursiveModel.dll",
+#endif
+                });
+#if !BACK_COMPAT
+                PEVerify.AssertValid("RecursiveModel.dll");
+#endif
+                clone = dll.DeepClone(parent);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mode));
+        }
+
+        Verify(Assert.IsType<RecursiveConcrete>(clone));
+
 
         static void Verify(RecursiveBase root)
         {
@@ -313,7 +356,7 @@ public class SurrogateTests
     }
 
     [ProtoContract(Surrogate = typeof(RecursiveSurrogateBase))]
-    abstract class RecursiveBase(int baseId)
+    public abstract class RecursiveBase(int baseId)
     {
         public int BaseId { get; } = baseId;
         internal abstract RecursiveSurrogateBase ConvertToSurrogate();
@@ -322,7 +365,7 @@ public class SurrogateTests
     }
 
     [ProtoContract(Surrogate = typeof(RecursiveSurrogateConcrete))]
-    sealed class RecursiveConcrete(int baseId, int subId) : RecursiveBase(baseId)
+    public sealed class RecursiveConcrete(int baseId, int subId) : RecursiveBase(baseId)
     {
         public int SubId { get; } = subId;
 
@@ -337,7 +380,7 @@ public class SurrogateTests
 
     [ProtoContract]
     [ProtoInclude(10, typeof(RecursiveSurrogateConcrete))]
-    abstract class RecursiveSurrogateBase
+    public abstract class RecursiveSurrogateBase
     {
         [ProtoMember(1)] public int BaseId { get; set; }
 
@@ -347,12 +390,13 @@ public class SurrogateTests
 
         public static implicit operator RecursiveBase(RecursiveSurrogateBase surrogateBase)
             => surrogateBase?.ConvertToObject();
+
         public static implicit operator RecursiveSurrogateBase(RecursiveBase surrogate)
             => surrogate?.ConvertToSurrogate();
     }
 
     [ProtoContract]
-    sealed class RecursiveSurrogateConcrete : RecursiveSurrogateBase
+    public sealed class RecursiveSurrogateConcrete : RecursiveSurrogateBase
     {
         [ProtoMember(1)] public int SubId { get; set; }
 
@@ -365,12 +409,13 @@ public class SurrogateTests
 
         public static implicit operator RecursiveConcrete(RecursiveSurrogateConcrete surrogateBase)
             => (RecursiveConcrete)surrogateBase?.ConvertToObject();
+
         public static implicit operator RecursiveSurrogateConcrete(RecursiveConcrete surrogate)
             => (RecursiveSurrogateConcrete)surrogate?.ConvertToSurrogate();
     }
 
     [ProtoContract(Surrogate = typeof(RecursivePropertiesSurrogate))]
-    class RecursiveProperties
+    public sealed class RecursiveProperties
     {
         public List<RecursiveBase> Objects { get; } = new();
     }
@@ -379,6 +424,7 @@ public class SurrogateTests
     {
         public static void Fill(RecursiveProperties from, RecursiveProperties to)
             => Fill(from.Objects, to.Objects);
+
         public static void Fill(List<RecursiveBase> from, List<RecursiveBase> to)
         {
 #if NET8_0_OR_GREATER
@@ -391,7 +437,7 @@ public class SurrogateTests
     }
 
     [ProtoContract]
-    class RecursivePropertiesSurrogate
+    public sealed class RecursivePropertiesSurrogate
     {
         [ProtoMember(1)] public List<RecursiveBase> Objects { get; } = new();
 
@@ -412,4 +458,3 @@ public class SurrogateTests
         }
     }
 }
-
