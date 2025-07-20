@@ -3,6 +3,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Internal.Serializers
@@ -71,6 +72,10 @@ namespace ProtoBuf.Internal.Serializers
         private IProtoTypeSerializer RootTail
             => _metaTypeOrSerializer is IProtoTypeSerializer ser ? ser : Unwrap();
 
+#if DEBUG
+        private int unwrapThreadId;
+#endif
+        
         private IProtoTypeSerializer Unwrap()
         {
             var obj = _metaTypeOrSerializer;
@@ -78,13 +83,22 @@ namespace ProtoBuf.Internal.Serializers
             {
                 return ser;
             }
-            
+#if DEBUG
+            int currentThreadId = Environment.CurrentManagedThreadId,
+                existingThreadId = Interlocked.CompareExchange(ref unwrapThreadId, currentThreadId, 0);
+            Debug.Assert(existingThreadId == 0 || existingThreadId !=  currentThreadId, "Re-entrant/recursive call to Unwrap");
             Debug.WriteLine($"Unwrapping serializer for {declaredType.Name}");
+#endif      
+            
             var metaType = (MetaType)obj; 
             ser = metaType.Serializer;
             Debug.Assert(declaredType == ser.ExpectedType || Helpers.IsSubclassOf(declaredType, ser.ExpectedType), "surrogate type mismatch");
             _features = ser.Features; // swap this first, for test order
             _metaTypeOrSerializer = ser;
+            
+#if DEBUG
+            Interlocked.CompareExchange(ref unwrapThreadId, 0, currentThreadId); // end recursion check
+#endif
             return ser;
         }
         

@@ -598,7 +598,7 @@ namespace ProtoBuf.Meta
             int fieldCount = _fields?.Count ?? 0;
             int subTypeCount = _subTypes?.Count ?? 0;
             int[] fieldNumbers = new int[fieldCount + subTypeCount];
-            IRuntimeProtoSerializerNode[] serializers = new IRuntimeProtoSerializerNode[fieldCount + subTypeCount];
+            object[] serializersOrProxies = new object[fieldCount + subTypeCount];
             int i = 0;
             if (subTypeCount != 0)
             {
@@ -609,7 +609,7 @@ namespace ProtoBuf.Meta
                         ThrowHelper.ThrowArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
                     fieldNumbers[i] = subType.FieldNumber;
-                    serializers[i++] = subType.GetSerializer(Type);
+                    serializersOrProxies[i++] = subType.GetSerializerProxy(Type);
                 }
             }
             if (fieldCount != 0)
@@ -617,7 +617,7 @@ namespace ProtoBuf.Meta
                 foreach (ValueMember member in _fields)
                 {
                     fieldNumbers[i] = member.FieldNumber;
-                    serializers[i++] = member.Serializer;
+                    serializersOrProxies[i++] = member.GetSerializerProxy();
                 }
             }
 
@@ -640,7 +640,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType is null, UseConstructor, !IgnoreUnknownSubTypes,
+            return TypeSerializer.Create(Type, fieldNumbers, serializersOrProxies, arr, baseType is null, UseConstructor, !IgnoreUnknownSubTypes,
                 callbacks, constructType, factory, GetInheritanceRoot(), GetFeatures());
         }
 
