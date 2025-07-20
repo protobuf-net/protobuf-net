@@ -8,7 +8,10 @@ using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
+using ProtoBuf.Compiler;
 
 namespace ProtoBuf.Meta
 {
@@ -500,6 +503,7 @@ namespace ProtoBuf.Meta
             hasSubTypes = _subTypes is { Count: > 0 };
             return hasSubTypes || (baseType is not null && baseType != this);
         }
+
         private IProtoTypeSerializer BuildSerializer()
         {
             Debug.WriteLine("Building serializer for " + Type.FullName);
@@ -535,10 +539,12 @@ namespace ProtoBuf.Meta
             if (surrogateType is not null)
             {
                 SerializerFeatures features;
+                object metaTypeOrSerializer;
                 // check to see if we can handle that directly without using GetSerializer<surrogateType>()
                 var serializer = ValueMember.TryGetCoreSerializer(Model, surrogateDataFormat, CompatibilityLevel, surrogateType, out _, false, false, false, false);
-                if (serializer is object)
+                if (serializer is { })
                 {
+                    metaTypeOrSerializer = serializer;
                     try
                     {
                         features = ExternalSerializer.Create(surrogateType, typeof(PrimaryTypeProvider)).Features;
@@ -555,25 +561,25 @@ namespace ProtoBuf.Meta
                     {
                         ThrowHelper.ThrowInvalidOperationException("Surrogate type must refer to the root inheritance type (for now; log an issue if this is a barrier): " + surrogateType.NormalizeName());
                     }
+
+                    metaTypeOrSerializer = mt;
+                    features = default;
                     // , mtBase;
                     //while ((mtBase = mt.baseType) is not null)
-                    //{
+                    //{serializer
                     //    mt = mtBase;
                     //}
-                    var ser = mt.Serializer;
-                    features = ser.Features;
-                    serializer = ser;
                 }
                 var root = GetInheritanceRoot();
                 if (root is null)
                 {
                     return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<>).MakeGenericType(Type),
-                        args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer, features });
+                        args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, metaTypeOrSerializer, features });
                 }
                 else
                 {
                     return (IProtoTypeSerializer)Activator.CreateInstance(typeof(SurrogateSerializer<,>).MakeGenericType(root, Type),
-                                            args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, serializer, features });
+                                            args: new object[] { surrogateType, underlyingToSurrogate, surrogateToUnderlying, metaTypeOrSerializer, features });
                 }
 
             }

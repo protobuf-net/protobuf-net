@@ -3,6 +3,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Diagnostics;
 using System.Reflection;
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Internal.Serializers
 {
@@ -10,7 +11,7 @@ namespace ProtoBuf.Internal.Serializers
         where TBase : class
         where T : class, TBase
     {
-        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IRuntimeProtoSerializerNode rootTail, SerializerFeatures features) : base(declaredType, toTail, fromTail, rootTail, features) { }
+        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, object metaTypeOrSerializer, SerializerFeatures features) : base(declaredType, toTail, fromTail, metaTypeOrSerializer, features) { }
         public override Type BaseType => typeof(TBase);
 
         public override bool IsSubType => typeof(TBase) != typeof(T);
@@ -18,7 +19,7 @@ namespace ProtoBuf.Internal.Serializers
     internal class SurrogateSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
         bool IProtoTypeSerializer.HasSurrogate => true;
-        public SerializerFeatures Features => features;
+
         public virtual bool IsSubType => false;
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
@@ -26,7 +27,10 @@ namespace ProtoBuf.Internal.Serializers
         bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
-        bool IRuntimeProtoSerializerNode.IsScalar => features.IsScalar();
+        public SerializerFeatures Features => // trust only when we've unwrapped
+            _metaTypeOrSerializer is IProtoTypeSerializer known ? _features : Unwrap().Features;
+        
+        bool IRuntimeProtoSerializerNode.IsScalar => Features.IsScalar();
 
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
 
@@ -41,27 +45,50 @@ namespace ProtoBuf.Internal.Serializers
 
         public bool ReturnsValue => true; // because always changes
 
-        public bool RequiresOldValue => rootTail.RequiresOldValue;
+        public bool RequiresOldValue => RootTail.RequiresOldValue;
 
         public Type ExpectedType => typeof(T);
         public virtual Type BaseType => ExpectedType;
 
         private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
-        private readonly IRuntimeProtoSerializerNode rootTail;
-        private readonly SerializerFeatures features;
 
-        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, IRuntimeProtoSerializerNode rootTail, SerializerFeatures features)
+        public SurrogateSerializer(Type declaredType, MethodInfo toTail, MethodInfo fromTail, object metaTypeOrSerializer, SerializerFeatures features)
         {
             Debug.Assert(declaredType is not null, "declaredType");
-            Debug.Assert(rootTail is object, "rootTail");
-            Debug.Assert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType), "surrogate type mismatch");
+            Debug.Assert(metaTypeOrSerializer is object, "metaTypeOrSerializer");
+
             this.declaredType = declaredType;
-            this.rootTail = rootTail;
+            _metaTypeOrSerializer = metaTypeOrSerializer;
+            _features = features;
             this.toTail = toTail ?? GetConversion(true);
             this.fromTail = fromTail ?? GetConversion(false);
-            this.features = features;
         }
+
+        private object _metaTypeOrSerializer;
+        private SerializerFeatures _features;
+
+        private IProtoTypeSerializer RootTail
+            => _metaTypeOrSerializer is IProtoTypeSerializer ser ? ser : Unwrap();
+
+        private IProtoTypeSerializer Unwrap()
+        {
+            var obj = _metaTypeOrSerializer;
+            if (obj is IProtoTypeSerializer ser)
+            {
+                return ser;
+            }
+            
+            Debug.WriteLine($"Unwrapping serializer for {declaredType.Name}");
+            var metaType = (MetaType)obj; 
+            ser = metaType.Serializer;
+            Debug.Assert(declaredType == ser.ExpectedType || Helpers.IsSubclassOf(declaredType, ser.ExpectedType), "surrogate type mismatch");
+            _features = ser.Features; // swap this first, for test order
+            _metaTypeOrSerializer = ser;
+            return ser;
+        }
+        
+        
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
             const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
@@ -124,7 +151,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public void Write(ref ProtoWriter.State state, object value)
         {
-            rootTail.Write(ref state, value is null ? null : toTail.Invoke(null, new object[] { value }));
+            RootTail.Write(ref state, value is null ? null : toTail.Invoke(null, new object[] { value }));
         }
 
         public object Read(ref ProtoReader.State state, object value)
@@ -136,7 +163,7 @@ namespace ProtoBuf.Internal.Serializers
             {
                 // GIGO
             }
-            else if (rootTail.RequiresOldValue)
+            else if (RootTail.RequiresOldValue)
             {
                 args[0] = value;
                 value = toTail.Invoke(null, args);
@@ -147,7 +174,7 @@ namespace ProtoBuf.Internal.Serializers
             }
 
             // invoke the tail and convert the outgoing value
-            value = rootTail.Read(ref state, value);
+            value = RootTail.Read(ref state, value);
             if (value is not null)
             {
                 args[0] = value;
@@ -170,7 +197,7 @@ namespace ProtoBuf.Internal.Serializers
             // Debug.Assert(valueFrom is object, "surrogate value on stack-head"); // don't support stack-head for this
             using Compiler.Local converted = new Compiler.Local(ctx, declaredType);
 
-            if (rootTail.RequiresOldValue)
+            if (RootTail.RequiresOldValue)
             {
                 ctx.LoadValue(valueFrom); // load primary onto stack
                 ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
@@ -178,16 +205,16 @@ namespace ProtoBuf.Internal.Serializers
             }
 
             // downstream processing against surrogate local
-            var tail = rootTail;
+            var tail = RootTail;
             ctx.Debug(">> tail");
-            if (rootTail is IProtoTypeSerializer { HasInheritance: true} forType)
+            if (RootTail is IProtoTypeSerializer { HasInheritance: true} forType)
             {
                 tail = forType;
                 forType.EmitReadRoot(ctx, converted);
             }
             else
             {
-                rootTail.EmitRead(ctx, converted);    
+                RootTail.EmitRead(ctx, converted);    
             }
             ctx.Debug("<< tail");
             if (!tail.ReturnsValue) // otherwise: already pon stack
@@ -209,7 +236,7 @@ namespace ProtoBuf.Internal.Serializers
             // inline the tail
             ctx.LoadValue(valueFrom);
             ctx.EmitCall(toTail);
-            rootTail.EmitWrite(ctx, null);
+            RootTail.EmitWrite(ctx, null);
         }
     }
 }
