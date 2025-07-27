@@ -60,4 +60,6 @@ using System.Runtime.CompilerServices;
 [assembly: TypeForwardedTo(typeof(CompatibilityLevelAttribute))]
 [assembly: TypeForwardedTo(typeof(ProtoSyntax))]
 
+#if !NETSTANDARD2_0_OR_GREATER // see #1214
 [module: SkipLocalsInit]
+#endif
