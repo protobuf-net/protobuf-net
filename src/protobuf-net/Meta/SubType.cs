@@ -90,5 +90,14 @@ namespace ProtoBuf.Meta
             IRuntimeProtoSerializerNode ser = SubItemSerializer.Create(derivedType.Type, derivedType, parentType);
             return new TagDecorator(_fieldNumber, wireType, false, ser);
         }
+
+        internal IRuntimeSerializerProxy GetSerializerProxy(Type parentType) => new SubTypeSerializerProxy(this, parentType);
+
+        private sealed class SubTypeSerializerProxy(SubType subType, Type parentType) : IRuntimeSerializerProxy
+        {
+            public Type ExpectedType =>  subType.DerivedType.Type;
+
+            public IRuntimeProtoSerializerNode GetSerializer() => subType.GetSerializer(parentType);
+        }
     }
 }

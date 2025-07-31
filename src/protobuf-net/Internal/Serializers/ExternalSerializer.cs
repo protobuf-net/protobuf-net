@@ -30,6 +30,7 @@ namespace ProtoBuf.Internal.Serializers
 
         public Type ExpectedType => typeof(T);
 
+        bool IProtoTypeSerializer.HasSurrogate => false;
         bool IRuntimeProtoSerializerNode.RequiresOldValue => true;
 
         bool IRuntimeProtoSerializerNode.ReturnsValue => true;
@@ -98,6 +99,8 @@ namespace ProtoBuf.Internal.Serializers
 
         void IRuntimeProtoSerializerNode.EmitRead(CompilerContext ctx, Local entity)
         {
+            ctx.Debug(">> external");
+            
             // entity = SerializerCache.Get<TProvider, T>().Read(ref state, value);
             // if TProvider is public, or
             // entity = state.GetSerializer<T>().Read(ref state, value);
@@ -119,8 +122,8 @@ namespace ProtoBuf.Internal.Serializers
             ctx.LoadValue(loc);
             ctx.EmitCall(typeof(ISerializer<T>).GetMethod(nameof(ISerializer<T>.Read)));
 
-            // store back
-            ctx.StoreValue(entity);
+            // leave on stack
+            ctx.Debug("<< external");
         }
     }
 }

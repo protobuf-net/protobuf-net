@@ -917,5 +917,14 @@ namespace ProtoBuf.Meta
                 return x.FieldNumber.CompareTo(y.FieldNumber);
             }
         }
+
+        internal IRuntimeSerializerProxy GetSerializerProxy() => new ValueMemberSerializerProxy(this);
+
+        private sealed class ValueMemberSerializerProxy(ValueMember valueMember) : IRuntimeSerializerProxy
+        {
+            public Type ExpectedType => valueMember.ParentType;
+
+            public IRuntimeProtoSerializerNode GetSerializer() => valueMember.Serializer;
+        }
     }
 }

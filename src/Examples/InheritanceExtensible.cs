@@ -45,8 +45,8 @@ namespace ProtoBuf
         public void CanReliablyRoundTripRetainingData_CompileDll()
             => CanReliablyRoundTripRetainingData(model =>
             {
-                var compiled = model.Compile(nameof(CanRoundTripTrivialExtensibleModel_CompileDll), nameof(CanRoundTripTrivialExtensibleModel_CompileDll) + ".dll");
-                PEVerify.AssertValid(nameof(CanRoundTripTrivialExtensibleModel_CompileDll) + ".dll");
+                var compiled = model.Compile(nameof(CanReliablyRoundTripRetainingData_CompileDll), nameof(CanReliablyRoundTripRetainingData_CompileDll) + ".dll");
+                PEVerify.AssertValid(nameof(CanReliablyRoundTripRetainingData_CompileDll) + ".dll");
                 return compiled;
             });
 

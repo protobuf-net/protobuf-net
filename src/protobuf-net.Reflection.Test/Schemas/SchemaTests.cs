@@ -311,6 +311,22 @@ namespace ProtoBuf.Schemas
             int exitCode;
             string protocExe = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"windows\protoc" :
                 RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? @"macosx/protoc" : "";
+
+            if (string.IsNullOrWhiteSpace(protocExe))
+            {
+                // try a raw command
+                try
+                {
+                    using var proc = Process.Start("protoc", "--version");
+                
+                    if (proc.WaitForExit(milliseconds: 2000))
+                    {
+                        protocExe = "protoc";
+                    }
+                }
+                finally {} // best effort only
+            }
+            
             if (string.IsNullOrWhiteSpace(protocExe))
                 throw new PlatformNotSupportedException(RuntimeInformation.OSDescription);
             using (var proc = new Process())

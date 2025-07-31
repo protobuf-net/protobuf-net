@@ -8,6 +8,8 @@ namespace ProtoBuf.Internal.Serializers
     internal sealed class TupleSerializer<T> : IProtoTypeSerializer, ISerializer<T>
     {
         bool IRuntimeProtoSerializerNode.IsScalar => false;
+        bool IProtoTypeSerializer.HasSurrogate => false;
+
         public SerializerFeatures Features { get; private set; } = SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 
         bool IProtoTypeSerializer.IsSubType => false;

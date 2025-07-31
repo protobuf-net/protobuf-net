@@ -9,9 +9,11 @@ namespace ProtoBuf.Internal.Serializers
     {
         SerializerFeatures IProtoTypeSerializer.Features => wireType.AsFeatures();
         bool IProtoTypeSerializer.IsSubType => Tail is IProtoTypeSerializer pts && pts.IsSubType;
+        bool IProtoTypeSerializer.HasSurrogate => Tail is IProtoTypeSerializer pts && pts.HasSurrogate;
         public bool HasCallbacks(TypeModel.CallbackType callbackType) => Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
 
         public bool CanCreateInstance() => Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
+        public bool HasSurrogate => Tail is IProtoTypeSerializer pts && pts.HasSurrogate;
 
         public object CreateInstance(ISerializationContext source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
 

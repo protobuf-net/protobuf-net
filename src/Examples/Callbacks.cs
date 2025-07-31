@@ -209,7 +209,7 @@ namespace Examples
 
             if(compile)
             {
-                string name = typeof (TCreate).FullName + "Ser";
+                string name = typeof (TCreate).FullName.Replace("+", "_") + "_Ser";
                 model.Compile(name, name + ".dll");
                 PEVerify.AssertValid(name + ".dll");
             }

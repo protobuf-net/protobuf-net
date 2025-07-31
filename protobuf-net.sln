@@ -100,6 +100,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildToolsSmokeTests", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.HybridCache", "src\protobuf-net.HybridCache\protobuf-net.HybridCache.csproj", "{D0EFC2AF-7AF1-4C1C-9DB0-47E1FEA5FFDB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackCompatTests", "src\BackCompatTests\BackCompatTests.csproj", "{81E1D7C8-5595-4664-B5AE-40013F34DCB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -287,6 +289,12 @@ Global
 		{D0EFC2AF-7AF1-4C1C-9DB0-47E1FEA5FFDB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D0EFC2AF-7AF1-4C1C-9DB0-47E1FEA5FFDB}.VS|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0EFC2AF-7AF1-4C1C-9DB0-47E1FEA5FFDB}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -323,6 +331,7 @@ Global
 		{763193DB-D730-4898-AB6B-986880AB18BF} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
 		{5BF248A8-1B2A-474C-9B62-A5173AD1BD55} = {0D637072-686D-4DC7-91E4-87913E5154B4}
 		{D0EFC2AF-7AF1-4C1C-9DB0-47E1FEA5FFDB} = {F5B07EBF-F1D9-40BF-8EF4-0BCBA45FAF94}
+		{81E1D7C8-5595-4664-B5AE-40013F34DCB4} = {0D637072-686D-4DC7-91E4-87913E5154B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CFE3C0D9-B865-48B9-9CC8-8AEA71EB5C16}
