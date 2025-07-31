@@ -77,15 +77,22 @@ namespace ProtoBuf
                 if (state.IsActive)
                 {
                     int bytes = 0;
+                    bool step = false;
                     try
                     {
                         bytes = state.ConsiderWritten();
+                        step = true;
                         _writer.Advance(bytes);
                     }
                     catch (Exception ex)
                     {
-                        ex.Data?.Add("ProtoBuf.Position", _position64);
-                        ex.Data?.Add("ProtoBuf.Flushing", bytes);
+                        var data = ex.Data;
+                        if (data is not null)
+                        {
+                            data.Add("ProtoBuf.Operation", step ? "Advance" : "ConsiderWritten");
+                            data.Add("ProtoBuf.Position", _position64);
+                            data.Add("ProtoBuf.Flushing", bytes);
+                        }
                         throw;
                     }
                 }
@@ -136,8 +143,31 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             private void GetBuffer(ref State state)
             {
+                var writer = _writer;
+                if (writer is null) ThrowNoWriter();
                 TryFlush(ref state);
-                state.Init(_writer.GetMemory(model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize));
+
+                int bytes = model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize;
+                bool step = false;
+                try
+                {
+                    var buffer = _writer.GetMemory(bytes);
+                    step = true;
+                    state.Init(buffer);
+                }
+                catch (Exception ex)
+                {
+                    var data = ex.Data;
+                    if (data is not null)
+                    {
+                        data.Add("ProtoBuf.Operation", step ? "Init" : "GetMemory");
+                        data.Add("ProtoBuf.Position", _position64);
+                        data.Add("ProtoBuf.Requesting", bytes);
+                    }
+                    throw;
+                }
+
+                static void ThrowNoWriter() => throw new InvalidOperationException("Invalid state: there is no writer for this instance");
             }
 
             private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> bytes)
