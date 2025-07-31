@@ -214,6 +214,7 @@ namespace ProtoBuf.BuildTools.Generators
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullWrappers", "nullwrappers");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "CompatLevel", "compatlevel");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "StringNullDefault", "stringnulldefault");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist");
 
                             void AddOption(string readKey, string writeKey)
