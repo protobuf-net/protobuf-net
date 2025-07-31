@@ -147,24 +147,25 @@ namespace ProtoBuf
                 if (writer is null) ThrowNoWriter();
                 TryFlush(ref state);
 
-                Memory<byte> buffer;
                 int bytes = model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize;
+                bool step = false;
                 try
                 {
-                    buffer = _writer.GetMemory(bytes);
+                    var buffer = _writer.GetMemory(bytes);
+                    step = true;
+                    state.Init(buffer);
                 }
                 catch (Exception ex)
                 {
                     var data = ex.Data;
                     if (data is not null)
                     {
-                        data.Add("ProtoBuf.Operation", "GetMemory");
+                        data.Add("ProtoBuf.Operation", step ? "Init" : "GetMemory");
                         data.Add("ProtoBuf.Position", _position64);
                         data.Add("ProtoBuf.Requesting", bytes);
                     }
                     throw;
                 }
-                state.Init(buffer);
 
                 static void ThrowNoWriter() => throw new InvalidOperationException("Invalid state: there is no writer for this instance");
             }
