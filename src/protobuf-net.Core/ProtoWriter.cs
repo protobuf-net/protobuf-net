@@ -259,7 +259,7 @@ namespace ProtoBuf
         protected internal virtual void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
-            var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null, style);
+            var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & !typeof(T).IsInterface & recursionCheck ? (object)value : null, style);
             (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
             state.EndSubItem(tok, style);
 #pragma warning restore CS0618
