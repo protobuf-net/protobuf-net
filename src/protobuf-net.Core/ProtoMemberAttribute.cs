@@ -221,7 +221,7 @@ namespace ProtoBuf
     /// format (for instance, using zigzag encoding for negative numbers, or 
     /// fixed-length encoding for large values.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class,
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct,
             AllowMultiple = true, Inherited = false)]
     public sealed class ProtoPartialMemberAttribute : ProtoMemberAttribute
     {
