@@ -24,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		README.md = README.md
 		src\Shared.ruleset = src\Shared.ruleset
 		src\version.json = src\version.json
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection", "src\protobuf-net.Reflection\protobuf-net.Reflection.csproj", "{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}"

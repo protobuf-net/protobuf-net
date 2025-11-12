@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch the full history (for versioning)
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
