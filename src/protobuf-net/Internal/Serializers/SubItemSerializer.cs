@@ -206,6 +206,7 @@ namespace ProtoBuf.Internal.Serializers
 
     internal abstract class SubItemSerializer : IProtoTypeSerializer
     {
+        bool IProtoTypeSerializer.HasSurrogate => false;
         bool IRuntimeProtoSerializerNode.IsScalar => false;
         SerializerFeatures IProtoTypeSerializer.Features
         {

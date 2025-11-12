@@ -41,7 +41,12 @@ namespace Examples.Issues
 
             using (var f = new FileStream("protoTest.txt", FileMode.OpenOrCreate))
             {
-                f.Read(buf, 0, buf.Length);
+                int offset = 0, read;
+                while ((read = f.Read(buf, offset, buf.Length - offset)) > 0)
+                {
+                    offset += read;
+                }
+                Assert.Equal(offset, buf.Length);
 
                 p2 = (SeniorDeveloper<bool>)s.Deserialize(buf, typeof(SeniorDeveloper<bool>));
 
