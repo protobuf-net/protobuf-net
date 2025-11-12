@@ -23,8 +23,8 @@ jobs:
           8.0.x
           9.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Build.csproj
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build Build.csproj --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test Build.csproj --no-build --verbosity normal
