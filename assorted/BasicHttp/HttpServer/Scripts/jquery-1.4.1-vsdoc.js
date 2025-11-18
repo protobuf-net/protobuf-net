@@ -732,7 +732,7 @@ jQuery.extend({
 		///	<returns type="Function" />
 	},
 
-	// Evalulates a script in a global context
+	// Evaluates a script in a global context
 	globalEval: function( data ) {
 		///	<summary>
 		///		Internally evaluates a script in a global context.
@@ -774,7 +774,7 @@ jQuery.extend({
 	// args is for internal usage only
 	each: function( object, callback, args ) {
 		///	<summary>
-		///		A generic iterator function, which can be used to seemlessly
+		///		A generic iterator function, which can be used to seamlessly
 		///		iterate over both objects and arrays. This function is not the same
 		///		as $().each() - which is used to iterate, exclusively, over a jQuery
 		///		object. This function can be used to iterate over anything.
@@ -1195,7 +1195,7 @@ function now() {
 		htmlSerialize: false,
 
 		// Get the style information from getAttribute
-		// (IE uses .cssText insted)
+		// (IE uses .cssText instead)
 		style: false,
 
 		// Make sure that URLs aren't manipulated
@@ -1753,7 +1753,7 @@ jQuery.fn.extend({
 					classNames = value.split( rspace );
 
 				while ( (className = classNames[ i++ ]) ) {
-					// check each className given, space seperated list
+					// check each className given, space separated list
 					state = isBool ? state : !self.hasClass( className );
 					self[ state ? "addClass" : "removeClass" ]( className );
 				}
@@ -1823,7 +1823,7 @@ jQuery.fn.extend({
 						var option = options[ i ];
 
 						if ( option.selected ) {
-							// Get the specifc value for the option
+							// Get the specific value for the option
 							value = jQuery(option).val();
 
 							// We don't need an array for one selects
@@ -2000,7 +2000,7 @@ jQuery.extend({
 		}
 
 		// elem is actually elem.style ... set the style
-		// Using attr for specific style information is now deprecated. Use style insead.
+		// Using attr for specific style information is now deprecated. Use style instead.
 		return jQuery.style( elem, name, value );
 	}
 });
@@ -3490,7 +3490,7 @@ var chunker = /((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^[\]]*\]|['"][^'"]*['"]|[^
 	baseHasDuplicate = true;
 
 // Here we check if the JavaScript engine is using some sort of
-// optimization where it does not always call our comparision
+// optimization where it does not always call our comparison
 // function. If that is the case, discard the hasDuplicate value.
 //   Thus far that includes Google Chrome.
 [0, 0].sort(function(){
@@ -4278,7 +4278,7 @@ if ( document.documentElement.compareDocumentPosition ) {
 	};
 }
 
-// Utility function for retreiving the text value of an array of DOM nodes
+// Utility function for retrieving the text value of an array of DOM nodes
 function getText( elems ) {
 	var ret = "", elem;
 
@@ -5122,7 +5122,7 @@ jQuery.fn.extend({
 		///	<summary>
 		///		Wrap all matched elements with a structure of other elements.
 		///		This wrapping process is most useful for injecting additional
-		///		stucture into a document, without ruining the original semantic
+		///		structure into a document, without ruining the original semantic
 		///		qualities of a document.
 		///		This works by going through the first element
 		///		provided and finding the deepest ancestor element within its
@@ -5195,7 +5195,7 @@ jQuery.fn.extend({
 		///	<summary>
 		///		Wrap all matched elements with a structure of other elements.
 		///		This wrapping process is most useful for injecting additional
-		///		stucture into a document, without ruining the original semantic
+		///		structure into a document, without ruining the original semantic
 		///		qualities of a document.
 		///		This works by going through the first element
 		///		provided and finding the deepest ancestor element within its
@@ -5312,7 +5312,7 @@ jQuery.fn.extend({
 			if ( !jQuery.support.noCloneEvent && !jQuery.isXMLDoc(this) ) {
 				// IE copies events bound via attachEvent when
 				// using cloneNode. Calling detachEvent on the
-				// clone will also remove the events from the orignal
+				// clone will also remove the events from the original
 				// In order to get around this, we use innerHTML.
 				// Unfortunately, this means some modifications to
 				// attributes in IE that are actually only stored
@@ -6308,7 +6308,7 @@ jQuery.extend({
 		///	<param name="type" optional="true" type="String">Type of data to be returned to callback function.  Valid valiues are xml, html, script, json, text, _default.</param>
 		///	<returns type="XMLHttpRequest" />
 
-		// shift arguments if data argument was omited
+		// shift arguments if data argument was omitted
 		if ( jQuery.isFunction( data ) ) {
 			type = type || callback;
 			callback = data;
@@ -6357,7 +6357,7 @@ jQuery.extend({
 		///	<param name="type" optional="true" type="String">Type of data to be returned to callback function.  Valid valiues are xml, html, script, json, text, _default.</param>
 		///	<returns type="XMLHttpRequest" />
 
-		// shift arguments if data argument was omited
+		// shift arguments if data argument was omitted
 		if ( jQuery.isFunction( data ) ) {
 			type = type || callback;
 			callback = data;
@@ -6399,7 +6399,7 @@ jQuery.extend({
 		// Create the request object; Microsoft failed to properly
 		// implement the XMLHttpRequest in IE7 (can't request local files),
 		// so we use the ActiveXObject when it is available
-		// This function can be overriden by calling jQuery.ajaxSetup
+		// This function can be overridden by calling jQuery.ajaxSetup
 		xhr: window.XMLHttpRequest && (window.location.protocol !== "file:" || !window.ActiveXObject) ?
 			function() {
 				return new window.XMLHttpRequest();
@@ -6606,7 +6606,7 @@ jQuery.extend({
 				jQuery.event.trigger( "ajaxStop" );
 			}
 
-			// close opended socket
+			// close opened socket
 			xhr.abort();
 			return false;
 		}
