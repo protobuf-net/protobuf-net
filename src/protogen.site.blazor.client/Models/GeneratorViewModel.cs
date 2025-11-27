@@ -45,6 +45,7 @@ namespace ProtoBuf.Models
         public bool? DisableNullWrappers { get; set; } = false;
         public bool? DisableCompatLevel { get; set; } = false;
         public bool? NullableValueType { get; set; } = false;
+        public bool? StringNullDefault { get; set; } = false;
         public bool? RepeatedAsList { get; set; } = false;
 
         public string LanguageVersion { get; set; }
@@ -97,6 +98,10 @@ namespace ProtoBuf.Models
             if (NullableValueType.GetValueOrDefault(false))
             {
                 res.Add("nullablevaluetype", "yes");
+            }
+            if (StringNullDefault.GetValueOrDefault(false))
+            {
+                res.Add("stringnulldefault", "yes");
             }
             if (RepeatedAsList.GetValueOrDefault(false))
             {
