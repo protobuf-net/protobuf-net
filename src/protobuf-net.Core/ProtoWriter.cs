@@ -664,6 +664,18 @@ namespace ProtoBuf
                     return length;
             }
 
+            if (serializer is IMeasuringSerializer<T> measuringSerializer
+                && serializer.Features.HasFlag(SerializerFeatures.OptionTrySkipWritingWhenMeasuring)
+                && (length = measuringSerializer.Measure(writer, writer.WireType, value)) > 0)
+            {
+                // cache it if we can
+                if (obj is not null)
+                {
+                    writer.netCache.SetKnownLength(obj, null, length);
+                }
+                return length;
+            }
+
             // do the actual work
             var oldState = writer.ResetWriteState();
             var nulState = new State(writer);
@@ -695,6 +707,7 @@ namespace ProtoBuf
             writer.SetWriteState(oldState); // make sure we leave it how we found it
             writer.netCache.SetKnownLength(obj, typeof(T), length);
             return length;
+
         }
     }
 }
