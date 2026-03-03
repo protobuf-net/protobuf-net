@@ -276,7 +276,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of measuring values without writing them
     /// </summary>
-    internal interface IMeasuringSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
+    public interface IMeasuringSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
     {
         /// <summary>
         /// Measure the given value, reporting the required length for the payload (not including the field-header)
