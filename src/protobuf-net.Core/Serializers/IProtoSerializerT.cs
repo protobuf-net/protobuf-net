@@ -125,6 +125,11 @@ namespace ProtoBuf.Serializers
         /// </summary>
         OptionWrappedCollectionGroup = 1 << 15,
 
+        /// <summary>
+        /// Specifies that when measuring a message, the serializer should attempt to measure without actually writing; this can be used to avoid expensive writing of messages during measuring.
+        /// </summary>
+        OptionTrySkipWritingWhenMeasuring = 1 << 16,
+
         // this isn't quite ready; the problem is that the property assignment / null-check logic
         // gets hella messy
         ///// <summary>
