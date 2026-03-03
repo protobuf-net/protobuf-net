@@ -14,6 +14,7 @@
     <Compile Include="..\Benchmark\*.cs" />
     <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.cs" />
     <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.generated.cs" />
+    <Compile Remove="..\Benchmark\MeasuringSerializerBenchmarks.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
