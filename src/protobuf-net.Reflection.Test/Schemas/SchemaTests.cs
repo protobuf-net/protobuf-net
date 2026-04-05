@@ -118,10 +118,10 @@ namespace ProtoBuf.Schemas
         [Fact]
         public void FullyQualifiedNames()
         {
-            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
-            const string path = "field_types.proto";
+            var path = Path.Combine(SchemaPath, "field_types.proto");
 
             var set = new FileDescriptorSet();
+            set.AddImportPath(".");
             set.Add(path, includeInOutput: true);
             set.Process();
             foreach (var file in set.Files)
@@ -130,14 +130,14 @@ namespace ProtoBuf.Schemas
                 {
                     if (messageType.Name.Equals("TestObject"))
                     {
-                        Assert.Equal("example.TestObject", messageType.GetFullyQualifiedName());
+                        Assert.Equal(".example.TestObject", messageType.GetFullyQualifiedName());
                     }
 
                     foreach (var nestedType in messageType.NestedTypes)
                     {
                         if (nestedType.Name.Equals("NestedObject"))
                         {
-                            Assert.Equal("example.TestObject.NestedObject", nestedType.GetFullyQualifiedName());
+                            Assert.Equal(".example.TestObject.NestedObject", nestedType.GetFullyQualifiedName());
                         }
                     }
 
@@ -145,11 +145,58 @@ namespace ProtoBuf.Schemas
                     {
                         if (nestedEnum.Name.Equals("NestedEnum"))
                         {
-                            Assert.Equal("example.TestObject.NestedEnum", nestedEnum.GetFullyQualifiedName());
+                            Assert.Equal(".example.TestObject.NestedEnum", nestedEnum.GetFullyQualifiedName());
                         }
                     }
                 }
             }
+        }
+
+        [Fact]
+        public void ParentForMessages()
+        {
+            var path = Path.Combine(SchemaPath, "field_types.proto");
+
+            var set = new FileDescriptorSet();
+            set.AddImportPath(".");
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            var fileDescriptorProto = set.Files.Single();
+            Assert.Equal(set, fileDescriptorProto.GetParentFileSet());
+
+            var enumType = fileDescriptorProto.EnumTypes.Single();
+            Assert.Equal(fileDescriptorProto, enumType.GetParentFile());
+
+            var messageType = fileDescriptorProto.MessageTypes.Single();
+            Assert.Equal(fileDescriptorProto, messageType.GetParentFile());
+
+            var nestedType = messageType.NestedTypes.Single();
+            Assert.Equal(messageType, nestedType.GetParentMessageType());
+
+            var field = nestedType.Fields.Single();
+            Assert.Equal(nestedType, field.GetParentMessageType());
+
+            var nestedEnum = messageType.EnumTypes.Single();
+            Assert.Equal(messageType, nestedEnum.GetParentMessageType());
+        }
+
+        [Fact]
+        public void ParentForServices()
+        {
+            const string path = "basic_service.proto";
+
+            var set = new FileDescriptorSet();
+            set.AddImportPath(".");
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            var fileDescriptorProto = set.Files.Single();
+            Assert.Equal(set, fileDescriptorProto.GetParentFileSet());
+
+            var service = fileDescriptorProto.Services.Single();
+            Assert.Equal(fileDescriptorProto, service.GetParentFile());
+
+            var method = service.Methods.Single();
+            Assert.Equal(service, method.GetParentService());
         }
 
         [SkippableFact]

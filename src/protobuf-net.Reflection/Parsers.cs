@@ -2729,6 +2729,54 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public static string GetFullyQualifiedName(this DescriptorProto message) 
             => message.FullyQualifiedName;
+
+        /// <summary>
+        /// Gets the parent file set of a file
+        /// </summary>
+        public static FileDescriptorSet GetParentFileSet(this FileDescriptorProto file) 
+            => file.Parent;
+
+        /// <summary>
+        /// Gets the parent message type of an enum
+        /// </summary>
+        public static DescriptorProto GetParentMessageType(this EnumDescriptorProto @enum) 
+            => @enum.Parent as DescriptorProto;
+
+        /// <summary>
+        /// Gets the parent message type of a message
+        /// </summary>
+        public static DescriptorProto GetParentMessageType(this DescriptorProto message) 
+            => message.Parent as DescriptorProto;
+
+        /// <summary>
+        /// Gets the parent message type of a field
+        /// </summary>
+        public static DescriptorProto GetParentMessageType(this FieldDescriptorProto field) 
+            => field.Parent as DescriptorProto;
+
+        /// <summary>
+        /// Gets the parent file of an enum
+        /// </summary>
+        public static FileDescriptorProto GetParentFile(this EnumDescriptorProto @enum) 
+            => @enum.Parent as FileDescriptorProto;
+
+        /// <summary>
+        /// Gets the parent file of a message
+        /// </summary>
+        public static FileDescriptorProto GetParentFile(this DescriptorProto message) 
+            => message.Parent as FileDescriptorProto;
+
+        /// <summary>
+        /// Gets the parent file of a service
+        /// </summary>
+        public static FileDescriptorProto GetParentFile(this ServiceDescriptorProto service) 
+            => service.Parent as FileDescriptorProto;
+
+        /// <summary>
+        /// Gets the parent service of a method
+        /// </summary>
+        public static ServiceDescriptorProto GetParentService(this MethodDescriptorProto method) 
+            => method.Parent as ServiceDescriptorProto;
     }
     
     internal static class ErrorExtensions
