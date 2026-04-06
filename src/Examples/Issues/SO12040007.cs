@@ -131,7 +131,7 @@ namespace Examples.Issues
             Assert.True(model.CanSerialize(typeof(string)));
             Assert.True(model.CanSerialize(typeof(DateTime)));
             Assert.True(model.CanSerialize(typeof(DateTime?)));
-#if !COREFX
+#if !COREFX && WINDOWS
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 AvoidJit(model);
@@ -157,7 +157,7 @@ namespace Examples.Issues
             Assert.True(model.CanSerialize(typeof(string[])), "string");
             Assert.True(model.CanSerialize(typeof(DateTime[])), "DateTime");
             Assert.True(model.CanSerialize(typeof(DateTime?[])), "DateTime?");
-#if !COREFX
+#if !COREFX && WINDOWS
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 AvoidJit(model);
@@ -182,7 +182,7 @@ namespace Examples.Issues
             Assert.False(model.CanSerialize(typeof(string[][])));
             Assert.False(model.CanSerialize(typeof(DateTime[][])));
             Assert.False(model.CanSerialize(typeof(DateTime?[][])));
-#if !COREFX
+#if !COREFX && WINDOWS
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 AvoidJit(model);
@@ -207,7 +207,7 @@ namespace Examples.Issues
             Assert.False(model.CanSerialize(typeof(string[,])));
             Assert.False(model.CanSerialize(typeof(DateTime[,])));
             Assert.False(model.CanSerialize(typeof(DateTime?[,])));
-#if !COREFX
+#if !COREFX && WINDOWS
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 AvoidJit(model);
