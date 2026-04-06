@@ -27,7 +27,7 @@
     <PackageReference Include="Pipelines.Sockets.Unofficial" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
-    <PackageReference Include="System.Collections.Immutable" VersionOverride="8.0.0"/>
+    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Reflection.Metadata" />
   </ItemGroup>
 

@@ -357,7 +357,8 @@ namespace ProtoBuf.Schemas
             var protocBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.bin"));
             int exitCode;
             string protocExe = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"windows\protoc" :
-                RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? @"macosx/protoc" : "";
+                RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? @"macosx/protoc" :
+                RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? @"linux/protoc" : "";
             if (string.IsNullOrWhiteSpace(protocExe))
                 throw new PlatformNotSupportedException(RuntimeInformation.OSDescription);
             using (var proc = new Process())

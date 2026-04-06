@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		appveyor.yml = appveyor.yml
 		src\Tools\bcl.proto = src\Tools\bcl.proto
 		Build.csproj = Build.csproj
-		src\Directory.build.props = src\Directory.build.props
 		src\Directory.Build.targets = src\Directory.Build.targets
 		src\Directory.Packages.props = src\Directory.Packages.props
 		global.json = global.json
@@ -25,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		src\Shared.ruleset = src\Shared.ruleset
 		src\version.json = src\version.json
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		src\Directory.Build.props = src\Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection", "src\protobuf-net.Reflection\protobuf-net.Reflection.csproj", "{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}"

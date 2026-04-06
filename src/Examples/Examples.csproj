@@ -25,8 +25,9 @@
       <Aliases>gpb</Aliases>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="System.ValueTuple" VersionOverride="$(LibSysValueTuple)"/>
+    <PackageReference Include="System.ValueTuple" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -52,9 +53,8 @@
     <Reference Include="System.ServiceModel" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="System.Configuration.ConfigurationManager" />
-    <PackageReference Include="System.Data.SqlClient" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" />
   </ItemGroup>
