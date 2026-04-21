@@ -28,9 +28,16 @@ namespace ProtoBuf.Internal.Serializers
         bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
-        public SerializerFeatures Features => // trust only when we've unwrapped
-            _metaTypeOrSerializer is IProtoTypeSerializer known ? _features : Unwrap().Features;
-        
+        public SerializerFeatures Features
+        {
+            get
+            {
+                // MetaType path still needs resolution; direct IRuntimeProtoSerializerNode (incl. scalar or already-unwrapped) has _features valid.
+                if (_metaTypeOrSerializer is MetaType) Unwrap();
+                return _features;
+            }
+        }
+
         bool IRuntimeProtoSerializerNode.IsScalar => Features.IsScalar();
 
         object IProtoTypeSerializer.CreateInstance(ISerializationContext source) => throw new NotSupportedException();
@@ -69,33 +76,34 @@ namespace ProtoBuf.Internal.Serializers
         private object _metaTypeOrSerializer;
         private SerializerFeatures _features;
 
-        private IProtoTypeSerializer RootTail
-            => _metaTypeOrSerializer is IProtoTypeSerializer ser ? ser : Unwrap();
+        private IRuntimeProtoSerializerNode RootTail
+            => _metaTypeOrSerializer is IRuntimeProtoSerializerNode node ? node : Unwrap();
 
 #if DEBUG
         private int unwrapThreadId;
 #endif
-        
-        private IProtoTypeSerializer Unwrap()
+
+        private IRuntimeProtoSerializerNode Unwrap()
         {
             var obj = _metaTypeOrSerializer;
-            if (obj is IProtoTypeSerializer ser)
+            if (obj is IRuntimeProtoSerializerNode directNode)
             {
-                return ser;
+                // already resolved (IProtoTypeSerializer) or direct scalar serializer
+                return directNode;
             }
 #if DEBUG
             int currentThreadId = Environment.CurrentManagedThreadId,
                 existingThreadId = Interlocked.CompareExchange(ref unwrapThreadId, currentThreadId, 0);
             Debug.Assert(existingThreadId == 0 || existingThreadId !=  currentThreadId, "Re-entrant/recursive call to Unwrap");
             Debug.WriteLine($"Unwrapping serializer for {declaredType.Name}");
-#endif      
-            
-            var metaType = (MetaType)obj; 
-            ser = metaType.Serializer;
+#endif
+
+            var metaType = (MetaType)obj;
+            var ser = metaType.Serializer;
             Debug.Assert(declaredType == ser.ExpectedType || Helpers.IsSubclassOf(declaredType, ser.ExpectedType), "surrogate type mismatch");
             _features = ser.Features; // swap this first, for test order
             _metaTypeOrSerializer = ser;
-            
+
 #if DEBUG
             Interlocked.CompareExchange(ref unwrapThreadId, 0, currentThreadId); // end recursion check
 #endif
