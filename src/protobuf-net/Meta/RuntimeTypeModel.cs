@@ -1084,6 +1084,24 @@ namespace ProtoBuf.Meta
 
                 if (GetServicesSlow(mt.Type, mt.CompatibilityLevel) is null) // respects enums, repeated, etc
                     throw new InvalidOperationException("No serializer available for " + mt.Type.NormalizeName());
+
+                // Additionally, force every ValueMember on this type to build its own serializer now,
+                // so that any referenced types get auto-added via TryGetCoreSerializer→IsDefined→
+                // FindOrAddAuto while the model is still mutable. The outer TypeSerializer only holds
+                // lazy ValueMemberSerializerProxy instances (introduced by commit 1ed20cb7 to avoid
+                // infinite regress during the outer build); without this pass, proxy resolution is
+                // deferred to emit time (after Freeze), and any auto-add there throws
+                // "The model cannot be changed once frozen". Walking fields here is safe: each
+                // referenced type's outer serializer is fetched lazily via the model's cache, and
+                // the containing MetaType outer is already built above, so no recursion re-enters
+                // this same member's Serializer getter.
+                if (mt.HasFields)
+                {
+                    foreach (var vm in mt.Fields)
+                    {
+                        _ = vm.Serializer;
+                    }
+                }
             }
         }
 
