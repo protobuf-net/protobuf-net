@@ -595,6 +595,22 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false, false, DefaultCompatibilityLevel)]; } }
 
+        /// <summary>
+        /// Walks the inheritance chain of <paramref name="type"/> and returns the topmost
+        /// type that owns a surrogate (directly or inherited). Returns <paramref name="type"/>
+        /// itself if it is not known to the model or no surrogate is present anywhere in the
+        /// chain. Intended for callers round-tripping surrogate-backed data without knowing
+        /// the concrete subtype at read time — e.g. stub surrogates whose subtype discriminator
+        /// is absent on the wire, where the only way to safely reach the conversion operator
+        /// is via the surrogate-owning root type.
+        /// </summary>
+        public Type GetSurrogateOwnerType(Type type)
+        {
+            if (type is null) return null;
+            var found = FindWithoutAdd(type);
+            return found is not null ? found.GetSurrogateOwnerType() : type;
+        }
+
         internal MetaType FindWithAmbientCompatibility(Type type, CompatibilityLevel ambient)
         {
             var found = (MetaType)types[FindOrAddAuto(type, true, false, false, ambient)];
