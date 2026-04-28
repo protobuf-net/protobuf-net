@@ -7,7 +7,7 @@ namespace ProtoBuf
 {
     internal sealed class NetObjectCache
     {
-        private readonly Dictionary<ObjectKey, long> _knownLengths = new Dictionary<ObjectKey, long>();
+        private Dictionary<ObjectKey, long> _knownLengths = new Dictionary<ObjectKey, long>();
 
         [StructLayout(LayoutKind.Auto)]
         private readonly struct ObjectKey : IEquatable<ObjectKey>
@@ -232,7 +232,7 @@ namespace ProtoBuf
             if (stringKeys is object) stringKeys.Clear();
             if (objectKeys is object) objectKeys.Clear();
 #endif
-            _knownLengths.Clear();
+            _knownLengths = new Dictionary<ObjectKey, long>(); // reinitialize the Dictionary<> to free up all allocated memory
             _hit = _miss = 0;
         }
 
