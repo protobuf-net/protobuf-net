@@ -3,7 +3,6 @@ using System.ComponentModel;
 using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using Xunit.Abstractions;
 
 namespace Examples.Issues
 {

@@ -13,7 +13,7 @@ namespace ProtoBuf.unittest.Serializers
             public Uri Value { get; set; }
         }
 
-        [SkippableTheory]
+        [Theory]
         [InlineData("http://example.com", UriKind.Absolute)]
         [InlineData("http://example.com/path/to/resource", UriKind.Absolute)]
         [InlineData("http://example.com/path/to/resource with spaces/", UriKind.Absolute)]
@@ -25,7 +25,7 @@ namespace ProtoBuf.unittest.Serializers
         [InlineData("/relative/path/to/file%20with%20spaces%20encoded.txt", UriKind.Relative, true)]
         public void TestUriRuntime(string uriString, UriKind uriKind, bool windowsOnly = false)
         {
-            if (windowsOnly) Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            if (windowsOnly) Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var model = CreateModel();
 
             var obj = new TypeWithUri { Value = new Uri(uriString, uriKind) };
@@ -33,7 +33,7 @@ namespace ProtoBuf.unittest.Serializers
             Assert.Equal(obj.Value, clone.Value);
         }
 
-        [SkippableTheory]
+        [Theory]
         [InlineData("http://example.com", UriKind.Absolute)]
         [InlineData("http://example.com/path/to/resource", UriKind.Absolute)]
         [InlineData("http://example.com/path/to/resource with spaces/", UriKind.Absolute)]
@@ -45,7 +45,7 @@ namespace ProtoBuf.unittest.Serializers
         [InlineData("/relative/path/to/file%20with%20spaces%20encoded.txt", UriKind.Relative, true)]
         public void TestUriInPlace(string uriString, UriKind uriKind, bool windowsOnly = false)
         {
-            if (windowsOnly) Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            if (windowsOnly) Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var model = CreateModel();
             model.CompileInPlace();
             var obj = new TypeWithUri { Value = new Uri(uriString, uriKind) };
@@ -62,7 +62,7 @@ namespace ProtoBuf.unittest.Serializers
             PEVerify.Verify("TestUriCanCompileFully.dll");
         }
 
-        [SkippableTheory]
+        [Theory]
         [InlineData("http://example.com", UriKind.Absolute)]
         [InlineData("http://example.com/path/to/resource", UriKind.Absolute)]
         [InlineData("http://example.com/path/to/resource with spaces/", UriKind.Absolute)]
@@ -74,7 +74,7 @@ namespace ProtoBuf.unittest.Serializers
         [InlineData("/relative/path/to/file%20with%20spaces%20encoded.txt", UriKind.Relative, true)]
         public void TestUriCompiled(string uriString, UriKind uriKind, bool windowsOnly = false)
         {
-            if (windowsOnly) Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            if (windowsOnly) Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var model = CreateModel().Compile();
 
             var obj = new TypeWithUri { Value = new Uri(uriString, uriKind) };

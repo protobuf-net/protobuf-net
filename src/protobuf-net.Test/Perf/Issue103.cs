@@ -17,7 +17,7 @@ namespace ProtoBuf.unittest.Perf
     using System.Diagnostics;
     using ProtoBuf.Meta;
     using System.IO;
-    using Xunit.Abstractions;
+    
 
     public class Issue103
     {

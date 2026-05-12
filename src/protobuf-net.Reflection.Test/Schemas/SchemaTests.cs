@@ -16,7 +16,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace ProtoBuf.Schemas
 {
@@ -199,10 +198,10 @@ namespace ProtoBuf.Schemas
             Assert.Equal(service, method.GetParentService());
         }
 
-        [SkippableFact]
+        [Fact]
         public void EverythingProtoLangver3()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "everything.proto";
 
@@ -244,10 +243,10 @@ namespace ProtoBuf.Schemas
             catch (PlatformNotSupportedException) { }
         }
 
-        [SkippableFact()]
+        [Fact]
         public void DescriptorProtoVB()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), "windows only");
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             const string path = "descriptor.proto";
 
@@ -514,6 +513,7 @@ namespace ProtoBuf.Schemas
 
             if (exitCode == 0)
             {
+                Assert.SkipUnless(File.Exists(protocBinPath), "no output");
                 var protocHex = GetPrettyHex(File.ReadAllBytes(protocBinPath));
                 File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
 

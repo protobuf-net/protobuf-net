@@ -1,7 +1,7 @@
 ﻿#if !NO_WCF
 using Xunit;
 using ProtoBuf.ServiceModel;
-using Xunit.Abstractions;
+
 
 namespace Examples.Issues
 {

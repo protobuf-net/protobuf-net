@@ -4,7 +4,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Schemas
 {

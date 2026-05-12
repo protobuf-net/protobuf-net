@@ -6,7 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Test
 {

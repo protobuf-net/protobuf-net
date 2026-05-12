@@ -6,7 +6,7 @@ using System.IO.Pipes;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.MessagePipeTests
 {

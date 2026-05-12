@@ -4,7 +4,7 @@ using Xunit;
 using System;
 using ProtoBuf;
 using System.IO;
-using Xunit.Abstractions;
+
 
 namespace Examples.Issues
 {

@@ -3,7 +3,6 @@ using NodaTime.Serialization.Protobuf;
 using ProtoBuf.Test;
 using System;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace NativeGoogleTests
 {
