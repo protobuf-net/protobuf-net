@@ -130,6 +130,7 @@ namespace ProtoBuf.Internal.Serializers
     internal abstract class CompiledSerializer : IProtoTypeSerializer, ICompiledSerializer
     {
         bool IRuntimeProtoSerializerNode.IsScalar => head.IsScalar;
+        bool IProtoTypeSerializer.HasSurrogate => head.HasSurrogate;
         public SerializerFeatures Features => head.Features;
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -154,14 +155,14 @@ namespace ProtoBuf.Internal.Serializers
                 ConstructorInfo ctor;
                 try
                 {
-                    if (head.IsSubType)
+                    if (head.IsSubType && !head.HasSurrogate)
                     {
                         ctor = Helpers.GetConstructor(typeof(InheritanceCompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
                             new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
                     }
                     else
                     {
-                        ctor = Helpers.GetConstructor(typeof(SimpleCompiledSerializer<>).MakeGenericType(head.BaseType),
+                        ctor = Helpers.GetConstructor(typeof(SimpleCompiledSerializer<>).MakeGenericType(head.ExpectedType),
                             new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
                     }
                 } catch(Exception ex)

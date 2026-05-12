@@ -10,9 +10,18 @@ namespace ProtoBuf.unittest.Serializers
         [Fact]
         public void CanSerializeTypeThatUsesNakedDiscriminatedUnions()
         {
-            var bf = new BinaryFormatter();
+            BinaryFormatter bf;
             using var ms = new MemoryStream();
-            bf.Serialize(ms, new TypeThatUsesNakedDiscriminatedUnions());
+            try
+            {
+                bf = new BinaryFormatter();
+                bf.Serialize(ms, new TypeThatUsesNakedDiscriminatedUnions());
+            }
+            catch (PlatformNotSupportedException)
+            {
+                return; // not much we can do, then 
+            }
+
             ms.Position = 0;
             var obj = bf.Deserialize(ms);
             Assert.IsType<TypeThatUsesNakedDiscriminatedUnions>(obj);

@@ -55,8 +55,8 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsType<InnerRef>(model.Deserialize(Stream.Null, null, typeof(InnerRef)));
             Assert.IsType<InnerVal>(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
-            var compiled = model.Compile("SubItems","SubItems.dll");
-            PEVerify.Verify("SubItems.dll");
+            var compiled = model.Compile("TestCanDeserialierAllFromEmptyStream","TestCanDeserialierAllFromEmptyStream.dll");
+            PEVerify.Verify("TestCanDeserialierAllFromEmptyStream.dll");
             Assert.IsType<OuterRef>(compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
             Assert.IsType<OuterVal>(compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
             Assert.IsType<InnerRef>(compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
@@ -79,8 +79,8 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsType<InnerRef>(model.Deserialize<InnerRef>(Stream.Null));
             Assert.IsType<InnerVal>(model.Deserialize<InnerVal>(Stream.Null));
 
-            var compiled = model.Compile("SubItems", "SubItems.dll");
-            PEVerify.Verify("SubItems.dll");
+            var compiled = model.Compile("TestCanDeserialierAllFromEmptyStream_Generic", "TestCanDeserialierAllFromEmptyStream_Generic.dll");
+            PEVerify.Verify("TestCanDeserialierAllFromEmptyStream_Generic.dll");
             Assert.IsType<OuterRef>(compiled.Deserialize<OuterRef>(Stream.Null));
             Assert.IsType<OuterVal>(compiled.Deserialize<OuterVal>(Stream.Null));
             Assert.IsType<InnerRef>(compiled.Deserialize<InnerRef>(Stream.Null));

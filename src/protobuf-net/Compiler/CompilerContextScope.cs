@@ -14,25 +14,27 @@ namespace ProtoBuf.Compiler
 {
     internal sealed class CompilerContextScope
     {
-        internal static CompilerContextScope CreateInProcess()
+        internal static CompilerContextScope CreateInProcess(bool forceLongBranches)
         {
-            return new CompilerContextScope(null, null, false, null);
+            return new CompilerContextScope(null, null, false, null, forceLongBranches);
         }
 
-        internal static CompilerContextScope CreateForModule(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName)
-            => new CompilerContextScope(model, module, isFullEmit, assemblyName);
+        internal static CompilerContextScope CreateForModule(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName, bool forceLongBranches)
+            => new CompilerContextScope(model, module, isFullEmit, assemblyName, forceLongBranches);
 
-        private CompilerContextScope(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName)
+        private CompilerContextScope(RuntimeTypeModel model, ModuleBuilder module, bool isFullEmit, string assemblyName, bool forceLongBranches)
         {
             _model = model;
             _module = module;
             IsFullEmit = isFullEmit;
             AssemblyName = assemblyName;
+            ForceLongBranches = forceLongBranches;
         }
 
         internal string AssemblyName { get; }
 
         public bool IsFullEmit { get; }
+        public bool ForceLongBranches { get; }
 
         private ModuleBuilder _module;
         private readonly RuntimeTypeModel _model;
@@ -85,7 +87,7 @@ namespace ProtoBuf.Compiler
             lock (module)
             {
                 TypeBuilder type;
-                var newTypeName = "<" + callback.Name + ">_helper_" + Uniquify();
+                var newTypeName = $"<{callback.Name}>_helper_{Uniquify()}";
                 try
                 {
                     type = module.DefineType(newTypeName,
@@ -132,11 +134,11 @@ namespace ProtoBuf.Compiler
                 if (IsFullEmit)
                 {
                     var method = type.DefineMethod(callback.Name,
-                        MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.HideBySig | MethodAttributes.RTSpecialName,
+                        MethodAttributes.Private | MethodAttributes.Static,
                         CallingConventions.Standard, typeof(void), new Type[] { typeof(T), typeof(ISerializationContext) });
                     method.DefineParameter(1, ParameterAttributes.None, "obj");
                     method.DefineParameter(2, ParameterAttributes.None, "context");
-
+                    
                     WriteCall(method.GetILGenerator(), callback);
 
                     var cctor = type.DefineTypeInitializer();

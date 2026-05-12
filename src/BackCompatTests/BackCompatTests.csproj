@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net9.0;net48</TargetFrameworks>
+        <DefineConstants>$(DefineConstants);BACK_COMPAT</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="..\Examples\SurrogateTests.cs">
+            <Link>SurrogateTests.cs</Link>
+        </Compile>
+        <PackageReference Include="protobuf-net" VersionOverride="2.4.9"/>
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+</Project>

@@ -106,7 +106,7 @@ namespace Examples.Issues
                 PEVerify.AssertValid("SO6407130.dll");
                 TestModel(compiled, "Compiled-dll");
             });
-            Assert.Equal("Types with surrogates cannot be used in inheritance hierarchies: Examples.Issues.SO6407130+ASurrogate", ex.Message);
+            Assert.StartsWith("Surrogate type must refer to the root inheritance type", ex.Message);
         }
 #pragma warning disable IDE0060
         static void TestModel(TypeModel model, string caption)

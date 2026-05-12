@@ -22,14 +22,22 @@ namespace Examples
 #endif
         public static void AssertValid(string path)
         {
-#if COREFX
-            return;
-#else
-            if (unavailable) return;
+#if NETFRAMEWORK || NET9_0_OR_GREATER 
             if(!File.Exists(path))
             {
                 throw new FileNotFoundException(path);
             }
+
+            if (new FileInfo(path).Length == 0)
+            {
+                throw new InvalidOperationException($"File is empty: {path}");
+            }
+#endif
+
+#if COREFX
+            return;
+#else
+            if (unavailable) return;
             ProcessStartInfo psi = new ProcessStartInfo(exePath, path);
             psi.CreateNoWindow = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;

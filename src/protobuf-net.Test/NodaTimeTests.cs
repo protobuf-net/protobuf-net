@@ -74,15 +74,17 @@ message HazNodaTimeInstant {
         public void CanRoundTripValueWithDuration()
         {
             var model = CreateModel();
-
+            
             TestRoundTrip(this, model); // runtime only
+            
             model.CompileInPlace();
             TestRoundTrip(this, model); // locally compiled
 
             TestRoundTrip(this, model.Compile()); // fully compiled in-proc
 
 #if !PLAT_NO_EMITDLL
-            TestRoundTrip(this, model.CompileAndVerify()); // fully compiled on disk
+            var dll = model.CompileAndVerify();
+            TestRoundTrip(this, dll); // fully compiled on disk
 #endif
             static void TestRoundTrip(NodaTimeTests tests, TypeModel model)
             {
@@ -106,13 +108,15 @@ message HazNodaTimeInstant {
             var model = CreateModel();
 
             TestRoundTrip(this, model); // runtime only
+            
             model.CompileInPlace();
             TestRoundTrip(this, model); // locally compiled
 
             TestRoundTrip(this, model.Compile()); // fully compiled in-proc
 
 #if !PLAT_NO_EMITDLL
-            TestRoundTrip(this, model.CompileAndVerify()); // fully compiled on disk
+            var dll = model.CompileAndVerify();
+            TestRoundTrip(this, dll); // fully compiled on disk
 #endif
             static void TestRoundTrip(NodaTimeTests tests, TypeModel model)
             {
@@ -214,11 +218,17 @@ message HazNodaTimeInstant {
         {
             var model = CreateModel();
             model.Add<MakeMeOneWithEverything>();
+            
             Test(this, model);
+
             model.CompileInPlace();
             Test(this, model);
             Test(this, model.Compile());
-            Test(this, model.CompileAndVerify());
+            
+#if !PLAT_NO_EMITDLL
+            var dll = model.CompileAndVerify(deleteOnSuccess: false);
+            Test(this, dll);
+#endif
 
             static void Test(NodaTimeTests test, TypeModel model)
             {
