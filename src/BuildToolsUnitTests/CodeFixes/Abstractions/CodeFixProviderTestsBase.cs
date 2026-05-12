@@ -42,7 +42,9 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
             await codeFixTest.RunAsync();
         }
 
+#pragma warning disable CS0618 // Type or member is obsolete
         static CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier> BuildCSharpCodeFixTest<TDiagnosticAnalyzer>(
+#pragma warning restore CS0618 // Type or member is obsolete
             string sourceCode, string expectedCode, string? targetFramework = null)
             where TDiagnosticAnalyzer : DiagnosticAnalyzer, new()
         {
@@ -51,7 +53,9 @@ namespace BuildToolsUnitTests.CodeFixes.Abstractions
                 targetFramework = CurrentRunningAssemblyTargetFramework.FrameworkDisplayName!;   
             }
 
+#pragma warning disable CS0618 // Type or member is obsolete
             var codeFixTest = new CSharpCodeFixTest<TDiagnosticAnalyzer, TCodeFixProvider, XUnitVerifier>
+#pragma warning restore CS0618 // Type or member is obsolete
             {
                 ReferenceAssemblies = new ReferenceAssemblies(targetFramework),
                 TestState = { Sources = { sourceCode }, OutputKind = OutputKind.DynamicallyLinkedLibrary },
