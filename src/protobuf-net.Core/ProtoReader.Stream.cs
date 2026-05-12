@@ -358,9 +358,16 @@ namespace ProtoBuf
                 return result;
             }
 
+            private const int MAX_FAST_READ = 16 * 1024;
+
             private void Ensure(ref State state, int count, bool strict)
             {
                 Debug.Assert(_available <= count, "Asking for data without checking first");
+                if (count - _available > MAX_FAST_READ)
+                {
+                    SlowEnsure(ref state, count - _available, strict);
+                    return;
+                }
                 if (_source is not null)
                 {
                     if (count > _ioBuffer.Length)
@@ -394,6 +401,39 @@ namespace ProtoBuf
                 {
                     state.ThrowEoF();
                 }
+            }
+
+            private void SlowEnsure(ref State state, int count, bool strict)
+            {
+                // Allow exponential growth, but not instantaneous.
+                // We only expect to get here if trying to read > MAX_FAST_READ, so: start with that.
+                byte[] buffer = ArrayPool<byte>.Shared.Rent(MAX_FAST_READ);
+                int index = 0, read;
+                while (count > 0 && (read = _source.Read(buffer, index, Math.Min(buffer.Length - index, count))) > 0)
+                {
+                    index += read;
+                    count -= read;
+                    if (count > 0 && index == buffer.Length)
+                    {
+                        // still want more data and the buffer is full
+                        var newBuffer = ArrayPool<byte>.Shared.Rent(buffer.Length * 2);
+                        buffer.AsSpan().CopyTo(newBuffer);
+                        ArrayPool<byte>.Shared.Return(buffer);
+                        buffer = newBuffer;
+                    }
+                }
+                if (strict && count > 0)
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                    state.ThrowEoF();
+                }
+                // we managed to read the data; copy it back to the *real* buffers
+                BufferPool.ResizeAndFlushLeft(ref _ioBuffer, _available + index, _ioIndex, _available);
+                _ioIndex = 0;
+                buffer.AsSpan(0, index).CopyTo(_ioBuffer.AsSpan(_available));
+                _available += index;
+                ArrayPool<byte>.Shared.Return(buffer);
+                
             }
 
             private protected override void ImplSkipBytes(ref State state, long count)
