@@ -800,13 +800,13 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowProtoException(string message)
             {
-                throw AddErrorData(new ProtoException(message), _reader, ref this);
+                throw AddErrorData(new ProtoException(message), _reader, in this);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal void ThrowEoF()
+            internal readonly void ThrowEoF(bool defensive = false)
             {
-                throw AddErrorData(new EndOfStreamException(), _reader, ref this);
+                throw AddErrorData(new EndOfStreamException(), _reader, in this, defensive);
             }
 
 
@@ -817,30 +817,31 @@ namespace ProtoBuf
             internal void ThrowInvalidOperationException(string message = null)
             {
                 var ex = string.IsNullOrWhiteSpace(message) ? new InvalidOperationException() : new InvalidOperationException(message);
-                throw AddErrorData(ex, _reader, ref this);
+                throw AddErrorData(ex, _reader, in this);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidLength(long length) => ThrowInvalidOperationException("Invalid length: " + length.ToString());
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal void ThrowArgumentException(string message)
+            internal readonly void ThrowArgumentException(string message)
             {
-                throw AddErrorData(new ArgumentException(message), _reader, ref this);
+                throw AddErrorData(new ArgumentException(message), _reader, in this);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal void ThrowOverflow()
+            internal readonly void ThrowOverflow()
             {
-                throw AddErrorData(new OverflowException(), _reader, ref this);
+                throw AddErrorData(new OverflowException(), _reader, in this);
             }
 
-            internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
+            internal static Exception AddErrorData(Exception exception, ProtoReader source, in State state, bool defensive = false)
             {
                 if (exception is not null && source is not null && !exception.Data.Contains("protoSource"))
                 {
                     exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                         source.FieldNumber, source.WireType, state.GetPosition(), source._depth));
+                    if (defensive) exception.Data.Add("defensive", true);
                 }
                 return exception;
             }

@@ -179,6 +179,17 @@ namespace ProtoBuf
                 return state.Span.Length;
             }
 
+            private void AssertRemaining(in State state, int bytes)
+            {
+                bytes -= state.RemainingInCurrent;
+                var iter = _source; // snapshot
+                while (bytes > 0 && iter.MoveNext())
+                {
+                    bytes -= iter.Current.Length;
+                }
+                if (bytes > 0) state.ThrowEoF(defensive: true);
+            }
+
             private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
             {
                 return state.RemainingInCurrent >= 10
@@ -269,6 +280,7 @@ namespace ProtoBuf
             {
                 // we should probably do the work with a Decoder,
                 // but this works for today
+                AssertRemaining(ref state, bytes);
                 var arr = BufferPool.GetBuffer(bytes);
                 try
                 {

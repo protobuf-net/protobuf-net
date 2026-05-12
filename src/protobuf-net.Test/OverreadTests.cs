@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using Xunit;
@@ -20,6 +21,30 @@ public class OverreadTests
     // we need the stream to not be obviously MemoryStream, which protobuf-net understands
     private static Stream ToStream(byte[] payload) => new BufferedStream(new MemoryStream(payload));
 
+    private static ReadOnlySequence<byte> ToSequence(byte[] payload)
+    {
+        Segment first = new(payload.AsMemory(0, payload.Length / 2)),
+            second = new(payload.AsMemory(payload.Length / 2), first);
+        var seq = new ReadOnlySequence<byte>(
+            first, 0, second, second.Memory.Length);
+        Assert.Equal(payload.Length, seq.Length);
+        Assert.False(seq.IsSingleSegment);
+        return seq;
+    }
+
+    private sealed class Segment : ReadOnlySequenceSegment<byte>
+    {
+        public Segment(ReadOnlyMemory<byte> memory, Segment previous = null)
+        {
+            Memory = memory;
+            if (previous is not null)
+            {
+                RunningIndex = previous.RunningIndex + previous.Memory.Length;
+                previous.Next = this;
+            }
+        }
+    }
+
     private const ulong Size1Gb = 1UL * 1024 * 1024 * 1024;
 
     [Fact]
@@ -34,7 +59,24 @@ public class OverreadTests
     public void OverreadBufferByteArray()
     {
         var payload = GetPayload(Size1Gb);
-        Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithByteArray>(payload));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithByteArray>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
+    }
+
+    [Fact]
+    public void NormalSequenceByteArray()
+    {
+        var payload = ToSequence(GetPayload(3, padding: 3));
+        var obj = Serializer.Deserialize<WithByteArray>(payload);
+        Assert.Equal("aaa"u8, obj.Value);
+    }
+
+    [Fact]
+    public void OverreadSequenceByteArray()
+    {
+        var payload = ToSequence(GetPayload(Size1Gb));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithByteArray>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
     }
 
     [Fact]
@@ -49,7 +91,8 @@ public class OverreadTests
     public void OverreadStreamByteArray()
     {
         var payload = ToStream(GetPayload(Size1Gb));
-        Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithByteArray>(payload));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithByteArray>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
     }
 
     [Fact]
@@ -64,7 +107,24 @@ public class OverreadTests
     public void OverreadBufferString()
     {
         var payload = GetPayload(Size1Gb);
-        Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithString>(payload));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithString>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
+    }
+
+    [Fact]
+    public void NormalSequenceString()
+    {
+        var payload = ToSequence(GetPayload(3, padding: 3));
+        var obj = Serializer.Deserialize<WithString>(payload);
+        Assert.Equal("aaa", obj.Value);
+    }
+
+    [Fact]
+    public void OverreadSequenceString()
+    {
+        var payload = ToSequence(GetPayload(Size1Gb));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithString>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
     }
 
     [Fact]
@@ -79,7 +139,8 @@ public class OverreadTests
     public void OverreadStreamString()
     {
         var payload = ToStream(GetPayload(Size1Gb));
-        Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithString>(payload));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithString>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
     }
 
     [Fact]
@@ -94,7 +155,24 @@ public class OverreadTests
     public void OverreadBufferInt32Array()
     {
         var payload = GetPayload(Size1Gb);
-        Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithInt32Array>(payload));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithInt32Array>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
+    }
+
+    [Fact]
+    public void NormalSequenceInt32Array()
+    {
+        var payload = ToSequence(GetPayload(3, padding: 3));
+        var obj = Serializer.Deserialize<WithInt32Array>(payload);
+        Assert.Equal(new int[] { 'a', 'a', 'a' }, obj.Value);
+    }
+
+    [Fact]
+    public void OverreadSequenceInt32Array()
+    {
+        var payload = ToSequence(GetPayload(Size1Gb));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithInt32Array>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
     }
 
     [Fact]
@@ -109,24 +187,25 @@ public class OverreadTests
     public void OverreadStreamInt32Array()
     {
         var payload = ToStream(GetPayload(Size1Gb));
-        Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithInt32Array>(payload));
+        var ex = Assert.Throws<EndOfStreamException>(() => Serializer.Deserialize<WithInt32Array>(payload));
+        Assert.True(ex.Data.Contains("defensive"));
     }
 
     [ProtoContract]
     public class WithByteArray
     {
-        [ProtoMember(1)] public byte[] Value { get; set; }
+        [ProtoMember(1)] public byte[] Value { get; set; } = [];
     }
 
     [ProtoContract]
     public class WithString
     {
-        [ProtoMember(1)] public string Value { get; set; }
+        [ProtoMember(1)] public string Value { get; set; } = "";
     }
     
     [ProtoContract]
     public class WithInt32Array
     {
-        [ProtoMember(1)] public int[] Value { get; set; }
+        [ProtoMember(1)] public int[] Value { get; set; } = [];
     }
 }

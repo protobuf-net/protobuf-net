@@ -399,7 +399,7 @@ namespace ProtoBuf
                 }
                 if (strict && count > 0)
                 {
-                    state.ThrowEoF();
+                    state.ThrowEoF(defensive: true);
                 }
             }
 
@@ -425,7 +425,7 @@ namespace ProtoBuf
                 if (strict && count > 0)
                 {
                     ArrayPool<byte>.Shared.Return(buffer);
-                    state.ThrowEoF();
+                    state.ThrowEoF(defensive: true);
                 }
                 // we managed to read the data; copy it back to the *real* buffers
                 BufferPool.ResizeAndFlushLeft(ref _ioBuffer, _available + index, _ioIndex, _available);
