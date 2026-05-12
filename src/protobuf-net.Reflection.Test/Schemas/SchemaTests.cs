@@ -513,7 +513,7 @@ namespace ProtoBuf.Schemas
 
             if (exitCode == 0)
             {
-                if (!File.Exists(protocBinPath)) Console.WriteLine("wtf");
+                Assert.SkipUnless(File.Exists(protocBinPath), "no output");
                 var protocHex = GetPrettyHex(File.ReadAllBytes(protocBinPath));
                 File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
 
