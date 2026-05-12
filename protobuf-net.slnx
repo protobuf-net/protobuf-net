@@ -1,0 +1,118 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="VS" />
+  </Configurations>
+  <Folder Name="/Common/">
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path="appveyor.yml" />
+    <File Path="Build.csproj" />
+    <File Path="global.json" />
+    <File Path="NuGet.Config" />
+    <File Path="protobuf-net.png" />
+    <File Path="protobuf-net.svg" />
+    <File Path="README.md" />
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/Directory.Build.targets" />
+    <File Path="src/Directory.Packages.props" />
+    <File Path="src/Shared.ruleset" />
+    <File Path="src/Tools/bcl.proto" />
+    <File Path="src/Tools/protogen.proto" />
+    <File Path="src/version.json" />
+  </Folder>
+  <Folder Name="/Common/docs/">
+    <File Path="docs/3_0.md" />
+    <File Path="docs/build_tools.md" />
+    <File Path="docs/compatibilitylevel.md" />
+    <File Path="docs/contract_first.md" />
+    <File Path="docs/index.md" />
+    <File Path="docs/nodatime.md" />
+    <File Path="docs/nullwrappers.md" />
+    <File Path="docs/releasenotes.md" />
+    <File Path="docs/schemas.md" />
+    <File Path="docs/version.md" />
+  </Folder>
+  <Folder Name="/experimental/">
+    <Project Path="src/protobuf-net.MessagePipes/protobuf-net.MessagePipes.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/protobuf-net.AspNetCore/protobuf-net.AspNetCore.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.BuildTools.Legacy/protobuf-net.BuildTools.Legacy.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.BuildTools/protobuf-net.BuildTools.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.Core/protobuf-net.Core.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/protobuf-net.FSharp/protobuf-net.FSharp.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.HybridCache/protobuf-net.HybridCache.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.NodaTime/protobuf-net.NodaTime.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.Protogen/protobuf-net.Protogen.csproj" />
+    <Project Path="src/protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
+    <Project Path="src/protobuf-net.ServiceModel/protobuf-net.ServiceModel.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net/protobuf-net.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/protogen.site.blazor.client/protogen.site.blazor.client.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/protogen.site/protogen.site.csproj" />
+    <Project Path="src/protogen/protogen.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="src/Benchmark/Benchmark.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/BenchmarkBaseline/BenchmarkBaseline.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/BuildToolsSmokeTests/BuildToolsSmokeTests.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/BuildToolsUnitTests/BuildToolsUnitTests.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/CSharpTest/CSharpTest.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/Examples/Examples.csproj" />
+    <Project Path="src/LongDataTests/LongDataTests.csproj" />
+    <Project Path="src/NativeGoogleTests/NativeGoogleTests.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.FSharp.Test/protobuf-net.FSharp.Test.fsproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.Reflection.Test/protobuf-net.Reflection.Test.csproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+    <Project Path="src/protobuf-net.Test/protobuf-net.Test.csproj" />
+    <Project Path="src/protobuf-net.TestCompatibilityLevel/protobuf-net.TestCompatibilityLevel.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.TestWeb/protobuf-net.TestWeb.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.TestWebConsole/protobuf-net.TestWebConsole.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/VBTest/VBTest.vbproj">
+      <BuildType Solution="VS|*" Project="Release" />
+    </Project>
+  </Folder>
+</Solution>
