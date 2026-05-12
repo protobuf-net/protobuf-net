@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using System.Net;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Issues
 {

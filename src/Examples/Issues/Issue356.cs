@@ -9,7 +9,7 @@ namespace test
     using Xunit;
     using ProtoBuf;
     using Examples;
-    using Xunit.Abstractions;
+    
 
     [XmlType]
     public class SimpleObject : IEquatable<SimpleObject>

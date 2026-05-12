@@ -4,6 +4,7 @@
     <TargetFrameworks>net8.0;net472</TargetFrameworks>
     <RootNamespace>ProtoBuf.Reflection.Test</RootNamespace>
     <NoWarn>$(NoWarn);xUnit1004</NoWarn>
+    <OutputType>exe</OutputType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -32,7 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -41,7 +42,6 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
-    <PackageReference Include="Xunit.SkippableFact" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="basic.proto" />

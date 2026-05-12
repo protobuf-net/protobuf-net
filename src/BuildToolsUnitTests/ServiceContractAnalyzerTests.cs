@@ -3,7 +3,6 @@ using ProtoBuf.BuildTools.Analyzers;
 using System.Globalization;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace BuildToolsUnitTests
 {

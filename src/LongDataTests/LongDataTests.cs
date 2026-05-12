@@ -1,10 +1,8 @@
 using ProtoBuf;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace LongDataTests
 {

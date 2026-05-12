@@ -6,7 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Xunit;
-using Xunit.Abstractions;
+
 using static ProtoBuf.Test.BufferWriteCountTests;
 
 #nullable enable

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Xunit;
-using Xunit.Abstractions;
+
 using static ProtoBuf.Test.BufferWriteCountTests;
 
 #nullable enable

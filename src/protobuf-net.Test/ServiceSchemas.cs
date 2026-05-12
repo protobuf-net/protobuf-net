@@ -1,4 +1,4 @@
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using ProtoBuf.WellKnownTypes;
 using System;
 using System.Collections;
@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Test
 {

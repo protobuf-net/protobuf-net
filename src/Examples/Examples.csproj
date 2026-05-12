@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <OutputType>exe</OutputType>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
@@ -28,13 +29,12 @@
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="System.ValueTuple" />
-    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
-    <PackageReference Include="Xunit.SkippableFact" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net472' and $(RuntimeIdentifier.StartsWith('win'))">
     <Reference Include="PresentationCore" />

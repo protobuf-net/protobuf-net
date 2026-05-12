@@ -4,8 +4,6 @@ using System.IO;
 using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using System.Linq;
-using Xunit.Abstractions;
 
 namespace Examples
 {

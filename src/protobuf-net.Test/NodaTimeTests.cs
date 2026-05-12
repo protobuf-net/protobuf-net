@@ -3,7 +3,7 @@ using ProtoBuf.unittest;
 using System;
 using System.IO;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace ProtoBuf.Test
 {
