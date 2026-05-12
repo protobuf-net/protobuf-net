@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Meta
 {
@@ -11,6 +12,11 @@ namespace ProtoBuf.Meta
         /// The name of the service.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// The description of the service.
+        /// </summary>
+        public string Description { get; set; }
 
         /// <summary>
         /// The methods available on the service.

@@ -1,4 +1,4 @@
-﻿#if !COREFX
+﻿#if !COREFX && WINDOWS
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;

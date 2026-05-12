@@ -28,8 +28,9 @@
       <Aliases>gpb</Aliases>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="System.ValueTuple" VersionOverride="$(LibSysValueTuple)"/>
+    <PackageReference Include="System.ValueTuple" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio">
       <PrivateAssets>all</PrivateAssets>
@@ -38,12 +39,17 @@
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
     <PackageReference Include="Xunit.SkippableFact" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net472' and $(RuntimeIdentifier.StartsWith('win'))">
+    <Reference Include="PresentationCore" />
+  </ItemGroup>
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win'))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net472'">
     <PackageReference Include="NHibernate" />
     <PackageReference Include="Iesi.Collections" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -57,7 +63,6 @@
   </ItemGroup>
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="System.Configuration.ConfigurationManager" />
-    <PackageReference Include="System.Data.SqlClient" />
     <PackageReference Include="System.Runtime.Serialization.Formatters" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" />
   </ItemGroup>

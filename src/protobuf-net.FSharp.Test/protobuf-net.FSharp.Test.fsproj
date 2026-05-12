@@ -6,7 +6,7 @@
         <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>
         <GenerateProgramFile>false</GenerateProgramFile>
-        <NoWarn>$(NoWarn);FS0988</NoWarn>
+        <NoWarn>$(NoWarn);FS0988;FS0203</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,7 +16,10 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio" />
+        <PackageReference Include="xunit.runner.visualstudio">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

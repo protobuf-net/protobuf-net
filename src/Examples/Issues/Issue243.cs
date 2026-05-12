@@ -4,8 +4,26 @@ using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Linq;
+
 namespace Examples.Issues
 {
+    static class AdditionalMemoryExtensions
+    {
+        public static bool SequenceEqual2<T>(this IEnumerable<T> x, IEnumerable<T> y)
+        {
+            var comparer = EqualityComparer<T>.Default;
+            using var a = x.GetEnumerator();
+            using var b = y.GetEnumerator();
+            while (a.MoveNext())
+            {
+                if (!b.MoveNext()) return false;
+                if (!comparer.Equals(a.Current, b.Current)) return false;
+            }
+
+            if (b.MoveNext()) return false;
+            return true;
+        }
+    }
     
     public class Issue243
     {
@@ -99,9 +117,11 @@ namespace Examples.Issues
             l.StringArray = new string[] { "c", null, "", "d", null };
             NullableSequences clone = (NullableSequences)model.DeepClone(l);
             Assert.Equal("2,,3", string.Join(",", clone.Int32List)); //, caption);
+            Assert.NotNull(clone.StringList);
             Assert.True(clone.StringList.SequenceEqual(new[] { "a", null, "b", "" }));
             Assert.Equal("4,,5,", string.Join(",", clone.Int32Array)); //, caption);
-            Assert.True(clone.StringArray.SequenceEqual(new[] { "c", null, "", "d", null }));
+            Assert.NotNull(clone.StringArray);
+            Assert.True(clone.StringArray.SequenceEqual2(new[] { "c", null, "", "d", null }));
         }
 
         static RuntimeTypeModel GetModelWithSupportForNulls()

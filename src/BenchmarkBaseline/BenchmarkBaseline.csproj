@@ -14,6 +14,7 @@
     <Compile Include="..\Benchmark\*.cs" />
     <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.cs" />
     <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.generated.cs" />
+    <Compile Remove="..\Benchmark\MeasuringSerializerBenchmarks.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -26,7 +27,7 @@
     <PackageReference Include="Pipelines.Sockets.Unofficial" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
-    <PackageReference Include="System.Collections.Immutable" VersionOverride="8.0.0"/>
+    <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Reflection.Metadata" />
   </ItemGroup>
 

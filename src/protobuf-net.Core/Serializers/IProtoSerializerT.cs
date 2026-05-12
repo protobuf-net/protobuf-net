@@ -125,6 +125,11 @@ namespace ProtoBuf.Serializers
         /// </summary>
         OptionWrappedCollectionGroup = 1 << 15,
 
+        /// <summary>
+        /// Specifies that when measuring a message, the serializer should attempt to measure without actually writing; this can be used to avoid expensive writing of messages during measuring.
+        /// </summary>
+        OptionTrySkipWritingWhenMeasuring = 1 << 16,
+
         // this isn't quite ready; the problem is that the property assignment / null-check logic
         // gets hella messy
         ///// <summary>
@@ -271,7 +276,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of measuring values without writing them
     /// </summary>
-    internal interface IMeasuringSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
+    public interface IMeasuringSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
     {
         /// <summary>
         /// Measure the given value, reporting the required length for the payload (not including the field-header)

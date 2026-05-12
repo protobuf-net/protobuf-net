@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Text;
-using Xunit;
+using Microsoft.Data.SqlClient;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using Xunit;
 
 namespace Examples
 {
-#pragma warning disable CS0618 // SqlClient (warn once only)
-#warning Migrate to Microsoft.Data.SqlClient
-
     public class TypeTests
     {
         [ProtoContract]
