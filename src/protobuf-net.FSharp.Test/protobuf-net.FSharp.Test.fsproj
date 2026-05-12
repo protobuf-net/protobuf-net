@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFrameworks>net472;net8.0</TargetFrameworks>
+        <OutputType>exe</OutputType>
         <RootNamespace>ProtoBuf.FSharp.Test</RootNamespace>
         <IsPackable>false</IsPackable>
         <LangVersion>latest</LangVersion>

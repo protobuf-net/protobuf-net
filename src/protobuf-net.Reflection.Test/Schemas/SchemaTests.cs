@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -373,8 +374,8 @@ namespace ProtoBuf.Schemas
                 psi.UseShellExecute = false;
                 psi.WorkingDirectory = schemaPath;
                 proc.Start();
-                var stdout = proc.StandardOutput.ReadToEndAsync();
-                var stderr = proc.StandardError.ReadToEndAsync();
+                var stdout = proc.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+                var stderr = proc.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
                 if (!proc.WaitForExit(5000))
                 {
                     try { proc.Kill(); } catch { }
@@ -421,8 +422,8 @@ namespace ProtoBuf.Schemas
                 psi.UseShellExecute = false;
                 psi.WorkingDirectory = schemaPath;
                 proc.Start();
-                var stdout = proc.StandardOutput.ReadToEndAsync();
-                var stderr = proc.StandardError.ReadToEndAsync();
+                var stdout = proc.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+                var stderr = proc.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
                 if (!proc.WaitForExit(5000))
                 {
                     try { proc.Kill(); } catch { }
@@ -596,3 +597,11 @@ namespace ProtoBuf.Schemas
 #endif
     }
 }
+
+#if !NET
+internal static class StreamReaderExtensions
+{
+    public static Task<string> ReadToEndAsync(this StreamReader reader, CancellationToken _)
+        => reader.ReadToEndAsync(); // cancellation not available, meh
+}
+#endif
