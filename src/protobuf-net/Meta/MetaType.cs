@@ -5,6 +5,7 @@ using ProtoBuf.Serializers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
@@ -257,7 +258,7 @@ namespace ProtoBuf.Meta
             callbacks.AfterDeserialize = ResolveMethod(afterDeserialize, true);
             return this;
         }
-        
+
         /// <summary>
         /// Returns the public Type name of this Type used in serialization
         /// </summary>
@@ -909,7 +910,7 @@ namespace ProtoBuf.Meta
             ThrowHelper.ThrowInvalidOperationException($"The expected ('{expected}') and actual ('{actual}') compatibility level of '{Type.NormalizeName()}' did not match; the same type cannot be used with different compatibility levels in the same model; this is most commonly an issue with tuple-like types in different contexts");
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, List<AttributeMap>partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
+        private static void ApplyDefaultBehaviour_AddMembers(AttributeFamily family, bool isEnum, List<AttributeMap> partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, List<ProtoMemberAttribute> members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, List<EnumMember> enumMembers, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -1228,7 +1229,7 @@ namespace ProtoBuf.Meta
             // check for list types
             var memberCompatibility = TypeCompatibilityHelper.GetMemberCompatibilityLevel(member, CompatibilityLevel);
             var repeated = model.TryGetRepeatedProvider(effectiveType, memberCompatibility);
-            
+
             AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
@@ -1499,7 +1500,7 @@ namespace ProtoBuf.Meta
             {
                 model.ReleaseLock(opaqueToken);
             }
-            
+
         }
 
         internal bool HasSurrogate
@@ -1763,7 +1764,7 @@ namespace ProtoBuf.Meta
         internal static bool IsValidEnum(IList<EnumMember> values)
         {
             if (values is null || values.Count == 0) return false;
-            foreach(var val in values)
+            foreach (var val in values)
             {
                 if (!val.TryGetInt32().HasValue) return false;
             }
@@ -1810,14 +1811,14 @@ namespace ProtoBuf.Meta
             var original = Serializer; // might lazily create
             if (original is ICompiledSerializer || original.ExpectedType.IsEnum || model.TryGetRepeatedProvider(Type) is not null)
                 return; // nothing to do
-            
+
             var wrapped = CompiledSerializer.Wrap(original, model);
             if (!ReferenceEquals(original, wrapped))
             {
-                _serializer = (IProtoTypeSerializer) wrapped;
+                _serializer = (IProtoTypeSerializer)wrapped;
                 Model.ResetServiceCache(Type);
             }
-            
+
         }
 
         internal bool IsDefined(int fieldNumber)
@@ -2007,6 +2008,12 @@ namespace ProtoBuf.Meta
             { // key-value-pair etc
                 if (ResolveTupleConstructor(Type, out MemberInfo[] mapping) is not null)
                 {
+                    var descriptionAttribute = Type.GetCustomAttribute<DescriptionAttribute>();
+                    if (descriptionAttribute != null && !string.IsNullOrEmpty(descriptionAttribute.Description))
+                    {
+                        NewLine(builder, indent).Append("// ").Append(descriptionAttribute.Description);
+                    }
+
                     NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                     AddNamespace(imports);
 
@@ -2025,6 +2032,13 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
+
+                        var memberDescriptionAttribute = effectiveType.GetCustomAttribute<DescriptionAttribute>();
+                        if (memberDescriptionAttribute != null && !string.IsNullOrEmpty(memberDescriptionAttribute.Description))
+                        {
+                            NewLine(builder, indent + 1).Append("// ").Append(memberDescriptionAttribute.Description);
+                        }
+
                         NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "")
                             .Append(model.GetSchemaTypeName(callstack, effectiveType, DataFormat.Default, CompatibilityLevel, false, false, imports))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
@@ -2039,13 +2053,20 @@ namespace ProtoBuf.Meta
 
                 bool allValid = IsValidEnum(enums);
                 if (!allValid) NewLine(builder, indent).Append("/* for context only");
+
+                var descriptionAttribute = Type.GetCustomAttribute<DescriptionAttribute>();
+                if (descriptionAttribute != null && !string.IsNullOrEmpty(descriptionAttribute.Description))
+                {
+                    NewLine(builder, indent).Append("// ").Append(descriptionAttribute.Description);
+                }
+
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
 
                 if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
                     NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
-                }                
+                }
 
                 bool needsAlias = false; // check whether we need to allow duplicate names
                 var uniqueFields = new HashSet<int>();
@@ -2107,6 +2128,12 @@ namespace ProtoBuf.Meta
                 ValueMember[] fieldsArr = GetFields();
                 int beforeMessagePosition = builder.Length;
 
+                var descriptionAttribute = Type.GetCustomAttribute<DescriptionAttribute>();
+                if (descriptionAttribute != null && !string.IsNullOrEmpty(descriptionAttribute.Description))
+                {
+                    NewLine(builder, indent).Append("// ").Append(descriptionAttribute.Description);
+                }
+
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
                 foreach (ValueMember member in fieldsArr)
@@ -2120,16 +2147,30 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Schema generation for null-wrapped maps and maps with null-wrapped values is not currently implemented; poke @mgravell with a big stick if you need this!");
                         }
+
+                        var memberDescriptAttribute = member.Member.GetCustomAttribute<DescriptionAttribute>();
+                        if (memberDescriptAttribute != null&&string.IsNullOrEmpty(memberDescriptAttribute.Description))
+                        {
+                            NewLine(builder, indent + 1).Append("// ").Append(memberDescriptAttribute.Description);
+                        }
+
                         repeated = model.TryGetRepeatedProvider(member.MemberType);
                         repeated.ResolveMapTypes(out var keyType, out var valueType);
 
                         var keyTypeName = model.GetSchemaTypeName(callstack, keyType, member.MapKeyFormat, CompatibilityLevel, false, false, imports);
                         schemaTypeName = model.GetSchemaTypeName(callstack, valueType, member.MapValueFormat, CompatibilityLevel, member.AsReference, member.DynamicType, imports);
+
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(',').Append(schemaTypeName).Append("> ")
                             .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
                     }
                     else
                     {
+                        var memberDescriptAttribute = member.Member.GetCustomAttribute<DescriptionAttribute>();
+                        if (memberDescriptAttribute != null && !string.IsNullOrEmpty(memberDescriptAttribute.Description))
+                        {
+                            NewLine(builder, indent + 1).Append("// ").Append(memberDescriptAttribute.Description);
+                        }
+
                         if (member.RequiresExtraLayerInSchema())
                         {
                             schemaTypeName = member.GetSchemaTypeName(callstack, true, imports, out altName);
