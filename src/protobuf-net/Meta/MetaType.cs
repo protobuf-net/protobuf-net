@@ -558,18 +558,14 @@ namespace ProtoBuf.Meta
                 else
                 {
                     MetaType mt = model[surrogateType];
-                    if (mt.BaseType is not null)
+                    // walk up the surrogate inheritance chain so polymorphic dispatch handles the actual concrete surrogate via sub-type metadata
+                    while (mt.BaseType is not null)
                     {
-                        ThrowHelper.ThrowInvalidOperationException("Surrogate type must refer to the root inheritance type (for now; log an issue if this is a barrier): " + surrogateType.NormalizeName());
+                        mt = mt.BaseType;
                     }
 
                     metaTypeOrSerializer = mt;
                     features = default;
-                    // , mtBase;
-                    //while ((mtBase = mt.baseType) is not null)
-                    //{serializer
-                    //    mt = mtBase;
-                    //}
                 }
                 var root = GetInheritanceRoot();
                 if (root is null)
