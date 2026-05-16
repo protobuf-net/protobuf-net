@@ -214,9 +214,14 @@ message HazAliasedEnum {
             Assert.Equal("def", val);
         }
 
-        [ProtoContract]
+        [ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
         public class HazMapString
         {
+            // Proto3 semantics: missing value-entries coerce to the proto default "" on read.
+            // Under Level200 / Level240 (the v2-compat path) a reference-type map value
+            // whose tag is absent on the wire is preserved as null instead; this type is
+            // explicitly marked Level300 so the omitted-value test below exercises the
+            // intended proto3 coercion rather than the v2-compat null-preservation.
             [ProtoMember(3), ProtoMap]
             public IDictionary<string, string> Lookup { get; } = new Dictionary<string, string>();
         }
