@@ -1116,10 +1116,11 @@ namespace ProtoBuf.Meta
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
 
                     var value = ((FieldInfo)member).GetRawConstantValue();
+                    var isObsolete = GetAttribute(attribs, "System.ObsoleteAttribute") is not null;
                     if (attrib is not null) GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
                     if (string.IsNullOrWhiteSpace(name)) name = member.Name;
 
-                    enumMember = new EnumMember(value, name);
+                    enumMember = new EnumMember(value, name, isObsolete);
                 }
                 return null;
             }
@@ -2062,6 +2063,7 @@ namespace ProtoBuf.Meta
 
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
+                AppendMessageDeprecatedOption(builder, indent);
 
                 if (Type.IsDefined(typeof(FlagsAttribute), true))
                 {
@@ -2092,8 +2094,9 @@ namespace ProtoBuf.Meta
                     var parsed = member.TryGetInt32();
                     if (parsed.HasValue && parsed.Value == 0)
                     {
-                        NewLine(builder, indent + 1).Append(enumNamePrefix).Append(member.Name).Append(" = 0;");
+                        NewLine(builder, indent + 1).Append(enumNamePrefix).Append(member.Name).Append(" = 0");
                         haveWrittenZero = true;
+                        AppendEnumMemberDeprecatedOption(builder, member);
                     }
                 }
 
@@ -2110,7 +2113,8 @@ namespace ProtoBuf.Meta
                     if (parsed.HasValue)
                     {
                         if (parsed.Value == 0) continue;
-                        NewLine(builder, indent + 1).Append(enumNamePrefix).Append(member.Name).Append(" = ").Append(parsed.Value).Append(';');
+                        NewLine(builder, indent + 1).Append(enumNamePrefix).Append(member.Name).Append(" = ").Append(parsed.Value);
+                        AppendEnumMemberDeprecatedOption(builder, member);
                     }
                     else
                     {
@@ -2136,6 +2140,7 @@ namespace ProtoBuf.Meta
 
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName(callstack)).Append(" {");
                 AddNamespace(imports);
+                AppendMessageDeprecatedOption(builder, indent);
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
@@ -2256,6 +2261,10 @@ namespace ProtoBuf.Meta
                             {
                                 imports.Add(RuntimeTypeModel.CommonImports.Protogen);
                                 AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
+                            }
+                            if (member.Member.IsDefined(typeof(ObsoleteAttribute), inherit: true))
+                            {
+                                AddOption(builder, ref hasOption).Append("deprecated = true");
                             }
                             CloseOption(builder, ref hasOption).Append(';');
                             if (syntax != ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
@@ -2385,6 +2394,23 @@ namespace ProtoBuf.Meta
                     if (!string.IsNullOrWhiteSpace(reservation.Comment))
                         builder.Append(" /* ").Append(reservation.Comment).Append(" */");
                 }
+            }
+            void AppendMessageDeprecatedOption(StringBuilder builder, int indent)
+            {
+                if (Type.IsDefined(typeof(ObsoleteAttribute), inherit: true))
+                {
+                    NewLine(builder, indent + 1).Append("option deprecated = true;");
+                }
+            }
+            void AppendEnumMemberDeprecatedOption(StringBuilder builder, EnumMember member)
+            {
+                if (member.IsObsolete)
+                {
+                    var hasOption = false;
+                    AddOption(builder, ref hasOption).Append("deprecated = true");
+                    CloseOption(builder, ref hasOption);
+                }
+                builder.Append(';');
             }
         }
 
