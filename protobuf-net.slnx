@@ -115,4 +115,9 @@
       <BuildType Solution="VS|*" Project="Release" />
     </Project>
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="src/AotRefGen/AotRefGen.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+  </Folder>
 </Solution>

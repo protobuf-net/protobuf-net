@@ -31,6 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- golden-file fixtures: input/output pairs are data, not code to compile -->
+    <Compile Remove="Aot/Data/**/*.*.cs" />
+    <None Include="Aot/Data/**/*.*" />
+    <None Update="Aot/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
   </ItemGroup>
 </Project>

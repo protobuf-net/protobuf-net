@@ -18,6 +18,7 @@
     <PackageVersion Include="BlazorInputFile" Version="0.2.0" />
     <PackageVersion Include="coverlet.collector" Version="10.0.0" />
     <PackageVersion Include="Google.Protobuf" Version="3.34.1" />
+    <PackageVersion Include="ICSharpCode.Decompiler" Version="10.1.1.8388" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.80.0" />
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
     <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
