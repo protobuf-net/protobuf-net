@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- net472 is not incidental: RuntimeTypeModel can only persist a compiled model to disk on
+         .NET Framework (see PLAT_NO_EMITDLL in protobuf-net.csproj) -->
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>ProtoBuf.AotRefGen</RootNamespace>
+    <AssemblyName>AotRefGen</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <Description>Dev tool: emits ref-emit reference output for the AOT generator's golden fixtures</Description>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <PackageReference Include="ICSharpCode.Decompiler" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- consume the generator's golden fixtures directly, so the reference output can never
+         drift from the input the tests actually run against -->
+    <Compile Include="../BuildToolsUnitTests/Aot/Data/*.input.cs" LinkBase="Fixtures" />
+  </ItemGroup>
+</Project>
