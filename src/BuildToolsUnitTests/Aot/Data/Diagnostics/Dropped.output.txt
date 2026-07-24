@@ -1,11 +1,17 @@
-Generator produced 5 diagnostics:
-Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L17 C25
+Generator produced 8 diagnostics:
+Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L19 C25
 Contract 'AotFixtures.Dropped.HasUnsupportedMember' is omitted from the AOT model: member 'Tags' has unsupported type 'System.Collections.Generic.List<string>'.
-Warning PBN2004 Aot/Data/Diagnostics/Dropped.input.cs L21 C14
+Warning PBN2004 Aot/Data/Diagnostics/Dropped.input.cs L23 C14
 Contract 'AotFixtures.Dropped.ReferencesDropped' is omitted from the AOT model because 'AotFixtures.Dropped.HasUnsupportedMember', which it references, is also omitted.
-Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L29 C14
+Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L31 C14
 Contract 'AotFixtures.Dropped.NoParameterlessConstructor' is omitted from the AOT model: there is no public parameterless constructor.
-Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L43 C16
+Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L45 C16
 Contract 'AotFixtures.Dropped.UsesMemberOptions' is omitted from the AOT model: [ProtoMember] with named arguments is not supported yet.
-Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L51 C16
+Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L53 C16
 Contract 'AotFixtures.Dropped.InitOnlyMember' is omitted from the AOT model: member 'Value' has an init-only setter.
+Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L61 C16
+Contract 'AotFixtures.Dropped.UnrenderableDefault' is omitted from the AOT model: this form of [DefaultValue] is not supported yet.
+Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L68 C16
+Contract 'AotFixtures.Dropped.ConditionalMembers' is omitted from the AOT model: member 'ByShouldSerialize' is conditional via 'ShouldSerializeByShouldSerialize()'.
+Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L81 C17
+Contract 'AotFixtures.Dropped.HasCallback' is omitted from the AOT model: [OnDeserialized] on methods is not supported yet.

@@ -1,6 +1,8 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.Serialization;
 
 // every contract here is expected to be dropped, each for a different reason; the point of the
 // fixture is the .txt golden, which is the user-visible explanation of why
@@ -51,7 +53,38 @@ public class InitOnlyMember
     public int Value { get; init; }
 }
 
+[ProtoContract]
+public class UnrenderableDefault
+{
+    // the (Type, string) form defers to a TypeConverter at runtime, which cannot be evaluated here
+    [ProtoMember(1), DefaultValue(typeof(int), "5")]
+    public int Value { get; set; }
+}
+
+[ProtoContract]
+public class ConditionalMembers
+{
+    [ProtoMember(1)]
+    public int ByShouldSerialize { get; set; }
+
+    // System.ComponentModel convention, matched by name rather than by attribute
+    public bool ShouldSerializeByShouldSerialize() => ByShouldSerialize > 0;
+}
+
+[ProtoContract]
+public class HasCallback
+{
+    [ProtoMember(1)]
+    public int Value { get; set; }
+
+    [OnDeserialized]
+    public void AfterRead(StreamingContext context) { }
+}
+
 [ProtoModel]
+[ProtoSerializable(typeof(UnrenderableDefault))]
+[ProtoSerializable(typeof(ConditionalMembers))]
+[ProtoSerializable(typeof(HasCallback))]
 [ProtoSerializable(typeof(ReferencesDropped))]
 [ProtoSerializable(typeof(NoParameterlessConstructor))]
 [ProtoSerializable(typeof(UsesMemberOptions))]

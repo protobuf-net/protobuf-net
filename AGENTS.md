@@ -71,6 +71,21 @@ Design constraints that are settled, and should not be quietly relaxed:
 - Diagnostics are projected through a **separate** `Select` from the plan, because they carry
   locations (which shift whenever anything above them moves) and the plan does not — so the emit
   step stays cached across edits that only move code around.
+- **Not everything that changes the wire format is a `ProtoBuf` attribute.** `MetaType.ApplyDefaultBehaviour`
+  also honours `System.Runtime.Serialization` (`[DataContract]`/`[DataMember]`, and the
+  `[OnDeserialized]` callback family — which live on *methods*), `System.Xml.Serialization`,
+  `[NonSerialized]`, and `[DefaultValue]` (which changes the write guard from `!= 0` to `!= default`).
+  Worse, the `{Name}Specified` / `ShouldSerialize{Name}()` conventions are matched **by name**, so no
+  attribute inspection finds them at all. `IsSignificantAttribute` and `GetConditionalPattern` exist
+  to bail on all of these; anything added to `MetaType`'s list must be added there too, or the
+  generator will silently emit wrong bytes.
+- Write guards, all three proven against ref-emit rather than assumed: a plain scalar is written when
+  `!= <type default>`; a `[DefaultValue]` scalar when `!= <declared>`; a `Nullable<T>` when
+  `HasValue` — **presence, not value**, so a nullable zero *is* written where a plain zero is not.
+  The two compose by nesting (`if (HasValue) { if (v != declared) ... }`), and `[DefaultValue(null)]`
+  means "no declared default". `[DefaultValue]` is write-only — the reader never applies it, so a
+  declared default without a matching initialiser is lossy across a round-trip (protobuf-net
+  behaviour generally; `PBN0020`/`PBN0021` exist to nag about it).
 - Every dropped contract must **say why**: `PBN2001` unsupported member, `PBN2002` unsupported
   declaration, `PBN2003` unsupported protobuf-net option, `PBN2004` dropped by cascade. All are
   **warnings**, not errors — an incomplete model still builds, and the runtime "no serializer" throw
@@ -81,9 +96,11 @@ Design constraints that are settled, and should not be quietly relaxed:
   versions multiplies every emitted construct for no benefit to anyone doing AOT. (netstandard2.0
   and net4x default to C# 7.3, so those consumers must set `<LangVersion>` — accepted deliberately.)
 
-AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0016` belong to
-`DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. New IDs must be added
-to `AnalyzerReleases.Unshipped.md` or RS2000 fires at build time.
+AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0022` belong to
+`DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. New IDs should be
+added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not actually *enforced*
+here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so the table is
+documentation rather than a build gate, and it has drifted: `PBN0020`–`PBN0022` are missing from it.
 
 Note the shipped analyzer still compiles against the low Roslyn baseline (4.3.1), which predates
 `LanguageVersion.CSharp12` — hence the numeric constant in `ProtoModelGenerator`. `BuildToolsUnitTests`

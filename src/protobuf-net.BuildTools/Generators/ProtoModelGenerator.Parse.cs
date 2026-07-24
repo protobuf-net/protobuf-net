@@ -1,8 +1,10 @@
 #nullable enable
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 
@@ -12,6 +14,7 @@ namespace ProtoBuf.BuildTools.Generators
     {
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoMemberAttributeName = "ProtoBuf.ProtoMemberAttribute";
+        private const string DefaultValueAttributeName = "System.ComponentModel.DefaultValueAttribute";
         private const string ProtoBufNamespace = "ProtoBuf";
 
         /// <summary>
@@ -157,9 +160,9 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                     isContract = true;
                 }
-                else if (IsProtoBufAttribute(attribute))
+                else if (IsSignificantAttribute(attribute))
                 {
-                    return Option(diagnostics, at, name, $"[{attribute.AttributeClass?.Name}]");
+                    return Option(diagnostics, at, name, $"[{AttributeName(attribute)}]");
                 }
             }
             if (!isContract) return Contract(diagnostics, at, name, "the type is not marked [ProtoContract]");
@@ -169,20 +172,39 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (symbol is IFieldSymbol field && !field.IsImplicitlyDeclared
-                    && field.GetAttributes().Any(IsProtoBufAttribute))
+                switch (symbol)
                 {
-                    return Option(diagnostics, PlanLocation.From(field), name, "[ProtoMember] on fields");
+                    case IFieldSymbol field when !field.IsImplicitlyDeclared:
+                        if (field.GetAttributes().FirstOrDefault(IsSignificantAttribute) is { } onField)
+                        {
+                            return Option(diagnostics, PlanLocation.From(field), name,
+                                $"[{AttributeName(onField)}] on fields");
+                        }
+                        break;
+
+                    // serialization callbacks ([OnDeserialized] and friends) live on methods
+                    case IMethodSymbol method when !method.IsImplicitlyDeclared && method.AssociatedSymbol is null:
+                        if (method.GetAttributes().FirstOrDefault(IsSignificantAttribute) is { } onMethod)
+                        {
+                            return Option(diagnostics, PlanLocation.From(method), name,
+                                $"[{AttributeName(onMethod)}] on methods");
+                        }
+                        break;
                 }
 
                 if (symbol is not IPropertySymbol property) continue;
 
                 var atMember = PlanLocation.From(property);
                 int? fieldNumber = null;
+                AttributeData? declaredDefault = null;
                 foreach (var attribute in property.GetAttributes())
                 {
                     var attributeName = attribute.AttributeClass?.ToDisplayString();
-                    if (attributeName == ProtoMemberAttributeName)
+                    if (attributeName == DefaultValueAttributeName)
+                    {
+                        declaredDefault = attribute;
+                    }
+                    else if (attributeName == ProtoMemberAttributeName)
                     {
                         // DataFormat, IsRequired, AsReference, ... all change the wire format
                         if (attribute.NamedArguments.Length != 0)
@@ -196,9 +218,9 @@ namespace ProtoBuf.BuildTools.Generators
                         }
                         fieldNumber = number;
                     }
-                    else if (IsProtoBufAttribute(attribute))
+                    else if (IsSignificantAttribute(attribute))
                     {
-                        return Option(diagnostics, atMember, name, $"[{attribute.AttributeClass?.Name}]");
+                        return Option(diagnostics, atMember, name, $"[{AttributeName(attribute)}]");
                     }
                 }
                 if (fieldNumber is null) continue;
@@ -221,11 +243,32 @@ namespace ProtoBuf.BuildTools.Generators
                     return Member(diagnostics, atMember, name, property.Name, "has an init-only setter");
                 }
 
-                var kind = GetMemberKind(property.Type, out var message);
+                if (GetConditionalPattern(type, property.Name) is { } conditional)
+                {
+                    return Member(diagnostics, atMember, name, property.Name,
+                        $"is conditional via '{conditional}'");
+                }
+
+                var kind = GetMemberKind(property.Type, out var message, out var isNullable);
                 if (kind is null)
                 {
                     return Member(diagnostics, atMember, name, property.Name,
                         $"has unsupported type '{property.Type.ToDisplayString()}'");
+                }
+
+                string? defaultLiteral = null;
+                // a null declared default means "no declared default", exactly as ref-emit treats it
+                if (declaredDefault is not null && !IsNullDefault(declaredDefault))
+                {
+                    if (kind == ProtoMemberKind.Message)
+                    {
+                        return Option(diagnostics, atMember, name, "[DefaultValue] on a message member");
+                    }
+                    defaultLiteral = GetDefaultLiteral(declaredDefault, kind.Value);
+                    if (defaultLiteral is null)
+                    {
+                        return Option(diagnostics, atMember, name, "this form of [DefaultValue]");
+                    }
                 }
 
                 if (kind == ProtoMemberKind.Message)
@@ -238,7 +281,8 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 else
                 {
-                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind.Value));
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind.Value,
+                        defaultLiteral: defaultLiteral, isNullable: isNullable));
                 }
             }
 
@@ -277,17 +321,143 @@ namespace ProtoBuf.BuildTools.Generators
             : typeName.StartsWith("global::", StringComparison.Ordinal) ? typeName.Substring("global::".Length)
             : typeName;
 
-        private static bool IsProtoBufAttribute(AttributeData attribute)
-            => attribute.AttributeClass?.ContainingNamespace?.ToDisplayString() == ProtoBufNamespace;
+        /// <summary>
+        /// The <c>{Name}Specified</c> / <c>ShouldSerialize{Name}()</c> conventions, if present.
+        /// </summary>
+        /// <remarks>
+        /// Inherited from the System.ComponentModel / XmlSerializer conventions, and matched by name
+        /// rather than by attribute (see <c>MetaType.ApplyDefaultBehaviour</c>) - so no amount of
+        /// attribute inspection would find them. They change both the write guard and the read path,
+        /// so a member using one cannot be emitted from the member alone.
+        /// </remarks>
+        private static string? GetConditionalPattern(INamedTypeSymbol type, string memberName)
+        {
+            var specified = memberName + "Specified";
+            var shouldSerialize = "ShouldSerialize" + memberName;
 
-        private static ProtoMemberKind? GetMemberKind(ITypeSymbol type, out INamedTypeSymbol? message)
+            foreach (var symbol in type.GetMembers())
+            {
+                switch (symbol)
+                {
+                    case IPropertySymbol property when property.Name == specified
+                        && property.Type.SpecialType == SpecialType.System_Boolean:
+                        return specified;
+
+                    case IMethodSymbol method when method.Name == shouldSerialize
+                        && !method.IsStatic && method.Parameters.Length == 0
+                        && method.ReturnType.SpecialType == SpecialType.System_Boolean:
+                        return shouldSerialize + "()";
+                }
+            }
+            return null;
+        }
+
+        private static string AttributeName(AttributeData attribute)
+        {
+            var name = attribute.AttributeClass?.Name ?? "?";
+            const string Suffix = "Attribute";
+            return name.Length > Suffix.Length && name.EndsWith(Suffix, StringComparison.Ordinal)
+                ? name.Substring(0, name.Length - Suffix.Length) : name;
+        }
+
+        /// <summary>
+        /// Does this attribute change how protobuf-net treats the thing it is applied to?
+        /// </summary>
+        /// <remarks>
+        /// Not just the ProtoBuf namespace: <c>MetaType.ApplyDefaultBehaviour</c> also honours
+        /// <c>[DataContract]</c>/<c>[DataMember]</c>, the <c>[OnDeserialized]</c> family of
+        /// callbacks, the <c>System.Xml.Serialization</c> attributes, <c>[NonSerialized]</c> and
+        /// <c>[DefaultValue]</c> - each of which can change the bytes we would emit.
+        /// </remarks>
+        private static bool IsSignificantAttribute(AttributeData attribute)
+        {
+            var type = attribute.AttributeClass;
+            if (type is null) return false;
+
+            switch (type.ContainingNamespace?.ToDisplayString())
+            {
+                case ProtoBufNamespace:
+                case "System.Runtime.Serialization":
+                case "System.Xml.Serialization":
+                    return true;
+            }
+
+            return type.ToDisplayString() is "System.NonSerializedAttribute";
+        }
+
+        /// <summary>
+        /// Render a <c>[DefaultValue]</c> argument as a C# literal of the member's own type, or null
+        /// if we cannot do so faithfully.
+        /// </summary>
+        /// <remarks>
+        /// Only the single-argument form is handled: <c>DefaultValue(Type, string)</c> defers to a
+        /// TypeConverter at runtime, which we cannot evaluate here.
+        /// </remarks>
+        private static bool IsNullDefault(AttributeData attribute)
+            => attribute.ConstructorArguments.Length == 1
+                && attribute.ConstructorArguments[0].Value is null;
+
+        private static string? GetDefaultLiteral(AttributeData attribute, ProtoMemberKind kind)
+        {
+            if (attribute.ConstructorArguments.Length != 1) return null;
+            if (attribute.ConstructorArguments[0].Value is not object raw) return null;
+
+            try
+            {
+                var culture = CultureInfo.InvariantCulture;
+                switch (kind)
+                {
+                    case ProtoMemberKind.Bool: return Convert.ToBoolean(raw, culture) ? "true" : "false";
+                    case ProtoMemberKind.SByte: return Convert.ToSByte(raw, culture).ToString(culture);
+                    case ProtoMemberKind.Byte: return Convert.ToByte(raw, culture).ToString(culture);
+                    case ProtoMemberKind.Int16: return Convert.ToInt16(raw, culture).ToString(culture);
+                    case ProtoMemberKind.UInt16: return Convert.ToUInt16(raw, culture).ToString(culture);
+                    case ProtoMemberKind.Int32: return Convert.ToInt32(raw, culture).ToString(culture);
+                    case ProtoMemberKind.UInt32: return Convert.ToUInt32(raw, culture).ToString(culture) + "U";
+                    case ProtoMemberKind.Int64: return Convert.ToInt64(raw, culture).ToString(culture) + "L";
+                    case ProtoMemberKind.UInt64: return Convert.ToUInt64(raw, culture).ToString(culture) + "UL";
+
+                    case ProtoMemberKind.Single:
+                        var single = Convert.ToSingle(raw, culture);
+                        // NaN/infinity have no literal form, and NaN != NaN would break the guard
+                        if (float.IsNaN(single) || float.IsInfinity(single)) return null;
+                        return single.ToString("R", culture) + "F";
+
+                    case ProtoMemberKind.Double:
+                        var @double = Convert.ToDouble(raw, culture);
+                        if (double.IsNaN(@double) || double.IsInfinity(@double)) return null;
+                        return @double.ToString("R", culture) + "D";
+
+                    case ProtoMemberKind.String:
+                        return raw is string text ? SymbolDisplay.FormatLiteral(text, quote: true) : null;
+                }
+            }
+            catch (Exception)
+            {
+                return null; // out of range, not convertible, ...
+            }
+            return null;
+        }
+
+        private static ProtoMemberKind? GetMemberKind(ITypeSymbol type, out INamedTypeSymbol? message, out bool isNullable)
         {
             message = null;
-            switch (type.SpecialType)
+            isNullable = false;
+
+            if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
             {
-                case SpecialType.System_Int32: return ProtoMemberKind.Int32;
-                case SpecialType.System_String: return ProtoMemberKind.String;
+                // only scalars can be Nullable<T>; a nullable message is not expressible, and an
+                // unsupported underlying type (an enum, say) simply yields null here
+                isNullable = true;
+                return GetScalarKind(nullable.TypeArguments[0]);
             }
+
+            return GetScalarKind(type) ?? GetMessageKind(type, out message);
+        }
+
+        private static ProtoMemberKind? GetMessageKind(ITypeSymbol type, out INamedTypeSymbol? message)
+        {
+            message = null;
 
             // anything marked [ProtoContract] counts as reachable, supported or not; whether it can
             // actually be handled is decided when the closure gets to it
@@ -296,6 +466,26 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 message = named;
                 return ProtoMemberKind.Message;
+            }
+            return null;
+        }
+
+        private static ProtoMemberKind? GetScalarKind(ITypeSymbol type)
+        {
+            switch (type.SpecialType)
+            {
+                case SpecialType.System_Boolean: return ProtoMemberKind.Bool;
+                case SpecialType.System_SByte: return ProtoMemberKind.SByte;
+                case SpecialType.System_Byte: return ProtoMemberKind.Byte;
+                case SpecialType.System_Int16: return ProtoMemberKind.Int16;
+                case SpecialType.System_UInt16: return ProtoMemberKind.UInt16;
+                case SpecialType.System_Int32: return ProtoMemberKind.Int32;
+                case SpecialType.System_UInt32: return ProtoMemberKind.UInt32;
+                case SpecialType.System_Int64: return ProtoMemberKind.Int64;
+                case SpecialType.System_UInt64: return ProtoMemberKind.UInt64;
+                case SpecialType.System_Single: return ProtoMemberKind.Single;
+                case SpecialType.System_Double: return ProtoMemberKind.Double;
+                case SpecialType.System_String: return ProtoMemberKind.String;
             }
             return null;
         }
