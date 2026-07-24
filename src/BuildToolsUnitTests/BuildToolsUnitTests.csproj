@@ -20,7 +20,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <!-- the shipped analyzer still compiles against the low Roslyn baseline; the tests need a
+         newer one purely so they can parse C# 12, which is the generator's declared floor -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
 

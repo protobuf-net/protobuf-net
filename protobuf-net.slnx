@@ -75,6 +75,9 @@
     <Project Path="src/protogen/protogen.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="src/AotConformanceTests/AotConformanceTests.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
     <Project Path="src/Benchmark/Benchmark.csproj">
       <BuildType Solution="VS|*" Project="Release" />
     </Project>

@@ -59,12 +59,13 @@ namespace BuildToolsUnitTests.Aot
             string source,
             StringBuilder? diagnosticsTo = null,
             string? fileName = null,
-            Action<TGenerator>? initializer = null)
+            Action<TGenerator>? initializer = null,
+            LanguageVersion languageVersion = LanguageVersion.Latest)
             where TGenerator : class, IIncrementalGenerator, new()
         {
             if (string.IsNullOrWhiteSpace(fileName)) fileName = "input.cs";
 
-            var parseOptions = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.Parse, SourceCodeKind.Regular);
+            var parseOptions = new CSharpParseOptions(languageVersion, DocumentationMode.Parse, SourceCodeKind.Regular);
             var inputCompilation = CSharpCompilation.Create(
                 "ProtoBuf.BuildTools.AotGeneratorTests",
                 new[] { CSharpSyntaxTree.ParseText(source, parseOptions, path: fileName!) },

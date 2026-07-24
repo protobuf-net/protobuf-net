@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.AotConformance</RootNamespace>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <!-- TypeModel's non-generic Serialize/Deserialize are the right shape for reflection-driven tests -->
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <!-- referenced as an analyzer, so the generator runs for real during this project's build -->
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- the generator's own fixtures, compiled for real. Deliberately only *.input.cs and only the
+         top-level folder: *.output.cs is a test artefact (compiling it would test a stale snapshot),
+         and Data/Diagnostics/* exists to produce diagnostics rather than working code -->
+    <Compile Include="../BuildToolsUnitTests/Aot/Data/*.input.cs" LinkBase="Fixtures" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

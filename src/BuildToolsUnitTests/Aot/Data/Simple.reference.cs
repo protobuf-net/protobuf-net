@@ -1,4 +1,5 @@
 using System.Reflection;
+using AotFixtures.Simple;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;

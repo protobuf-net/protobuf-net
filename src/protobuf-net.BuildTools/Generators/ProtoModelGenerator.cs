@@ -1,5 +1,7 @@
 #nullable enable
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
@@ -16,10 +18,47 @@ namespace ProtoBuf.BuildTools.Generators
     /// (a "no serializer for type" throw) applies if they are used.
     /// </remarks>
     [Generator(LanguageNames.CSharp)]
-    public sealed class ProtoModelGenerator : IIncrementalGenerator
+    public sealed partial class ProtoModelGenerator : IIncrementalGenerator
     {
         internal const string ProtoModelAttributeName = "ProtoBuf.ProtoModelAttribute";
         internal const string ProtoSerializableAttributeName = "ProtoBuf.ProtoSerializableAttribute";
+
+        /// <summary>
+        /// The lowest C# version this generator emits for.
+        /// </summary>
+        /// <remarks>
+        /// Supporting multiple language versions means multiplying every emitted construct by the
+        /// size of the matrix, for no benefit to anyone actually doing AOT; a single enforced floor
+        /// with a clear diagnostic is cheaper for everyone. Note that netstandard2.0/net4x projects
+        /// default to C# 7.3, so those consumers must set LangVersion explicitly.
+        /// </remarks>
+        /// <remarks>
+        /// Spelled numerically because this analyzer compiles against Roslyn 4.3.1, which predates
+        /// <c>LanguageVersion.CSharp12</c>. The numeric values are stable, and at runtime we bind to
+        /// whatever Roslyn the host supplies - which, for anyone actually on C# 12, is 4.8+.
+        /// </remarks>
+        internal const LanguageVersion MinimumLanguageVersion = (LanguageVersion)1200; // C# 12.0
+
+        internal const string MinimumLanguageVersionDisplay = "12.0";
+
+        /// <summary>
+        /// Names the model-building step, so tests can assert that its results are actually cached
+        /// between runs - caching failures are otherwise silent.
+        /// </summary>
+        internal const string ModelTrackingName = "ProtoModelPlans";
+
+        /// <summary>
+        /// Names the diagnostic-projection step; separate from the model so each can be asserted on.
+        /// </summary>
+        internal const string DiagnosticTrackingName = "ProtoModelDiagnostics";
+
+        internal static readonly DiagnosticDescriptor LanguageVersionTooLow = new(
+            id: "PBN2000",
+            title: "Language version too low",
+            messageFormat: "The protobuf-net AOT generator requires C# {0} or later, but this project uses C# {1}; set <LangVersion> to at least {0}.",
+            category: "ProtoBuf",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
 
         void IIncrementalGenerator.Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -28,8 +67,46 @@ namespace ProtoBuf.BuildTools.Generators
             context.RegisterPostInitializationOutput(static ctx
                 => ctx.AddSource("ProtoModelAttributes.g.cs", SourceText.From(AttributeSource, Encoding.UTF8)));
 
-            // TODO: locate [ProtoModel] seeds via ForAttributeWithMetadataName, take the transitive closure
-            // over reachable contracts, and emit the nested ISerializer<T> services + GetSerializer<T> override
+            var parsed = context.SyntaxProvider.ForAttributeWithMetadataName(
+                ProtoModelAttributeName,
+                predicate: static (node, _) => node is ClassDeclarationSyntax cls
+                    && cls.Modifiers.Any(SyntaxKind.PartialKeyword),
+                transform: static (ctx, cancellationToken) => Parse(ctx, cancellationToken));
+
+            // split the plan from its diagnostics: diagnostics carry locations, which shift whenever
+            // anything above them moves, whereas the plan does not - so emission stays cached across
+            // edits that only move code around
+            var models = parsed.Select(static (result, _) => result?.Plan).WithTrackingName(ModelTrackingName);
+            var diagnostics = parsed
+                .Select(static (result, _) => result?.Diagnostics ?? default)
+                .WithTrackingName(DiagnosticTrackingName);
+
+            context.RegisterSourceOutput(diagnostics, static (ctx, items) =>
+            {
+                foreach (var item in items) ctx.ReportDiagnostic(ToDiagnostic(item));
+            });
+
+            var languageVersion = context.ParseOptionsProvider.Select(static (options, _)
+                => options is CSharpParseOptions cs
+                    ? cs.LanguageVersion.MapSpecifiedToEffectiveVersion()
+                    : LanguageVersion.Default);
+
+            context.RegisterSourceOutput(models.Combine(languageVersion), static (ctx, pair) =>
+            {
+                var (plan, languageVersion) = pair;
+                if (plan is null) return;
+
+                if (languageVersion < MinimumLanguageVersion)
+                {
+                    // emit nothing: one clear diagnostic beats a pile of errors in code they didn't write
+                    // TODO: report against the model declaration once the plan carries an equatable location
+                    ctx.ReportDiagnostic(Diagnostic.Create(LanguageVersionTooLow, Location.None,
+                        MinimumLanguageVersionDisplay, languageVersion.ToDisplayString()));
+                    return;
+                }
+
+                ctx.AddSource(plan.HintName, SourceText.From(Emit(plan), Encoding.UTF8));
+            });
         }
 
         private const string AttributeSource = """
