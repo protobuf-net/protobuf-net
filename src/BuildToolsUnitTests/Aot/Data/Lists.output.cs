@@ -13,6 +13,10 @@ partial class ListsModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour?>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small?>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -132,6 +136,25 @@ partial class ListsModel
                         value.Scalar = state.ReadInt32();
                         break;
                     }
+                    case 12:
+                    {
+                        var tmp12 = value.Colours;
+                        tmp12 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Lists.Colour>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
+                        if (tmp12 != null) value.Colours = tmp12;
+                        break;
+                    }
+                    case 13:
+                    {
+                        var tmp13 = value.Smalls;
+                        tmp13 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Small>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
+                        if (tmp13 != null) value.Smalls = tmp13;
+                        break;
+                    }
+                    case 14:
+                    {
+                        value.SingleColour = (global::AotFixtures.Lists.Colour)state.ReadInt32();
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -190,7 +213,31 @@ partial class ListsModel
             }
             var tmp11 = value.Scalar;
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+            var tmp12 = value.Colours;
+            if (tmp12 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Lists.Colour>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
+            }
+            var tmp13 = value.Smalls;
+            if (tmp13 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Small>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
+            }
+            var tmp14 = value.SingleColour;
+            if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
         }
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Colour> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Lists.Colour>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Colour?> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour?>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Lists.Colour>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Small> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateByte<global::AotFixtures.Lists.Small>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Small?> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small?>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateByte<global::AotFixtures.Lists.Small>();
     }
 }
 

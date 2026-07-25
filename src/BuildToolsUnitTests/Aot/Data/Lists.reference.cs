@@ -116,6 +116,32 @@ internal sealed class ___PBN_Services___ListsModel : ISerializer<Repeated>, ISer
 				value.Scalar = scalar;
 				break;
 			}
+			case 12:
+			{
+				List<Colour> colours = value.Colours;
+				colours = RepeatedSerializer.CreateList<Colour>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, colours, this as ISerializer<Colour>);
+				if (colours != null)
+				{
+					value.Colours = colours;
+				}
+				break;
+			}
+			case 13:
+			{
+				Small[] smalls = value.Smalls;
+				smalls = RepeatedSerializer.CreateVector<Small>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, smalls, this as ISerializer<Small>);
+				if (smalls != null)
+				{
+					value.Smalls = smalls;
+				}
+				break;
+			}
+			case 14:
+			{
+				Colour singleColour = (Colour)state.ReadInt32();
+				value.SingleColour = singleColour;
+				break;
+			}
 			default:
 				state.SkipField();
 				break;
@@ -185,6 +211,24 @@ internal sealed class ___PBN_Services___ListsModel : ISerializer<Repeated>, ISer
 		if (scalar != 0)
 		{
 			state.WriteInt32Varint(11, scalar);
+		}
+		List<Colour> colours = value.Colours;
+		if (colours != null)
+		{
+			List<Colour> values10 = colours;
+			RepeatedSerializer.CreateList<Colour>().WriteRepeated(ref state, 12, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values10, this as ISerializer<Colour>);
+		}
+		Small[] smalls = value.Smalls;
+		if (smalls != null)
+		{
+			Small[] values11 = smalls;
+			RepeatedSerializer.CreateVector<Small>().WriteRepeated(ref state, 13, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values11, this as ISerializer<Small>);
+		}
+		Colour singleColour = value.SingleColour;
+		if (singleColour != Colour.None)
+		{
+			scalar = (int)singleColour;
+			state.WriteInt32Varint(14, scalar);
 		}
 	}
 

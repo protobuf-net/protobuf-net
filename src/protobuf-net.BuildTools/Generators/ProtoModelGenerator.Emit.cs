@@ -1,5 +1,7 @@
 #nullable enable
 using ProtoBuf.BuildTools.Internal.Aot;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -70,6 +72,11 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, $", {Serializers}.IFactory<{contract.TypeName}>");
                 }
             }
+            foreach (var enumType in EnumProxies(plan))
+            {
+                Line(sb, indent + 2, $", {Serializers}.ISerializerProxy<{enumType.Key}>");
+                Line(sb, indent + 2, $", {Serializers}.ISerializerProxy<{enumType.Key}?>");
+            }
             Line(sb, indent + 1, "{");
 
             var first = true;
@@ -79,6 +86,8 @@ namespace ProtoBuf.BuildTools.Generators
                 first = false;
                 EmitContract(sb, indent + 2, contract);
             }
+
+            EmitEnumProxies(sb, indent + 2, plan);
 
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");
@@ -338,6 +347,58 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent, "}");
         }
+
+        /// <summary>
+        /// The enum types that need an <c>ISerializerProxy</c>, keyed by type name.
+        /// </summary>
+        /// <remarks>
+        /// Only *repeated* enums need one. A plain enum member is written inline (cast to its
+        /// underlying type), but <c>RepeatedSerializer</c> resolves an <c>ISerializer&lt;TEnum&gt;</c>
+        /// from the model instead — so without this a repeated enum throws "no serializer for type"
+        /// at runtime.
+        /// </remarks>
+        private static SortedDictionary<string, ProtoMemberKind> EnumProxies(ProtoModelPlan plan)
+        {
+            var result = new SortedDictionary<string, ProtoMemberKind>(StringComparer.Ordinal);
+            foreach (var contract in plan.Contracts)
+            {
+                foreach (var member in contract.Members)
+                {
+                    if (member.Repeated == ProtoRepeatedKind.None) continue;
+                    if (member.EnumTypeName is { } name) result[name] = member.Kind;
+                }
+            }
+            return result;
+        }
+
+        private static void EmitEnumProxies(StringBuilder sb, int indent, ProtoModelPlan plan)
+        {
+            foreach (var pair in EnumProxies(plan))
+            {
+                // EnumSerializer<TEnum> implements both ISerializer<TEnum> and ISerializer<TEnum?>,
+                // so the nullable proxy returns the very same instance
+                var create = $"{Serializers}.EnumSerializer.Create{UnderlyingName(pair.Value)}<{pair.Key}>()";
+                sb.AppendLine();
+                Line(sb, indent, $"{Serializers}.ISerializer<{pair.Key}> {Serializers}.ISerializerProxy<{pair.Key}>.Serializer");
+                Line(sb, indent + 1, $"=> {create};");
+                sb.AppendLine();
+                Line(sb, indent, $"{Serializers}.ISerializer<{pair.Key}?> {Serializers}.ISerializerProxy<{pair.Key}?>.Serializer");
+                Line(sb, indent + 1, $"=> {create};");
+            }
+        }
+
+        /// <summary>The <c>EnumSerializer.CreateXxx</c> suffix for an enum's underlying type.</summary>
+        private static string UnderlyingName(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.SByte => "SByte",
+            ProtoMemberKind.Byte => "Byte",
+            ProtoMemberKind.Int16 => "Int16",
+            ProtoMemberKind.UInt16 => "UInt16",
+            ProtoMemberKind.UInt32 => "UInt32",
+            ProtoMemberKind.Int64 => "Int64",
+            ProtoMemberKind.UInt64 => "UInt64",
+            _ => "Int32",
+        };
 
         /// <summary>The <c>RepeatedSerializer</c> factory for a collection member.</summary>
         private static string Repeated(ProtoMemberPlan member)

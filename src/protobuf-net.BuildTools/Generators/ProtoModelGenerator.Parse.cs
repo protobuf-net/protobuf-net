@@ -669,11 +669,8 @@ namespace ProtoBuf.BuildTools.Generators
             if (shape.IsNullable) return null;
 
             // an enum element is *not* written inline: RepeatedSerializer resolves an
-            // ISerializer<TEnum> from the model, so the services type would have to expose one (the
-            // ISerializerProxy<TEnum> + EnumSerializer.CreateXxx<T>() pattern). Until it does, a
-            // repeated enum would throw "no serializer for type" at runtime - so refuse it.
-            if (shape.EnumType is not null) return null;
-
+            // ISerializer<TEnum> from the model, so the services type exposes one via
+            // ISerializerProxy<TEnum> (see EmitEnumProxies)
             return new MemberShape(shape.Kind, message: shape.Message, enumType: shape.EnumType,
                 repeated: repeated,
                 elementTypeName: element.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));

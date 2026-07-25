@@ -11,8 +11,11 @@ public class Inner
     [ProtoMember(2)] public string Label { get; set; }
 }
 
-// note: a repeated *enum* is not supported yet - RepeatedSerializer resolves an ISerializer<TEnum>
-// from the model, which the generated services type does not yet expose
+// a repeated enum needs the services type to expose ISerializerProxy<TEnum>, because
+// RepeatedSerializer resolves an ISerializer<TEnum> from the model rather than writing it inline
+public enum Colour { None = 0, Red = 1, Blue = 2 }
+
+public enum Small : byte { Zero = 0, Big = 200 }
 
 [ProtoContract]
 public class Repeated
@@ -33,6 +36,13 @@ public class Repeated
     [ProtoMember(10)] public Inner[] MessageArray { get; set; }
 
     [ProtoMember(11)] public int Scalar { get; set; }
+
+    // repeated enums, including a non-int underlying type
+    [ProtoMember(12)] public List<Colour> Colours { get; set; }
+    [ProtoMember(13)] public Small[] Smalls { get; set; }
+
+    // ... and a plain enum member alongside, which is still written inline
+    [ProtoMember(14)] public Colour SingleColour { get; set; }
 }
 
 public static class ListsSamples
@@ -50,6 +60,9 @@ public static class ListsSamples
         new Repeated { Messages = [new Inner { Value = 1, Label = "x" }, new Inner()] },
         new Repeated { MessageArray = [new Inner { Value = 2 }] },
         new Repeated { Int32List = [7], Scalar = 8 },
+        new Repeated { Colours = [Colour.None, Colour.Blue, Colour.Red] },
+        new Repeated { Smalls = [Small.Zero, Small.Big] },
+        new Repeated { Colours = [], SingleColour = Colour.Red },
     ];
 }
 
