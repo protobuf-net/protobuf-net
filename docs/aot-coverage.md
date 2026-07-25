@@ -7,25 +7,22 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **396** of 1392 (72% emitted)
-of which dropped only by cascade: 50
+contracts dropped: **277** of 1392 (81% emitted)
+of which dropped only by cascade: 45
 
 | count | reason |
 | ---: | --- |
-| 105 | PBN2002 no [ProtoMember] properties were found |
 | 39 | PBN2001 member '…' has unsupported type '…' |
-| 32 | PBN2001 member '…' has no public setter |
+| 34 | PBN2001 member '…' has no public setter |
+| 24 | PBN2002 generic types are not supported |
 | 23 | PBN2003 [NullWrappedValue] is not supported yet |
 | 20 | PBN2002 only classes and structs are supported |
-| 17 | PBN2003 [ProtoContract(Name = ...)] is not supported yet |
 | 13 | PBN2002 there is no public parameterless constructor |
 | 13 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
-| 11 | PBN2002 generic types are not supported |
 | 10 | PBN2003 [NullWrappedCollection] is not supported yet |
 | 9 | PBN2003 [ProtoMap] is not supported yet |
-| 6 | PBN2003 [ProtoMember] with named arguments is not supported yet |
-| 6 | PBN2003 [ProtoContract(Serializer = ...)] is not supported yet |
-| 6 | PBN2003 [ProtoReserved] is not supported yet |
+| 8 | PBN2003 [ProtoContract(Serializer = ...)] is not supported yet |
+| 4 | PBN2001 member '…' is conditional via '…' |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
@@ -33,17 +30,15 @@ of which dropped only by cascade: 50
 | 3 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
+| 2 | PBN2003 this DataFormat on a BCL type is not supported yet |
 | 2 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
 | 1 | PBN2003 [ProtoContract(IsGroup = ...)] is not supported yet |
 | 1 | PBN2003 DataFormat.WellKnown on this type is not supported yet |
 | 1 | PBN2003 [ProtoContract(Surrogate = ...)] is not supported yet |
-| 1 | PBN2003 [ProtoIgnore] is not supported yet |
 | 1 | PBN2001 member '…' is not public |
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
-| 1 | PBN2001 member '…' is conditional via '…' |
 | 1 | PBN2001 member '…' has no public getter |
-| 1 | PBN2003 this DataFormat on a BCL type is not supported yet |
 
 Member types we could not handle:
 
@@ -72,3 +67,6 @@ Member types we could not handle:
 
 **the generated code does not compile** — these are generator bugs, not gaps:
 - CS0433: 2 — The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
+- CS0152: 1 — The switch statement contains multiple cases with the label value '2'
+- CS8121: 1 — An expression of type 'CompatibilityLevelTests.BaseDerivedDetermines' cannot be handled by a pattern of type 'CompatibilityLevelTests.InheritedBaseDetermines'.
+- CS0311: 1 — The type 'ProtoBuf.Test.CompatibilityLevelTests.InheritedBaseDetermines' cannot be used as type parameter 'TSubType' in the generic type or method 'SubTypeState<CompatibilityLevelTests.BaseDerivedDetermines>.ReadSubType<TSubType>(ref ProtoReader.State, ISubTypeSerializer<TSubType>)'. There is no implicit reference conversion from 'ProtoBuf.Test.CompatibilityLevelTests.InheritedBaseDetermines' to 'ProtoBuf.Test.CompatibilityLevelTests.BaseDerivedDetermines'.

@@ -14,6 +14,8 @@ namespace ProtoBuf.BuildTools.Generators
     {
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
+        private const string ProtoReservedAttributeName = "ProtoBuf.ProtoReservedAttribute";
+        private const string ProtoIgnoreAttributeName = "ProtoBuf.ProtoIgnoreAttribute";
         private const string CompatibilityLevelAttributeName = "ProtoBuf.CompatibilityLevelAttribute";
         private const string ExtensibleTypeName = "ProtoBuf.Extensible";
         private const string ExtensibleInterfaceName = "ProtoBuf.IExtensible";
@@ -285,6 +287,10 @@ namespace ProtoBuf.BuildTools.Generators
                             case "IgnoreListHandling" when argument.Value.Value is bool ignoreList:
                                 ignoreListHandling = ignoreList;
                                 continue;
+                            // schema naming only: neither reaches the wire format
+                            case "Name":
+                            case "Origin":
+                                continue;
                         }
                         return Option(diagnostics, at, name, $"[ProtoContract({argument.Key} = ...)]");
                     }
@@ -292,6 +298,8 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 // already read up-front, since it decides whether inheritance is legal here
                 else if (attributeName == ProtoIncludeAttributeName) { }
+                // reserved field ranges exist to shape the generated .proto; nothing on the wire
+                else if (attributeName == ProtoReservedAttributeName) { }
                 // [DataContract] and [XmlType] are contract markers in their own right; their own
                 // arguments (Name, Namespace) affect schema naming only
                 else if (attributeName == DataContractAttributeName) isDataContract = true;
@@ -378,13 +386,15 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         xmlOrder = GetNamedInt(attribute, "Order");
                     }
-                    else if (attributeName is XmlIgnoreAttributeName or NonSerializedAttributeName)
+                    else if (attributeName is XmlIgnoreAttributeName or NonSerializedAttributeName
+                        or ProtoIgnoreAttributeName)
                     {
                         ignored = true;
                     }
                     else if (attributeName == ProtoMemberAttributeName && attribute.NamedArguments.Length != 0
                         && attribute.NamedArguments.All(static x
-                            => x.Key is "IsPacked" or "OverwriteList" or "IsRequired" or "DataFormat"))
+                            => x.Key is "IsPacked" or "OverwriteList" or "IsRequired" or "DataFormat"
+                                or "Name"))
                     {
                         foreach (var argument in attribute.NamedArguments)
                         {
@@ -398,6 +408,9 @@ namespace ProtoBuf.BuildTools.Generators
                                     continue;
                                 case "IsRequired" when argument.Value.Value is bool required:
                                     isRequired = required;
+                                    continue;
+                                // schema naming only
+                                case "Name":
                                     continue;
                                 // the constant is the DataFormat enum's underlying int
                                 case "DataFormat" when argument.Value.Value is int format:
@@ -590,10 +603,8 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
-            if (members.Count == 0)
-            {
-                return Contract(diagnostics, at, name, "no [ProtoMember] properties were found");
-            }
+            // note there is no "it has no members" refusal: an empty message is entirely legal
+            // protobuf, and .proto-generated DTOs are full of them
             members.Sort(static (x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
 
             // the whole hierarchy has to be in the model, since every type in it routes through the

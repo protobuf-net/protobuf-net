@@ -187,6 +187,20 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitReadLoop(StringBuilder sb, int indent, ProtoContractPlan contract,
             string instance, EquatableArray<ProtoSubTypePlan> subTypes = default)
         {
+            // an empty message is legal protobuf, and has nothing to switch on
+            var unknown = contract.Extensible == ProtoExtensibleKind.None
+                ? "state.SkipField();"
+                : $"state.AppendExtensionData({(instance == "value" ? "value" : "value.Value")}{ExtensionType(contract)});";
+            if (contract.Members.Count == 0 && subTypes.Count == 0)
+            {
+                Line(sb, indent, "int field;");
+                Line(sb, indent, "while ((field = state.ReadFieldHeader()) > 0)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, unknown);
+                Line(sb, indent, "}");
+                return;
+            }
+
             Line(sb, indent, "int field;");
             Line(sb, indent, "while ((field = state.ReadFieldHeader()) > 0)");
             Line(sb, indent, "{");
@@ -295,9 +309,7 @@ namespace ProtoBuf.BuildTools.Generators
             // instance has to be materialised for that, which is why the sub-type form reads
             // value.Value here rather than using the per-case local
             Line(sb, indent + 2, "default:");
-            Line(sb, indent + 3, contract.Extensible == ProtoExtensibleKind.None
-                ? "state.SkipField();"
-                : $"state.AppendExtensionData({(instance == "value" ? "value" : "value.Value")}{ExtensionType(contract)});");
+            Line(sb, indent + 3, unknown);
             Line(sb, indent + 3, "break;");
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");

@@ -537,6 +537,18 @@ reference the fallback at all), not annotating.
 The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
 the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
 
+### Schema-only options
+
+Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.
+Refusing a contract over one of those loses a serializer for no reason, and the coverage sweep says
+they are common, so each is **accepted and ignored**: `[ProtoContract(Name = …, Origin = …)]`,
+`[ProtoReserved]`, and `[ProtoMember(Name = …)]`. `[ProtoIgnore]` excludes the member, like
+`[XmlIgnore]` and `[NonSerialized]`.
+
+There is also **no "it has no members" refusal**: an empty message is entirely legal protobuf, and
+`.proto`-generated DTOs are full of them — it was the single largest cause of dropped contracts in
+the sweep. It emits a bare skip loop with no `switch`, matching ref-emit.
+
 ### Coverage sweep
 
 `src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built
