@@ -79,6 +79,21 @@ namespace ProtoBuf
         internal const long TO_EOF = -1;
 
         /// <summary>
+        /// Lengths at or below this are taken at face value; vetting them isn't worth the cycles,
+        /// and a payload that lies about a length this small can't do much harm. Above this, a
+        /// claimed length is checked against <see cref="MaxRemaining"/> before it is allowed to
+        /// size an allocation; where that isn't knowable, the data is read in bounded chunks
+        /// instead of being trusted up-front.
+        /// </summary>
+        internal const int EagerAllocationLimit = 32 * 1024;
+
+        /// <summary>
+        /// The maximum number of bytes that this source could still supply, or a negative value if
+        /// that cannot be determined cheaply (i.e. a stream of unknown length).
+        /// </summary>
+        private protected abstract long MaxRemaining { get; }
+
+        /// <summary>
         /// Gets / sets a flag indicating whether strings should be checked for repetition; if
         /// true, any repeated UTF-8 byte sequence will result in the same String instance, rather
         /// than a second instance of the same string. Disabled by default. Note that this uses

@@ -143,11 +143,13 @@ namespace ProtoBuf
             }
 
             private ReadOnlySequence<byte>.Enumerator _source;
+            private long _end;
 
             public override void Dispose()
             {
                 base.Dispose();
                 _source = default;
+                _end = 0;
                 Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
@@ -155,7 +157,11 @@ namespace ProtoBuf
             {
                 base.Init(model, userState);
                 _source = source.GetEnumerator();
+                _end = source.Length;
             }
+
+            // the length of a sequence is always known, so we can always answer this exactly
+            private protected override long MaxRemaining => _end - LongPosition;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private int GetSomeData(ref State state, bool throwIfEOF = true)
@@ -269,6 +275,7 @@ namespace ProtoBuf
             {
                 // we should probably do the work with a Decoder,
                 // but this works for today
+                state.AssertPlausibleLength(bytes); // don't rent against a length we can't satisfy
                 var arr = BufferPool.GetBuffer(bytes);
                 try
                 {
