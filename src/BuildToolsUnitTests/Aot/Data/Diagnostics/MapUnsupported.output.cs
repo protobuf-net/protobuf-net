@@ -36,12 +36,22 @@ namespace ProtoBuf
     /// or anything else you do not own.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This is the compile-time equivalent of <c>RuntimeTypeModel.SetSurrogate</c>. The
     /// conversion is a cast in each direction unless <see cref="Converter"/> names a type
     /// supplying static conversion methods, which is how a type with no usable operators —
     /// <c>NodaTime.Duration</c>, say — is hooked up.
+    /// </para>
+    /// <para>
+    /// Apply it to a model to configure that model alone, or to an <b>assembly</b> to offer
+    /// the pairing to every model that references it — which is how a library can ship
+    /// surrogates for types it supports, without each consumer restating them. A model's
+    /// own declaration wins over one it merely references.
+    /// </para>
     /// </remarks>
-    [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    [global::System.AttributeUsage(
+        global::System.AttributeTargets.Class | global::System.AttributeTargets.Assembly,
+        AllowMultiple = true, Inherited = false)]
     internal sealed class ProtoSurrogateAttribute : global::System.Attribute
     {
         /// <summary>

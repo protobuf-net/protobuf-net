@@ -590,6 +590,14 @@ static methods instead, which is how a type with no usable operators is hooked u
 own `AddNodaTime` passes exactly such method pairs to `SetSurrogate`. The named methods are checked
 for existence, accessibility and signature when the declaration is read.
 
+It can also be declared on an **assembly**, which is what lets a package ship surrogates for the
+types it supports — `protobuf-net.NodaTime` could carry them for `NodaTime.Duration` and
+`NodaTime.Instant`, and a consumer would get them without restating anything. Declarations are
+gathered least-to-most specific — referenced assemblies, then this assembly, then the model — so the
+more specific wins. Note this scans *assembly* attributes only: that is cheap and bounded, where
+scanning every type in every reference would not be, which is why the pairing lives on the assembly
+rather than on the surrogate type.
+
 **Status: first cut.** `Diagnostics/ModelSurrogate.input.cs` covers both forms as a golden only —
 there is no `*.reference.cs` and no differential coverage, because `AotRefGen` would have to replay
 the declarations against a `RuntimeTypeModel` before it could produce one. That is the next step if

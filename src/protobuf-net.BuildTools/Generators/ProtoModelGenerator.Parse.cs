@@ -53,7 +53,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (model.ContainingType is not null || model.IsGenericType) return null;
 
             var diagnostics = new List<PlanDiagnostic>();
-            var surrogates = GetSurrogates(model, diagnostics);
+            var surrogates = GetSurrogates(compilation, model, diagnostics);
             var parsed = new Dictionary<string, ProtoContractPlan>(StringComparer.Ordinal);
             var visited = new HashSet<string>(StringComparer.Ordinal);
             var pending = new Queue<INamedTypeSymbol>();
@@ -946,11 +946,27 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>
         /// The model's <c>[ProtoSurrogate]</c> declarations, keyed by the type being surrogated.
         /// </summary>
+        /// <remarks>
+        /// Gathered from least to most specific, so the more specific overwrites: a referenced
+        /// library's assembly-level offer, then this assembly's, then the model's own. That is what
+        /// lets a package ship surrogates for the types it supports - scanning *assembly* attributes
+        /// is cheap and bounded, where scanning every type in every reference would not be.
+        /// </remarks>
         private static Dictionary<string, SurrogateDeclaration> GetSurrogates(
-            INamedTypeSymbol model, List<PlanDiagnostic> diagnostics)
+            Compilation compilation, INamedTypeSymbol model, List<PlanDiagnostic> diagnostics)
         {
             var result = new Dictionary<string, SurrogateDeclaration>(StringComparer.Ordinal);
-            foreach (var attribute in model.GetAttributes())
+            foreach (var reference in compilation.SourceModule.ReferencedAssemblySymbols)
+            {
+                Collect(reference.GetAttributes());
+            }
+            Collect(compilation.Assembly.GetAttributes());
+            Collect(model.GetAttributes());
+            return result;
+
+            void Collect(IEnumerable<AttributeData> attributes)
+            {
+            foreach (var attribute in attributes)
             {
                 if (attribute.AttributeClass?.ToDisplayString() != ProtoSurrogateAttributeName) continue;
                 if (attribute.ConstructorArguments.Length != 2) continue;
@@ -1002,7 +1018,7 @@ namespace ProtoBuf.BuildTools.Generators
                 result[underlying.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)]
                     = new SurrogateDeclaration(surrogate, toName, fromName);
             }
-            return result;
+            }
         }
 
         /// <summary>The fully-qualified call, if a matching public static one-argument method exists.</summary>
