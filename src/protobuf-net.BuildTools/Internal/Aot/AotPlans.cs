@@ -67,7 +67,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// </remarks>
     internal readonly struct ProtoRepeatedPlan : IEquatable<ProtoRepeatedPlan>
     {
-        public ProtoRepeatedPlan(string factory, bool takesCollectionType, bool isValueType)
+        public ProtoRepeatedPlan(string? factory, bool takesCollectionType, bool isValueType)
         {
             Factory = factory;
             TakesCollectionType = takesCollectionType;

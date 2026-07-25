@@ -180,6 +180,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             bool isContract = false, isDataContract = false, isXmlType = false, skipConstructor = false;
+            var ignoreListHandling = false;
             var dataMemberOffset = 0;
             foreach (var attribute in type.GetAttributes())
             {
@@ -202,6 +203,11 @@ namespace ProtoBuf.BuildTools.Generators
                             case "DataMemberOffset" when argument.Value.Value is int offset:
                                 dataMemberOffset = offset;
                                 continue;
+                            // opts the type *out* of list handling, which is what lets a list-like
+                            // contract be serialized as an ordinary message
+                            case "IgnoreListHandling" when argument.Value.Value is bool ignoreList:
+                                ignoreListHandling = ignoreList;
+                                continue;
                         }
                         return Option(diagnostics, at, name, $"[ProtoContract({argument.Key} = ...)]");
                     }
@@ -220,6 +226,19 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return Contract(diagnostics, at, name,
                     "the type is not marked [ProtoContract], [DataContract] or [XmlType]");
+            }
+
+            // protobuf-net serializes anything that *looks* like a list as a collection, even when it
+            // carries [ProtoContract] and has members of its own - those members are simply ignored.
+            // Reproducing that decision means replicating RepeatedSerializers.TryGetRepeatedProvider
+            // exactly, so refuse instead: emitting a message here would silently disagree on the wire.
+            // [ProtoContract(IgnoreListHandling = true)] is the documented opt-out.
+            if (!ignoreListHandling && ResolveRepeated(type) is not null)
+            {
+                return Contract(diagnostics, at, name,
+                    "protobuf-net would serialize it as a collection rather than a message, ignoring "
+                    + "its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a "
+                    + "message");
             }
 
             if (skipConstructor && isValueType)
@@ -525,6 +544,14 @@ namespace ProtoBuf.BuildTools.Generators
             return type is not null && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly);
         }
 
+        /// <summary>
+        /// Is a given <c>RepeatedSerializer</c> factory present in the library being compiled
+        /// against? <c>CreateReadOnySet</c> is net6.0-and-up only.
+        /// </summary>
+        private static bool HasFactory(Compilation compilation, string name)
+            => compilation.GetTypeByMetadataName("ProtoBuf.Serializers.RepeatedSerializer")
+                is { } repeated && !repeated.GetMembers(name).IsEmpty;
+
         /// <summary>Map the DataFormat enum's underlying value onto what we can emit.</summary>
         private static ProtoDataFormat? GetDataFormat(int value) => value switch
         {
@@ -713,59 +740,220 @@ namespace ProtoBuf.BuildTools.Generators
 
             // collections: the element is analysed exactly as a standalone member would be, and the
             // resulting shape *describes the element* - Repeated says how it is stored
-            if (type is IArrayTypeSymbol { Rank: 1 } array)
+            if (ResolveRepeated(type) is { } repeated)
             {
-                return AsRepeated(compilation, array.ElementType, new("CreateVector", false, false), type);
-            }
-            if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } collection
-                && GetRepeatedPlan(collection.ConstructedFrom.ToDisplayString()) is { } repeated)
-            {
-                return AsRepeated(compilation, collection.TypeArguments[0], repeated, type);
+                // maps resolve to a MapSerializer, which we have no plan for yet
+                if (!repeated.IsSupported) return null;
+
+                // IReadOnlySet<T> support is conditional on the runtime the library was built for
+                if (repeated.Plan.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
+
+                return AsRepeated(compilation, repeated.Element!, repeated.Plan, type);
             }
             return null;
         }
 
         /// <summary>
-        /// Which <c>RepeatedSerializer</c> factory serves a given collection type.
+        /// One entry from the provider table in <c>RepeatedSerializers</c>' static constructor.
+        /// </summary>
+        private readonly struct RepeatedProvider
+        {
+            public RepeatedProvider(string metadata, string? factory, bool exactOnly,
+                bool takesCollectionType, bool dropsCollectionTypeWhenExact = false)
+            {
+                Metadata = metadata;
+                Factory = factory;
+                ExactOnly = exactOnly;
+                TakesCollectionType = takesCollectionType;
+                DropsCollectionTypeWhenExact = dropsCollectionTypeWhenExact;
+            }
+
+            /// <summary>e.g. <c>System.Collections.Generic.List`1</c>.</summary>
+            public string Metadata { get; }
+
+            /// <summary>The <c>RepeatedSerializer</c> factory; null for the map shapes, which we refuse.</summary>
+            public string? Factory { get; }
+
+            /// <summary>Applies only to the member's own type, not to something it inherits or implements.</summary>
+            public bool ExactOnly { get; }
+
+            /// <summary><c>Create{X}&lt;TCollection, TElement&gt;()</c> rather than <c>Create{X}&lt;TElement&gt;()</c>.</summary>
+            public bool TakesCollectionType { get; }
+
+            /// <summary><c>List&lt;T&gt;</c> alone gets the one-arg factory; anything derived from it does not.</summary>
+            public bool DropsCollectionTypeWhenExact { get; }
+        }
+
+        /// <summary>
+        /// The provider table from <c>RepeatedSerializers</c>' static constructor, in registration
+        /// order - order <em>is</em> priority, lower wins.
         /// </summary>
         /// <remarks>
-        /// Taken from what ref-emit picks, not guessed: the interfaces all route through
-        /// <c>CreateEnumerable</c>, the concrete shapes have their own factories, and the immutable
-        /// family takes only the element type because the collection type is fixed by the factory.
+        /// Reproduced rather than approximated. Both the ordering and the exact-only flags are
+        /// load-bearing: the immutable family is registered ahead of the mutable lookalikes so that
+        /// it wins on types that implement both, and <c>SortedSet&lt;T&gt;</c> lands on
+        /// <c>CreateEnumerable</c> - not <c>CreateSet</c> - precisely because the
+        /// <c>ISet&lt;T&gt;</c> registration is exact-only and so does not apply through an interface.
         /// </remarks>
-        private static ProtoRepeatedPlan? GetRepeatedPlan(string constructedFrom) => constructedFrom switch
+        private static readonly RepeatedProvider[] s_repeatedProviders =
         {
-            "System.Collections.Generic.List<T>" => new("CreateList", false, false),
+            new("System.Collections.Generic.List`1", "CreateList", false, true, true),
 
-            "System.Collections.Generic.IList<T>" or "System.Collections.Generic.ICollection<T>"
-                or "System.Collections.Generic.IEnumerable<T>" or "System.Collections.Generic.IReadOnlyList<T>"
-                or "System.Collections.Generic.IReadOnlyCollection<T>" => new("CreateEnumerable", true, false),
+            // the immutable set, deliberately ahead of everything that looks like it
+            new("System.Collections.Immutable.ImmutableArray`1", "CreateImmutableArray", true, false),
+            new("System.Collections.Immutable.ImmutableDictionary`2", null, true, false),
+            new("System.Collections.Immutable.ImmutableSortedDictionary`2", null, true, false),
+            new("System.Collections.Immutable.IImmutableDictionary`2", null, true, false),
+            new("System.Collections.Immutable.ImmutableList`1", "CreateImmutableList", true, false),
+            new("System.Collections.Immutable.IImmutableList`1", "CreateImmutableIList", true, false),
+            new("System.Collections.Immutable.ImmutableHashSet`1", "CreateImmutableHashSet", true, false),
+            new("System.Collections.Immutable.ImmutableSortedSet`1", "CreateImmutableSortedSet", true, false),
+            new("System.Collections.Immutable.IImmutableSet`1", "CreateImmutableISet", true, false),
+            new("System.Collections.Immutable.ImmutableQueue`1", "CreateImmutableQueue", true, false),
+            new("System.Collections.Immutable.IImmutableQueue`1", "CreateImmutableIQueue", true, false),
+            new("System.Collections.Immutable.ImmutableStack`1", "CreateImmutableStack", true, false),
+            new("System.Collections.Immutable.IImmutableStack`1", "CreateImmutableIStack", true, false),
 
-            "System.Collections.Generic.HashSet<T>" or "System.Collections.Generic.SortedSet<T>"
-                or "System.Collections.Generic.ISet<T>" => new("CreateSet", true, false),
-            "System.Collections.Generic.Queue<T>" => new("CreateQueue", true, false),
-            "System.Collections.Generic.Stack<T>" => new("CreateStack", true, false),
+            // the concurrent set
+            new("System.Collections.Concurrent.ConcurrentDictionary`2", null, false, false),
+            new("System.Collections.Concurrent.ConcurrentBag`1", "CreateConcurrentBag", false, true),
+            new("System.Collections.Concurrent.ConcurrentQueue`1", "CreateConcurrentQueue", false, true),
+            new("System.Collections.Concurrent.ConcurrentStack`1", "CreateConcurrentStack", false, true),
+            new("System.Collections.Concurrent.IProducerConsumerCollection`1", "CreateIProducerConsumerCollection", false, true),
 
-            "System.Collections.Concurrent.ConcurrentQueue<T>" => new("CreateConcurrentQueue", true, false),
-            "System.Collections.Concurrent.ConcurrentStack<T>" => new("CreateConcurrentStack", true, false),
-            "System.Collections.Concurrent.ConcurrentBag<T>" => new("CreateConcurrentBag", true, false),
-            "System.Collections.Concurrent.IProducerConsumerCollection<T>"
-                => new("CreateIProducerConsumerCollection", true, false),
+            // pretty normal stuff
+            new("System.Collections.Generic.Dictionary`2", null, false, false),
+            new("System.Collections.Generic.IDictionary`2", null, false, false),
+            new("System.Collections.Generic.IReadOnlyDictionary`2", null, true, false),
+            new("System.Collections.Generic.Queue`1", "CreateQueue", false, true),
+            new("System.Collections.Generic.Stack`1", "CreateStack", false, true),
+            new("System.Collections.Generic.HashSet`1", "CreateSet", true, true),
+            new("System.Collections.Generic.ISet`1", "CreateSet", true, true),
+            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnySet", true, false),
 
-            // ImmutableArray<T> is a struct, so neither side null-tests it
-            "System.Collections.Immutable.ImmutableArray<T>" => new("CreateImmutableArray", false, true),
-            "System.Collections.Immutable.ImmutableList<T>" => new("CreateImmutableList", false, false),
-            "System.Collections.Immutable.IImmutableList<T>" => new("CreateImmutableIList", false, false),
-            "System.Collections.Immutable.ImmutableQueue<T>" => new("CreateImmutableQueue", false, false),
-            "System.Collections.Immutable.IImmutableQueue<T>" => new("CreateImmutableIQueue", false, false),
-            "System.Collections.Immutable.ImmutableStack<T>" => new("CreateImmutableStack", false, false),
-            "System.Collections.Immutable.IImmutableStack<T>" => new("CreateImmutableIStack", false, false),
-            "System.Collections.Immutable.ImmutableHashSet<T>" => new("CreateImmutableHashSet", false, false),
-            "System.Collections.Immutable.ImmutableSortedSet<T>" => new("CreateImmutableSortedSet", false, false),
-            "System.Collections.Immutable.IImmutableSet<T>" => new("CreateImmutableISet", false, false),
-
-            _ => null,
+            // the fallback, which is why nearly anything enumerable is a collection
+            new("System.Collections.Generic.IEnumerable`1", "CreateEnumerable", false, true),
         };
+
+        /// <summary>
+        /// Shapes that resolve to a serializer which throws at runtime; we refuse them up-front.
+        /// </summary>
+        private static readonly string[] s_notSupportedFlavors =
+        {
+            "System.Span`1", "System.ReadOnlySpan`1", "System.Buffers.ReadOnlySequence`1",
+            "System.ReadOnlyMemory`1", "System.Memory`1", "System.ArraySegment`1",
+            "System.Buffers.IMemoryOwner`1",
+        };
+
+        /// <summary>What <c>TryGetRepeatedProvider</c> found for a type.</summary>
+        private readonly struct RepeatedMatch
+        {
+            public RepeatedMatch(ProtoRepeatedPlan plan, ITypeSymbol? element)
+            {
+                Plan = plan;
+                Element = element;
+            }
+
+            public ProtoRepeatedPlan Plan { get; }
+
+            /// <summary>Null for the map shapes, which carry two.</summary>
+            public ITypeSymbol? Element { get; }
+
+            /// <summary>Maps are repeated, but we have no plan for them yet.</summary>
+            public bool IsSupported => Plan.Factory is not null && Element is not null;
+        }
+
+        /// <summary>
+        /// A port of <c>RepeatedSerializers.TryGetRepeatedProvider</c>: walk the base-type chain and
+        /// then the interfaces, keeping the lowest-priority match, and treat a tie between two
+        /// different resolutions as "not a collection at all".
+        /// </summary>
+        /// <remarks>
+        /// This is the single decision behind both questions we need to answer - which factory a
+        /// member's collection uses, and whether a contract is list-like - so they cannot drift apart.
+        /// </remarks>
+        private static RepeatedMatch? ResolveRepeated(ITypeSymbol type)
+        {
+            if (type.SpecialType == SpecialType.System_String) return null;
+            if (IsBytesLike(type)) return null; // "bytes", not a repeated byte
+
+            if (type is IArrayTypeSymbol array)
+            {
+                // vectors only: byte[] is handled above, and byte[,] has no vector type to match
+                return array.Rank == 1
+                    ? new RepeatedMatch(new ProtoRepeatedPlan("CreateVector", false, false), array.ElementType)
+                    : null;
+            }
+            if (type is not INamedTypeSymbol root) return null;
+            if (root.IsGenericType && Array.IndexOf(s_notSupportedFlavors, MetadataName(root)) >= 0) return null;
+
+            int bestPriority = int.MaxValue, best = -1;
+            ITypeSymbol? bestElement = null;
+            bool ambiguous = false;
+
+            for (var current = root; current is not null && current.SpecialType != SpecialType.System_Object;
+                current = current.BaseType)
+            {
+                Consider(current);
+            }
+            foreach (var iface in root.AllInterfaces) Consider(iface);
+
+            if (ambiguous || best < 0) return null;
+
+            var found = s_repeatedProviders[best];
+            // List<T> alone gets the one-arg factory; a type *derived* from it still needs both args
+            var exact = MetadataName(root) == found.Metadata;
+            var takesCollectionType = found.TakesCollectionType && !(found.DropsCollectionTypeWhenExact && exact);
+            return new RepeatedMatch(new ProtoRepeatedPlan(found.Factory, takesCollectionType, root.IsValueType), bestElement);
+
+            void Consider(INamedTypeSymbol current)
+            {
+                if (!current.IsGenericType) return;
+                var metadata = MetadataName(current);
+                for (int i = 0; i < s_repeatedProviders.Length; i++)
+                {
+                    var candidate = s_repeatedProviders[i];
+                    if (candidate.Metadata != metadata) continue;
+                    if (i > bestPriority) return;
+                    if (candidate.ExactOnly && !SymbolEqualityComparer.Default.Equals(root, current)) return;
+
+                    var element = current.TypeArguments.Length == 1 ? current.TypeArguments[0] : null;
+                    if (i < bestPriority)
+                    {
+                        bestPriority = i;
+                        best = i;
+                        bestElement = element;
+                        ambiguous = false;
+                    }
+                    // the same registration reached twice - IEnumerable<int> *and* IEnumerable<string>,
+                    // say - resolves to two different serializers, which ref-emit treats as no match
+                    else if (!SymbolEqualityComparer.Default.Equals(element, bestElement))
+                    {
+                        ambiguous = true;
+                    }
+                    return;
+                }
+            }
+
+        }
+
+        /// <summary>e.g. <c>System.Collections.Generic.List`1</c>, matching the runtime table's keys.</summary>
+        private static string MetadataName(INamedTypeSymbol type)
+        {
+            var definition = type.OriginalDefinition;
+            var ns = definition.ContainingNamespace;
+            return ns is null or { IsGlobalNamespace: true }
+                ? definition.MetadataName
+                : ns.ToDisplayString() + "." + definition.MetadataName;
+        }
+
+        private static bool IsBytesLike(ITypeSymbol type)
+        {
+            if (type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte }) return true;
+            return type is INamedTypeSymbol { TypeArguments.Length: 1 } named
+                && named.TypeArguments[0].SpecialType == SpecialType.System_Byte
+                && MetadataName(named) is "System.Memory`1" or "System.ReadOnlyMemory`1" or "System.ArraySegment`1";
+        }
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
             ProtoRepeatedPlan repeated, ITypeSymbol declared)

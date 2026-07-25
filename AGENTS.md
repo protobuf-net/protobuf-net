@@ -181,13 +181,30 @@ AOT by definition, so none of the AOT generator's requirements apply to them.
 ### Collections
 
 Arrays, `List<T>`, the collection interfaces, sets/queues/stacks, and the immutable and concurrent
-families, of scalars, messages and enums. Which `RepeatedSerializer` factory serves which collection
-is a **lookup table taken from ref-emit** (`GetRepeatedPlan`), not inferred — the interfaces all
-route through `CreateEnumerable`, and the factories come in two shapes:
-`Create{X}<TCollection, TElement>()` needs the member's declared type, while
-`Create{X}<TElement>()` has it fixed by the factory (arrays, `List<T>`, the immutable family).
-`ImmutableArray<T>` is a **struct**, so neither side null-tests it. Read uses the same merge shape as sub-messages (existing collection passed in,
-result assigned back only when non-null). Facts confirmed against ref-emit rather than assumed:
+families, of scalars, messages and enums.
+
+Which `RepeatedSerializer` factory serves which collection is **not a lookup table** and cannot be
+one: `ResolveRepeated` is a port of `RepeatedSerializers.TryGetRepeatedProvider`, walking the
+base-type chain and then the interfaces against a priority-ordered provider table. Three parts of
+that algorithm are load-bearing, and a table keyed on the declared type gets all three wrong:
+
+- **Order is priority**, lowest wins. The immutable family is registered *ahead* of the mutable
+  lookalikes precisely so it wins on types implementing both.
+- Most entries are **exact-only**: they apply to the member's own type but not to anything deriving
+  from or implementing it. This is why `SortedSet<T>` gets `CreateEnumerable`, not `CreateSet` —
+  the `ISet<T>` registration is exact-only, so it does not apply through an interface — and why
+  `class MySet : HashSet<int>` also gets `CreateEnumerable`, while `class MyQueue : Queue<int>`
+  keeps `CreateQueue` (the `Queue<T>` registration is not exact-only).
+- Two matches at the **same** priority resolving differently — `IEnumerable<int>` *and*
+  `IEnumerable<string>` on one type — is treated as **no match at all**, leaving an ordinary
+  message. `Derived.input.cs` pins all four cases against ref-emit.
+
+`List<T>` alone gets `CreateList<T>()`; anything derived from it needs `CreateList<TRoot, T>()`.
+More generally the factories come in two shapes: `Create{X}<TCollection, TElement>()` needs the
+member's declared type, while `Create{X}<TElement>()` has it fixed by the factory (arrays,
+`List<T>`, the immutable family). `ImmutableArray<T>` is a **struct**, so neither side null-tests
+it. Read uses the same merge shape as sub-messages (existing collection passed in, result assigned
+back only when non-null). Facts confirmed against ref-emit rather than assumed:
 
 - **Packing is a compile-time decision.** The features constant carries `OptionPackedDisabled`, and
   ref-emit simply *omits* it for `[ProtoMember(IsPacked = true)]`. Unpacked is the default; that
@@ -202,6 +219,25 @@ result assigned back only when non-null). Facts confirmed against ref-emit rathe
   failing with "no serializer for type" at runtime.
 - protobuf-net **rejects null elements** inside a collection (`ThrowNullRepeatedContents`), so
   fixtures must not contain them.
+- **A list-like `[ProtoContract]` is refused.** The same resolution decides whether a *contract* is
+  a collection; if it is, protobuf-net serializes it as one and ignores its members entirely.
+  Emitting a message there would silently disagree on the wire, so the contract is dropped (and
+  anything referencing it cascades). `[ProtoContract(IgnoreListHandling = true)]` is the documented
+  opt-out and makes it an ordinary message — that is exactly what the runtime honours, in
+  `RuntimeTypeModel.TryGetRepeatedProvider`. There is no "has a public `Add`" or "has a
+  `GetEnumerator`" heuristic anywhere in modern protobuf-net; `ResolveUniqueEnumerableT` is
+  `[Obsolete]` and unused.
+- **Maps are repeated too**, resolving to a `MapSerializer`. They have no plan yet, so they are
+  dropped with a diagnostic rather than mistaken for messages — the table carries the entries with
+  a null factory precisely so they are recognised and refused.
+- `Span<T>`, `Memory<T>`, `ArraySegment<T>` and friends resolve to a serializer that *throws* at
+  runtime; refused up front. `byte[]`, `Memory<byte>`, `ReadOnlyMemory<byte>` and
+  `ArraySegment<byte>` are "bytes", not collections.
+- `IProducerConsumerCollection<T>` resolves to a provider, but **reading** one needs a concrete type
+  to construct, so ref-emit throws on deserialize. There is nothing to compare against, so it has no
+  fixture.
+- `IReadOnlySet<T>` maps to `CreateReadOnySet` (sic), which only exists in the net6.0+ build of the
+  library; the generator checks the symbol is present before emitting a call to it.
 
 Collection options are pure features composition, and compose orthogonally:
 `IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*

@@ -31,6 +31,21 @@ public class Exotics
 
     // and a string element, to prove the element type still drives the features
     [ProtoMember(13)] public IList<string> Strings { get; set; }
+
+    // the remaining table entries, so every factory in GetRepeatedPlan is actually exercised
+    [ProtoMember(14)] public SortedSet<int> SortedSet { get; set; }
+    [ProtoMember(15)] public ISet<int> ISet { get; set; }
+    [ProtoMember(16)] public IReadOnlyCollection<int> ReadOnlyCollection { get; set; }
+    [ProtoMember(17)] public ConcurrentStack<int> ConcurrentStack { get; set; }
+    // 18 was IProducerConsumerCollection<int>: it resolves to a provider, but *reading* one needs a
+    // concrete type to construct, so ref-emit throws on deserialize. Nothing to compare against.
+    [ProtoMember(19)] public ImmutableQueue<int> ImmutableQueue { get; set; }
+    [ProtoMember(20)] public IImmutableQueue<int> ImmutableIQueue { get; set; }
+    [ProtoMember(21)] public ImmutableStack<int> ImmutableStack { get; set; }
+    [ProtoMember(22)] public IImmutableStack<int> ImmutableIStack { get; set; }
+    [ProtoMember(23)] public ImmutableHashSet<int> ImmutableHashSet { get; set; }
+    [ProtoMember(24)] public ImmutableSortedSet<int> ImmutableSortedSet { get; set; }
+    [ProtoMember(25)] public IImmutableSet<int> ImmutableISet { get; set; }
 }
 
 public static class ExoticSamples
@@ -47,6 +62,11 @@ public static class ExoticSamples
         new Exotics { ConcurrentQueue = new ConcurrentQueue<int>([18]) },
         new Exotics { ConcurrentBag = new ConcurrentBag<int>([19]) },
         new Exotics { Strings = ["a", "b"] },
+        new Exotics { SortedSet = [20, 21], ISet = new HashSet<int> { 22 } },
+        new Exotics { ReadOnlyCollection = [23], ConcurrentStack = new ConcurrentStack<int>([24]) },
+        new Exotics { ImmutableQueue = ImmutableQueue.Create(26), ImmutableIQueue = ImmutableQueue.Create(27) },
+        new Exotics { ImmutableStack = ImmutableStack.Create(28), ImmutableIStack = ImmutableStack.Create(29) },
+        new Exotics { ImmutableHashSet = [30], ImmutableSortedSet = [31], ImmutableISet = ImmutableHashSet.Create(32) },
     ];
 }
 

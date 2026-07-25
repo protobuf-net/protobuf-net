@@ -149,6 +149,116 @@ internal sealed class ___PBN_Services___ExoticModel : ISerializer<Exotics>
 				}
 				break;
 			}
+			case 14:
+			{
+				SortedSet<int> sortedSet = value.SortedSet;
+				sortedSet = RepeatedSerializer.CreateEnumerable<SortedSet<int>, int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, sortedSet);
+				if (sortedSet != null)
+				{
+					value.SortedSet = sortedSet;
+				}
+				break;
+			}
+			case 15:
+			{
+				ISet<int> iSet = value.ISet;
+				iSet = RepeatedSerializer.CreateSet<ISet<int>, int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, iSet);
+				if (iSet != null)
+				{
+					value.ISet = iSet;
+				}
+				break;
+			}
+			case 16:
+			{
+				IReadOnlyCollection<int> readOnlyCollection = value.ReadOnlyCollection;
+				readOnlyCollection = RepeatedSerializer.CreateEnumerable<IReadOnlyCollection<int>, int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, readOnlyCollection);
+				if (readOnlyCollection != null)
+				{
+					value.ReadOnlyCollection = readOnlyCollection;
+				}
+				break;
+			}
+			case 17:
+			{
+				ConcurrentStack<int> concurrentStack = value.ConcurrentStack;
+				concurrentStack = RepeatedSerializer.CreateConcurrentStack<ConcurrentStack<int>, int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, concurrentStack);
+				if (concurrentStack != null)
+				{
+					value.ConcurrentStack = concurrentStack;
+				}
+				break;
+			}
+			case 19:
+			{
+				ImmutableQueue<int> immutableQueue = value.ImmutableQueue;
+				immutableQueue = RepeatedSerializer.CreateImmutableQueue<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableQueue);
+				if (immutableQueue != null)
+				{
+					value.ImmutableQueue = immutableQueue;
+				}
+				break;
+			}
+			case 20:
+			{
+				IImmutableQueue<int> immutableIQueue = value.ImmutableIQueue;
+				immutableIQueue = RepeatedSerializer.CreateImmutableIQueue<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableIQueue);
+				if (immutableIQueue != null)
+				{
+					value.ImmutableIQueue = immutableIQueue;
+				}
+				break;
+			}
+			case 21:
+			{
+				ImmutableStack<int> immutableStack = value.ImmutableStack;
+				immutableStack = RepeatedSerializer.CreateImmutableStack<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableStack);
+				if (immutableStack != null)
+				{
+					value.ImmutableStack = immutableStack;
+				}
+				break;
+			}
+			case 22:
+			{
+				IImmutableStack<int> immutableIStack = value.ImmutableIStack;
+				immutableIStack = RepeatedSerializer.CreateImmutableIStack<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableIStack);
+				if (immutableIStack != null)
+				{
+					value.ImmutableIStack = immutableIStack;
+				}
+				break;
+			}
+			case 23:
+			{
+				ImmutableHashSet<int> immutableHashSet = value.ImmutableHashSet;
+				immutableHashSet = RepeatedSerializer.CreateImmutableHashSet<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableHashSet);
+				if (immutableHashSet != null)
+				{
+					value.ImmutableHashSet = immutableHashSet;
+				}
+				break;
+			}
+			case 24:
+			{
+				ImmutableSortedSet<int> immutableSortedSet = value.ImmutableSortedSet;
+				immutableSortedSet = RepeatedSerializer.CreateImmutableSortedSet<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableSortedSet);
+				if (immutableSortedSet != null)
+				{
+					value.ImmutableSortedSet = immutableSortedSet;
+				}
+				break;
+			}
+			case 25:
+			{
+				IImmutableSet<int> immutableISet = value.ImmutableISet;
+				immutableISet = RepeatedSerializer.CreateImmutableISet<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, immutableISet);
+				if (immutableISet != null)
+				{
+					value.ImmutableISet = immutableISet;
+				}
+				break;
+			}
 			default:
 				state.SkipField();
 				break;
@@ -233,6 +343,72 @@ internal sealed class ___PBN_Services___ExoticModel : ISerializer<Exotics>
 		{
 			IList<string> values12 = strings;
 			RepeatedSerializer.CreateEnumerable<IList<string>, string>().WriteRepeated(ref state, 13, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values12);
+		}
+		SortedSet<int> sortedSet = value.SortedSet;
+		if (sortedSet != null)
+		{
+			SortedSet<int> values13 = sortedSet;
+			RepeatedSerializer.CreateEnumerable<SortedSet<int>, int>().WriteRepeated(ref state, 14, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values13);
+		}
+		ISet<int> iSet = value.ISet;
+		if (iSet != null)
+		{
+			ISet<int> values14 = iSet;
+			RepeatedSerializer.CreateSet<ISet<int>, int>().WriteRepeated(ref state, 15, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values14);
+		}
+		IReadOnlyCollection<int> readOnlyCollection = value.ReadOnlyCollection;
+		if (readOnlyCollection != null)
+		{
+			IReadOnlyCollection<int> values15 = readOnlyCollection;
+			RepeatedSerializer.CreateEnumerable<IReadOnlyCollection<int>, int>().WriteRepeated(ref state, 16, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values15);
+		}
+		ConcurrentStack<int> concurrentStack = value.ConcurrentStack;
+		if (concurrentStack != null)
+		{
+			ConcurrentStack<int> values16 = concurrentStack;
+			RepeatedSerializer.CreateConcurrentStack<ConcurrentStack<int>, int>().WriteRepeated(ref state, 17, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values16);
+		}
+		ImmutableQueue<int> immutableQueue = value.ImmutableQueue;
+		if (immutableQueue != null)
+		{
+			ImmutableQueue<int> values17 = immutableQueue;
+			RepeatedSerializer.CreateImmutableQueue<int>().WriteRepeated(ref state, 19, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values17);
+		}
+		IImmutableQueue<int> immutableIQueue = value.ImmutableIQueue;
+		if (immutableIQueue != null)
+		{
+			IImmutableQueue<int> values18 = immutableIQueue;
+			RepeatedSerializer.CreateImmutableIQueue<int>().WriteRepeated(ref state, 20, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values18);
+		}
+		ImmutableStack<int> immutableStack = value.ImmutableStack;
+		if (immutableStack != null)
+		{
+			ImmutableStack<int> values19 = immutableStack;
+			RepeatedSerializer.CreateImmutableStack<int>().WriteRepeated(ref state, 21, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values19);
+		}
+		IImmutableStack<int> immutableIStack = value.ImmutableIStack;
+		if (immutableIStack != null)
+		{
+			IImmutableStack<int> values20 = immutableIStack;
+			RepeatedSerializer.CreateImmutableIStack<int>().WriteRepeated(ref state, 22, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values20);
+		}
+		ImmutableHashSet<int> immutableHashSet = value.ImmutableHashSet;
+		if (immutableHashSet != null)
+		{
+			ImmutableHashSet<int> values21 = immutableHashSet;
+			RepeatedSerializer.CreateImmutableHashSet<int>().WriteRepeated(ref state, 23, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values21);
+		}
+		ImmutableSortedSet<int> immutableSortedSet = value.ImmutableSortedSet;
+		if (immutableSortedSet != null)
+		{
+			ImmutableSortedSet<int> values22 = immutableSortedSet;
+			RepeatedSerializer.CreateImmutableSortedSet<int>().WriteRepeated(ref state, 24, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values22);
+		}
+		IImmutableSet<int> immutableISet = value.ImmutableISet;
+		if (immutableISet != null)
+		{
+			IImmutableSet<int> values23 = immutableISet;
+			RepeatedSerializer.CreateImmutableISet<int>().WriteRepeated(ref state, 25, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values23);
 		}
 	}
 
