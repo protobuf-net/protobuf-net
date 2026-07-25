@@ -282,7 +282,8 @@ Collection options are pure features composition, and compose orthogonally:
   the read: a required string still keeps its `if (x != null)` on the way back in. The emitter omits
   the test entirely rather than emitting `if (true)`.
 
-`WellKnown` is still refused.
+`WellKnown` is meaningful only on the compatibility-level BCL types, where it promotes a level-200
+member to 240; it is refused anywhere else.
 
 Note `ListSet` and `RepeatedAsList` are **protogen schema-codegen** options that shape generated DTOs
 from `.proto`; they are not `[ProtoMember]` options and have nothing to do with this generator.
@@ -340,6 +341,40 @@ code involved. It is only reachable from a payload carrying the same field twice
 sub-type markers (`Dog` then `Cat`); same-branch merges, in either direction, are fine.
 `Inherit.input.cs`'s `Holder` samples stay on one branch because of it, since the differential suite
 manufactures repeated fields by concatenating every sample of a type.
+
+### Compatibility level and the BCL types
+
+`DateTime`, `TimeSpan`, `Guid` and `decimal` are the **only** things the compatibility level touches,
+so the two features are one piece of work. All four are length-prefixed —
+`WriteFieldHeader(n, WireType.String)` — and go through `BclHelpers`; the level picks the method:
+
+| | 200 | 240 | 300 |
+| --- | --- | --- | --- |
+| `DateTime` | `DateTime` | `Timestamp` | `Timestamp` |
+| `TimeSpan` | `TimeSpan` | `Duration` | `Duration` |
+| `Guid` | `Guid` | `Guid` | `GuidString`, or `GuidBytes` with `DataFormat.FixedSize` |
+| `decimal` | `Decimal` | `Decimal` | `DecimalString` |
+
+Resolution is a port of `TypeCompatibilityHelper`: **member attribute → type attribute (inherited
+from base types) → module → assembly → 200**, then `ValueMember.GetEffectiveCompatibilityLevel`,
+where at or below 200 `DataFormat.WellKnown` promotes to 240 and above 200 it means nothing.
+
+Facts taken from ref-emit rather than assumed:
+
+- **`DateTime` is written unconditionally.** The other three are guarded against `TimeSpan.Zero`,
+  `Guid.Empty` and `0m` — zero is a legitimate date, so there is no trivial value to skip. A
+  *nullable* one is guarded by `HasValue` like any other nullable, with no inner value test.
+- `DataFormat.FixedSize` on a `Guid` **below** level 300 is simply ignored, not an error.
+- `DataFormat.WellKnown` on a `Guid` or `decimal` is a no-op, since 240 equals 200 for those two.
+- `[DefaultValue]` on any of the four is refused: there is no ref-emit shape to copy.
+
+`[module: CompatibilityLevel(...)]` is fixtured under `Data/Diagnostics/` **deliberately**: a module
+attribute applies to the whole assembly, and `AotRefGen`/`AotConformanceTests` link every fixture
+into one, so placing it beside them would silently re-level all of them. The golden tests compile
+each input in isolation, which is exactly what is needed.
+
+Note the level-200 `Guid` path costs four AOT warnings that the other forms do not — see
+`docs/aot-findings.md`.
 
 ### Extensible contracts
 
@@ -401,10 +436,6 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
   reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
   is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
-- **compatibility level** (`[CompatibilityLevel]`, `RuntimeTypeModel.DefaultCompatibilityLevel`) —
-  it changes the wire form of the BCL types below *and* is inherited from assembly/module/type down
-  to the member, so it cannot be read off a single attribute. See `docs/compatibilitylevel.md`.
-- the compatibility-level BCL types (`DateTime`/`TimeSpan`/`decimal`/`Guid`)
 - surrogates, serialization callbacks, `ShouldSerialize`/`Specified`
 
 ### Golden-file tests

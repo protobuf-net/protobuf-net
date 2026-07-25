@@ -36,6 +36,29 @@ public class Order
 
     // unknown fields are kept rather than discarded, which routes through IExtension/BufferExtension
     [ProtoMember(10)] public Note Note { get; set; }
+
+    // the compatibility-level BCL types, at both ends of the range: level 200 goes through
+    // bcl.proto, level 300 through the well-known and string forms
+    [ProtoMember(11)] public Legacy Legacy { get; set; }
+    [ProtoMember(12)] public Modern Modern { get; set; }
+}
+
+[ProtoContract]
+public class Legacy
+{
+    [ProtoMember(1)] public DateTime When { get; set; }
+    [ProtoMember(2)] public TimeSpan How { get; set; }
+    [ProtoMember(3)] public Guid Id { get; set; }
+    [ProtoMember(4)] public decimal Amount { get; set; }
+}
+
+[ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
+public class Modern
+{
+    [ProtoMember(1)] public DateTime When { get; set; }
+    [ProtoMember(2)] public TimeSpan How { get; set; }
+    [ProtoMember(3)] public Guid Id { get; set; }
+    [ProtoMember(4)] public decimal Amount { get; set; }
 }
 
 [ProtoContract]
@@ -90,6 +113,9 @@ internal static class Program
     /// Round-trips through the generated model using only the generic APIs, so nothing is resolved
     /// reflectively. Returns 0 on success; any failure is reported and returns non-zero.
     /// </summary>
+    private static readonly DateTime When = new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+    private static readonly Guid Id = new Guid("0f8fad5b-d9cb-469f-a165-70867728950e");
+
     private static int Main()
     {
         var failures = 0;
@@ -107,6 +133,20 @@ internal static class Program
             Size = new Dimensions { Width = 3, Height = 4 },
             Payment = new CardPayment { Amount = 99, Last4 = "4242" },
             Note = new Note { Text = "hi" },
+            Legacy = new Legacy
+            {
+                When = When,
+                How = TimeSpan.FromMinutes(90),
+                Id = Id,
+                Amount = 1.25m,
+            },
+            Modern = new Modern
+            {
+                When = When,
+                How = TimeSpan.FromMinutes(90),
+                Id = Id,
+                Amount = 1.25m,
+            },
         };
 
         using var ms = new MemoryStream();
@@ -133,6 +173,14 @@ internal static class Program
         Check(ref failures, "Payment.Last4", ((CardPayment)original.Payment).Last4,
             (clone.Payment as CardPayment)?.Last4);
         Check(ref failures, "Note.Text", original.Note.Text, clone.Note?.Text);
+        Check(ref failures, "Legacy.When", original.Legacy.When, clone.Legacy?.When);
+        Check(ref failures, "Legacy.How", original.Legacy.How, clone.Legacy?.How);
+        Check(ref failures, "Legacy.Id", original.Legacy.Id, clone.Legacy?.Id);
+        Check(ref failures, "Legacy.Amount", original.Legacy.Amount, clone.Legacy?.Amount);
+        Check(ref failures, "Modern.When", original.Modern.When, clone.Modern?.When);
+        Check(ref failures, "Modern.How", original.Modern.How, clone.Modern?.How);
+        Check(ref failures, "Modern.Id", original.Modern.Id, clone.Modern?.Id);
+        Check(ref failures, "Modern.Amount", original.Modern.Amount, clone.Modern?.Amount);
 
         // an unknown field must survive being read into a contract that does not declare it and
         // written back out. Producing it via NoteV2 keeps this on the generic, generated path -

@@ -241,6 +241,11 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
+                    // the BCL types read through BclHelpers, which needs no hint and no cast
+                    case ProtoMemberKind.DateTime:
+                    case ProtoMemberKind.TimeSpan:
+                    case ProtoMemberKind.Guid:
+                    case ProtoMemberKind.Decimal:
                         if (ScalarReadHint(member) is { } hint) Line(sb, indent + 3, hint);
                         Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member)));
                         break;
@@ -383,6 +388,12 @@ namespace ProtoBuf.BuildTools.Generators
 
                 switch (member.Kind)
                 {
+                    // DateTime alone among the BCL types is written unconditionally - zero is a
+                    // legitimate date, so there is no "trivial" value to skip
+                    case ProtoMemberKind.DateTime:
+                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                        break;
+
                     // int32 has a convenience overload that writes its own field header; everything
                     // else needs the header emitting separately, as ref-emit does
                     case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default:
@@ -403,6 +414,9 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
+                    case ProtoMemberKind.TimeSpan:
+                    case ProtoMemberKind.Guid:
+                    case ProtoMemberKind.Decimal:
                         // IsRequired means field presence, so there is no test to emit at all
                         if (member.IsRequired)
                         {
@@ -732,8 +746,14 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local)
         {
             var expression = ScalarValue(member, local);
+            if (BclSuffix(member) is { } bcl)
+            {
+                // always length-prefixed, whatever the level and type
+                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
+                Line(sb, indent, $"global::ProtoBuf.BclHelpers.Write{bcl}(ref state, {expression});");
+            }
             // the Int32 shortcut writes its own varint header, so it only applies at the default format
-            if (member.Kind == ProtoMemberKind.Int32 && member.DataFormat == ProtoDataFormat.Default)
+            else if (member.Kind == ProtoMemberKind.Int32 && member.DataFormat == ProtoDataFormat.Default)
             {
                 Line(sb, indent, $"state.WriteInt32Varint({number}, {expression});");
             }
@@ -760,8 +780,30 @@ namespace ProtoBuf.BuildTools.Generators
             => member.DataFormat == ProtoDataFormat.ZigZag
                 ? "state.Hint(global::ProtoBuf.WireType.SignedVarint);" : null;
 
+        /// <summary>
+        /// The <c>BclHelpers</c> method suffix for a compatibility-level BCL type, or null if this
+        /// member is not one.
+        /// </summary>
+        /// <remarks>
+        /// Taken from ref-emit at each level. Note the level has already absorbed
+        /// <c>DataFormat.WellKnown</c>, and that <c>FixedSize</c> selects the 16-byte Guid only at
+        /// level 300 — below that it is simply ignored.
+        /// </remarks>
+        private static string? BclSuffix(ProtoMemberPlan member) => member.Kind switch
+        {
+            ProtoMemberKind.DateTime => member.CompatibilityLevel >= 240 ? "Timestamp" : "DateTime",
+            ProtoMemberKind.TimeSpan => member.CompatibilityLevel >= 240 ? "Duration" : "TimeSpan",
+            ProtoMemberKind.Guid => member.CompatibilityLevel >= 300
+                ? (member.DataFormat == ProtoDataFormat.FixedSize ? "GuidBytes" : "GuidString")
+                : "Guid",
+            ProtoMemberKind.Decimal => member.CompatibilityLevel >= 300 ? "DecimalString" : "Decimal",
+            _ => null,
+        };
+
         private static string ScalarRead(ProtoMemberPlan member)
         {
+            if (BclSuffix(member) is { } bcl) return $"global::ProtoBuf.BclHelpers.Read{bcl}(ref state)";
+
             var call = $"state.{ScalarSuffix(member.Kind, "Read")}()";
             if (member.EnumTypeName is { } enumType) return $"({enumType}){call}";
             return member.Kind == ProtoMemberKind.Char ? $"(char){call}" : call;
@@ -824,6 +866,11 @@ namespace ProtoBuf.BuildTools.Generators
                 ProtoMemberKind.Bool => local,
                 ProtoMemberKind.Single => $"{local} != 0f",
                 ProtoMemberKind.Double => $"{local} != 0d",
+                // DateTime is the odd one out: ref-emit writes it unconditionally, so it never
+                // reaches here (see the write, which skips the test for it entirely)
+                ProtoMemberKind.TimeSpan => $"{local} != global::System.TimeSpan.Zero",
+                ProtoMemberKind.Guid => $"{local} != global::System.Guid.Empty",
+                ProtoMemberKind.Decimal => $"{local} != 0m",
                 _ => $"{local} != 0",
             };
         }

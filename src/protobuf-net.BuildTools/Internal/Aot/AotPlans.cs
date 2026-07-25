@@ -35,6 +35,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <summary>A nested contract, served by another serializer on the same services type.</summary>
         Message,
 
+        // the four BCL types whose encoding is chosen by the compatibility level rather than by the
+        // type alone; all of them are length-prefixed and go through BclHelpers
+
+        DateTime,
+        TimeSpan,
+        Guid,
+        Decimal,
+
         /// <summary>
         /// A dictionary. Unlike every other kind this says nothing about the member on its own —
         /// <see cref="ProtoMemberPlan.Map"/> carries both element types.
@@ -61,6 +69,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         /// <summary>Group encoding for a sub-message; affects the write only.</summary>
         Group,
+
+        /// <summary>
+        /// Only meaningful on the compatibility-level BCL types, where it promotes a level-200
+        /// member to level 240; it is the older, single-step form of the same idea.
+        /// </summary>
+        WellKnown,
     }
 
     /// <summary>
@@ -170,8 +184,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
-            ProtoMapPlan map = default, bool isInitOnly = false)
+            ProtoMapPlan map = default, bool isInitOnly = false, int compatibilityLevel = 200)
         {
+            CompatibilityLevel = compatibilityLevel;
             IsInitOnly = isInitOnly;
             DataFormat = dataFormat;
             IsRequired = isRequired;
@@ -236,6 +251,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool IsInitOnly { get; }
 
         /// <summary>
+        /// The resolved compatibility level (200, 240 or 300), already through the
+        /// <c>DataFormat.WellKnown</c> promotion. Only the BCL kinds consult it.
+        /// </summary>
+        public int CompatibilityLevel { get; }
+
+        /// <summary>
         /// From <c>[ProtoMember(IsRequired = true)]</c>: the member is written unconditionally.
         /// Only observable for value-type scalars — reference types were already unguarded on write —
         /// and it does not affect the read at all.
@@ -283,7 +304,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
-                && IsInitOnly == other.IsInitOnly;
+                && IsInitOnly == other.IsInitOnly && CompatibilityLevel == other.CompatibilityLevel;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

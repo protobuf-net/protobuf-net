@@ -14,6 +14,7 @@ namespace ProtoBuf.BuildTools.Generators
     {
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
+        private const string CompatibilityLevelAttributeName = "ProtoBuf.CompatibilityLevelAttribute";
         private const string ExtensibleTypeName = "ProtoBuf.Extensible";
         private const string ExtensibleInterfaceName = "ProtoBuf.IExtensible";
         private const string TypedExtensibleInterfaceName = "ProtoBuf.ITypedExtensible";
@@ -507,6 +508,33 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 var kind = shape.Kind;
                 var message = shape.Message;
+
+                // the compatibility level chooses the encoding for the four BCL types, and nothing
+                // else; resolving it for every member would be wasted work
+                var compatibilityLevel = 200;
+                if (IsBclKind(kind))
+                {
+                    compatibilityLevel = GetEffectiveCompatibilityLevel(
+                        GetDeclaredLevel(symbol) ?? GetCompatibilityLevel(compilation, type), dataFormat);
+
+                    // FixedSize picks the 16-byte Guid at level 300; WellKnown has already been
+                    // consumed above. Nothing else has a meaning here.
+                    var allowed = dataFormat is ProtoDataFormat.Default or ProtoDataFormat.WellKnown
+                        || (dataFormat == ProtoDataFormat.FixedSize && kind == ProtoMemberKind.Guid);
+                    if (!allowed)
+                    {
+                        return Option(diagnostics, atMember, name, "this DataFormat on a BCL type");
+                    }
+                    if (declaredDefault is not null)
+                    {
+                        return Option(diagnostics, atMember, name, "[DefaultValue] on a BCL type");
+                    }
+                }
+                else if (dataFormat == ProtoDataFormat.WellKnown)
+                {
+                    // it only ever meant "use the well-known form of a BCL type"
+                    return Option(diagnostics, atMember, name, "DataFormat.WellKnown on this type");
+                }
                 // an init-only member needs its declared type for the [UnsafeAccessor] signature
                 var declaredTypeName = shape.DeclaredTypeName ?? (isInitOnly
                     ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);
@@ -535,7 +563,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -548,7 +576,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel));
                 }
                 else
                 {
@@ -558,7 +586,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel));
                 }
             }
 
@@ -703,6 +731,51 @@ namespace ProtoBuf.BuildTools.Generators
             return true;
         }
 
+        /// <summary>
+        /// The compatibility level in force for a type: its own attribute, then any inherited from a
+        /// base type, then the module's, then the assembly's — a port of
+        /// <c>TypeCompatibilityHelper.GetTypeCompatibilityLevel</c>. Anything below 200 means 200.
+        /// </summary>
+        private static int GetCompatibilityLevel(Compilation compilation, INamedTypeSymbol type)
+        {
+            // Attribute.GetCustomAttribute(type, ..., inherit: true) walks the base types
+            for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
+            {
+                if (GetDeclaredLevel(current) is { } declared) return declared;
+            }
+            if (GetDeclaredLevel(compilation.SourceModule) is { } fromModule) return fromModule;
+            if (GetDeclaredLevel(compilation.Assembly) is { } fromAssembly) return fromAssembly;
+            return 200;
+        }
+
+        /// <summary>
+        /// The level a symbol declares directly, if any; <c>NotSpecified</c> (zero) counts as absent.
+        /// </summary>
+        private static int? GetDeclaredLevel(ISymbol symbol)
+        {
+            foreach (var attribute in symbol.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != CompatibilityLevelAttributeName) continue;
+                if (attribute.ConstructorArguments.Length == 1
+                    && attribute.ConstructorArguments[0].Value is int level && level > 0)
+                {
+                    return level;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// <c>ValueMember.GetEffectiveCompatibilityLevel</c>: at or below level 200,
+        /// <c>DataFormat.WellKnown</c> promotes the member to 240; above that it means nothing.
+        /// </summary>
+        private static int GetEffectiveCompatibilityLevel(int level, ProtoDataFormat dataFormat)
+            => level > 200 ? level : dataFormat == ProtoDataFormat.WellKnown ? 240 : 200;
+
+        private static bool IsBclKind(ProtoMemberKind kind)
+            => kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                or ProtoMemberKind.Guid or ProtoMemberKind.Decimal;
+
         private static bool Implements(INamedTypeSymbol type, string interfaceName)
         {
             foreach (var iface in type.AllInterfaces)
@@ -762,7 +835,8 @@ namespace ProtoBuf.BuildTools.Generators
             1 => ProtoDataFormat.ZigZag,
             3 => ProtoDataFormat.FixedSize,
             4 => ProtoDataFormat.Group,
-            _ => null, // WellKnown, and anything added later
+            5 => ProtoDataFormat.WellKnown,
+            _ => null, // anything added later
         };
 
         private static int? GetNamedInt(AttributeData attribute, string name)
@@ -783,6 +857,8 @@ namespace ProtoBuf.BuildTools.Generators
             // notably the [OnDeserialized] callback family
             switch (type.ToDisplayString())
             {
+                // read directly wherever it is relevant, rather than acted on here
+                case CompatibilityLevelAttributeName:
                 case DataContractAttributeName:
                 case DataMemberAttributeName:
                 case XmlTypeAttributeName:
@@ -1294,8 +1370,17 @@ namespace ProtoBuf.BuildTools.Generators
                 case SpecialType.System_Double: return ProtoMemberKind.Double;
                 case SpecialType.System_Char: return ProtoMemberKind.Char;
                 case SpecialType.System_String: return ProtoMemberKind.String;
+                case SpecialType.System_DateTime: return ProtoMemberKind.DateTime;
+                case SpecialType.System_Decimal: return ProtoMemberKind.Decimal;
             }
-            return null;
+
+            // TimeSpan and Guid have no SpecialType, so they go by name
+            return type.ToDisplayString() switch
+            {
+                "System.TimeSpan" => ProtoMemberKind.TimeSpan,
+                "System.Guid" => ProtoMemberKind.Guid,
+                _ => (ProtoMemberKind?)null,
+            };
         }
     }
 }
