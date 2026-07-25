@@ -180,8 +180,13 @@ AOT by definition, so none of the AOT generator's requirements apply to them.
 
 ### Collections
 
-`T[]` and `List<T>` of scalars and messages, via `RepeatedSerializer.CreateVector<T>()` /
-`CreateList<T>()`. Read uses the same merge shape as sub-messages (existing collection passed in,
+Arrays, `List<T>`, the collection interfaces, sets/queues/stacks, and the immutable and concurrent
+families, of scalars, messages and enums. Which `RepeatedSerializer` factory serves which collection
+is a **lookup table taken from ref-emit** (`GetRepeatedPlan`), not inferred — the interfaces all
+route through `CreateEnumerable`, and the factories come in two shapes:
+`Create{X}<TCollection, TElement>()` needs the member's declared type, while
+`Create{X}<TElement>()` has it fixed by the factory (arrays, `List<T>`, the immutable family).
+`ImmutableArray<T>` is a **struct**, so neither side null-tests it. Read uses the same merge shape as sub-messages (existing collection passed in,
 result assigned back only when non-null). Facts confirmed against ref-emit rather than assumed:
 
 - **Packing is a compile-time decision.** The features constant carries `OptionPackedDisabled`, and

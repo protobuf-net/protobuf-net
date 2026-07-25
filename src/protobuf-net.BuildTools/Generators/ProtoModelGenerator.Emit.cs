@@ -154,13 +154,16 @@ namespace ProtoBuf.BuildTools.Generators
                 var target = contract.IsTuple ? $"arg{number}" : $"value.{member.Name}";
                 Line(sb, indent + 3, $"case {number}:");
                 Line(sb, indent + 3, "{");
-                if (member.Repeated != ProtoRepeatedKind.None)
+                if (member.Repeated.Factory is not null)
                 {
                     // same merge shape as a sub-message: the existing collection is passed in, and
                     // the result assigned back only if non-null
                     Line(sb, indent + 4, $"var tmp{number} = {target};");
                     Line(sb, indent + 4, $"tmp{number} = {Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
-                    Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                    // ImmutableArray<T> is a struct and can never be null
+                    Line(sb, indent + 4, member.Repeated.IsValueType
+                        ? $"{target} = tmp{number};"
+                        : $"if (tmp{number} != null) {target} = tmp{number};");
                     Line(sb, indent + 4, "break;");
                     Line(sb, indent + 3, "}");
                     continue;
@@ -245,11 +248,17 @@ namespace ProtoBuf.BuildTools.Generators
                 // hoist to a local, as ref-emit does; the member could be a computed property
                 Line(sb, indent + 1, $"var tmp{number} = value.{member.Name};");
 
-                if (member.Repeated != ProtoRepeatedKind.None)
+                if (member.Repeated.Factory is not null)
                 {
+                    var writeRepeated = $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});";
+                    if (member.Repeated.IsValueType)
+                    {
+                        Line(sb, indent + 1, writeRepeated);
+                        continue;
+                    }
                     Line(sb, indent + 1, $"if (tmp{number} != null)");
                     Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
+                    Line(sb, indent + 2, writeRepeated);
                     Line(sb, indent + 1, "}");
                     continue;
                 }
@@ -377,7 +386,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 foreach (var member in contract.Members)
                 {
-                    if (member.Repeated == ProtoRepeatedKind.None) continue;
+                    if (member.Repeated.Factory is null) continue;
                     if (member.EnumTypeName is { } name) result[name] = member.Kind;
                 }
             }
@@ -415,9 +424,12 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>The <c>RepeatedSerializer</c> factory for a collection member.</summary>
         private static string Repeated(ProtoMemberPlan member)
-            => $"{Serializers}.RepeatedSerializer.Create"
-             + (member.Repeated == ProtoRepeatedKind.Vector ? "Vector" : "List")
-             + $"<{member.ElementTypeName}>()";
+        {
+            var arguments = member.Repeated.TakesCollectionType
+                ? $"<{member.DeclaredTypeName}, {member.ElementTypeName}>"
+                : $"<{member.ElementTypeName}>";
+            return $"{Serializers}.RepeatedSerializer.{member.Repeated.Factory}{arguments}()";
+        }
 
         /// <summary>
         /// The features for a repeated member: the *element's* wire type, plus the packed opt-out.

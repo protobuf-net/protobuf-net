@@ -26,6 +26,8 @@ namespace BuildToolsUnitTests
             // List<T> members, and the RepeatedSerializer overloads that take them; note this must be
             // the System.Collections facade, not typeof(List<>).Assembly (System.Private.CoreLib)
             MetadataReference.CreateFromFile(Assembly.Load("System.Collections").Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Collections.Immutable").Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Collections.Concurrent").Location),
             // fixtures declare contracts via [DataContract]/[DataMember] and [XmlType]/[XmlElement]
             MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataMemberAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(System.Xml.Serialization.XmlElementAttribute).Assembly.Location),

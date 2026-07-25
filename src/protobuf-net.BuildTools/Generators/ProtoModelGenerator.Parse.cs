@@ -337,7 +337,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (ignored) continue;
 
                 if ((isPacked || overwriteList) && GetMemberShape(compilation, property.Type)
-                    is not { Repeated: not ProtoRepeatedKind.None })
+                    is not { Repeated.Factory: not null })
                 {
                     // both options only mean anything for a collection
                     return Option(diagnostics, atMember, name,
@@ -411,6 +411,7 @@ namespace ProtoBuf.BuildTools.Generators
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
+                        declaredTypeName: shape.DeclaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
                         dataFormat: dataFormat, isRequired: isRequired));
                 }
@@ -420,6 +421,7 @@ namespace ProtoBuf.BuildTools.Generators
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
+                        declaredTypeName: shape.DeclaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
                         dataFormat: dataFormat, isRequired: isRequired));
                 }
@@ -639,8 +641,10 @@ namespace ProtoBuf.BuildTools.Generators
         {
             public MemberShape(ProtoMemberKind kind, bool isNullable = false,
                 INamedTypeSymbol? message = null, INamedTypeSymbol? enumType = null,
-                ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null)
+                ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
+                string? declaredTypeName = null)
             {
+                DeclaredTypeName = declaredTypeName;
                 Kind = kind;
                 IsNullable = isNullable;
                 Message = message;
@@ -653,8 +657,9 @@ namespace ProtoBuf.BuildTools.Generators
             public bool IsNullable { get; }
             public INamedTypeSymbol? Message { get; }
             public INamedTypeSymbol? EnumType { get; }
-            public ProtoRepeatedKind Repeated { get; }
+            public ProtoRepeatedPlan Repeated { get; }
             public string? ElementTypeName { get; }
+            public string? DeclaredTypeName { get; }
         }
 
         private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type)
@@ -710,20 +715,63 @@ namespace ProtoBuf.BuildTools.Generators
             // resulting shape *describes the element* - Repeated says how it is stored
             if (type is IArrayTypeSymbol { Rank: 1 } array)
             {
-                return AsRepeated(compilation, array.ElementType, ProtoRepeatedKind.Vector);
+                return AsRepeated(compilation, array.ElementType, new("CreateVector", false, false), type);
             }
-            if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } list
-                && list.ConstructedFrom.ToDisplayString() == "System.Collections.Generic.List<T>")
+            if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } collection
+                && GetRepeatedPlan(collection.ConstructedFrom.ToDisplayString()) is { } repeated)
             {
-                return AsRepeated(compilation, list.TypeArguments[0], ProtoRepeatedKind.List);
+                return AsRepeated(compilation, collection.TypeArguments[0], repeated, type);
             }
             return null;
         }
 
-        private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element, ProtoRepeatedKind repeated)
+        /// <summary>
+        /// Which <c>RepeatedSerializer</c> factory serves a given collection type.
+        /// </summary>
+        /// <remarks>
+        /// Taken from what ref-emit picks, not guessed: the interfaces all route through
+        /// <c>CreateEnumerable</c>, the concrete shapes have their own factories, and the immutable
+        /// family takes only the element type because the collection type is fixed by the factory.
+        /// </remarks>
+        private static ProtoRepeatedPlan? GetRepeatedPlan(string constructedFrom) => constructedFrom switch
+        {
+            "System.Collections.Generic.List<T>" => new("CreateList", false, false),
+
+            "System.Collections.Generic.IList<T>" or "System.Collections.Generic.ICollection<T>"
+                or "System.Collections.Generic.IEnumerable<T>" or "System.Collections.Generic.IReadOnlyList<T>"
+                or "System.Collections.Generic.IReadOnlyCollection<T>" => new("CreateEnumerable", true, false),
+
+            "System.Collections.Generic.HashSet<T>" or "System.Collections.Generic.SortedSet<T>"
+                or "System.Collections.Generic.ISet<T>" => new("CreateSet", true, false),
+            "System.Collections.Generic.Queue<T>" => new("CreateQueue", true, false),
+            "System.Collections.Generic.Stack<T>" => new("CreateStack", true, false),
+
+            "System.Collections.Concurrent.ConcurrentQueue<T>" => new("CreateConcurrentQueue", true, false),
+            "System.Collections.Concurrent.ConcurrentStack<T>" => new("CreateConcurrentStack", true, false),
+            "System.Collections.Concurrent.ConcurrentBag<T>" => new("CreateConcurrentBag", true, false),
+            "System.Collections.Concurrent.IProducerConsumerCollection<T>"
+                => new("CreateIProducerConsumerCollection", true, false),
+
+            // ImmutableArray<T> is a struct, so neither side null-tests it
+            "System.Collections.Immutable.ImmutableArray<T>" => new("CreateImmutableArray", false, true),
+            "System.Collections.Immutable.ImmutableList<T>" => new("CreateImmutableList", false, false),
+            "System.Collections.Immutable.IImmutableList<T>" => new("CreateImmutableIList", false, false),
+            "System.Collections.Immutable.ImmutableQueue<T>" => new("CreateImmutableQueue", false, false),
+            "System.Collections.Immutable.IImmutableQueue<T>" => new("CreateImmutableIQueue", false, false),
+            "System.Collections.Immutable.ImmutableStack<T>" => new("CreateImmutableStack", false, false),
+            "System.Collections.Immutable.IImmutableStack<T>" => new("CreateImmutableIStack", false, false),
+            "System.Collections.Immutable.ImmutableHashSet<T>" => new("CreateImmutableHashSet", false, false),
+            "System.Collections.Immutable.ImmutableSortedSet<T>" => new("CreateImmutableSortedSet", false, false),
+            "System.Collections.Immutable.IImmutableSet<T>" => new("CreateImmutableISet", false, false),
+
+            _ => null,
+        };
+
+        private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
+            ProtoRepeatedPlan repeated, ITypeSymbol declared)
         {
             // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
-            if (GetMemberShape(compilation, element) is not { Repeated: ProtoRepeatedKind.None } shape) return null;
+            if (GetMemberShape(compilation, element) is not { Repeated.Factory: null } shape) return null;
 
             // a nullable element changes the encoding (null-wrapping); not handled yet
             if (shape.IsNullable) return null;
@@ -733,7 +781,8 @@ namespace ProtoBuf.BuildTools.Generators
             // ISerializerProxy<TEnum> (see EmitEnumProxies)
             return new MemberShape(shape.Kind, message: shape.Message, enumType: shape.EnumType,
                 repeated: repeated,
-                elementTypeName: element.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                elementTypeName: element.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                declaredTypeName: declared.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
 
         private static ProtoMemberKind? GetMessageKind(ITypeSymbol type, out INamedTypeSymbol? message)

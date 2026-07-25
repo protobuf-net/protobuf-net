@@ -58,17 +58,40 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
-    /// How a repeated member is stored, which selects the <c>RepeatedSerializer</c> factory.
+    /// Which <c>RepeatedSerializer</c> factory serves a collection, and how it is shaped.
     /// </summary>
-    internal enum ProtoRepeatedKind
+    /// <remarks>
+    /// The factories come in two forms: <c>Create{X}&lt;TCollection, TElement&gt;()</c>, which needs
+    /// the member's declared type, and <c>Create{X}&lt;TElement&gt;()</c>, where the collection type
+    /// is fixed by the factory (arrays, <c>List&lt;T&gt;</c>, and the immutable family).
+    /// </remarks>
+    internal readonly struct ProtoRepeatedPlan : IEquatable<ProtoRepeatedPlan>
     {
-        None,
+        public ProtoRepeatedPlan(string factory, bool takesCollectionType, bool isValueType)
+        {
+            Factory = factory;
+            TakesCollectionType = takesCollectionType;
+            IsValueType = isValueType;
+        }
 
-        /// <summary>An array: <c>RepeatedSerializer.CreateVector&lt;T&gt;()</c>.</summary>
-        Vector,
+        /// <summary>e.g. <c>CreateVector</c>, <c>CreateEnumerable</c>, <c>CreateImmutableArray</c>.</summary>
+        public string? Factory { get; }
 
-        /// <summary>A <c>List&lt;T&gt;</c>: <c>RepeatedSerializer.CreateList&lt;T&gt;()</c>.</summary>
-        List,
+        public bool TakesCollectionType { get; }
+
+        /// <summary>
+        /// <c>ImmutableArray&lt;T&gt;</c> is a struct, so neither side null-tests it.
+        /// </summary>
+        public bool IsValueType { get; }
+
+        public bool Equals(ProtoRepeatedPlan other)
+            => Factory == other.Factory && TakesCollectionType == other.TakesCollectionType
+                && IsValueType == other.IsValueType;
+
+        public override bool Equals(object? obj) => obj is ProtoRepeatedPlan other && Equals(other);
+
+        public override int GetHashCode()
+            => (Factory?.GetHashCode() ?? 0) ^ (TakesCollectionType ? 31 : 0) ^ (IsValueType ? 131 : 0);
     }
 
     /// <summary>
@@ -79,7 +102,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
             string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
-            ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null,
+            ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false)
         {
@@ -117,7 +140,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <see cref="Kind"/>, <see cref="TypeName"/> and <see cref="EnumTypeName"/> then describe
         /// the *element*, not the member.
         /// </summary>
-        public ProtoRepeatedKind Repeated { get; }
+        public ProtoRepeatedPlan Repeated { get; }
 
         /// <summary>The element's own type, for the <c>RepeatedSerializer</c> type argument.</summary>
         public string? ElementTypeName { get; }
@@ -175,7 +198,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
                 && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
                 && DeclaredTypeName == other.DeclaredTypeName
-                && Repeated == other.Repeated && ElementTypeName == other.ElementTypeName
+                && Repeated.Equals(other.Repeated) && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired;
 
