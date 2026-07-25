@@ -1,15 +1,7 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace AotFixtures.SetterUnsupported;
-
-// ref-emit's *compiled* path refuses a non-public setter outright - "cannot apply changes to
-// property" - even though its runtime path reaches one by reflection. We match the compiled path.
-[ProtoContract]
-public class NonPublicSetter
-{
-    [ProtoMember(1)] public int Value { get; private set; }
-}
 
 [ProtoContract]
 public struct Point
@@ -32,7 +24,6 @@ public class ReadOnlyNullableMessage
 }
 
 [ProtoModel]
-[ProtoSerializable(typeof(NonPublicSetter))]
 [ProtoSerializable(typeof(ReadOnlyStructMessage))]
 [ProtoSerializable(typeof(ReadOnlyNullableMessage))]
 public partial class SetterUnsupportedModel : TypeModel

@@ -413,16 +413,18 @@ discarded, so the value is simply never stored. It is fine in the JIT fixtures, 
 serializing a wider contract (`NoteV2`) and reading it back as the narrower one, which keeps the test
 on the generated path.
 
-### `init`-only accessors
+### Setters that C# cannot call: `init`-only and non-public
 
-IL has no notion of `init` — it is a modreq the C# compiler enforces — so ref-emit simply calls the
-setter, merging into an existing instance like any other member. `[UnsafeAccessor]` is the exact
+Both route through `[UnsafeAccessor]`, which is why they share `ProtoMemberPlan.UsesAccessor`.
+
+IL has neither restriction — `init` is a modreq the C# compiler enforces, and IL does not care about
+accessibility — so ref-emit's *runtime* path simply calls the setter. `[UnsafeAccessor]` is the exact
 equivalent for generated code, and unlike reflection it is resolved at publish time, so it stays
-AOT-safe; the `AotSmoke` fixture carries an `init` member specifically to prove ILC resolves it.
+AOT-safe; `AotSmoke` carries one of each specifically to prove ILC resolves them.
 
-It is **net8.0 and up**, so the generator probes for `UnsafeAccessorAttribute` and keeps the old
-refusal below that. The accessors are emitted onto the services type as `private static extern`
-methods named after the sanitised contract type plus the member; a struct target takes `ref`.
+It is **net8.0 and up**, so the generator probes for `UnsafeAccessorAttribute` and refuses below
+that. The accessors are emitted onto the services type as `private static extern` methods named after
+the sanitised contract type plus the member; a struct target takes `ref`.
 
 Note `AotRefGen` is net472 and so predates `IsExternalInit`; `src/AotRefGen/Polyfills.cs` declares
 it, since it is a pure compile-time marker.
@@ -436,6 +438,11 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
   reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
   is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
+- **interfaces as contracts** — currently refused by "only classes and structs are supported", which
+  the coverage sweep puts at 20 contracts. Treat with suspicion: they behave differently as a unary
+  member, as the element of a collection, and as an inheritance root, and are a reliable source of
+  confusion. Even if the emit behaviour can be matched exactly, a diagnostic saying "this is not
+  recommended" is probably wanted **either way**.
 - surrogates, serialization callbacks, `ShouldSerialize`/`Specified`
 
 ### Golden-file tests
@@ -552,9 +559,15 @@ and a nullable scalar drops the wrapper too (ref-emit emits a pointless `new int
 Refused, for want of a reference: a getter-only member whose type is a **struct or nullable
 sub-message**, where the read would be mutating a copy.
 
-**A non-public setter is refused**, and that matches ref-emit's *compiled* path, which throws
-"cannot apply changes to property" while building the model — even though its runtime path reaches
-one by reflection. `[UnsafeAccessor]` could reach it the way `init` does, if it ever seems worth it.
+**A non-public setter goes through `[UnsafeAccessor]`, the same as `init`** — see below. This is one
+of the few places we deliberately do *better* than ref-emit rather than matching it: its compiled
+path refuses them ("cannot apply changes to property", apparently to stay verifiable) while its
+runtime path reaches them by reflection, and `[UnsafeAccessor]` needs neither compromise.
+
+Consequently `NonPublicSetter.input.cs` has **no `*.reference.cs`**: ref-emit declines to compile it,
+and `AotRefGen` now skips a model it cannot emit rather than failing the whole run. The differential
+suite still covers the fixture, because `RuntimeTypeModel` *does* handle these — which is exactly the
+comparison that matters for a divergence from the *compiled* path.
 
 ### Schema-only options
 

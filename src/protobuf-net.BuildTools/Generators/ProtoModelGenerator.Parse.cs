@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
@@ -368,7 +368,7 @@ namespace ProtoBuf.BuildTools.Generators
                 var atMember = PlanLocation.From(symbol);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
-                bool isInitOnly = false, isReadOnly = false;
+                bool usesAccessor = false, isReadOnly = false;
                 var dataFormat = ProtoDataFormat.Default;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
@@ -493,9 +493,16 @@ namespace ProtoBuf.BuildTools.Generators
                         }
                         else if (property.SetMethod.DeclaredAccessibility != Accessibility.Public)
                         {
-                            // ref-emit's *compiled* path refuses these too ("cannot apply changes to
-                            // property"), even though its runtime path reaches them by reflection
-                            return Member(diagnostics, atMember, name, symbol.Name, "has a non-public setter");
+                            // ref-emit's *compiled* path refuses these ("cannot apply changes to
+                            // property"), apparently to stay verifiable; its runtime path reaches
+                            // them by reflection. [UnsafeAccessor] lets us do neither - a deliberate
+                            // divergence rather than a match
+                            if (!SupportsUnsafeAccessor(compilation))
+                            {
+                                return Member(diagnostics, atMember, name, symbol.Name,
+                                    "has a non-public setter, which needs [UnsafeAccessor] (net8.0 or later)");
+                            }
+                            usesAccessor = true;
                         }
                         // an init-only setter can only be reached via [UnsafeAccessor], which is
                         // net8.0 and up; below that there is no way to assign it at all
@@ -506,7 +513,7 @@ namespace ProtoBuf.BuildTools.Generators
                                 return Member(diagnostics, atMember, name, symbol.Name,
                                     "has an init-only setter, which needs [UnsafeAccessor] (net8.0 or later)");
                             }
-                            isInitOnly = true;
+                            usesAccessor = true;
                         }
                         break;
 
@@ -567,7 +574,7 @@ namespace ProtoBuf.BuildTools.Generators
                     return Option(diagnostics, atMember, name, "DataFormat.WellKnown on this type");
                 }
                 // an init-only member needs its declared type for the [UnsafeAccessor] signature
-                var declaredTypeName = shape.DeclaredTypeName ?? (isInitOnly
+                var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor
                     ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);
                 var isNullable = shape.IsNullable;
                 var enumTypeName = shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -594,7 +601,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -607,7 +614,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
                 else
                 {
@@ -617,7 +624,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
             }
 

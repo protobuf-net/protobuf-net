@@ -684,7 +684,7 @@ namespace ProtoBuf.BuildTools.Generators
             // effects alone - which is the whole mechanism for a getter-only collection
             if (member.IsReadOnly) return $"{expression};";
 
-            return member.IsInitOnly && !contract.IsTuple
+            return member.UsesAccessor && !contract.IsTuple
                 ? $"{AccessorName(contract, member)}({(contract.IsValueType ? "ref value" : "value")}, {expression});"
                 : $"{target} = {expression};";
         }
@@ -712,7 +712,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 foreach (var member in contract.Members)
                 {
-                    if (!member.IsInitOnly || contract.IsTuple) continue;
+                    if (!member.UsesAccessor || contract.IsTuple) continue;
 
                     var self = contract.IsValueType ? $"ref {contract.TypeName}" : contract.TypeName;
                     sb.AppendLine();

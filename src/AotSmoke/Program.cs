@@ -65,6 +65,13 @@ public class Modern
 public class Note : Extensible
 {
     [ProtoMember(1)] public string Text { get; set; }
+
+    // a non-public setter, reached the same way an init-only one is. ref-emit's compiled path
+    // refuses these outright, so this is a deliberate divergence - and ILC has to resolve a setter
+    // that is not visible from the call site at all
+    [ProtoMember(2)] public int Sequence { get; private set; }
+
+    public void Stamp(int sequence) => Sequence = sequence;
 }
 
 /// <summary>
@@ -149,6 +156,8 @@ internal static class Program
             },
         };
 
+        original.Note.Stamp(11);
+
         using var ms = new MemoryStream();
         model.Serialize(ms, original);
         var bytes = ms.ToArray();
@@ -173,6 +182,7 @@ internal static class Program
         Check(ref failures, "Payment.Last4", ((CardPayment)original.Payment).Last4,
             (clone.Payment as CardPayment)?.Last4);
         Check(ref failures, "Note.Text", original.Note.Text, clone.Note?.Text);
+        Check(ref failures, "Note.Sequence", original.Note.Sequence, clone.Note?.Sequence);
         Check(ref failures, "Legacy.When", original.Legacy.When, clone.Legacy?.When);
         Check(ref failures, "Legacy.How", original.Legacy.How, clone.Legacy?.How);
         Check(ref failures, "Legacy.Id", original.Legacy.Id, clone.Legacy?.Id);

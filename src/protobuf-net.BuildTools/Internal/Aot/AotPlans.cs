@@ -184,12 +184,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
-            ProtoMapPlan map = default, bool isInitOnly = false, int compatibilityLevel = 200,
+            ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             bool isReadOnly = false)
         {
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
-            IsInitOnly = isInitOnly;
+            UsesAccessor = usesAccessor;
             DataFormat = dataFormat;
             IsRequired = isRequired;
             DeclaredTypeName = declaredTypeName;
@@ -246,11 +246,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoDataFormat DataFormat { get; }
 
         /// <summary>
-        /// An <c>init</c>-only property. C# forbids assigning one after construction, so the read
-        /// goes through an <c>[UnsafeAccessor]</c> helper — which is what ref-emit does in effect,
-        /// since IL has no notion of <c>init</c> at all.
+        /// The setter cannot be called directly from generated C#, so the read goes through an
+        /// <c>[UnsafeAccessor]</c> helper. Two things land here: <c>init</c>-only properties, which
+        /// C# forbids assigning after construction, and non-public setters.
         /// </summary>
-        public bool IsInitOnly { get; }
+        /// <remarks>
+        /// IL has neither restriction, which is why ref-emit's runtime path simply calls the setter.
+        /// Its *compiled* path refuses non-public ones — apparently to stay verifiable — and this is
+        /// one of the few places we deliberately do better than it rather than matching it.
+        /// </remarks>
+        public bool UsesAccessor { get; }
 
         /// <summary>
         /// A property with a getter but no setter. The read runs exactly as it would otherwise —
@@ -314,7 +319,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
-                && IsInitOnly == other.IsInitOnly && CompatibilityLevel == other.CompatibilityLevel
+                && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
                 && IsReadOnly == other.IsReadOnly;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);

@@ -48,7 +48,19 @@ namespace ProtoBuf.AotRefGen
                     return 1;
                 }
 
-                foreach (var model in models) Emit(model, fixtureDir);
+                foreach (var model in models)
+                {
+                    // one fixture that ref-emit cannot compile must not cost every other reference;
+                    // a deliberate divergence (non-public setters, say) simply has no reference file
+                    try
+                    {
+                        Emit(model, fixtureDir);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"{model.Name}: ref-emit declined - {ex.Message}");
+                    }
+                }
                 return 0;
             }
             catch (Exception ex)
