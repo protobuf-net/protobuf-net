@@ -46,14 +46,6 @@ public class UsesMemberOptions
 }
 
 [ProtoContract]
-public class InitOnlyMember
-{
-    // -> PBN2001
-    [ProtoMember(1)]
-    public int Value { get; init; }
-}
-
-[ProtoContract]
 public class UnrenderableDefault
 {
     // the (Type, string) form defers to a TypeConverter at runtime, which cannot be evaluated here
@@ -88,7 +80,6 @@ public class HasCallback
 [ProtoSerializable(typeof(ReferencesDropped))]
 [ProtoSerializable(typeof(NoParameterlessConstructor))]
 [ProtoSerializable(typeof(UsesMemberOptions))]
-[ProtoSerializable(typeof(InitOnlyMember))]
 public partial class DroppedModel : TypeModel
 {
 }

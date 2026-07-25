@@ -295,12 +295,24 @@ skipped (the property itself covers them). Two states a property cannot be in ar
 `readonly` (the same problem `init` has — no assignment after construction) and `const`. `static`
 and non-public are refused as for properties, though note ref-emit reaches both by reflection.
 
+### `init`-only accessors
+
+IL has no notion of `init` — it is a modreq the C# compiler enforces — so ref-emit simply calls the
+setter, merging into an existing instance like any other member. `[UnsafeAccessor]` is the exact
+equivalent for generated code, and unlike reflection it is resolved at publish time, so it stays
+AOT-safe; the `AotSmoke` fixture carries an `init` member specifically to prove ILC resolves it.
+
+It is **net8.0 and up**, so the generator probes for `UnsafeAccessorAttribute` and keeps the old
+refusal below that. The accessors are emitted onto the services type as `private static extern`
+methods named after the sanitised contract type plus the member; a struct target takes `ref`.
+
+Note `AotRefGen` is net472 and so predates `IsExternalInit`; `src/AotRefGen/Polyfills.cs` declares
+it, since it is a pure compile-time marker.
+
 ### Not yet supported
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
 
-- **`init`-only accessors** — currently `PBN2001`. Note these cannot be assigned after construction,
-  so they likely have to route through the constructor/tuple path rather than the property-setter one.
 - `[ProtoMap]` (per-key and per-value `DataFormat`)
 - **null-wrapping** (`SerializerFeatures.OptionWrappedValue` and friends) — the
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the

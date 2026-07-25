@@ -296,6 +296,7 @@ namespace ProtoBuf.BuildTools.Generators
                 var atMember = PlanLocation.From(symbol);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
+                bool isInitOnly = false;
                 var dataFormat = ProtoDataFormat.Default;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
@@ -411,9 +412,16 @@ namespace ProtoBuf.BuildTools.Generators
                         {
                             return Member(diagnostics, atMember, name, symbol.Name, "has no public setter");
                         }
+                        // an init-only setter can only be reached via [UnsafeAccessor], which is
+                        // net8.0 and up; below that there is no way to assign it at all
                         if (property.SetMethod.IsInitOnly)
                         {
-                            return Member(diagnostics, atMember, name, symbol.Name, "has an init-only setter");
+                            if (!SupportsUnsafeAccessor(compilation))
+                            {
+                                return Member(diagnostics, atMember, name, symbol.Name,
+                                    "has an init-only setter, which needs [UnsafeAccessor] (net8.0 or later)");
+                            }
+                            isInitOnly = true;
                         }
                         break;
 
@@ -436,6 +444,9 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 var kind = shape.Kind;
                 var message = shape.Message;
+                // an init-only member needs its declared type for the [UnsafeAccessor] signature
+                var declaredTypeName = shape.DeclaredTypeName ?? (isInitOnly
+                    ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);
                 var isNullable = shape.IsNullable;
                 var enumTypeName = shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
@@ -459,9 +470,9 @@ namespace ProtoBuf.BuildTools.Generators
                     // a map can reach a contract through its key *and* its value
                     foreach (var reached in shape.MapMessages!) reachable.Add(reached);
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
-                        declaredTypeName: shape.DeclaredTypeName, map: shape.Map,
+                        declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -472,9 +483,9 @@ namespace ProtoBuf.BuildTools.Generators
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
-                        declaredTypeName: shape.DeclaredTypeName,
+                        declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly));
                 }
                 else
                 {
@@ -482,9 +493,9 @@ namespace ProtoBuf.BuildTools.Generators
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
-                        declaredTypeName: shape.DeclaredTypeName,
+                        declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly));
                 }
             }
 
@@ -585,6 +596,14 @@ namespace ProtoBuf.BuildTools.Generators
                 "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute");
             return type is not null && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly);
         }
+
+        /// <summary>
+        /// Is <c>[UnsafeAccessor]</c> available? It is net8.0 and up, and is the only way generated
+        /// code can assign an <c>init</c>-only property.
+        /// </summary>
+        private static bool SupportsUnsafeAccessor(Compilation compilation)
+            => compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.UnsafeAccessorAttribute")
+                is { } type && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly);
 
         /// <summary>
         /// Is a given <c>RepeatedSerializer</c> factory present in the library being compiled

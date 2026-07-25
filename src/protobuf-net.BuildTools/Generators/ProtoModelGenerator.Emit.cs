@@ -88,6 +88,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             EmitEnumProxies(sb, indent + 2, plan);
+            EmitAccessors(sb, indent + 2, plan);
 
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");
@@ -160,7 +161,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // sub-serializers they need - ride alongside
                     Line(sb, indent + 4, $"var tmp{number} = {target};");
                     Line(sb, indent + 4, $"tmp{number} = {Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
-                    Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                    Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                     Line(sb, indent + 4, "break;");
                     Line(sb, indent + 3, "}");
                     continue;
@@ -173,8 +174,8 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 4, $"tmp{number} = {Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
                     // ImmutableArray<T> is a struct and can never be null
                     Line(sb, indent + 4, member.Repeated.IsValueType
-                        ? $"{target} = tmp{number};"
-                        : $"if (tmp{number} != null) {target} = tmp{number};");
+                        ? Assign(contract, member, target, $"tmp{number}")
+                        : $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                     Line(sb, indent + 4, "break;");
                     Line(sb, indent + 3, "}");
                     continue;
@@ -194,19 +195,19 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
                         if (ScalarReadHint(member) is { } hint) Line(sb, indent + 4, hint);
-                        Line(sb, indent + 4, $"{target} = {ScalarRead(member)};");
+                        Line(sb, indent + 4, Assign(contract, member, target, ScalarRead(member)));
                         break;
                     case ProtoMemberKind.String:
                         // a null string leaves the existing value alone, matching ref-emit
                         Line(sb, indent + 4, $"var tmp{number} = state.ReadString();");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                     case ProtoMemberKind.Bytes:
                         // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
                         // existing array rather than replacing it
                         Line(sb, indent + 4, $"var tmp{number} = {target};");
                         Line(sb, indent + 4, $"tmp{number} = state.AppendBytes(tmp{number});");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                     // in all three cases the *existing* value is passed in, so repeated occurrences
                     // merge rather than replace; and the category is Repeated, not Message
@@ -214,16 +215,16 @@ namespace ProtoBuf.BuildTools.Generators
                         // a nullable struct message: seed from the current value, assign the result
                         // straight back - the read cannot produce a null
                         Line(sb, indent + 4, $"var tmp{number} = {target}.GetValueOrDefault();");
-                        Line(sb, indent + 4, $"{target} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent + 4, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
                         break;
                     case ProtoMemberKind.Message when member.MessageIsValueType:
                         Line(sb, indent + 4, $"var tmp{number} = {target};");
-                        Line(sb, indent + 4, $"{target} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent + 4, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
                         break;
                     case ProtoMemberKind.Message:
                         Line(sb, indent + 4, $"var tmp{number} = {target};");
                         Line(sb, indent + 4, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                 }
                 Line(sb, indent + 4, "break;");
@@ -484,6 +485,56 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>A message element needs us passed along as its serializer; a scalar does not.</summary>
         private static string RepeatedSubSerializer(ProtoMemberPlan member)
             => member.Kind == ProtoMemberKind.Message ? ", this" : "";
+
+        /// <summary>
+        /// The statement that stores a value into a member.
+        /// </summary>
+        /// <remarks>
+        /// C# forbids assigning an <c>init</c>-only property after construction; IL does not, which
+        /// is why ref-emit simply calls the setter. <c>[UnsafeAccessor]</c> is the equivalent, and
+        /// unlike reflection it is resolved at publish time, so it stays AOT-safe.
+        /// </remarks>
+        private static string Assign(ProtoContractPlan contract, ProtoMemberPlan member,
+            string target, string expression)
+            => member.IsInitOnly && !contract.IsTuple
+                ? $"{AccessorName(contract, member)}({(contract.IsValueType ? "ref value" : "value")}, {expression});"
+                : $"{target} = {expression};";
+
+        /// <summary>A name unique across the whole services type, since the accessors all live on it.</summary>
+        private static string AccessorName(ProtoContractPlan contract, ProtoMemberPlan member)
+        {
+            var name = contract.TypeName;
+            if (name.StartsWith("global::", StringComparison.Ordinal)) name = name.Substring(8);
+
+            var sb = new StringBuilder("Set_");
+            foreach (var c in name)
+            {
+                sb.Append(char.IsLetterOrDigit(c) ? c : '_');
+            }
+            return sb.Append('_').Append(member.Name).ToString();
+        }
+
+        /// <summary>
+        /// The <c>[UnsafeAccessor]</c> declarations for every init-only member in the model.
+        /// </summary>
+        private static void EmitAccessors(StringBuilder sb, int indent, ProtoModelPlan plan)
+        {
+            foreach (var contract in plan.Contracts)
+            {
+                foreach (var member in contract.Members)
+                {
+                    if (!member.IsInitOnly || contract.IsTuple) continue;
+
+                    var self = contract.IsValueType ? $"ref {contract.TypeName}" : contract.TypeName;
+                    sb.AppendLine();
+                    Line(sb, indent, "[global::System.Runtime.CompilerServices.UnsafeAccessor("
+                        + "global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, "
+                        + $"Name = \"set_{member.Name}\")]");
+                    Line(sb, indent, $"private static extern void {AccessorName(contract, member)}("
+                        + $"{self} target, {member.DeclaredTypeName} value);");
+                }
+            }
+        }
 
         /// <summary>The <c>MapSerializer</c> factory for a dictionary member.</summary>
         private static string Map(ProtoMemberPlan member)

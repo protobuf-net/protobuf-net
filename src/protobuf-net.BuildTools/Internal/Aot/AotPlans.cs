@@ -170,8 +170,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
-            ProtoMapPlan map = default)
+            ProtoMapPlan map = default, bool isInitOnly = false)
         {
+            IsInitOnly = isInitOnly;
             DataFormat = dataFormat;
             IsRequired = isRequired;
             DeclaredTypeName = declaredTypeName;
@@ -228,6 +229,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoDataFormat DataFormat { get; }
 
         /// <summary>
+        /// An <c>init</c>-only property. C# forbids assigning one after construction, so the read
+        /// goes through an <c>[UnsafeAccessor]</c> helper — which is what ref-emit does in effect,
+        /// since IL has no notion of <c>init</c> at all.
+        /// </summary>
+        public bool IsInitOnly { get; }
+
+        /// <summary>
         /// From <c>[ProtoMember(IsRequired = true)]</c>: the member is written unconditionally.
         /// Only observable for value-type scalars — reference types were already unguarded on write —
         /// and it does not affect the read at all.
@@ -274,7 +282,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Repeated.Equals(other.Repeated) && Map.Equals(other.Map)
                 && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
-                && DataFormat == other.DataFormat && IsRequired == other.IsRequired;
+                && DataFormat == other.DataFormat && IsRequired == other.IsRequired
+                && IsInitOnly == other.IsInitOnly;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

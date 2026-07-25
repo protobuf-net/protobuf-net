@@ -22,6 +22,10 @@ public class Order
     [ProtoMember(4)] public byte[] Payload { get; set; }
     [ProtoMember(5)] public Status Status { get; set; }
     [ProtoMember(6)] public double? Weight { get; set; }
+
+    // reached through an [UnsafeAccessor]; the point of testing it here is that ILC has to resolve
+    // that at publish time, which is exactly what a JIT run would not prove
+    [ProtoMember(7)] public string Reference { get; init; }
 }
 
 public enum Status { Unknown = 0, Open = 1, Closed = 2 }
@@ -51,6 +55,7 @@ internal static class Program
             Payload = [1, 2, 3],
             Status = Status.Closed,
             Weight = 2.5d,
+            Reference = "ref-1",
         };
 
         using var ms = new MemoryStream();
@@ -69,6 +74,7 @@ internal static class Program
             clone.Payload is null ? null : BitConverter.ToString(clone.Payload));
         Check(ref failures, "Status", original.Status, clone.Status);
         Check(ref failures, "Weight", original.Weight, clone.Weight);
+        Check(ref failures, "Reference", original.Reference, clone.Reference);
 
         // and the bytes must be stable across a second pass
         using var second = new MemoryStream();
