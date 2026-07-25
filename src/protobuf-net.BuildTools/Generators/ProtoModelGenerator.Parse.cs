@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
@@ -267,34 +267,38 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                switch (symbol)
+                // serialization callbacks ([OnDeserialized] and friends) live on methods
+                if (symbol is IMethodSymbol { IsImplicitlyDeclared: false, AssociatedSymbol: null } method)
                 {
-                    case IFieldSymbol field when !field.IsImplicitlyDeclared:
-                        if (field.GetAttributes().FirstOrDefault(IsSignificantAttribute) is { } onField)
-                        {
-                            return Option(diagnostics, PlanLocation.From(field), name,
-                                $"[{AttributeName(onField)}] on fields");
-                        }
-                        break;
-
-                    // serialization callbacks ([OnDeserialized] and friends) live on methods
-                    case IMethodSymbol method when !method.IsImplicitlyDeclared && method.AssociatedSymbol is null:
-                        if (method.GetAttributes().FirstOrDefault(IsSignificantAttribute) is { } onMethod)
-                        {
-                            return Option(diagnostics, PlanLocation.From(method), name,
-                                $"[{AttributeName(onMethod)}] on methods");
-                        }
-                        break;
+                    if (method.GetAttributes().FirstOrDefault(IsSignificantAttribute) is { } onMethod)
+                    {
+                        return Option(diagnostics, PlanLocation.From(method), name,
+                            $"[{AttributeName(onMethod)}] on methods");
+                    }
+                    continue;
                 }
 
-                if (symbol is not IPropertySymbol property) continue;
+                // fields are members in their own right, and behave exactly as properties do; the
+                // implicit ones are auto-property backing fields, which the property itself covers
+                ITypeSymbol memberType;
+                switch (symbol)
+                {
+                    case IPropertySymbol property:
+                        memberType = property.Type;
+                        break;
+                    case IFieldSymbol { IsImplicitlyDeclared: false } field:
+                        memberType = field.Type;
+                        break;
+                    default:
+                        continue;
+                }
 
-                var atMember = PlanLocation.From(property);
+                var atMember = PlanLocation.From(symbol);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
                 var dataFormat = ProtoDataFormat.Default;
                 AttributeData? declaredDefault = null;
-                foreach (var attribute in property.GetAttributes())
+                foreach (var attribute in symbol.GetAttributes())
                 {
                     var attributeName = attribute.AttributeClass?.ToDisplayString();
                     if (attributeName == DefaultValueAttributeName)
@@ -370,7 +374,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 if (ignored) continue;
 
-                if ((isPacked || overwriteList) && GetMemberShape(compilation, property.Type)
+                if ((isPacked || overwriteList) && GetMemberShape(compilation, memberType)
                     is not ({ Repeated.Factory: not null } or { Map.Factory: not null }))
                 {
                     // both options only mean anything for a collection
@@ -387,34 +391,48 @@ namespace ProtoBuf.BuildTools.Generators
                 fieldNumber ??= isXmlType && xmlOrder >= 1 ? xmlOrder : null;
                 if (fieldNumber is null) continue;
 
-                if (property.IsStatic) return Member(diagnostics, atMember, name, property.Name, "is static");
-                if (property.DeclaredAccessibility != Accessibility.Public)
+                if (symbol is IFieldSymbol { IsConst: true })
                 {
-                    return Member(diagnostics, atMember, name, property.Name, "is not public");
+                    return Member(diagnostics, atMember, name, symbol.Name, "is a constant");
                 }
-                if (property.GetMethod is not { DeclaredAccessibility: Accessibility.Public })
+                if (symbol.IsStatic) return Member(diagnostics, atMember, name, symbol.Name, "is static");
+                if (symbol.DeclaredAccessibility != Accessibility.Public)
                 {
-                    return Member(diagnostics, atMember, name, property.Name, "has no public getter");
+                    return Member(diagnostics, atMember, name, symbol.Name, "is not public");
                 }
-                if (property.SetMethod is not { DeclaredAccessibility: Accessibility.Public })
+                switch (symbol)
                 {
-                    return Member(diagnostics, atMember, name, property.Name, "has no public setter");
-                }
-                if (property.SetMethod.IsInitOnly)
-                {
-                    return Member(diagnostics, atMember, name, property.Name, "has an init-only setter");
+                    case IPropertySymbol property:
+                        if (property.GetMethod is not { DeclaredAccessibility: Accessibility.Public })
+                        {
+                            return Member(diagnostics, atMember, name, symbol.Name, "has no public getter");
+                        }
+                        if (property.SetMethod is not { DeclaredAccessibility: Accessibility.Public })
+                        {
+                            return Member(diagnostics, atMember, name, symbol.Name, "has no public setter");
+                        }
+                        if (property.SetMethod.IsInitOnly)
+                        {
+                            return Member(diagnostics, atMember, name, symbol.Name, "has an init-only setter");
+                        }
+                        break;
+
+                    // a readonly field cannot be assigned after construction, so it has the same
+                    // problem an init-only property does
+                    case IFieldSymbol { IsReadOnly: true }:
+                        return Member(diagnostics, atMember, name, symbol.Name, "is read-only");
                 }
 
-                if (GetConditionalPattern(type, property.Name) is { } conditional)
+                if (GetConditionalPattern(type, symbol.Name) is { } conditional)
                 {
-                    return Member(diagnostics, atMember, name, property.Name,
+                    return Member(diagnostics, atMember, name, symbol.Name,
                         $"is conditional via '{conditional}'");
                 }
 
-                if (GetMemberShape(compilation, property.Type) is not { } shape)
+                if (GetMemberShape(compilation, memberType) is not { } shape)
                 {
-                    return Member(diagnostics, atMember, name, property.Name,
-                        $"has unsupported type '{property.Type.ToDisplayString()}'");
+                    return Member(diagnostics, atMember, name, symbol.Name,
+                        $"has unsupported type '{memberType.ToDisplayString()}'");
                 }
                 var kind = shape.Kind;
                 var message = shape.Message;
@@ -440,7 +458,7 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // a map can reach a contract through its key *and* its value
                     foreach (var reached in shape.MapMessages!) reachable.Add(reached);
-                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: shape.DeclaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList,
                         dataFormat: dataFormat, isRequired: isRequired));
@@ -450,7 +468,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // enqueued even if it turns out to be unsupported, so that it reports its own
                     // reason and this contract is dropped by cascade with a message that chains
                     reachable.Add(message!);
-                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
@@ -460,7 +478,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 else
                 {
-                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,

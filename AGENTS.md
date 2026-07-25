@@ -287,6 +287,14 @@ Collection options are pure features composition, and compose orthogonally:
 Note `ListSet` and `RepeatedAsList` are **protogen schema-codegen** options that shape generated DTOs
 from `.proto`; they are not `[ProtoMember]` options and have nothing to do with this generator.
 
+### Fields
+
+Fields are members exactly as properties are — ref-emit emits the identical guards and read shapes,
+so the whole change was in parsing. Auto-property backing fields are `IsImplicitlyDeclared` and so
+skipped (the property itself covers them). Two states a property cannot be in are refused:
+`readonly` (the same problem `init` has — no assignment after construction) and `const`. `static`
+and non-public are refused as for properties, though note ref-emit reaches both by reflection.
+
 ### Not yet supported
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
@@ -302,7 +310,7 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   it changes the wire form of the BCL types below *and* is inherited from assembly/module/type down
   to the member, so it cannot be read off a single attribute. See `docs/compatibilitylevel.md`.
 - the compatibility-level BCL types (`DateTime`/`TimeSpan`/`decimal`/`Guid`)
-- inheritance / `[ProtoInclude]`, surrogates, serialization callbacks, fields-as-members,
+- inheritance / `[ProtoInclude]`, surrogates, serialization callbacks,
   `ShouldSerialize`/`Specified`
 
 ### Golden-file tests
