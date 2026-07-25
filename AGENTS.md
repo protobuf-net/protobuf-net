@@ -237,6 +237,34 @@ field, so `AppendBytes` (which *concatenates* byte arrays) and `ReadMessage`'s m
 are otherwise untested. It concatenates every sample's payload — itself a valid protobuf message —
 to manufacture the duplicates.
 
+### Native AOT smoke test
+
+`src/AotSmoke` is a `PublishAot` console app that round-trips through a generated model and returns
+a non-zero exit code on mismatch. It is the only thing here that proves the actual goal; everything
+else runs on a JIT runtime where ref-emit still exists.
+
+```
+dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64
+```
+
+`vswhere.exe` must be on `PATH` (`%ProgramFiles(x86)%\Microsoft Visual Studio\Installer`) or ILC's
+link step fails with a mangled command line — the error names `link.exe`, which is misleading.
+
+Because `PublishAot` enables trim/AOT analysis at **build** time too, an ordinary `dotnet build` of
+this project catches annotation regressions without paying for a native publish. That is how IL2095
+was found. Two things it has already caught, both invisible on JIT:
+
+- The generated `GetSerializer<T>` override must restate the base's
+  `[DynamicallyAccessedMembers(DynamicAccess.ContractType)]` exactly, or IL2095 fires. `DynamicAccess`
+  is internal to protobuf-net, so the emitter spells the flags out — keep them in step with
+  `protobuf-net.Core/Internal/DynamicallyAccessedMembersAttribute.cs`, and note the attribute only
+  exists on net5+, so the generator probes for it rather than assuming.
+- `SerializerCache.Get<TProvider, T>` had **no** annotations while the `SerializerCache<TProvider>`
+  it forwards to needs `DynamicAccess.Serializer` to preserve the constructor used by
+  `Activator.CreateInstance`. The chain broke at that public boundary, ILC trimmed the constructor,
+  and the first serialize threw `MissingMethodException` at runtime. This affected *any* hand-written
+  `TypeModel` under AOT, not just generated ones.
+
 ### Reference output from ref-emit
 
 `src/AotRefGen` (net472, hence the section above) exists so the generator's expected output is

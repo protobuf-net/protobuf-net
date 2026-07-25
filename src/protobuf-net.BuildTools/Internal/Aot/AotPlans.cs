@@ -180,12 +180,25 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// </summary>
     internal sealed class ProtoModelPlan : IEquatable<ProtoModelPlan>
     {
-        public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts)
+        public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
+            bool annotateTrimming = false)
         {
             Namespace = nameSpace;
             TypeName = typeName;
             Contracts = contracts;
+            AnnotateTrimming = annotateTrimming;
         }
+
+        /// <summary>
+        /// Whether <c>[DynamicallyAccessedMembers]</c> is available to the consumer, and so whether
+        /// the <c>GetSerializer&lt;T&gt;</c> override can restate the base's annotation.
+        /// </summary>
+        /// <remarks>
+        /// Without it a native-AOT build reports IL2095: an override must repeat the annotation
+        /// exactly. protobuf-net's own <c>DynamicAccess.ContractType</c> is internal, so the flags
+        /// have to be spelled out; and the attribute itself only exists on net5+, hence the probe.
+        /// </remarks>
+        public bool AnnotateTrimming { get; }
 
         /// <summary>Null for the global namespace.</summary>
         public string? Namespace { get; }
@@ -200,7 +213,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         public bool Equals(ProtoModelPlan? other)
             => other is not null && Namespace == other.Namespace && TypeName == other.TypeName
-                && Contracts.Equals(other.Contracts);
+                && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 

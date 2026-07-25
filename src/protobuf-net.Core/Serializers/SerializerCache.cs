@@ -143,8 +143,18 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Gets a cached serializer instance for a type, in the context of a given provider
         /// </summary>
+        /// <remarks>
+        /// The annotations here are load-bearing under native AOT, and must match those on
+        /// <see cref="SerializerCache{TProvider}"/>. Without them the chain breaks at this public
+        /// boundary: the trimmer never learns that <typeparamref name="TProvider"/> is activated
+        /// reflectively, removes its parameterless constructor, and the first serialize fails with
+        /// "No parameterless constructor defined". Generated models reach the cache exclusively
+        /// through here, so this is the annotation that matters for them.
+        /// </remarks>
         [MethodImpl(ProtoReader.HotPath)]
-        public static ISerializer<T> Get<TProvider, T>()
+        public static ISerializer<T> Get<
+            [DynamicallyAccessedMembers(DynamicAccess.Serializer)] TProvider,
+            [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             where TProvider : class
             => SerializerCache<TProvider, T>.InstanceField;
 

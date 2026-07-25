@@ -12,6 +12,18 @@ namespace ProtoBuf.BuildTools.Generators
         private const string Features = Serializers + ".SerializerFeatures";
         private const string ServicesTypeName = "ProtoBufGeneratedServices";
 
+        private const string MemberTypes = "global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes";
+
+        /// <summary>Mirrors <c>ProtoBuf.Internal.DynamicAccess.ContractType</c>, which is internal.</summary>
+        private const string DynamicallyAccessedMembers
+            = "global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers("
+            + MemberTypes + ".PublicConstructors | " + MemberTypes + ".NonPublicConstructors | "
+            + MemberTypes + ".PublicParameterlessConstructor | "
+            + MemberTypes + ".PublicProperties | " + MemberTypes + ".NonPublicProperties | "
+            + MemberTypes + ".PublicFields | " + MemberTypes + ".NonPublicFields | "
+            + MemberTypes + ".PublicMethods | " + MemberTypes + ".NonPublicMethods | "
+            + MemberTypes + ".PublicNestedTypes | " + MemberTypes + ".NonPublicNestedTypes)";
+
         /// <summary>
         /// Render a plan as the partial half of the user's model class.
         /// </summary>
@@ -37,10 +49,13 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent, $"partial class {plan.TypeName}");
             Line(sb, indent, "{");
 
-            // TODO: the base declares [DynamicallyAccessedMembers(DynamicAccess.ContractType)] on T,
-            // but DynamicAccess is internal to protobuf-net so we cannot restate it here; confirm
-            // against a real PublishAot build whether the override needs its own annotation
-            Line(sb, indent + 1, $"protected sealed override {Serializers}.ISerializer<T> GetSerializer<T>()");
+            // the base declares [DynamicallyAccessedMembers(DynamicAccess.ContractType)] on T, and an
+            // override must restate it exactly or trim analysis reports IL2095. DynamicAccess is
+            // internal to protobuf-net, so the flags are spelled out; keep them in step with
+            // protobuf-net.Core/Internal/DynamicallyAccessedMembersAttribute.cs. src/AotSmoke is what
+            // catches any drift, since IL2095 reappears the moment the two disagree.
+            var typeParameter = plan.AnnotateTrimming ? $"[{DynamicallyAccessedMembers}] T" : "T";
+            Line(sb, indent + 1, $"protected sealed override {Serializers}.ISerializer<T> GetSerializer<{typeParameter}>()");
             Line(sb, indent + 2, $"=> {Serializers}.SerializerCache.Get<{ServicesTypeName}, T>();");
             sb.AppendLine();
 

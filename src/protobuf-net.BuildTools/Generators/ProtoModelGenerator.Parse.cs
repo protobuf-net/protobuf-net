@@ -85,7 +85,8 @@ namespace ProtoBuf.BuildTools.Generators
                 var contracts = parsed.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
                 var nameSpace = model.ContainingNamespace is { IsGlobalNamespace: false } ns
                     ? ns.ToDisplayString() : null;
-                plan = new ProtoModelPlan(nameSpace, model.Name, new(contracts));
+                plan = new ProtoModelPlan(nameSpace, model.Name, new(contracts),
+                    annotateTrimming: SupportsTrimAnnotations(compilation));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
@@ -456,6 +457,21 @@ namespace ProtoBuf.BuildTools.Generators
         /// callbacks, the <c>System.Xml.Serialization</c> attributes, <c>[NonSerialized]</c> and
         /// <c>[DefaultValue]</c> - each of which can change the bytes we would emit.
         /// </remarks>
+        /// <summary>
+        /// Is <c>[DynamicallyAccessedMembers]</c> available to the consumer?
+        /// </summary>
+        /// <remarks>
+        /// Probing for the type rather than assuming a TFM: it ships in the BCL from net5 onwards,
+        /// and protobuf-net's own down-level copy is internal, so it would not be usable from the
+        /// consumer's assembly even where it exists.
+        /// </remarks>
+        private static bool SupportsTrimAnnotations(Compilation compilation)
+        {
+            var type = compilation.GetTypeByMetadataName(
+                "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute");
+            return type is not null && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly);
+        }
+
         private static int? GetNamedInt(AttributeData attribute, string name)
         {
             foreach (var argument in attribute.NamedArguments)
