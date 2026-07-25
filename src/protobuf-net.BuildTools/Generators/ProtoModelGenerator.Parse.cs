@@ -37,6 +37,7 @@ namespace ProtoBuf.BuildTools.Generators
         private static ProtoParseResult? Parse(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
         {
             if (context.TargetSymbol is not INamedTypeSymbol model) return null;
+            var compilation = context.SemanticModel.Compilation;
 
             // TODO: nested and generic model types
             if (model.ContainingType is not null || model.IsGenericType) return null;
@@ -71,7 +72,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                 locations[key] = PlanLocation.From(type);
 
-                var contract = ParseContract(type, diagnostics, out var reachable, cancellationToken);
+                var contract = ParseContract(compilation, type, diagnostics, out var reachable, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
                 foreach (var next in reachable) pending.Enqueue(next);
             }
@@ -127,6 +128,7 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         private static ProtoContractPlan? ParseContract(
+            Compilation compilation,
             INamedTypeSymbol type,
             List<PlanDiagnostic> diagnostics,
             out List<INamedTypeSymbol> reachable,
@@ -142,7 +144,7 @@ namespace ProtoBuf.BuildTools.Generators
             // a tuple is commonly a closed generic, which they would otherwise reject
             if (!HasContractFamily(type))
             {
-                if (ParseTuple(type, diagnostics, out reachable, cancellationToken) is { } tuple) return tuple;
+                if (ParseTuple(compilation, type, diagnostics, out reachable, cancellationToken) is { } tuple) return tuple;
                 reachable = new List<INamedTypeSymbol>();
                 return Contract(diagnostics, at, name,
                     "the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple");
@@ -329,7 +331,7 @@ namespace ProtoBuf.BuildTools.Generators
                         $"is conditional via '{conditional}'");
                 }
 
-                if (GetMemberShape(property.Type) is not { } shape)
+                if (GetMemberShape(compilation, property.Type) is not { } shape)
                 {
                     return Member(diagnostics, atMember, name, property.Name,
                         $"has unsupported type '{property.Type.ToDisplayString()}'");
@@ -572,7 +574,7 @@ namespace ProtoBuf.BuildTools.Generators
             public INamedTypeSymbol? EnumType { get; }
         }
 
-        private static MemberShape? GetMemberShape(ITypeSymbol type)
+        private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type)
         {
             var isNullable = false;
             if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
@@ -595,11 +597,22 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (GetScalarKind(type) is { } scalar) return new MemberShape(scalar, isNullable);
 
+            // erase tuple element names before anything looks at the type: they are decoration, and
+            // leaving them on would key the same shape twice and emit a duplicate ISerializer<>
+            type = EraseTupleNames(compilation, type);
+
             // a struct contract can be Nullable<T>; a reference-type one cannot
             if (GetMessageKind(type, out var message) is { } messageKind)
             {
                 if (isNullable && message is not { IsValueType: true }) return null;
                 return new MemberShape(messageKind, isNullable, message: message);
+            }
+
+            // a tuple-typed member is a sub-message too, even though it carries no contract attribute
+            if (type is INamedTypeSymbol candidate && IsTupleCandidate(candidate))
+            {
+                if (isNullable && !candidate.IsValueType) return null;
+                return new MemberShape(ProtoMemberKind.Message, isNullable, message: candidate);
             }
 
             if (isNullable) return null; // nothing else below here is a value type

@@ -103,27 +103,25 @@ Design constraints that are settled, and should not be quietly relaxed:
   literal** — `new (int, string)(...)` is not legal C#. Note `TupleUnderlyingType` is *null* for
   these symbols, so it is no help in normalising them.
 
-  Tuples are currently only reachable as explicit `[ProtoSerializable]` seeds: `GetMessageKind`
-  accepts only `[ProtoContract]` types, so a tuple-typed *member* is reported unsupported.
+  Tuple-typed **members** are supported as sub-messages even though they carry no contract
+  attribute: `GetMemberShape` falls through to `IsTupleCandidate`, and the closure handles the rest.
 
-  **When that gap is closed: accept element names from consumers, but erase them in our own output.**
-  A consumer writing `public (int Id, string Name) Pair { get; set; }` must work — be gracious in
-  what we accept; erasure is about what *we* emit and key on, never about rejecting input. It costs
-  nothing, because the conversion between tuple types differing only in names is an *identity*
-  conversion: `value.Pair = state.ReadMessage<(int, string)>(...)` compiles against a named member
-  with no cast.
+  **Element names are accepted from consumers but erased in our output** (`EraseTupleNames`, applied
+  recursively and also through enclosing generics such as `KeyValuePair<int, (int A, int B)>`).
+  A consumer writing `public (int Id, string Name) Pair { get; set; }` works — be gracious in what we
+  accept; erasure governs only what *we* key on and emit. It is free, because the conversion between
+  tuple types differing only in names is an *identity* conversion, so `value.Named` passes to
+  `WriteMessage<(int, string)>(...)` with no cast.
 
-  Erasure itself is **decided, not optional.** Element names are
-  identity-convertible decoration, not part of the type: `ISerializer<(int Id, string Name)>` and
-  `ISerializer<(int, string)>` are the *same* interface, so emitting both is a duplicate
-  implementation and will not compile, and `SerializerCache.Get<TProvider, T>()` is keyed on a
-  runtime type where the names do not exist anyway. Ref-emit gets the collapse for free by working in
-  metadata; we have to do it deliberately, because our closure keys on `ToDisplayString`, which
-  *includes* the names. Key and emit using the anonymous syntax — `(int, string)` — and erase
-  **recursively**, since nested tuples carry names too. Erasing at the symbol level
-  (`Compilation.CreateTupleTypeSymbol` with no names) is likely also needed for detection: a named
-  tuple is expected to expose `Id`/`Name` *and* `Item1`/`Item2`, which would fail the
-  constructor-arity match. Confirm that with a probe rather than assuming it.
+  Erasure is not cosmetic, and all three reasons were confirmed by probing the symbols rather than
+  assumed:
+  - **Detection**: a *named* tuple reports four public fields (`Item1, Id, Item2, Name`), which fails
+    the constructor-arity match; the erased form reports the two we want.
+  - **De-duplication**: `SymbolEqualityComparer.Default` returns **false** between the two spellings,
+    and `ToDisplayString` includes the names — so the same shape named two ways would emit
+    `ISerializer<(int, string)>` *twice* and fail to compile.
+  - **Alignment**: ref-emit works in metadata where names do not exist, so it collapses them for
+    free; erasing keeps our serializer set identical to its.
 - **Value types are first-class contracts.** A struct needs no construction or null test on read, and
   no `ThrowUnexpectedSubtype` on write (that is constrained to reference types). A struct-typed
   *member* is never null, so neither side tests for it — and unlike a reference-type message,
