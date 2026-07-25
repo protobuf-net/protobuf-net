@@ -33,6 +33,26 @@ public class Order
     // an inheritance hierarchy: reads and writes route through the root's ISubTypeSerializer, and
     // SubTypeState<T> constructs via TypeHelper<T>.Factory - the reflective path ILC has to keep
     [ProtoMember(9)] public Payment Payment { get; set; }
+
+    // unknown fields are kept rather than discarded, which routes through IExtension/BufferExtension
+    [ProtoMember(10)] public Note Note { get; set; }
+}
+
+[ProtoContract]
+public class Note : Extensible
+{
+    [ProtoMember(1)] public string Text { get; set; }
+}
+
+/// <summary>
+/// The same shape as <see cref="Note"/> plus a field it does not know about — which is how an
+/// unknown field is produced without going anywhere near a reflective API.
+/// </summary>
+[ProtoContract]
+public class NoteV2
+{
+    [ProtoMember(1)] public string Text { get; set; }
+    [ProtoMember(5)] public int Number { get; set; }
 }
 
 [ProtoContract]
@@ -59,6 +79,7 @@ public enum Status { Unknown = 0, Open = 1, Closed = 2 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Order))]
+[ProtoSerializable(typeof(NoteV2))]
 public partial class SmokeModel : TypeModel
 {
 }
@@ -85,6 +106,7 @@ internal static class Program
             Reference = "ref-1",
             Size = new Dimensions { Width = 3, Height = 4 },
             Payment = new CardPayment { Amount = 99, Last4 = "4242" },
+            Note = new Note { Text = "hi" },
         };
 
         using var ms = new MemoryStream();
@@ -110,6 +132,24 @@ internal static class Program
         Check(ref failures, "Payment.Amount", original.Payment.Amount, clone.Payment?.Amount);
         Check(ref failures, "Payment.Last4", ((CardPayment)original.Payment).Last4,
             (clone.Payment as CardPayment)?.Last4);
+        Check(ref failures, "Note.Text", original.Note.Text, clone.Note?.Text);
+
+        // an unknown field must survive being read into a contract that does not declare it and
+        // written back out. Producing it via NoteV2 keeps this on the generic, generated path -
+        // Extensible.AppendValue would not, since it serializes through the reflective auxiliary
+        // path and so silently does nothing once trimmed.
+        using var v2 = new MemoryStream();
+        model.Serialize(v2, new NoteV2 { Text = "hi", Number = 1234 });
+        var v2Bytes = v2.ToArray();
+
+        v2.Position = 0;
+        var narrowed = model.Deserialize<Note>(v2);
+        using var again = new MemoryStream();
+        model.Serialize(again, narrowed);
+
+        Check(ref failures, "Note.Text via v2", "hi", narrowed.Text);
+        Check(ref failures, "unknown field preserved", BitConverter.ToString(v2Bytes),
+            BitConverter.ToString(again.ToArray()));
 
         // and the bytes must be stable across a second pass
         using var second = new MemoryStream();

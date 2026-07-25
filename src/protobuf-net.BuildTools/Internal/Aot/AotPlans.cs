@@ -294,6 +294,25 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
+    /// How a contract stores fields it does not recognise.
+    /// </summary>
+    internal enum ProtoExtensibleKind
+    {
+        /// <summary>Unknown fields are skipped and lost.</summary>
+        None,
+
+        /// <summary><c>IExtensible</c>: one bag for the whole instance.</summary>
+        Untyped,
+
+        /// <summary>
+        /// <c>ITypedExtensible</c>: a bag per layer, keyed on the declaring type — which is what
+        /// makes it work across an inheritance hierarchy, where the same field number can appear at
+        /// more than one level with different meanings.
+        /// </summary>
+        Typed,
+    }
+
+    /// <summary>
     /// One <c>[ProtoInclude]</c> link: a directly-derived contract and the field it occupies.
     /// </summary>
     internal readonly struct ProtoSubTypePlan : IEquatable<ProtoSubTypePlan>
@@ -325,10 +344,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoContractPlan(string typeName, EquatableArray<ProtoMemberPlan> members,
             bool isValueType = false, bool skipConstructor = false, bool isTuple = false,
             bool isTupleLiteral = false, bool isSealed = false,
-            string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default)
+            string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
+            ProtoExtensibleKind extensible = ProtoExtensibleKind.None)
         {
             TypeName = typeName;
             Members = members;
+            Extensible = extensible;
             RootTypeName = rootTypeName;
             SubTypes = subTypes;
             IsSealed = isSealed;
@@ -387,6 +408,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <summary>The directly-derived contracts, in declaration order.</summary>
         public EquatableArray<ProtoSubTypePlan> SubTypes { get; }
 
+        /// <summary>
+        /// Whether unrecognised fields are kept, and in which shape: the read stores them instead of
+        /// skipping, and the write appends them after every declared member.
+        /// </summary>
+        public ProtoExtensibleKind Extensible { get; }
+
         /// <summary>Fully-qualified, <c>global::</c>-prefixed type name.</summary>
         public string TypeName { get; }
 
@@ -397,7 +424,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
                 && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
-                && SubTypes.Equals(other.SubTypes);
+                && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

@@ -341,6 +341,43 @@ sub-type markers (`Dog` then `Cat`); same-branch merges, in either direction, ar
 `Inherit.input.cs`'s `Holder` samples stay on one branch because of it, since the differential suite
 manufactures repeated fields by concatenating every sample of a type.
 
+### Extensible contracts
+
+An extensible contract keeps the fields it does not recognise: the read's `default:` case becomes
+`state.AppendExtensionData(...)` instead of `state.SkipField()`, and the write appends the stored
+bytes after every declared member. That is the whole change — the serializer only ever copies raw
+bytes, so it needs no reflection.
+
+Which overload is used is **not** simply "whichever interface is implemented". Ref-emit's rule
+(`TypeSerializer.UseTypedExtensible`) is `ITypedExtensible && (in a hierarchy || IExtensible is not
+also implemented)`. Since `Extensible` supplies both interfaces, that means:
+
+| declares | standalone | in a hierarchy |
+| --- | --- | --- |
+| `IExtensible` | untyped | **refused** |
+| `ITypedExtensible` | typed | typed |
+| both (i.e. `Extensible`) | untyped | typed |
+
+The typed overload passes `typeof(<this layer>)` — not the root — so each layer of a hierarchy keys
+its own bag and the same field number can appear at several levels without colliding. In a sub-type
+read the `default:` case uses `value.Value` rather than the per-case local, since the instance has to
+exist before anything can be stored on it.
+
+Two combinations ref-emit rejects while *building* the model, so there is nothing to reproduce and we
+refuse them up front: extensible **structs**, and `IExtensible` without `ITypedExtensible` on a type
+with inheritance.
+
+Deriving from `ProtoBuf.Extensible` is exempted from the "derives from a type that does not declare
+`[ProtoInclude]` for it" refusal — it is the documented way to get the interfaces and declares no
+serializable members of its own.
+
+**`Extensible.AppendValue` does not work under AOT**, and fails silently. It serializes through
+`TrySerializeAuxiliaryType` with a null type — i.e. the reflective path — and the return value is
+discarded, so the value is simply never stored. It is fine in the JIT fixtures, which is where
+`Extensible.input.cs` uses it to manufacture an unknown field; `AotSmoke` instead produces one by
+serializing a wider contract (`NoteV2`) and reading it back as the narrower one, which keeps the test
+on the generated path.
+
 ### `init`-only accessors
 
 IL has no notion of `init` — it is a modreq the C# compiler enforces — so ref-emit simply calls the
@@ -368,9 +405,6 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   it changes the wire form of the BCL types below *and* is inherited from assembly/module/type down
   to the member, so it cannot be read off a single attribute. See `docs/compatibilitylevel.md`.
 - the compatibility-level BCL types (`DateTime`/`TimeSpan`/`decimal`/`Guid`)
-- **`IExtensible` / `ITypedExtensible` / `Extensible`** — carrying unknown fields through a
-  round-trip. The typed pair is what makes that robust across an inheritance hierarchy, where each
-  layer needs its own extension data rather than one shared bag.
 - surrogates, serialization callbacks, `ShouldSerialize`/`Specified`
 
 ### Golden-file tests

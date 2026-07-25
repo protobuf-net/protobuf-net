@@ -14,6 +14,9 @@ namespace ProtoBuf.BuildTools.Generators
     {
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
+        private const string ExtensibleTypeName = "ProtoBuf.Extensible";
+        private const string ExtensibleInterfaceName = "ProtoBuf.IExtensible";
+        private const string TypedExtensibleInterfaceName = "ProtoBuf.ITypedExtensible";
         private const string ProtoMemberAttributeName = "ProtoBuf.ProtoMemberAttribute";
         private const string DefaultValueAttributeName = "System.ComponentModel.DefaultValueAttribute";
         private const string DataContractAttributeName = "System.Runtime.Serialization.DataContractAttribute";
@@ -202,6 +205,29 @@ namespace ProtoBuf.BuildTools.Generators
             }
             var linkedBase = GetLinkedBase(type);
 
+            // ref-emit's rule, from TypeSerializer: the typed form is used whenever the type is in a
+            // hierarchy, or when it is the only extension interface implemented. Extensible supplies
+            // both, so a standalone Extensible gets the untyped overload.
+            var inHierarchy = subTypes.Count != 0 || linkedBase is not null;
+            var isExtensible = Implements(type, ExtensibleInterfaceName);
+            var isTypedExtensible = Implements(type, TypedExtensibleInterfaceName);
+            var extensible = ProtoExtensibleKind.None;
+            if (isExtensible || isTypedExtensible)
+            {
+                if (isValueType)
+                {
+                    return Option(diagnostics, at, name, "IExtensible on a struct");
+                }
+                if (inHierarchy && !isTypedExtensible)
+                {
+                    // ref-emit throws while building the model rather than emitting anything
+                    return Option(diagnostics, at, name,
+                        "IExtensible without ITypedExtensible on a type with inheritance");
+                }
+                extensible = isTypedExtensible && (inHierarchy || !isExtensible)
+                    ? ProtoExtensibleKind.Typed : ProtoExtensibleKind.Untyped;
+            }
+
             // a struct is always constructible and can never have a base contract, so both of the
             // remaining checks are class-only
             if (!isValueType)
@@ -217,7 +243,10 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     return Contract(diagnostics, at, name, "there is no public parameterless constructor");
                 }
-                if (type.BaseType is { SpecialType: not SpecialType.System_Object } && linkedBase is null)
+                // Extensible is the documented way to get the extension interfaces, and declares no
+                // serializable members of its own, so it is not the silent-loss case below
+                if (type.BaseType is { SpecialType: not SpecialType.System_Object } baseType
+                    && linkedBase is null && baseType.ToDisplayString() != ExtensibleTypeName)
                 {
                     // protobuf-net would treat this as a standalone contract that silently ignores
                     // its inherited members; refusing is the safer half of that surprise
@@ -558,7 +587,7 @@ namespace ProtoBuf.BuildTools.Generators
             return new ProtoContractPlan(
                 type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 new(members.ToArray()), isValueType, skipConstructor, isSealed: type.IsSealed,
-                rootTypeName: rootTypeName, subTypes: new(subTypePlans));
+                rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -672,6 +701,15 @@ namespace ProtoBuf.BuildTools.Generators
                 subTypes.Add((tag, derived));
             }
             return true;
+        }
+
+        private static bool Implements(INamedTypeSymbol type, string interfaceName)
+        {
+            foreach (var iface in type.AllInterfaces)
+            {
+                if (iface.ToDisplayString() == interfaceName) return true;
+            }
+            return false;
         }
 
         /// <summary>

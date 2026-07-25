@@ -286,12 +286,25 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 3, $"value.ReadSubType<{subType.TypeName}>(ref state, this);");
                 Line(sb, indent + 3, "break;");
             }
+            // an extensible contract keeps what it does not recognise rather than discarding it; the
+            // instance has to be materialised for that, which is why the sub-type form reads
+            // value.Value here rather than using the per-case local
             Line(sb, indent + 2, "default:");
-            Line(sb, indent + 3, "state.SkipField();");
+            Line(sb, indent + 3, contract.Extensible == ProtoExtensibleKind.None
+                ? "state.SkipField();"
+                : $"state.AppendExtensionData({(instance == "value" ? "value" : "value.Value")}{ExtensionType(contract)});");
             Line(sb, indent + 3, "break;");
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");
         }
+
+        /// <summary>
+        /// The <c>typeof</c> argument that keys a typed extension bag, or nothing for the untyped
+        /// form. Each layer of a hierarchy gets its own, so the same field number can appear at more
+        /// than one level without colliding.
+        /// </summary>
+        private static string ExtensionType(ProtoContractPlan contract)
+            => contract.Extensible == ProtoExtensibleKind.Typed ? $", typeof({contract.TypeName})" : "";
 
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
         private static void EmitWriteMembers(StringBuilder sb, int indent, ProtoContractPlan contract)
@@ -429,6 +442,12 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
                         break;
                 }
+            }
+
+            // the kept-but-unrecognised fields go out after every declared member
+            if (contract.Extensible != ProtoExtensibleKind.None)
+            {
+                Line(sb, indent, $"state.AppendExtensionData(value{ExtensionType(contract)});");
             }
         }
 
