@@ -154,6 +154,17 @@ namespace ProtoBuf.BuildTools.Generators
                 var target = contract.IsTuple ? $"arg{number}" : $"value.{member.Name}";
                 Line(sb, indent + 3, $"case {number}:");
                 Line(sb, indent + 3, "{");
+                if (member.Map.Factory is not null)
+                {
+                    // same merge shape as a collection, but the key and value features - and any
+                    // sub-serializers they need - ride alongside
+                    Line(sb, indent + 4, $"var tmp{number} = {target};");
+                    Line(sb, indent + 4, $"tmp{number} = {Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
+                    Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                    Line(sb, indent + 4, "break;");
+                    Line(sb, indent + 3, "}");
+                    continue;
+                }
                 if (member.Repeated.Factory is not null)
                 {
                     // same merge shape as a sub-message: the existing collection is passed in, and
@@ -247,6 +258,15 @@ namespace ProtoBuf.BuildTools.Generators
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
                 Line(sb, indent + 1, $"var tmp{number} = value.{member.Name};");
+
+                if (member.Map.Factory is not null)
+                {
+                    Line(sb, indent + 1, $"if (tmp{number} != null)");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"{Map(member)}.WriteMap(ref state, {number}, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
+                    Line(sb, indent + 1, "}");
+                    continue;
+                }
 
                 if (member.Repeated.Factory is not null)
                 {
@@ -464,6 +484,60 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>A message element needs us passed along as its serializer; a scalar does not.</summary>
         private static string RepeatedSubSerializer(ProtoMemberPlan member)
             => member.Kind == ProtoMemberKind.Message ? ", this" : "";
+
+        /// <summary>The <c>MapSerializer</c> factory for a dictionary member.</summary>
+        private static string Map(ProtoMemberPlan member)
+        {
+            var map = member.Map;
+            var arguments = map.TakesCollectionType
+                ? $"<{member.DeclaredTypeName}, {map.KeyTypeName}, {map.ValueTypeName}>"
+                : $"<{map.KeyTypeName}, {map.ValueTypeName}>";
+            return $"{Serializers}.MapSerializer.{map.Factory}{arguments}()";
+        }
+
+        /// <summary>
+        /// The features for a map member: the map is always length-prefixed (or a group), and the
+        /// key and value wire types are passed separately.
+        /// </summary>
+        /// <remarks>
+        /// <c>DataFormat</c> selects the root wire type and nothing else — <c>Group</c> is the only
+        /// value that changes anything, since a map is length-prefixed either way. The per-key and
+        /// per-value formats come from <c>[ProtoMap]</c>, which is refused.
+        /// <c>OptionFailOnDuplicateKey</c> rides on whether the shape is a real protobuf <c>map</c>.
+        /// </remarks>
+        private static string MapFeatures(ProtoMemberPlan member)
+        {
+            var result = member.DataFormat == ProtoDataFormat.Group
+                ? $"{Features}.WireTypeStartGroup"
+                : $"{Features}.WireTypeString";
+            if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
+            if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
+            if (!member.Map.IsValidProtobufMap) result += $" | {Features}.OptionFailOnDuplicateKey";
+            return result;
+        }
+
+        private static string MapElementFeatures(ProtoMemberPlan member)
+            => $"{Features}.{MapWireType(member.Map.KeyKind)}, {Features}.{MapWireType(member.Map.ValueKind)}";
+
+        private static string MapWireType(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Single => "WireTypeFixed32",
+            ProtoMemberKind.Double => "WireTypeFixed64",
+            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message => "WireTypeString",
+            _ => "WireTypeVarint",
+        };
+
+        /// <summary>
+        /// A message key or value needs us passed along as its serializer. The two are positional, so
+        /// a message value alone still has to pass a null for the key.
+        /// </summary>
+        private static string MapSubSerializers(ProtoMemberPlan member)
+        {
+            var key = member.Map.KeyKind == ProtoMemberKind.Message;
+            var value = member.Map.ValueKind == ProtoMemberKind.Message;
+            if (value) return key ? ", this, this" : ", null, this";
+            return key ? ", this" : "";
+        }
 
         /// <summary>
         /// How a fresh instance is made: normally <c>new</c>, but SkipConstructor bypasses every

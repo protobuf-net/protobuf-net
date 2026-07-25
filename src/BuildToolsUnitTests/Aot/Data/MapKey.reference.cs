@@ -1,0 +1,174 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.MapKey;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___MapKeyModel : ISerializer<Keys>, ISerializer<Payload>
+{
+	Keys ISerializer<Keys>.Read(ref ProtoReader.State state, Keys value)
+	{
+		if (value == null)
+		{
+			Keys keys = new Keys();
+			value = keys;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dictionary<bool, int> values = value.Bool;
+				values = MapSerializer.CreateDictionary<bool, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+				if (values != null)
+				{
+					value.Bool = values;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dictionary<double, int> values2 = value.Double;
+				values2 = MapSerializer.CreateDictionary<double, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values2, SerializerFeatures.WireTypeFixed64, SerializerFeatures.WireTypeVarint);
+				if (values2 != null)
+				{
+					value.Double = values2;
+				}
+				break;
+			}
+			case 3:
+			{
+				Dictionary<char, int> values3 = value.Char;
+				values3 = MapSerializer.CreateDictionary<char, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values3, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+				if (values3 != null)
+				{
+					value.Char = values3;
+				}
+				break;
+			}
+			case 4:
+			{
+				Dictionary<Payload, int> message = value.Message;
+				message = MapSerializer.CreateDictionary<Payload, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, message, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, this);
+				if (message != null)
+				{
+					value.Message = message;
+				}
+				break;
+			}
+			case 5:
+			{
+				Dictionary<Payload, Payload> bothMessages = value.BothMessages;
+				bothMessages = MapSerializer.CreateDictionary<Payload, Payload>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, bothMessages, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString, this, this);
+				if (bothMessages != null)
+				{
+					value.BothMessages = bothMessages;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Keys>.Write(ref ProtoWriter.State state, Keys value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Dictionary<bool, int> dictionary = value.Bool;
+		if (dictionary != null)
+		{
+			Dictionary<bool, int> values = dictionary;
+			MapSerializer.CreateDictionary<bool, int>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<double, int> dictionary2 = value.Double;
+		if (dictionary2 != null)
+		{
+			Dictionary<double, int> values2 = dictionary2;
+			MapSerializer.CreateDictionary<double, int>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values2, SerializerFeatures.WireTypeFixed64, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<char, int> dictionary3 = value.Char;
+		if (dictionary3 != null)
+		{
+			Dictionary<char, int> values3 = dictionary3;
+			MapSerializer.CreateDictionary<char, int>().WriteMap(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values3, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<Payload, int> message = value.Message;
+		if (message != null)
+		{
+			Dictionary<Payload, int> values4 = message;
+			MapSerializer.CreateDictionary<Payload, int>().WriteMap(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values4, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, this);
+		}
+		Dictionary<Payload, Payload> bothMessages = value.BothMessages;
+		if (bothMessages != null)
+		{
+			Dictionary<Payload, Payload> values5 = bothMessages;
+			MapSerializer.CreateDictionary<Payload, Payload>().WriteMap(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values5, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString, this, this);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Keys>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Payload>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Payload ISerializer<Payload>.Read(ref ProtoReader.State state, Payload value)
+	{
+		if (value == null)
+		{
+			Payload payload = new Payload();
+			value = payload;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int id = state.ReadInt32();
+				value.Id = id;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Payload>.Write(ref ProtoWriter.State state, Payload value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int id = value.Id;
+		if (id != 0)
+		{
+			state.WriteInt32Varint(1, id);
+		}
+	}
+}
+public sealed class MapKeyModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___MapKeyModel, T>();
+	}
+}

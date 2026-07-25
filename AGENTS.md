@@ -227,9 +227,7 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
   `RuntimeTypeModel.TryGetRepeatedProvider`. There is no "has a public `Add`" or "has a
   `GetEnumerator`" heuristic anywhere in modern protobuf-net; `ResolveUniqueEnumerableT` is
   `[Obsolete]` and unused.
-- **Maps are repeated too**, resolving to a `MapSerializer`. They have no plan yet, so they are
-  dropped with a diagnostic rather than mistaken for messages — the table carries the entries with
-  a null factory precisely so they are recognised and refused.
+- **Maps are repeated too**, resolving to a `MapSerializer` — see below.
 - `Span<T>`, `Memory<T>`, `ArraySegment<T>` and friends resolve to a serializer that *throws* at
   runtime; refused up front. `byte[]`, `Memory<byte>`, `ReadOnlyMemory<byte>` and
   `ArraySegment<byte>` are "bytes", not collections.
@@ -238,6 +236,32 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
   fixture.
 - `IReadOnlySet<T>` maps to `CreateReadOnySet` (sic), which only exists in the net6.0+ build of the
   library; the generator checks the symbol is present before emitting a call to it.
+
+### Maps
+
+Dictionaries resolve through the same provider walk and land on a `MapSerializer` factory, with the
+same two factory shapes and the same merge shape on read. `SortedDictionary<K,V>` is not in the
+table at all — it matches through `IDictionary<K,V>`, so it gets `CreateDictionary<TRoot, K, V>()`.
+
+The map's own features are `WireTypeString | OptionPackedDisabled`; `IsPacked` and `OverwriteList`
+compose exactly as for a repeated member. Three things are specific to maps, all confirmed against
+ref-emit:
+
+- The key and value wire types are passed **as separate arguments**, after the collection.
+- `OptionFailOnDuplicateKey` is added when the shape is **not a valid protobuf map**
+  (`RepeatedSerializerStub.IsValidProtobufMap`): the key must be an integral, string or enum type —
+  `bool`, `char` and the floating-point types are *not* in that list — and the value must not itself
+  be repeated. It changes reading from `SetValues` (overwrite) to `AddRange`, which **throws** on a
+  repeated key. That is why `MapKey.input.cs`'s samples use disjoint keys per field: the differential
+  suite manufactures repeated fields by concatenating payloads.
+- A message key or value is passed `this`, **positionally**: `, this` for a key alone, `, null, this`
+  for a value alone, `, this, this` for both.
+
+`DataFormat` selects only the root wire type, so `Group` is the one value that changes anything and
+`FixedSize`/`ZigZag` are silently ignored — the per-key and per-value formats come from `[ProtoMap]`,
+which is refused. An **enum** on either side is refused for the same reason a repeated enum is: the
+serializer is resolved from the model. A **repeated value** is refused too, even though ref-emit
+allows nesting on dictionaries specifically (`TestIfNestedNotSupported` exempts maps).
 
 Collection options are pure features composition, and compose orthogonally:
 `IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*
@@ -269,7 +293,14 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
 
 - **`init`-only accessors** — currently `PBN2001`. Note these cannot be assigned after construction,
   so they likely have to route through the constructor/tuple path rather than the property-setter one.
-- collections and maps (`RepeatedSerializer`, packed vs unpacked, `ListSet`/`RepeatedAsList`)
+- `[ProtoMap]` (per-key and per-value `DataFormat`)
+- **null-wrapping** (`SerializerFeatures.OptionWrappedValue` and friends) — the
+  `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
+  reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
+  is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
+- **compatibility level** (`[CompatibilityLevel]`, `RuntimeTypeModel.DefaultCompatibilityLevel`) —
+  it changes the wire form of the BCL types below *and* is inherited from assembly/module/type down
+  to the member, so it cannot be read off a single attribute. See `docs/compatibilitylevel.md`.
 - the compatibility-level BCL types (`DateTime`/`TimeSpan`/`decimal`/`Guid`)
 - inheritance / `[ProtoInclude]`, surrogates, serialization callbacks, fields-as-members,
   `ShouldSerialize`/`Specified`

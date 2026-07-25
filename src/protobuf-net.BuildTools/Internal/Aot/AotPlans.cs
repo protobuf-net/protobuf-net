@@ -34,6 +34,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         /// <summary>A nested contract, served by another serializer on the same services type.</summary>
         Message,
+
+        /// <summary>
+        /// A dictionary. Unlike every other kind this says nothing about the member on its own —
+        /// <see cref="ProtoMemberPlan.Map"/> carries both element types.
+        /// </summary>
+        Map,
     }
 
     /// <summary>
@@ -95,6 +101,65 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
+    /// Which <c>MapSerializer</c> factory serves a dictionary, and what its key and value are.
+    /// </summary>
+    /// <remarks>
+    /// A map is resolved by the same provider walk as any other collection, but it carries two
+    /// element types rather than one, so it needs its own plan rather than reusing the member's
+    /// <see cref="ProtoMemberPlan.Kind"/> for the element.
+    /// </remarks>
+    internal readonly struct ProtoMapPlan : IEquatable<ProtoMapPlan>
+    {
+        public ProtoMapPlan(string factory, bool takesCollectionType,
+            ProtoMemberKind keyKind, string keyTypeName,
+            ProtoMemberKind valueKind, string valueTypeName, bool isValidProtobufMap)
+        {
+            Factory = factory;
+            TakesCollectionType = takesCollectionType;
+            KeyKind = keyKind;
+            KeyTypeName = keyTypeName;
+            ValueKind = valueKind;
+            ValueTypeName = valueTypeName;
+            IsValidProtobufMap = isValidProtobufMap;
+        }
+
+        /// <summary>e.g. <c>CreateDictionary</c>, <c>CreateImmutableSortedDictionary</c>.</summary>
+        public string? Factory { get; }
+
+        /// <summary><c>Create{X}&lt;TCollection, TKey, TValue&gt;()</c> rather than <c>Create{X}&lt;TKey, TValue&gt;()</c>.</summary>
+        public bool TakesCollectionType { get; }
+
+        public ProtoMemberKind KeyKind { get; }
+
+        public string? KeyTypeName { get; }
+
+        public ProtoMemberKind ValueKind { get; }
+
+        public string? ValueTypeName { get; }
+
+        /// <summary>
+        /// Whether this is expressible as a protobuf <c>map</c>: the key must be an integral, string
+        /// or enum type, and the value must not itself be repeated. When it is *not*, protobuf-net
+        /// adds <c>OptionFailOnDuplicateKey</c>, so the distinction is visible on the wire path.
+        /// </summary>
+        public bool IsValidProtobufMap { get; }
+
+        public bool Equals(ProtoMapPlan other)
+            => Factory == other.Factory && TakesCollectionType == other.TakesCollectionType
+                && KeyKind == other.KeyKind && KeyTypeName == other.KeyTypeName
+                && ValueKind == other.ValueKind && ValueTypeName == other.ValueTypeName
+                && IsValidProtobufMap == other.IsValidProtobufMap;
+
+        public override bool Equals(object? obj) => obj is ProtoMapPlan other && Equals(other);
+
+        public override int GetHashCode()
+            => (Factory?.GetHashCode() ?? 0) ^ (TakesCollectionType ? 31 : 0)
+                ^ ((int)KeyKind * 397) ^ (KeyTypeName?.GetHashCode() ?? 0)
+                ^ ((int)ValueKind * 131) ^ (ValueTypeName?.GetHashCode() ?? 0)
+                ^ (IsValidProtobufMap ? 8191 : 0);
+    }
+
+    /// <summary>
     /// One serialized member of a contract.
     /// </summary>
     internal readonly struct ProtoMemberPlan : IEquatable<ProtoMemberPlan>
@@ -104,11 +169,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
-            ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false)
+            ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
+            ProtoMapPlan map = default)
         {
             DataFormat = dataFormat;
             IsRequired = isRequired;
             DeclaredTypeName = declaredTypeName;
+            Map = map;
             Repeated = repeated;
             ElementTypeName = elementTypeName;
             IsPacked = isPacked;
@@ -141,6 +208,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// the *element*, not the member.
         /// </summary>
         public ProtoRepeatedPlan Repeated { get; }
+
+        /// <summary>
+        /// When its factory is set, this member is a dictionary; the plan carries both element types
+        /// itself, so <see cref="Kind"/> says nothing useful.
+        /// </summary>
+        public ProtoMapPlan Map { get; }
 
         /// <summary>The element's own type, for the <c>RepeatedSerializer</c> type argument.</summary>
         public string? ElementTypeName { get; }
@@ -198,7 +271,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
                 && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
                 && DeclaredTypeName == other.DeclaredTypeName
-                && Repeated.Equals(other.Repeated) && ElementTypeName == other.ElementTypeName
+                && Repeated.Equals(other.Repeated) && Map.Equals(other.Map)
+                && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired;
 

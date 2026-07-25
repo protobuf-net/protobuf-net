@@ -113,19 +113,34 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     foreach (var member in contract.Members)
                     {
-                        if (member.Kind != ProtoMemberKind.Message) continue;
-                        if (member.TypeName is not null && parsed.ContainsKey(member.TypeName)) continue;
+                        // a map can reach a contract through either side, so both are tested
+                        string? missing;
+                        if (member.Kind == ProtoMemberKind.Map)
+                        {
+                            missing = Missing(member.Map.KeyKind, member.Map.KeyTypeName)
+                                ?? Missing(member.Map.ValueKind, member.Map.ValueTypeName);
+                        }
+                        else
+                        {
+                            missing = Missing(member.Kind, member.TypeName);
+                        }
+                        if (missing is null) continue;
 
                         parsed.Remove(contract.TypeName);
                         locations.TryGetValue(contract.TypeName, out var location);
                         diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.OmittedCascade, location,
-                            Simplify(contract.TypeName), Simplify(member.TypeName)));
+                            Simplify(contract.TypeName), Simplify(missing)));
                         removed = true;
                         break;
                     }
                 }
             }
             while (removed);
+
+            // the referenced contract, when it is one and we could not handle it
+            string? Missing(ProtoMemberKind kind, string? typeName)
+                => kind != ProtoMemberKind.Message || (typeName is not null && parsed.ContainsKey(typeName))
+                    ? null : typeName;
         }
 
         private static ProtoContractPlan? ParseContract(
@@ -356,7 +371,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (ignored) continue;
 
                 if ((isPacked || overwriteList) && GetMemberShape(compilation, property.Type)
-                    is not { Repeated.Factory: not null })
+                    is not ({ Repeated.Factory: not null } or { Map.Factory: not null }))
                 {
                     // both options only mean anything for a collection
                     return Option(diagnostics, atMember, name,
@@ -421,7 +436,16 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
 
-                if (kind == ProtoMemberKind.Message)
+                if (shape.Map.Factory is not null)
+                {
+                    // a map can reach a contract through its key *and* its value
+                    foreach (var reached in shape.MapMessages!) reachable.Add(reached);
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
+                        declaredTypeName: shape.DeclaredTypeName, map: shape.Map,
+                        isPacked: isPacked, overwriteList: overwriteList,
+                        dataFormat: dataFormat, isRequired: isRequired));
+                }
+                else if (kind == ProtoMemberKind.Message)
                 {
                     // enqueued even if it turns out to be unsupported, so that it reports its own
                     // reason and this contract is dropped by cascade with a message that chains
@@ -669,7 +693,8 @@ namespace ProtoBuf.BuildTools.Generators
             public MemberShape(ProtoMemberKind kind, bool isNullable = false,
                 INamedTypeSymbol? message = null, INamedTypeSymbol? enumType = null,
                 ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
-                string? declaredTypeName = null)
+                string? declaredTypeName = null, ProtoMapPlan map = default,
+                IEnumerable<INamedTypeSymbol>? mapMessages = null)
             {
                 DeclaredTypeName = declaredTypeName;
                 Kind = kind;
@@ -677,6 +702,8 @@ namespace ProtoBuf.BuildTools.Generators
                 Message = message;
                 EnumType = enumType;
                 Repeated = repeated;
+                Map = map;
+                MapMessages = mapMessages;
                 ElementTypeName = elementTypeName;
             }
 
@@ -685,6 +712,14 @@ namespace ProtoBuf.BuildTools.Generators
             public INamedTypeSymbol? Message { get; }
             public INamedTypeSymbol? EnumType { get; }
             public ProtoRepeatedPlan Repeated { get; }
+            public ProtoMapPlan Map { get; }
+
+            /// <summary>
+            /// Contracts reached through a map's key or value; the closure has to walk to these, and
+            /// unlike every other shape there can be two of them.
+            /// </summary>
+            public IEnumerable<INamedTypeSymbol>? MapMessages { get; }
+
             public string? ElementTypeName { get; }
             public string? DeclaredTypeName { get; }
         }
@@ -740,15 +775,14 @@ namespace ProtoBuf.BuildTools.Generators
 
             // collections: the element is analysed exactly as a standalone member would be, and the
             // resulting shape *describes the element* - Repeated says how it is stored
-            if (ResolveRepeated(type) is { } repeated)
+            if (ResolveRepeated(type) is { Factory: not null, Element: not null } repeated)
             {
-                // maps resolve to a MapSerializer, which we have no plan for yet
-                if (!repeated.IsSupported) return null;
+                if (repeated.IsMap) return AsMap(compilation, repeated, type);
 
                 // IReadOnlySet<T> support is conditional on the runtime the library was built for
-                if (repeated.Plan.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
+                if (repeated.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
 
-                return AsRepeated(compilation, repeated.Element!, repeated.Plan, type);
+                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type);
             }
             return null;
         }
@@ -759,14 +793,18 @@ namespace ProtoBuf.BuildTools.Generators
         private readonly struct RepeatedProvider
         {
             public RepeatedProvider(string metadata, string? factory, bool exactOnly,
-                bool takesCollectionType, bool dropsCollectionTypeWhenExact = false)
+                bool takesCollectionType, bool dropsCollectionTypeWhenExact = false, bool isMap = false)
             {
                 Metadata = metadata;
                 Factory = factory;
                 ExactOnly = exactOnly;
                 TakesCollectionType = takesCollectionType;
                 DropsCollectionTypeWhenExact = dropsCollectionTypeWhenExact;
+                IsMap = isMap;
             }
+
+            /// <summary>A <c>MapSerializer</c> factory rather than a <c>RepeatedSerializer</c> one.</summary>
+            public bool IsMap { get; }
 
             /// <summary>e.g. <c>System.Collections.Generic.List`1</c>.</summary>
             public string Metadata { get; }
@@ -801,9 +839,9 @@ namespace ProtoBuf.BuildTools.Generators
 
             // the immutable set, deliberately ahead of everything that looks like it
             new("System.Collections.Immutable.ImmutableArray`1", "CreateImmutableArray", true, false),
-            new("System.Collections.Immutable.ImmutableDictionary`2", null, true, false),
-            new("System.Collections.Immutable.ImmutableSortedDictionary`2", null, true, false),
-            new("System.Collections.Immutable.IImmutableDictionary`2", null, true, false),
+            new("System.Collections.Immutable.ImmutableDictionary`2", "CreateImmutableDictionary", true, false, isMap: true),
+            new("System.Collections.Immutable.ImmutableSortedDictionary`2", "CreateImmutableSortedDictionary", true, false, isMap: true),
+            new("System.Collections.Immutable.IImmutableDictionary`2", "CreateIImmutableDictionary", true, false, isMap: true),
             new("System.Collections.Immutable.ImmutableList`1", "CreateImmutableList", true, false),
             new("System.Collections.Immutable.IImmutableList`1", "CreateImmutableIList", true, false),
             new("System.Collections.Immutable.ImmutableHashSet`1", "CreateImmutableHashSet", true, false),
@@ -815,16 +853,16 @@ namespace ProtoBuf.BuildTools.Generators
             new("System.Collections.Immutable.IImmutableStack`1", "CreateImmutableIStack", true, false),
 
             // the concurrent set
-            new("System.Collections.Concurrent.ConcurrentDictionary`2", null, false, false),
+            new("System.Collections.Concurrent.ConcurrentDictionary`2", "CreateConcurrentDictionary", false, true, isMap: true),
             new("System.Collections.Concurrent.ConcurrentBag`1", "CreateConcurrentBag", false, true),
             new("System.Collections.Concurrent.ConcurrentQueue`1", "CreateConcurrentQueue", false, true),
             new("System.Collections.Concurrent.ConcurrentStack`1", "CreateConcurrentStack", false, true),
             new("System.Collections.Concurrent.IProducerConsumerCollection`1", "CreateIProducerConsumerCollection", false, true),
 
             // pretty normal stuff
-            new("System.Collections.Generic.Dictionary`2", null, false, false),
-            new("System.Collections.Generic.IDictionary`2", null, false, false),
-            new("System.Collections.Generic.IReadOnlyDictionary`2", null, true, false),
+            new("System.Collections.Generic.Dictionary`2", "CreateDictionary", false, true, dropsCollectionTypeWhenExact: true, isMap: true),
+            new("System.Collections.Generic.IDictionary`2", "CreateDictionary", false, true, isMap: true),
+            new("System.Collections.Generic.IReadOnlyDictionary`2", "CreateIReadOnlyDictionary", true, false, isMap: true),
             new("System.Collections.Generic.Queue`1", "CreateQueue", false, true),
             new("System.Collections.Generic.Stack`1", "CreateStack", false, true),
             new("System.Collections.Generic.HashSet`1", "CreateSet", true, true),
@@ -848,19 +886,31 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>What <c>TryGetRepeatedProvider</c> found for a type.</summary>
         private readonly struct RepeatedMatch
         {
-            public RepeatedMatch(ProtoRepeatedPlan plan, ITypeSymbol? element)
+            public RepeatedMatch(string? factory, bool takesCollectionType, bool isValueType,
+                ITypeSymbol? element, ITypeSymbol? value = null)
             {
-                Plan = plan;
+                Factory = factory;
+                TakesCollectionType = takesCollectionType;
+                IsValueType = isValueType;
                 Element = element;
+                Value = value;
             }
 
-            public ProtoRepeatedPlan Plan { get; }
+            public string? Factory { get; }
 
-            /// <summary>Null for the map shapes, which carry two.</summary>
+            public bool TakesCollectionType { get; }
+
+            public bool IsValueType { get; }
+
+            /// <summary>The element type; for a map, the *key*.</summary>
             public ITypeSymbol? Element { get; }
 
-            /// <summary>Maps are repeated, but we have no plan for them yet.</summary>
-            public bool IsSupported => Plan.Factory is not null && Element is not null;
+            /// <summary>A map's value type; null for everything else, which is what marks a map.</summary>
+            public ITypeSymbol? Value { get; }
+
+            public bool IsMap => Value is not null;
+
+            public ProtoRepeatedPlan AsRepeatedPlan() => new(Factory, TakesCollectionType, IsValueType);
         }
 
         /// <summary>
@@ -881,14 +931,14 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 // vectors only: byte[] is handled above, and byte[,] has no vector type to match
                 return array.Rank == 1
-                    ? new RepeatedMatch(new ProtoRepeatedPlan("CreateVector", false, false), array.ElementType)
+                    ? new RepeatedMatch("CreateVector", false, false, array.ElementType)
                     : null;
             }
             if (type is not INamedTypeSymbol root) return null;
             if (root.IsGenericType && Array.IndexOf(s_notSupportedFlavors, MetadataName(root)) >= 0) return null;
 
             int bestPriority = int.MaxValue, best = -1;
-            ITypeSymbol? bestElement = null;
+            ITypeSymbol? bestElement = null, bestValue = null;
             bool ambiguous = false;
 
             for (var current = root; current is not null && current.SpecialType != SpecialType.System_Object;
@@ -904,7 +954,7 @@ namespace ProtoBuf.BuildTools.Generators
             // List<T> alone gets the one-arg factory; a type *derived* from it still needs both args
             var exact = MetadataName(root) == found.Metadata;
             var takesCollectionType = found.TakesCollectionType && !(found.DropsCollectionTypeWhenExact && exact);
-            return new RepeatedMatch(new ProtoRepeatedPlan(found.Factory, takesCollectionType, root.IsValueType), bestElement);
+            return new RepeatedMatch(found.Factory, takesCollectionType, root.IsValueType, bestElement, bestValue);
 
             void Consider(INamedTypeSymbol current)
             {
@@ -917,17 +967,22 @@ namespace ProtoBuf.BuildTools.Generators
                     if (i > bestPriority) return;
                     if (candidate.ExactOnly && !SymbolEqualityComparer.Default.Equals(root, current)) return;
 
-                    var element = current.TypeArguments.Length == 1 ? current.TypeArguments[0] : null;
+                    // a map's "element" is its key, with the value alongside
+                    var arguments = current.TypeArguments;
+                    var element = arguments.Length == 0 ? null : arguments[0];
+                    var value = candidate.IsMap && arguments.Length == 2 ? arguments[1] : null;
                     if (i < bestPriority)
                     {
                         bestPriority = i;
                         best = i;
                         bestElement = element;
+                        bestValue = value;
                         ambiguous = false;
                     }
                     // the same registration reached twice - IEnumerable<int> *and* IEnumerable<string>,
                     // say - resolves to two different serializers, which ref-emit treats as no match
-                    else if (!SymbolEqualityComparer.Default.Equals(element, bestElement))
+                    else if (!SymbolEqualityComparer.Default.Equals(element, bestElement)
+                        || !SymbolEqualityComparer.Default.Equals(value, bestValue))
                     {
                         ambiguous = true;
                     }
@@ -953,6 +1008,62 @@ namespace ProtoBuf.BuildTools.Generators
             return type is INamedTypeSymbol { TypeArguments.Length: 1 } named
                 && named.TypeArguments[0].SpecialType == SpecialType.System_Byte
                 && MetadataName(named) is "System.Memory`1" or "System.ReadOnlyMemory`1" or "System.ArraySegment`1";
+        }
+
+        /// <summary>
+        /// A dictionary member: the same merge shape as a collection, but with two element types and
+        /// their wire types passed alongside.
+        /// </summary>
+        private static MemberShape? AsMap(Compilation compilation, RepeatedMatch match, ITypeSymbol declared)
+        {
+            var key = match.Element!;
+            var value = match.Value!;
+            if (GetMemberShape(compilation, key) is not { } keyShape) return null;
+            if (GetMemberShape(compilation, value) is not { } valueShape) return null;
+
+            // an enum on either side resolves an ISerializer<TEnum> from the model, which the
+            // services type does not expose - the same reason a repeated enum is refused
+            if (keyShape.EnumType is not null || valueShape.EnumType is not null) return null;
+
+            // a nested collection is legal for ref-emit (it allows nesting on dictionaries alone) but
+            // needs a repeated serializer resolved from the model, so it goes the same way
+            if (keyShape.Repeated.Factory is not null || valueShape.Repeated.Factory is not null) return null;
+            if (keyShape.Map.Factory is not null || valueShape.Map.Factory is not null) return null;
+
+            // the key is part of the wire identity, so a nullable one has no meaning
+            if (keyShape.IsNullable) return null;
+
+            var messages = new List<INamedTypeSymbol>();
+            if (keyShape.Message is { } keyMessage) messages.Add(keyMessage);
+            if (valueShape.Message is { } valueMessage) messages.Add(valueMessage);
+
+            var map = new ProtoMapPlan(match.Factory!, match.TakesCollectionType,
+                keyShape.Kind, key.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                valueShape.Kind, value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                IsValidProtobufMap(keyShape, valueShape));
+
+            return new MemberShape(ProtoMemberKind.Map, map: map, mapMessages: messages,
+                declaredTypeName: declared.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
+
+        /// <summary>
+        /// Is this expressible as a protobuf <c>map</c>? A port of
+        /// <c>RepeatedSerializerStub.IsValidProtobufMap</c>: the key must be an integral, string or
+        /// enum type, and the value must not itself be repeated. When it is not, protobuf-net adds
+        /// <c>OptionFailOnDuplicateKey</c>.
+        /// </summary>
+        private static bool IsValidProtobufMap(MemberShape key, MemberShape value)
+        {
+            // Guid keys are valid from compatibility level 300, which we do not support yet; note
+            // that bool, char and the floating-point types are *not* in the list
+            var validKey = key.EnumType is not null || (!key.IsNullable && key.Kind switch
+            {
+                ProtoMemberKind.String or ProtoMemberKind.SByte or ProtoMemberKind.Int16
+                    or ProtoMemberKind.Int32 or ProtoMemberKind.Int64 or ProtoMemberKind.Byte
+                    or ProtoMemberKind.UInt16 or ProtoMemberKind.UInt32 or ProtoMemberKind.UInt64 => true,
+                _ => false,
+            });
+            return validKey && value.Repeated.Factory is null && value.Map.Factory is null;
         }
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
