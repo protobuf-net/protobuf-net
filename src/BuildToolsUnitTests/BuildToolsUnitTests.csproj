@@ -31,6 +31,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- generator fixtures: input/golden pairs and the contract surface are data, not code to compile -->
+    <Compile Remove="Grpc/Data/**/*.cs" />
+    <None Include="Grpc/Data/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
   </ItemGroup>
 </Project>

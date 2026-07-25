@@ -18,3 +18,8 @@ PBN0013  | Usage    | Warning  | Include not declared
 PBN0014  | Usage    | Warning  | Sub-type not marked as proto-contract
 PBN0015  | Usage    | Error    | No suitable constructor
 PBN0016  | Usage    | Info     | Missing compatibility-level
+PBN3000  | ProtoBuf.Grpc | Info | Language version too low for build-time gRPC proxies
+PBN3001  | ProtoBuf.Grpc | Warning | Service interface cannot be nested
+PBN3002  | ProtoBuf.Grpc | Info | Service method shape is not supported by the generator
+PBN3003  | ProtoBuf.Grpc | Warning | Generic service interfaces are not supported
+PBN3004  | ProtoBuf.Grpc | Info | Target framework cannot support build-time gRPC proxies
