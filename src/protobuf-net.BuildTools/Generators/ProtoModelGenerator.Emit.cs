@@ -99,11 +99,19 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.UInt64:
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
-                        Line(sb, indent + 4, $"value.{member.Name} = state.{ScalarSuffix(member.Kind, "Read")}();");
+                    case ProtoMemberKind.Char:
+                        Line(sb, indent + 4, $"value.{member.Name} = {ScalarRead(member)};");
                         break;
                     case ProtoMemberKind.String:
                         // a null string leaves the existing value alone, matching ref-emit
                         Line(sb, indent + 4, $"var tmp{number} = state.ReadString();");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
+                        break;
+                    case ProtoMemberKind.Bytes:
+                        // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
+                        // existing array rather than replacing it
+                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name};");
+                        Line(sb, indent + 4, $"tmp{number} = state.AppendBytes(tmp{number});");
                         Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
                         break;
                     case ProtoMemberKind.Message:
@@ -146,12 +154,12 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         Line(sb, indent + 2, $"if (val{number} != {nullableDefault})");
                         Line(sb, indent + 2, "{");
-                        EmitScalarWrite(sb, indent + 3, member.Kind, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 3, member, number, $"val{number}");
                         Line(sb, indent + 2, "}");
                     }
                     else
                     {
-                        EmitScalarWrite(sb, indent + 2, member.Kind, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}");
                     }
                     Line(sb, indent + 1, "}");
                     continue;
@@ -162,7 +170,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // int32 has a convenience overload that writes its own field header; everything
                     // else needs the header emitting separately, as ref-emit does
                     case ProtoMemberKind.Int32:
-                        Line(sb, indent + 1, $"if ({ScalarGuard(member, $"tmp{number}")}) state.WriteInt32Varint({number}, tmp{number});");
+                        Line(sb, indent + 1, $"if ({ScalarGuard(member, $"tmp{number}")}) state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});");
                         break;
                     case ProtoMemberKind.Bool:
                     case ProtoMemberKind.SByte:
@@ -174,10 +182,10 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.UInt64:
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
+                    case ProtoMemberKind.Char:
                         Line(sb, indent + 1, $"if ({ScalarGuard(member, $"tmp{number}")})");
                         Line(sb, indent + 1, "{");
-                        Line(sb, indent + 2, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{ScalarWireType(member.Kind)});");
-                        Line(sb, indent + 2, $"state.{ScalarSuffix(member.Kind, "Write")}(tmp{number});");
+                        EmitScalarWrite(sb, indent + 2, member, number, $"tmp{number}");
                         Line(sb, indent + 1, "}");
                         break;
                     case ProtoMemberKind.String when member.DefaultLiteral is { } declared:
@@ -192,6 +200,15 @@ namespace ProtoBuf.BuildTools.Generators
                         // no null test: WriteString(int, string) skips nulls itself
                         Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
                         break;
+                    case ProtoMemberKind.Bytes:
+                        // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its
+                        // own field header, so both are explicit here
+                        Line(sb, indent + 1, $"if (tmp{number} != null)");
+                        Line(sb, indent + 1, "{");
+                        Line(sb, indent + 2, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
+                        Line(sb, indent + 2, $"state.WriteBytes(tmp{number});");
+                        Line(sb, indent + 1, "}");
+                        break;
                     case ProtoMemberKind.Message:
                         // likewise WriteMessage(int, ...) skips nulls itself
                         Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
@@ -204,18 +221,50 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>
         /// The unguarded write for a scalar: the caller owns whatever test precedes it.
         /// </summary>
-        private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberKind kind, string number, string local)
+        private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local)
         {
-            if (kind == ProtoMemberKind.Int32)
+            var expression = ScalarValue(member, local);
+            if (member.Kind == ProtoMemberKind.Int32)
             {
-                Line(sb, indent, $"state.WriteInt32Varint({number}, {local});");
+                Line(sb, indent, $"state.WriteInt32Varint({number}, {expression});");
             }
             else
             {
-                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{ScalarWireType(kind)});");
-                Line(sb, indent, $"state.{ScalarSuffix(kind, "Write")}({local});");
+                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{ScalarWireType(member.Kind)});");
+                Line(sb, indent, $"state.{ScalarSuffix(member.Kind, "Write")}({expression});");
             }
         }
+
+        /// <summary>
+        /// The value handed to the write method: an enum needs casting down to its underlying type,
+        /// while a char converts to ushort implicitly.
+        /// </summary>
+        private static string ScalarValue(ProtoMemberPlan member, string local)
+            => member.EnumTypeName is null ? local : $"({UnderlyingKeyword(member.Kind)}){local}";
+
+        /// <summary>
+        /// The value read back: cast up to the enum type, or to char, since the read methods deal in
+        /// the underlying scalar.
+        /// </summary>
+        private static string ScalarRead(ProtoMemberPlan member)
+        {
+            var call = $"state.{ScalarSuffix(member.Kind, "Read")}()";
+            if (member.EnumTypeName is { } enumType) return $"({enumType}){call}";
+            return member.Kind == ProtoMemberKind.Char ? $"(char){call}" : call;
+        }
+
+        private static string UnderlyingKeyword(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.SByte => "sbyte",
+            ProtoMemberKind.Byte => "byte",
+            ProtoMemberKind.Int16 => "short",
+            ProtoMemberKind.UInt16 => "ushort",
+            ProtoMemberKind.Int32 => "int",
+            ProtoMemberKind.UInt32 => "uint",
+            ProtoMemberKind.Int64 => "long",
+            ProtoMemberKind.UInt64 => "ulong",
+            _ => kind.ToString(),
+        };
 
         /// <summary>The <c>ReadXxx</c>/<c>WriteXxx</c> name for a scalar kind.</summary>
         private static string ScalarSuffix(ProtoMemberKind kind, string prefix) => prefix + (kind switch
@@ -223,6 +272,7 @@ namespace ProtoBuf.BuildTools.Generators
             ProtoMemberKind.Bool => "Boolean",
             ProtoMemberKind.Single => "Single",
             ProtoMemberKind.Double => "Double",
+            ProtoMemberKind.Char => "UInt16", // a char goes on the wire as a ushort
             _ => kind.ToString(), // SByte, Byte, Int16, UInt16, Int32, UInt32, Int64, UInt64
         });
 
@@ -240,6 +290,9 @@ namespace ProtoBuf.BuildTools.Generators
         private static string ScalarGuard(ProtoMemberPlan member, string local)
         {
             if (member.DefaultLiteral is { } declared) return $"{local} != {declared}";
+
+            // an enum compares against its own zero, which need not have a declared name
+            if (member.EnumTypeName is { } enumType) return $"{local} != default({enumType})";
 
             return member.Kind switch
             {

@@ -57,6 +57,50 @@ namespace ProtoBuf.AotConformance
             Assert.Equal(Hex(runtimeBytes), Hex(Serialize(runtime, viaRuntime)));
         }
 
+        public static IEnumerable<object[]> GetModels()
+            => from model in DiscoverModels() select new object[] { model.FullName! };
+
+        /// <summary>
+        /// Repeated occurrences of the same field must merge the same way in both models.
+        /// </summary>
+        /// <remarks>
+        /// Round-tripping cannot reach this: serialization never emits a duplicated field, so the
+        /// merge paths (<c>AppendBytes</c> concatenating byte arrays, <c>ReadMessage</c> merging into
+        /// an existing sub-message) are invisible to it. Concatenating two payloads is itself a valid
+        /// protobuf message, and is the cheapest way to produce duplicates for any contract.
+        /// </remarks>
+        [Theory, MemberData(nameof(GetModels))]
+        public void RepeatedFieldOccurrencesMergeIdentically(string modelTypeName)
+        {
+            var modelType = Fixtures.GetType(modelTypeName);
+            Assert.NotNull(modelType);
+
+            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType));
+            var compared = 0;
+
+            foreach (var group in GetSamples(modelType).GroupBy(static x => x.GetType()))
+            {
+                if (group.Count() < 2) continue;
+
+                var contractType = group.Key;
+                var runtime = RuntimeTypeModel.Create();
+                runtime.Add(contractType, applyDefaultBehaviour: true);
+
+                // every sample, not just two: samples that are entirely at their defaults serialize
+                // to nothing, so a fixed pair can easily produce an empty payload
+                var payload = group.SelectMany(x => Serialize(runtime, x)).ToArray();
+                if (payload.Length == 0) continue; // nothing duplicated, nothing to compare
+
+                var viaGenerated = Deserialize(generated, payload, contractType);
+                var viaRuntime = Deserialize(runtime, payload, contractType);
+
+                Assert.Equal(Hex(Serialize(runtime, viaRuntime)), Hex(Serialize(runtime, viaGenerated)));
+                compared++;
+            }
+
+            Assert.True(compared > 0, $"no contract in {modelTypeName} had two samples to concatenate");
+        }
+
         [Fact]
         public void AtLeastOneModelWasGenerated()
         {

@@ -249,12 +249,15 @@ namespace ProtoBuf.BuildTools.Generators
                         $"is conditional via '{conditional}'");
                 }
 
-                var kind = GetMemberKind(property.Type, out var message, out var isNullable);
-                if (kind is null)
+                if (GetMemberShape(property.Type) is not { } shape)
                 {
                     return Member(diagnostics, atMember, name, property.Name,
                         $"has unsupported type '{property.Type.ToDisplayString()}'");
                 }
+                var kind = shape.Kind;
+                var message = shape.Message;
+                var isNullable = shape.IsNullable;
+                var enumTypeName = shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
                 string? defaultLiteral = null;
                 // a null declared default means "no declared default", exactly as ref-emit treats it
@@ -264,7 +267,7 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         return Option(diagnostics, atMember, name, "[DefaultValue] on a message member");
                     }
-                    defaultLiteral = GetDefaultLiteral(declaredDefault, kind.Value);
+                    defaultLiteral = GetDefaultLiteral(declaredDefault, kind, enumTypeName);
                     if (defaultLiteral is null)
                     {
                         return Option(diagnostics, atMember, name, "this form of [DefaultValue]");
@@ -276,13 +279,14 @@ namespace ProtoBuf.BuildTools.Generators
                     // enqueued even if it turns out to be unsupported, so that it reports its own
                     // reason and this contract is dropped by cascade with a message that chains
                     reachable.Add(message!);
-                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind.Value,
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
                 }
                 else
                 {
-                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind.Value,
-                        defaultLiteral: defaultLiteral, isNullable: isNullable));
+                    members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
+                        defaultLiteral: defaultLiteral, isNullable: isNullable,
+                        enumTypeName: enumTypeName));
                 }
             }
 
@@ -397,10 +401,18 @@ namespace ProtoBuf.BuildTools.Generators
             => attribute.ConstructorArguments.Length == 1
                 && attribute.ConstructorArguments[0].Value is null;
 
-        private static string? GetDefaultLiteral(AttributeData attribute, ProtoMemberKind kind)
+        private static string? GetDefaultLiteral(AttributeData attribute, ProtoMemberKind kind, string? enumTypeName)
         {
             if (attribute.ConstructorArguments.Length != 1) return null;
             if (attribute.ConstructorArguments[0].Value is not object raw) return null;
+
+            // for an enum the constant is its underlying integral value, so render the underlying
+            // literal and cast it back; parentheses matter for negatives
+            if (enumTypeName is not null)
+            {
+                var underlying = GetDefaultLiteral(attribute, kind, enumTypeName: null);
+                return underlying is null ? null : $"({enumTypeName})({underlying})";
+            }
 
             try
             {
@@ -439,20 +451,57 @@ namespace ProtoBuf.BuildTools.Generators
             return null;
         }
 
-        private static ProtoMemberKind? GetMemberKind(ITypeSymbol type, out INamedTypeSymbol? message, out bool isNullable)
+        private readonly struct MemberShape
         {
-            message = null;
-            isNullable = false;
-
-            if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
+            public MemberShape(ProtoMemberKind kind, bool isNullable = false,
+                INamedTypeSymbol? message = null, INamedTypeSymbol? enumType = null)
             {
-                // only scalars can be Nullable<T>; a nullable message is not expressible, and an
-                // unsupported underlying type (an enum, say) simply yields null here
-                isNullable = true;
-                return GetScalarKind(nullable.TypeArguments[0]);
+                Kind = kind;
+                IsNullable = isNullable;
+                Message = message;
+                EnumType = enumType;
             }
 
-            return GetScalarKind(type) ?? GetMessageKind(type, out message);
+            public ProtoMemberKind Kind { get; }
+            public bool IsNullable { get; }
+            public INamedTypeSymbol? Message { get; }
+            public INamedTypeSymbol? EnumType { get; }
+        }
+
+        private static MemberShape? GetMemberShape(ITypeSymbol type)
+        {
+            var isNullable = false;
+            if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
+            {
+                isNullable = true;
+                type = nullable.TypeArguments[0];
+            }
+
+            if (type.TypeKind == TypeKind.Enum && type is INamedTypeSymbol { EnumUnderlyingType: { } underlying } enumType)
+            {
+                // an enum is its underlying scalar plus a cast; [Flags] makes no difference, and
+                // [ProtoEnum] only renames for schema purposes - neither affects the wire form
+                var kind = GetScalarKind(underlying);
+
+                // the CLR permits char-backed enums even though C# cannot declare one; we have no way
+                // to test that shape, so refuse it rather than emit something unverified
+                if (kind is null or ProtoMemberKind.Char) return null;
+                return new MemberShape(kind.Value, isNullable, enumType: enumType);
+            }
+
+            if (GetScalarKind(type) is { } scalar) return new MemberShape(scalar, isNullable);
+
+            // the remaining shapes are reference types, so cannot have been Nullable<T>
+            if (isNullable) return null;
+
+            // byte[] is a bytes field, not a repeated byte; note the rank check, since byte[,] is not
+            if (type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte })
+            {
+                return new MemberShape(ProtoMemberKind.Bytes);
+            }
+
+            return GetMessageKind(type, out var message) is { } messageKind
+                ? new MemberShape(messageKind, message: message) : null;
         }
 
         private static ProtoMemberKind? GetMessageKind(ITypeSymbol type, out INamedTypeSymbol? message)
@@ -485,6 +534,7 @@ namespace ProtoBuf.BuildTools.Generators
                 case SpecialType.System_UInt64: return ProtoMemberKind.UInt64;
                 case SpecialType.System_Single: return ProtoMemberKind.Single;
                 case SpecialType.System_Double: return ProtoMemberKind.Double;
+                case SpecialType.System_Char: return ProtoMemberKind.Char;
                 case SpecialType.System_String: return ProtoMemberKind.String;
             }
             return null;

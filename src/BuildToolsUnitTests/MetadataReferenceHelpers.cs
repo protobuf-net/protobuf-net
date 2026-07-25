@@ -20,6 +20,9 @@ namespace BuildToolsUnitTests
         {
             MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
+            // needed to resolve the Memory<byte>/ReadOnlyMemory<byte> overloads of WriteBytes during
+            // overload resolution; netstandard2.0 predates those types, so the facade doesn't supply them
+            MetadataReference.CreateFromFile(Assembly.Load("System.Memory").Location),
             MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location)
         };
 

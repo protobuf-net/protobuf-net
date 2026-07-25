@@ -1,0 +1,236 @@
+using System.Reflection;
+using AotFixtures.Enums;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___EnumsModel : ISerializer<WithEnums>
+{
+	WithEnums ISerializer<WithEnums>.Read(ref ProtoReader.State state, WithEnums value)
+	{
+		if (value == null)
+		{
+			WithEnums withEnums = new WithEnums();
+			value = withEnums;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				AsSByte sByteEnum = (AsSByte)state.ReadSByte();
+				value.SByteEnum = sByteEnum;
+				break;
+			}
+			case 2:
+			{
+				AsByte byteEnum = (AsByte)state.ReadByte();
+				value.ByteEnum = byteEnum;
+				break;
+			}
+			case 3:
+			{
+				AsInt16 int16Enum = (AsInt16)state.ReadInt16();
+				value.Int16Enum = int16Enum;
+				break;
+			}
+			case 4:
+			{
+				AsUInt16 uInt16Enum = (AsUInt16)state.ReadUInt16();
+				value.UInt16Enum = uInt16Enum;
+				break;
+			}
+			case 5:
+			{
+				AsInt32 enumWithDefault = (AsInt32)state.ReadInt32();
+				value.Int32Enum = enumWithDefault;
+				break;
+			}
+			case 6:
+			{
+				AsUInt32 uInt32Enum = (AsUInt32)state.ReadUInt32();
+				value.UInt32Enum = uInt32Enum;
+				break;
+			}
+			case 7:
+			{
+				AsInt64 int64Enum = (AsInt64)state.ReadInt64();
+				value.Int64Enum = int64Enum;
+				break;
+			}
+			case 8:
+			{
+				AsUInt64 uInt64Enum = (AsUInt64)state.ReadUInt64();
+				value.UInt64Enum = uInt64Enum;
+				break;
+			}
+			case 9:
+			{
+				Flagged flags = (Flagged)state.ReadInt32();
+				value.Flags = flags;
+				break;
+			}
+			case 10:
+			{
+				AsInt32? maybeEnum = (AsInt32)state.ReadInt32();
+				value.MaybeEnum = maybeEnum;
+				break;
+			}
+			case 11:
+			{
+				AsInt32 enumWithDefault = (AsInt32)state.ReadInt32();
+				value.EnumWithDefault = enumWithDefault;
+				break;
+			}
+			case 12:
+			{
+				Flagged? maybeFlagsWithDefault = (Flagged)state.ReadInt32();
+				value.MaybeFlagsWithDefault = maybeFlagsWithDefault;
+				break;
+			}
+			case 13:
+			{
+				char character = (char)state.ReadUInt16();
+				value.Character = character;
+				break;
+			}
+			case 14:
+			{
+				char? maybeCharacter = (char)state.ReadUInt16();
+				value.MaybeCharacter = maybeCharacter;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<WithEnums>.Write(ref ProtoWriter.State state, WithEnums value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		AsSByte sByteEnum = value.SByteEnum;
+		if (sByteEnum != AsSByte.Zero)
+		{
+			state.WriteFieldHeader(1, WireType.Variant);
+			sbyte value2 = (sbyte)sByteEnum;
+			state.WriteSByte(value2);
+		}
+		AsByte byteEnum = value.ByteEnum;
+		if (byteEnum != AsByte.Zero)
+		{
+			state.WriteFieldHeader(2, WireType.Variant);
+			byte value3 = (byte)byteEnum;
+			state.WriteByte(value3);
+		}
+		AsInt16 int16Enum = value.Int16Enum;
+		if (int16Enum != AsInt16.Zero)
+		{
+			state.WriteFieldHeader(3, WireType.Variant);
+			short value4 = (short)int16Enum;
+			state.WriteInt16(value4);
+		}
+		AsUInt16 uInt16Enum = value.UInt16Enum;
+		if (uInt16Enum != AsUInt16.Zero)
+		{
+			state.WriteFieldHeader(4, WireType.Variant);
+			ushort value5 = (ushort)uInt16Enum;
+			state.WriteUInt16(value5);
+		}
+		AsInt32 int32Enum = value.Int32Enum;
+		if (int32Enum != AsInt32.Zero)
+		{
+			int value6 = (int)int32Enum;
+			state.WriteInt32Varint(5, value6);
+		}
+		AsUInt32 uInt32Enum = value.UInt32Enum;
+		if (uInt32Enum != AsUInt32.Zero)
+		{
+			state.WriteFieldHeader(6, WireType.Variant);
+			uint value7 = (uint)uInt32Enum;
+			state.WriteUInt32(value7);
+		}
+		AsInt64 int64Enum = value.Int64Enum;
+		if (int64Enum != AsInt64.Zero)
+		{
+			state.WriteFieldHeader(7, WireType.Variant);
+			long value8 = (long)int64Enum;
+			state.WriteInt64(value8);
+		}
+		AsUInt64 uInt64Enum = value.UInt64Enum;
+		if (uInt64Enum != AsUInt64.Zero)
+		{
+			state.WriteFieldHeader(8, WireType.Variant);
+			ulong value9 = (ulong)uInt64Enum;
+			state.WriteUInt64(value9);
+		}
+		Flagged flags = value.Flags;
+		if (flags != Flagged.None)
+		{
+			int value6 = (int)flags;
+			state.WriteInt32Varint(9, value6);
+		}
+		AsInt32? maybeEnum = value.MaybeEnum;
+		if (maybeEnum.HasValue)
+		{
+			int value6 = (int)maybeEnum.GetValueOrDefault();
+			state.WriteInt32Varint(10, value6);
+		}
+		int32Enum = value.EnumWithDefault;
+		if (int32Enum != AsInt32.Neg)
+		{
+			int value6 = (int)int32Enum;
+			state.WriteInt32Varint(11, value6);
+		}
+		Flagged? maybeFlagsWithDefault = value.MaybeFlagsWithDefault;
+		if (maybeFlagsWithDefault.HasValue)
+		{
+			flags = maybeFlagsWithDefault.GetValueOrDefault();
+			if (flags != Flagged.AB)
+			{
+				int value6 = (int)flags;
+				state.WriteInt32Varint(12, value6);
+			}
+		}
+		char character = value.Character;
+		if (character != 0)
+		{
+			state.WriteFieldHeader(13, WireType.Variant);
+			ushort value5 = character;
+			state.WriteUInt16(value5);
+		}
+		char? maybeCharacter = value.MaybeCharacter;
+		if (maybeCharacter.HasValue)
+		{
+			char valueOrDefault = maybeCharacter.GetValueOrDefault();
+			state.WriteFieldHeader(14, WireType.Variant);
+			ushort value5 = valueOrDefault;
+			state.WriteUInt16(value5);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<WithEnums>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class EnumsModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___EnumsModel, T>();
+	}
+}

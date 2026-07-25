@@ -1,0 +1,100 @@
+using System.Reflection;
+using AotFixtures.Bytes;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___BytesModel : ISerializer<Blob>
+{
+	Blob ISerializer<Blob>.Read(ref ProtoReader.State state, Blob value)
+	{
+		if (value == null)
+		{
+			Blob blob = new Blob();
+			value = blob;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				byte[] other = value.Payload;
+				other = state.AppendBytes(other);
+				if (other != null)
+				{
+					value.Payload = other;
+				}
+				break;
+			}
+			case 2:
+			{
+				byte[] other = value.Other;
+				other = state.AppendBytes(other);
+				if (other != null)
+				{
+					value.Other = other;
+				}
+				break;
+			}
+			case 3:
+			{
+				byte single = state.ReadByte();
+				value.Single = single;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Blob>.Write(ref ProtoWriter.State state, Blob value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		byte[] payload = value.Payload;
+		if (payload != null)
+		{
+			state.WriteFieldHeader(1, WireType.String);
+			byte[] data = payload;
+			state.WriteBytes(data);
+		}
+		byte[] other = value.Other;
+		if (other != null)
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			byte[] data = other;
+			state.WriteBytes(data);
+		}
+		byte single = value.Single;
+		if (single != 0)
+		{
+			state.WriteFieldHeader(3, WireType.Variant);
+			state.WriteByte(single);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Blob>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class BytesModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___BytesModel, T>();
+	}
+}

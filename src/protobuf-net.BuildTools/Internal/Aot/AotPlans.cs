@@ -20,7 +20,17 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         UInt64,
         Single,
         Double,
+
+        /// <summary>A <c>char</c>; written as a <c>ushort</c> varint.</summary>
+        Char,
+
         String,
+
+        /// <summary>
+        /// A <c>byte[]</c>. Length-prefixed like a string, but neither the null test nor the field
+        /// header is done for us, and reads <em>append</em> rather than replace.
+        /// </summary>
+        Bytes,
 
         /// <summary>A nested contract, served by another serializer on the same services type.</summary>
         Message,
@@ -32,7 +42,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     internal readonly struct ProtoMemberPlan : IEquatable<ProtoMemberPlan>
     {
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
-            string? typeName = null, string? defaultLiteral = null, bool isNullable = false)
+            string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
+            string? enumTypeName = null)
         {
             FieldNumber = fieldNumber;
             Name = name;
@@ -40,6 +51,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             TypeName = typeName;
             DefaultLiteral = defaultLiteral;
             IsNullable = isNullable;
+            EnumTypeName = enumTypeName;
         }
 
         public int FieldNumber { get; }
@@ -67,17 +79,24 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public bool IsNullable { get; }
 
+        /// <summary>
+        /// When set, the member is an enum of this type whose wire form is <see cref="Kind"/>, the
+        /// underlying scalar; the emitter casts between the two.
+        /// </summary>
+        public string? EnumTypeName { get; }
+
         public bool Equals(ProtoMemberPlan other)
             => FieldNumber == other.FieldNumber && Kind == other.Kind
                 && Name == other.Name && TypeName == other.TypeName
-                && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable;
+                && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
+                && EnumTypeName == other.EnumTypeName;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 
         public override int GetHashCode()
             => (FieldNumber * 397) ^ ((int)Kind * 31) ^ Name.GetHashCode()
                 ^ (TypeName?.GetHashCode() ?? 0) ^ (DefaultLiteral?.GetHashCode() ?? 0)
-                ^ (IsNullable ? 8191 : 0);
+                ^ (IsNullable ? 8191 : 0) ^ (EnumTypeName?.GetHashCode() ?? 0);
     }
 
     /// <summary>

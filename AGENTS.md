@@ -79,6 +79,15 @@ Design constraints that are settled, and should not be quietly relaxed:
   attribute inspection finds them at all. `IsSignificantAttribute` and `GetConditionalPattern` exist
   to bail on all of these; anything added to `MetaType`'s list must be added there too, or the
   generator will silently emit wrong bytes.
+- An **enum** is its underlying scalar plus a cast in each direction, compared against
+  `default(TEnum)`. `[Flags]` makes no difference to the wire form, and `[ProtoEnum]` only renames
+  for schema purposes (`ProtoEnumAttribute.Value` is `[Obsolete(..., error: true)]`), so neither
+  needs guarding against. Older protobuf-net supported enum value-aliasing and validity-checking
+  (auto-disabled by `[Flags]`, which is why that looks worth testing); that was simplified away in
+  line with .proto, and is now *unreachable* rather than merely deprecated — `EnumPassthru`'s setter
+  throws on both `ProtoContractAttribute` and `MetaType`. Don't reintroduce support for it. **char** is a `ushort` varint, needing an explicit cast on read. Note the
+  CLR permits char-backed enums even though C# cannot declare one (CS1008) — those are refused,
+  since the shape cannot be tested from C#.
 - Write guards, all three proven against ref-emit rather than assumed: a plain scalar is written when
   `!= <type default>`; a `[DefaultValue]` scalar when `!= <declared>`; a `Nullable<T>` when
   `HasValue` — **presence, not value**, so a nullable zero *is* written where a plain zero is not.
@@ -133,6 +142,10 @@ Fixture conventions:
   (a `public static object[]`) supplying the values the differential tests exercise.
 - A sibling `<Name>.langver` file pins the parse language version for that fixture — used to prove
   the `PBN2000` floor fires.
+- **A fixture member with `[DefaultValue(x)]` must also be initialised to `x`.** `[DefaultValue]`
+  affects writing only, so without the initialiser an empty payload deserializes to the CLR default
+  and the round-trip assertion fails — correctly. This has caught out two fixtures so far; it is a
+  fixture-authoring rule, not a generator limitation.
 - `Data/Diagnostics/**` holds fixtures that exist to produce diagnostics rather than working code.
   The golden tests glob recursively; `AotRefGen` and `AotConformanceTests` deliberately glob only
   `Data/*.input.cs`, so these are excluded from both.
@@ -148,6 +161,12 @@ Each sample is checked four ways: bytes from the generated model vs `RuntimeType
 and each model must read what the other wrote. The cross-deserialization is the point — a serializer
 that consistently writes the wrong field number round-trips against itself perfectly. Equivalence is
 asserted by re-serializing with the reference model rather than via a hand-written deep comparer.
+
+`RepeatedFieldOccurrencesMergeIdentically` covers what round-tripping structurally cannot: merge
+behaviour on **repeated occurrences of the same field**. Serialization never emits a duplicated
+field, so `AppendBytes` (which *concatenates* byte arrays) and `ReadMessage`'s merge-into-existing
+are otherwise untested. It concatenates every sample's payload — itself a valid protobuf message —
+to manufacture the duplicates.
 
 ### Reference output from ref-emit
 
