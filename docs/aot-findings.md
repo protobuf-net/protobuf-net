@@ -76,7 +76,22 @@ the `ThrowEnumException` enum formatting (the first suspect) changed nothing.
 Four `StreamSerializer_NonRootStream` cases (`trySkipWritingWhenMeasuring: True`) fail. Pre-existing
 and unrelated to this work — they fail with the AOT branch stashed.
 
-### 6. Assorted API surprises
+### 6. `PBN0015` is a false positive on a surrogated type — and it is an **error**
+
+**Fixed on this branch**, but worth calling out separately because it affects the *shipped analyzer*,
+not the AOT work.
+
+`DataContractAnalyzer.ConstructorMissing` fires when a `[ProtoContract]` has constructors but no
+parameterless one, and `SkipConstructor` is not set. It did not consider `Surrogate`. But with a
+surrogate protobuf-net constructs the **surrogate** and converts — the type itself never needs a
+constructor, and surrogating an immutable type is precisely the canonical use.
+
+Severity is `DiagnosticSeverity.Error`, so this **fails the build** for anyone doing that. Found by
+adding an immutable surrogated type to a fixture and watching `AotConformanceTests` refuse to
+compile. The fix is a new `DataContractContextFlags.HasSurrogate`, set from the attribute and
+checked alongside `SkipConstructor`.
+
+### 7. Assorted API surprises
 
 Not bugs exactly, but each cost time and each is a trap for callers:
 

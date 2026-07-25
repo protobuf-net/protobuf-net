@@ -124,6 +124,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // root dispatches to each sub-type by name, so one missing link breaks the rest
                     var broken = contract.RootTypeName is { } root && !parsed.ContainsKey(root)
                         ? root
+                        : contract.SurrogateTypeName is { } surrogate && !parsed.ContainsKey(surrogate)
+                        ? surrogate
                         : contract.SubTypes.FirstOrDefault(x => !parsed.ContainsKey(x.TypeName)).TypeName;
                     if (broken is not null)
                     {
@@ -243,11 +245,9 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     return Contract(diagnostics, at, name, "abstract types are not supported");
                 }
-                if (!type.IsAbstract && !type.InstanceConstructors.Any(static ctor
-                    => ctor.Parameters.Length == 0 && ctor.DeclaredAccessibility == Accessibility.Public))
-                {
-                    return Contract(diagnostics, at, name, "there is no public parameterless constructor");
-                }
+                // note the constructor check is deferred: with a surrogate it is the *surrogate* that
+                // gets constructed, which is exactly what lets an immutable type be surrogated
+
                 // Extensible is the documented way to get the extension interfaces, and declares no
                 // serializable members of its own, so it is not the silent-loss case below
                 if (type.BaseType is { SpecialType: not SpecialType.System_Object } baseType
@@ -260,6 +260,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
+            INamedTypeSymbol? surrogateType = null;
             bool isContract = false, isDataContract = false, isXmlType = false, skipConstructor = false;
             var ignoreListHandling = false;
             var dataMemberOffset = 0;
@@ -292,6 +293,9 @@ namespace ProtoBuf.BuildTools.Generators
                             // schema naming only: neither reaches the wire format
                             case "Name":
                             case "Origin":
+                                continue;
+                            case "Surrogate" when argument.Value.Value is INamedTypeSymbol declared:
+                                surrogateType = declared;
                                 continue;
                         }
                         return Option(diagnostics, at, name, $"[ProtoContract({argument.Key} = ...)]");
@@ -336,8 +340,47 @@ namespace ProtoBuf.BuildTools.Generators
                 return Option(diagnostics, at, name, "[ProtoContract(SkipConstructor = true)] on a struct");
             }
 
+            // a surrogate carries the wire shape: the serializer is the *surrogate's* body with a
+            // conversion at each end, so its members are the ones to parse. Nothing changes for a
+            // member whose type is surrogated - that stays an ordinary sub-message.
+            var memberSource = type;
+            if (surrogateType is not null)
+            {
+                if (subTypes.Count != 0 || linkedBase is not null)
+                {
+                    // protobuf-net throws for this combination while building the model
+                    return Option(diagnostics, at, name, "a surrogate on a type with inheritance");
+                }
+                if (Implements(surrogateType, "System.Collections.IEnumerable"))
+                {
+                    return Option(diagnostics, at, name, "a surrogate that is a collection");
+                }
+                if (!CanConvert(compilation, type, surrogateType)
+                    || !CanConvert(compilation, surrogateType, type))
+                {
+                    // protobuf-net also accepts a [ProtoConverter]-attributed method; we need
+                    // something C# can spell as a cast
+                    return Option(diagnostics, at, name,
+                        "a surrogate without conversion operators in both directions");
+                }
+
+                // it is a contract in its own right, and ref-emit emits a serializer for it too
+                reachable.Add(surrogateType);
+                memberSource = surrogateType;
+                isValueType = surrogateType.IsValueType;
+            }
+
+            // whatever actually gets constructed on read: the surrogate when there is one, which is
+            // what lets an immutable type be surrogated at all
+            if (!isValueType && !memberSource.IsAbstract && !memberSource.InstanceConstructors.Any(
+                static ctor => ctor.Parameters.Length == 0
+                    && ctor.DeclaredAccessibility == Accessibility.Public))
+            {
+                return Contract(diagnostics, at, name, "there is no public parameterless constructor");
+            }
+
             var members = new List<ProtoMemberPlan>();
-            foreach (var symbol in type.GetMembers())
+            foreach (var symbol in memberSource.GetMembers())
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -550,7 +593,7 @@ namespace ProtoBuf.BuildTools.Generators
                         return Member(diagnostics, atMember, name, symbol.Name, "is read-only");
                 }
 
-                if (GetConditionalPattern(type, symbol.Name) is { } conditional)
+                if (GetConditionalPattern(memberSource, symbol.Name) is { } conditional)
                 {
                     return Member(diagnostics, atMember, name, symbol.Name,
                         $"is conditional via '{conditional}'");
@@ -602,7 +645,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (IsBclKind(kind))
                 {
                     compatibilityLevel = GetEffectiveCompatibilityLevel(
-                        GetDeclaredLevel(symbol) ?? GetCompatibilityLevel(compilation, type), dataFormat);
+                        GetDeclaredLevel(symbol) ?? GetCompatibilityLevel(compilation, memberSource), dataFormat);
 
                     // ZigZag throws while building the model; everything else selects a field-header
                     // wire type (see BclWireType), which for several combinations means "no change"
@@ -693,8 +736,9 @@ namespace ProtoBuf.BuildTools.Generators
 
             return new ProtoContractPlan(
                 type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                new(members.ToArray()), isValueType, skipConstructor, isSealed: type.IsSealed,
-                rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible);
+                new(members.ToArray()), isValueType, skipConstructor, isSealed: memberSource.IsSealed,
+                rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible,
+                surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -854,6 +898,17 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool IsBclKind(ProtoMemberKind kind)
             => kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
                 or ProtoMemberKind.Guid or ProtoMemberKind.Decimal;
+
+        /// <summary>
+        /// Can C# spell this conversion as a cast? protobuf-net resolves <c>op_Implicit</c> or
+        /// <c>op_Explicit</c> on either type; asking Roslyn covers exactly that, and rules out the
+        /// <c>[ProtoConverter]</c>-method form, which no cast can express.
+        /// </summary>
+        private static bool CanConvert(Compilation compilation, ITypeSymbol from, ITypeSymbol to)
+        {
+            var conversion = compilation.ClassifyConversion(from, to);
+            return conversion.Exists && (conversion.IsUserDefined || conversion.IsIdentity);
+        }
 
         private static bool Implements(INamedTypeSymbol type, string interfaceName)
         {

@@ -555,6 +555,31 @@ reference the fallback at all), not annotating.
 The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
 the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
 
+### Surrogates
+
+`[ProtoContract(Surrogate = typeof(X))]` moves the wire shape onto another type. The emitted
+serializer for the underlying type **is the surrogate's body**, with a conversion at each end — and
+nothing changes for a *member* whose type is surrogated, which stays an ordinary sub-message. The
+surrogate is a contract in its own right and gets its own serializer alongside.
+
+So the plan for a surrogated contract carries the **surrogate's** members, and the surrogate is also
+what decides construction, `IsSealed` and `ThrowUnexpectedSubtype` — the underlying type is never
+constructed, which is exactly what lets an *immutable* type be surrogated. The parse deliberately
+defers the parameterless-constructor check until after the surrogate is known, for that reason.
+
+We emit an explicit cast in both directions rather than ref-emit's implicit conversion, so that an
+`explicit operator` works as well as an `implicit` one. `Compilation.ClassifyConversion` decides
+whether the pairing is legal — which conveniently rules out protobuf-net's third option, a
+`[ProtoConverter]`-attributed *method*, that no cast can express. A surrogate on a type with
+inheritance, or a surrogate that is a collection, are both refused: protobuf-net throws for those.
+
+**The attribute is only half the story.** protobuf-net's usual way to surrogate a type you do not own
+(`Uri`, `IPAddress`, `Type`) is `RuntimeTypeModel.SetSurrogate`, which a compile-time model cannot
+see by design — and you cannot put an attribute on `System.Uri`. Closing that would need a
+model-level opt-in, something like `[ProtoSurrogate(typeof(Uri), typeof(UriSurrogate))]` on the
+`[ProtoModel]` class. That is a design decision, not an oversight; the coverage sweep's
+member-type tail is largely waiting on it.
+
 ### Null-wrapping
 
 `docs/nullwrappers.md` is the reference, and unusually complete — but the *shapes* were still taken

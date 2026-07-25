@@ -8,23 +8,23 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, generic: 19
 
 contracts dropped: **213** of 1392 (85% emitted)
-of which dropped only by cascade: 42
+of which dropped only by cascade: 43
 
 | count | reason |
 | ---: | --- |
 | 36 | PBN2001 member '…' has unsupported type '…' |
 | 24 | PBN2002 generic types are not supported |
 | 20 | PBN2002 only classes and structs are supported |
-| 13 | PBN2002 there is no public parameterless constructor |
 | 13 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
+| 11 | PBN2002 there is no public parameterless constructor |
 | 11 | PBN2003 [ProtoMap] is not supported yet |
-| 8 | PBN2003 [ProtoContract(Serializer = ...)] is not supported yet |
+| 9 | PBN2003 [ProtoContract(Serializer = ...)] is not supported yet |
 | 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
 | 5 | PBN2001 member '…' is conditional via '…' |
+| 4 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
-| 3 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [NullWrappedCollection] on a non-collection is not supported yet |
 | 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
@@ -34,7 +34,6 @@ of which dropped only by cascade: 42
 | 1 | PBN2003 [ProtoContract(IsGroup = ...)] is not supported yet |
 | 1 | PBN2003 [NullWrappedValue] with [DefaultValue] is not supported yet |
 | 1 | PBN2003 [NullWrappedValue] on a non-nullable value is not supported yet |
-| 1 | PBN2003 [ProtoContract(Surrogate = ...)] is not supported yet |
 | 1 | PBN2001 member '…' is not public |
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |

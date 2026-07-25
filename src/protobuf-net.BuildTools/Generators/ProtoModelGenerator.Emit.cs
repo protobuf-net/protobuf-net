@@ -120,8 +120,20 @@ namespace ProtoBuf.BuildTools.Generators
                 return;
             }
 
+            // a surrogate contract's serializer *is* the surrogate's, with a conversion at each end;
+            // everything below then works on the converted local rather than on `value`
+            var surrogate = contract.SurrogateTypeName;
+            var instance = surrogate is null ? "value" : "surrogate";
+            var bodyType = surrogate ?? contract.TypeName;
+
             Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
+            if (surrogate is not null)
+            {
+                // the cast covers an explicit operator as well as an implicit one; ref-emit relies on
+                // the implicit form, but both are legal here and only one of them compiles for both
+                Line(sb, indent + 1, $"var {instance} = ({surrogate})value;");
+            }
             if (contract.IsTuple)
             {
                 // a tuple is rebuilt through its constructor at the end, so the read works on locals;
@@ -151,29 +163,32 @@ namespace ProtoBuf.BuildTools.Generators
             // a struct arrives by value and is never null, so there is nothing to construct
             else if (!contract.IsValueType)
             {
-                Line(sb, indent + 1, $"value ??= {Construct(contract)};");
+                Line(sb, indent + 1, $"{instance} ??= {Construct(contract, bodyType)};");
             }
-            EmitReadLoop(sb, indent + 1, contract, "value");
+            EmitReadLoop(sb, indent + 1, contract, instance);
             if (contract.IsTuple)
             {
                 var arguments = string.Join(", ", contract.Members.Select(static x => $"arg{x.FieldNumber}"));
                 Line(sb, indent + 1, contract.IsTupleLiteral
-                    ? $"value = ({arguments});"
-                    : $"value = new {contract.TypeName}({arguments});");
+                    ? $"{instance} = ({arguments});"
+                    : $"{instance} = new {bodyType}({arguments});");
             }
+            if (surrogate is not null) Line(sb, indent + 1, $"value = ({contract.TypeName}){instance};");
             Line(sb, indent + 1, "return value;");
             Line(sb, indent, "}");
             sb.AppendLine();
 
             Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
+            if (surrogate is not null) Line(sb, indent + 1, $"var {instance} = ({surrogate})value;");
             // ThrowUnexpectedSubtype is constrained to reference types, and a struct, a sealed type
-            // and a tuple all rule sub-types out at compile time - ref-emit omits it for each
+            // and a tuple all rule sub-types out at compile time - ref-emit omits it for each. Note
+            // it tests the *surrogate*, which is what carries any sub-types.
             if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed)
             {
-                Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
-            EmitWriteMembers(sb, indent + 1, contract);
+            EmitWriteMembers(sb, indent + 1, contract, instance);
             Line(sb, indent, "}");
         }
 
@@ -185,7 +200,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// so the instance has to be hoisted out of it - which also constructs it on demand.
         /// </param>
         private static void EmitReadLoop(StringBuilder sb, int indent, ProtoContractPlan contract,
-            string instance, EquatableArray<ProtoSubTypePlan> subTypes = default)
+            string instance, EquatableArray<ProtoSubTypePlan> subTypes = default,
+            bool fromSubTypeState = false)
         {
             // an empty message is legal protobuf, and has nothing to switch on
             var unknown = contract.Extensible == ProtoExtensibleKind.None
@@ -215,7 +231,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 2, "{");
                 // a sub-type read holds the instance inside SubTypeState, and reading it is what
                 // constructs it - so it is hoisted per case, exactly as ref-emit does
-                if (instance != "value") Line(sb, indent + 3, $"var {instance} = value.Value;");
+                if (fromSubTypeState) Line(sb, indent + 3, $"var {instance} = value.Value;");
                 if (member.Map.Factory is not null)
                 {
                     // same merge shape as a collection, but the key and value features - and any
@@ -367,13 +383,14 @@ namespace ProtoBuf.BuildTools.Generators
             => contract.Extensible == ProtoExtensibleKind.Typed ? $", typeof({contract.TypeName})" : "";
 
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
-        private static void EmitWriteMembers(StringBuilder sb, int indent, ProtoContractPlan contract)
+        private static void EmitWriteMembers(StringBuilder sb, int indent, ProtoContractPlan contract,
+            string instance = "value")
         {
             foreach (var member in contract.Members)
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
-                Line(sb, indent, $"var tmp{number} = value.{member.Name};");
+                Line(sb, indent, $"var tmp{number} = {instance}.{member.Name};");
 
                 // WriteAny handles the null itself, so there is no guard - not even for a null int?
                 if (member.WrappedValue && member.Repeated.Factory is null && member.Map.Factory is null)
@@ -589,7 +606,7 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent, $"{contract.TypeName} {sub}.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, "
                 + $"global::ProtoBuf.Serializers.SubTypeState<{contract.TypeName}> value)");
             Line(sb, indent, "{");
-            EmitReadLoop(sb, indent + 1, contract, "obj", contract.SubTypes);
+            EmitReadLoop(sb, indent + 1, contract, "obj", contract.SubTypes, fromSubTypeState: true);
             Line(sb, indent + 1, "return value.Value;");
             Line(sb, indent, "}");
         }
@@ -600,7 +617,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// <remarks>
         /// Only *repeated* enums need one. A plain enum member is written inline (cast to its
         /// underlying type), but <c>RepeatedSerializer</c> resolves an <c>ISerializer&lt;TEnum&gt;</c>
-        /// from the model instead — so without this a repeated enum throws "no serializer for type"
+        /// from the model instead â€” so without this a repeated enum throws "no serializer for type"
         /// at runtime.
         /// </remarks>
         private static SortedDictionary<string, ProtoMemberKind> EnumProxies(ProtoModelPlan plan)
@@ -701,7 +718,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>
         /// The features for a lone <c>[NullWrappedValue]</c>: the value's own wire type plus the
-        /// wrapping. Note there is no field-presence flag here — that is a collection concern, where
+        /// wrapping. Note there is no field-presence flag here â€” that is a collection concern, where
         /// a null and a zero would otherwise be indistinguishable.
         /// </summary>
         /// <param name="forRead">
@@ -724,7 +741,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// Ref-emit passes <c>this as ISerializer&lt;TEnum?&gt;</c> here, which we cannot: our
         /// services type implements <c>ISerializerProxy&lt;TEnum?&gt;</c> rather than
         /// <c>ISerializer&lt;TEnum?&gt;</c>, and C# rejects that cast on a sealed type where IL
-        /// merely yields null. Both end up in the same place — <c>serializer ??=
+        /// merely yields null. Both end up in the same place â€” <c>serializer ??=
         /// TypeModel.GetSerializer&lt;T&gt;(Model)</c>, which resolves the proxy through the model.
         /// </remarks>
         private static string WrappedSerializer(ProtoMemberPlan member) => "";
@@ -808,7 +825,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// key and value wire types are passed separately.
         /// </summary>
         /// <remarks>
-        /// <c>DataFormat</c> selects the root wire type and nothing else — <c>Group</c> is the only
+        /// <c>DataFormat</c> selects the root wire type and nothing else â€” <c>Group</c> is the only
         /// value that changes anything, since a map is length-prefixed either way. The per-key and
         /// per-value formats come from <c>[ProtoMap]</c>, which is refused.
         /// <c>OptionFailOnDuplicateKey</c> rides on whether the shape is a real protobuf <c>map</c>.
@@ -866,10 +883,16 @@ namespace ProtoBuf.BuildTools.Generators
         /// How a fresh instance is made: normally <c>new</c>, but SkipConstructor bypasses every
         /// constructor, exactly as ref-emit does.
         /// </summary>
-        private static string Construct(ProtoContractPlan contract)
-            => contract.SkipConstructor
-                ? $"({contract.TypeName})global::ProtoBuf.BclHelpers.GetUninitializedObject(typeof({contract.TypeName}))"
-                : $"new {contract.TypeName}()";
+        /// <param name="typeName">
+        /// What to construct â€” the contract itself, or its surrogate when it has one.
+        /// </param>
+        private static string Construct(ProtoContractPlan contract, string? typeName = null)
+        {
+            typeName ??= contract.TypeName;
+            return contract.SkipConstructor
+                ? $"({typeName})global::ProtoBuf.BclHelpers.GetUninitializedObject(typeof({typeName}))"
+                : $"new {typeName}()";
+        }
 
         /// <summary>
         /// The unguarded write for a scalar: the caller owns whatever test precedes it.
@@ -917,7 +940,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// <remarks>
         /// Taken from ref-emit at each level. Note the level has already absorbed
         /// <c>DataFormat.WellKnown</c>, and that <c>FixedSize</c> selects the 16-byte Guid only at
-        /// level 300 — below that it is simply ignored.
+        /// level 300 â€” below that it is simply ignored.
         /// </remarks>
         private static string? BclSuffix(ProtoMemberPlan member) => member.Kind switch
         {
@@ -931,19 +954,19 @@ namespace ProtoBuf.BuildTools.Generators
         };
 
         /// <param name="discard">
-        /// The result is going nowhere, so it is emitted as a bare statement — which means the casts
+        /// The result is going nowhere, so it is emitted as a bare statement â€” which means the casts
         /// have to go, since a cast expression is not a valid C# statement.
         /// </param>
         /// <summary>
         /// The field-header wire type for a BCL member. Length-prefixed by default, but
-        /// <c>DataFormat</c> shifts some combinations — and not uniformly.
+        /// <c>DataFormat</c> shifts some combinations â€” and not uniformly.
         /// </summary>
         /// <remarks>
         /// This is a probed table, not a rule: ref-emit takes the wire type from whichever serializer
         /// (type, level, format) resolves to, and the result has real quirks. <c>decimal</c> ignores
         /// the format entirely; <c>Guid</c> honours <c>Group</c> but ignores <c>FixedSize</c> below
         /// level 300 (where it instead selects the 16-byte form); <c>DateTime</c> and
-        /// <c>TimeSpan</c> honour both. <c>ZigZag</c> is refused — it throws while building the model.
+        /// <c>TimeSpan</c> honour both. <c>ZigZag</c> is refused â€” it throws while building the model.
         /// </remarks>
         private static string BclWireType(ProtoMemberPlan member) => member.DataFormat switch
         {

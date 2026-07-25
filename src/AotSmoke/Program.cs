@@ -53,6 +53,9 @@ public class Order
 
     // a null collection, distinguishable from an empty one
     [ProtoMember(16), NullWrappedCollection] public List<int> MaybeNone { get; set; }
+
+    // a surrogate: the serializer is the surrogate's body with a conversion at each end
+    [ProtoMember(17)] public Money Price { get; set; }
 }
 
 [ProtoContract]
@@ -71,6 +74,26 @@ public class Modern
     [ProtoMember(2)] public TimeSpan How { get; set; }
     [ProtoMember(3)] public Guid Id { get; set; }
     [ProtoMember(4)] public decimal Amount { get; set; }
+}
+
+[ProtoContract]
+public class MoneySurrogate
+{
+    [ProtoMember(1)] public long Units { get; set; }
+
+    public static implicit operator MoneySurrogate(Money value) => new() { Units = value.Units };
+    public static implicit operator Money(MoneySurrogate value)
+        => value is null ? default : new Money(value.Units);
+}
+
+/// <summary>
+/// Immutable, and with no parameterless constructor — the canonical reason to use a surrogate.
+/// </summary>
+[ProtoContract(Surrogate = typeof(MoneySurrogate))]
+public readonly struct Money
+{
+    public Money(long units) => Units = units;
+    public long Units { get; }
 }
 
 [ProtoContract]
@@ -156,6 +179,7 @@ internal static class Program
             OptionalStatus = Status.Unknown,
             Sparse = { 1, null, 0 },
             MaybeNone = [],
+            Price = new Money(1999),
             Legacy = new Legacy
             {
                 When = When,
@@ -207,6 +231,7 @@ internal static class Program
             clone.Sparse.Select(static x => x?.ToString() ?? "null")));
         Check(ref failures, "MaybeNone empty-not-null", "empty",
             clone.MaybeNone is null ? "null" : clone.MaybeNone.Count == 0 ? "empty" : "items");
+        Check(ref failures, "Price via surrogate", original.Price.Units, clone.Price.Units);
         Check(ref failures, "Legacy.When", original.Legacy.When, clone.Legacy?.When);
         Check(ref failures, "Legacy.How", original.Legacy.How, clone.Legacy?.How);
         Check(ref failures, "Legacy.Id", original.Legacy.Id, clone.Legacy?.Id);

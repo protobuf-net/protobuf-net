@@ -411,8 +411,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool isValueType = false, bool skipConstructor = false, bool isTuple = false,
             bool isTupleLiteral = false, bool isSealed = false,
             string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
-            ProtoExtensibleKind extensible = ProtoExtensibleKind.None)
+            ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null)
         {
+            SurrogateTypeName = surrogateTypeName;
             TypeName = typeName;
             Members = members;
             Extensible = extensible;
@@ -480,6 +481,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public ProtoExtensibleKind Extensible { get; }
 
+        /// <summary>
+        /// From <c>[ProtoContract(Surrogate = …)]</c>: the type that actually carries the wire shape.
+        /// </summary>
+        /// <remarks>
+        /// The members on this plan are then the <em>surrogate's</em>, and the serializer is its body
+        /// with a conversion at each end — which is exactly what ref-emit emits. Nothing changes for
+        /// a member whose type is surrogated: it stays an ordinary sub-message.
+        /// </remarks>
+        public string? SurrogateTypeName { get; }
+
         /// <summary>Fully-qualified, <c>global::</c>-prefixed type name.</summary>
         public string TypeName { get; }
 
@@ -490,7 +501,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
                 && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
-                && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible;
+                && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible
+                && SurrogateTypeName == other.SurrogateTypeName;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

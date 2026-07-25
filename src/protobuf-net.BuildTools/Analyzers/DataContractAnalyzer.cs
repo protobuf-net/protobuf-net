@@ -467,6 +467,10 @@ namespace ProtoBuf.BuildTools.Analyzers
                     && hasAnyConstructor && !hasParameterlessConstructor
                     && typeContext.HasFlag(DataContractContextFlags.IsProtoContract)
                     && !typeContext.HasFlag(DataContractContextFlags.SkipConstructor)
+                    // with a surrogate the library constructs *that* and converts, so the type
+                    // itself never needs a constructor - which is the point of surrogating an
+                    // immutable type in the first place
+                    && !typeContext.HasFlag(DataContractContextFlags.HasSurrogate)
                 )
                 {
                     context.ReportDiagnostic(Diagnostic.Create(

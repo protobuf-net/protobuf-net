@@ -565,6 +565,13 @@ namespace ProtoBuf.BuildTools.Internal
                 _flags |= DataContractContextFlags.SkipConstructor;
             if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreUnknownSubTypes), out val) && val)
                 _flags |= DataContractContextFlags.IgnoreUnknownSubTypes;
+            foreach (var named in attrib.NamedArguments)
+            {
+                if (named.Key == nameof(ProtoContractAttribute.Surrogate) && named.Value.Value is not null)
+                {
+                    _flags |= DataContractContextFlags.HasSurrogate;
+                }
+            }
         }
 
         public bool HasFlag(DataContractContextFlags flag)
