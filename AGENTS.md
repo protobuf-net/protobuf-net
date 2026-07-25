@@ -211,12 +211,12 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
   named argument is not supported yet, so we always emit the disabled form.
 - The features wire type is the **element's**, not the member's.
 - A message element passes `this` as the sub-serializer; a scalar element passes nothing.
-- **A repeated enum is refused.** Unlike inline scalars, `RepeatedSerializer` resolves an
-  `ISerializer<TEnum>` *from the model* — ref-emit emits `values, this as ISerializer<TEnum>` — and
-  the generated services type does not expose one. Supporting it needs the
-  `ISerializerProxy<TEnum>` + `EnumSerializer.CreateXxx<T>()` pattern that
-  `Internal/CustomProtogenSerializer.cs` uses. Until then it is dropped at build time rather than
-  failing with "no serializer for type" at runtime.
+- **A repeated enum needs a serializer proxy.** Unlike an inline scalar, `RepeatedSerializer`
+  resolves an `ISerializer<TEnum>` *from the model* — ref-emit emits `values, this as
+  ISerializer<TEnum>` — so the services type implements `ISerializerProxy<TEnum>` (and `<TEnum?>`)
+  returning `EnumSerializer.CreateXxx<TEnum>()`, per `EmitEnumProxies`. Without it the failure is a
+  runtime "no serializer for type", not a build error. **A map with an enum key or value is still
+  refused**, though it needs nothing more than pointing the same proxy scan at the map plan.
 - protobuf-net **rejects null elements** inside a collection (`ThrowNullRepeatedContents`), so
   fixtures must not contain them.
 - **A list-like `[ProtoContract]` is refused.** The same resolution decides whether a *contract* is
