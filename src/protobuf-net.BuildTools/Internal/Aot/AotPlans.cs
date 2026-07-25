@@ -294,16 +294,44 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
+    /// One <c>[ProtoInclude]</c> link: a directly-derived contract and the field it occupies.
+    /// </summary>
+    internal readonly struct ProtoSubTypePlan : IEquatable<ProtoSubTypePlan>
+    {
+        public ProtoSubTypePlan(int fieldNumber, string typeName)
+        {
+            FieldNumber = fieldNumber;
+            TypeName = typeName;
+        }
+
+        public int FieldNumber { get; }
+
+        /// <summary>Fully-qualified, <c>global::</c>-prefixed.</summary>
+        public string TypeName { get; }
+
+        public bool Equals(ProtoSubTypePlan other)
+            => FieldNumber == other.FieldNumber && TypeName == other.TypeName;
+
+        public override bool Equals(object? obj) => obj is ProtoSubTypePlan other && Equals(other);
+
+        public override int GetHashCode() => (FieldNumber * 397) ^ (TypeName?.GetHashCode() ?? 0);
+    }
+
+    /// <summary>
     /// One contract type that the model can serialize.
     /// </summary>
     internal sealed class ProtoContractPlan : IEquatable<ProtoContractPlan>
     {
         public ProtoContractPlan(string typeName, EquatableArray<ProtoMemberPlan> members,
             bool isValueType = false, bool skipConstructor = false, bool isTuple = false,
-            bool isTupleLiteral = false)
+            bool isTupleLiteral = false, bool isSealed = false,
+            string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default)
         {
             TypeName = typeName;
             Members = members;
+            RootTypeName = rootTypeName;
+            SubTypes = subTypes;
+            IsSealed = isSealed;
             IsValueType = isValueType;
             SkipConstructor = skipConstructor;
             IsTuple = isTuple;
@@ -338,6 +366,27 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public bool IsValueType { get; }
 
+        /// <summary>
+        /// A sealed contract cannot have sub-types either, so ref-emit omits the
+        /// <c>ThrowUnexpectedSubtype</c> guard for it just as it does for a struct.
+        /// </summary>
+        public bool IsSealed { get; }
+
+        /// <summary>
+        /// The top of this contract's <c>[ProtoInclude]</c> hierarchy, or null when it is not in one.
+        /// </summary>
+        /// <remarks>
+        /// Every type in a hierarchy reads and writes through the <em>root's</em>
+        /// <c>ISubTypeSerializer</c>, which is what threads the base type's members and the sub-type
+        /// marker onto the wire. A contract is only in a hierarchy if the link is declared: a derived
+        /// contract its base does not <c>[ProtoInclude]</c> is an independent contract that silently
+        /// ignores its inherited members, which is ref-emit's behaviour too.
+        /// </remarks>
+        public string? RootTypeName { get; }
+
+        /// <summary>The directly-derived contracts, in declaration order.</summary>
+        public EquatableArray<ProtoSubTypePlan> SubTypes { get; }
+
         /// <summary>Fully-qualified, <c>global::</c>-prefixed type name.</summary>
         public string TypeName { get; }
 
@@ -346,7 +395,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool Equals(ProtoContractPlan? other)
             => other is not null && TypeName == other.TypeName && Members.Equals(other.Members)
                 && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
-                && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral;
+                && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
+                && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
+                && SubTypes.Equals(other.SubTypes);
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

@@ -174,7 +174,13 @@ namespace ProtoBuf.Internal
         public static readonly IValueChecker<T> ValueChecker =
             SerializerCache<PrimaryTypeProvider>.InstanceField as IValueChecker<T>
             ?? ReferenceValueChecker.Instance as IValueChecker<T>
-            ?? (IValueChecker<T>)TypeHelper.GetValueTypeChecker(typeof(T));
+            // a non-nullable value type is always present and never null, so the answer is constant.
+            // Naming the type statically is also what keeps it alive under AOT: the reflective path
+            // below goes through MakeGenericType, which ILC cannot see, so StructValueChecker<TStruct>
+            // was simply never generated and the first serialize threw "missing native code".
+            ?? (CanBeNull
+                ? (IValueChecker<T>)TypeHelper.GetValueTypeChecker(typeof(T))
+                : NonNullValueChecker<T>.Instance);
 
         public static readonly bool CanBePacked = !IsReferenceType && TypeHelper.CanBePacked(typeof(T));
 
@@ -208,6 +214,21 @@ namespace ProtoBuf.Internal
         /// </summary>
         bool IValueChecker<object>.IsNull(object value) => value is null;
     }
+    /// <summary>
+    /// The checker for a non-nullable value type, where both answers are constants.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately unconstrained, so <see cref="TypeHelper{T}"/> can name it without knowing that
+    /// T is a struct — which is what makes it statically reachable, and so AOT-safe.
+    /// </remarks>
+    internal sealed class NonNullValueChecker<T> : IValueChecker<T>
+    {
+        private NonNullValueChecker() { }
+        public static readonly NonNullValueChecker<T> Instance = new NonNullValueChecker<T>();
+        bool IValueChecker<T>.HasNonTrivialValue(T value) => true;
+        bool IValueChecker<T>.IsNull(T value) => false;
+    }
+
     internal sealed class StructValueChecker<T> : IValueChecker<T?>, IValueChecker<T>
         where T : struct
     {

@@ -67,6 +67,10 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 2, $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>");
                 prefix = ',';
+                if (contract.RootTypeName is not null)
+                {
+                    Line(sb, indent + 2, $", {Serializers}.ISubTypeSerializer<{contract.TypeName}>");
+                }
                 if (contract.SkipConstructor)
                 {
                     Line(sb, indent + 2, $", {Serializers}.IFactory<{contract.TypeName}>");
@@ -110,6 +114,12 @@ namespace ProtoBuf.BuildTools.Generators
                 sb.AppendLine();
             }
 
+            if (contract.RootTypeName is { } root)
+            {
+                EmitSubTypeContract(sb, indent, contract, root);
+                return;
+            }
+
             Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
             if (contract.IsTuple)
@@ -143,41 +153,78 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, $"value ??= {Construct(contract)};");
             }
-            Line(sb, indent + 1, "int field;");
-            Line(sb, indent + 1, "while ((field = state.ReadFieldHeader()) > 0)");
+            EmitReadLoop(sb, indent + 1, contract, "value");
+            if (contract.IsTuple)
+            {
+                var arguments = string.Join(", ", contract.Members.Select(static x => $"arg{x.FieldNumber}"));
+                Line(sb, indent + 1, contract.IsTupleLiteral
+                    ? $"value = ({arguments});"
+                    : $"value = new {contract.TypeName}({arguments});");
+            }
+            Line(sb, indent + 1, "return value;");
+            Line(sb, indent, "}");
+            sb.AppendLine();
+
+            Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+            Line(sb, indent, "{");
+            // ThrowUnexpectedSubtype is constrained to reference types, and a struct, a sealed type
+            // and a tuple all rule sub-types out at compile time - ref-emit omits it for each
+            if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed)
+            {
+                Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+            }
+            EmitWriteMembers(sb, indent + 1, contract);
+            Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// The field-dispatch loop shared by <c>Read</c> and <c>ReadSubType</c>.
+        /// </summary>
+        /// <param name="instance">
+        /// What the members hang off. A sub-type read works through <c>SubTypeState&lt;T&gt;</c>,
+        /// so the instance has to be hoisted out of it - which also constructs it on demand.
+        /// </param>
+        private static void EmitReadLoop(StringBuilder sb, int indent, ProtoContractPlan contract,
+            string instance, EquatableArray<ProtoSubTypePlan> subTypes = default)
+        {
+            Line(sb, indent, "int field;");
+            Line(sb, indent, "while ((field = state.ReadFieldHeader()) > 0)");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, "switch (field)");
             Line(sb, indent + 1, "{");
-            Line(sb, indent + 2, "switch (field)");
-            Line(sb, indent + 2, "{");
             foreach (var member in contract.Members)
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // a tuple reads into the locals it will pass to the constructor, not into the member
-                var target = contract.IsTuple ? $"arg{number}" : $"value.{member.Name}";
-                Line(sb, indent + 3, $"case {number}:");
-                Line(sb, indent + 3, "{");
+                var target = contract.IsTuple ? $"arg{number}" : $"{instance}.{member.Name}";
+                Line(sb, indent + 2, $"case {number}:");
+                Line(sb, indent + 2, "{");
+                // a sub-type read holds the instance inside SubTypeState, and reading it is what
+                // constructs it - so it is hoisted per case, exactly as ref-emit does
+                if (instance != "value") Line(sb, indent + 3, $"var {instance} = value.Value;");
                 if (member.Map.Factory is not null)
                 {
                     // same merge shape as a collection, but the key and value features - and any
                     // sub-serializers they need - ride alongside
-                    Line(sb, indent + 4, $"var tmp{number} = {target};");
-                    Line(sb, indent + 4, $"tmp{number} = {Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
-                    Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
-                    Line(sb, indent + 4, "break;");
-                    Line(sb, indent + 3, "}");
+                    Line(sb, indent + 3, $"var tmp{number} = {target};");
+                    Line(sb, indent + 3, $"tmp{number} = {Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
+                    Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                    Line(sb, indent + 3, "break;");
+                    Line(sb, indent + 2, "}");
                     continue;
                 }
                 if (member.Repeated.Factory is not null)
                 {
                     // same merge shape as a sub-message: the existing collection is passed in, and
                     // the result assigned back only if non-null
-                    Line(sb, indent + 4, $"var tmp{number} = {target};");
-                    Line(sb, indent + 4, $"tmp{number} = {Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
+                    Line(sb, indent + 3, $"var tmp{number} = {target};");
+                    Line(sb, indent + 3, $"tmp{number} = {Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
                     // ImmutableArray<T> is a struct and can never be null
-                    Line(sb, indent + 4, member.Repeated.IsValueType
+                    Line(sb, indent + 3, member.Repeated.IsValueType
                         ? Assign(contract, member, target, $"tmp{number}")
                         : $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
-                    Line(sb, indent + 4, "break;");
-                    Line(sb, indent + 3, "}");
+                    Line(sb, indent + 3, "break;");
+                    Line(sb, indent + 2, "}");
                     continue;
                 }
                 switch (member.Kind)
@@ -194,78 +241,73 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
-                        if (ScalarReadHint(member) is { } hint) Line(sb, indent + 4, hint);
-                        Line(sb, indent + 4, Assign(contract, member, target, ScalarRead(member)));
+                        if (ScalarReadHint(member) is { } hint) Line(sb, indent + 3, hint);
+                        Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member)));
                         break;
                     case ProtoMemberKind.String:
                         // a null string leaves the existing value alone, matching ref-emit
-                        Line(sb, indent + 4, $"var tmp{number} = state.ReadString();");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                        Line(sb, indent + 3, $"var tmp{number} = state.ReadString();");
+                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                     case ProtoMemberKind.Bytes:
                         // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
                         // existing array rather than replacing it
-                        Line(sb, indent + 4, $"var tmp{number} = {target};");
-                        Line(sb, indent + 4, $"tmp{number} = state.AppendBytes(tmp{number});");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        Line(sb, indent + 3, $"tmp{number} = state.AppendBytes(tmp{number});");
+                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                     // in all three cases the *existing* value is passed in, so repeated occurrences
                     // merge rather than replace; and the category is Repeated, not Message
                     case ProtoMemberKind.Message when member.IsNullable:
                         // a nullable struct message: seed from the current value, assign the result
                         // straight back - the read cannot produce a null
-                        Line(sb, indent + 4, $"var tmp{number} = {target}.GetValueOrDefault();");
-                        Line(sb, indent + 4, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
+                        Line(sb, indent + 3, $"var tmp{number} = {target}.GetValueOrDefault();");
+                        Line(sb, indent + 3, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
                         break;
                     case ProtoMemberKind.Message when member.MessageIsValueType:
-                        Line(sb, indent + 4, $"var tmp{number} = {target};");
-                        Line(sb, indent + 4, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
+                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        Line(sb, indent + 3, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
                         break;
                     case ProtoMemberKind.Message:
-                        Line(sb, indent + 4, $"var tmp{number} = {target};");
-                        Line(sb, indent + 4, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        Line(sb, indent + 3, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                 }
-                Line(sb, indent + 4, "break;");
-                Line(sb, indent + 3, "}");
+                Line(sb, indent + 3, "break;");
+                Line(sb, indent + 2, "}");
             }
-            Line(sb, indent + 3, "default:");
-            Line(sb, indent + 4, "state.SkipField();");
-            Line(sb, indent + 4, "break;");
-            Line(sb, indent + 2, "}");
+            // a derived layer arrives as a nested sub-item at its own field number; reading it hands
+            // the whole SubTypeState down, so the instance is constructed at the deepest layer
+            foreach (var subType in subTypes)
+            {
+                var number = subType.FieldNumber.ToString(CultureInfo.InvariantCulture);
+                Line(sb, indent + 2, $"case {number}:");
+                Line(sb, indent + 3, $"value.ReadSubType<{subType.TypeName}>(ref state, this);");
+                Line(sb, indent + 3, "break;");
+            }
+            Line(sb, indent + 2, "default:");
+            Line(sb, indent + 3, "state.SkipField();");
+            Line(sb, indent + 3, "break;");
             Line(sb, indent + 1, "}");
-            if (contract.IsTuple)
-            {
-                var arguments = string.Join(", ", contract.Members.Select(static x => $"arg{x.FieldNumber}"));
-                Line(sb, indent + 1, contract.IsTupleLiteral
-                    ? $"value = ({arguments});"
-                    : $"value = new {contract.TypeName}({arguments});");
-            }
-            Line(sb, indent + 1, "return value;");
             Line(sb, indent, "}");
-            sb.AppendLine();
+        }
 
-            Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
-            Line(sb, indent, "{");
-            // ThrowUnexpectedSubtype is constrained to reference types, and neither a struct nor a
-            // tuple can have sub-types
-            if (!contract.IsValueType && !contract.IsTuple)
-            {
-                Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
-            }
+        /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
+        private static void EmitWriteMembers(StringBuilder sb, int indent, ProtoContractPlan contract)
+        {
             foreach (var member in contract.Members)
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
-                Line(sb, indent + 1, $"var tmp{number} = value.{member.Name};");
+                Line(sb, indent, $"var tmp{number} = value.{member.Name};");
 
                 if (member.Map.Factory is not null)
                 {
-                    Line(sb, indent + 1, $"if (tmp{number} != null)");
-                    Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"{Map(member)}.WriteMap(ref state, {number}, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
-                    Line(sb, indent + 1, "}");
+                    Line(sb, indent, $"if (tmp{number} != null)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, $"{Map(member)}.WriteMap(ref state, {number}, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
+                    Line(sb, indent, "}");
                     continue;
                 }
 
@@ -274,13 +316,13 @@ namespace ProtoBuf.BuildTools.Generators
                     var writeRepeated = $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});";
                     if (member.Repeated.IsValueType)
                     {
-                        Line(sb, indent + 1, writeRepeated);
+                        Line(sb, indent, writeRepeated);
                         continue;
                     }
-                    Line(sb, indent + 1, $"if (tmp{number} != null)");
-                    Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, writeRepeated);
-                    Line(sb, indent + 1, "}");
+                    Line(sb, indent, $"if (tmp{number} != null)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, writeRepeated);
+                    Line(sb, indent, "}");
                     continue;
                 }
 
@@ -288,10 +330,10 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // a nullable struct message: presence decides, and the unwrapped value goes
                     // straight to WriteMessage
-                    Line(sb, indent + 1, $"if (tmp{number}.HasValue)");
-                    Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), this);");
-                    Line(sb, indent + 1, "}");
+                    Line(sb, indent, $"if (tmp{number}.HasValue)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), this);");
+                    Line(sb, indent, "}");
                     continue;
                 }
 
@@ -299,21 +341,21 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // presence decides, not value - so a nullable zero *is* written, unlike a plain
                     // zero. A declared default then nests inside, rather than replacing the test.
-                    Line(sb, indent + 1, $"if (tmp{number}.HasValue)");
-                    Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"var val{number} = tmp{number}.GetValueOrDefault();");
+                    Line(sb, indent, $"if (tmp{number}.HasValue)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, $"var val{number} = tmp{number}.GetValueOrDefault();");
                     if (member.DefaultLiteral is { } nullableDefault)
                     {
-                        Line(sb, indent + 2, $"if (val{number} != {nullableDefault})");
-                        Line(sb, indent + 2, "{");
-                        EmitScalarWrite(sb, indent + 3, member, number, $"val{number}");
-                        Line(sb, indent + 2, "}");
+                        Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
+                        Line(sb, indent + 1, "{");
+                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}");
+                        Line(sb, indent + 1, "}");
                     }
                     else
                     {
-                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"val{number}");
                     }
-                    Line(sb, indent + 1, "}");
+                    Line(sb, indent, "}");
                     continue;
                 }
 
@@ -322,7 +364,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (contract.IsTuple && member.Kind is not (ProtoMemberKind.String
                     or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
                 {
-                    EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                    EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
                     continue;
                 }
 
@@ -332,7 +374,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // else needs the header emitting separately, as ref-emit does
                     case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default:
                         var int32Write = $"state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});";
-                        Line(sb, indent + 1, member.IsRequired
+                        Line(sb, indent, member.IsRequired
                             ? int32Write
                             : $"if ({ScalarGuard(member, $"tmp{number}")}) {int32Write}");
                         break;
@@ -351,43 +393,109 @@ namespace ProtoBuf.BuildTools.Generators
                         // IsRequired means field presence, so there is no test to emit at all
                         if (member.IsRequired)
                         {
-                            EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                            EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
                             break;
                         }
-                        Line(sb, indent + 1, $"if ({ScalarGuard(member, $"tmp{number}")})");
-                        Line(sb, indent + 1, "{");
-                        EmitScalarWrite(sb, indent + 2, member, number, $"tmp{number}");
-                        Line(sb, indent + 1, "}");
+                        Line(sb, indent, $"if ({ScalarGuard(member, $"tmp{number}")})");
+                        Line(sb, indent, "{");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                        Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.String when member.DefaultLiteral is { } declared:
                         // the null test has to be explicit here: WriteString skips nulls itself, but
                         // we must not compare a null against the declared default
-                        Line(sb, indent + 1, $"if (tmp{number} != null && tmp{number} != {declared})");
-                        Line(sb, indent + 1, "{");
-                        Line(sb, indent + 2, $"state.WriteString({number}, tmp{number});");
-                        Line(sb, indent + 1, "}");
+                        Line(sb, indent, $"if (tmp{number} != null && tmp{number} != {declared})");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
+                        Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.String:
                         // no null test: WriteString(int, string) skips nulls itself
-                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
+                        Line(sb, indent, $"state.WriteString({number}, tmp{number});");
                         break;
                     case ProtoMemberKind.Bytes:
                         // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its
                         // own field header, so both are explicit here
-                        Line(sb, indent + 1, $"if (tmp{number} != null)");
-                        Line(sb, indent + 1, "{");
-                        Line(sb, indent + 2, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
-                        Line(sb, indent + 2, $"state.WriteBytes(tmp{number});");
-                        Line(sb, indent + 1, "}");
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
+                        Line(sb, indent + 1, $"state.WriteBytes(tmp{number});");
+                        Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.Message:
                         // likewise WriteMessage/WriteGroup(int, ...) skip nulls themselves. Group
                         // affects the *write* only - its read is an ordinary ReadMessage
                         var writeMessage = member.DataFormat == ProtoDataFormat.Group ? "WriteGroup" : "WriteMessage";
-                        Line(sb, indent + 1, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// A contract in a <c>[ProtoInclude]</c> hierarchy.
+        /// </summary>
+        /// <remarks>
+        /// Both directions route through the <em>root</em>'s <c>ISubTypeSerializer</c>: that is what
+        /// walks down the chain, writing each layer's own members and nesting the next layer inside a
+        /// sub-type marker. So <c>ISerializer&lt;T&gt;</c> is a pair of one-line delegations for every
+        /// type in the hierarchy, and the real work is in the sub-type pair, which sees only the
+        /// members this layer declares.
+        /// </remarks>
+        private static void EmitSubTypeContract(StringBuilder sb, int indent, ProtoContractPlan contract, string root)
+        {
+            var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
+            var sub = $"{Serializers}.ISubTypeSerializer<{contract.TypeName}>";
+            var rootSub = $"{Serializers}.ISubTypeSerializer<{root}>";
+            // the root's ReadSubType returns the root type, so anything below it needs a cast back
+            var cast = contract.TypeName == root ? "" : $"({contract.TypeName})";
+
+            Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
+            Line(sb, indent + 1, $"=> {cast}(({rootSub})this).ReadSubType(ref state, "
+                + $"global::ProtoBuf.Serializers.SubTypeState<{root}>.Create(state.Context, value));");
+            sb.AppendLine();
+
+            Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+            Line(sb, indent + 1, $"=> (({rootSub})this).WriteSubType(ref state, value);");
+            sb.AppendLine();
+
+            Line(sb, indent, $"void {sub}.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+            Line(sb, indent, "{");
+            if (contract.SubTypes.Count != 0)
+            {
+                // the runtime type decides which layer to nest; anything else is a type the model
+                // was never told about
+                Line(sb, indent + 1, "if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))");
+                Line(sb, indent + 1, "{");
+                var keyword = "if";
+                foreach (var subType in contract.SubTypes)
+                {
+                    var local = $"sub{subType.FieldNumber.ToString(CultureInfo.InvariantCulture)}";
+                    Line(sb, indent + 2, $"{keyword} (value is {subType.TypeName} {local})");
+                    Line(sb, indent + 2, "{");
+                    Line(sb, indent + 3, $"state.WriteSubType({subType.FieldNumber.ToString(CultureInfo.InvariantCulture)}, {local}, this);");
+                    Line(sb, indent + 2, "}");
+                    keyword = "else if";
+                }
+                Line(sb, indent + 2, "else");
+                Line(sb, indent + 2, "{");
+                Line(sb, indent + 3, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                Line(sb, indent + 2, "}");
+                Line(sb, indent + 1, "}");
+            }
+            else if (!contract.IsSealed)
+            {
+                Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+            }
+            EmitWriteMembers(sb, indent + 1, contract);
+            Line(sb, indent, "}");
+            sb.AppendLine();
+
+            Line(sb, indent, $"{contract.TypeName} {sub}.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, "
+                + $"global::ProtoBuf.Serializers.SubTypeState<{contract.TypeName}> value)");
+            Line(sb, indent, "{");
+            EmitReadLoop(sb, indent + 1, contract, "obj", contract.SubTypes);
+            Line(sb, indent + 1, "return value.Value;");
             Line(sb, indent, "}");
         }
 

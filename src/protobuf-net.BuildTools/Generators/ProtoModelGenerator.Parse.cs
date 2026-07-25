@@ -13,6 +13,7 @@ namespace ProtoBuf.BuildTools.Generators
     partial class ProtoModelGenerator
     {
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
+        private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
         private const string ProtoMemberAttributeName = "ProtoBuf.ProtoMemberAttribute";
         private const string DefaultValueAttributeName = "System.ComponentModel.DefaultValueAttribute";
         private const string DataContractAttributeName = "System.Runtime.Serialization.DataContractAttribute";
@@ -111,6 +112,21 @@ namespace ProtoBuf.BuildTools.Generators
                 removed = false;
                 foreach (var contract in parsed.Values.ToList())
                 {
+                    // a hierarchy is all-or-nothing: every type routes through the root, and the
+                    // root dispatches to each sub-type by name, so one missing link breaks the rest
+                    var broken = contract.RootTypeName is { } root && !parsed.ContainsKey(root)
+                        ? root
+                        : contract.SubTypes.FirstOrDefault(x => !parsed.ContainsKey(x.TypeName)).TypeName;
+                    if (broken is not null)
+                    {
+                        parsed.Remove(contract.TypeName);
+                        locations.TryGetValue(contract.TypeName, out var brokenAt);
+                        diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.OmittedCascade, brokenAt,
+                            Simplify(contract.TypeName), Simplify(broken)));
+                        removed = true;
+                        continue;
+                    }
+
                     foreach (var member in contract.Members)
                     {
                         // a map can reach a contract through either side, so both are tested
@@ -171,7 +187,6 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return Contract(diagnostics, at, name, "only classes and structs are supported");
             }
-            if (type.IsAbstract) return Contract(diagnostics, at, name, "abstract types are not supported");
             if (type.IsGenericType) return Contract(diagnostics, at, name, "generic types are not supported");
             if (type.DeclaredAccessibility != Accessibility.Public)
             {
@@ -179,18 +194,35 @@ namespace ProtoBuf.BuildTools.Generators
                 return Contract(diagnostics, at, name, "the type is not public");
             }
 
+            // the [ProtoInclude] links are read up-front: they decide whether inheritance is legal
+            // here at all, and whether an abstract type has a reason to exist
+            if (!TryGetSubTypes(type, out var subTypes))
+            {
+                return Option(diagnostics, at, name, "this form of [ProtoInclude]");
+            }
+            var linkedBase = GetLinkedBase(type);
+
             // a struct is always constructible and can never have a base contract, so both of the
             // remaining checks are class-only
             if (!isValueType)
             {
-                if (!type.InstanceConstructors.Any(static ctor
+                // a hierarchy is read through SubTypeState<T>, which never constructs the root
+                // unless the payload actually contains one; an abstract leaf would be useless
+                if (type.IsAbstract && subTypes.Count == 0)
+                {
+                    return Contract(diagnostics, at, name, "abstract types are not supported");
+                }
+                if (!type.IsAbstract && !type.InstanceConstructors.Any(static ctor
                     => ctor.Parameters.Length == 0 && ctor.DeclaredAccessibility == Accessibility.Public))
                 {
                     return Contract(diagnostics, at, name, "there is no public parameterless constructor");
                 }
-                if (type.BaseType is { SpecialType: not SpecialType.System_Object })
+                if (type.BaseType is { SpecialType: not SpecialType.System_Object } && linkedBase is null)
                 {
-                    return Contract(diagnostics, at, name, "inheritance is not supported");
+                    // protobuf-net would treat this as a standalone contract that silently ignores
+                    // its inherited members; refusing is the safer half of that surprise
+                    return Contract(diagnostics, at, name,
+                        "it derives from a type that does not declare [ProtoInclude] for it");
                 }
             }
 
@@ -228,6 +260,8 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                     isContract = true;
                 }
+                // already read up-front, since it decides whether inheritance is legal here
+                else if (attributeName == ProtoIncludeAttributeName) { }
                 // [DataContract] and [XmlType] are contract markers in their own right; their own
                 // arguments (Name, Namespace) affect schema naming only
                 else if (attributeName == DataContractAttributeName) isDataContract = true;
@@ -505,9 +539,26 @@ namespace ProtoBuf.BuildTools.Generators
             }
             members.Sort(static (x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
 
+            // the whole hierarchy has to be in the model, since every type in it routes through the
+            // root; walking both ways gets there from whichever end was seeded
+            string? rootTypeName = null;
+            var subTypePlans = new ProtoSubTypePlan[subTypes.Count];
+            if (subTypes.Count != 0 || linkedBase is not null)
+            {
+                rootTypeName = GetHierarchyRoot(type).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                if (linkedBase is not null) reachable.Add(linkedBase);
+                for (int i = 0; i < subTypes.Count; i++)
+                {
+                    subTypePlans[i] = new ProtoSubTypePlan(subTypes[i].Tag,
+                        subTypes[i].Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                    reachable.Add(subTypes[i].Type);
+                }
+            }
+
             return new ProtoContractPlan(
                 type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                new(members.ToArray()), isValueType, skipConstructor);
+                new(members.ToArray()), isValueType, skipConstructor, isSealed: type.IsSealed,
+                rootTypeName: rootTypeName, subTypes: new(subTypePlans));
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -595,6 +646,58 @@ namespace ProtoBuf.BuildTools.Generators
             var type = compilation.GetTypeByMetadataName(
                 "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute");
             return type is not null && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly);
+        }
+
+        /// <summary>
+        /// The contracts a type declares as directly-derived, via <c>[ProtoInclude]</c>.
+        /// </summary>
+        /// <returns>
+        /// False if any of them uses a form we cannot reproduce, in which case the caller must
+        /// refuse the contract rather than emit a partial hierarchy.
+        /// </returns>
+        private static bool TryGetSubTypes(INamedTypeSymbol type, out List<(int Tag, INamedTypeSymbol Type)> subTypes)
+        {
+            subTypes = new List<(int, INamedTypeSymbol)>();
+            foreach (var attribute in type.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != ProtoIncludeAttributeName) continue;
+
+                // the (int, string) form defers to runtime type resolution, and DataFormat.Group
+                // changes the sub-type framing
+                if (attribute.NamedArguments.Length != 0) return false;
+                if (attribute.ConstructorArguments.Length != 2) return false;
+                if (attribute.ConstructorArguments[0].Value is not int tag) return false;
+                if (attribute.ConstructorArguments[1].Value is not INamedTypeSymbol derived) return false;
+
+                subTypes.Add((tag, derived));
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The base contract that declares this type as a sub-type, if any. Inheritance without that
+        /// declaration is not a hierarchy — protobuf-net treats the derived type as its own contract.
+        /// </summary>
+        private static INamedTypeSymbol? GetLinkedBase(INamedTypeSymbol type)
+        {
+            if (type.BaseType is not { SpecialType: not SpecialType.System_Object } baseType) return null;
+            if (!TryGetSubTypes(baseType, out var subTypes)) return null;
+
+            foreach (var candidate in subTypes)
+            {
+                if (SymbolEqualityComparer.Default.Equals(candidate.Type, type)) return baseType;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The top of a type's hierarchy: every type in one reads and writes through the root's
+        /// <c>ISubTypeSerializer</c>.
+        /// </summary>
+        private static INamedTypeSymbol GetHierarchyRoot(INamedTypeSymbol type)
+        {
+            while (GetLinkedBase(type) is { } linked) type = linked;
+            return type;
         }
 
         /// <summary>

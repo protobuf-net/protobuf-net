@@ -1485,7 +1485,7 @@ namespace ProtoBuf.Meta
             ?? model?.GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
+        internal static ISubTypeSerializer<T> GetSubTypeSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model) where T : class
            => model?.GetSerializer<T>() as ISubTypeSerializer<T>
             ?? NoSubTypeSerializer<T>(model);
 

@@ -295,6 +295,52 @@ skipped (the property itself covers them). Two states a property cannot be in ar
 `readonly` (the same problem `init` has — no assignment after construction) and `const`. `static`
 and non-public are refused as for properties, though note ref-emit reaches both by reflection.
 
+### Inheritance (`[ProtoInclude]`)
+
+A hierarchy is a second emit shape, and every type in one implements **both** `ISerializer<T>` and
+`ISubTypeSerializer<T>`. All the traffic goes through the **root's** `ISubTypeSerializer`, which
+walks down the chain writing each layer's own members and nesting the next inside a sub-type marker,
+so `ISerializer<T>` collapses to a pair of one-line delegations — for the root as much as the leaves,
+with a cast back on read for anything below it. A layer only ever sees **its own declared members**;
+inherited ones belong to the layer that declares them.
+
+- `WriteSubType` dispatches on the runtime type: `if (TypeModel.IsSubType(value))` then an `is` chain
+  over the direct `[ProtoInclude]` types, `else ThrowUnexpectedSubtype`. A leaf has no chain and
+  falls back to the plain unconditional throw.
+- `ReadSubType` hoists `value.Value` **per case** — reading it is what constructs the instance — and
+  each sub-type field is `value.ReadSubType<TDerived>(ref state, this)`.
+- **`sealed` omits `ThrowUnexpectedSubtype` entirely**, in a hierarchy or out of one. This was a
+  pre-existing divergence: we emitted it everywhere a struct or tuple did not apply. It is benign
+  (the call cannot throw for a sealed type) but it is not what ref-emit produces.
+- **Abstract is allowed only as a root** — with no sub-types there would be nothing to construct.
+  An abstract root also needs no public parameterless constructor, since nothing ever calls `new` on
+  it; `SubTypeState<T>` constructs the layer the payload actually names.
+- **Inheritance without the `[ProtoInclude]` link is refused.** protobuf-net treats such a derived
+  type as an independent contract that *silently ignores every inherited member*; refusing is the
+  safer half of that surprise. `[ProtoInclude(tag, "name")]` is refused too — it resolves the type at
+  runtime.
+- A hierarchy is **all-or-nothing** in the cascade: one dropped member anywhere takes the whole
+  hierarchy, since the root dispatches to each sub-type by name and every type routes back to the root.
+
+Two library-level things this exposed, both invisible on the JIT differential path:
+
+- `TypeHelper<T>.ValueChecker` reached `StructValueChecker<TStruct>` through `MakeGenericType`, so
+  ILC never generated it and the first serialize of any **struct contract member** threw *"missing
+  native code or metadata"*. For a non-nullable value type both answers are constants, so
+  `NonNullValueChecker<T>` — deliberately unconstrained, so `TypeHelper<T>` can name it — is used
+  instead. The reflective path remains only for `Nullable<TStruct>`.
+- `TypeModel.GetSubTypeSerializer<T>` and `SubTypeState<T>.ReadSubType<TSubType>` needed
+  `DynamicAccess.ContractType`; annotating both terminates at the generated call sites, which pass a
+  concrete type. The one left is `SubTypeState<T>.Cast`'s `Merge`, which would need the annotation on
+  the **class**'s `T` — i.e. on every consumer, including the generated path. Left alone deliberately.
+
+**Merging incompatible sibling sub-types overflows the stack** — `SubTypeState.Cast` → `Merge` →
+`Model.Serialize<object>` → … — and that reproduces with `RuntimeTypeModel` alone, with no generated
+code involved. It is only reachable from a payload carrying the same field twice with two different
+sub-type markers (`Dog` then `Cat`); same-branch merges, in either direction, are fine.
+`Inherit.input.cs`'s `Holder` samples stay on one branch because of it, since the differential suite
+manufactures repeated fields by concatenating every sample of a type.
+
 ### `init`-only accessors
 
 IL has no notion of `init` — it is a modreq the C# compiler enforces — so ref-emit simply calls the
@@ -322,8 +368,10 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   it changes the wire form of the BCL types below *and* is inherited from assembly/module/type down
   to the member, so it cannot be read off a single attribute. See `docs/compatibilitylevel.md`.
 - the compatibility-level BCL types (`DateTime`/`TimeSpan`/`decimal`/`Guid`)
-- inheritance / `[ProtoInclude]`, surrogates, serialization callbacks,
-  `ShouldSerialize`/`Specified`
+- **`IExtensible` / `ITypedExtensible` / `Extensible`** — carrying unknown fields through a
+  round-trip. The typed pair is what makes that robust across an inheritance hierarchy, where each
+  layer needs its own extension data rather than one shared bag.
+- surrogates, serialization callbacks, `ShouldSerialize`/`Specified`
 
 ### Golden-file tests
 
