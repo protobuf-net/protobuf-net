@@ -15,6 +15,8 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
         private const string ProtoReservedAttributeName = "ProtoBuf.ProtoReservedAttribute";
+        private const string NullWrappedValueAttributeName = "ProtoBuf.NullWrappedValueAttribute";
+        private const string NullWrappedCollectionAttributeName = "ProtoBuf.NullWrappedCollectionAttribute";
         private const string ProtoIgnoreAttributeName = "ProtoBuf.ProtoIgnoreAttribute";
         private const string CompatibilityLevelAttributeName = "ProtoBuf.CompatibilityLevelAttribute";
         private const string ExtensibleTypeName = "ProtoBuf.Extensible";
@@ -369,6 +371,8 @@ namespace ProtoBuf.BuildTools.Generators
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
                 bool usesAccessor = false, isReadOnly = false;
+                bool wrappedValue = false, wrappedValueGroup = false;
+                bool wrappedCollection = false, wrappedCollectionGroup = false;
                 var dataFormat = ProtoDataFormat.Default;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
@@ -390,6 +394,29 @@ namespace ProtoBuf.BuildTools.Generators
                         or ProtoIgnoreAttributeName)
                     {
                         ignored = true;
+                    }
+                    else if (attributeName is NullWrappedValueAttributeName or NullWrappedCollectionAttributeName)
+                    {
+                        var group = false;
+                        foreach (var argument in attribute.NamedArguments)
+                        {
+                            if (argument.Key == "AsGroup" && argument.Value.Value is bool asGroup)
+                            {
+                                group = asGroup;
+                                continue;
+                            }
+                            return Option(diagnostics, atMember, name, $"this form of [{AttributeName(attribute)}]");
+                        }
+                        if (attributeName == NullWrappedValueAttributeName)
+                        {
+                            wrappedValue = true;
+                            wrappedValueGroup = group;
+                        }
+                        else
+                        {
+                            wrappedCollection = true;
+                            wrappedCollectionGroup = group;
+                        }
                     }
                     else if (attributeName == ProtoMemberAttributeName && attribute.NamedArguments.Length != 0
                         && attribute.NamedArguments.All(static x
@@ -537,6 +564,38 @@ namespace ProtoBuf.BuildTools.Generators
                 var kind = shape.Kind;
                 var message = shape.Message;
 
+                // the null-wrapping rules, which protobuf-net enforces by *throwing* rather than by
+                // ignoring the attribute - deliberately, so that widening them later is not a silent
+                // behaviour change. Probed against ref-emit rather than read off the documentation:
+                // a message or a compatibility-level BCL type is not a "scalar" for this purpose.
+                var isCollection = shape.Repeated.Factory is not null;
+                var isMap = shape.Map.Factory is not null;
+                if (wrappedValue && !isCollection && !isMap)
+                {
+                    if (kind is ProtoMemberKind.Message or ProtoMemberKind.Map
+                        or ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                        or ProtoMemberKind.Guid or ProtoMemberKind.Decimal)
+                    {
+                        return Option(diagnostics, atMember, name,
+                            "[NullWrappedValue] on a non-scalar");
+                    }
+                    // a reference-type scalar is already nullable; a value type has to say so
+                    if (!shape.IsNullable && kind is not (ProtoMemberKind.String or ProtoMemberKind.Bytes))
+                    {
+                        return Option(diagnostics, atMember, name,
+                            "[NullWrappedValue] on a non-nullable value");
+                    }
+                    if (declaredDefault is not null)
+                    {
+                        return Option(diagnostics, atMember, name, "[NullWrappedValue] with [DefaultValue]");
+                    }
+                }
+                if (wrappedCollection && !isCollection)
+                {
+                    // maps are repeated too, but there is no ref-emit reference for one wrapped
+                    return Option(diagnostics, atMember, name, "[NullWrappedCollection] on a map");
+                }
+
                 // discarding the read is only meaningful where the instance itself is mutated, or
                 // where the value is genuinely thrown away; a struct or nullable sub-message would
                 // be mutating a copy, and there is no ref-emit reference for either
@@ -573,8 +632,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // it only ever meant "use the well-known form of a BCL type"
                     return Option(diagnostics, atMember, name, "DataFormat.WellKnown on this type");
                 }
-                // an init-only member needs its declared type for the [UnsafeAccessor] signature
-                var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor
+                // needed for the [UnsafeAccessor] signature, and as the type argument to ReadAny/WriteAny
+                var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor || wrappedValue
                     ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);
                 var isNullable = shape.IsNullable;
                 var enumTypeName = shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -600,7 +659,7 @@ namespace ProtoBuf.BuildTools.Generators
                     foreach (var reached in shape.MapMessages!) reachable.Add(reached);
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
-                        isPacked: isPacked, overwriteList: overwriteList,
+                        isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
                 else if (kind == ProtoMemberKind.Message)
@@ -613,7 +672,7 @@ namespace ProtoBuf.BuildTools.Generators
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
-                        isPacked: isPacked, overwriteList: overwriteList,
+                        isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
                 else
@@ -623,7 +682,7 @@ namespace ProtoBuf.BuildTools.Generators
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
-                        isPacked: isPacked, overwriteList: overwriteList,
+                        isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
             }
@@ -769,7 +828,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>
         /// The compatibility level in force for a type: its own attribute, then any inherited from a
-        /// base type, then the module's, then the assembly's — a port of
+        /// base type, then the module's, then the assembly's â€” a port of
         /// <c>TypeCompatibilityHelper.GetTypeCompatibilityLevel</c>. Anything below 200 means 200.
         /// </summary>
         private static int GetCompatibilityLevel(Compilation compilation, INamedTypeSymbol type)
@@ -823,7 +882,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>
         /// The base contract that declares this type as a sub-type, if any. Inheritance without that
-        /// declaration is not a hierarchy — protobuf-net treats the derived type as its own contract.
+        /// declaration is not a hierarchy â€” protobuf-net treats the derived type as its own contract.
         /// </summary>
         private static INamedTypeSymbol? GetLinkedBase(INamedTypeSymbol type)
         {
@@ -1362,8 +1421,14 @@ namespace ProtoBuf.BuildTools.Generators
             // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
             if (GetMemberShape(compilation, element) is not { Repeated.Factory: null } shape) return null;
 
-            // a nullable element changes the encoding (null-wrapping); not handled yet
-            if (shape.IsNullable) return null;
+            // a nullable *scalar* element is an ordinary element as far as the encoding goes - it
+            // only throws at runtime if a null actually turns up, unless [NullWrappedValue] is on
+            // the member. The other kinds have no reference, so they stay refused.
+            if (shape.IsNullable && (shape.EnumType is not null || shape.Message is not null
+                || IsBclKind(shape.Kind)))
+            {
+                return null;
+            }
 
             // an enum element is *not* written inline: RepeatedSerializer resolves an
             // ISerializer<TEnum> from the model, so the services type exposes one via

@@ -257,6 +257,19 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, "}");
                     continue;
                 }
+                // a lone wrapped value has its own API: the extra message layer is not expressible
+                // as features on an ordinary read, so ReadAny/WriteAny handle it
+                if (member.WrappedValue)
+                {
+                    Line(sb, indent + 3, $"var tmp{number} = {target};");
+                    Line(sb, indent + 3, $"tmp{number} = state.ReadAny<{member.DeclaredTypeName}>({WrappedFeatures(member, forRead: true)}, tmp{number}{WrappedSerializer(member)});");
+                    Line(sb, indent + 3, NullableTarget(member)
+                        ? $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}"
+                        : Assign(contract, member, target, $"tmp{number}"));
+                    Line(sb, indent + 3, "break;");
+                    Line(sb, indent + 2, "}");
+                    continue;
+                }
                 switch (member.Kind)
                 {
                     case ProtoMemberKind.Bool:
@@ -361,6 +374,13 @@ namespace ProtoBuf.BuildTools.Generators
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
                 Line(sb, indent, $"var tmp{number} = value.{member.Name};");
+
+                // WriteAny handles the null itself, so there is no guard - not even for a null int?
+                if (member.WrappedValue && member.Repeated.Factory is null && member.Map.Factory is null)
+                {
+                    Line(sb, indent, $"state.WriteAny<{member.DeclaredTypeName}>({number}, {WrappedFeatures(member)}, tmp{number}{WrappedSerializer(member)});");
+                    continue;
+                }
 
                 if (member.Map.Factory is not null)
                 {
@@ -590,7 +610,9 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 foreach (var member in contract.Members)
                 {
-                    if (member.Repeated.Factory is null) continue;
+                    // a repeated enum resolves its serializer from the model, and so does a lone
+                    // [NullWrappedValue] one - ReadAny/WriteAny take an ISerializer<TEnum?>
+                    if (member.Repeated.Factory is null && !member.WrappedValue) continue;
                     if (member.EnumTypeName is { } name) result[name] = member.Kind;
                 }
             }
@@ -648,6 +670,18 @@ namespace ProtoBuf.BuildTools.Generators
         {
             var result = $"{Features}.{ElementWireType(member)}";
             if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
+            if (member.WrappedValue)
+            {
+                // field presence in the wrapper is what separates a null element from a zero one
+                result += $" | {Features}.OptionWrappedValue";
+                if (member.WrappedValueGroup) result += $" | {Features}.OptionWrappedValueGroup";
+                result += $" | {Features}.OptionWrappedValueFieldPresence";
+            }
+            if (member.WrappedCollection)
+            {
+                result += $" | {Features}.OptionWrappedCollection";
+                if (member.WrappedCollectionGroup) result += $" | {Features}.OptionWrappedCollectionGroup";
+            }
             if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
             return result;
         }
@@ -664,6 +698,40 @@ namespace ProtoBuf.BuildTools.Generators
                 _ => "WireTypeVarint",
             },
         };
+
+        /// <summary>
+        /// The features for a lone <c>[NullWrappedValue]</c>: the value's own wire type plus the
+        /// wrapping. Note there is no field-presence flag here — that is a collection concern, where
+        /// a null and a zero would otherwise be indistinguishable.
+        /// </summary>
+        /// <param name="forRead">
+        /// The read takes the wire type from the field header, so it passes the wrapping alone;
+        /// only the write states it.
+        /// </param>
+        private static string WrappedFeatures(ProtoMemberPlan member, bool forRead = false)
+        {
+            var result = forRead
+                ? $"{Features}.OptionWrappedValue"
+                : $"{Features}.{ElementWireType(member)} | {Features}.OptionWrappedValue";
+            if (member.WrappedValueGroup) result += $" | {Features}.OptionWrappedValueGroup";
+            return result;
+        }
+
+        /// <summary>
+        /// Nothing: <c>ReadAny</c>/<c>WriteAny</c> resolve the serializer themselves.
+        /// </summary>
+        /// <remarks>
+        /// Ref-emit passes <c>this as ISerializer&lt;TEnum?&gt;</c> here, which we cannot: our
+        /// services type implements <c>ISerializerProxy&lt;TEnum?&gt;</c> rather than
+        /// <c>ISerializer&lt;TEnum?&gt;</c>, and C# rejects that cast on a sealed type where IL
+        /// merely yields null. Both end up in the same place — <c>serializer ??=
+        /// TypeModel.GetSerializer&lt;T&gt;(Model)</c>, which resolves the proxy through the model.
+        /// </remarks>
+        private static string WrappedSerializer(ProtoMemberPlan member) => "";
+
+        /// <summary>Does the read need a null test before assigning back?</summary>
+        private static bool NullableTarget(ProtoMemberPlan member)
+            => member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes;
 
         /// <summary>A message element needs us passed along as its serializer; a scalar does not.</summary>
         private static string RepeatedSubSerializer(ProtoMemberPlan member)
@@ -751,13 +819,23 @@ namespace ProtoBuf.BuildTools.Generators
                 ? $"{Features}.WireTypeStartGroup"
                 : $"{Features}.WireTypeString";
             if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
+            // note the split: field presence rides on the *map*, the wrapping on the value
+            if (member.WrappedValue) result += $" | {Features}.OptionWrappedValueFieldPresence";
             if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
             if (!member.Map.IsValidProtobufMap) result += $" | {Features}.OptionFailOnDuplicateKey";
             return result;
         }
 
         private static string MapElementFeatures(ProtoMemberPlan member)
-            => $"{Features}.{MapWireType(member.Map.KeyKind)}, {Features}.{MapWireType(member.Map.ValueKind)}";
+        {
+            var value = $"{Features}.{MapWireType(member.Map.ValueKind)}";
+            if (member.WrappedValue)
+            {
+                value += $" | {Features}.OptionWrappedValue";
+                if (member.WrappedValueGroup) value += $" | {Features}.OptionWrappedValueGroup";
+            }
+            return $"{Features}.{MapWireType(member.Map.KeyKind)}, {value}";
+        }
 
         private static string MapWireType(ProtoMemberKind kind) => kind switch
         {

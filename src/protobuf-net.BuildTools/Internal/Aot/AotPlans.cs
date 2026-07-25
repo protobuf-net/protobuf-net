@@ -183,6 +183,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
+            bool wrappedValue = false, bool wrappedValueGroup = false,
+            bool wrappedCollection = false, bool wrappedCollectionGroup = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             bool isReadOnly = false)
@@ -198,6 +200,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ElementTypeName = elementTypeName;
             IsPacked = isPacked;
             OverwriteList = overwriteList;
+            WrappedValue = wrappedValue;
+            WrappedValueGroup = wrappedValueGroup;
+            WrappedCollection = wrappedCollection;
+            WrappedCollectionGroup = wrappedCollectionGroup;
             FieldNumber = fieldNumber;
             Name = name;
             Kind = kind;
@@ -241,6 +247,26 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         /// <summary>From <c>[ProtoMember(OverwriteList = true)]</c>: adds <c>OptionClearCollection</c>.</summary>
         public bool OverwriteList { get; }
+
+        /// <summary>
+        /// From <c>[NullWrappedValue]</c>: an extra conceptual message layer around the value, so
+        /// that null is expressible. On a collection or map it applies to each element, and adds
+        /// <c>OptionWrappedValueFieldPresence</c> so a null is distinguishable from a zero.
+        /// </summary>
+        public bool WrappedValue { get; }
+
+        /// <summary>From <c>[NullWrappedValue(AsGroup = true)]</c>, which is the v2 <c>SupportNull</c> encoding.</summary>
+        public bool WrappedValueGroup { get; }
+
+        /// <summary>
+        /// From <c>[NullWrappedCollection]</c>: the same trick applied to the collection itself, so
+        /// that a null collection and an empty one are distinguishable. Composes with
+        /// <see cref="WrappedValue"/>, since the two apply at different scopes.
+        /// </summary>
+        public bool WrappedCollection { get; }
+
+        /// <summary>From <c>[NullWrappedCollection(AsGroup = true)]</c>.</summary>
+        public bool WrappedCollectionGroup { get; }
 
         /// <summary>From <c>[ProtoMember(DataFormat = ...)]</c>; selects the wire type.</summary>
         public ProtoDataFormat DataFormat { get; }
@@ -318,6 +344,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Repeated.Equals(other.Repeated) && Map.Equals(other.Map)
                 && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
+                && WrappedValue == other.WrappedValue && WrappedValueGroup == other.WrappedValueGroup
+                && WrappedCollection == other.WrappedCollection
+                && WrappedCollectionGroup == other.WrappedCollectionGroup
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
                 && IsReadOnly == other.IsReadOnly;

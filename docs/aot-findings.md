@@ -62,6 +62,11 @@ Warning-only: the round-trip is verified correct in `AotSmoke`. The level-240/30
 (`GuidString`, `GuidBytes`, `Timestamp`, `DecimalString`) do **not** pay this, since they go through
 `GuidHelper` and direct writes instead.
 
+The same `Enum.GetValues` dependency also reaches **generated code** through the null-wrapped enum
+path (`ReadAny<TEnum?>`/`WriteAny<TEnum?>` inline into the generated `Read`/`Write`), so an
+`IL3050` is reported against the generator's own output. Again warning-only, and again correct at
+runtime.
+
 Not an obvious fix — it is the same entanglement as the other reflective fallbacks, and `WriteGuid`
 genuinely needs the `PrimaryTypeProvider` serializer. Verified by experiment, not assumed: patching
 the `ThrowEnumException` enum formatting (the first suspect) changed nothing.
@@ -93,8 +98,13 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   generated ones.
 - **`TypeHelper<T>.ValueChecker` reached `StructValueChecker<TStruct>` through `MakeGenericType`**,
   so ILC never generated it: the first serialize of any **struct contract member** threw *"missing
-  native code or metadata"*. Replaced with an unconstrained `NonNullValueChecker<T>` for the
-  non-nullable case, which `TypeHelper<T>` can name statically.
+  native code or metadata"*, and later the same for any **nullable enum or struct** reached through
+  the null-wrapping paths. The reflective lookup is now gone entirely, replaced by two unconstrained
+  checkers `TypeHelper<T>` can name statically — `NonNullValueChecker<T>` (a plain value type is
+  always present) and `NullableValueChecker<T>` (both answers are `HasValue`; the `is null` test
+  looks like it boxes, but box-of-nullable followed by a null comparison is a JIT peephole).
+  Anything reaching those branches is a value type, because `IValueChecker<in T>` is contravariant
+  and so a reference type is already taken by `ReferenceValueChecker`.
 - **`[DynamicallyAccessedMembers]` was declared on `ISerializer<T>` and its siblings**, so every
   consumer paid the reflection-based model's cost — including generated models, which never reflect.
   `PrimaryTypeProvider` implements `ISerializer<Type>`, and `System.Type` is saturated with

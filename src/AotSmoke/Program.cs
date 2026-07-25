@@ -1,6 +1,7 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -41,6 +42,17 @@ public class Order
     // bcl.proto, level 300 through the well-known and string forms
     [ProtoMember(11)] public Legacy Legacy { get; set; }
     [ProtoMember(12)] public Modern Modern { get; set; }
+
+    // null-wrapping: a lone value goes through ReadAny/WriteAny, and a wrapped enum resolves its
+    // serializer through the model's proxy - neither of which any other member here exercises
+    [ProtoMember(13), NullWrappedValue] public int? Optional { get; set; }
+    [ProtoMember(14), NullWrappedValue] public Status? OptionalStatus { get; set; }
+
+    // and a null *inside* a collection, which is the whole point of the feature
+    [ProtoMember(15), NullWrappedValue] public List<int?> Sparse { get; } = new();
+
+    // a null collection, distinguishable from an empty one
+    [ProtoMember(16), NullWrappedCollection] public List<int> MaybeNone { get; set; }
 }
 
 [ProtoContract]
@@ -140,6 +152,10 @@ internal static class Program
             Size = new Dimensions { Width = 3, Height = 4 },
             Payment = new CardPayment { Amount = 99, Last4 = "4242" },
             Note = new Note { Text = "hi" },
+            Optional = 0,
+            OptionalStatus = Status.Unknown,
+            Sparse = { 1, null, 0 },
+            MaybeNone = [],
             Legacy = new Legacy
             {
                 When = When,
@@ -183,6 +199,14 @@ internal static class Program
             (clone.Payment as CardPayment)?.Last4);
         Check(ref failures, "Note.Text", original.Note.Text, clone.Note?.Text);
         Check(ref failures, "Note.Sequence", original.Note.Sequence, clone.Note?.Sequence);
+
+        // an explicit zero must survive as a zero, not collapse to null - that is what the wrapper is for
+        Check(ref failures, "Optional", original.Optional, clone.Optional);
+        Check(ref failures, "OptionalStatus", original.OptionalStatus, clone.OptionalStatus);
+        Check(ref failures, "Sparse", "1,null,0", string.Join(",",
+            clone.Sparse.Select(static x => x?.ToString() ?? "null")));
+        Check(ref failures, "MaybeNone empty-not-null", "empty",
+            clone.MaybeNone is null ? "null" : clone.MaybeNone.Count == 0 ? "empty" : "items");
         Check(ref failures, "Legacy.When", original.Legacy.When, clone.Legacy?.When);
         Check(ref failures, "Legacy.How", original.Legacy.How, clone.Legacy?.How);
         Check(ref failures, "Legacy.Id", original.Legacy.Id, clone.Legacy?.Id);

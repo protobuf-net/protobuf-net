@@ -544,6 +544,36 @@ reference the fallback at all), not annotating.
 The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
 the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
 
+### Null-wrapping
+
+`docs/nullwrappers.md` is the reference, and unusually complete — but the *shapes* were still taken
+from ref-emit. There are two distinct mechanisms:
+
+- **On a collection or map it is pure features composition.** A collection element gets
+  `OptionWrappedValue | OptionWrappedValueFieldPresence` (plus `OptionWrappedValueGroup` for
+  `AsGroup`); the field-presence flag is what separates a null element from a zero one. On a map the
+  two flags **split**: `OptionWrappedValueFieldPresence` rides on the *map*, `OptionWrappedValue` on
+  the *value features*. `[NullWrappedCollection]` adds `OptionWrappedCollection` (+`…Group`) and
+  composes with the above, since they apply at different scopes.
+- **A lone value uses a different API**: `state.WriteAny(n, features, value)` and
+  `state.ReadAny(features, value)`. Note the read passes **no wire type** — it comes from the field
+  header — while the write states it. The write is *unguarded*: `WriteAny` handles a null itself.
+
+protobuf-net enforces the rules by **throwing** rather than ignoring the attribute, deliberately, so
+that widening them later cannot silently change behaviour. Which shapes throw was probed rather than
+read off the docs: a **message** and a **compatibility-level BCL type** are both "not scalar" for
+this purpose, and a non-nullable value is refused. `[DefaultValue]` cannot combine with it.
+
+Ref-emit passes `this as ISerializer<TEnum?>` for a wrapped enum; **we pass nothing**. Our services
+type implements `ISerializerProxy<TEnum?>` rather than `ISerializer<TEnum?>`, and C# rejects that
+cast on a sealed type where IL merely yields null — both end up at
+`serializer ??= TypeModel.GetSerializer<T>(Model)`, which resolves the proxy through the model.
+
+Separately, this established that a **nullable element without the attribute is an ordinary element**
+— `List<int?>` emits plain features and only faults at runtime if a null actually turns up. Those are
+now accepted for scalar elements; nullable enum, message and BCL elements stay refused for want of a
+reference.
+
 ### Getter-only members
 
 A property with no setter still round-trips: the read runs **exactly as it would otherwise, but the
