@@ -55,6 +55,33 @@ namespace ProtoBuf.AotConformance
             // comparer that would need extending for every future member shape
             Assert.Equal(Hex(runtimeBytes), Hex(Serialize(runtime, viaGenerated)));
             Assert.Equal(Hex(runtimeBytes), Hex(Serialize(runtime, viaRuntime)));
+
+            AssertSimplePropertiesMatch(contractType, viaRuntime, viaGenerated);
+        }
+
+        /// <summary>
+        /// Compare state that a byte comparison cannot see.
+        /// </summary>
+        /// <remarks>
+        /// Some behaviour is only observable in members the payload never touches — SkipConstructor
+        /// is exactly that: whether the constructor ran shows up in a non-serialized member, and
+        /// re-serializing would compare equal either way. Only simply-typed properties are compared;
+        /// message-typed ones are distinct instances by construction and would never match.
+        /// </remarks>
+        private static void AssertSimplePropertiesMatch(Type contractType, object expected, object actual)
+        {
+            foreach (var property in contractType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!property.CanRead || property.GetIndexParameters().Length != 0) continue;
+
+                var type = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                if (!type.IsPrimitive && !type.IsEnum && type != typeof(string) && type != typeof(decimal)) continue;
+
+                var expectedValue = property.GetValue(expected);
+                var actualValue = property.GetValue(actual);
+                Assert.True(Equals(expectedValue, actualValue),
+                    $"{contractType.Name}.{property.Name}: runtime={expectedValue ?? "null"}, generated={actualValue ?? "null"}");
+            }
         }
 
         public static IEnumerable<object[]> GetModels()

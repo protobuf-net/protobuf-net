@@ -23,6 +23,9 @@ namespace BuildToolsUnitTests
             // needed to resolve the Memory<byte>/ReadOnlyMemory<byte> overloads of WriteBytes during
             // overload resolution; netstandard2.0 predates those types, so the facade doesn't supply them
             MetadataReference.CreateFromFile(Assembly.Load("System.Memory").Location),
+            // fixtures declare contracts via [DataContract]/[DataMember] and [XmlType]/[XmlElement]
+            MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataMemberAttribute).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Xml.Serialization.XmlElementAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location)
         };
 

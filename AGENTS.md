@@ -79,6 +79,21 @@ Design constraints that are settled, and should not be quietly relaxed:
   attribute inspection finds them at all. `IsSignificantAttribute` and `GetConditionalPattern` exist
   to bail on all of these; anything added to `MetaType`'s list must be added there too, or the
   generator will silently emit wrong bytes.
+- **Value types are first-class contracts.** A struct needs no construction or null test on read, and
+  no `ThrowUnexpectedSubtype` on write (that is constrained to reference types). A struct-typed
+  *member* is never null, so neither side tests for it — and unlike a reference-type message,
+  `Nullable<TStruct>` **is** expressible and uses `HasValue`/`GetValueOrDefault`.
+- **Field numbers have three sources**, in the precedence `MetaType.ApplyDefaultBehaviour` uses:
+  `[ProtoMember]`, then `[DataMember(Order)]`, then `[XmlElement(Order)]`/`[XmlArray(Order)]`.
+  `[DataContract]` and `[XmlType]` are contract markers in their own right, and the two families can
+  be mixed on one type — `[ProtoMember]` wins for its own member while `[DataMember]` supplies the
+  rest. `DataMemberOffset` applies **only** to the `[DataMember]` orders, never to the Xml ones. An
+  order below 1 means "not declared" (`DataMember.Order` defaults to -1). `[XmlIgnore]` and
+  `[NonSerialized]` exclude a member rather than dropping the contract.
+- `[ProtoContract(SkipConstructor = true)]` constructs via
+  `BclHelpers.GetUninitializedObject(typeof(T))` and additionally implements `IFactory<T>`. Its
+  effect is only visible in non-serialized members, which is why the differential tests compare
+  simply-typed properties as well as bytes.
 - An **enum** is its underlying scalar plus a cast in each direction, compared against
   `default(TEnum)`. `[Flags]` makes no difference to the wire form, and `[ProtoEnum]` only renames
   for schema purposes (`ProtoEnumAttribute.Value` is `[Obsolete(..., error: true)]`), so neither

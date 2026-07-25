@@ -43,7 +43,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     {
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
-            string? enumTypeName = null)
+            string? enumTypeName = null, bool messageIsValueType = false)
         {
             FieldNumber = fieldNumber;
             Name = name;
@@ -52,7 +52,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             DefaultLiteral = defaultLiteral;
             IsNullable = isNullable;
             EnumTypeName = enumTypeName;
+            MessageIsValueType = messageIsValueType;
         }
+
+        /// <summary>
+        /// For a <see cref="ProtoMemberKind.Message"/>, whether the nested contract is a struct -
+        /// in which case it can never be null and neither side tests for it.
+        /// </summary>
+        public bool MessageIsValueType { get; }
 
         public int FieldNumber { get; }
 
@@ -89,7 +96,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             => FieldNumber == other.FieldNumber && Kind == other.Kind
                 && Name == other.Name && TypeName == other.TypeName
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
-                && EnumTypeName == other.EnumTypeName;
+                && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 
@@ -104,11 +111,26 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// </summary>
     internal sealed class ProtoContractPlan : IEquatable<ProtoContractPlan>
     {
-        public ProtoContractPlan(string typeName, EquatableArray<ProtoMemberPlan> members)
+        public ProtoContractPlan(string typeName, EquatableArray<ProtoMemberPlan> members,
+            bool isValueType = false, bool skipConstructor = false)
         {
             TypeName = typeName;
             Members = members;
+            IsValueType = isValueType;
+            SkipConstructor = skipConstructor;
         }
+
+        /// <summary>
+        /// From <c>[ProtoContract(SkipConstructor = true)]</c>: instances are created without running
+        /// any constructor, and the serializer additionally acts as an <c>IFactory&lt;T&gt;</c>.
+        /// </summary>
+        public bool SkipConstructor { get; }
+
+        /// <summary>
+        /// A struct contract: it needs no construction or null test on read, and cannot have
+        /// sub-types, so the <c>ThrowUnexpectedSubtype</c> guard does not apply.
+        /// </summary>
+        public bool IsValueType { get; }
 
         /// <summary>Fully-qualified, <c>global::</c>-prefixed type name.</summary>
         public string TypeName { get; }
@@ -116,11 +138,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public EquatableArray<ProtoMemberPlan> Members { get; }
 
         public bool Equals(ProtoContractPlan? other)
-            => other is not null && TypeName == other.TypeName && Members.Equals(other.Members);
+            => other is not null && TypeName == other.TypeName && Members.Equals(other.Members)
+                && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 
-        public override int GetHashCode() => (TypeName.GetHashCode() * 397) ^ Members.GetHashCode();
+        public override int GetHashCode()
+            => (TypeName.GetHashCode() * 397) ^ Members.GetHashCode() ^ (IsValueType ? 4093 : 0);
     }
 
     /// <summary>

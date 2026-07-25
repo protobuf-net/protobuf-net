@@ -1,0 +1,121 @@
+using System.Reflection;
+using AotFixtures.SkipCtor;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___SkipCtorModel : ISerializer<Bypassed>, IFactory<Bypassed>, ISerializer<Constructed>
+{
+	Bypassed ISerializer<Bypassed>.Read(ref ProtoReader.State state, Bypassed value)
+	{
+		if (value == null)
+		{
+			Bypassed bypassed = (Bypassed)BclHelpers.GetUninitializedObject(typeof(Bypassed));
+			value = bypassed;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Text = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Bypassed>.Write(ref ProtoWriter.State state, Bypassed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		string text = value.Text;
+		state.WriteString(2, text);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Bypassed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Constructed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Bypassed IFactory<Bypassed>.Create(ISerializationContext context)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Bypassed)BclHelpers.GetUninitializedObject(typeof(Bypassed));
+	}
+
+	Constructed ISerializer<Constructed>.Read(ref ProtoReader.State state, Constructed value)
+	{
+		if (value == null)
+		{
+			Constructed constructed = new Constructed();
+			value = constructed;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Constructed>.Write(ref ProtoWriter.State state, Constructed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+	}
+}
+public sealed class SkipCtorModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___SkipCtorModel, T>();
+	}
+}

@@ -49,6 +49,10 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 2, $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>");
                 prefix = ',';
+                if (contract.SkipConstructor)
+                {
+                    Line(sb, indent + 2, $", {Serializers}.IFactory<{contract.TypeName}>");
+                }
             }
             Line(sb, indent + 1, "{");
 
@@ -73,9 +77,20 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, $"=> {Features}.CategoryMessage | {Features}.WireTypeString;");
             sb.AppendLine();
 
+            if (contract.SkipConstructor)
+            {
+                Line(sb, indent, $"{contract.TypeName} {Serializers}.IFactory<{contract.TypeName}>.Create(global::ProtoBuf.ISerializationContext context)");
+                Line(sb, indent + 1, $"=> {Construct(contract)};");
+                sb.AppendLine();
+            }
+
             Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
-            Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
+            // a struct arrives by value and is never null, so there is nothing to construct
+            if (!contract.IsValueType)
+            {
+                Line(sb, indent + 1, $"value ??= {Construct(contract)};");
+            }
             Line(sb, indent + 1, "int field;");
             Line(sb, indent + 1, "while ((field = state.ReadFieldHeader()) > 0)");
             Line(sb, indent + 1, "{");
@@ -114,9 +129,19 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 4, $"tmp{number} = state.AppendBytes(tmp{number});");
                         Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
                         break;
+                    // in all three cases the *existing* value is passed in, so repeated occurrences
+                    // merge rather than replace; and the category is Repeated, not Message
+                    case ProtoMemberKind.Message when member.IsNullable:
+                        // a nullable struct message: seed from the current value, assign the result
+                        // straight back - the read cannot produce a null
+                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name}.GetValueOrDefault();");
+                        Line(sb, indent + 4, $"value.{member.Name} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        break;
+                    case ProtoMemberKind.Message when member.MessageIsValueType:
+                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name};");
+                        Line(sb, indent + 4, $"value.{member.Name} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        break;
                     case ProtoMemberKind.Message:
-                        // the *existing* value is passed in, so repeated occurrences merge rather
-                        // than replace; and the category is Repeated, not Message
                         Line(sb, indent + 4, $"var tmp{number} = value.{member.Name};");
                         Line(sb, indent + 4, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
                         Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
@@ -136,12 +161,28 @@ namespace ProtoBuf.BuildTools.Generators
 
             Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
-            Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+            // ThrowUnexpectedSubtype is constrained to reference types, and a struct cannot have
+            // sub-types anyway
+            if (!contract.IsValueType)
+            {
+                Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+            }
             foreach (var member in contract.Members)
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
                 Line(sb, indent + 1, $"var tmp{number} = value.{member.Name};");
+
+                if (member.IsNullable && member.Kind == ProtoMemberKind.Message)
+                {
+                    // a nullable struct message: presence decides, and the unwrapped value goes
+                    // straight to WriteMessage
+                    Line(sb, indent + 1, $"if (tmp{number}.HasValue)");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), this);");
+                    Line(sb, indent + 1, "}");
+                    continue;
+                }
 
                 if (member.IsNullable)
                 {
@@ -217,6 +258,15 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent, "}");
         }
+
+        /// <summary>
+        /// How a fresh instance is made: normally <c>new</c>, but SkipConstructor bypasses every
+        /// constructor, exactly as ref-emit does.
+        /// </summary>
+        private static string Construct(ProtoContractPlan contract)
+            => contract.SkipConstructor
+                ? $"({contract.TypeName})global::ProtoBuf.BclHelpers.GetUninitializedObject(typeof({contract.TypeName}))"
+                : $"new {contract.TypeName}()";
 
         /// <summary>
         /// The unguarded write for a scalar: the caller owns whatever test precedes it.

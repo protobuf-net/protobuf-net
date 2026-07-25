@@ -15,6 +15,13 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoMemberAttributeName = "ProtoBuf.ProtoMemberAttribute";
         private const string DefaultValueAttributeName = "System.ComponentModel.DefaultValueAttribute";
+        private const string DataContractAttributeName = "System.Runtime.Serialization.DataContractAttribute";
+        private const string DataMemberAttributeName = "System.Runtime.Serialization.DataMemberAttribute";
+        private const string XmlTypeAttributeName = "System.Xml.Serialization.XmlTypeAttribute";
+        private const string XmlElementAttributeName = "System.Xml.Serialization.XmlElementAttribute";
+        private const string XmlArrayAttributeName = "System.Xml.Serialization.XmlArrayAttribute";
+        private const string XmlIgnoreAttributeName = "System.Xml.Serialization.XmlIgnoreAttribute";
+        private const string NonSerializedAttributeName = "System.NonSerializedAttribute";
         private const string ProtoBufNamespace = "ProtoBuf";
 
         /// <summary>
@@ -130,7 +137,11 @@ namespace ProtoBuf.BuildTools.Generators
             var at = PlanLocation.From(type);
             var name = type.ToDisplayString();
 
-            if (type.TypeKind != TypeKind.Class) return Contract(diagnostics, at, name, "only classes are supported");
+            var isValueType = type.TypeKind == TypeKind.Struct;
+            if (!isValueType && type.TypeKind != TypeKind.Class)
+            {
+                return Contract(diagnostics, at, name, "only classes and structs are supported");
+            }
             if (type.IsAbstract) return Contract(diagnostics, at, name, "abstract types are not supported");
             if (type.IsGenericType) return Contract(diagnostics, at, name, "generic types are not supported");
             if (type.DeclaredAccessibility != Accessibility.Public)
@@ -138,34 +149,70 @@ namespace ProtoBuf.BuildTools.Generators
                 // full ref-emit compilation only reaches public API, and we match that for now
                 return Contract(diagnostics, at, name, "the type is not public");
             }
-            if (!type.InstanceConstructors.Any(static ctor
-                => ctor.Parameters.Length == 0 && ctor.DeclaredAccessibility == Accessibility.Public))
+
+            // a struct is always constructible and can never have a base contract, so both of the
+            // remaining checks are class-only
+            if (!isValueType)
             {
-                return Contract(diagnostics, at, name, "there is no public parameterless constructor");
-            }
-            if (type.BaseType is { SpecialType: not SpecialType.System_Object })
-            {
-                return Contract(diagnostics, at, name, "inheritance is not supported");
+                if (!type.InstanceConstructors.Any(static ctor
+                    => ctor.Parameters.Length == 0 && ctor.DeclaredAccessibility == Accessibility.Public))
+                {
+                    return Contract(diagnostics, at, name, "there is no public parameterless constructor");
+                }
+                if (type.BaseType is { SpecialType: not SpecialType.System_Object })
+                {
+                    return Contract(diagnostics, at, name, "inheritance is not supported");
+                }
             }
 
-            var isContract = false;
+            bool isContract = false, isDataContract = false, isXmlType = false, skipConstructor = false;
+            var dataMemberOffset = 0;
             foreach (var attribute in type.GetAttributes())
             {
                 var attributeName = attribute.AttributeClass?.ToDisplayString();
                 if (attributeName == ProtoContractAttributeName)
                 {
-                    if (attribute.NamedArguments.Length != 0 || attribute.ConstructorArguments.Length != 0)
+                    if (attribute.ConstructorArguments.Length != 0)
                     {
-                        return Option(diagnostics, at, name, "[ProtoContract] with explicit options");
+                        return Option(diagnostics, at, name, "[ProtoContract] with constructor arguments");
+                    }
+                    foreach (var argument in attribute.NamedArguments)
+                    {
+                        // only options whose effect we reproduce are allowed through; everything
+                        // else (ImplicitFields, Serializer, ...) still bails
+                        switch (argument.Key)
+                        {
+                            case "SkipConstructor" when argument.Value.Value is bool skip:
+                                skipConstructor = skip;
+                                continue;
+                            case "DataMemberOffset" when argument.Value.Value is int offset:
+                                dataMemberOffset = offset;
+                                continue;
+                        }
+                        return Option(diagnostics, at, name, $"[ProtoContract({argument.Key} = ...)]");
                     }
                     isContract = true;
                 }
+                // [DataContract] and [XmlType] are contract markers in their own right; their own
+                // arguments (Name, Namespace) affect schema naming only
+                else if (attributeName == DataContractAttributeName) isDataContract = true;
+                else if (attributeName == XmlTypeAttributeName) isXmlType = true;
                 else if (IsSignificantAttribute(attribute))
                 {
                     return Option(diagnostics, at, name, $"[{AttributeName(attribute)}]");
                 }
             }
-            if (!isContract) return Contract(diagnostics, at, name, "the type is not marked [ProtoContract]");
+            if (!isContract && !isDataContract && !isXmlType)
+            {
+                return Contract(diagnostics, at, name,
+                    "the type is not marked [ProtoContract], [DataContract] or [XmlType]");
+            }
+
+            if (skipConstructor && isValueType)
+            {
+                // meaningless for a struct, and we have no ref-emit reference for the combination
+                return Option(diagnostics, at, name, "[ProtoContract(SkipConstructor = true)] on a struct");
+            }
 
             var members = new List<ProtoMemberPlan>();
             foreach (var symbol in type.GetMembers())
@@ -195,7 +242,8 @@ namespace ProtoBuf.BuildTools.Generators
                 if (symbol is not IPropertySymbol property) continue;
 
                 var atMember = PlanLocation.From(property);
-                int? fieldNumber = null;
+                int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
+                var ignored = false;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in property.GetAttributes())
                 {
@@ -203,6 +251,18 @@ namespace ProtoBuf.BuildTools.Generators
                     if (attributeName == DefaultValueAttributeName)
                     {
                         declaredDefault = attribute;
+                    }
+                    else if (attributeName == DataMemberAttributeName)
+                    {
+                        dataMemberOrder = GetNamedInt(attribute, "Order");
+                    }
+                    else if (attributeName is XmlElementAttributeName or XmlArrayAttributeName)
+                    {
+                        xmlOrder = GetNamedInt(attribute, "Order");
+                    }
+                    else if (attributeName is XmlIgnoreAttributeName or NonSerializedAttributeName)
+                    {
+                        ignored = true;
                     }
                     else if (attributeName == ProtoMemberAttributeName)
                     {
@@ -223,6 +283,15 @@ namespace ProtoBuf.BuildTools.Generators
                         return Option(diagnostics, atMember, name, $"[{AttributeName(attribute)}]");
                     }
                 }
+                if (ignored) continue;
+
+                // precedence, per MetaType.ApplyDefaultBehaviour: [ProtoMember] first, then
+                // [DataMember(Order)] - to which the offset applies - then [XmlElement]/[XmlArray],
+                // to which it does not. An order below 1 means "not declared" (DataMember.Order
+                // defaults to -1, and 0 is not a valid protobuf field number).
+                fieldNumber ??= isDataContract && dataMemberOrder >= 1
+                    ? dataMemberOrder + dataMemberOffset : null;
+                fieldNumber ??= isXmlType && xmlOrder >= 1 ? xmlOrder : null;
                 if (fieldNumber is null) continue;
 
                 if (property.IsStatic) return Member(diagnostics, atMember, name, property.Name, "is static");
@@ -280,7 +349,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // reason and this contract is dropped by cascade with a message that chains
                     reachable.Add(message!);
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
-                        message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
+                        message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        isNullable: isNullable, messageIsValueType: message.IsValueType));
                 }
                 else
                 {
@@ -298,7 +368,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             return new ProtoContractPlan(
                 type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                new(members.ToArray()));
+                new(members.ToArray()), isValueType, skipConstructor);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -373,10 +443,33 @@ namespace ProtoBuf.BuildTools.Generators
         /// callbacks, the <c>System.Xml.Serialization</c> attributes, <c>[NonSerialized]</c> and
         /// <c>[DefaultValue]</c> - each of which can change the bytes we would emit.
         /// </remarks>
+        private static int? GetNamedInt(AttributeData attribute, string name)
+        {
+            foreach (var argument in attribute.NamedArguments)
+            {
+                if (argument.Key == name && argument.Value.Value is int value) return value;
+            }
+            return null;
+        }
+
         private static bool IsSignificantAttribute(AttributeData attribute)
         {
             var type = attribute.AttributeClass;
             if (type is null) return false;
+
+            // these we understand and act on; anything else in the same namespaces still bails,
+            // notably the [OnDeserialized] callback family
+            switch (type.ToDisplayString())
+            {
+                case DataContractAttributeName:
+                case DataMemberAttributeName:
+                case XmlTypeAttributeName:
+                case XmlElementAttributeName:
+                case XmlArrayAttributeName:
+                case XmlIgnoreAttributeName:
+                case NonSerializedAttributeName:
+                    return false;
+            }
 
             switch (type.ContainingNamespace?.ToDisplayString())
             {
@@ -491,17 +584,18 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (GetScalarKind(type) is { } scalar) return new MemberShape(scalar, isNullable);
 
-            // the remaining shapes are reference types, so cannot have been Nullable<T>
-            if (isNullable) return null;
-
-            // byte[] is a bytes field, not a repeated byte; note the rank check, since byte[,] is not
-            if (type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte })
+            // a struct contract can be Nullable<T>; a reference-type one cannot
+            if (GetMessageKind(type, out var message) is { } messageKind)
             {
-                return new MemberShape(ProtoMemberKind.Bytes);
+                if (isNullable && message is not { IsValueType: true }) return null;
+                return new MemberShape(messageKind, isNullable, message: message);
             }
 
-            return GetMessageKind(type, out var message) is { } messageKind
-                ? new MemberShape(messageKind, message: message) : null;
+            if (isNullable) return null; // nothing else below here is a value type
+
+            // byte[] is a bytes field, not a repeated byte; note the rank check, since byte[,] is not
+            return type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte }
+                ? new MemberShape(ProtoMemberKind.Bytes) : null;
         }
 
         private static ProtoMemberKind? GetMessageKind(ITypeSymbol type, out INamedTypeSymbol? message)
