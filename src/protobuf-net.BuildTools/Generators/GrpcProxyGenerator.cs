@@ -44,6 +44,11 @@ namespace ProtoBuf.BuildTools.Generators
         internal const string ProxyAttributeName = "ProtoBuf.Grpc.Configuration.ProxyAttribute";
 
         /// <summary>
+        /// Marks a base interface whose operations are bound as part of the inheriting contract.
+        /// </summary>
+        internal const string SubServiceAttributeName = "ProtoBuf.Grpc.Configuration.SubServiceAttribute";
+
+        /// <summary>
         /// The lowest C# version this generator emits for; the emitted code is nullable-annotated,
         /// which is C# 8 and up. Note that netstandard2.0/net4x projects default to C# 7.3, so those
         /// consumers must set <c>LangVersion</c> explicitly to get build-time proxies.

@@ -212,7 +212,9 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             string proxyTypeName,
             string serverBindingsTypeName,
             string initTypeName,
-            ImmutableArray<GrpcOperationModel> operations)
+            ImmutableArray<GrpcOperationModel> operations,
+            bool implementsDisposable,
+            bool implementsAsyncDisposable)
         {
             InterfaceFullName = interfaceFullName;
             ServiceName = serviceName;
@@ -220,6 +222,8 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             ServerBindingsTypeName = serverBindingsTypeName;
             InitTypeName = initTypeName;
             Operations = operations;
+            ImplementsDisposable = implementsDisposable;
+            ImplementsAsyncDisposable = implementsAsyncDisposable;
         }
 
         /// <summary>The contract interface, as <c>global::Ns.IFoo</c>.</summary>
@@ -239,6 +243,17 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
 
         public ImmutableArray<GrpcOperationModel> Operations { get; }
 
+        /// <summary>
+        /// Whether the contract inherits <see cref="IDisposable"/>, which the proxy has to implement
+        /// (as a no-op, matching the runtime) but must never bind as an operation.
+        /// </summary>
+        public bool ImplementsDisposable { get; }
+
+        /// <summary>
+        /// Whether the contract inherits <c>IAsyncDisposable</c>; as with <see cref="ImplementsDisposable"/>.
+        /// </summary>
+        public bool ImplementsAsyncDisposable { get; }
+
         public bool Equals(GrpcInterfaceModel? other)
         {
             if (other is null) return false;
@@ -247,6 +262,8 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
                 || !string.Equals(ProxyTypeName, other.ProxyTypeName, StringComparison.Ordinal)
                 || !string.Equals(ServerBindingsTypeName, other.ServerBindingsTypeName, StringComparison.Ordinal)
                 || !string.Equals(InitTypeName, other.InitTypeName, StringComparison.Ordinal)
+                || ImplementsDisposable != other.ImplementsDisposable
+                || ImplementsAsyncDisposable != other.ImplementsAsyncDisposable
                 || Operations.Length != other.Operations.Length)
             {
                 return false;

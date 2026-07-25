@@ -23,3 +23,4 @@ PBN3001  | ProtoBuf.Grpc | Warning | Service interface cannot be nested
 PBN3002  | ProtoBuf.Grpc | Info | Service method shape is not supported by the generator
 PBN3003  | ProtoBuf.Grpc | Warning | Generic service interfaces are not supported
 PBN3004  | ProtoBuf.Grpc | Info | Target framework cannot support build-time gRPC proxies
+PBN3005  | ProtoBuf.Grpc | Info | Service interface inherits an interface that is not a sub-service

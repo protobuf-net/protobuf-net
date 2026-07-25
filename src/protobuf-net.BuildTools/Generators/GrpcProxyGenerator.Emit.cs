@@ -137,6 +137,19 @@ namespace ProtoBuf.BuildTools.Generators
                 EmitClientOperation(sb, contract, contract.Operations[i], methodFields[i]);
             }
 
+            // the runtime proxy implements these as no-ops rather than binding them, because
+            // infrastructure (ASP.NET Core DI, for one) calls Dispose on whatever it is handed
+            if (contract.ImplementsDisposable)
+            {
+                sb.AppendLine("        void global::System.IDisposable.Dispose() { }");
+                sb.AppendLine();
+            }
+            if (contract.ImplementsAsyncDisposable)
+            {
+                sb.AppendLine("        global::System.Threading.Tasks.ValueTask global::System.IAsyncDisposable.DisposeAsync() => default;");
+                sb.AppendLine();
+            }
+
             sb.AppendLine("    }");
         }
 

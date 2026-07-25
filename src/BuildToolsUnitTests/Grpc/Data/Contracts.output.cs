@@ -44,6 +44,8 @@ namespace ProtoBuf.Grpc.Generated
             return global::ProtoBuf.Grpc.Internal.Reshape.UnaryTaskAsync(in context, this.CallInvoker, __op1, request, null);
         }
 
+        void global::System.IDisposable.Dispose() { }
+
     }
 
     [global::System.CodeDom.Compiler.GeneratedCode("protobuf-net.BuildTools", "1.0")]

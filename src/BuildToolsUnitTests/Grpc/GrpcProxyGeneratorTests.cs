@@ -50,6 +50,19 @@ namespace BuildToolsUnitTests.Grpc
         }
 
         /// <summary>
+        /// The runtime binds an inherited interface only when it is marked [SubService]; for any other
+        /// base it emits a throwing stub and binds nothing. Generating a binding there would put a
+        /// method on the wire that the runtime path never serves.
+        /// </summary>
+        [Fact]
+        public void PlainBaseInterfaceTakesOutTheWholeContract()
+        {
+            var result = ExecuteFixture("Diagnostics/PlainBaseInterface").AssertCompiles().AssertNoOutput();
+            var diagnostic = result.AssertSingleDiagnostic("PBN3005");
+            Assert.Contains("IPlainBase", diagnostic.GetMessage());
+        }
+
+        /// <summary>
         /// The runtime path recognises shapes this generator doesn't emit (observables, streams, raw
         /// Grpc.Core call types). Those must be recognised as *not ours* rather than mistaken for an
         /// ordinary payload, which would compile and then fail looking for a marshaller at startup.

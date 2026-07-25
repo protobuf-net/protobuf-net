@@ -56,14 +56,17 @@ namespace GrpcFixtures.Contracts
         IAsyncEnumerable<Response> Duplex(IAsyncEnumerable<Request> requests, CallContext context = default);
     }
 
-    // inherited operations are bound too, and the same payload type on both sides shares one marshaller
+    // a [SubService] base is bound as part of the inheriting contract, under *its* service name; the
+    // same payload type on both sides shares one marshaller. IDisposable is implemented but not bound,
+    // matching what the runtime proxy does with it.
+    [SubService]
     public interface IBaseService
     {
         Task<Request> EchoAsync(Request request, CallContext context = default);
     }
 
     [Service]
-    public interface IDerivedService : IBaseService
+    public interface IDerivedService : IBaseService, System.IDisposable
     {
         Task<Response> DerivedAsync(Request request, CallContext context = default);
     }

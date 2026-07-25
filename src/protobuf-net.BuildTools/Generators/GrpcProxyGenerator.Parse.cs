@@ -42,9 +42,37 @@ namespace ProtoBuf.BuildTools.Generators
             var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
             var unsupported = false;
 
+            // Inherited interfaces follow the runtime's rules exactly, because the wire format depends
+            // on them: a [SubService] base is bound under *this* contract's service name, IDisposable
+            // and IAsyncDisposable get no-op implementations and are never bound, and anything else
+            // takes the contract out - the runtime emits a throwing stub for those members and binds
+            // nothing, which is not something worth reproducing at build time.
             var contracts = ImmutableArray.CreateBuilder<INamedTypeSymbol>();
             contracts.Add(iface);
-            contracts.AddRange(iface.AllInterfaces);
+            var disposable = false;
+            var asyncDisposable = false;
+
+            foreach (var inherited in iface.AllInterfaces)
+            {
+                if (HasAttribute(inherited, SubServiceAttributeName))
+                {
+                    contracts.Add(inherited);
+                }
+                else if (IsType(inherited, "System", "IDisposable"))
+                {
+                    disposable = true;
+                }
+                else if (IsType(inherited, "System", "IAsyncDisposable"))
+                {
+                    asyncDisposable = true;
+                }
+                else if (DeclaresOperations(inherited))
+                {
+                    diagnostics.Add(new DiagnosticInfo(
+                        UnsupportedBaseInterface, Where(iface), iface.Name, inherited.ToDisplayString()));
+                    return new GrpcContractCandidate(null, diagnostics.ToImmutable());
+                }
+            }
 
             foreach (var contract in contracts)
             {
@@ -82,12 +110,27 @@ namespace ProtoBuf.BuildTools.Generators
                 proxyTypeName: sanitized + "_ClientProxy",
                 serverBindingsTypeName: sanitized + "_ServerBindings",
                 initTypeName: sanitized + "_Init",
-                operations: operations.ToImmutable());
+                operations: operations.ToImmutable(),
+                implementsDisposable: disposable,
+                implementsAsyncDisposable: asyncDisposable);
 
             return new GrpcContractCandidate(model, diagnostics.ToImmutable());
         }
 
         private static Location? Where(ISymbol symbol) => symbol.Locations.Length > 0 ? symbol.Locations[0] : null;
+
+        private static bool DeclaresOperations(INamedTypeSymbol iface)
+        {
+            foreach (var member in iface.GetMembers())
+            {
+                if (member is IMethodSymbol { IsStatic: false } method
+                    && method.MethodKind == Microsoft.CodeAnalysis.MethodKind.Ordinary)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// Recognise one operation, mirroring the runtime <c>ContractOperation.TryIdentifySignature</c>

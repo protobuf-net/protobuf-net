@@ -44,6 +44,19 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         /// <summary>
+        /// The runtime binds an inherited interface's operations only when it is marked
+        /// <c>[SubService]</c>; for any other base it emits a throwing stub on the client and binds
+        /// nothing on the server. Rather than reproduce that, the contract goes to the runtime whole.
+        /// </summary>
+        internal static readonly DiagnosticDescriptor UnsupportedBaseInterface = new(
+            id: "PBN3005",
+            title: "Service interface inherits an interface that is not a sub-service",
+            messageFormat: "Interface '{0}' inherits '{1}', which is not marked [SubService]; the runtime proxy will be used for this contract, which is not trim/AOT-friendly. Mark the base interface [SubService] to have it bound as part of this contract",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
+        /// <summary>
         /// Registration happens from a <c>[ModuleInitializer]</c>, which is net5.0+ unless the consumer
         /// declares the attribute themselves.
         /// </summary>

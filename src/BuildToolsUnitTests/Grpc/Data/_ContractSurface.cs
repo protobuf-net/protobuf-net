@@ -81,6 +81,9 @@ namespace ProtoBuf.Grpc.Configuration
     }
 
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
+    public sealed class SubServiceAttribute : Attribute { }
+
+    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
     public sealed class ProxyAttribute : Attribute
     {
         public ProxyAttribute(Type type) => Type = type;
