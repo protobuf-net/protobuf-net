@@ -43,8 +43,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     {
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
-            string? enumTypeName = null, bool messageIsValueType = false)
+            string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null)
         {
+            DeclaredTypeName = declaredTypeName;
             FieldNumber = fieldNumber;
             Name = name;
             Kind = kind;
@@ -60,6 +61,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// in which case it can never be null and neither side tests for it.
         /// </summary>
         public bool MessageIsValueType { get; }
+
+        /// <summary>
+        /// The member's own type, fully qualified — needed when a tuple read has to declare a local
+        /// for it before the read loop. Null for members that never need one.
+        /// </summary>
+        public string? DeclaredTypeName { get; }
 
         public int FieldNumber { get; }
 
@@ -96,7 +103,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             => FieldNumber == other.FieldNumber && Kind == other.Kind
                 && Name == other.Name && TypeName == other.TypeName
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
-                && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType;
+                && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
+                && DeclaredTypeName == other.DeclaredTypeName;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 
@@ -112,13 +120,32 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     internal sealed class ProtoContractPlan : IEquatable<ProtoContractPlan>
     {
         public ProtoContractPlan(string typeName, EquatableArray<ProtoMemberPlan> members,
-            bool isValueType = false, bool skipConstructor = false)
+            bool isValueType = false, bool skipConstructor = false, bool isTuple = false,
+            bool isTupleLiteral = false)
         {
             TypeName = typeName;
             Members = members;
             IsValueType = isValueType;
             SkipConstructor = skipConstructor;
+            IsTuple = isTuple;
+            IsTupleLiteral = isTupleLiteral;
         }
+
+        /// <summary>
+        /// A C# tuple type, whose name renders as <c>(int, string)</c> — so it has to be built with
+        /// a tuple literal, since <c>new (int, string)(...)</c> is not legal C#.
+        /// </summary>
+        public bool IsTupleLiteral { get; }
+
+        /// <summary>
+        /// An "auto-tuple": members are reconstructed through a constructor at the end of the read
+        /// rather than assigned, and every member is written unconditionally.
+        /// </summary>
+        /// <remarks>
+        /// Members are ordered by constructor parameter, and their field numbers are 1..n in that
+        /// same order, so the emitter can pass the locals straight through in member order.
+        /// </remarks>
+        public bool IsTuple { get; }
 
         /// <summary>
         /// From <c>[ProtoContract(SkipConstructor = true)]</c>: instances are created without running
@@ -139,7 +166,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         public bool Equals(ProtoContractPlan? other)
             => other is not null && TypeName == other.TypeName && Members.Equals(other.Members)
-                && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor;
+                && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
+                && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

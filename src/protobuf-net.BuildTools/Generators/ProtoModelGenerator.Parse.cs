@@ -137,6 +137,17 @@ namespace ProtoBuf.BuildTools.Generators
             var at = PlanLocation.From(type);
             var name = type.ToDisplayString();
 
+            // auto-tuple detection applies only when the type carries no contract family at all
+            // (MetaType.GetContractFamily), and has to be tried before the shape checks below -
+            // a tuple is commonly a closed generic, which they would otherwise reject
+            if (!HasContractFamily(type))
+            {
+                if (ParseTuple(type, diagnostics, out reachable, cancellationToken) is { } tuple) return tuple;
+                reachable = new List<INamedTypeSymbol>();
+                return Contract(diagnostics, at, name,
+                    "the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple");
+            }
+
             var isValueType = type.TypeKind == TypeKind.Struct;
             if (!isValueType && type.TypeKind != TypeKind.Class)
             {

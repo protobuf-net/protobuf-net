@@ -1,6 +1,7 @@
 #nullable enable
 using ProtoBuf.BuildTools.Internal.Aot;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace ProtoBuf.BuildTools.Generators
@@ -86,8 +87,34 @@ namespace ProtoBuf.BuildTools.Generators
 
             Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
+            if (contract.IsTuple)
+            {
+                // a tuple is rebuilt through its constructor at the end, so the read works on locals;
+                // they are seeded from the incoming value so repeated occurrences still merge
+                foreach (var member in contract.Members)
+                {
+                    Line(sb, indent + 1, $"{member.DeclaredTypeName} arg{member.FieldNumber} = default;");
+                }
+                if (!contract.IsValueType)
+                {
+                    Line(sb, indent + 1, "if (value != null)");
+                    Line(sb, indent + 1, "{");
+                    foreach (var member in contract.Members)
+                    {
+                        Line(sb, indent + 2, $"arg{member.FieldNumber} = value.{member.Name};");
+                    }
+                    Line(sb, indent + 1, "}");
+                }
+                else
+                {
+                    foreach (var member in contract.Members)
+                    {
+                        Line(sb, indent + 1, $"arg{member.FieldNumber} = value.{member.Name};");
+                    }
+                }
+            }
             // a struct arrives by value and is never null, so there is nothing to construct
-            if (!contract.IsValueType)
+            else if (!contract.IsValueType)
             {
                 Line(sb, indent + 1, $"value ??= {Construct(contract)};");
             }
@@ -99,6 +126,8 @@ namespace ProtoBuf.BuildTools.Generators
             foreach (var member in contract.Members)
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
+                // a tuple reads into the locals it will pass to the constructor, not into the member
+                var target = contract.IsTuple ? $"arg{number}" : $"value.{member.Name}";
                 Line(sb, indent + 3, $"case {number}:");
                 Line(sb, indent + 3, "{");
                 switch (member.Kind)
@@ -115,36 +144,36 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
-                        Line(sb, indent + 4, $"value.{member.Name} = {ScalarRead(member)};");
+                        Line(sb, indent + 4, $"{target} = {ScalarRead(member)};");
                         break;
                     case ProtoMemberKind.String:
                         // a null string leaves the existing value alone, matching ref-emit
                         Line(sb, indent + 4, $"var tmp{number} = state.ReadString();");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
                         break;
                     case ProtoMemberKind.Bytes:
                         // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
                         // existing array rather than replacing it
-                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name};");
+                        Line(sb, indent + 4, $"var tmp{number} = {target};");
                         Line(sb, indent + 4, $"tmp{number} = state.AppendBytes(tmp{number});");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
                         break;
                     // in all three cases the *existing* value is passed in, so repeated occurrences
                     // merge rather than replace; and the category is Repeated, not Message
                     case ProtoMemberKind.Message when member.IsNullable:
                         // a nullable struct message: seed from the current value, assign the result
                         // straight back - the read cannot produce a null
-                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name}.GetValueOrDefault();");
-                        Line(sb, indent + 4, $"value.{member.Name} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent + 4, $"var tmp{number} = {target}.GetValueOrDefault();");
+                        Line(sb, indent + 4, $"{target} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
                         break;
                     case ProtoMemberKind.Message when member.MessageIsValueType:
-                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name};");
-                        Line(sb, indent + 4, $"value.{member.Name} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent + 4, $"var tmp{number} = {target};");
+                        Line(sb, indent + 4, $"{target} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
                         break;
                     case ProtoMemberKind.Message:
-                        Line(sb, indent + 4, $"var tmp{number} = value.{member.Name};");
+                        Line(sb, indent + 4, $"var tmp{number} = {target};");
                         Line(sb, indent + 4, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
-                        Line(sb, indent + 4, $"if (tmp{number} != null) value.{member.Name} = tmp{number};");
+                        Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
                         break;
                 }
                 Line(sb, indent + 4, "break;");
@@ -155,15 +184,22 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 4, "break;");
             Line(sb, indent + 2, "}");
             Line(sb, indent + 1, "}");
+            if (contract.IsTuple)
+            {
+                var arguments = string.Join(", ", contract.Members.Select(static x => $"arg{x.FieldNumber}"));
+                Line(sb, indent + 1, contract.IsTupleLiteral
+                    ? $"value = ({arguments});"
+                    : $"value = new {contract.TypeName}({arguments});");
+            }
             Line(sb, indent + 1, "return value;");
             Line(sb, indent, "}");
             sb.AppendLine();
 
             Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
-            // ThrowUnexpectedSubtype is constrained to reference types, and a struct cannot have
-            // sub-types anyway
-            if (!contract.IsValueType)
+            // ThrowUnexpectedSubtype is constrained to reference types, and neither a struct nor a
+            // tuple can have sub-types
+            if (!contract.IsValueType && !contract.IsTuple)
             {
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
@@ -203,6 +239,15 @@ namespace ProtoBuf.BuildTools.Generators
                         EmitScalarWrite(sb, indent + 2, member, number, $"val{number}");
                     }
                     Line(sb, indent + 1, "}");
+                    continue;
+                }
+
+                // a tuple writes every scalar unconditionally: it is rebuilt through a constructor,
+                // so "absent" and "default" cannot be told apart on the way back in
+                if (contract.IsTuple && member.Kind is not (ProtoMemberKind.String
+                    or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
+                {
+                    EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
                     continue;
                 }
 

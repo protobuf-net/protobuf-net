@@ -157,11 +157,13 @@ namespace ProtoBuf.AotConformance
                 ?.GetProperty("Values", BindingFlags.Public | BindingFlags.Static)
                 ?.GetValue(null) as object[];
 
-            // the all-defaults case matters: it is the one that should write no bytes at all
+            // the all-defaults case matters: it is the one that should write no bytes at all. Tuples
+            // have no parameterless constructor, so they can only be covered by declared samples.
             var defaults = from attribute in modelType.GetCustomAttributes()
                            where attribute.GetType().FullName == ProtoSerializableAttribute
                            let seed = (Type?)attribute.GetType().GetProperty("Type")?.GetValue(attribute)
                            where seed is not null
+                              && (seed.IsValueType || seed.GetConstructor(Type.EmptyTypes) is not null)
                            select Activator.CreateInstance(seed!)!;
 
             return (declared ?? Array.Empty<object>()).Concat(defaults).ToArray();

@@ -79,6 +79,51 @@ Design constraints that are settled, and should not be quietly relaxed:
   attribute inspection finds them at all. `IsSignificantAttribute` and `GetConditionalPattern` exist
   to bail on all of these; anything added to `MetaType`'s list must be added there too, or the
   generator will silently emit wrong bytes.
+- **Auto-tuples** are a second emit shape, not a variation on the first. The read declares a local
+  per constructor parameter (seeded from the incoming value so merge still works), reads into those,
+  and calls the constructor at the *end*; the write emits every scalar **unconditionally** — with
+  construction-time assignment there is no way to tell "absent" from "default" — and skips
+  `ThrowUnexpectedSubtype`. Field numbers are 1..n in constructor-parameter order.
+
+  Detection mirrors `MetaType.ResolveTupleConstructor` and must not drift from it. It engages **only
+  when the type carries no contract attribute family at all** (`MetaType.GetContractFamily`) — a
+  `[ProtoContract]` on an immutable type *defeats* detection and makes ref-emit produce a serializer
+  that finds no members and throws `ThrowCannotCreateInstance`; we drop such types instead, which is
+  deliberately better than matching. The rule is "no *public* setter", not "immutable": non-public
+  and `init`-only setters are both tolerated, and any type with **"Tuple" in its name** is exempt
+  from the read-only demand entirely — which is the only reason `ValueTuple`'s public mutable fields
+  qualify. Members include fields as well as properties, the constructor is matched by parameter
+  name (case-insensitive) with exact type equality, and **exactly one** constructor may map.
+  Closed constructed generics are supported, since `KeyValuePair<K,V>` is the common case.
+
+  `ValueTuple` needs two Roslyn-specific allowances, both found the hard way: its `Item1`/`Item2`
+  fields are reported as **`IsImplicitlyDeclared`**, so a filter for that (intended to skip
+  auto-property backing fields — which the public-accessibility test already excludes) leaves it with
+  no members at all; and its name renders as `(int, string)`, so it must be built with a **tuple
+  literal** — `new (int, string)(...)` is not legal C#. Note `TupleUnderlyingType` is *null* for
+  these symbols, so it is no help in normalising them.
+
+  Tuples are currently only reachable as explicit `[ProtoSerializable]` seeds: `GetMessageKind`
+  accepts only `[ProtoContract]` types, so a tuple-typed *member* is reported unsupported.
+
+  **When that gap is closed: accept element names from consumers, but erase them in our own output.**
+  A consumer writing `public (int Id, string Name) Pair { get; set; }` must work — be gracious in
+  what we accept; erasure is about what *we* emit and key on, never about rejecting input. It costs
+  nothing, because the conversion between tuple types differing only in names is an *identity*
+  conversion: `value.Pair = state.ReadMessage<(int, string)>(...)` compiles against a named member
+  with no cast.
+
+  Erasure itself is **decided, not optional.** Element names are
+  identity-convertible decoration, not part of the type: `ISerializer<(int Id, string Name)>` and
+  `ISerializer<(int, string)>` are the *same* interface, so emitting both is a duplicate
+  implementation and will not compile, and `SerializerCache.Get<TProvider, T>()` is keyed on a
+  runtime type where the names do not exist anyway. Ref-emit gets the collapse for free by working in
+  metadata; we have to do it deliberately, because our closure keys on `ToDisplayString`, which
+  *includes* the names. Key and emit using the anonymous syntax — `(int, string)` — and erase
+  **recursively**, since nested tuples carry names too. Erasing at the symbol level
+  (`Compilation.CreateTupleTypeSymbol` with no names) is likely also needed for detection: a named
+  tuple is expected to expose `Id`/`Name` *and* `Item1`/`Item2`, which would fail the
+  constructor-arity match. Confirm that with a probe rather than assuming it.
 - **Value types are first-class contracts.** A struct needs no construction or null test on read, and
   no `ThrowUnexpectedSubtype` on write (that is constrained to reference types). A struct-typed
   *member* is never null, so neither side tests for it — and unlike a reference-type message,
@@ -134,6 +179,17 @@ carries a `VersionOverride` to 4.8.0 purely so its in-memory compilations can pa
 Roslyn API we cannot work around — e.g. detecting a language feature we actually use. The old
 baseline is what lets `protobuf-net.BuildTools.Legacy` serve very old SDKs; those users are not doing
 AOT by definition, so none of the AOT generator's requirements apply to them.
+
+### Not yet supported
+
+Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
+
+- **`init`-only accessors** — currently `PBN2001`. Note these cannot be assigned after construction,
+  so they likely have to route through the constructor/tuple path rather than the property-setter one.
+- collections and maps (`RepeatedSerializer`, packed vs unpacked, `ListSet`/`RepeatedAsList`)
+- the compatibility-level BCL types (`DateTime`/`TimeSpan`/`decimal`/`Guid`)
+- inheritance / `[ProtoInclude]`, surrogates, serialization callbacks, fields-as-members,
+  `ShouldSerialize`/`Specified`
 
 ### Golden-file tests
 
