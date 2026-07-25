@@ -537,6 +537,19 @@ reference the fallback at all), not annotating.
 The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
 the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
 
+### Coverage sweep
+
+`src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built
+`protobuf-net.Test`, `Examples` and `protobuf-net.Reflection.Test` assemblies and tallies what it
+could and could not handle, grouped by reason. It exists so that "what should the generator support
+next" is answered by counting real contracts rather than by guessing; `docs/aot-coverage.md` is the
+last snapshot. Build those three projects first — it seeds from **metadata**, not source.
+
+Two artefacts to know about: it can only seed types a `typeof(...)` in another assembly can name, so
+non-public and open-generic contracts are reported as "not seedable" rather than analysed; and
+because it flattens every dll beside the targets into one reference set, `CS0433` in its output means
+two scanned assemblies declare the same type name, not a generator fault.
+
 ### Reference output from ref-emit
 
 `src/AotRefGen` (net472, hence the section above) exists so the generator's expected output is
