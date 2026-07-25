@@ -178,6 +178,26 @@ Roslyn API we cannot work around — e.g. detecting a language feature we actual
 baseline is what lets `protobuf-net.BuildTools.Legacy` serve very old SDKs; those users are not doing
 AOT by definition, so none of the AOT generator's requirements apply to them.
 
+### Collections
+
+`T[]` and `List<T>` of scalars and messages, via `RepeatedSerializer.CreateVector<T>()` /
+`CreateList<T>()`. Read uses the same merge shape as sub-messages (existing collection passed in,
+result assigned back only when non-null). Facts confirmed against ref-emit rather than assumed:
+
+- **Packing is a compile-time decision.** The features constant carries `OptionPackedDisabled`, and
+  ref-emit simply *omits* it for `[ProtoMember(IsPacked = true)]`. Unpacked is the default; that
+  named argument is not supported yet, so we always emit the disabled form.
+- The features wire type is the **element's**, not the member's.
+- A message element passes `this` as the sub-serializer; a scalar element passes nothing.
+- **A repeated enum is refused.** Unlike inline scalars, `RepeatedSerializer` resolves an
+  `ISerializer<TEnum>` *from the model* — ref-emit emits `values, this as ISerializer<TEnum>` — and
+  the generated services type does not expose one. Supporting it needs the
+  `ISerializerProxy<TEnum>` + `EnumSerializer.CreateXxx<T>()` pattern that
+  `Internal/CustomProtogenSerializer.cs` uses. Until then it is dropped at build time rather than
+  failing with "no serializer for type" at runtime.
+- protobuf-net **rejects null elements** inside a collection (`ThrowNullRepeatedContents`), so
+  fixtures must not contain them.
+
 ### Not yet supported
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:

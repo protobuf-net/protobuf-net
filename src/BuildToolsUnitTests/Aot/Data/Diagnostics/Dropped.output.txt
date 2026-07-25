@@ -1,8 +1,4 @@
-Generator produced 8 diagnostics:
-Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L19 C25
-Contract 'AotFixtures.Dropped.HasUnsupportedMember' is omitted from the AOT model: member 'Tags' has unsupported type 'System.Collections.Generic.List<string>'.
-Warning PBN2004 Aot/Data/Diagnostics/Dropped.input.cs L23 C14
-Contract 'AotFixtures.Dropped.ReferencesDropped' is omitted from the AOT model because 'AotFixtures.Dropped.HasUnsupportedMember', which it references, is also omitted.
+Generator produced 6 diagnostics:
 Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L31 C14
 Contract 'AotFixtures.Dropped.NoParameterlessConstructor' is omitted from the AOT model: there is no public parameterless constructor.
 Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L45 C16

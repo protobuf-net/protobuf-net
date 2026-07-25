@@ -37,15 +37,32 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
+    /// How a repeated member is stored, which selects the <c>RepeatedSerializer</c> factory.
+    /// </summary>
+    internal enum ProtoRepeatedKind
+    {
+        None,
+
+        /// <summary>An array: <c>RepeatedSerializer.CreateVector&lt;T&gt;()</c>.</summary>
+        Vector,
+
+        /// <summary>A <c>List&lt;T&gt;</c>: <c>RepeatedSerializer.CreateList&lt;T&gt;()</c>.</summary>
+        List,
+    }
+
+    /// <summary>
     /// One serialized member of a contract.
     /// </summary>
     internal readonly struct ProtoMemberPlan : IEquatable<ProtoMemberPlan>
     {
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
-            string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null)
+            string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
+            ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null)
         {
             DeclaredTypeName = declaredTypeName;
+            Repeated = repeated;
+            ElementTypeName = elementTypeName;
             FieldNumber = fieldNumber;
             Name = name;
             Kind = kind;
@@ -67,6 +84,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// for it before the read loop. Null for members that never need one.
         /// </summary>
         public string? DeclaredTypeName { get; }
+
+        /// <summary>
+        /// When not <see cref="ProtoRepeatedKind.None"/>, this member is a collection — and
+        /// <see cref="Kind"/>, <see cref="TypeName"/> and <see cref="EnumTypeName"/> then describe
+        /// the *element*, not the member.
+        /// </summary>
+        public ProtoRepeatedKind Repeated { get; }
+
+        /// <summary>The element's own type, for the <c>RepeatedSerializer</c> type argument.</summary>
+        public string? ElementTypeName { get; }
 
         public int FieldNumber { get; }
 
@@ -104,7 +131,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Name == other.Name && TypeName == other.TypeName
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
                 && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
-                && DeclaredTypeName == other.DeclaredTypeName;
+                && DeclaredTypeName == other.DeclaredTypeName
+                && Repeated == other.Repeated && ElementTypeName == other.ElementTypeName;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

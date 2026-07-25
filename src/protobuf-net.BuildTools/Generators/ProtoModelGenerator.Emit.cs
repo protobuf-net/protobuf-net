@@ -145,6 +145,17 @@ namespace ProtoBuf.BuildTools.Generators
                 var target = contract.IsTuple ? $"arg{number}" : $"value.{member.Name}";
                 Line(sb, indent + 3, $"case {number}:");
                 Line(sb, indent + 3, "{");
+                if (member.Repeated != ProtoRepeatedKind.None)
+                {
+                    // same merge shape as a sub-message: the existing collection is passed in, and
+                    // the result assigned back only if non-null
+                    Line(sb, indent + 4, $"var tmp{number} = {target};");
+                    Line(sb, indent + 4, $"tmp{number} = {Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
+                    Line(sb, indent + 4, $"if (tmp{number} != null) {target} = tmp{number};");
+                    Line(sb, indent + 4, "break;");
+                    Line(sb, indent + 3, "}");
+                    continue;
+                }
                 switch (member.Kind)
                 {
                     case ProtoMemberKind.Bool:
@@ -223,6 +234,15 @@ namespace ProtoBuf.BuildTools.Generators
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
                 Line(sb, indent + 1, $"var tmp{number} = value.{member.Name};");
+
+                if (member.Repeated != ProtoRepeatedKind.None)
+                {
+                    Line(sb, indent + 1, $"if (tmp{number} != null)");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
+                    Line(sb, indent + 1, "}");
+                    continue;
+                }
 
                 if (member.IsNullable && member.Kind == ProtoMemberKind.Message)
                 {
@@ -318,6 +338,36 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent, "}");
         }
+
+        /// <summary>The <c>RepeatedSerializer</c> factory for a collection member.</summary>
+        private static string Repeated(ProtoMemberPlan member)
+            => $"{Serializers}.RepeatedSerializer.Create"
+             + (member.Repeated == ProtoRepeatedKind.Vector ? "Vector" : "List")
+             + $"<{member.ElementTypeName}>()";
+
+        /// <summary>
+        /// The features for a repeated member: the *element's* wire type, plus the packed opt-out.
+        /// </summary>
+        /// <remarks>
+        /// Packing is a compile-time decision, not a runtime one: ref-emit bakes
+        /// <c>OptionPackedDisabled</c> into the constant and simply omits it when
+        /// <c>[ProtoMember(IsPacked = true)]</c> is set. Unpacked is the default, and that named
+        /// argument is not supported yet, so this is always the disabled form.
+        /// </remarks>
+        private static string RepeatedFeatures(ProtoMemberPlan member)
+            => $"{Features}.{ElementWireType(member.Kind)} | {Features}.OptionPackedDisabled";
+
+        private static string ElementWireType(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Single => "WireTypeFixed32",
+            ProtoMemberKind.Double => "WireTypeFixed64",
+            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message => "WireTypeString",
+            _ => "WireTypeVarint",
+        };
+
+        /// <summary>A message element needs us passed along as its serializer; a scalar does not.</summary>
+        private static string RepeatedSubSerializer(ProtoMemberPlan member)
+            => member.Kind == ProtoMemberKind.Message ? ", this" : "";
 
         /// <summary>
         /// How a fresh instance is made: normally <c>new</c>, but SkipConstructor bypasses every

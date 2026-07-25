@@ -364,13 +364,15 @@ namespace ProtoBuf.BuildTools.Generators
                     reachable.Add(message!);
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        isNullable: isNullable, messageIsValueType: message.IsValueType));
+                        isNullable: isNullable, messageIsValueType: message.IsValueType,
+                        repeated: shape.Repeated, elementTypeName: shape.ElementTypeName));
                 }
                 else
                 {
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
-                        enumTypeName: enumTypeName));
+                        enumTypeName: enumTypeName,
+                        repeated: shape.Repeated, elementTypeName: shape.ElementTypeName));
                 }
             }
 
@@ -576,18 +578,23 @@ namespace ProtoBuf.BuildTools.Generators
         private readonly struct MemberShape
         {
             public MemberShape(ProtoMemberKind kind, bool isNullable = false,
-                INamedTypeSymbol? message = null, INamedTypeSymbol? enumType = null)
+                INamedTypeSymbol? message = null, INamedTypeSymbol? enumType = null,
+                ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null)
             {
                 Kind = kind;
                 IsNullable = isNullable;
                 Message = message;
                 EnumType = enumType;
+                Repeated = repeated;
+                ElementTypeName = elementTypeName;
             }
 
             public ProtoMemberKind Kind { get; }
             public bool IsNullable { get; }
             public INamedTypeSymbol? Message { get; }
             public INamedTypeSymbol? EnumType { get; }
+            public ProtoRepeatedKind Repeated { get; }
+            public string? ElementTypeName { get; }
         }
 
         private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type)
@@ -634,8 +641,42 @@ namespace ProtoBuf.BuildTools.Generators
             if (isNullable) return null; // nothing else below here is a value type
 
             // byte[] is a bytes field, not a repeated byte; note the rank check, since byte[,] is not
-            return type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte }
-                ? new MemberShape(ProtoMemberKind.Bytes) : null;
+            if (type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte })
+            {
+                return new MemberShape(ProtoMemberKind.Bytes);
+            }
+
+            // collections: the element is analysed exactly as a standalone member would be, and the
+            // resulting shape *describes the element* - Repeated says how it is stored
+            if (type is IArrayTypeSymbol { Rank: 1 } array)
+            {
+                return AsRepeated(compilation, array.ElementType, ProtoRepeatedKind.Vector);
+            }
+            if (type is INamedTypeSymbol { IsGenericType: true, TypeArguments.Length: 1 } list
+                && list.ConstructedFrom.ToDisplayString() == "System.Collections.Generic.List<T>")
+            {
+                return AsRepeated(compilation, list.TypeArguments[0], ProtoRepeatedKind.List);
+            }
+            return null;
+        }
+
+        private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element, ProtoRepeatedKind repeated)
+        {
+            // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
+            if (GetMemberShape(compilation, element) is not { Repeated: ProtoRepeatedKind.None } shape) return null;
+
+            // a nullable element changes the encoding (null-wrapping); not handled yet
+            if (shape.IsNullable) return null;
+
+            // an enum element is *not* written inline: RepeatedSerializer resolves an
+            // ISerializer<TEnum> from the model, so the services type would have to expose one (the
+            // ISerializerProxy<TEnum> + EnumSerializer.CreateXxx<T>() pattern). Until it does, a
+            // repeated enum would throw "no serializer for type" at runtime - so refuse it.
+            if (shape.EnumType is not null) return null;
+
+            return new MemberShape(shape.Kind, message: shape.Message, enumType: shape.EnumType,
+                repeated: repeated,
+                elementTypeName: element.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
 
         private static ProtoMemberKind? GetMessageKind(ITypeSymbol type, out INamedTypeSymbol? message)
