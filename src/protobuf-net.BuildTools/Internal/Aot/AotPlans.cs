@@ -58,11 +58,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
             string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
-            ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null)
+            ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null,
+            bool isPacked = false, bool overwriteList = false)
         {
             DeclaredTypeName = declaredTypeName;
             Repeated = repeated;
             ElementTypeName = elementTypeName;
+            IsPacked = isPacked;
+            OverwriteList = overwriteList;
             FieldNumber = fieldNumber;
             Name = name;
             Kind = kind;
@@ -94,6 +97,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
 
         /// <summary>The element's own type, for the <c>RepeatedSerializer</c> type argument.</summary>
         public string? ElementTypeName { get; }
+
+        /// <summary>From <c>[ProtoMember(IsPacked = true)]</c>: omits <c>OptionPackedDisabled</c>.</summary>
+        public bool IsPacked { get; }
+
+        /// <summary>From <c>[ProtoMember(OverwriteList = true)]</c>: adds <c>OptionClearCollection</c>.</summary>
+        public bool OverwriteList { get; }
 
         public int FieldNumber { get; }
 
@@ -132,7 +141,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
                 && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
                 && DeclaredTypeName == other.DeclaredTypeName
-                && Repeated == other.Repeated && ElementTypeName == other.ElementTypeName;
+                && Repeated == other.Repeated && ElementTypeName == other.ElementTypeName
+                && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

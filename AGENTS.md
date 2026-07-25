@@ -198,6 +198,20 @@ result assigned back only when non-null). Facts confirmed against ref-emit rathe
 - protobuf-net **rejects null elements** inside a collection (`ThrowNullRepeatedContents`), so
   fixtures must not contain them.
 
+Collection options are pure features composition, and compose orthogonally:
+`IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*
+`OptionClearCollection`. Both are refused on a non-collection member, where they mean nothing.
+
+`DataFormat` and `IsRequired` are **not** supported yet, because they change the emitted *shape*
+rather than just the features: `DataFormat.ZigZag` on a scalar becomes
+`WriteFieldHeader(n, WireType.SignedVariant)` + `WriteInt32(v)` (note `WriteInt32`, not
+`WriteInt32Varint`), `DataFormat.FixedSize` swaps the wire type, and `IsRequired = true` drops the
+`!= 0` guard so the member is written unconditionally. On a *repeated* member `DataFormat` is only a
+features change (`WireTypeSignedVarint`/`WireTypeFixed32` in place of `WireTypeVarint`).
+
+Note `ListSet` and `RepeatedAsList` are **protogen schema-codegen** options that shape generated DTOs
+from `.proto`; they are not `[ProtoMember]` options and have nothing to do with this generator.
+
 ### Not yet supported
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:

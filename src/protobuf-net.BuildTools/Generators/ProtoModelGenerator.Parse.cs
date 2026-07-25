@@ -257,7 +257,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                 var atMember = PlanLocation.From(property);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
-                var ignored = false;
+                bool ignored = false, isPacked = false, overwriteList = false;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in property.GetAttributes())
                 {
@@ -277,6 +277,23 @@ namespace ProtoBuf.BuildTools.Generators
                     else if (attributeName is XmlIgnoreAttributeName or NonSerializedAttributeName)
                     {
                         ignored = true;
+                    }
+                    else if (attributeName == ProtoMemberAttributeName && attribute.NamedArguments.Length != 0
+                        && attribute.NamedArguments.All(static x => x.Key is "IsPacked" or "OverwriteList"))
+                    {
+                        // both are pure features flags on a collection; every other option changes
+                        // the emitted shape and is still refused below
+                        foreach (var argument in attribute.NamedArguments)
+                        {
+                            if (argument.Value.Value is not bool flag) return Option(diagnostics, atMember, name, "this form of [ProtoMember]");
+                            if (argument.Key == "IsPacked") isPacked = flag; else overwriteList = flag;
+                        }
+                        if (attribute.ConstructorArguments.Length != 1
+                            || attribute.ConstructorArguments[0].Value is not int packedNumber)
+                        {
+                            return Option(diagnostics, atMember, name, "this form of [ProtoMember]");
+                        }
+                        fieldNumber = packedNumber;
                     }
                     else if (attributeName == ProtoMemberAttributeName)
                     {
@@ -298,6 +315,14 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
                 if (ignored) continue;
+
+                if ((isPacked || overwriteList) && GetMemberShape(compilation, property.Type)
+                    is not { Repeated: not ProtoRepeatedKind.None })
+                {
+                    // both options only mean anything for a collection
+                    return Option(diagnostics, atMember, name,
+                        "[ProtoMember(IsPacked/OverwriteList)] on a non-collection member");
+                }
 
                 // precedence, per MetaType.ApplyDefaultBehaviour: [ProtoMember] first, then
                 // [DataMember(Order)] - to which the offset applies - then [XmlElement]/[XmlArray],
@@ -365,14 +390,16 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
-                        repeated: shape.Repeated, elementTypeName: shape.ElementTypeName));
+                        repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
+                        isPacked: isPacked, overwriteList: overwriteList));
                 }
                 else
                 {
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, property.Name, kind,
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
                         enumTypeName: enumTypeName,
-                        repeated: shape.Repeated, elementTypeName: shape.ElementTypeName));
+                        repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
+                        isPacked: isPacked, overwriteList: overwriteList));
                 }
             }
 

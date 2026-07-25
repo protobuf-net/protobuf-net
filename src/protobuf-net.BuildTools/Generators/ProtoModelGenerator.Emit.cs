@@ -416,7 +416,12 @@ namespace ProtoBuf.BuildTools.Generators
         /// argument is not supported yet, so this is always the disabled form.
         /// </remarks>
         private static string RepeatedFeatures(ProtoMemberPlan member)
-            => $"{Features}.{ElementWireType(member.Kind)} | {Features}.OptionPackedDisabled";
+        {
+            var result = $"{Features}.{ElementWireType(member.Kind)}";
+            if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
+            if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
+            return result;
+        }
 
         private static string ElementWireType(ProtoMemberKind kind) => kind switch
         {
