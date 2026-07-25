@@ -184,8 +184,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
-            ProtoMapPlan map = default, bool isInitOnly = false, int compatibilityLevel = 200)
+            ProtoMapPlan map = default, bool isInitOnly = false, int compatibilityLevel = 200,
+            bool isReadOnly = false)
         {
+            IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
             IsInitOnly = isInitOnly;
             DataFormat = dataFormat;
@@ -251,6 +253,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool IsInitOnly { get; }
 
         /// <summary>
+        /// A property with a getter but no setter. The read runs exactly as it would otherwise —
+        /// which is how a getter-only collection or sub-message is populated, since the existing
+        /// instance is passed in and mutated — but the result is discarded rather than assigned.
+        /// For a scalar that means the value is read and thrown away, which is what ref-emit does.
+        /// </summary>
+        public bool IsReadOnly { get; }
+
+        /// <summary>
         /// The resolved compatibility level (200, 240 or 300), already through the
         /// <c>DataFormat.WellKnown</c> promotion. Only the BCL kinds consult it.
         /// </summary>
@@ -304,7 +314,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && ElementTypeName == other.ElementTypeName
                 && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
-                && IsInitOnly == other.IsInitOnly && CompatibilityLevel == other.CompatibilityLevel;
+                && IsInitOnly == other.IsInitOnly && CompatibilityLevel == other.CompatibilityLevel
+                && IsReadOnly == other.IsReadOnly;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

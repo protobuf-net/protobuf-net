@@ -537,6 +537,25 @@ reference the fallback at all), not annotating.
 The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
 the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
 
+### Getter-only members
+
+A property with no setter still round-trips: the read runs **exactly as it would otherwise, but the
+result is discarded** rather than assigned. For a collection, map or sub-message that is the whole
+mechanism — the instance the property already holds is passed in and mutated. For a scalar the value
+really is read and thrown away; that is ref-emit's behaviour, and refusing would cost the whole
+contract.
+
+Two consequences for the emitter: the discarded read is a bare statement, so the enum and `char`
+casts have to go (a cast expression is not a valid C# statement — hence `ScalarRead(discard: true)`),
+and a nullable scalar drops the wrapper too (ref-emit emits a pointless `new int?(…);`).
+
+Refused, for want of a reference: a getter-only member whose type is a **struct or nullable
+sub-message**, where the read would be mutating a copy.
+
+**A non-public setter is refused**, and that matches ref-emit's *compiled* path, which throws
+"cannot apply changes to property" while building the model — even though its runtime path reaches
+one by reflection. `[UnsafeAccessor]` could reach it the way `init` does, if it ever seems worth it.
+
 ### Schema-only options
 
 Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.

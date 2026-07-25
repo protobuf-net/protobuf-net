@@ -221,8 +221,16 @@ namespace ProtoBuf.BuildTools.Generators
                     // same merge shape as a collection, but the key and value features - and any
                     // sub-serializers they need - ride alongside
                     Line(sb, indent + 3, $"var tmp{number} = {target};");
-                    Line(sb, indent + 3, $"tmp{number} = {Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
-                    Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                    var readMap = $"{Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)})";
+                    if (member.IsReadOnly)
+                    {
+                        Line(sb, indent + 3, $"{readMap};");
+                    }
+                    else
+                    {
+                        Line(sb, indent + 3, $"tmp{number} = {readMap};");
+                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                    }
                     Line(sb, indent + 3, "break;");
                     Line(sb, indent + 2, "}");
                     continue;
@@ -232,11 +240,19 @@ namespace ProtoBuf.BuildTools.Generators
                     // same merge shape as a sub-message: the existing collection is passed in, and
                     // the result assigned back only if non-null
                     Line(sb, indent + 3, $"var tmp{number} = {target};");
-                    Line(sb, indent + 3, $"tmp{number} = {Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});");
-                    // ImmutableArray<T> is a struct and can never be null
-                    Line(sb, indent + 3, member.Repeated.IsValueType
-                        ? Assign(contract, member, target, $"tmp{number}")
-                        : $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                    var readRepeated = $"{Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)})";
+                    if (member.IsReadOnly)
+                    {
+                        Line(sb, indent + 3, $"{readRepeated};");
+                    }
+                    else
+                    {
+                        Line(sb, indent + 3, $"tmp{number} = {readRepeated};");
+                        // ImmutableArray<T> is a struct and can never be null
+                        Line(sb, indent + 3, member.Repeated.IsValueType
+                            ? Assign(contract, member, target, $"tmp{number}")
+                            : $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                    }
                     Line(sb, indent + 3, "break;");
                     Line(sb, indent + 2, "}");
                     continue;
@@ -261,7 +277,10 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Guid:
                     case ProtoMemberKind.Decimal:
                         if (ScalarReadHint(member) is { } hint) Line(sb, indent + 3, hint);
-                        Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member)));
+                        Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member, discard: member.IsReadOnly)));
+                        break;
+                    case ProtoMemberKind.String when member.IsReadOnly:
+                        Line(sb, indent + 3, "state.ReadString();");
                         break;
                     case ProtoMemberKind.String:
                         // a null string leaves the existing value alone, matching ref-emit
@@ -272,6 +291,11 @@ namespace ProtoBuf.BuildTools.Generators
                         // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
                         // existing array rather than replacing it
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        if (member.IsReadOnly)
+                        {
+                            Line(sb, indent + 3, $"state.AppendBytes(tmp{number});");
+                            break;
+                        }
                         Line(sb, indent + 3, $"tmp{number} = state.AppendBytes(tmp{number});");
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
@@ -289,6 +313,12 @@ namespace ProtoBuf.BuildTools.Generators
                         break;
                     case ProtoMemberKind.Message:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        if (member.IsReadOnly)
+                        {
+                            // the instance it already holds is what gets populated
+                            Line(sb, indent + 3, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                            break;
+                        }
                         Line(sb, indent + 3, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
@@ -649,9 +679,15 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static string Assign(ProtoContractPlan contract, ProtoMemberPlan member,
             string target, string expression)
-            => member.IsInitOnly && !contract.IsTuple
+        {
+            // a getter-only member has nowhere to put the result, so the read runs for its side
+            // effects alone - which is the whole mechanism for a getter-only collection
+            if (member.IsReadOnly) return $"{expression};";
+
+            return member.IsInitOnly && !contract.IsTuple
                 ? $"{AccessorName(contract, member)}({(contract.IsValueType ? "ref value" : "value")}, {expression});"
                 : $"{target} = {expression};";
+        }
 
         /// <summary>A name unique across the whole services type, since the accessors all live on it.</summary>
         private static string AccessorName(ProtoContractPlan contract, ProtoMemberPlan member)
@@ -812,11 +848,16 @@ namespace ProtoBuf.BuildTools.Generators
             _ => null,
         };
 
-        private static string ScalarRead(ProtoMemberPlan member)
+        /// <param name="discard">
+        /// The result is going nowhere, so it is emitted as a bare statement — which means the casts
+        /// have to go, since a cast expression is not a valid C# statement.
+        /// </param>
+        private static string ScalarRead(ProtoMemberPlan member, bool discard = false)
         {
             if (BclSuffix(member) is { } bcl) return $"global::ProtoBuf.BclHelpers.Read{bcl}(ref state)";
 
             var call = $"state.{ScalarSuffix(member.Kind, "Read")}()";
+            if (discard) return call;
             if (member.EnumTypeName is { } enumType) return $"({enumType}){call}";
             return member.Kind == ProtoMemberKind.Char ? $"(char){call}" : call;
         }

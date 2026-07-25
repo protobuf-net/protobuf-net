@@ -7,13 +7,12 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **277** of 1392 (81% emitted)
-of which dropped only by cascade: 45
+contracts dropped: **255** of 1392 (82% emitted)
+of which dropped only by cascade: 46
 
 | count | reason |
 | ---: | --- |
-| 39 | PBN2001 member '…' has unsupported type '…' |
-| 34 | PBN2001 member '…' has no public setter |
+| 40 | PBN2001 member '…' has unsupported type '…' |
 | 24 | PBN2002 generic types are not supported |
 | 23 | PBN2003 [NullWrappedValue] is not supported yet |
 | 20 | PBN2002 only classes and structs are supported |
@@ -22,11 +21,13 @@ of which dropped only by cascade: 45
 | 10 | PBN2003 [NullWrappedCollection] is not supported yet |
 | 9 | PBN2003 [ProtoMap] is not supported yet |
 | 8 | PBN2003 [ProtoContract(Serializer = ...)] is not supported yet |
-| 4 | PBN2001 member '…' is conditional via '…' |
+| 7 | PBN2001 member '…' has no setter, and is a value-type sub-message |
+| 5 | PBN2001 member '…' is conditional via '…' |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
 | 3 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
+| 3 | PBN2003 DataFormat.WellKnown on this type is not supported yet |
 | 3 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
@@ -34,7 +35,6 @@ of which dropped only by cascade: 45
 | 2 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
 | 1 | PBN2003 [ProtoContract(IsGroup = ...)] is not supported yet |
-| 1 | PBN2003 DataFormat.WellKnown on this type is not supported yet |
 | 1 | PBN2003 [ProtoContract(Surrogate = ...)] is not supported yet |
 | 1 | PBN2001 member '…' is not public |
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
@@ -46,8 +46,8 @@ Member types we could not handle:
 | ---: | --- |
 | 6 | `List<…>` |
 | 5 | `System.Type` |
+| 4 | `Dictionary<…>` |
 | 4 | `System.Uri` |
-| 3 | `Dictionary<…>` |
 | 2 | `NodaTime.Duration` |
 | 2 | `nint` |
 | 2 | `System.Net.IPAddress` |

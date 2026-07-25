@@ -368,7 +368,7 @@ namespace ProtoBuf.BuildTools.Generators
                 var atMember = PlanLocation.From(symbol);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
-                bool isInitOnly = false;
+                bool isInitOnly = false, isReadOnly = false;
                 var dataFormat = ProtoDataFormat.Default;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
@@ -485,13 +485,21 @@ namespace ProtoBuf.BuildTools.Generators
                         {
                             return Member(diagnostics, atMember, name, symbol.Name, "has no public getter");
                         }
-                        if (property.SetMethod is not { DeclaredAccessibility: Accessibility.Public })
+                        if (property.SetMethod is null)
                         {
-                            return Member(diagnostics, atMember, name, symbol.Name, "has no public setter");
+                            // no setter at all is fine: the read still runs, and a collection or
+                            // sub-message is populated by mutating the instance it already holds
+                            isReadOnly = true;
+                        }
+                        else if (property.SetMethod.DeclaredAccessibility != Accessibility.Public)
+                        {
+                            // ref-emit's *compiled* path refuses these too ("cannot apply changes to
+                            // property"), even though its runtime path reaches them by reflection
+                            return Member(diagnostics, atMember, name, symbol.Name, "has a non-public setter");
                         }
                         // an init-only setter can only be reached via [UnsafeAccessor], which is
                         // net8.0 and up; below that there is no way to assign it at all
-                        if (property.SetMethod.IsInitOnly)
+                        if (property.SetMethod is { IsInitOnly: true })
                         {
                             if (!SupportsUnsafeAccessor(compilation))
                             {
@@ -521,6 +529,16 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 var kind = shape.Kind;
                 var message = shape.Message;
+
+                // discarding the read is only meaningful where the instance itself is mutated, or
+                // where the value is genuinely thrown away; a struct or nullable sub-message would
+                // be mutating a copy, and there is no ref-emit reference for either
+                if (isReadOnly && kind == ProtoMemberKind.Message
+                    && (shape.IsNullable || message is { IsValueType: true }))
+                {
+                    return Member(diagnostics, atMember, name, symbol.Name,
+                        "has no setter, and is a value-type sub-message");
+                }
 
                 // the compatibility level chooses the encoding for the four BCL types, and nothing
                 // else; resolving it for every member would be wasted work
@@ -576,7 +594,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -589,7 +607,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
                 else
                 {
@@ -599,7 +617,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList,
-                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel));
+                        dataFormat: dataFormat, isRequired: isRequired, isInitOnly: isInitOnly, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
                 }
             }
 

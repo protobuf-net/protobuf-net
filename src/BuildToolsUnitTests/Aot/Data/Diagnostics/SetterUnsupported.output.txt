@@ -1,0 +1,7 @@
+Generator produced 3 diagnostics:
+Warning PBN2001 Aot/Data/Diagnostics/SetterUnsupported.input.cs L11 C33
+Contract 'AotFixtures.SetterUnsupported.NonPublicSetter' is omitted from the AOT model: member 'Value' has a non-public setter.
+Warning PBN2001 Aot/Data/Diagnostics/SetterUnsupported.input.cs L25 C35
+Contract 'AotFixtures.SetterUnsupported.ReadOnlyStructMessage' is omitted from the AOT model: member 'Where' has no setter, and is a value-type sub-message.
+Warning PBN2001 Aot/Data/Diagnostics/SetterUnsupported.input.cs L31 C36
+Contract 'AotFixtures.SetterUnsupported.ReadOnlyNullableMessage' is omitted from the AOT model: member 'Where' has no setter, and is a value-type sub-message.
