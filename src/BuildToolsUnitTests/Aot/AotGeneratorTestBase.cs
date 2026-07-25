@@ -60,16 +60,20 @@ namespace BuildToolsUnitTests.Aot
             StringBuilder? diagnosticsTo = null,
             string? fileName = null,
             Action<TGenerator>? initializer = null,
-            LanguageVersion languageVersion = LanguageVersion.Latest)
+            LanguageVersion languageVersion = LanguageVersion.Latest,
+            IEnumerable<MetadataReference>? extraReferences = null)
             where TGenerator : class, IIncrementalGenerator, new()
         {
             if (string.IsNullOrWhiteSpace(fileName)) fileName = "input.cs";
 
             var parseOptions = new CSharpParseOptions(languageVersion, DocumentationMode.Parse, SourceCodeKind.Regular);
+            var references = MetadataReferenceHelpers.WellKnownReferences
+                .Concat(MetadataReferenceHelpers.ProtoBufReferences)
+                .Concat(extraReferences ?? Enumerable.Empty<MetadataReference>());
             var inputCompilation = CSharpCompilation.Create(
                 "ProtoBuf.BuildTools.AotGeneratorTests",
                 new[] { CSharpSyntaxTree.ParseText(source, parseOptions, path: fileName!) },
-                MetadataReferenceHelpers.WellKnownReferences.Concat(MetadataReferenceHelpers.ProtoBufReferences),
+                references,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
             // the input is *expected* to be incomplete on its own (the trigger attributes are supplied by

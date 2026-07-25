@@ -591,12 +591,24 @@ own `AddNodaTime` passes exactly such method pairs to `SetSurrogate`. The named 
 for existence, accessibility and signature when the declaration is read.
 
 It can also be declared on an **assembly**, which is what lets a package ship surrogates for the
-types it supports — `protobuf-net.NodaTime` could carry them for `NodaTime.Duration` and
-`NodaTime.Instant`, and a consumer would get them without restating anything. Declarations are
-gathered least-to-most specific — referenced assemblies, then this assembly, then the model — so the
-more specific wins. Note this scans *assembly* attributes only: that is cheap and bounded, where
+types it supports. Declarations are gathered least-to-most specific — referenced assemblies, then
+this assembly, then the model — so the more specific wins, and a consumer can always override a
+library's choice. Note this scans *assembly* attributes only: that is cheap and bounded, where
 scanning every type in every reference would not be, which is why the pairing lives on the assembly
 rather than on the surrogate type.
+
+**The three-assembly hand-off works**, which is the case that matters for NodaTime: the types live in
+one package, the protobuf-net helper that knows how to serialize them is a second, and the consumer
+is a third that references the helper and says nothing about surrogates. `ProtoSurrogateReferenceTests`
+pins it, and cannot be a golden fixture because it needs genuinely separate compilations.
+
+The subtle part is that the helper's `ProtoSurrogateAttribute` is a **different type** from the
+consumer's — both are generator-owned and `internal`, so each assembly compiles its own copy. What
+makes the hand-off work is matching by **full name** rather than by symbol, plus the fact that
+`IAssemblySymbol.GetAttributes()` surfaces internal assembly attributes from referenced metadata.
+Keep that in mind before "tidying" the comparison into a symbol equality check. Moving the attribute
+into protobuf-net.Core would make it one shared type and remove the subtlety, at the cost of the
+deliberate rule that trigger attributes are generator-owned.
 
 **Status: first cut.** `Diagnostics/ModelSurrogate.input.cs` covers both forms as a golden only —
 there is no `*.reference.cs` and no differential coverage, because `AotRefGen` would have to replay
