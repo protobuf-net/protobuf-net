@@ -7,36 +7,37 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **213** of 1392 (85% emitted)
-of which dropped only by cascade: 43
+contracts dropped: **208** of 1392 (86% emitted)
+of which dropped only by cascade: 42
 
 | count | reason |
 | ---: | --- |
-| 36 | PBN2001 member '…' has unsupported type '…' |
+| 34 | PBN2001 member '…' has unsupported type '…' |
 | 24 | PBN2002 generic types are not supported |
 | 20 | PBN2002 only classes and structs are supported |
-| 13 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
-| 11 | PBN2002 there is no public parameterless constructor |
+| 15 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
+| 12 | PBN2002 there is no public parameterless constructor |
 | 11 | PBN2003 [ProtoMap] is not supported yet |
-| 9 | PBN2003 [ProtoContract(Serializer = ...)] is not supported yet |
 | 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
 | 5 | PBN2001 member '…' is conditional via '…' |
 | 4 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
+| 3 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [NullWrappedCollection] on a non-collection is not supported yet |
 | 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
-| 2 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
+| 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
 | 1 | PBN2003 [ProtoContract(IsGroup = ...)] is not supported yet |
 | 1 | PBN2003 [NullWrappedValue] with [DefaultValue] is not supported yet |
 | 1 | PBN2003 [NullWrappedValue] on a non-nullable value is not supported yet |
 | 1 | PBN2001 member '…' is not public |
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |
+| 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |
 
 Member types we could not handle:
 
@@ -46,12 +47,11 @@ Member types we could not handle:
 | 4 | `Dictionary<…>` |
 | 4 | `System.Uri` |
 | 3 | `List<…>` |
-| 2 | `NodaTime.Duration` |
 | 2 | `nint` |
 | 2 | `System.Net.IPAddress` |
 | 1 | `System.DateOnly` |
 | 1 | `System.DateOnly[]` |
-| 1 | `NodaTime.Instant` |
+| 1 | `NodaTime.LocalDate` |
 | 1 | `System.IO.Stream` |
 | 1 | `System.Type[]` |
 | 1 | `Examples.ProtoGeneration.MyNonSurrogate` |
@@ -62,9 +62,8 @@ Member types we could not handle:
 | 1 | `Examples.Issues.SO19161823.IDummy` |
 | 1 | `Examples.Issues.SurrogateForObjectUsage.FloatData` |
 | 1 | `ProtoBuf.Issues.Issue509.Item` |
+| 1 | `ProtoBuf.Issues.Issue713.SomeEnum?[]` |
 
 **the generated code does not compile** — these are generator bugs, not gaps:
+- PBN9001: 1393 — 'ProtoBuf.ProtoModelAttribute' is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 - CS0433: 2 — The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
-- CS0152: 1 — The switch statement contains multiple cases with the label value '2'
-- CS8121: 1 — An expression of type 'CompatibilityLevelTests.BaseDerivedDetermines' cannot be handled by a pattern of type 'CompatibilityLevelTests.InheritedBaseDetermines'.
-- CS0311: 1 — The type 'ProtoBuf.Test.CompatibilityLevelTests.InheritedBaseDetermines' cannot be used as type parameter 'TSubType' in the generic type or method 'SubTypeState<CompatibilityLevelTests.BaseDerivedDetermines>.ReadSubType<TSubType>(ref ProtoReader.State, ISubTypeSerializer<TSubType>)'. There is no implicit reference conversion from 'ProtoBuf.Test.CompatibilityLevelTests.InheritedBaseDetermines' to 'ProtoBuf.Test.CompatibilityLevelTests.BaseDerivedDetermines'.

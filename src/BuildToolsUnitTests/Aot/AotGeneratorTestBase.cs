@@ -20,6 +20,18 @@ namespace BuildToolsUnitTests.Aot
         // diagnostics that are an artefact of the test compilation's reference set, not the generator
         private static readonly string[] IgnoredDiagnostics = { "CS1701", "CS1702" };
 
+        /// <summary>
+        /// The compile-time model attributes are <c>[Experimental]</c>, which is an <em>error</em> by
+        /// default - deliberately, so that using them is an explicit choice. Every fixture uses them,
+        /// so the harness opts in on their behalf; real projects do it with <c>NoWarn</c>.
+        /// </summary>
+        internal static readonly CSharpCompilationOptions CompilationOptions
+            = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
+                {
+                    ["PBN9001"] = ReportDiagnostic.Suppress,
+                });
+
         private readonly ITestOutputHelper? _log;
 
         protected AotGeneratorTestBase(ITestOutputHelper? log = null) => _log = log;
@@ -74,7 +86,7 @@ namespace BuildToolsUnitTests.Aot
                 "ProtoBuf.BuildTools.AotGeneratorTests",
                 new[] { CSharpSyntaxTree.ParseText(source, parseOptions, path: fileName!) },
                 references,
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                CompilationOptions);
 
             // the input is *expected* to be incomplete on its own (the trigger attributes are supplied by
             // the generator), so input diagnostics are logged for debugging but never asserted on; the

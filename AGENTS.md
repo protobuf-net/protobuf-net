@@ -573,6 +573,18 @@ whether the pairing is legal — which conveniently rules out protobuf-net's thi
 `[ProtoConverter]`-attributed *method*, that no cast can express. A surrogate on a type with
 inheritance, or a surrogate that is a collection, are both refused: protobuf-net throws for those.
 
+#### Hand-written serializers
+
+`[ProtoContract(Serializer = typeof(X))]` means the contract has a hand-written serializer, so we
+emit **no body at all**: the services type implements `ISerializerProxy<T>` handing that serializer
+out, and members of that type pass `SerializerCache.Get<X, T>()` rather than `this`.
+
+There is a wrinkle: protobuf-net's own well-known types name the **internal** `PrimaryTypeProvider`,
+which a consumer's generated code cannot reference. Those are inbuilt types that
+`TypeModel.GetSerializer<T>` resolves without a model, so an *inaccessible* serializer is treated as
+"inbuilt": the member passes `null` (which is what resolution does anyway) and the type is not pulled
+into the model at all.
+
 #### `[ProtoSurrogate]` on the model
 
 You cannot put an attribute on `System.Uri`, so the contract-level form cannot reach a type you do
@@ -614,6 +626,13 @@ deliberate rule that trigger attributes are generator-owned.
 there is no `*.reference.cs` and no differential coverage, because `AotRefGen` would have to replay
 the declarations against a `RuntimeTypeModel` before it could produce one. That is the next step if
 this direction is kept.
+
+**NodaTime is annotated but not yet working**, and `src/AotNodaTimeSmoke` reports exactly why. The
+declarations are found and applied — the diagnostics name `NodaTime.Duration`/`Instant` — but their
+surrogates are `WellKnownTypes.Duration`/`Timestamp`, which carry their *own* hand-written serializer.
+Our surrogate emit **inlines** the surrogate's members, and there are none to inline; what that case
+needs is a "convert, then delegate to the surrogate's serializer" shape. Alternatively, exposing a
+public serializer for the well-known types would let the ordinary `Serializer =` path handle them.
 
 ### Null-wrapping
 

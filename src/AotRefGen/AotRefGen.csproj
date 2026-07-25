@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <!-- the compile-time model attributes are [Experimental] while the shape settles -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <OutputType>Exe</OutputType>
     <!-- net472 is not incidental: RuntimeTypeModel can only persist a compiled model to disk on
          .NET Framework (see PLAT_NO_EMITDLL in protobuf-net.csproj) -->

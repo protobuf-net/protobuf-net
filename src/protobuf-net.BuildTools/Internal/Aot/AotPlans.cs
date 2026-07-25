@@ -187,8 +187,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool wrappedCollection = false, bool wrappedCollectionGroup = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
-            bool isReadOnly = false)
+            bool isReadOnly = false, string? subSerializer = null)
         {
+            SubSerializer = subSerializer;
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
             UsesAccessor = usesAccessor;
@@ -292,6 +293,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool IsReadOnly { get; }
 
         /// <summary>
+        /// What to pass as the sub-serializer for a message member: normally <c>this</c>, but a
+        /// contract with a hand-written serializer needs that one handed over instead.
+        /// </summary>
+        public string? SubSerializer { get; }
+
+        /// <summary>
         /// The resolved compatibility level (200, 240 or 300), already through the
         /// <c>DataFormat.WellKnown</c> promotion. Only the BCL kinds consult it.
         /// </summary>
@@ -349,7 +356,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && WrappedCollectionGroup == other.WrappedCollectionGroup
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
-                && IsReadOnly == other.IsReadOnly;
+                && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 
@@ -412,8 +419,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool isTupleLiteral = false, bool isSealed = false,
             string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
-            string? toSurrogate = null, string? toUnderlying = null)
+            string? toSurrogate = null, string? toUnderlying = null,
+            string? externalSerializerTypeName = null)
         {
+            ExternalSerializerTypeName = externalSerializerTypeName;
             SurrogateTypeName = surrogateTypeName;
             ToSurrogate = toSurrogate;
             ToUnderlying = toUnderlying;
@@ -492,6 +501,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// with a conversion at each end — which is exactly what ref-emit emits. Nothing changes for
         /// a member whose type is surrogated: it stays an ordinary sub-message.
         /// </remarks>
+        /// <summary>
+        /// From <c>[ProtoContract(Serializer = …)]</c>: the contract is served by a hand-written
+        /// serializer, so we emit no body for it at all — the services type implements
+        /// <c>ISerializerProxy&lt;T&gt;</c> and hands out that serializer instead.
+        /// </summary>
+        public string? ExternalSerializerTypeName { get; }
+
         public string? SurrogateTypeName { get; }
 
         /// <summary>
@@ -515,7 +531,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
                 && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible
                 && SurrogateTypeName == other.SurrogateTypeName
-                && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying;
+                && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying
+                && ExternalSerializerTypeName == other.ExternalSerializerTypeName;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

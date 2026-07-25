@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
 using System.Collections.Generic;
@@ -65,7 +65,10 @@ namespace ProtoBuf.BuildTools.Generators
             var prefix = ':';
             foreach (var contract in plan.Contracts)
             {
-                Line(sb, indent + 2, $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>");
+                // a contract with a hand-written serializer is *proxied*, never implemented
+                Line(sb, indent + 2, contract.ExternalSerializerTypeName is null
+                    ? $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>"
+                    : $"{prefix} {Serializers}.ISerializerProxy<{contract.TypeName}>");
                 prefix = ',';
                 if (contract.RootTypeName is not null)
                 {
@@ -103,6 +106,15 @@ namespace ProtoBuf.BuildTools.Generators
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
 
+            // a hand-written serializer replaces the body entirely - including Features - so we hand
+            // it out rather than implementing ISerializer<T> ourselves at all
+            if (contract.ExternalSerializerTypeName is { } external)
+            {
+                Line(sb, indent, $"{self} {Serializers}.ISerializerProxy<{contract.TypeName}>.Serializer");
+                Line(sb, indent + 1, $"=> {Serializers}.SerializerCache.Get<{external}, {contract.TypeName}>();");
+                return;
+            }
+
             Line(sb, indent, $"{Features} {self}.Features");
             Line(sb, indent + 1, $"=> {Features}.CategoryMessage | {Features}.WireTypeString;");
             sb.AppendLine();
@@ -119,6 +131,7 @@ namespace ProtoBuf.BuildTools.Generators
                 EmitSubTypeContract(sb, indent, contract, root);
                 return;
             }
+
 
             // a surrogate contract's serializer *is* the surrogate's, with a conversion at each end;
             // everything below then works on the converted local rather than on `value`
@@ -332,21 +345,21 @@ namespace ProtoBuf.BuildTools.Generators
                         // a nullable struct message: seed from the current value, assign the result
                         // straight back - the read cannot produce a null
                         Line(sb, indent + 3, $"var tmp{number} = {target}.GetValueOrDefault();");
-                        Line(sb, indent + 3, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
+                        Line(sb, indent + 3, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)})"));
                         break;
                     case ProtoMemberKind.Message when member.MessageIsValueType:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
-                        Line(sb, indent + 3, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this)"));
+                        Line(sb, indent + 3, Assign(contract, member, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)})"));
                         break;
                     case ProtoMemberKind.Message:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
                         if (member.IsReadOnly)
                         {
                             // the instance it already holds is what gets populated
-                            Line(sb, indent + 3, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                            Line(sb, indent + 3, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
                             break;
                         }
-                        Line(sb, indent + 3, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent + 3, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                 }
@@ -427,7 +440,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // straight to WriteMessage
                     Line(sb, indent, $"if (tmp{number}.HasValue)");
                     Line(sb, indent, "{");
-                    Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), this);");
+                    Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
                     Line(sb, indent, "}");
                     continue;
                 }
@@ -530,7 +543,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // likewise WriteMessage/WriteGroup(int, ...) skip nulls themselves. Group
                         // affects the *write* only - its read is an ordinary ReadMessage
                         var writeMessage = member.DataFormat == ProtoDataFormat.Group ? "WriteGroup" : "WriteMessage";
-                        Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
+                        Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
                         break;
                 }
             }
@@ -748,9 +761,15 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool NullableTarget(ProtoMemberPlan member)
             => member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes;
 
-        /// <summary>A message element needs us passed along as its serializer; a scalar does not.</summary>
+        /// <summary>
+        /// The serializer to hand a nested message: ourselves, unless the contract declares a
+        /// hand-written one, in which case we never implement <c>ISerializer&lt;T&gt;</c> for it.
+        /// </summary>
+        private static string SubSerializer(ProtoMemberPlan member) => member.SubSerializer ?? "this";
+
+        /// <summary>A message element needs a serializer passed along; a scalar does not.</summary>
         private static string RepeatedSubSerializer(ProtoMemberPlan member)
-            => member.Kind == ProtoMemberKind.Message ? ", this" : "";
+            => member.Kind == ProtoMemberKind.Message ? $", {SubSerializer(member)}" : "";
 
         /// <summary>
         /// The statement that stores a value into a member.

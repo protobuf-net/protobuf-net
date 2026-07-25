@@ -270,11 +270,19 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var surrogateType = declaredSurrogate?.Surrogate;
+            INamedTypeSymbol? externalSerializer = null;
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
             var ignoreListHandling = false;
             var dataMemberOffset = 0;
-            foreach (var attribute in type.GetAttributes())
+
+            // a model-surrogated type contributes nothing but its identity: the surrogate carries the
+            // whole wire shape, so the type's own attributes are irrelevant - and inspecting them
+            // would refuse types for decoration that has nothing to do with us. NodaTime's Instant
+            // and Duration carry [XmlSchemaProvider], for instance.
+            foreach (var attribute in declaredSurrogate is null
+                ? (IEnumerable<AttributeData>)type.GetAttributes()
+                : Array.Empty<AttributeData>())
             {
                 var attributeName = attribute.AttributeClass?.ToDisplayString();
                 if (attributeName == ProtoContractAttributeName)
@@ -306,6 +314,19 @@ namespace ProtoBuf.BuildTools.Generators
                                 continue;
                             case "Surrogate" when argument.Value.Value is INamedTypeSymbol declared:
                                 surrogateType = declared;
+                                continue;
+                            // a hand-written serializer: we emit no body, just hand it out - but only
+                            // if the generated code can actually name it. protobuf-net's own
+                            // well-known types point at the internal PrimaryTypeProvider, which a
+                            // consumer's assembly cannot see.
+                            case "Serializer" when argument.Value.Value is INamedTypeSymbol external:
+                                if (!compilation.IsSymbolAccessibleWithin(external, compilation.Assembly))
+                                {
+                                    return Option(diagnostics, at, name,
+                                        $"[ProtoContract(Serializer = typeof({Simplify(external.ToDisplayString())}))], "
+                                        + "because that serializer is not accessible here");
+                                }
+                                externalSerializer = external;
                                 continue;
                         }
                         return Option(diagnostics, at, name, $"[ProtoContract({argument.Key} = ...)]");
@@ -704,14 +725,19 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // enqueued even if it turns out to be unsupported, so that it reports its own
                     // reason and this contract is dropped by cascade with a message that chains
-                    reachable.Add(message!);
+                    // an inbuilt type (see GetSubSerializer) is served by protobuf-net itself, so it
+                    // is neither ours to emit nor a reason to drop anything by cascade
+                    var subSerializer = GetSubSerializer(compilation, message!);
+                    if (subSerializer != "null") reachable.Add(message!);
+
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly,
+                        subSerializer: subSerializer));
                 }
                 else
                 {
@@ -729,12 +755,46 @@ namespace ProtoBuf.BuildTools.Generators
             // protobuf, and .proto-generated DTOs are full of them
             members.Sort(static (x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
 
+            // two members on one field number would emit duplicate switch labels, which does not
+            // compile; protobuf-net itself throws for this, so refusing loses nothing
+            for (int i = 1; i < members.Count; i++)
+            {
+                if (members[i].FieldNumber != members[i - 1].FieldNumber) continue;
+                return Contract(diagnostics, at, name,
+                    $"members '{members[i - 1].Name}' and '{members[i].Name}' share field number "
+                    + members[i].FieldNumber.ToString(CultureInfo.InvariantCulture));
+            }
+
+            // a hand-written serializer replaces the body entirely: nothing we parsed above is used,
+            // and the services type hands that serializer out through ISerializerProxy<T> instead
+            if (externalSerializer is not null)
+            {
+                return new ProtoContractPlan(
+                    type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    default, isValueType,
+                    externalSerializerTypeName: externalSerializer.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat));
+            }
+
             // the whole hierarchy has to be in the model, since every type in it routes through the
             // root; walking both ways gets there from whichever end was seeded
             string? rootTypeName = null;
             var subTypePlans = new ProtoSubTypePlan[subTypes.Count];
             if (subTypes.Count != 0 || linkedBase is not null)
             {
+                // members and sub-type tags share one switch in ReadSubType, so a collision between
+                // them is a duplicate label just as much as two members would be
+                foreach (var subType in subTypes)
+                {
+                    foreach (var member in members)
+                    {
+                        if (member.FieldNumber != subType.Tag) continue;
+                        return Contract(diagnostics, at, name,
+                            $"member '{member.Name}' and [ProtoInclude] share field number "
+                            + subType.Tag.ToString(CultureInfo.InvariantCulture));
+                    }
+                }
+
                 rootTypeName = GetHierarchyRoot(type).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                 if (linkedBase is not null) reachable.Add(linkedBase);
                 for (int i = 0; i < subTypes.Count; i++)
@@ -860,6 +920,11 @@ namespace ProtoBuf.BuildTools.Generators
                 if (attribute.ConstructorArguments.Length != 2) return false;
                 if (attribute.ConstructorArguments[0].Value is not int tag) return false;
                 if (attribute.ConstructorArguments[1].Value is not INamedTypeSymbol derived) return false;
+
+                // protobuf-net tolerates a [ProtoInclude] naming an unrelated type (it simply never
+                // matches); we cannot, since `value is TDerived` and ReadSubType<TDerived> would not
+                // compile. Refusing keeps us from emitting code the consumer cannot build.
+                if (!DerivesFrom(derived, type)) return false;
 
                 subTypes.Add((tag, derived));
             }
@@ -1043,6 +1108,45 @@ namespace ProtoBuf.BuildTools.Generators
                 return converter.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + "." + methodName;
             }
             return null;
+        }
+
+        /// <summary>
+        /// The expression a *member* of this contract's type must pass as its sub-serializer: null
+        /// for the usual case (<c>this</c>), or the hand-written serializer when the contract
+        /// declares one, since we never implement <c>ISerializer&lt;T&gt;</c> for those.
+        /// </summary>
+        private static string? GetSubSerializer(Compilation compilation, INamedTypeSymbol type)
+        {
+            foreach (var attribute in type.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != ProtoContractAttributeName) continue;
+                foreach (var argument in attribute.NamedArguments)
+                {
+                    if (argument.Key == "Serializer" && argument.Value.Value is INamedTypeSymbol external)
+                    {
+                        // an inaccessible serializer means an inbuilt type - protobuf-net's own
+                        // well-known types point at the internal PrimaryTypeProvider. Passing null
+                        // lets TypeModel.GetSerializer<T> find it, which is how it resolves anyway.
+                        if (!compilation.IsSymbolAccessibleWithin(external, compilation.Assembly))
+                        {
+                            return "null";
+                        }
+                        return $"global::ProtoBuf.Serializers.SerializerCache.Get<"
+                            + external.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ", "
+                            + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ">()";
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static bool DerivesFrom(INamedTypeSymbol derived, INamedTypeSymbol baseType)
+        {
+            for (var current = derived.BaseType; current is not null; current = current.BaseType)
+            {
+                if (SymbolEqualityComparer.Default.Equals(current, baseType)) return true;
+            }
+            return false;
         }
 
         private static bool Implements(INamedTypeSymbol type, string interfaceName)

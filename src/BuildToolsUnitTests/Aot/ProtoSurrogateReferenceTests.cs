@@ -14,11 +14,9 @@ namespace BuildToolsUnitTests.Aot
     /// consumer is a third and references only the helper.
     /// </summary>
     /// <remarks>
-    /// This cannot be a golden fixture, because it needs real separate compilations — and the
-    /// interesting part is precisely that the helper's <c>ProtoSurrogateAttribute</c> is a
-    /// <em>different type</em> from the consumer's: both are generator-owned and internal, so each
-    /// assembly gets its own copy. Matching by full name rather than by symbol is what makes the
-    /// hand-off work, and that is what these tests pin.
+    /// This cannot be a golden fixture, because it needs real separate compilations: the point is
+    /// that the pairing crosses assembly boundaries, reaching a model that says nothing about
+    /// surrogates itself.
     /// </remarks>
     public class ProtoSurrogateReferenceTests : AotGeneratorTestBase
     {
@@ -37,36 +35,17 @@ namespace BuildToolsUnitTests.Aot
 
         /// <summary>
         /// Stands in for protobuf-net.NodaTime: knows about both sides, and offers the pairing to
-        /// anything that references it. Note it declares its own copy of the trigger attribute,
-        /// exactly as the generator's post-init output would give it.
+        /// anything that references it, using the real attribute from protobuf-net.Core.
         /// </summary>
         private const string HelperSource = """
             using ProtoBuf;
 
+            #pragma warning disable PBN9001 // the compile-time model attributes are [Experimental]
             [assembly: ProtoSurrogate(typeof(Chrono.Span), typeof(Chrono.Proto.SpanSurrogate),
                 Converter = typeof(Chrono.Proto.SpanConverter),
                 ToSurrogate = nameof(Chrono.Proto.SpanConverter.ToSurrogate),
                 ToType = nameof(Chrono.Proto.SpanConverter.ToSpan))]
-
-            namespace ProtoBuf
-            {
-                [global::System.AttributeUsage(
-                    global::System.AttributeTargets.Class | global::System.AttributeTargets.Assembly,
-                    AllowMultiple = true, Inherited = false)]
-                internal sealed class ProtoSurrogateAttribute : global::System.Attribute
-                {
-                    public ProtoSurrogateAttribute(global::System.Type type, global::System.Type surrogate)
-                    {
-                        Type = type;
-                        Surrogate = surrogate;
-                    }
-                    public global::System.Type Type { get; }
-                    public global::System.Type Surrogate { get; }
-                    public global::System.Type? Converter { get; set; }
-                    public string? ToSurrogate { get; set; }
-                    public string? ToType { get; set; }
-                }
-            }
+            #pragma warning restore PBN9001
 
             namespace Chrono.Proto
             {
@@ -176,8 +155,7 @@ namespace BuildToolsUnitTests.Aot
                 MetadataReferenceHelpers.WellKnownReferences
                     .Concat(MetadataReferenceHelpers.ProtoBufReferences)
                     .Concat(references),
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
-                    nullableContextOptions: NullableContextOptions.Enable));
+                CompilationOptions.WithNullableContextOptions(NullableContextOptions.Enable));
 
             using var peStream = new MemoryStream();
             var emitted = compilation.Emit(peStream);
