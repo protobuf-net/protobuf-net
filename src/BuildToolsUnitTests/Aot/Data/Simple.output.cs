@@ -85,4 +85,54 @@ namespace ProtoBuf
         /// </summary>
         public global::System.Type Type { get; }
     }
+
+    /// <summary>
+    /// Declares that the associated model serializes one type by way of another, for types
+    /// that cannot carry <c>[ProtoContract(Surrogate = ...)]</c> themselves — a BCL type,
+    /// or anything else you do not own.
+    /// </summary>
+    /// <remarks>
+    /// This is the compile-time equivalent of <c>RuntimeTypeModel.SetSurrogate</c>. The
+    /// conversion is a cast in each direction unless <see cref="Converter"/> names a type
+    /// supplying static conversion methods, which is how a type with no usable operators —
+    /// <c>NodaTime.Duration</c>, say — is hooked up.
+    /// </remarks>
+    [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    internal sealed class ProtoSurrogateAttribute : global::System.Attribute
+    {
+        /// <summary>
+        /// Create a new instance.
+        /// </summary>
+        public ProtoSurrogateAttribute(global::System.Type type, global::System.Type surrogate)
+        {
+            Type = type;
+            Surrogate = surrogate;
+        }
+
+        /// <summary>
+        /// The type being serialized.
+        /// </summary>
+        public global::System.Type Type { get; }
+
+        /// <summary>
+        /// The type that carries its wire shape.
+        /// </summary>
+        public global::System.Type Surrogate { get; }
+
+        /// <summary>
+        /// A type declaring the static conversion methods named by <see cref="ToSurrogate"/>
+        /// and <see cref="ToType"/>; when omitted, a cast is used in both directions.
+        /// </summary>
+        public global::System.Type? Converter { get; set; }
+
+        /// <summary>
+        /// The <see cref="Converter"/> method converting the type to its surrogate.
+        /// </summary>
+        public string? ToSurrogate { get; set; }
+
+        /// <summary>
+        /// The <see cref="Converter"/> method converting a surrogate back to the type.
+        /// </summary>
+        public string? ToType { get; set; }
+    }
 }

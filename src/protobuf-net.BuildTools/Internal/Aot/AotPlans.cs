@@ -411,9 +411,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool isValueType = false, bool skipConstructor = false, bool isTuple = false,
             bool isTupleLiteral = false, bool isSealed = false,
             string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
-            ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null)
+            ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
+            string? toSurrogate = null, string? toUnderlying = null)
         {
             SurrogateTypeName = surrogateTypeName;
+            ToSurrogate = toSurrogate;
+            ToUnderlying = toUnderlying;
             TypeName = typeName;
             Members = members;
             Extensible = extensible;
@@ -491,6 +494,15 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </remarks>
         public string? SurrogateTypeName { get; }
 
+        /// <summary>
+        /// The fully-qualified static method converting the type to its surrogate, when the pairing
+        /// names one; null means a plain cast, which is what an operator-based surrogate uses.
+        /// </summary>
+        public string? ToSurrogate { get; }
+
+        /// <summary>The converse; see <see cref="ToSurrogate"/>.</summary>
+        public string? ToUnderlying { get; }
+
         /// <summary>Fully-qualified, <c>global::</c>-prefixed type name.</summary>
         public string TypeName { get; }
 
@@ -502,7 +514,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
                 && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible
-                && SurrogateTypeName == other.SurrogateTypeName;
+                && SurrogateTypeName == other.SurrogateTypeName
+                && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

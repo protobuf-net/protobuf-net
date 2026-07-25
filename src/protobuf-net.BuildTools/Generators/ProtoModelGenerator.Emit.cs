@@ -130,9 +130,7 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent, "{");
             if (surrogate is not null)
             {
-                // the cast covers an explicit operator as well as an implicit one; ref-emit relies on
-                // the implicit form, but both are legal here and only one of them compiles for both
-                Line(sb, indent + 1, $"var {instance} = ({surrogate})value;");
+                Line(sb, indent + 1, $"var {instance} = {ToSurrogate(contract, "value")};");
             }
             if (contract.IsTuple)
             {
@@ -173,14 +171,14 @@ namespace ProtoBuf.BuildTools.Generators
                     ? $"{instance} = ({arguments});"
                     : $"{instance} = new {bodyType}({arguments});");
             }
-            if (surrogate is not null) Line(sb, indent + 1, $"value = ({contract.TypeName}){instance};");
+            if (surrogate is not null) Line(sb, indent + 1, $"value = {ToUnderlying(contract, instance)};");
             Line(sb, indent + 1, "return value;");
             Line(sb, indent, "}");
             sb.AppendLine();
 
             Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
-            if (surrogate is not null) Line(sb, indent + 1, $"var {instance} = ({surrogate})value;");
+            if (surrogate is not null) Line(sb, indent + 1, $"var {instance} = {ToSurrogate(contract, "value")};");
             // ThrowUnexpectedSubtype is constrained to reference types, and a struct, a sealed type
             // and a tuple all rule sub-types out at compile time - ref-emit omits it for each. Note
             // it tests the *surrogate*, which is what carries any sub-types.
@@ -886,6 +884,23 @@ namespace ProtoBuf.BuildTools.Generators
         /// <param name="typeName">
         /// What to construct â€” the contract itself, or its surrogate when it has one.
         /// </param>
+        /// <summary>
+        /// Convert an instance to its surrogate. A cast covers an <c>explicit</c> operator as well as
+        /// an <c>implicit</c> one - ref-emit relies on the implicit form, but only the cast compiles
+        /// for both - unless the model named conversion methods instead, which is how a type with no
+        /// usable operators is hooked up.
+        /// </summary>
+        private static string ToSurrogate(ProtoContractPlan contract, string value)
+            => contract.ToSurrogate is { } method
+                ? $"{method}({value})"
+                : $"({contract.SurrogateTypeName}){value}";
+
+        /// <summary>The converse; see <see cref="ToSurrogate"/>.</summary>
+        private static string ToUnderlying(ProtoContractPlan contract, string surrogate)
+            => contract.ToUnderlying is { } method
+                ? $"{method}({surrogate})"
+                : $"({contract.TypeName}){surrogate}";
+
         private static string Construct(ProtoContractPlan contract, string? typeName = null)
         {
             typeName ??= contract.TypeName;

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
@@ -15,6 +15,7 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
         private const string ProtoReservedAttributeName = "ProtoBuf.ProtoReservedAttribute";
+        private const string ProtoSurrogateAttributeName = "ProtoBuf.ProtoSurrogateAttribute";
         private const string NullWrappedValueAttributeName = "ProtoBuf.NullWrappedValueAttribute";
         private const string NullWrappedCollectionAttributeName = "ProtoBuf.NullWrappedCollectionAttribute";
         private const string ProtoIgnoreAttributeName = "ProtoBuf.ProtoIgnoreAttribute";
@@ -52,6 +53,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (model.ContainingType is not null || model.IsGenericType) return null;
 
             var diagnostics = new List<PlanDiagnostic>();
+            var surrogates = GetSurrogates(model, diagnostics);
             var parsed = new Dictionary<string, ProtoContractPlan>(StringComparer.Ordinal);
             var visited = new HashSet<string>(StringComparer.Ordinal);
             var pending = new Queue<INamedTypeSymbol>();
@@ -81,7 +83,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                 locations[key] = PlanLocation.From(type);
 
-                var contract = ParseContract(compilation, type, diagnostics, out var reachable, cancellationToken);
+                var contract = ParseContract(compilation, type, diagnostics, surrogates, out var reachable, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
                 foreach (var next in reachable) pending.Enqueue(next);
             }
@@ -173,6 +175,7 @@ namespace ProtoBuf.BuildTools.Generators
             Compilation compilation,
             INamedTypeSymbol type,
             List<PlanDiagnostic> diagnostics,
+            Dictionary<string, SurrogateDeclaration> surrogates,
             out List<INamedTypeSymbol> reachable,
             CancellationToken cancellationToken)
         {
@@ -181,10 +184,16 @@ namespace ProtoBuf.BuildTools.Generators
             var at = PlanLocation.From(type);
             var name = type.ToDisplayString();
 
+            // a model-level [ProtoSurrogate] stands in for the contract attribute entirely: the type
+            // being surrogated need not - and for a BCL type, cannot - carry one, so this has to be
+            // resolved before any of the "is this even a contract" checks
+            surrogates.TryGetValue(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                out var declaredSurrogate);
+
             // auto-tuple detection applies only when the type carries no contract family at all
             // (MetaType.GetContractFamily), and has to be tried before the shape checks below -
             // a tuple is commonly a closed generic, which they would otherwise reject
-            if (!HasContractFamily(type))
+            if (declaredSurrogate is null && !HasContractFamily(type))
             {
                 if (ParseTuple(compilation, type, diagnostics, out reachable, cancellationToken) is { } tuple) return tuple;
                 reachable = new List<INamedTypeSymbol>();
@@ -260,8 +269,9 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
-            INamedTypeSymbol? surrogateType = null;
-            bool isContract = false, isDataContract = false, isXmlType = false, skipConstructor = false;
+            var surrogateType = declaredSurrogate?.Surrogate;
+            bool isContract = declaredSurrogate is not null;
+            bool isDataContract = false, isXmlType = false, skipConstructor = false;
             var ignoreListHandling = false;
             var dataMemberOffset = 0;
             foreach (var attribute in type.GetAttributes())
@@ -355,11 +365,12 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     return Option(diagnostics, at, name, "a surrogate that is a collection");
                 }
-                if (!CanConvert(compilation, type, surrogateType)
-                    || !CanConvert(compilation, surrogateType, type))
+                // named converter methods are validated when the declaration is read; otherwise the
+                // conversion has to be something C# can spell as a cast
+                if (declaredSurrogate?.ToSurrogate is null
+                    && (!CanConvert(compilation, type, surrogateType)
+                        || !CanConvert(compilation, surrogateType, type)))
                 {
-                    // protobuf-net also accepts a [ProtoConverter]-attributed method; we need
-                    // something C# can spell as a cast
                     return Option(diagnostics, at, name,
                         "a surrogate without conversion operators in both directions");
                 }
@@ -522,7 +533,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 if (ignored) continue;
 
-                if ((isPacked || overwriteList) && GetMemberShape(compilation, memberType)
+                if ((isPacked || overwriteList) && GetMemberShape(compilation, memberType, surrogates)
                     is not ({ Repeated.Factory: not null } or { Map.Factory: not null }))
                 {
                     // both options only mean anything for a collection
@@ -599,7 +610,7 @@ namespace ProtoBuf.BuildTools.Generators
                         $"is conditional via '{conditional}'");
                 }
 
-                if (GetMemberShape(compilation, memberType) is not { } shape)
+                if (GetMemberShape(compilation, memberType, surrogates) is not { } shape)
                 {
                     return Member(diagnostics, atMember, name, symbol.Name,
                         $"has unsupported type '{memberType.ToDisplayString()}'");
@@ -738,7 +749,8 @@ namespace ProtoBuf.BuildTools.Generators
                 type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 new(members.ToArray()), isValueType, skipConstructor, isSealed: memberSource.IsSealed,
                 rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible,
-                surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -908,6 +920,113 @@ namespace ProtoBuf.BuildTools.Generators
         {
             var conversion = compilation.ClassifyConversion(from, to);
             return conversion.Exists && (conversion.IsUserDefined || conversion.IsIdentity);
+        }
+
+        /// <summary>
+        /// A model-level <c>[ProtoSurrogate]</c> declaration: how to serialize a type that cannot
+        /// carry <c>[ProtoContract(Surrogate = ...)]</c> itself, such as a BCL type.
+        /// </summary>
+        private sealed class SurrogateDeclaration
+        {
+            public SurrogateDeclaration(INamedTypeSymbol surrogate, string? toSurrogate, string? toUnderlying)
+            {
+                Surrogate = surrogate;
+                ToSurrogate = toSurrogate;
+                ToUnderlying = toUnderlying;
+            }
+
+            public INamedTypeSymbol Surrogate { get; }
+
+            /// <summary>Null when the conversion is a plain cast.</summary>
+            public string? ToSurrogate { get; }
+
+            public string? ToUnderlying { get; }
+        }
+
+        /// <summary>
+        /// The model's <c>[ProtoSurrogate]</c> declarations, keyed by the type being surrogated.
+        /// </summary>
+        private static Dictionary<string, SurrogateDeclaration> GetSurrogates(
+            INamedTypeSymbol model, List<PlanDiagnostic> diagnostics)
+        {
+            var result = new Dictionary<string, SurrogateDeclaration>(StringComparer.Ordinal);
+            foreach (var attribute in model.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != ProtoSurrogateAttributeName) continue;
+                if (attribute.ConstructorArguments.Length != 2) continue;
+                if (attribute.ConstructorArguments[0].Value is not INamedTypeSymbol underlying) continue;
+                if (attribute.ConstructorArguments[1].Value is not INamedTypeSymbol surrogate) continue;
+
+                INamedTypeSymbol? converter = null;
+                string? toSurrogate = null, toUnderlying = null;
+                foreach (var argument in attribute.NamedArguments)
+                {
+                    switch (argument.Key)
+                    {
+                        case "Converter" when argument.Value.Value is INamedTypeSymbol declaring:
+                            converter = declaring;
+                            continue;
+                        case "ToSurrogate" when argument.Value.Value is string to:
+                            toSurrogate = to;
+                            continue;
+                        case "ToType" when argument.Value.Value is string from:
+                            toUnderlying = from;
+                            continue;
+                    }
+                }
+
+                var at = PlanLocation.From(model);
+                var name = Simplify(underlying.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                if ((converter is null) != (toSurrogate is null && toUnderlying is null))
+                {
+                    Contract(diagnostics, at, name,
+                        "[ProtoSurrogate] needs either no converter at all, or a Converter with both "
+                        + "ToSurrogate and ToType");
+                    continue;
+                }
+
+                string? toName = null, fromName = null;
+                if (converter is not null)
+                {
+                    toName = FindConverter(converter, toSurrogate, underlying, surrogate);
+                    fromName = FindConverter(converter, toUnderlying, surrogate, underlying);
+                    if (toName is null || fromName is null)
+                    {
+                        Contract(diagnostics, at, name,
+                            "[ProtoSurrogate] names a converter method that does not exist, is not "
+                            + "public and static, or has the wrong signature");
+                        continue;
+                    }
+                }
+
+                result[underlying.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)]
+                    = new SurrogateDeclaration(surrogate, toName, fromName);
+            }
+            return result;
+        }
+
+        /// <summary>The fully-qualified call, if a matching public static one-argument method exists.</summary>
+        private static string? FindConverter(INamedTypeSymbol converter, string? methodName,
+            ITypeSymbol from, ITypeSymbol to)
+        {
+            if (methodName is null) return null;
+            foreach (var candidate in converter.GetMembers(methodName))
+            {
+                if (candidate is not IMethodSymbol
+                    {
+                        IsStatic: true,
+                        DeclaredAccessibility: Accessibility.Public,
+                        Parameters.Length: 1,
+                    } method)
+                {
+                    continue;
+                }
+                if (!SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, from)) continue;
+                if (!SymbolEqualityComparer.Default.Equals(method.ReturnType, to)) continue;
+
+                return converter.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + "." + methodName;
+            }
+            return null;
         }
 
         private static bool Implements(INamedTypeSymbol type, string interfaceName)
@@ -1112,7 +1231,8 @@ namespace ProtoBuf.BuildTools.Generators
             public string? DeclaredTypeName { get; }
         }
 
-        private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type)
+        private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type,
+            Dictionary<string, SurrogateDeclaration>? surrogates = null)
         {
             var isNullable = false;
             if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
@@ -1140,7 +1260,7 @@ namespace ProtoBuf.BuildTools.Generators
             type = EraseTupleNames(compilation, type);
 
             // a struct contract can be Nullable<T>; a reference-type one cannot
-            if (GetMessageKind(type, out var message) is { } messageKind)
+            if (GetMessageKind(type, surrogates, out var message) is { } messageKind)
             {
                 if (isNullable && message is not { IsValueType: true }) return null;
                 return new MemberShape(messageKind, isNullable, message: message);
@@ -1165,12 +1285,12 @@ namespace ProtoBuf.BuildTools.Generators
             // resulting shape *describes the element* - Repeated says how it is stored
             if (ResolveRepeated(type) is { Factory: not null, Element: not null } repeated)
             {
-                if (repeated.IsMap) return AsMap(compilation, repeated, type);
+                if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates);
 
                 // IReadOnlySet<T> support is conditional on the runtime the library was built for
                 if (repeated.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
 
-                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type);
+                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type, surrogates);
             }
             return null;
         }
@@ -1402,12 +1522,13 @@ namespace ProtoBuf.BuildTools.Generators
         /// A dictionary member: the same merge shape as a collection, but with two element types and
         /// their wire types passed alongside.
         /// </summary>
-        private static MemberShape? AsMap(Compilation compilation, RepeatedMatch match, ITypeSymbol declared)
+        private static MemberShape? AsMap(Compilation compilation, RepeatedMatch match, ITypeSymbol declared,
+            Dictionary<string, SurrogateDeclaration>? surrogates)
         {
             var key = match.Element!;
             var value = match.Value!;
-            if (GetMemberShape(compilation, key) is not { } keyShape) return null;
-            if (GetMemberShape(compilation, value) is not { } valueShape) return null;
+            if (GetMemberShape(compilation, key, surrogates) is not { } keyShape) return null;
+            if (GetMemberShape(compilation, value, surrogates) is not { } valueShape) return null;
 
             // an enum on either side resolves an ISerializer<TEnum> from the model, which the
             // services type does not expose - the same reason a repeated enum is refused
@@ -1455,10 +1576,11 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
-            ProtoRepeatedPlan repeated, ITypeSymbol declared)
+            ProtoRepeatedPlan repeated, ITypeSymbol declared,
+            Dictionary<string, SurrogateDeclaration>? surrogates)
         {
             // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
-            if (GetMemberShape(compilation, element) is not { Repeated.Factory: null } shape) return null;
+            if (GetMemberShape(compilation, element, surrogates) is not { Repeated.Factory: null } shape) return null;
 
             // a nullable *scalar* element is an ordinary element as far as the encoding goes - it
             // only throws at runtime if a null actually turns up, unless [NullWrappedValue] is on
@@ -1478,14 +1600,25 @@ namespace ProtoBuf.BuildTools.Generators
                 declaredTypeName: declared.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
 
-        private static ProtoMemberKind? GetMessageKind(ITypeSymbol type, out INamedTypeSymbol? message)
+        private static ProtoMemberKind? GetMessageKind(ITypeSymbol type,
+            Dictionary<string, SurrogateDeclaration>? surrogates, out INamedTypeSymbol? message)
         {
             message = null;
+            if (type is not INamedTypeSymbol named) return null;
 
             // anything marked [ProtoContract] counts as reachable, supported or not; whether it can
             // actually be handled is decided when the closure gets to it
-            if (type is INamedTypeSymbol named && named.GetAttributes().Any(static a
+            if (named.GetAttributes().Any(static a
                     => a.AttributeClass?.ToDisplayString() == ProtoContractAttributeName))
+            {
+                message = named;
+                return ProtoMemberKind.Message;
+            }
+
+            // ... and so does a type the *model* surrogates, which is how something like System.Uri
+            // becomes serializable despite never being able to carry the attribute itself
+            if (surrogates is not null
+                && surrogates.ContainsKey(named.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
             {
                 message = named;
                 return ProtoMemberKind.Message;

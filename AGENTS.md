@@ -573,12 +573,27 @@ whether the pairing is legal — which conveniently rules out protobuf-net's thi
 `[ProtoConverter]`-attributed *method*, that no cast can express. A surrogate on a type with
 inheritance, or a surrogate that is a collection, are both refused: protobuf-net throws for those.
 
-**The attribute is only half the story.** protobuf-net's usual way to surrogate a type you do not own
-(`Uri`, `IPAddress`, `Type`) is `RuntimeTypeModel.SetSurrogate`, which a compile-time model cannot
-see by design — and you cannot put an attribute on `System.Uri`. Closing that would need a
-model-level opt-in, something like `[ProtoSurrogate(typeof(Uri), typeof(UriSurrogate))]` on the
-`[ProtoModel]` class. That is a design decision, not an oversight; the coverage sweep's
-member-type tail is largely waiting on it.
+#### `[ProtoSurrogate]` on the model
+
+You cannot put an attribute on `System.Uri`, so the contract-level form cannot reach a type you do
+not own — which is most of the coverage sweep's member-type tail. `[ProtoSurrogate(typeof(Uri),
+typeof(UriSurrogate))]` on the **model** is the compile-time equivalent of
+`RuntimeTypeModel.SetSurrogate`, and it is a generator-owned trigger attribute like `[ProtoModel]`
+itself, emitted from `RegisterPostInitializationOutput`.
+
+A surrogated type needs no contract attribute at all — the declaration stands in for it, which is
+why it is resolved *before* the "is this even a contract" checks and threaded down into
+`GetMessageKind`, so a `Uri`-typed member resolves as a message.
+
+Conversion is a cast in each direction by default. `Converter` + `ToSurrogate` + `ToType` name
+static methods instead, which is how a type with no usable operators is hooked up — protobuf-net's
+own `AddNodaTime` passes exactly such method pairs to `SetSurrogate`. The named methods are checked
+for existence, accessibility and signature when the declaration is read.
+
+**Status: first cut.** `Diagnostics/ModelSurrogate.input.cs` covers both forms as a golden only —
+there is no `*.reference.cs` and no differential coverage, because `AotRefGen` would have to replay
+the declarations against a `RuntimeTypeModel` before it could produce one. That is the next step if
+this direction is kept.
 
 ### Null-wrapping
 

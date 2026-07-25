@@ -28,6 +28,9 @@ namespace BuildToolsUnitTests
             MetadataReference.CreateFromFile(Assembly.Load("System.Collections").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Collections.Immutable").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Collections.Concurrent").Location),
+            // System.Uri lives in its own assembly, and is the motivating example for a model-level
+            // [ProtoSurrogate] - a type a consumer could never attribute themselves
+            MetadataReference.CreateFromFile(typeof(System.Uri).Assembly.Location),
             // fixtures declare contracts via [DataContract]/[DataMember] and [XmlType]/[XmlElement]
             MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataMemberAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(System.Xml.Serialization.XmlElementAttribute).Assembly.Location),
