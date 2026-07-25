@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -1250,7 +1250,7 @@ namespace ProtoBuf
             }
 
             [MethodImpl(HotPath)]
-            internal T DeserializeRootImpl<T>(T value = default)
+            internal T DeserializeRootImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
             {
                 var serializer = TypeModel.TryGetSerializer<T>(Model);
                 if (serializer is null)

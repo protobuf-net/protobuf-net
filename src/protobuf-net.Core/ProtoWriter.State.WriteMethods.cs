@@ -482,7 +482,9 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a base-type to the input writer
             /// </summary>
-            public void WriteBaseType<T>([DynamicallyAccessedMembers(DynamicAccess.ContractType)] T value, ISubTypeSerializer<T> serializer = null) where T : class
+            // the annotation belongs on the generic parameter, not on 'value': applied to a parameter
+            // whose type is neither Type nor string it does nothing at all, and reports IL2098
+            public void WriteBaseType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value, ISubTypeSerializer<T> serializer = null) where T : class
                 => (serializer ?? TypeModel.GetSubTypeSerializer<T>(Model)).WriteSubType(ref this, value);
 
             internal readonly TypeModel Model => _writer?.Model;

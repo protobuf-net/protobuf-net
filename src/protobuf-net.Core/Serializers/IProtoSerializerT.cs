@@ -244,7 +244,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing messages or values
     /// </summary>
-    public interface ISerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public interface ISerializer<T>
     {
         /// <summary>
         /// Deserialize an instance from the supplied writer
@@ -265,7 +265,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Provides indirect access to a serializer for a given type
     /// </summary>
-    public interface ISerializerProxy<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public interface ISerializerProxy<T>
     {
         /// <summary>
         /// Gets the actual serializer for the type
@@ -276,7 +276,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of measuring values without writing them
     /// </summary>
-    public interface IMeasuringSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
+    public interface IMeasuringSerializer<T> : ISerializer<T>
     {
         /// <summary>
         /// Measure the given value, reporting the required length for the payload (not including the field-header)
@@ -287,7 +287,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing a sequence of messages or values
     /// </summary>
-    public interface IRepeatedSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
+    public interface IRepeatedSerializer<T> : ISerializer<T>
     {
         /// <summary>
         /// Serialize a sequence of values to the supplied writer
@@ -316,7 +316,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy
     /// </summary>
-    public interface ISubTypeSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> where T : class
+    public interface ISubTypeSerializer<T> where T : class
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
@@ -333,7 +333,7 @@ namespace ProtoBuf.Serializers
     /// Represents the state of an inheritance deserialization operation
     /// </summary>
     [StructLayout(LayoutKind.Auto)]
-    public struct SubTypeState<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public struct SubTypeState<T>
         where T : class
     {
         private readonly ISerializationContext _context;
@@ -436,7 +436,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing complex objects with inheritance
     /// </summary>
-    public interface IFactory<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public interface IFactory<T>
     {
         /// <summary>
         /// Create a new instance of the type

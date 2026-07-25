@@ -10,8 +10,13 @@
             | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods // callbacks
             | DynamicallyAccessedMemberTypes.PublicNestedTypes | DynamicallyAccessedMemberTypes.NonPublicNestedTypes; // nested/child objects
 
+        // NonPublicConstructors is required because SerializerCache<TProvider> activates via
+        // Activator.CreateInstance(type, nonPublic: true); without it the trimmer is not told to keep
+        // a non-public constructor, and IL2087 reports the mismatch
         internal const DynamicallyAccessedMemberTypes Serializer
-            = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
+            = DynamicallyAccessedMemberTypes.PublicMethods
+            | DynamicallyAccessedMemberTypes.PublicParameterlessConstructor
+            | DynamicallyAccessedMemberTypes.NonPublicConstructors;
     }
 }
 

@@ -265,6 +265,29 @@ was found. Two things it has already caught, both invisible on JIT:
   and the first serialize threw `MissingMethodException` at runtime. This affected *any* hand-written
   `TypeModel` under AOT, not just generated ones.
 
+### Trim/AOT annotations: which axis they belong on
+
+`[DynamicallyAccessedMembers]` says *"someone will reflect over this T"*. That is a property of **how
+a serializer is obtained** (the reflection-based `RuntimeTypeModel` builds one by inspecting the
+contract), **not of what a serializer is**. It was originally declared on `ISerializer<T>` and its
+siblings, so every consumer paid the runtime model's cost — including generated models, which never
+reflect at all. `PrimaryTypeProvider` implements `ISerializer<Type>`, and since `System.Type` is
+saturated with `RequiresDynamicCode` members, that single instantiation produced ~180 warnings.
+
+Removing it from the serializer interfaces took the `AotSmoke` publish from **200 warnings to 33**.
+Do not reintroduce it there; annotate the reflection entry points instead.
+
+`Requires*` attributes were tried on the dynamic helpers and **reverted** — they do not remove
+warnings, they relocate them to callers, and the callers here are
+`ProtoReader.State.DeserializeRootImpl<T>`, `TypeModel.CreateInstance<T>` and
+`TypeHelper<T>..cctor()` — i.e. the *generic paths generated models use*. The reflective fallbacks
+are entangled inside the AOT-safe paths rather than sitting behind a boundary, so `Requires*` has
+nowhere clean to terminate. Fixing that properly means **restructuring** (the generic path must not
+reference the fallback at all), not annotating.
+
+The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
+the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
+
 ### Reference output from ref-emit
 
 `src/AotRefGen` (net472, hence the section above) exists so the generator's expected output is

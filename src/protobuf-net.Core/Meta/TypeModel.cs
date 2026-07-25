@@ -368,7 +368,7 @@ namespace ProtoBuf.Meta
             SerializeRootFallback(ref state, value);
         }
 
-        internal static long SerializeImpl<T>(ref ProtoWriter.State state, T value)
+        internal static long SerializeImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref ProtoWriter.State state, T value)
         {
             if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)) return 0;
 
@@ -1314,7 +1314,7 @@ namespace ProtoBuf.Meta
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 get => s_Singleton;
             }
-            protected override ISerializer<T> GetSerializer<T>() => null;
+            protected override ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>() => null;
         }
 
         /// <summary>
@@ -1378,7 +1378,7 @@ namespace ProtoBuf.Meta
         protected virtual ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => this as ISerializer<T>;
 
-        internal virtual ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
+        internal virtual ISerializer<T> GetSerializerCore<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(CompatibilityLevel ambient)
             => GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1400,7 +1400,7 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        internal static T CreateInstance<T>(ISerializationContext context, ISerializer<T> serializer = null)
+        internal static T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ISerializationContext context, ISerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsReferenceType)
             {
@@ -1480,7 +1480,7 @@ namespace ProtoBuf.Meta
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISerializer<T> TryGetSerializer<T>(TypeModel model)
+        internal static ISerializer<T> TryGetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model)
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>();
 
