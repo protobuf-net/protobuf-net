@@ -1,8 +1,6 @@
-Generator produced 6 diagnostics:
+Generator produced 5 diagnostics:
 Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L31 C14
 Contract 'AotFixtures.Dropped.NoParameterlessConstructor' is omitted from the AOT model: there is no public parameterless constructor.
-Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L45 C16
-Contract 'AotFixtures.Dropped.UsesMemberOptions' is omitted from the AOT model: [ProtoMember] with named arguments is not supported yet.
 Warning PBN2001 Aot/Data/Diagnostics/Dropped.input.cs L53 C16
 Contract 'AotFixtures.Dropped.InitOnlyMember' is omitted from the AOT model: member 'Value' has an init-only setter.
 Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L61 C16

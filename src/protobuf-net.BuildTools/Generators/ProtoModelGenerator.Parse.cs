@@ -257,7 +257,8 @@ namespace ProtoBuf.BuildTools.Generators
 
                 var atMember = PlanLocation.From(property);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
-                bool ignored = false, isPacked = false, overwriteList = false;
+                bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
+                var dataFormat = ProtoDataFormat.Default;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in property.GetAttributes())
                 {
@@ -279,21 +280,40 @@ namespace ProtoBuf.BuildTools.Generators
                         ignored = true;
                     }
                     else if (attributeName == ProtoMemberAttributeName && attribute.NamedArguments.Length != 0
-                        && attribute.NamedArguments.All(static x => x.Key is "IsPacked" or "OverwriteList"))
+                        && attribute.NamedArguments.All(static x
+                            => x.Key is "IsPacked" or "OverwriteList" or "IsRequired" or "DataFormat"))
                     {
-                        // both are pure features flags on a collection; every other option changes
-                        // the emitted shape and is still refused below
                         foreach (var argument in attribute.NamedArguments)
                         {
-                            if (argument.Value.Value is not bool flag) return Option(diagnostics, atMember, name, "this form of [ProtoMember]");
-                            if (argument.Key == "IsPacked") isPacked = flag; else overwriteList = flag;
+                            switch (argument.Key)
+                            {
+                                case "IsPacked" when argument.Value.Value is bool packed:
+                                    isPacked = packed;
+                                    continue;
+                                case "OverwriteList" when argument.Value.Value is bool overwrite:
+                                    overwriteList = overwrite;
+                                    continue;
+                                case "IsRequired" when argument.Value.Value is bool required:
+                                    isRequired = required;
+                                    continue;
+                                // the constant is the DataFormat enum's underlying int
+                                case "DataFormat" when argument.Value.Value is int format:
+                                    if (GetDataFormat(format) is not { } parsed)
+                                    {
+                                        return Option(diagnostics, atMember, name,
+                                            "this DataFormat");
+                                    }
+                                    dataFormat = parsed;
+                                    continue;
+                            }
+                            return Option(diagnostics, atMember, name, "this form of [ProtoMember]");
                         }
                         if (attribute.ConstructorArguments.Length != 1
-                            || attribute.ConstructorArguments[0].Value is not int packedNumber)
+                            || attribute.ConstructorArguments[0].Value is not int optionNumber)
                         {
                             return Option(diagnostics, atMember, name, "this form of [ProtoMember]");
                         }
-                        fieldNumber = packedNumber;
+                        fieldNumber = optionNumber;
                     }
                     else if (attributeName == ProtoMemberAttributeName)
                     {
@@ -391,7 +411,8 @@ namespace ProtoBuf.BuildTools.Generators
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, messageIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
-                        isPacked: isPacked, overwriteList: overwriteList));
+                        isPacked: isPacked, overwriteList: overwriteList,
+                        dataFormat: dataFormat, isRequired: isRequired));
                 }
                 else
                 {
@@ -399,7 +420,8 @@ namespace ProtoBuf.BuildTools.Generators
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
-                        isPacked: isPacked, overwriteList: overwriteList));
+                        isPacked: isPacked, overwriteList: overwriteList,
+                        dataFormat: dataFormat, isRequired: isRequired));
                 }
             }
 
@@ -500,6 +522,17 @@ namespace ProtoBuf.BuildTools.Generators
                 "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute");
             return type is not null && compilation.IsSymbolAccessibleWithin(type, compilation.Assembly);
         }
+
+        /// <summary>Map the DataFormat enum's underlying value onto what we can emit.</summary>
+        private static ProtoDataFormat? GetDataFormat(int value) => value switch
+        {
+            // Default and TwosComplement produce byte-identical output for the types we handle
+            0 or 2 => ProtoDataFormat.Default,
+            1 => ProtoDataFormat.ZigZag,
+            3 => ProtoDataFormat.FixedSize,
+            4 => ProtoDataFormat.Group,
+            _ => null, // WellKnown, and anything added later
+        };
 
         private static int? GetNamedInt(AttributeData attribute, string name)
         {

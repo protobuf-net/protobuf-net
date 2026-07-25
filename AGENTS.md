@@ -202,12 +202,22 @@ Collection options are pure features composition, and compose orthogonally:
 `IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*
 `OptionClearCollection`. Both are refused on a non-collection member, where they mean nothing.
 
-`DataFormat` and `IsRequired` are **not** supported yet, because they change the emitted *shape*
-rather than just the features: `DataFormat.ZigZag` on a scalar becomes
-`WriteFieldHeader(n, WireType.SignedVariant)` + `WriteInt32(v)` (note `WriteInt32`, not
-`WriteInt32Varint`), `DataFormat.FixedSize` swaps the wire type, and `IsRequired = true` drops the
-`!= 0` guard so the member is written unconditionally. On a *repeated* member `DataFormat` is only a
-features change (`WireTypeSignedVarint`/`WireTypeFixed32` in place of `WireTypeVarint`).
+`DataFormat` and `IsRequired` change the emitted *shape*, not just the features:
+
+- **`DataFormat`** selects the wire type. On a scalar that means `WriteFieldHeader(n, WireType.X)` +
+  the wire-type-aware `WriteInt32`/`WriteInt64` — **not** the `WriteInt32Varint` shortcut, which
+  writes its own varint header and therefore only applies at the default format. `FixedSize` picks
+  `Fixed32`/`Fixed64` from the *member's* width. On a repeated member it is only a features swap.
+- **`ZigZag` reads need `state.Hint(WireType.SignedVarint)` before the read**; no other format does.
+- **`Group`** differs on the **write only** (`WriteGroup` for `WriteMessage`); its read is an
+  ordinary `ReadMessage`.
+- **`TwosComplement` is byte-identical to `Default`** for every type we handle, so it maps onto it.
+- **`IsRequired`** drops the write guard so the member is always written. It is only observable for
+  value-type scalars — reference types were already unguarded on write — and it does **not** affect
+  the read: a required string still keeps its `if (x != null)` on the way back in. The emitter omits
+  the test entirely rather than emitting `if (true)`.
+
+`WellKnown` is still refused.
 
 Note `ListSet` and `RepeatedAsList` are **protogen schema-codegen** options that shape generated DTOs
 from `.proto`; they are not `[ProtoMember]` options and have nothing to do with this generator.

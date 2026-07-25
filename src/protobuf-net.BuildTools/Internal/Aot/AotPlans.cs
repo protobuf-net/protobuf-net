@@ -37,6 +37,27 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
+    /// The subset of <c>DataFormat</c> that changes what we emit.
+    /// </summary>
+    /// <remarks>
+    /// <c>TwosComplement</c> is deliberately absent: for the types we handle it produces byte-for-byte
+    /// the same output as <c>Default</c>, so it maps onto <see cref="Default"/>.
+    /// </remarks>
+    internal enum ProtoDataFormat
+    {
+        Default,
+
+        /// <summary>Signed varint; the read also needs a <c>state.Hint</c>.</summary>
+        ZigZag,
+
+        /// <summary>Fixed32 or Fixed64, depending on the width of the member.</summary>
+        FixedSize,
+
+        /// <summary>Group encoding for a sub-message; affects the write only.</summary>
+        Group,
+    }
+
+    /// <summary>
     /// How a repeated member is stored, which selects the <c>RepeatedSerializer</c> factory.
     /// </summary>
     internal enum ProtoRepeatedKind
@@ -59,8 +80,11 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
             string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
             ProtoRepeatedKind repeated = ProtoRepeatedKind.None, string? elementTypeName = null,
-            bool isPacked = false, bool overwriteList = false)
+            bool isPacked = false, bool overwriteList = false,
+            ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false)
         {
+            DataFormat = dataFormat;
+            IsRequired = isRequired;
             DeclaredTypeName = declaredTypeName;
             Repeated = repeated;
             ElementTypeName = elementTypeName;
@@ -104,6 +128,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <summary>From <c>[ProtoMember(OverwriteList = true)]</c>: adds <c>OptionClearCollection</c>.</summary>
         public bool OverwriteList { get; }
 
+        /// <summary>From <c>[ProtoMember(DataFormat = ...)]</c>; selects the wire type.</summary>
+        public ProtoDataFormat DataFormat { get; }
+
+        /// <summary>
+        /// From <c>[ProtoMember(IsRequired = true)]</c>: the member is written unconditionally.
+        /// Only observable for value-type scalars — reference types were already unguarded on write —
+        /// and it does not affect the read at all.
+        /// </summary>
+        public bool IsRequired { get; }
+
         public int FieldNumber { get; }
 
         /// <summary>The C# member name on the contract type.</summary>
@@ -142,7 +176,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
                 && DeclaredTypeName == other.DeclaredTypeName
                 && Repeated == other.Repeated && ElementTypeName == other.ElementTypeName
-                && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList;
+                && IsPacked == other.IsPacked && OverwriteList == other.OverwriteList
+                && DataFormat == other.DataFormat && IsRequired == other.IsRequired;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

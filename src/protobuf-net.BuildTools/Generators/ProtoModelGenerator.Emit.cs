@@ -179,6 +179,7 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
+                        if (ScalarReadHint(member) is { } hint) Line(sb, indent + 4, hint);
                         Line(sb, indent + 4, $"{target} = {ScalarRead(member)};");
                         break;
                     case ProtoMemberKind.String:
@@ -299,9 +300,13 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // int32 has a convenience overload that writes its own field header; everything
                     // else needs the header emitting separately, as ref-emit does
-                    case ProtoMemberKind.Int32:
-                        Line(sb, indent + 1, $"if ({ScalarGuard(member, $"tmp{number}")}) state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});");
+                    case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default:
+                        var int32Write = $"state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});";
+                        Line(sb, indent + 1, member.IsRequired
+                            ? int32Write
+                            : $"if ({ScalarGuard(member, $"tmp{number}")}) {int32Write}");
                         break;
+                    case ProtoMemberKind.Int32:
                     case ProtoMemberKind.Bool:
                     case ProtoMemberKind.SByte:
                     case ProtoMemberKind.Byte:
@@ -313,6 +318,12 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Single:
                     case ProtoMemberKind.Double:
                     case ProtoMemberKind.Char:
+                        // IsRequired means field presence, so there is no test to emit at all
+                        if (member.IsRequired)
+                        {
+                            EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                            break;
+                        }
                         Line(sb, indent + 1, $"if ({ScalarGuard(member, $"tmp{number}")})");
                         Line(sb, indent + 1, "{");
                         EmitScalarWrite(sb, indent + 2, member, number, $"tmp{number}");
@@ -340,8 +351,10 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 1, "}");
                         break;
                     case ProtoMemberKind.Message:
-                        // likewise WriteMessage(int, ...) skips nulls itself
-                        Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
+                        // likewise WriteMessage/WriteGroup(int, ...) skip nulls themselves. Group
+                        // affects the *write* only - its read is an ordinary ReadMessage
+                        var writeMessage = member.DataFormat == ProtoDataFormat.Group ? "WriteGroup" : "WriteMessage";
+                        Line(sb, indent + 1, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, this);");
                         break;
                 }
             }
@@ -417,18 +430,23 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static string RepeatedFeatures(ProtoMemberPlan member)
         {
-            var result = $"{Features}.{ElementWireType(member.Kind)}";
+            var result = $"{Features}.{ElementWireType(member)}";
             if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
             if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
             return result;
         }
 
-        private static string ElementWireType(ProtoMemberKind kind) => kind switch
+        private static string ElementWireType(ProtoMemberPlan member) => member.DataFormat switch
         {
-            ProtoMemberKind.Single => "WireTypeFixed32",
-            ProtoMemberKind.Double => "WireTypeFixed64",
-            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message => "WireTypeString",
-            _ => "WireTypeVarint",
+            ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
+            ProtoDataFormat.FixedSize => Is64Bit(member.Kind) ? "WireTypeFixed64" : "WireTypeFixed32",
+            _ => member.Kind switch
+            {
+                ProtoMemberKind.Single => "WireTypeFixed32",
+                ProtoMemberKind.Double => "WireTypeFixed64",
+                ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message => "WireTypeString",
+                _ => "WireTypeVarint",
+            },
         };
 
         /// <summary>A message element needs us passed along as its serializer; a scalar does not.</summary>
@@ -450,13 +468,14 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local)
         {
             var expression = ScalarValue(member, local);
-            if (member.Kind == ProtoMemberKind.Int32)
+            // the Int32 shortcut writes its own varint header, so it only applies at the default format
+            if (member.Kind == ProtoMemberKind.Int32 && member.DataFormat == ProtoDataFormat.Default)
             {
                 Line(sb, indent, $"state.WriteInt32Varint({number}, {expression});");
             }
             else
             {
-                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{ScalarWireType(member.Kind)});");
+                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{ScalarWireType(member)});");
                 Line(sb, indent, $"state.{ScalarSuffix(member.Kind, "Write")}({expression});");
             }
         }
@@ -472,6 +491,11 @@ namespace ProtoBuf.BuildTools.Generators
         /// The value read back: cast up to the enum type, or to char, since the read methods deal in
         /// the underlying scalar.
         /// </summary>
+        /// <summary>ZigZag reads need a wire-type hint first; no other format does.</summary>
+        private static string? ScalarReadHint(ProtoMemberPlan member)
+            => member.DataFormat == ProtoDataFormat.ZigZag
+                ? "state.Hint(global::ProtoBuf.WireType.SignedVarint);" : null;
+
         private static string ScalarRead(ProtoMemberPlan member)
         {
             var call = $"state.{ScalarSuffix(member.Kind, "Read")}()";
@@ -502,12 +526,21 @@ namespace ProtoBuf.BuildTools.Generators
             _ => kind.ToString(), // SByte, Byte, Int16, UInt16, Int32, UInt32, Int64, UInt64
         });
 
-        private static string ScalarWireType(ProtoMemberKind kind) => kind switch
+        private static string ScalarWireType(ProtoMemberPlan member) => member.DataFormat switch
         {
-            ProtoMemberKind.Single => "Fixed32",
-            ProtoMemberKind.Double => "Fixed64",
-            _ => "Varint",
+            // ZigZag is always the signed varint; FixedSize picks its width from the member
+            ProtoDataFormat.ZigZag => "SignedVarint",
+            ProtoDataFormat.FixedSize => Is64Bit(member.Kind) ? "Fixed64" : "Fixed32",
+            _ => member.Kind switch
+            {
+                ProtoMemberKind.Single => "Fixed32",
+                ProtoMemberKind.Double => "Fixed64",
+                _ => "Varint",
+            },
         };
+
+        private static bool Is64Bit(ProtoMemberKind kind)
+            => kind is ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.Double;
 
         /// <summary>
         /// The "is this worth writing" test: a member equal to its default is omitted, where the
@@ -515,6 +548,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static string ScalarGuard(ProtoMemberPlan member, string local)
         {
+            // note: IsRequired is handled by the callers omitting the test entirely, rather than
+            // by returning "true" here - generated code is read by people
             if (member.DefaultLiteral is { } declared) return $"{local} != {declared}";
 
             // an enum compares against its own zero, which need not have a declared name
