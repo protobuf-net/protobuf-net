@@ -46,6 +46,10 @@ public class Wrapped
     // the two compose, at different scopes
     [ProtoMember(10), NullWrappedCollection, NullWrappedValue] public List<Nested> Both { get; set; }
 
+    // a map is repeated too, and wraps exactly as a collection does - in both scopes
+    [ProtoMember(16), NullWrappedCollection] public Dictionary<int, int> WrappedMap { get; set; }
+    [ProtoMember(17), NullWrappedCollection, NullWrappedValue] public Dictionary<int, Nested> MapBoth { get; set; }
+
     // and a nullable element with *no* wrapping is an ordinary element: it only faults at runtime if
     // a null actually turns up, which is why there is no null in this one's samples
     [ProtoMember(15)] public List<int?> Bare { get; } = new();
@@ -77,6 +81,10 @@ public static class WrappedSamples
         new Wrapped { Both = [null, new Nested { Id = 9 }] },
 
         new Wrapped { Bare = { 10, 0 } },
+        new Wrapped { WrappedMap = null },
+        new Wrapped { WrappedMap = new() },
+        new Wrapped { WrappedMap = new() { [11] = 12 } },
+        new Wrapped { MapBoth = new() { [13] = null, [14] = new Nested { Id = 15 } } },
     ];
 }
 

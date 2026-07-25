@@ -18,8 +18,19 @@ public class Nested
 public enum Shade { None, Light }
 
 [ProtoContract]
+public struct Point
+{
+    [ProtoMember(1)] public int X { get; set; }
+}
+
+[ProtoContract]
 public class Getters
 {
+    // a struct or nullable sub-message: the read still runs, into a copy, and is then discarded -
+    // so these write but never come back, exactly as the plain scalars below do
+    [ProtoMember(11)] public Point Where { get; }
+    [ProtoMember(12)] public Point? Maybe2 { get; }
+
     [ProtoMember(1)] public List<int> Numbers { get; } = new();
     [ProtoMember(2)] public Dictionary<int, string> Map { get; } = new();
     [ProtoMember(3)] public Nested Child { get; } = new();

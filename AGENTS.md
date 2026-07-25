@@ -273,6 +273,11 @@ Collection options are pure features composition, and compose orthogonally:
   the wire-type-aware `WriteInt32`/`WriteInt64` — **not** the `WriteInt32Varint` shortcut, which
   writes its own varint header and therefore only applies at the default format. `FixedSize` picks
   `Fixed32`/`Fixed64` from the *member's* width. On a repeated member it is only a features swap.
+  On a **BCL type** it shifts the field header only, and not uniformly — see `BclWireType`, which is
+  a probed table rather than a rule: `decimal` ignores the format entirely, `Guid` honours `Group`
+  but ignores `FixedSize` below level 300, and `DateTime`/`TimeSpan` honour both. `ZigZag` is
+  refused, since it throws while ref-emit builds the model (for `decimal` it is merely ignored, so
+  refusing it there is a small deliberate over-reach).
 - **`ZigZag` reads need `state.Hint(WireType.SignedVarint)` before the read**; no other format does.
 - **`Group`** differs on the **write only** (`WriteGroup` for `WriteMessage`); its read is an
   ordinary `ReadMessage`.
@@ -283,7 +288,7 @@ Collection options are pure features composition, and compose orthogonally:
   the test entirely rather than emitting `if (true)`.
 
 `WellKnown` is meaningful only on the compatibility-level BCL types, where it promotes a level-200
-member to 240; it is refused anywhere else.
+member to 240. Anywhere else it has nothing to promote and ref-emit simply ignores it, so we do too.
 
 Note `ListSet` and `RepeatedAsList` are **protogen schema-codegen** options that shape generated DTOs
 from `.proto`; they are not `[ProtoMember]` options and have nothing to do with this generator.
@@ -554,7 +559,8 @@ from ref-emit. There are two distinct mechanisms:
   `AsGroup`); the field-presence flag is what separates a null element from a zero one. On a map the
   two flags **split**: `OptionWrappedValueFieldPresence` rides on the *map*, `OptionWrappedValue` on
   the *value features*. `[NullWrappedCollection]` adds `OptionWrappedCollection` (+`…Group`) and
-  composes with the above, since they apply at different scopes.
+  composes with the above, since they apply at different scopes — **a map wraps exactly as a
+  collection does**, in both scopes.
 - **A lone value uses a different API**: `state.WriteAny(n, features, value)` and
   `state.ReadAny(features, value)`. Note the read passes **no wire type** — it comes from the field
   header — while the write states it. The write is *unguarded*: `WriteAny` handles a null itself.
@@ -586,8 +592,9 @@ Two consequences for the emitter: the discarded read is a bare statement, so the
 casts have to go (a cast expression is not a valid C# statement — hence `ScalarRead(discard: true)`),
 and a nullable scalar drops the wrapper too (ref-emit emits a pointless `new int?(…);`).
 
-Refused, for want of a reference: a getter-only member whose type is a **struct or nullable
-sub-message**, where the read would be mutating a copy.
+That includes a **struct or nullable sub-message**: the read runs into a copy and is discarded, so
+the member writes but never comes back. Pointless, but it is what ref-emit emits, and refusing would
+cost the whole contract.
 
 **A non-public setter goes through `[UnsafeAccessor]`, the same as `init`** — see below. This is one
 of the few places we deliberately do *better* than ref-emit rather than matching it: its compiled

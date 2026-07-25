@@ -1,7 +1,6 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
-using System.Collections.Generic;
 
 namespace AotFixtures.WrappedUnsupported;
 
@@ -33,17 +32,10 @@ public class WrappedBcl
     [ProtoMember(1), NullWrappedValue] public DateTime? When { get; set; }
 }
 
-[ProtoContract]
-public class WrappedMap
-{
-    [ProtoMember(1), NullWrappedCollection] public Dictionary<int, int> Map { get; set; }
-}
-
 [ProtoModel]
 [ProtoSerializable(typeof(WrappedMessage))]
 [ProtoSerializable(typeof(WrappedNonNullable))]
 [ProtoSerializable(typeof(WrappedBcl))]
-[ProtoSerializable(typeof(WrappedMap))]
 public partial class WrappedUnsupportedModel : TypeModel
 {
 }

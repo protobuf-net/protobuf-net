@@ -590,20 +590,10 @@ namespace ProtoBuf.BuildTools.Generators
                         return Option(diagnostics, atMember, name, "[NullWrappedValue] with [DefaultValue]");
                     }
                 }
-                if (wrappedCollection && !isCollection)
+                // a map is repeated too, and wraps exactly as a collection does
+                if (wrappedCollection && !isCollection && !isMap)
                 {
-                    // maps are repeated too, but there is no ref-emit reference for one wrapped
-                    return Option(diagnostics, atMember, name, "[NullWrappedCollection] on a map");
-                }
-
-                // discarding the read is only meaningful where the instance itself is mutated, or
-                // where the value is genuinely thrown away; a struct or nullable sub-message would
-                // be mutating a copy, and there is no ref-emit reference for either
-                if (isReadOnly && kind == ProtoMemberKind.Message
-                    && (shape.IsNullable || message is { IsValueType: true }))
-                {
-                    return Member(diagnostics, atMember, name, symbol.Name,
-                        "has no setter, and is a value-type sub-message");
+                    return Option(diagnostics, atMember, name, "[NullWrappedCollection] on a non-collection");
                 }
 
                 // the compatibility level chooses the encoding for the four BCL types, and nothing
@@ -614,24 +604,18 @@ namespace ProtoBuf.BuildTools.Generators
                     compatibilityLevel = GetEffectiveCompatibilityLevel(
                         GetDeclaredLevel(symbol) ?? GetCompatibilityLevel(compilation, type), dataFormat);
 
-                    // FixedSize picks the 16-byte Guid at level 300; WellKnown has already been
-                    // consumed above. Nothing else has a meaning here.
-                    var allowed = dataFormat is ProtoDataFormat.Default or ProtoDataFormat.WellKnown
-                        || (dataFormat == ProtoDataFormat.FixedSize && kind == ProtoMemberKind.Guid);
-                    if (!allowed)
+                    // ZigZag throws while building the model; everything else selects a field-header
+                    // wire type (see BclWireType), which for several combinations means "no change"
+                    if (dataFormat == ProtoDataFormat.ZigZag)
                     {
-                        return Option(diagnostics, atMember, name, "this DataFormat on a BCL type");
+                        return Option(diagnostics, atMember, name, "DataFormat.ZigZag on a BCL type");
                     }
                     if (declaredDefault is not null)
                     {
                         return Option(diagnostics, atMember, name, "[DefaultValue] on a BCL type");
                     }
                 }
-                else if (dataFormat == ProtoDataFormat.WellKnown)
-                {
-                    // it only ever meant "use the well-known form of a BCL type"
-                    return Option(diagnostics, atMember, name, "DataFormat.WellKnown on this type");
-                }
+                // on anything else WellKnown has nothing to promote, and ref-emit simply ignores it
                 // needed for the [UnsafeAccessor] signature, and as the type argument to ReadAny/WriteAny
                 var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor || wrappedValue
                     ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);

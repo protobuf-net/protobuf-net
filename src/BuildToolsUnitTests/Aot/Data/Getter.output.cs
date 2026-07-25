@@ -13,6 +13,7 @@ partial class GetterModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -80,6 +81,18 @@ partial class GetterModel
                         global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
                         break;
                     }
+                    case 11:
+                    {
+                        var tmp11 = value.Where;
+                        state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
+                        break;
+                    }
+                    case 12:
+                    {
+                        var tmp12 = value.Maybe2.GetValueOrDefault();
+                        state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12, this);
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -129,6 +142,13 @@ partial class GetterModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
             }
+            var tmp11 = value.Where;
+            state.WriteMessage<global::AotFixtures.Getter.Point>(11, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
+            var tmp12 = value.Maybe2;
+            if (tmp12.HasValue)
+            {
+                state.WriteMessage<global::AotFixtures.Getter.Point>(12, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12.GetValueOrDefault(), this);
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Features
@@ -159,6 +179,35 @@ partial class GetterModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
+            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.Getter.Point global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Point value)
+        {
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.X = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
+        {
+            var tmp1 = value.X;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
     }

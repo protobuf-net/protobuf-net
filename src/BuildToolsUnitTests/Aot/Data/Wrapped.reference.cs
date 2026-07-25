@@ -52,20 +52,20 @@ internal sealed class ___PBN_Services___WrappedModel : ISerializer<Wrapped>, ISe
 			}
 			case 5:
 			{
-				List<Nested> both = value.Items;
-				RepeatedSerializer.CreateList<Nested>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, both, this);
+				List<Nested> groupedItems = value.Items;
+				RepeatedSerializer.CreateList<Nested>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, groupedItems, this);
 				break;
 			}
 			case 6:
 			{
-				List<Nested> both = value.GroupedItems;
-				RepeatedSerializer.CreateList<Nested>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup | SerializerFeatures.OptionWrappedValueFieldPresence, both, this);
+				List<Nested> groupedItems = value.GroupedItems;
+				RepeatedSerializer.CreateList<Nested>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup | SerializerFeatures.OptionWrappedValueFieldPresence, groupedItems, this);
 				break;
 			}
 			case 7:
 			{
-				Dictionary<int, Nested> groupedKeyed = value.Keyed;
-				MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence, groupedKeyed, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue, null, this);
+				Dictionary<int, Nested> mapBoth = value.Keyed;
+				MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence, mapBoth, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue, null, this);
 				break;
 			}
 			case 8:
@@ -90,11 +90,11 @@ internal sealed class ___PBN_Services___WrappedModel : ISerializer<Wrapped>, ISe
 			}
 			case 10:
 			{
-				List<Nested> both = value.Both;
-				both = RepeatedSerializer.CreateList<Nested>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence | SerializerFeatures.OptionWrappedCollection, both, this);
-				if (both != null)
+				List<Nested> groupedItems = value.Both;
+				groupedItems = RepeatedSerializer.CreateList<Nested>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence | SerializerFeatures.OptionWrappedCollection, groupedItems, this);
+				if (groupedItems != null)
 				{
-					value.Both = both;
+					value.Both = groupedItems;
 				}
 				break;
 			}
@@ -117,8 +117,8 @@ internal sealed class ___PBN_Services___WrappedModel : ISerializer<Wrapped>, ISe
 			}
 			case 13:
 			{
-				Dictionary<int, Nested> groupedKeyed = value.GroupedKeyed;
-				MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence, groupedKeyed, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup, null, this);
+				Dictionary<int, Nested> mapBoth = value.GroupedKeyed;
+				MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence, mapBoth, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup, null, this);
 				break;
 			}
 			case 14:
@@ -131,6 +131,26 @@ internal sealed class ___PBN_Services___WrappedModel : ISerializer<Wrapped>, ISe
 			{
 				List<int?> bare = value.Bare;
 				RepeatedSerializer.CreateList<int?>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, bare);
+				break;
+			}
+			case 16:
+			{
+				Dictionary<int, int> wrappedMap = value.WrappedMap;
+				wrappedMap = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedCollection, wrappedMap, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+				if (wrappedMap != null)
+				{
+					value.WrappedMap = wrappedMap;
+				}
+				break;
+			}
+			case 17:
+			{
+				Dictionary<int, Nested> mapBoth = value.MapBoth;
+				mapBoth = MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence | SerializerFeatures.OptionWrappedCollection, mapBoth, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue, null, this);
+				if (mapBoth != null)
+				{
+					value.MapBoth = mapBoth;
+				}
 				break;
 			}
 			default:
@@ -213,6 +233,18 @@ internal sealed class ___PBN_Services___WrappedModel : ISerializer<Wrapped>, ISe
 		{
 			List<int?> values = bare;
 			RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 15, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values);
+		}
+		Dictionary<int, int> wrappedMap = value.WrappedMap;
+		if (wrappedMap != null)
+		{
+			Dictionary<int, int> values6 = wrappedMap;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 16, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedCollection, values6, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, Nested> mapBoth = value.MapBoth;
+		if (mapBoth != null)
+		{
+			Dictionary<int, Nested> values3 = mapBoth;
+			MapSerializer.CreateDictionary<int, Nested>().WriteMap(ref state, 17, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence | SerializerFeatures.OptionWrappedCollection, values3, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue, null, this);
 		}
 	}
 

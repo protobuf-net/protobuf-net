@@ -821,6 +821,11 @@ namespace ProtoBuf.BuildTools.Generators
             if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
             // note the split: field presence rides on the *map*, the wrapping on the value
             if (member.WrappedValue) result += $" | {Features}.OptionWrappedValueFieldPresence";
+            if (member.WrappedCollection)
+            {
+                result += $" | {Features}.OptionWrappedCollection";
+                if (member.WrappedCollectionGroup) result += $" | {Features}.OptionWrappedCollectionGroup";
+            }
             if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
             if (!member.Map.IsValidProtobufMap) result += $" | {Features}.OptionFailOnDuplicateKey";
             return result;
@@ -874,8 +879,7 @@ namespace ProtoBuf.BuildTools.Generators
             var expression = ScalarValue(member, local);
             if (BclSuffix(member) is { } bcl)
             {
-                // always length-prefixed, whatever the level and type
-                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
+                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{BclWireType(member)});");
                 Line(sb, indent, $"global::ProtoBuf.BclHelpers.Write{bcl}(ref state, {expression});");
             }
             // the Int32 shortcut writes its own varint header, so it only applies at the default format
@@ -930,6 +934,25 @@ namespace ProtoBuf.BuildTools.Generators
         /// The result is going nowhere, so it is emitted as a bare statement — which means the casts
         /// have to go, since a cast expression is not a valid C# statement.
         /// </param>
+        /// <summary>
+        /// The field-header wire type for a BCL member. Length-prefixed by default, but
+        /// <c>DataFormat</c> shifts some combinations — and not uniformly.
+        /// </summary>
+        /// <remarks>
+        /// This is a probed table, not a rule: ref-emit takes the wire type from whichever serializer
+        /// (type, level, format) resolves to, and the result has real quirks. <c>decimal</c> ignores
+        /// the format entirely; <c>Guid</c> honours <c>Group</c> but ignores <c>FixedSize</c> below
+        /// level 300 (where it instead selects the 16-byte form); <c>DateTime</c> and
+        /// <c>TimeSpan</c> honour both. <c>ZigZag</c> is refused — it throws while building the model.
+        /// </remarks>
+        private static string BclWireType(ProtoMemberPlan member) => member.DataFormat switch
+        {
+            ProtoDataFormat.Group when member.Kind != ProtoMemberKind.Decimal => "StartGroup",
+            ProtoDataFormat.FixedSize when member.Kind
+                is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan => "Fixed64",
+            _ => "String",
+        };
+
         private static string ScalarRead(ProtoMemberPlan member, bool discard = false)
         {
             if (BclSuffix(member) is { } bcl) return $"global::ProtoBuf.BclHelpers.Read{bcl}(ref state)";

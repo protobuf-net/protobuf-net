@@ -7,7 +7,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-internal sealed class ___PBN_Services___GetterModel : ISerializer<Getters>, ISerializer<Nested>
+internal sealed class ___PBN_Services___GetterModel : ISerializer<Getters>, ISerializer<Point>, ISerializer<Nested>
 {
 	Getters ISerializer<Getters>.Read(ref ProtoReader.State state, Getters value)
 	{
@@ -64,6 +64,18 @@ internal sealed class ___PBN_Services___GetterModel : ISerializer<Getters>, ISer
 			{
 				int[] array = value.Array;
 				RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, array);
+				break;
+			}
+			case 11:
+			{
+				Point valueOrDefault = value.Where;
+				state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this);
+				break;
+			}
+			case 12:
+			{
+				Point valueOrDefault = value.Maybe2.GetValueOrDefault();
+				new Point?(state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this));
 				break;
 			}
 			default:
@@ -127,6 +139,14 @@ internal sealed class ___PBN_Services___GetterModel : ISerializer<Getters>, ISer
 			int[] values3 = array;
 			RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values3);
 		}
+		Point value4 = value.Where;
+		state.WriteMessage(11, SerializerFeatures.CategoryRepeated, value4, this);
+		Point? maybe2 = value.Maybe2;
+		if (maybe2.HasValue)
+		{
+			value4 = maybe2.GetValueOrDefault();
+			state.WriteMessage(12, SerializerFeatures.CategoryRepeated, value4, this);
+		}
 	}
 
 	private SerializerFeatures Features_82()
@@ -141,10 +161,43 @@ internal sealed class ___PBN_Services___GetterModel : ISerializer<Getters>, ISer
 		return this.Features_82();
 	}
 
+	SerializerFeatures ISerializer<Point>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
 	SerializerFeatures ISerializer<Nested>.get_Features()
 	{
 		//ILSpy generated this explicit interface implementation from .override directive in Features_82
 		return this.Features_82();
+	}
+
+	Point ISerializer<Point>.Read(ref ProtoReader.State state, Point value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int x = state.ReadInt32();
+				value.X = x;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Point>.Write(ref ProtoWriter.State state, Point value)
+	{
+		int x = value.X;
+		if (x != 0)
+		{
+			state.WriteInt32Varint(1, x);
+		}
 	}
 
 	Nested ISerializer<Nested>.Read(ref ProtoReader.State state, Nested value)
