@@ -1,4 +1,4 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 
@@ -75,6 +75,25 @@ public class LegacyFixed
 }
 #pragma warning restore CS0618
 
+// DataFormat on a BCL type shifts the field header, and not uniformly. Note the BclHelpers methods
+// are wire-type aware: under a Fixed64 header WriteDateTime emits the 8-byte fixed form rather than
+// a message, so this is a compact encoding rather than a mislabelled message.
+[ProtoContract]
+public class Formats
+{
+    [ProtoMember(1, DataFormat = DataFormat.FixedSize)] public DateTime FixedWhen { get; set; }
+    [ProtoMember(2, DataFormat = DataFormat.FixedSize)] public TimeSpan FixedHow { get; set; }
+    [ProtoMember(3, DataFormat = DataFormat.Group)] public DateTime GroupedWhen { get; set; }
+    [ProtoMember(4, DataFormat = DataFormat.Group)] public TimeSpan GroupedHow { get; set; }
+    [ProtoMember(5, DataFormat = DataFormat.Group)] public Guid GroupedId { get; set; }
+
+    // ... and the ones the format does not reach: decimal ignores it entirely, and a Guid below
+    // level 300 ignores FixedSize
+    [ProtoMember(6, DataFormat = DataFormat.Group)] public decimal GroupedAmount { get; set; }
+    [ProtoMember(7, DataFormat = DataFormat.FixedSize)] public decimal FixedAmount { get; set; }
+    [ProtoMember(8, DataFormat = DataFormat.FixedSize)] public Guid FixedId { get; set; }
+}
+
 // the type-level attribute is inherited by derived contracts
 [ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
 [ProtoInclude(100, typeof(InheritsLevel))]
@@ -108,6 +127,18 @@ public static class CompatSamples
         new LegacyFixed { Id = Id },
         new LevelledBase { When = When },
         new InheritsLevel { When = When, Id = Id },
+        new Formats(),
+        new Formats
+        {
+            FixedWhen = When,
+            FixedHow = TimeSpan.FromMinutes(90),
+            GroupedWhen = When,
+            GroupedHow = TimeSpan.FromSeconds(7),
+            GroupedId = Id,
+            GroupedAmount = 4.5m,
+            FixedAmount = -6.25m,
+            FixedId = Id,
+        },
     ];
 }
 
@@ -118,6 +149,7 @@ public static class CompatSamples
 [ProtoSerializable(typeof(Mixed))]
 [ProtoSerializable(typeof(WellKnown))]
 [ProtoSerializable(typeof(LegacyFixed))]
+[ProtoSerializable(typeof(Formats))]
 [ProtoSerializable(typeof(LevelledBase))]
 public partial class CompatModel : TypeModel
 {

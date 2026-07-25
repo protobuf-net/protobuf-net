@@ -273,11 +273,17 @@ Collection options are pure features composition, and compose orthogonally:
   the wire-type-aware `WriteInt32`/`WriteInt64` — **not** the `WriteInt32Varint` shortcut, which
   writes its own varint header and therefore only applies at the default format. `FixedSize` picks
   `Fixed32`/`Fixed64` from the *member's* width. On a repeated member it is only a features swap.
-  On a **BCL type** it shifts the field header only, and not uniformly — see `BclWireType`, which is
-  a probed table rather than a rule: `decimal` ignores the format entirely, `Guid` honours `Group`
-  but ignores `FixedSize` below level 300, and `DateTime`/`TimeSpan` honour both. `ZigZag` is
-  refused, since it throws while ref-emit builds the model (for `decimal` it is merely ignored, so
-  refusing it there is a small deliberate over-reach).
+  On a **BCL type** it shifts the field header, and not uniformly — see `BclWireType`, which is a
+  probed table rather than a rule: `decimal` ignores the format entirely, `Guid` honours `Group` but
+  ignores `FixedSize` below level 300, and `DateTime`/`TimeSpan` honour both. `ZigZag` is refused,
+  since it throws while ref-emit builds the model (for `decimal` it is merely ignored, so refusing it
+  there is a small deliberate over-reach).
+
+  Note the `BclHelpers.WriteXxx` methods are **wire-type aware**: under a `Fixed64` header
+  `WriteDateTime` emits the 8-byte fixed form rather than a message, so `FixedSize` on a
+  `DateTime`/`TimeSpan` is a compact encoding and not, as it first looks, a message body mislabelled
+  as `Fixed64`. The payload is ordinary, valid protobuf — `09-80-80-85-75-3A-0F-38-00` is a tag plus
+  exactly eight bytes.
 - **`ZigZag` reads need `state.Hint(WireType.SignedVarint)` before the read**; no other format does.
 - **`Group`** differs on the **write only** (`WriteGroup` for `WriteMessage`); its read is an
   ordinary `ReadMessage`.

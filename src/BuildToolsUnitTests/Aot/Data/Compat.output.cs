@@ -11,7 +11,8 @@ partial class CompatModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>
+        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.InheritsLevel>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Legacy>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>
@@ -22,6 +23,112 @@ partial class CompatModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.Compat.Formats global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Formats value)
+        {
+            value ??= new global::AotFixtures.Compat.Formats();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.FixedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    case 2:
+                    {
+                        value.FixedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
+                        break;
+                    }
+                    case 3:
+                    {
+                        value.GroupedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    case 4:
+                    {
+                        value.GroupedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
+                        break;
+                    }
+                    case 5:
+                    {
+                        value.GroupedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    case 6:
+                    {
+                        value.GroupedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    case 7:
+                    {
+                        value.FixedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    case 8:
+                    {
+                        value.FixedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Formats value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.FixedWhen;
+            state.WriteFieldHeader(1, global::ProtoBuf.WireType.Fixed64);
+            global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp1);
+            var tmp2 = value.FixedHow;
+            if (tmp2 != global::System.TimeSpan.Zero)
+            {
+                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Fixed64);
+                global::ProtoBuf.BclHelpers.WriteTimeSpan(ref state, tmp2);
+            }
+            var tmp3 = value.GroupedWhen;
+            state.WriteFieldHeader(3, global::ProtoBuf.WireType.StartGroup);
+            global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp3);
+            var tmp4 = value.GroupedHow;
+            if (tmp4 != global::System.TimeSpan.Zero)
+            {
+                state.WriteFieldHeader(4, global::ProtoBuf.WireType.StartGroup);
+                global::ProtoBuf.BclHelpers.WriteTimeSpan(ref state, tmp4);
+            }
+            var tmp5 = value.GroupedId;
+            if (tmp5 != global::System.Guid.Empty)
+            {
+                state.WriteFieldHeader(5, global::ProtoBuf.WireType.StartGroup);
+                global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp5);
+            }
+            var tmp6 = value.GroupedAmount;
+            if (tmp6 != 0m)
+            {
+                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp6);
+            }
+            var tmp7 = value.FixedAmount;
+            if (tmp7 != 0m)
+            {
+                state.WriteFieldHeader(7, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp7);
+            }
+            var tmp8 = value.FixedId;
+            if (tmp8 != global::System.Guid.Empty)
+            {
+                state.WriteFieldHeader(8, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp8);
+            }
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 

@@ -6,7 +6,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-internal sealed class ___PBN_Services___CompatModel : ISerializer<Legacy>, ISerializer<Level240>, ISerializer<Level300>, ISerializer<Mixed>, ISerializer<WellKnown>, ISerializer<LegacyFixed>, ISerializer<LevelledBase>, ISubTypeSerializer<LevelledBase>, ISerializer<InheritsLevel>, ISubTypeSerializer<InheritsLevel>
+internal sealed class ___PBN_Services___CompatModel : ISerializer<Legacy>, ISerializer<Level240>, ISerializer<Level300>, ISerializer<Mixed>, ISerializer<WellKnown>, ISerializer<LegacyFixed>, ISerializer<Formats>, ISerializer<LevelledBase>, ISubTypeSerializer<LevelledBase>, ISerializer<InheritsLevel>, ISubTypeSerializer<InheritsLevel>
 {
 	Legacy ISerializer<Legacy>.Read(ref ProtoReader.State state, Legacy value)
 	{
@@ -144,6 +144,12 @@ internal sealed class ___PBN_Services___CompatModel : ISerializer<Legacy>, ISeri
 	}
 
 	SerializerFeatures ISerializer<LegacyFixed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Formats>.get_Features()
 	{
 		//ILSpy generated this explicit interface implementation from .override directive in Features_82
 		return this.Features_82();
@@ -462,6 +468,123 @@ internal sealed class ___PBN_Services___CompatModel : ISerializer<Legacy>, ISeri
 		{
 			state.WriteFieldHeader(1, WireType.String);
 			BclHelpers.WriteGuid(ref state, id);
+		}
+	}
+
+	Formats ISerializer<Formats>.Read(ref ProtoReader.State state, Formats value)
+	{
+		if (value == null)
+		{
+			Formats formats = new Formats();
+			value = formats;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime groupedWhen = BclHelpers.ReadDateTime(ref state);
+				value.FixedWhen = groupedWhen;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan groupedHow = BclHelpers.ReadTimeSpan(ref state);
+				value.FixedHow = groupedHow;
+				break;
+			}
+			case 3:
+			{
+				DateTime groupedWhen = BclHelpers.ReadDateTime(ref state);
+				value.GroupedWhen = groupedWhen;
+				break;
+			}
+			case 4:
+			{
+				TimeSpan groupedHow = BclHelpers.ReadTimeSpan(ref state);
+				value.GroupedHow = groupedHow;
+				break;
+			}
+			case 5:
+			{
+				Guid fixedId = BclHelpers.ReadGuid(ref state);
+				value.GroupedId = fixedId;
+				break;
+			}
+			case 6:
+			{
+				decimal fixedAmount = BclHelpers.ReadDecimal(ref state);
+				value.GroupedAmount = fixedAmount;
+				break;
+			}
+			case 7:
+			{
+				decimal fixedAmount = BclHelpers.ReadDecimal(ref state);
+				value.FixedAmount = fixedAmount;
+				break;
+			}
+			case 8:
+			{
+				Guid fixedId = BclHelpers.ReadGuid(ref state);
+				value.FixedId = fixedId;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Formats>.Write(ref ProtoWriter.State state, Formats value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime fixedWhen = value.FixedWhen;
+		state.WriteFieldHeader(1, WireType.Fixed64);
+		DateTime value2 = fixedWhen;
+		BclHelpers.WriteDateTime(ref state, value2);
+		TimeSpan fixedHow = value.FixedHow;
+		if (!(fixedHow == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.Fixed64);
+			BclHelpers.WriteTimeSpan(ref state, fixedHow);
+		}
+		DateTime groupedWhen = value.GroupedWhen;
+		state.WriteFieldHeader(3, WireType.StartGroup);
+		value2 = groupedWhen;
+		BclHelpers.WriteDateTime(ref state, value2);
+		fixedHow = value.GroupedHow;
+		if (!(fixedHow == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(4, WireType.StartGroup);
+			BclHelpers.WriteTimeSpan(ref state, fixedHow);
+		}
+		Guid groupedId = value.GroupedId;
+		if (!(groupedId == Guid.Empty))
+		{
+			state.WriteFieldHeader(5, WireType.StartGroup);
+			BclHelpers.WriteGuid(ref state, groupedId);
+		}
+		decimal groupedAmount = value.GroupedAmount;
+		if (!(groupedAmount == 0m))
+		{
+			state.WriteFieldHeader(6, WireType.String);
+			BclHelpers.WriteDecimal(ref state, groupedAmount);
+		}
+		groupedAmount = value.FixedAmount;
+		if (!(groupedAmount == 0m))
+		{
+			state.WriteFieldHeader(7, WireType.String);
+			BclHelpers.WriteDecimal(ref state, groupedAmount);
+		}
+		groupedId = value.FixedId;
+		if (!(groupedId == Guid.Empty))
+		{
+			state.WriteFieldHeader(8, WireType.String);
+			BclHelpers.WriteGuid(ref state, groupedId);
 		}
 	}
 
