@@ -29,68 +29,74 @@ partial class GetterModel
                     case 1:
                     {
                         var tmp1 = value.Numbers;
-                        global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                        if (tmp1 != null) Field_AotFixtures_Getter_Getters_Numbers(value) = tmp1;
                         break;
                     }
                     case 2:
                     {
                         var tmp2 = value.Map;
-                        global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp2 != null) Field_AotFixtures_Getter_Getters_Map(value) = tmp2;
                         break;
                     }
                     case 3:
                     {
                         var tmp3 = value.Child;
-                        state.ReadMessage<global::AotFixtures.Getter.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+                        tmp3 = state.ReadMessage<global::AotFixtures.Getter.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+                        if (tmp3 != null) Field_AotFixtures_Getter_Getters_Child(value) = tmp3;
                         break;
                     }
                     case 4:
                     {
-                        state.ReadInt32();
+                        Field_AotFixtures_Getter_Getters_Value(value) = state.ReadInt32();
                         break;
                     }
                     case 5:
                     {
-                        state.ReadString();
+                        var tmp5 = state.ReadString();
+                        if (tmp5 != null) Field_AotFixtures_Getter_Getters_Text(value) = tmp5;
                         break;
                     }
                     case 6:
                     {
                         var tmp6 = value.Blob;
-                        state.AppendBytes(tmp6);
+                        tmp6 = state.AppendBytes(tmp6);
+                        if (tmp6 != null) Field_AotFixtures_Getter_Getters_Blob(value) = tmp6;
                         break;
                     }
                     case 7:
                     {
-                        state.ReadInt32();
+                        Field_AotFixtures_Getter_Getters_Maybe(value) = state.ReadInt32();
                         break;
                     }
                     case 8:
                     {
-                        state.ReadInt32();
+                        Field_AotFixtures_Getter_Getters_Colour(value) = (global::AotFixtures.Getter.Shade)state.ReadInt32();
                         break;
                     }
                     case 9:
                     {
-                        global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        Field_AotFixtures_Getter_Getters_When(value) = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
                     case 10:
                     {
                         var tmp10 = value.Array;
-                        global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                        if (tmp10 != null) Field_AotFixtures_Getter_Getters_Array(value) = tmp10;
                         break;
                     }
                     case 11:
                     {
                         var tmp11 = value.Where;
-                        state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
+                        Field_AotFixtures_Getter_Getters_Where(value) = state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
                         break;
                     }
                     case 12:
                     {
                         var tmp12 = value.Maybe2.GetValueOrDefault();
-                        state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12, this);
+                        Field_AotFixtures_Getter_Getters_Maybe2(value) = state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12, this);
                         break;
                     }
                     default:
@@ -210,5 +216,41 @@ partial class GetterModel
             var tmp1 = value.X;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Numbers>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.List<int> Field_AotFixtures_Getter_Getters_Numbers(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Map>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.Dictionary<int, string> Field_AotFixtures_Getter_Getters_Map(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Child>k__BackingField")]
+        private static extern ref global::AotFixtures.Getter.Nested Field_AotFixtures_Getter_Getters_Child(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Value>k__BackingField")]
+        private static extern ref int Field_AotFixtures_Getter_Getters_Value(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Text>k__BackingField")]
+        private static extern ref string Field_AotFixtures_Getter_Getters_Text(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Blob>k__BackingField")]
+        private static extern ref byte[] Field_AotFixtures_Getter_Getters_Blob(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Maybe>k__BackingField")]
+        private static extern ref int? Field_AotFixtures_Getter_Getters_Maybe(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Colour>k__BackingField")]
+        private static extern ref global::AotFixtures.Getter.Shade Field_AotFixtures_Getter_Getters_Colour(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<When>k__BackingField")]
+        private static extern ref global::System.DateTime Field_AotFixtures_Getter_Getters_When(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Array>k__BackingField")]
+        private static extern ref int[] Field_AotFixtures_Getter_Getters_Array(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Where>k__BackingField")]
+        private static extern ref global::AotFixtures.Getter.Point Field_AotFixtures_Getter_Getters_Where(global::AotFixtures.Getter.Getters target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Maybe2>k__BackingField")]
+        private static extern ref global::AotFixtures.Getter.Point? Field_AotFixtures_Getter_Getters_Maybe2(global::AotFixtures.Getter.Getters target);
     }
 }

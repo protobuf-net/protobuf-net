@@ -117,13 +117,15 @@ partial class SurrogateModel
                     case 4:
                     {
                         var tmp4 = value.Amounts;
-                        global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Surrogate.Money>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, this);
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Surrogate.Money>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, this);
+                        if (tmp4 != null) Field_AotFixtures_Surrogate_Holder_Amounts(value) = tmp4;
                         break;
                     }
                     case 5:
                     {
                         var tmp5 = value.Tags;
-                        global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Surrogate.Tag>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, this);
+                        tmp5 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Surrogate.Tag>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, this);
+                        if (tmp5 != null) Field_AotFixtures_Surrogate_Holder_Tags(value) = tmp5;
                         break;
                     }
                     default:
@@ -294,5 +296,11 @@ partial class SurrogateModel
             var tmp1 = value.Text;
             state.WriteString(1, tmp1);
         }
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Amounts>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.List<global::AotFixtures.Surrogate.Money> Field_AotFixtures_Surrogate_Holder_Amounts(global::AotFixtures.Surrogate.Holder target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Tags>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.Dictionary<int, global::AotFixtures.Surrogate.Tag> Field_AotFixtures_Surrogate_Holder_Tags(global::AotFixtures.Surrogate.Holder target);
     }
 }

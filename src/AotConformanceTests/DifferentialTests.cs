@@ -128,6 +128,39 @@ namespace ProtoBuf.AotConformance
             Assert.True(compared > 0, $"no contract in {modelTypeName} had two samples to concatenate");
         }
 
+        /// <summary>
+        /// A getter-only member round-trips, agreeing with <see cref="RuntimeTypeModel"/>.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be a differential case, and the reason is worth stating: a sample can only
+        /// ever hold the value its constructor gave it, so "discard the incoming value" and "store
+        /// it" agree on every sample we are able to build. It only shows up against a payload that
+        /// disagrees with the constructor — hence the hand-built bytes.
+        /// <para>
+        /// This is the case that separates ref-emit's two paths. The persisted-dll path discards the
+        /// value (it has no verifiable way to assign the field); the runtime path assigns it by
+        /// reflection. <c>[UnsafeAccessor]</c> lets generated code match the <em>runtime</em> path,
+        /// so the fixture's <c>.reference.cs</c> snapshot is the outlier here, not us.
+        /// </para>
+        /// </remarks>
+        [Fact]
+        public void GetterOnlyMemberRoundTrips()
+        {
+            var contractType = Fixtures.GetType("AotFixtures.Getter.Getters")!;
+            var generated = (TypeModel)Activator.CreateInstance(
+                Fixtures.GetType("AotFixtures.Getter.GetterModel")!)!;
+
+            // field 4 (the getter-only `Value`), varint, 7 — a value no constructor here produces
+            byte[] payload = [0x20, 0x07];
+
+            var runtime = RuntimeTypeModel.Create();
+            runtime.Add(contractType, applyDefaultBehaviour: true);
+            var value = contractType.GetProperty("Value")!;
+
+            Assert.Equal(7, value.GetValue(Deserialize(generated, payload, contractType)));
+            Assert.Equal(7, value.GetValue(Deserialize(runtime, payload, contractType)));
+        }
+
         [Fact]
         public void AtLeastOneModelWasGenerated()
         {
@@ -135,10 +168,24 @@ namespace ProtoBuf.AotConformance
             Assert.NotEmpty(DiscoverModels());
         }
 
+        /// <summary>
+        /// Models with no reference behaviour to differ from, because <see cref="RuntimeTypeModel"/>
+        /// throws on their contracts rather than producing bytes to compare against.
+        /// </summary>
+        /// <remarks>
+        /// Kept as an explicit list rather than "skip whatever ref-emit rejects", so that a contract
+        /// ref-emit starts rejecting shows up as a failure instead of quietly leaving the suite.
+        /// </remarks>
+        private static readonly HashSet<string> NotDifferentiable =
+        [
+            "AotFixtures.TrivialGetter.TrivialGetterModel", // see TrivialGetterTests
+        ];
+
         private static List<Type> DiscoverModels()
             => (from type in Fixtures.GetTypes()
                 where type.GetCustomAttributes().Any(
                     static a => a.GetType().FullName == ProtoModelAttribute)
+                where !NotDifferentiable.Contains(type.FullName!)
                 orderby type.FullName
                 select type).ToList();
 

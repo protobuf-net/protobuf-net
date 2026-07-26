@@ -825,9 +825,14 @@ namespace ProtoBuf.BuildTools.Generators
             // effects alone - which is the whole mechanism for a getter-only collection
             if (member.IsReadOnly) return $"{expression};";
 
-            return member.UsesAccessor && !contract.IsTuple
-                ? $"{AccessorName(contract, member)}({(contract.IsValueType ? "ref value" : "value")}, {expression});"
-                : $"{target} = {expression};";
+            if (!member.UsesAccessor || contract.IsTuple) return $"{target} = {expression};";
+
+            var self = contract.IsValueType ? "ref value" : "value";
+
+            // a field accessor hands back a ref, so the store is an ordinary assignment
+            return member.AccessorField is null
+                ? $"{AccessorName(contract, member)}({self}, {expression});"
+                : $"{AccessorName(contract, member)}({self}) = {expression};";
         }
 
         /// <summary>A name unique across the whole services type, since the accessors all live on it.</summary>
@@ -836,7 +841,7 @@ namespace ProtoBuf.BuildTools.Generators
             var name = contract.TypeName;
             if (name.StartsWith("global::", StringComparison.Ordinal)) name = name.Substring(8);
 
-            var sb = new StringBuilder("Set_");
+            var sb = new StringBuilder(member.AccessorField is null ? "Set_" : "Field_");
             foreach (var c in name)
             {
                 sb.Append(char.IsLetterOrDigit(c) ? c : '_');
@@ -857,11 +862,22 @@ namespace ProtoBuf.BuildTools.Generators
 
                     var self = contract.IsValueType ? $"ref {contract.TypeName}" : contract.TypeName;
                     sb.AppendLine();
-                    Line(sb, indent, "[global::System.Runtime.CompilerServices.UnsafeAccessor("
-                        + "global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, "
-                        + $"Name = \"set_{member.Name}\")]");
-                    Line(sb, indent, $"private static extern void {AccessorName(contract, member)}("
-                        + $"{self} target, {member.DeclaredTypeName} value);");
+                    if (member.AccessorField is { } fieldName)
+                    {
+                        Line(sb, indent, "[global::System.Runtime.CompilerServices.UnsafeAccessor("
+                            + "global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, "
+                            + $"Name = \"{fieldName}\")]");
+                        Line(sb, indent, $"private static extern ref {member.DeclaredTypeName} "
+                            + $"{AccessorName(contract, member)}({self} target);");
+                    }
+                    else
+                    {
+                        Line(sb, indent, "[global::System.Runtime.CompilerServices.UnsafeAccessor("
+                            + "global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, "
+                            + $"Name = \"set_{member.Name}\")]");
+                        Line(sb, indent, $"private static extern void {AccessorName(contract, member)}("
+                            + $"{self} target, {member.DeclaredTypeName} value);");
+                    }
                 }
             }
         }

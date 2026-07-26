@@ -56,6 +56,22 @@ public class Order
 
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
+
+    // getter-only, reached by writing its backing field through [UnsafeAccessor] - which is worth
+    // proving here specifically, since ILC resolves those at publish time
+    [ProtoMember(18)] public int Sequence { get; }
+
+    // ...and the same via a trivial getter, where the field is named from the source. Note it is
+    // `readonly`, so this also proves a ref to an initonly field is writable under AOT
+    private readonly string _token = "";
+    [ProtoMember(19)] public string Token => _token;
+
+    public Order() { }
+    public Order(int sequence, string token)
+    {
+        Sequence = sequence;
+        _token = token;
+    }
 }
 
 [ProtoContract]
@@ -163,7 +179,7 @@ internal static class Program
         var failures = 0;
 
         var model = new SmokeModel();
-        var original = new Order
+        var original = new Order(sequence: 5, token: "tok")
         {
             Number = 42,
             Description = "hello",
@@ -232,6 +248,10 @@ internal static class Program
         Check(ref failures, "MaybeNone empty-not-null", "empty",
             clone.MaybeNone is null ? "null" : clone.MaybeNone.Count == 0 ? "empty" : "items");
         Check(ref failures, "Price via surrogate", original.Price.Units, clone.Price.Units);
+
+        // getter-only members, restored by writing the backing field through [UnsafeAccessor]
+        Check(ref failures, "Sequence", original.Sequence, clone.Sequence);
+        Check(ref failures, "Token", original.Token, clone.Token);
         Check(ref failures, "Legacy.When", original.Legacy.When, clone.Legacy?.When);
         Check(ref failures, "Legacy.How", original.Legacy.How, clone.Legacy?.How);
         Check(ref failures, "Legacy.Id", original.Legacy.Id, clone.Legacy?.Id);

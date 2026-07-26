@@ -26,25 +26,25 @@ partial class NonPublicSetterModel
                 {
                     case 1:
                     {
-                        Set_AotFixtures_NonPublicSetter_Guarded_Value(value, state.ReadInt32());
+                        Field_AotFixtures_NonPublicSetter_Guarded_Value(value) = state.ReadInt32();
                         break;
                     }
                     case 2:
                     {
                         var tmp2 = state.ReadString();
-                        if (tmp2 != null) Set_AotFixtures_NonPublicSetter_Guarded_Text(value, tmp2);
+                        if (tmp2 != null) Field_AotFixtures_NonPublicSetter_Guarded_Text(value) = tmp2;
                         break;
                     }
                     case 3:
                     {
                         var tmp3 = value.Numbers;
                         tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) Set_AotFixtures_NonPublicSetter_Guarded_Numbers(value, tmp3);
+                        if (tmp3 != null) Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) = tmp3;
                         break;
                     }
                     case 4:
                     {
-                        Set_AotFixtures_NonPublicSetter_Guarded_Once(value, state.ReadInt32());
+                        Field_AotFixtures_NonPublicSetter_Guarded_Once(value) = state.ReadInt32();
                         break;
                     }
                     default:
@@ -71,16 +71,16 @@ partial class NonPublicSetterModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Value")]
-        private static extern void Set_AotFixtures_NonPublicSetter_Guarded_Value(global::AotFixtures.NonPublicSetter.Guarded target, int value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Value>k__BackingField")]
+        private static extern ref int Field_AotFixtures_NonPublicSetter_Guarded_Value(global::AotFixtures.NonPublicSetter.Guarded target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Text")]
-        private static extern void Set_AotFixtures_NonPublicSetter_Guarded_Text(global::AotFixtures.NonPublicSetter.Guarded target, string value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Text>k__BackingField")]
+        private static extern ref string Field_AotFixtures_NonPublicSetter_Guarded_Text(global::AotFixtures.NonPublicSetter.Guarded target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Numbers")]
-        private static extern void Set_AotFixtures_NonPublicSetter_Guarded_Numbers(global::AotFixtures.NonPublicSetter.Guarded target, global::System.Collections.Generic.List<int> value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Numbers>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.List<int> Field_AotFixtures_NonPublicSetter_Guarded_Numbers(global::AotFixtures.NonPublicSetter.Guarded target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Once")]
-        private static extern void Set_AotFixtures_NonPublicSetter_Guarded_Once(global::AotFixtures.NonPublicSetter.Guarded target, int value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Once>k__BackingField")]
+        private static extern ref int Field_AotFixtures_NonPublicSetter_Guarded_Once(global::AotFixtures.NonPublicSetter.Guarded target);
     }
 }

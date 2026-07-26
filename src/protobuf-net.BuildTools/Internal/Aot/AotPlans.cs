@@ -188,8 +188,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             bool isReadOnly = false, string? subSerializer = null,
-            string? writeCondition = null, string? specifiedMember = null)
+            string? writeCondition = null, string? specifiedMember = null,
+            string? accessorField = null)
         {
+            AccessorField = accessorField;
             WriteCondition = writeCondition;
             SpecifiedMember = specifiedMember;
             SubSerializer = subSerializer;
@@ -296,6 +298,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool IsReadOnly { get; }
 
         /// <summary>
+        /// The name of the field behind the property, when it could be identified exactly: the
+        /// backing field of an auto-property, or the one a trivial getter returns. When set, the
+        /// <c>[UnsafeAccessor]</c> targets the <i>field</i> rather than the setter.
+        /// </summary>
+        /// <remarks>
+        /// This is what makes a getter-only member assignable at all, and it is the better answer
+        /// for <c>init</c> and non-public setters too: there is no accessor call, and no reliance
+        /// on a setter that may not exist.
+        /// </remarks>
+        public string? AccessorField { get; }
+
+        /// <summary>
         /// What to pass as the sub-serializer for a message member: normally <c>this</c>, but a
         /// contract with a hand-written serializer needs that one handed over instead.
         /// </summary>
@@ -373,6 +387,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
                 && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer
+                && AccessorField == other.AccessorField
                 && WriteCondition == other.WriteCondition && SpecifiedMember == other.SpecifiedMember;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);

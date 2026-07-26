@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
 using System.Collections.Generic;
@@ -467,6 +468,7 @@ namespace ProtoBuf.BuildTools.Generators
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
                 bool usesAccessor = false, isReadOnly = false;
+                string? accessorField = null;
                 bool wrappedValue = false, wrappedValueGroup = false;
                 bool wrappedCollection = false, wrappedCollectionGroup = false;
                 var dataFormat = ProtoDataFormat.Default;
@@ -608,33 +610,38 @@ namespace ProtoBuf.BuildTools.Generators
                         {
                             return Member(diagnostics, atMember, name, symbol.Name, "has no public getter");
                         }
-                        if (property.SetMethod is null)
+                        // anything C# will not let us assign directly goes through [UnsafeAccessor],
+                        // preferring the *field* where we can name it exactly - which is the only way
+                        // to reach a getter-only member at all, and is simpler than an accessor call
+                        // for the rest. ref-emit's compiled path refuses all of these, apparently to
+                        // stay verifiable; this is one of the few places we deliberately do better.
+                        var needsAccessor = property.SetMethod is null
+                            || property.SetMethod.DeclaredAccessibility != Accessibility.Public
+                            || property.SetMethod.IsInitOnly;
+
+                        // note the field is often `initonly` - that is exactly what a getter-only
+                        // auto-property compiles to - and [UnsafeAccessor] hands back a plain `ref`
+                        // regardless, which is the documented way to reach one
+                        if (needsAccessor && SupportsUnsafeAccessor(compilation)
+                            && GetBackingField(type, property, cancellationToken) is { } field)
                         {
-                            // no setter at all is fine: the read still runs, and a collection or
-                            // sub-message is populated by mutating the instance it already holds
-                            isReadOnly = true;
-                        }
-                        else if (property.SetMethod.DeclaredAccessibility != Accessibility.Public)
-                        {
-                            // ref-emit's *compiled* path refuses these ("cannot apply changes to
-                            // property"), apparently to stay verifiable; its runtime path reaches
-                            // them by reflection. [UnsafeAccessor] lets us do neither - a deliberate
-                            // divergence rather than a match
-                            if (!SupportsUnsafeAccessor(compilation))
-                            {
-                                return Member(diagnostics, atMember, name, symbol.Name,
-                                    "has a non-public setter, which needs [UnsafeAccessor] (net8.0 or later)");
-                            }
+                            accessorField = field.Name;
                             usesAccessor = true;
                         }
-                        // an init-only setter can only be reached via [UnsafeAccessor], which is
-                        // net8.0 and up; below that there is no way to assign it at all
-                        if (property.SetMethod is { IsInitOnly: true })
+                        else if (property.SetMethod is null)
+                        {
+                            // no setter and no field we can name: the read still runs, and a
+                            // collection or sub-message is populated by mutating what it already holds
+                            isReadOnly = true;
+                        }
+                        else if (needsAccessor)
                         {
                             if (!SupportsUnsafeAccessor(compilation))
                             {
                                 return Member(diagnostics, atMember, name, symbol.Name,
-                                    "has an init-only setter, which needs [UnsafeAccessor] (net8.0 or later)");
+                                    property.SetMethod.IsInitOnly
+                                        ? "has an init-only setter, which needs [UnsafeAccessor] (net8.0 or later)"
+                                        : "has a non-public setter, which needs [UnsafeAccessor] (net8.0 or later)");
                             }
                             usesAccessor = true;
                         }
@@ -738,7 +745,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -756,7 +763,7 @@ namespace ProtoBuf.BuildTools.Generators
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
-                        subSerializer: subSerializer));
+                        accessorField: accessorField, subSerializer: subSerializer));
                 }
                 else
                 {
@@ -766,7 +773,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField));
                 }
             }
 
@@ -1172,6 +1179,78 @@ namespace ProtoBuf.BuildTools.Generators
                         return $"global::ProtoBuf.Serializers.SerializerCache.Get<"
                             + external.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ", "
                             + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ">()";
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The field behind a property, when it can be identified exactly: the compiler-generated
+        /// backing field of an auto-property, or the single field a trivial getter returns.
+        /// </summary>
+        /// <remarks>
+        /// This is what lets <c>[UnsafeAccessor]</c> reach a member C# will not let us assign - a
+        /// getter-only or <c>init</c> property - by going to the field instead of the accessor.
+        /// Anything less than trivial returns null and falls back to the property accessor, since
+        /// guessing a field name would silently write to the wrong place.
+        /// </remarks>
+        private static IFieldSymbol? GetBackingField(INamedTypeSymbol type, IPropertySymbol property,
+            CancellationToken cancellationToken)
+        {
+            // an auto-property: Roslyn hands us the field, so there is nothing to infer
+            foreach (var member in type.GetMembers())
+            {
+                if (member is IFieldSymbol { IsImplicitlyDeclared: true } backing
+                    && SymbolEqualityComparer.Default.Equals(backing.AssociatedSymbol, property))
+                {
+                    return backing;
+                }
+            }
+
+            // ... otherwise accept only `Foo => _foo;` and `get { return _foo; }`
+            var name = GetTrivialGetterField(property, cancellationToken);
+            if (name is null) return null;
+
+            foreach (var member in type.GetMembers(name))
+            {
+                if (member is IFieldSymbol { IsStatic: false, IsConst: false } field
+                    && SymbolEqualityComparer.Default.Equals(field.Type, property.Type))
+                {
+                    return field;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>The identifier a trivial getter returns, if that is all it does.</summary>
+        private static string? GetTrivialGetterField(IPropertySymbol property, CancellationToken cancellationToken)
+        {
+            foreach (var reference in property.DeclaringSyntaxReferences)
+            {
+                if (reference.GetSyntax(cancellationToken) is not PropertyDeclarationSyntax declaration) continue;
+
+                // Foo => _foo;
+                if (declaration.ExpressionBody is { Expression: IdentifierNameSyntax arrow })
+                {
+                    return arrow.Identifier.ValueText;
+                }
+                if (declaration.AccessorList is not { } accessors) continue;
+
+                foreach (var accessor in accessors.Accessors)
+                {
+                    if (!accessor.IsKind(SyntaxKind.GetAccessorDeclaration)) continue;
+
+                    // get => _foo;
+                    if (accessor.ExpressionBody is { Expression: IdentifierNameSyntax shorthand })
+                    {
+                        return shorthand.Identifier.ValueText;
+                    }
+                    // get { return _foo; }
+                    if (accessor.Body is { Statements: { Count: 1 } statements }
+                        && statements[0] is ReturnStatementSyntax { Expression: IdentifierNameSyntax returned })
+                    {
+                        return returned.Identifier.ValueText;
                     }
                 }
             }

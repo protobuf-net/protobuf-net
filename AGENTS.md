@@ -690,11 +690,11 @@ parameterless `bool` method.
 
 ### Getter-only members
 
-A property with no setter still round-trips: the read runs **exactly as it would otherwise, but the
-result is discarded** rather than assigned. For a collection, map or sub-message that is the whole
-mechanism — the instance the property already holds is passed in and mutated. For a scalar the value
-really is read and thrown away; that is ref-emit's behaviour, and refusing would cost the whole
-contract.
+A property with no setter is **assigned through its backing field** whenever that field can be named
+exactly — see "Reaching a member C# will not let us assign" below. Only when it cannot is the read
+discarded: the read still runs exactly as it would otherwise, and for a collection, map or
+sub-message that is the whole mechanism, since the instance the property already holds is passed in
+and mutated. For a scalar the value really is read and thrown away.
 
 Two consequences for the emitter: the discarded read is a bare statement, so the enum and `char`
 casts have to go (a cast expression is not a valid C# statement — hence `ScalarRead(discard: true)`),
@@ -704,10 +704,52 @@ That includes a **struct or nullable sub-message**: the read runs into a copy an
 the member writes but never comes back. Pointless, but it is what ref-emit emits, and refusing would
 cost the whole contract.
 
-**A non-public setter goes through `[UnsafeAccessor]`, the same as `init`** — see below. This is one
-of the few places we deliberately do *better* than ref-emit rather than matching it: its compiled
-path refuses them ("cannot apply changes to property", apparently to stay verifiable) while its
-runtime path reaches them by reflection, and `[UnsafeAccessor]` needs neither compromise.
+### Reaching a member C# will not let us assign
+
+Three shapes need help: `init`-only setters, non-public setters, and no setter at all. All three go
+through `[UnsafeAccessor]` (net8.0+), which unlike reflection is resolved at publish time and so
+stays AOT-safe. **The field is preferred over the setter** wherever we can name it exactly — it is
+the only way to reach a getter-only member, and for the other two it is simply less machinery.
+
+The field is taken from one of two places, and never guessed:
+
+- an **auto-property**, where Roslyn hands us the backing field outright (an `IsImplicitlyDeclared`
+  field whose `AssociatedSymbol` is the property). No inference, so no chance of naming the wrong
+  field; the name renders as `<Foo>k__BackingField`;
+- a **trivial getter** — `Foo => _foo;`, `get => _foo;`, or `get { return _foo; }` — read off the
+  syntax and matched to a field of the same type on the same type.
+
+Anything less than trivial (`Doubled => _value * 2;`) falls back: the property accessor if there is
+a setter to call, otherwise read-and-discard. A guessed field name would silently write to the
+wrong place, which is far worse than not writing at all.
+
+A getter-only auto-property's backing field is `initonly`; `UnsafeAccessorKind.Field` hands back a
+plain `ref` regardless and writing through it is fine — proven under native AOT (`AotSmoke` covers
+both an `initonly` backing field and an explicitly `readonly` one), not just on JIT.
+
+**This is where we diverge from ref-emit, and the two paths diverge from each other:**
+
+| | persisted dll | `RuntimeTypeModel` | generated |
+|---|---|---|---|
+| non-public setter | throws | reflection | field |
+| getter-only auto-property | discards | backing field | field |
+| getter-only trivial getter | throws | throws | **field** |
+
+So for auto-properties we are *matching* the runtime model — which the generator previously failed
+to do, discarding values ref-emit restores. For a trivial getter we are strictly more capable than
+either: `PropertyDecorator.SanityCheck` throws ("cannot apply changes to property") because
+reflection has no setter to call and no way to know which field the getter reads. We know, because
+we can see the source.
+
+That last row is why `TrivialGetter.input.cs` has **no samples and no `.reference.cs`** and is on
+`DifferentialTests.NotDifferentiable`: there is no reference behaviour to differ from. It is covered
+by `TrivialGetterTests` instead, which round-trips directly and pins the ref-emit throw.
+
+Getter-only members are also invisible to the differential suite *in principle*, and the reason is
+worth remembering before adding a fixture for one: a sample can only ever hold the value its
+constructor gave it, so "discard the incoming value" and "store it" agree on every sample that can
+be built. It only shows up against a payload that disagrees with the constructor, which is what
+`GetterOnlyMemberRoundTrips` builds by hand.
 
 Consequently `NonPublicSetter.input.cs` has **no `*.reference.cs`**: ref-emit declines to compile it,
 and `AotRefGen` now skips a model it cannot emit rather than failing the whole run. The differential

@@ -27,7 +27,7 @@ partial class InitModel
                 {
                     case 1:
                     {
-                        Set_AotFixtures_Init_InitStruct_Number(ref value, state.ReadInt32());
+                        Field_AotFixtures_Init_InitStruct_Number(ref value) = state.ReadInt32();
                         break;
                     }
                     default:
@@ -57,20 +57,20 @@ partial class InitModel
                 {
                     case 1:
                     {
-                        Set_AotFixtures_Init_Inits_Number(value, state.ReadInt32());
+                        Field_AotFixtures_Init_Inits_Number(value) = state.ReadInt32();
                         break;
                     }
                     case 2:
                     {
                         var tmp2 = state.ReadString();
-                        if (tmp2 != null) Set_AotFixtures_Init_Inits_Text(value, tmp2);
+                        if (tmp2 != null) Field_AotFixtures_Init_Inits_Text(value) = tmp2;
                         break;
                     }
                     case 3:
                     {
                         var tmp3 = value.Message;
                         tmp3 = state.ReadMessage<global::AotFixtures.Init.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) Set_AotFixtures_Init_Inits_Message(value, tmp3);
+                        if (tmp3 != null) Field_AotFixtures_Init_Inits_Message(value) = tmp3;
                         break;
                     }
                     case 4:
@@ -112,7 +112,7 @@ partial class InitModel
                 {
                     case 1:
                     {
-                        Set_AotFixtures_Init_Nested_Id(value, state.ReadInt32());
+                        Field_AotFixtures_Init_Nested_Id(value) = state.ReadInt32();
                         break;
                     }
                     default:
@@ -130,19 +130,19 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Number")]
-        private static extern void Set_AotFixtures_Init_InitStruct_Number(ref global::AotFixtures.Init.InitStruct target, int value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Number>k__BackingField")]
+        private static extern ref int Field_AotFixtures_Init_InitStruct_Number(ref global::AotFixtures.Init.InitStruct target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Number")]
-        private static extern void Set_AotFixtures_Init_Inits_Number(global::AotFixtures.Init.Inits target, int value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Number>k__BackingField")]
+        private static extern ref int Field_AotFixtures_Init_Inits_Number(global::AotFixtures.Init.Inits target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Text")]
-        private static extern void Set_AotFixtures_Init_Inits_Text(global::AotFixtures.Init.Inits target, string value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Text>k__BackingField")]
+        private static extern ref string Field_AotFixtures_Init_Inits_Text(global::AotFixtures.Init.Inits target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Message")]
-        private static extern void Set_AotFixtures_Init_Inits_Message(global::AotFixtures.Init.Inits target, global::AotFixtures.Init.Nested value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Message>k__BackingField")]
+        private static extern ref global::AotFixtures.Init.Nested Field_AotFixtures_Init_Inits_Message(global::AotFixtures.Init.Inits target);
 
-        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Method, Name = "set_Id")]
-        private static extern void Set_AotFixtures_Init_Nested_Id(global::AotFixtures.Init.Nested target, int value);
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Id>k__BackingField")]
+        private static extern ref int Field_AotFixtures_Init_Nested_Id(global::AotFixtures.Init.Nested target);
     }
 }
