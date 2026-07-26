@@ -104,6 +104,86 @@ Not bugs exactly, but each cost time and each is a trap for callers:
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.
 - `AnalyzerReleases.Unshipped.md` has drifted: `PBN0020`–`PBN0022` are missing from it.
 
+## Future ideas
+
+Not defects — things worth doing that were scoped out, with the measurements that were taken at the
+time so the next person does not have to retake them.
+
+### A. A UTF-8 fast path for string-shaped members (`IUtf8SpanFormattable`)
+
+Every string-shaped member goes through a `string`: parseable types do `ToString()` on the way out
+and `Parse(string)` on the way back, and `WriteString` takes a `string`. For types implementing
+`IUtf8SpanFormattable` the write could format straight into the output buffer, skipping the
+intermediate `string` allocation entirely.
+
+**This needs a library-side addition first.** `ProtoWriter.State` has no `WriteString`-equivalent
+taking UTF-8 bytes, so there is nothing for the generator to call. That is the blocking item, not
+the generator work — which is easy, because a source generator can test the interface at *compile*
+time and pick per-type, where ref-emit would need a runtime check.
+
+The two halves are **not symmetric**, which is the thing to know before designing around this.
+Probed against the actual ref assemblies rather than recalled:
+
+| | `IUtf8SpanFormattable` | `IUtf8SpanParsable<TSelf>` |
+| --- | :-: | :-: |
+| `IPAddress`, `Version`, `BigInteger`, `Guid`, `decimal`, `int`, `Half`, `Int128`, `UInt128` | yes | yes |
+| `DateOnly`, `TimeOnly`, `TimeSpan`, `DateTime`, `DateTimeOffset` | yes | **no** |
+| `IPEndPoint`, `EntityTagHeaderValue` | no | no |
+
+- Both interfaces exist from **net8.0**, so the generator would probe for them exactly as it does for
+  `UnsafeAccessorAttribute` and `CreateReadOnySet`.
+- Implementations **move between versions**: `IPAddress` implements only the formattable half on
+  net8.0 and both by net10. So this must be decided from the compilation's own reference set, never
+  from a hard-coded list.
+- The read side is the weak half — the date/time family formats to UTF-8 but does not parse from it —
+  so a design gated on "implements both" would cover almost nothing. Format-via-UTF-8,
+  parse-via-`string` is the realistic shape.
+- **The utf8 pair is not a superset of parseable**, so it cannot be used as the gate on its own:
+  `Complex` and `Rune` implement both interfaces but have no `static Parse(string)`, and accepting
+  them would *widen* the set of types protobuf-net serializes — a wire-compat change, not an
+  optimisation.
+
+Worth noting the win is allocation, not correctness: the wire bytes are identical either way, so this
+is measurable rather than observable, and the differential suite would pass unchanged.
+
+### B. The coverage sweep undercounts generics
+
+`src/AotCoverage` reports "not seedable, generic: 19" — open generic definitions it cannot name with
+a `typeof(...)` in the generated seed list. That was accurate when the generator refused all
+generics, but closed constructions are supported now, so those 19 are unmeasured rather than
+unsupported.
+
+The tool could substitute a plausible argument (`int`, or the first type satisfying the constraints)
+and seed the construction, giving a truer denominator. Care needed: constraint satisfaction is not
+guaranteed, and a construction the sweep invents is not evidence that a *consumer* has one.
+
+### C. `System.Type` members are deliberately not supported
+
+Five contracts in the sweep have a `System.Type` member, which ref-emit serializes with
+`SystemTypeSerializer`. Refused on purpose rather than not yet done: it round-trips assembly-qualified
+names through `Type.GetType`, which is exactly the reflection AOT cannot do, so emitting it would
+produce a serializer that compiles and then fails at runtime. The honest options are a diagnostic
+(what happens today) or a surrogate the consumer supplies.
+
+Same reasoning applies to `System.IO.Stream` (1), which is not serializable in any case.
+
+### D. Generated accessor names could collide in principle
+
+`AccessorName` builds an identifier by replacing every non-alphanumeric character in the contract's
+full name with `_`. Distinct types can therefore sanitise to the same identifier — `Ns.A<B>` and
+`Ns.A_B_` both give `Ns_A_B_`. It needs two such types in one model, both needing `[UnsafeAccessor]`,
+so it has not been hit; a uniqueness pass (suffix on clash) would close it cheaply.
+
+Worth doing before generics see real use, since closed constructions make contrived-looking names
+much more likely.
+
+### E. Nested and generic *model* types are refused
+
+`ProtoModelGenerator.Parse` bails on `model.ContainingType is not null || model.IsGenericType`, so
+`[ProtoModel]` must be on a top-level non-generic class. Nested would be straightforward — the emit
+needs to reopen the enclosing types as `partial`. A generic model is a different question and
+probably not worth it: the services type is what makes the closed-world guarantee work.
+
 ## Fixed on this branch
 
 - **`SerializerCache.Get<TProvider, T>` had no trim annotations**, while the

@@ -830,6 +830,10 @@ parseable fixture looks like a generator bug.
 Note the coverage sweep does **not** enable this, deliberately — a real consumer has to opt in, so
 counting these as emittable would overstate what works out of the box.
 
+A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `docs/aot-findings.md` under
+"Future ideas" — it is blocked on protobuf-net having no UTF-8 `WriteString` equivalent, and the
+read half of the interface pair is implemented by far fewer types than the write half.
+
 ### Schema-only options
 
 Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.
