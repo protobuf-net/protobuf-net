@@ -627,12 +627,19 @@ there is no `*.reference.cs` and no differential coverage, because `AotRefGen` w
 the declarations against a `RuntimeTypeModel` before it could produce one. That is the next step if
 this direction is kept.
 
-**NodaTime is annotated but not yet working**, and `src/AotNodaTimeSmoke` reports exactly why. The
-declarations are found and applied — the diagnostics name `NodaTime.Duration`/`Instant` — but their
-surrogates are `WellKnownTypes.Duration`/`Timestamp`, which carry their *own* hand-written serializer.
-Our surrogate emit **inlines** the surrogate's members, and there are none to inline; what that case
-needs is a "convert, then delegate to the surrogate's serializer" shape. Alternatively, exposing a
-public serializer for the well-known types would let the ordinary `Serializer =` path handle them.
+**NodaTime works end to end** — `src/AotNodaTimeSmoke` is a consumer that references only
+`protobuf-net.NodaTime`, declares no surrogates of its own, and round-trips `Instant` and `Duration`.
+
+Getting there needed a **second surrogate emit shape**. The usual one inlines the surrogate's
+members, but `WellKnownTypes.Duration`/`Timestamp` carry their own hand-written serializer and so
+have no members to inline. When a surrogate has a serializer, the body converts and then
+**delegates** to it. For the well-known types that serializer is the *internal* `PrimaryTypeProvider`,
+which generated code cannot name — the public `TypeModel.GetInbuiltSerializer<T>(default, default)`
+is how it is obtained instead. (Both arguments are spelled out: the defaulted overload is ambiguous
+with the explicit one from a call site supplying neither.)
+
+Such a surrogate is also **not** a contract in the model — it is delegated to, not emitted — so it is
+neither enqueued nor a reason to drop anything by cascade.
 
 ### Null-wrapping
 

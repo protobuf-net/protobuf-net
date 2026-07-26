@@ -133,8 +133,28 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
 
-            // a surrogate contract's serializer *is* the surrogate's, with a conversion at each end;
-            // everything below then works on the converted local rather than on `value`
+            // when the surrogate carries a serializer of its own there are no members to inline, so
+            // we convert and hand over to it - the shape a well-known-type surrogate needs
+            if (contract.SurrogateSerializer is { } surrogateSerializer)
+            {
+                Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
+                Line(sb, indent + 1, $"surrogate = {surrogateSerializer}.Read(ref state, surrogate);");
+                Line(sb, indent + 1, $"return {ToUnderlying(contract, "surrogate")};");
+                Line(sb, indent, "}");
+                sb.AppendLine();
+
+                Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
+                Line(sb, indent + 1, $"{surrogateSerializer}.Write(ref state, surrogate);");
+                Line(sb, indent, "}");
+                return;
+            }
+
+            // otherwise a surrogate contract's serializer *is* the surrogate's, with a conversion at
+            // each end; everything below then works on the converted local rather than on `value`
             var surrogate = contract.SurrogateTypeName;
             var instance = surrogate is null ? "value" : "surrogate";
             var bodyType = surrogate ?? contract.TypeName;

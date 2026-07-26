@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **208** of 1392 (86% emitted)
-of which dropped only by cascade: 42
+contracts dropped: **204** of 1392 (86% emitted)
+of which dropped only by cascade: 38
 
 | count | reason |
 | ---: | --- |

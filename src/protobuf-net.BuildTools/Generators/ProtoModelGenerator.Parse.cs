@@ -126,7 +126,10 @@ namespace ProtoBuf.BuildTools.Generators
                     // root dispatches to each sub-type by name, so one missing link breaks the rest
                     var broken = contract.RootTypeName is { } root && !parsed.ContainsKey(root)
                         ? root
-                        : contract.SurrogateTypeName is { } surrogate && !parsed.ContainsKey(surrogate)
+                        // a surrogate with a serializer of its own is delegated to, not inlined, so
+                        // it needs no plan here
+                        : contract.SurrogateSerializer is null
+                            && contract.SurrogateTypeName is { } surrogate && !parsed.ContainsKey(surrogate)
                         ? surrogate
                         : contract.SubTypes.FirstOrDefault(x => !parsed.ContainsKey(x.TypeName)).TypeName;
                     if (broken is not null)
@@ -271,6 +274,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             var surrogateType = declaredSurrogate?.Surrogate;
             INamedTypeSymbol? externalSerializer = null;
+            string? surrogateSerializer = null;
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
             var ignoreListHandling = false;
@@ -396,9 +400,26 @@ namespace ProtoBuf.BuildTools.Generators
                         "a surrogate without conversion operators in both directions");
                 }
 
-                // it is a contract in its own right, and ref-emit emits a serializer for it too
-                reachable.Add(surrogateType);
-                memberSource = surrogateType;
+                // when the surrogate has a serializer of its own there are no members to inline, so
+                // the body converts and then *delegates* to it - which is what lets a well-known
+                // type serve as a surrogate, as protobuf-net.NodaTime does
+                surrogateSerializer = GetSubSerializer(compilation, surrogateType);
+                if (surrogateSerializer == "null")
+                {
+                    // inbuilt: obtainable without naming the (internal) provider
+                    // both arguments spelled out: the defaulted overload is ambiguous with the
+                    // explicit one from a call site that supplies neither
+                    surrogateSerializer = "global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<"
+                        + surrogateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                        + ">(default, default)";
+                }
+                else if (surrogateSerializer is null)
+                {
+                    // an ordinary contract: it is a contract in its own right, and its members are
+                    // inlined into this one's body
+                    reachable.Add(surrogateType);
+                    memberSource = surrogateType;
+                }
                 isValueType = surrogateType.IsValueType;
             }
 
@@ -810,7 +831,8 @@ namespace ProtoBuf.BuildTools.Generators
                 new(members.ToArray()), isValueType, skipConstructor, isSealed: memberSource.IsSealed,
                 rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible,
                 surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying);
+                toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying,
+                surrogateSerializer: surrogateSerializer);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)

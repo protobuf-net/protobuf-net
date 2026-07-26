@@ -420,9 +420,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
             string? toSurrogate = null, string? toUnderlying = null,
-            string? externalSerializerTypeName = null)
+            string? externalSerializerTypeName = null, string? surrogateSerializer = null)
         {
             ExternalSerializerTypeName = externalSerializerTypeName;
+            SurrogateSerializer = surrogateSerializer;
             SurrogateTypeName = surrogateTypeName;
             ToSurrogate = toSurrogate;
             ToUnderlying = toUnderlying;
@@ -511,6 +512,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public string? SurrogateTypeName { get; }
 
         /// <summary>
+        /// When the surrogate has a serializer of its own, the expression yielding it: the body then
+        /// <em>delegates</em> to that after converting, rather than inlining the surrogate's members
+        /// (of which there may be none). This is how a well-known type serves as a surrogate.
+        /// </summary>
+        public string? SurrogateSerializer { get; }
+
+        /// <summary>
         /// The fully-qualified static method converting the type to its surrogate, when the pairing
         /// names one; null means a plain cast, which is what an operator-based surrogate uses.
         /// </summary>
@@ -532,7 +540,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible
                 && SurrogateTypeName == other.SurrogateTypeName
                 && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying
-                && ExternalSerializerTypeName == other.ExternalSerializerTypeName;
+                && ExternalSerializerTypeName == other.ExternalSerializerTypeName
+                && SurrogateSerializer == other.SurrogateSerializer;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 
