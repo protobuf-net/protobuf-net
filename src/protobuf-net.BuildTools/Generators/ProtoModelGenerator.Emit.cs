@@ -340,6 +340,7 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.TimeOnly:
                     case ProtoMemberKind.IntPtr:
                     case ProtoMemberKind.UIntPtr:
+                    case ProtoMemberKind.Parseable:
                         if (ScalarReadHint(member) is { } hint) Line(sb, indent + 3, hint);
                         Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member, discard: member.IsReadOnly)));
                         break;
@@ -574,6 +575,19 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.String:
                         // no null test: WriteString(int, string) skips nulls itself
                         Line(sb, indent, $"state.WriteString({number}, tmp{number});");
+                        break;
+                    case ProtoMemberKind.Parseable when !member.MessageIsValueType:
+                        // a reference type has to be null-tested: ToString() would throw, and the
+                        // bare WriteString(string) overload does not skip nulls the way the
+                        // field-number one does
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.Parseable:
+                        // a value type is never null, and has no trivial value to compare against
+                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
                         break;
                     case ProtoMemberKind.Bytes:
                         // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its
@@ -998,7 +1012,12 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local)
         {
             var expression = ScalarValue(member, local);
-            if (BclSuffix(member) is { } bcl)
+            if (member.Kind == ProtoMemberKind.Parseable)
+            {
+                Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
+                Line(sb, indent, $"state.WriteString({expression}.ToString());");
+            }
+            else if (BclSuffix(member) is { } bcl)
             {
                 Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{BclWireType(member)});");
                 Line(sb, indent, $"global::ProtoBuf.BclHelpers.Write{bcl}(ref state, {expression});");
@@ -1089,6 +1108,10 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static string ScalarRead(ProtoMemberPlan member, bool discard = false)
         {
+            if (member.Kind == ProtoMemberKind.Parseable)
+            {
+                return $"{member.DeclaredTypeName}.Parse(state.ReadString())";
+            }
             if (BclSuffix(member) is { } bcl) return $"global::ProtoBuf.BclHelpers.Read{bcl}(ref state)";
 
             var call = $"state.{ScalarSuffix(member.Kind, "Read")}()";

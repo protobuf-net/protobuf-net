@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -63,11 +63,27 @@ namespace ProtoBuf.BuildTools.Generators
             // them moves, and putting them in the plan would invalidate the cached emit step
             var locations = new Dictionary<string, PlanLocation>(StringComparer.Ordinal);
 
+            // off by default, exactly as RuntimeTypeModel.AllowParseableTypes is: it changes the wire
+            // form of any member whose type qualifies, so it has to be opted into on both sides
+            var allowParseableTypes = false;
+
             foreach (var attribute in model.GetAttributes())
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (attribute.AttributeClass?.ToDisplayString() != ProtoSerializableAttributeName) continue;
+                var attributeName = attribute.AttributeClass?.ToDisplayString();
+                if (attributeName == ProtoModelAttributeName)
+                {
+                    foreach (var named in attribute.NamedArguments)
+                    {
+                        if (named.Key == "AllowParseableTypes" && named.Value.Value is true)
+                        {
+                            allowParseableTypes = true;
+                        }
+                    }
+                    continue;
+                }
+                if (attributeName != ProtoSerializableAttributeName) continue;
                 if (attribute.ConstructorArguments.Length != 1) continue;
                 if (attribute.ConstructorArguments[0].Value is INamedTypeSymbol seed) pending.Enqueue(seed);
             }
@@ -84,7 +100,8 @@ namespace ProtoBuf.BuildTools.Generators
 
                 locations[key] = PlanLocation.From(type);
 
-                var contract = ParseContract(compilation, type, diagnostics, surrogates, out var reachable, cancellationToken);
+                var contract = ParseContract(compilation, type, diagnostics, surrogates,
+                    allowParseableTypes, out var reachable, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
                 foreach (var next in reachable) pending.Enqueue(next);
             }
@@ -180,6 +197,7 @@ namespace ProtoBuf.BuildTools.Generators
             INamedTypeSymbol type,
             List<PlanDiagnostic> diagnostics,
             Dictionary<string, SurrogateDeclaration> surrogates,
+            bool allowParseableTypes,
             out List<INamedTypeSymbol> reachable,
             CancellationToken cancellationToken)
         {
@@ -587,7 +605,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 if (ignored) continue;
 
-                if ((isPacked || overwriteList) && GetMemberShape(compilation, memberType, surrogates)
+                if ((isPacked || overwriteList) && GetMemberShape(compilation, memberType, surrogates, allowParseableTypes)
                     is not ({ Repeated.Factory: not null } or { Map.Factory: not null }))
                 {
                     // both options only mean anything for a collection
@@ -667,7 +685,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // they *replace* the trivial-value write guard rather than adding to it
                 var writeCondition = GetConditionalPattern(memberSource, symbol.Name, out var specifiedMember);
 
-                if (GetMemberShape(compilation, memberType, surrogates) is not { } shape)
+                if (GetMemberShape(compilation, memberType, surrogates, allowParseableTypes) is not { } shape)
                 {
                     return Member(diagnostics, atMember, name, symbol.Name,
                         $"has unsupported type '{memberType.ToDisplayString()}'");
@@ -779,6 +797,8 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
+                        // a parseable value type is never null, so the write skips the null test
+                        messageIsValueType: kind == ProtoMemberKind.Parseable && memberType.IsValueType,
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
@@ -1511,7 +1531,7 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type,
-            Dictionary<string, SurrogateDeclaration>? surrogates = null)
+            Dictionary<string, SurrogateDeclaration>? surrogates = null, bool allowParseableTypes = false)
         {
             var isNullable = false;
             if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
@@ -1545,6 +1565,16 @@ namespace ProtoBuf.BuildTools.Generators
                 return new MemberShape(scalar, isNullable);
             }
 
+            // ValueMember's order, and it is not the obvious one: the parseable test sits *after* the
+            // built-in scalars but *before* contracts, so a [ProtoContract] type that happens to
+            // carry a Parse(string) goes on the wire as a string rather than as a message. Placing
+            // this later - the tidier-looking option - silently disagrees with ref-emit.
+            if (allowParseableTypes && IsParseable(type))
+            {
+                return new MemberShape(ProtoMemberKind.Parseable, isNullable,
+                    declaredTypeName: type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            }
+
             // erase tuple element names before anything looks at the type: they are decoration, and
             // leaving them on would key the same shape twice and emit a duplicate ISerializer<>
             type = EraseTupleNames(compilation, type);
@@ -1575,12 +1605,12 @@ namespace ProtoBuf.BuildTools.Generators
             // resulting shape *describes the element* - Repeated says how it is stored
             if (ResolveRepeated(type) is { Factory: not null, Element: not null } repeated)
             {
-                if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates);
+                if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates, allowParseableTypes);
 
                 // IReadOnlySet<T> support is conditional on the runtime the library was built for
                 if (repeated.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
 
-                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type, surrogates);
+                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type, surrogates, allowParseableTypes);
             }
             return null;
         }
@@ -1813,12 +1843,12 @@ namespace ProtoBuf.BuildTools.Generators
         /// their wire types passed alongside.
         /// </summary>
         private static MemberShape? AsMap(Compilation compilation, RepeatedMatch match, ITypeSymbol declared,
-            Dictionary<string, SurrogateDeclaration>? surrogates)
+            Dictionary<string, SurrogateDeclaration>? surrogates, bool allowParseableTypes)
         {
             var key = match.Element!;
             var value = match.Value!;
-            if (GetMemberShape(compilation, key, surrogates) is not { } keyShape) return null;
-            if (GetMemberShape(compilation, value, surrogates) is not { } valueShape) return null;
+            if (GetMemberShape(compilation, key, surrogates, allowParseableTypes) is not { } keyShape) return null;
+            if (GetMemberShape(compilation, value, surrogates, allowParseableTypes) is not { } valueShape) return null;
 
             // an enum on either side resolves an ISerializer<TEnum> from the model, which the
             // services type does not expose - the same reason a repeated enum is refused
@@ -1867,10 +1897,10 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
             ProtoRepeatedPlan repeated, ITypeSymbol declared,
-            Dictionary<string, SurrogateDeclaration>? surrogates)
+            Dictionary<string, SurrogateDeclaration>? surrogates, bool allowParseableTypes)
         {
             // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
-            if (GetMemberShape(compilation, element, surrogates) is not { Repeated.Factory: null } shape) return null;
+            if (GetMemberShape(compilation, element, surrogates, allowParseableTypes) is not { Repeated.Factory: null } shape) return null;
 
             // a nullable *scalar* element is an ordinary element as far as the encoding goes - it
             // only throws at runtime if a null actually turns up, unless [NullWrappedValue] is on
@@ -1914,6 +1944,51 @@ namespace ProtoBuf.BuildTools.Generators
                 return ProtoMemberKind.Message;
             }
             return null;
+        }
+
+        /// <summary>
+        /// A type protobuf-net can round-trip as a string: <c>ToString()</c> out, <c>Parse</c> back.
+        /// </summary>
+        /// <remarks>
+        /// A port of <c>ParseableSerializer.TryCreate</c>, and the details are load-bearing. It wants
+        /// <c>Parse</c> and <b>not</b> <c>TryParse</c>; declared on the type itself, so an inherited
+        /// one does not count; taking exactly one <c>string</c> and returning the type. A <b>value
+        /// type</b> additionally needs its own <c>ToString()</c> override — a struct that inherits
+        /// <c>object.ToString()</c> would round-trip its type name, which is the "fools" case guarded
+        /// against there.
+        /// </remarks>
+        private static bool IsParseable(ITypeSymbol type)
+        {
+            if (type.TypeKind is not (TypeKind.Class or TypeKind.Struct)) return false;
+
+            var found = false;
+            foreach (var member in type.GetMembers("Parse"))
+            {
+                // note: no list pattern here - netstandard2.0 has no System.Index for it to lower to
+                if (member is IMethodSymbol { IsStatic: true, DeclaredAccessibility: Accessibility.Public } method
+                    && method.Parameters.Length == 1
+                    && method.Parameters[0].Type.SpecialType == SpecialType.System_String
+                    && SymbolEqualityComparer.Default.Equals(method.ReturnType, type))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) return false;
+            if (!type.IsValueType) return true;
+
+            foreach (var member in type.GetMembers("ToString"))
+            {
+                if (member is IMethodSymbol
+                    {
+                        IsStatic: false, DeclaredAccessibility: Accessibility.Public, Parameters.IsEmpty: true,
+                        ReturnType.SpecialType: SpecialType.System_String,
+                    })
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

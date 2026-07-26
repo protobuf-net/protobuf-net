@@ -58,6 +58,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         TimeOnly,
 
         /// <summary>
+        /// A type serialized as a string via <c>ToString()</c> and <c>static T Parse(string)</c>.
+        /// Opt-in only, matching <c>RuntimeTypeModel.AllowParseableTypes</c>, which is off by
+        /// default — turning it on changes the wire form of every member whose type qualifies.
+        /// </summary>
+        Parseable,
+
+        /// <summary>
         /// A dictionary. Unlike every other kind this says nothing about the member on its own —
         /// <see cref="ProtoMemberPlan.Map"/> carries both element types.
         /// </summary>

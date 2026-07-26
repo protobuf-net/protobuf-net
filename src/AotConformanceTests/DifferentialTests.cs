@@ -40,8 +40,7 @@ namespace ProtoBuf.AotConformance
             var value = GetSamples(modelType)[index];
             var contractType = value.GetType();
 
-            var runtime = RuntimeTypeModel.Create();
-            runtime.Add(contractType, applyDefaultBehaviour: true);
+            var runtime = CreateReference(modelType, contractType);
 
             var generatedBytes = Serialize(generated, value);
             var runtimeBytes = Serialize(runtime, value);
@@ -110,8 +109,7 @@ namespace ProtoBuf.AotConformance
                 if (group.Count() < 2) continue;
 
                 var contractType = group.Key;
-                var runtime = RuntimeTypeModel.Create();
-                runtime.Add(contractType, applyDefaultBehaviour: true);
+                var runtime = CreateReference(modelType, contractType);
 
                 // every sample, not just two: samples that are entirely at their defaults serialize
                 // to nothing, so a fixed pair can easily produce an empty payload
@@ -180,6 +178,34 @@ namespace ProtoBuf.AotConformance
         [
             "AotFixtures.TrivialGetter.TrivialGetterModel", // see TrivialGetterTests
         ];
+
+        /// <summary>
+        /// The reference model for a fixture, carrying whatever model-level options its
+        /// <c>[ProtoModel]</c> declares.
+        /// </summary>
+        /// <remarks>
+        /// Without this the comparison is against a *differently configured* model rather than
+        /// against ref-emit: <c>AllowParseableTypes</c> is off by default and changes the wire form
+        /// of every qualifying member, so the reference would be the unparsed shape and every
+        /// parseable fixture would look like a generator bug.
+        /// </remarks>
+        private static RuntimeTypeModel CreateReference(Type modelType, Type contractType)
+        {
+            var runtime = RuntimeTypeModel.Create();
+
+            // the attribute is generated into this assembly, so it is matched by name
+            foreach (var attribute in modelType.GetCustomAttributes())
+            {
+                if (attribute.GetType().FullName != ProtoModelAttribute) continue;
+                if (attribute.GetType().GetProperty("AllowParseableTypes")?.GetValue(attribute) is true)
+                {
+                    runtime.AllowParseableTypes = true;
+                }
+            }
+
+            runtime.Add(contractType, applyDefaultBehaviour: true);
+            return runtime;
+        }
 
         private static List<Type> DiscoverModels()
             => (from type in Fixtures.GetTypes()

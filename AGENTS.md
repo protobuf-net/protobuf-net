@@ -801,6 +801,35 @@ consequences worth knowing before touching `DateOnly.input.cs`:
 - `AotRefGen` is net472, where `DateOnly` does not exist at all, so that one fixture is explicitly
   `<Compile Remove>`d from it and has no `.reference.cs`.
 
+### Parseable types
+
+A type with a `ToString()` and a `static T Parse(string)` can go on the wire as a string
+(`ParseableSerializer`). This is **opt-in on both sides**: `RuntimeTypeModel.AllowParseableTypes` is
+off by default, so `[ProtoModel(AllowParseableTypes = true)]` is the compile-time mirror of it.
+Emitting it unconditionally would disagree with the runtime model's *default* behaviour, which is
+worse than not supporting it.
+
+The predicate is a port of `ParseableSerializer.TryCreate`, and every clause is load-bearing:
+`Parse` and **not** `TryParse`; declared on the type itself, so an inherited one does not count;
+exactly one `string` in, the type out. A **value type** additionally needs its own `ToString()`
+override — one inheriting `object.ToString()` would round-trip its type name, which is the case the
+library guards against.
+
+**Placement is the part that is easy to get wrong.** In `ValueMember.TryGetCoreSerializer` the
+parseable test sits *after* the built-in scalar switch but *before* contracts — so a `[ProtoContract]`
+type that happens to carry a `Parse(string)` is serialized as a **string, not a message**, and a type
+with a built-in serializer keeps it even though it would also qualify (`DateOnly` and `nint` both
+would). Putting the check at the end — the tidier-looking option, and what this first did — silently
+disagrees: it made a parseable contract a message, and an auto-tuple out of a parseable class.
+
+Both harnesses have to mirror the model's options or they are not comparing against ref-emit at all:
+`AotRefGen` reads `AllowParseableTypes` off the `[ProtoModel]` attribute, and `DifferentialTests`
+does the same in `CreateReference`. Without that the reference is the *unparsed* shape and every
+parseable fixture looks like a generator bug.
+
+Note the coverage sweep does **not** enable this, deliberately — a real consumer has to opt in, so
+counting these as emittable would overstate what works out of the box.
+
 ### Schema-only options
 
 Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.

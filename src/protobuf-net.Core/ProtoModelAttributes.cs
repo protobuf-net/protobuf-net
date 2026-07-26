@@ -20,6 +20,16 @@ namespace ProtoBuf
         /// The diagnostic reported for use of the compile-time model APIs while they are experimental.
         /// </summary>
         public const string DiagnosticId = "PBN9001";
+
+        /// <summary>
+        /// Whether types with a <c>ToString()</c> and a <c>Parse(string)</c> should be serialized as
+        /// strings; the compile-time equivalent of <see cref="Meta.RuntimeTypeModel.AllowParseableTypes"/>.
+        /// </summary>
+        /// <remarks>
+        /// Off by default, matching the runtime model. Turning it on changes the wire form of any
+        /// member whose type qualifies, so it must be opted into on both sides or not at all.
+        /// </remarks>
+        public bool AllowParseableTypes { get; set; }
     }
 
     /// <summary>

@@ -92,6 +92,15 @@ namespace ProtoBuf.AotRefGen
             }
 
             var model = RuntimeTypeModel.Create();
+
+            // the model-level options have to be mirrored onto the reference model, or it is not the
+            // same model: AllowParseableTypes changes the wire form of any qualifying member, and
+            // without this the reference would silently be the *unparsed* shape
+            model.AllowParseableTypes = modelType
+                .GetCustomAttributes(typeof(ProtoModelAttribute), inherit: false)
+                .Cast<ProtoModelAttribute>()
+                .Any(static x => x.AllowParseableTypes);
+
             foreach (var seed in seeds) model.Add(seed, applyDefaultBehaviour: true);
 
             var dllName = modelType.Name + ".dll";
