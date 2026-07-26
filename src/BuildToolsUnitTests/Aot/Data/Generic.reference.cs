@@ -1,0 +1,576 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.Generic;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___GenericModel : ISerializer<Holder>, ISerializer<Standalone<int>>, ISerializer<Standalone<string>>, ISerializer<Wrapper<int>>, ISerializer<Wrapper<string>>, ISerializer<Wrapper<Nested>>, ISerializer<Wrapper<Wrapper<int>>>, ISerializer<Wrapper<List<int>>>, ISerializer<Pair<int, string>>, ISerializer<Nested>
+{
+	Holder ISerializer<Holder>.Read(ref ProtoReader.State state, Holder value)
+	{
+		if (value == null)
+		{
+			Holder holder = new Holder();
+			value = holder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Wrapper<int> number = value.Number;
+				number = state.ReadMessage(SerializerFeatures.CategoryRepeated, number, this);
+				if (number != null)
+				{
+					value.Number = number;
+				}
+				break;
+			}
+			case 2:
+			{
+				Wrapper<string> text = value.Text;
+				text = state.ReadMessage(SerializerFeatures.CategoryRepeated, text, this);
+				if (text != null)
+				{
+					value.Text = text;
+				}
+				break;
+			}
+			case 3:
+			{
+				Wrapper<Nested> message = value.Message;
+				message = state.ReadMessage(SerializerFeatures.CategoryRepeated, message, this);
+				if (message != null)
+				{
+					value.Message = message;
+				}
+				break;
+			}
+			case 4:
+			{
+				Wrapper<Wrapper<int>> deep = value.Deep;
+				deep = state.ReadMessage(SerializerFeatures.CategoryRepeated, deep, this);
+				if (deep != null)
+				{
+					value.Deep = deep;
+				}
+				break;
+			}
+			case 5:
+			{
+				Wrapper<List<int>> many = value.Many;
+				many = state.ReadMessage(SerializerFeatures.CategoryRepeated, many, this);
+				if (many != null)
+				{
+					value.Many = many;
+				}
+				break;
+			}
+			case 6:
+			{
+				Pair<int, string> pair = value.Pair;
+				pair = state.ReadMessage(SerializerFeatures.CategoryRepeated, pair, this);
+				value.Pair = pair;
+				break;
+			}
+			case 7:
+			{
+				List<Wrapper<int>> wrappers = value.Wrappers;
+				wrappers = RepeatedSerializer.CreateList<Wrapper<int>>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, wrappers, this);
+				if (wrappers != null)
+				{
+					value.Wrappers = wrappers;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Holder>.Write(ref ProtoWriter.State state, Holder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Wrapper<int> number = value.Number;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, number, this);
+		Wrapper<string> text = value.Text;
+		state.WriteMessage(2, SerializerFeatures.CategoryRepeated, text, this);
+		Wrapper<Nested> message = value.Message;
+		state.WriteMessage(3, SerializerFeatures.CategoryRepeated, message, this);
+		Wrapper<Wrapper<int>> deep = value.Deep;
+		state.WriteMessage(4, SerializerFeatures.CategoryRepeated, deep, this);
+		Wrapper<List<int>> many = value.Many;
+		state.WriteMessage(5, SerializerFeatures.CategoryRepeated, many, this);
+		Pair<int, string> pair = value.Pair;
+		state.WriteMessage(6, SerializerFeatures.CategoryRepeated, pair, this);
+		List<Wrapper<int>> wrappers = value.Wrappers;
+		if (wrappers != null)
+		{
+			List<Wrapper<int>> values = wrappers;
+			RepeatedSerializer.CreateList<Wrapper<int>>().WriteRepeated(ref state, 7, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Holder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Standalone<int>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Standalone<string>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Wrapper<int>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Wrapper<string>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Wrapper<Nested>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Wrapper<Wrapper<int>>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Wrapper<List<int>>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Pair<int, string>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Nested>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Standalone<int> ISerializer<Standalone<int>>.Read(ref ProtoReader.State state, Standalone<int> value)
+	{
+		if (value == null)
+		{
+			Standalone<int> standalone = new Standalone<int>();
+			value = standalone;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int item = state.ReadInt32();
+				value.Item = item;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Standalone<int>>.Write(ref ProtoWriter.State state, Standalone<int> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int item = value.Item;
+		if (item != 0)
+		{
+			state.WriteInt32Varint(1, item);
+		}
+	}
+
+	Standalone<string> ISerializer<Standalone<string>>.Read(ref ProtoReader.State state, Standalone<string> value)
+	{
+		if (value == null)
+		{
+			Standalone<string> standalone = new Standalone<string>();
+			value = standalone;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Item = text;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Standalone<string>>.Write(ref ProtoWriter.State state, Standalone<string> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string item = value.Item;
+		state.WriteString(1, item);
+	}
+
+	Wrapper<int> ISerializer<Wrapper<int>>.Read(ref ProtoReader.State state, Wrapper<int> value)
+	{
+		if (value == null)
+		{
+			Wrapper<int> wrapper = new Wrapper<int>();
+			value = wrapper;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Wrapper<int>>.Write(ref ProtoWriter.State state, Wrapper<int> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		string label = value.Label;
+		state.WriteString(2, label);
+	}
+
+	Wrapper<string> ISerializer<Wrapper<string>>.Read(ref ProtoReader.State state, Wrapper<string> value)
+	{
+		if (value == null)
+		{
+			Wrapper<string> wrapper = new Wrapper<string>();
+			value = wrapper;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Value = text;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Wrapper<string>>.Write(ref ProtoWriter.State state, Wrapper<string> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string value2 = value.Value;
+		state.WriteString(1, value2);
+		value2 = value.Label;
+		state.WriteString(2, value2);
+	}
+
+	Wrapper<Nested> ISerializer<Wrapper<Nested>>.Read(ref ProtoReader.State state, Wrapper<Nested> value)
+	{
+		if (value == null)
+		{
+			Wrapper<Nested> wrapper = new Wrapper<Nested>();
+			value = wrapper;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Nested value2 = value.Value;
+				value2 = state.ReadMessage(SerializerFeatures.CategoryRepeated, value2, this);
+				if (value2 != null)
+				{
+					value.Value = value2;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Wrapper<Nested>>.Write(ref ProtoWriter.State state, Wrapper<Nested> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Nested value2 = value.Value;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, value2, this);
+		string label = value.Label;
+		state.WriteString(2, label);
+	}
+
+	Wrapper<Wrapper<int>> ISerializer<Wrapper<Wrapper<int>>>.Read(ref ProtoReader.State state, Wrapper<Wrapper<int>> value)
+	{
+		if (value == null)
+		{
+			Wrapper<Wrapper<int>> wrapper = new Wrapper<Wrapper<int>>();
+			value = wrapper;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Wrapper<int> value2 = value.Value;
+				value2 = state.ReadMessage(SerializerFeatures.CategoryRepeated, value2, this);
+				if (value2 != null)
+				{
+					value.Value = value2;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Wrapper<Wrapper<int>>>.Write(ref ProtoWriter.State state, Wrapper<Wrapper<int>> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Wrapper<int> value2 = value.Value;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, value2, this);
+		string label = value.Label;
+		state.WriteString(2, label);
+	}
+
+	Wrapper<List<int>> ISerializer<Wrapper<List<int>>>.Read(ref ProtoReader.State state, Wrapper<List<int>> value)
+	{
+		if (value == null)
+		{
+			Wrapper<List<int>> wrapper = new Wrapper<List<int>>();
+			value = wrapper;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				List<int> value2 = value.Value;
+				value2 = RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, value2);
+				if (value2 != null)
+				{
+					value.Value = value2;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Wrapper<List<int>>>.Write(ref ProtoWriter.State state, Wrapper<List<int>> value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		List<int> value2 = value.Value;
+		if (value2 != null)
+		{
+			List<int> values = value2;
+			RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values);
+		}
+		string label = value.Label;
+		state.WriteString(2, label);
+	}
+
+	Pair<int, string> ISerializer<Pair<int, string>>.Read(ref ProtoReader.State state, Pair<int, string> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int key = state.ReadInt32();
+				value.Key = key;
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Value = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Pair<int, string>>.Write(ref ProtoWriter.State state, Pair<int, string> value)
+	{
+		int key = value.Key;
+		if (key != 0)
+		{
+			state.WriteInt32Varint(1, key);
+		}
+		string value2 = value.Value;
+		state.WriteString(2, value2);
+	}
+
+	Nested ISerializer<Nested>.Read(ref ProtoReader.State state, Nested value)
+	{
+		if (value == null)
+		{
+			Nested nested = new Nested();
+			value = nested;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int id = state.ReadInt32();
+				value.Id = id;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Nested>.Write(ref ProtoWriter.State state, Nested value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int id = value.Id;
+		if (id != 0)
+		{
+			state.WriteInt32Varint(1, id);
+		}
+	}
+}
+public sealed class GenericModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___GenericModel, T>();
+	}
+}

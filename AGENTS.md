@@ -756,6 +756,27 @@ and `AotRefGen` now skips a model it cannot emit rather than failing the whole r
 suite still covers the fixture, because `RuntimeTypeModel` *does* handle these — which is exactly the
 comparison that matters for a divergence from the *compiled* path.
 
+### Generics
+
+The distinction is **open versus closed**, not generic versus not. A closed construction is an
+ordinary contract — Roslyn hands us its members already substituted, so `Wrapper<int>` and
+`Wrapper<string>` are simply two contracts that happen to share a definition, each with its own
+`ISerializer<>`. They arrive as member types far more often than as seeds, which is why refusing
+them cost 24 contracts in the sweep.
+
+An **open** one is refused, and cannot be otherwise: the services type is a single non-generic class,
+so there is nowhere to put the type parameter. The test recurses (`Wrapper<List<T>>` is open too) and
+walks `ContainingType`, since `Outer<T>.Inner` carries the parameter on the enclosing type.
+
+`typeof(Foo<>)` needs its own check: it yields an **unbound** symbol whose `TypeArguments` are *not*
+type parameters, so `ContainsTypeParameter` alone returns false and the contract falls through to be
+refused for an unrelated-sounding reason — it was reported as "there is no public parameterless
+constructor" before `IsUnboundGenericType` was added alongside it.
+
+Nothing else needed changing: the emitted identifiers already sanitise non-alphanumerics (so
+`Wrapper<int>` and `Wrapper<string>` get distinct accessor names), and `AotSmoke` covers both a
+reference and a value instantiation, the latter being the one ILC must generate concrete code for.
+
 ### Schema-only options
 
 Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.

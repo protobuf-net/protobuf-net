@@ -8,6 +8,12 @@ using System.Linq;
 namespace ProtoBuf.AotSmoke;
 
 [ProtoContract]
+public class Wrapper<T>
+{
+    [ProtoMember(1)] public T Value { get; set; }
+}
+
+[ProtoContract]
 public class Customer
 {
     [ProtoMember(1)] public int Id { get; set; }
@@ -56,6 +62,11 @@ public class Order
 
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
+
+    // closed generics: each instantiation is its own contract, and the value-type one is the
+    // interesting case for ILC, which has to generate concrete code for it rather than share
+    [ProtoMember(20)] public Wrapper<string> Tag { get; set; }
+    [ProtoMember(21)] public Wrapper<int> Count { get; set; }
 
     // getter-only, reached by writing its backing field through [UnsafeAccessor] - which is worth
     // proving here specifically, since ILC resolves those at publish time
@@ -196,6 +207,8 @@ internal static class Program
             Sparse = { 1, null, 0 },
             MaybeNone = [],
             Price = new Money(1999),
+            Tag = new Wrapper<string> { Value = "boxed" },
+            Count = new Wrapper<int> { Value = 11 },
             Legacy = new Legacy
             {
                 When = When,
@@ -248,6 +261,10 @@ internal static class Program
         Check(ref failures, "MaybeNone empty-not-null", "empty",
             clone.MaybeNone is null ? "null" : clone.MaybeNone.Count == 0 ? "empty" : "items");
         Check(ref failures, "Price via surrogate", original.Price.Units, clone.Price.Units);
+
+        // closed generics, one per instantiation
+        Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);
+        Check(ref failures, "Count", original.Count.Value, clone.Count?.Value);
 
         // getter-only members, restored by writing the backing field through [UnsafeAccessor]
         Check(ref failures, "Sequence", original.Sequence, clone.Sequence);

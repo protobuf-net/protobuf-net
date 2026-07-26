@@ -210,7 +210,17 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return Contract(diagnostics, at, name, "only classes and structs are supported");
             }
-            if (type.IsGenericType) return Contract(diagnostics, at, name, "generic types are not supported");
+            // a *closed* generic is an ordinary contract - Roslyn hands us its members already
+            // substituted, so `Wrapper<int>` and `Wrapper<string>` are simply two contracts. An open
+            // one is not expressible: the services type is a single non-generic class, so there is
+            // nowhere to put the type parameter
+            // note `typeof(Foo<>)` gives an *unbound* symbol, whose TypeArguments are not type
+            // parameters - so it needs its own test, or it falls through to a later check and is
+            // refused for an unrelated-sounding reason
+            if (type.IsUnboundGenericType || ContainsTypeParameter(type))
+            {
+                return Contract(diagnostics, at, name, "open generic types are not supported");
+            }
             if (type.DeclaredAccessibility != Accessibility.Public)
             {
                 // full ref-emit compilation only reaches public API, and we match that for now
@@ -1255,6 +1265,38 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Is any part of this type still an unsubstituted type parameter?
+        /// </summary>
+        /// <remarks>
+        /// The distinction that matters is open versus closed, not generic versus not:
+        /// <c>Wrapper&lt;int&gt;</c> is a perfectly ordinary contract, while <c>Wrapper&lt;T&gt;</c>
+        /// cannot be named by the services type. Note this has to recurse — <c>Wrapper&lt;List&lt;
+        /// T&gt;&gt;</c> is open too, and an unbound <c>Wrapper&lt;&gt;</c> reports its own type
+        /// parameters as its arguments, so it is caught by the same test.
+        /// </remarks>
+        private static bool ContainsTypeParameter(ITypeSymbol type)
+        {
+            switch (type)
+            {
+                case ITypeParameterSymbol:
+                    return true;
+                case IArrayTypeSymbol array:
+                    return ContainsTypeParameter(array.ElementType);
+                case INamedTypeSymbol named:
+                    for (var current = named; current is not null; current = current.ContainingType)
+                    {
+                        foreach (var argument in current.TypeArguments)
+                        {
+                            if (ContainsTypeParameter(argument)) return true;
+                        }
+                    }
+                    return false;
+                default:
+                    return false;
+            }
         }
 
         private static bool DerivesFrom(INamedTypeSymbol derived, INamedTypeSymbol baseType)

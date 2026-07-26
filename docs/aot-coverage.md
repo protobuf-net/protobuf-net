@@ -7,23 +7,22 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **200** of 1392 (86% emitted)
-of which dropped only by cascade: 39
+contracts dropped: **175** of 1392 (88% emitted)
+of which dropped only by cascade: 35
 
 | count | reason |
 | ---: | --- |
 | 34 | PBN2001 member '…' has unsupported type '…' |
-| 24 | PBN2002 generic types are not supported |
 | 20 | PBN2002 only classes and structs are supported |
 | 15 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
 | 12 | PBN2002 there is no public parameterless constructor |
 | 11 | PBN2003 [ProtoMap] is not supported yet |
 | 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
+| 5 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 4 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
-| 3 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [NullWrappedCollection] on a non-collection is not supported yet |
 | 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
@@ -37,6 +36,7 @@ of which dropped only by cascade: 39
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |
 | 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |
+| 1 | PBN2003 [ProtoContract(UseProtoMembersOnly = ...)] is not supported yet |
 
 Member types we could not handle:
 

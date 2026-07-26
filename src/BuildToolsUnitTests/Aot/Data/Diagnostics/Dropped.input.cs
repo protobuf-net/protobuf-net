@@ -63,7 +63,16 @@ public class HasCallback
     public void AfterRead(StreamingContext context) { }
 }
 
+// a *closed* generic is an ordinary contract; only an open one is refused, since the services type
+// is a single non-generic class with nowhere to put the type parameter -> PBN2002
+[ProtoContract]
+public class OpenGeneric<T>
+{
+    [ProtoMember(1)] public T Value { get; set; }
+}
+
 [ProtoModel]
+[ProtoSerializable(typeof(OpenGeneric<>))]
 [ProtoSerializable(typeof(UnrenderableDefault))]
 [ProtoSerializable(typeof(HasCallback))]
 [ProtoSerializable(typeof(ReferencesDropped))]
