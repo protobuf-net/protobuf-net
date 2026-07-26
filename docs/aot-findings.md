@@ -99,6 +99,13 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   ignored entirely** — silently. `IgnoreListHandling = true` is the opt-out. Nothing warns.
 - **A derived `[ProtoContract]` whose base does not `[ProtoInclude]` it is an independent contract
   that silently ignores every inherited member.** Also nothing warns.
+- **An interface root writes its own declared members *in addition to* the implementation's**, so a
+  property declared on both goes on the wire twice. `[ProtoContract] interface IAnimal` declaring
+  `[ProtoMember(1)] Name`, with `Dog` implementing it and declaring `[ProtoMember(1)] Name` itself,
+  serializes `Name` once inside the `Dog` sub-type layer and again in the `IAnimal` layer:
+  `0A-0E · 52-07(0A-03 "rex" · 10-03) · 0A-03 "rex"`. Consistent with "a layer only sees its own
+  declared members" — the interface property and the implementing property genuinely *are* different
+  members — but it is not what anyone writing that contract intends, and nothing warns.
 - `IProducerConsumerCollection<T>` resolves to a provider that can be written but **not read** —
   deserialize throws, because there is no concrete type to construct.
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.

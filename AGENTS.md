@@ -454,6 +454,26 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   member, as the element of a collection, and as an inheritance root, and are a reliable source of
   confusion. Even if the emit behaviour can be matched exactly, a diagnostic saying "this is not
   recommended" is probably wanted **either way**.
+
+  Probed against ref-emit, so the next attempt need not re-derive it — an interface is **exactly an
+  inheritance root**, and needs no new emit shape:
+
+  | shape | ref-emit |
+  | --- | --- |
+  | `[ProtoContract]` + `[ProtoInclude]`, unary member | works; sub-type marker then the root layer |
+  | same, as `List<IAnimal>` | works; each element an ordinary message |
+  | same, serialized directly as root | works |
+  | `[ProtoContract]`, **no** `[ProtoInclude]` | **throws** `Unexpected sub-type` on write |
+  | interface with no attributes, as a member | **throws** `No serializer defined for type` |
+
+  So the work is: accept `TypeKind.Interface` when it carries `[ProtoInclude]`, teach `DerivesFrom`
+  and `GetLinkedBase` that *implementing* counts as deriving, and refuse the other two shapes — both
+  of which ref-emit refuses too, so refusing is a match rather than a limitation. An interface root
+  is implicitly abstract, which the "abstract is allowed only as a root" rule already covers.
+
+  The catch, and the reason for the "not recommended" diagnostic: **the interface layer writes its
+  own declared members in addition to the implementation's**, so a property declared on both goes on
+  the wire twice. See `docs/aot-findings.md` for the decoded bytes.
 - serialization callbacks
 
 ### Golden-file tests
